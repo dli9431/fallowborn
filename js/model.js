@@ -3822,6 +3822,17 @@ window.FB = window.FB || {};
     command_defeat:FB.msg('news.biography.command_defeat', 'Led {men} soldiers in defeat at {place}, against {enemyMen}.', {}),
     foundation:FB.msg('news.biography.foundation', 'Established {foundation}.', {}),
     death:FB.msg('news.biography.death', 'Died at the age of {age}.', {}),
+    death_cause:FB.msg('news.biography.death_cause', {
+      forms: { select:'value', param:'cause', cases: {
+        fever:'Died of fever at the age of {age}.',
+        flux:'Died of the flux at the age of {age}.',
+        chest:'Died of a chest sickness at the age of {age}.',
+        accident:'Died after an accident at the age of {age}.',
+        pestilence:'Died of pestilence at the age of {age}.',
+        hunger:'Died after a season of hunger at the age of {age}.',
+        other:'Died at the age of {age}.'
+      } }
+    }, {}),
     retirement:FB.msg('news.biography.retirement', 'Retired from leading the household.', {}),
     appointment:FB.msg('news.biography.appointment', 'Appointed as {office} in the household of {patron}.', {}),
     captivity:FB.msg('news.biography.captivity', 'Taken captive.', {}),
@@ -3830,7 +3841,8 @@ window.FB = window.FB || {};
   const lifeWeights = { rank:80, accession:90, loss:85, conquest:70,
     tournament:45, games_hosted:40,
     battle:30, defeat:30, command:30, command_defeat:30,
-    foundation:90, death:100, retirement:95, appointment:65, captivity:65, exile:75 };
+    foundation:90, death:100, death_cause:100, retirement:95,
+    appointment:65, captivity:65, exile:75 };
   const lifeIndexes = new WeakMap();
   const lifeKinIndexes = new WeakMap();
   const lifeRestoring = new WeakSet();
@@ -3875,6 +3887,7 @@ window.FB = window.FB || {};
     // Save's ordinary character compactor must not strip this detached id.
     const identity = { lifeIdentity:true };
     ['id', 'name', 'byname', 'dyn', 'sex', 'culture', 'religion', 'born', 'died',
+      'deathCause',
       'dead', 'station', 'portraitName', 'portraitProfile', 'health',
       'highestTitleData'].forEach(function (key) {
       if (c[key] !== undefined) identity[key] = FB.messageParams({ value:c[key] }).value;
@@ -4047,7 +4060,9 @@ window.FB = window.FB || {};
   };
   FB.noteLifeDeath = function (state, c) {
     if (!c || lifeRestoring.has(state)) return;
-    FB.noteLifeEvent(state, c.id, 'death', { age:Math.max(0, state.date.year - c.born) });
+    const params = { age:Math.max(0, state.date.year - c.born) };
+    if (c.deathCause) params.cause = c.deathCause;
+    FB.noteLifeEvent(state, c.id, c.deathCause ? 'death_cause' : 'death', params);
     const record = FB.lifeHistory(state, c.id);
     if (record) {
       record.identity = lifeIdentity(c);

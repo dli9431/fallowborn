@@ -346,6 +346,9 @@ history retains the project view on Back, and funding replaces its spent quote.
 Controls use shared cards/buttons and localizable text for keyboard and mobile.
 
 Settlement grant reviews reuse the shared modal history and keyboard buttons.
+Grant Land, character pickers and settlement sheets include personally held
+baronies under another count. The review names the actual count and shows dues
+going to that count; county ownership and forts stay with that count.
 The searchable recipient list uses shared person cards with Stewardship and
 capacity disclosures. The review replaces its intermediate recipient or settlement
 picker in modal history. Back, including browser Back on mobile, returns directly

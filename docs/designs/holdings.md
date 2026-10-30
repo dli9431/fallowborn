@@ -207,6 +207,8 @@ plot supplies seasonal produce through `FB.landYield`; plots consolidated in the
 settlement receive `balance.landConsolidationBonus` for each additional plot in that
 holding. A settlement is capped by `balance.landPlotMaxSettlement`.
 
+At current balance, one plot earns 1 gold per season before consolidation. Five plots in one settlement earn 7 gold per season, compared with 5 gold for five separate plots.
+
 `FB.manorSite` requires `balance.manorPlotRequirement` plots in one settlement. Once the
 family also has `balance.manorPrestige`, Declare a Manor's always-enabled Freeholder
 launcher opens the ordinary on-demand rank review. Its confirmation is greyed until the

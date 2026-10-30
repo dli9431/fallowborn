@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.192.0';
+FB.VERSION = '1.192.1';
 FB.CHANGELOG = [
+  { v: '1.192.1', date: '2026-10-30', changes: [
+    'Personally held baronies under other counts can be granted, and family land plots earn more.',
+    'Childhood life histories record causes, local council alerts pause time, and intrigue recruitment follows current limits.'
+  ] },
   { v: '1.192.0', date: '2026-10-30', changes: [
     '568 offers Sigebert, Chilperic and Guntram as rulers with court priorities to review.'
   ] },
@@ -20,6 +24,21 @@ FB.CHANGELOG = [
   ] },
   { v: '1.190.0', date: '2026-10-30', changes: [
     'Player rulers can manage dynastic settlements using their living family, succession and regional authority.'
+  ] },
+  { v: '1.189.14', date: '2026-10-30', changes: [
+    'Personally held baronies under other counts can be granted from Grant Land, settlement sheets and character sheets.'
+  ] },
+  { v: '1.189.12', date: '2026-10-30', changes: [
+    'Family land plots earn more seasonal gold, with larger holdings benefiting from consolidation.'
+  ] },
+  { v: '1.189.11', date: '2026-10-30', changes: [
+    'Childhood deaths now record a historical cause in the Chronicle and family life history.'
+  ] },
+  { v: '1.189.10', date: '2026-10-30', changes: [
+    'Ready deed alerts pause time when a local council motion can be brought again.'
+  ] },
+  { v: '1.189.9', date: '2026-10-30', changes: [
+    'Intrigue accomplice offers exclude reigning rulers and require personal hostility to recruit close family for assassination.'
   ] },
   { v: '1.189.8', date: '2026-10-16', changes: [
     'Preparation for side-by-side test builds. Your saves, settings and mods are unchanged.'
@@ -5300,6 +5319,27 @@ FB.CHANGELOG = [
     }
   };
 
+  /* A childhood mortality roll gets an in-world account. Derive the ordinary
+     cause from the child and year without consuming the campaign RNG; a death
+     notice must not change who lives through the rest of the annual sweep. */
+  const childDeathNews = FB.msg('news.life.child_died_cause', {
+    forms: { select:'value', param:'cause', cases: {
+      fever:'🕯 Your child {name} died of fever, aged {age}.',
+      flux:'🕯 Your child {name} died of the flux, aged {age}.',
+      chest:'🕯 Your child {name} died of a chest sickness, aged {age}.',
+      accident:'🕯 Your child {name} died after an accident, aged {age}.',
+      pestilence:'🕯 Your child {name} died of pestilence, aged {age}.',
+      hunger:'🕯 Your child {name} died after a season of hunger, aged {age}.',
+      other:'🕯 Your child {name} died, aged {age}.'
+    } }
+  }, {});
+  function childDeathCause(s, c, residentHere, hardshipHere) {
+    if (s.player.flags.plague_here && residentHere) return 'pestilence';
+    if (hardshipHere) return 'hunger';
+    return ['fever', 'flux', 'chest', 'accident'][
+      FB.hashSeed(c.id + ':' + s.date.year) % 4];
+  }
+
   /* ---------- yearly aging, mortality, coming of age ---------- */
   function yearlyLife(s, annualContext) {
     const p = s.player;
@@ -5457,10 +5497,11 @@ FB.CHANGELOG = [
       if (medicalProtection && householdCharacter) {
         cq -= medicalProtection;
       }
-      if (marketMortality && householdCharacter &&
-          (residentHere !== undefined ? residentHere :
-            (!FB.characterResidence ||
-              FB.characterResidence(s, c) === p.provinceId))) {
+      const hardshipHere = marketMortality && householdCharacter &&
+        (residentHere !== undefined ? residentHere :
+          (!FB.characterResidence ||
+            FB.characterResidence(s, c) === p.provinceId));
+      if (hardshipHere) {
         cq += marketMortality;
       }
       if (FB.chance(FB.clamp(cq, 0.002, 0.6))) {
@@ -5480,7 +5521,10 @@ FB.CHANGELOG = [
            consults, and a spouse checked afterwards reads as a stranger. */
         const compactRoyal = !!(c.royalLine && FB.courtRecordRetained &&
           !FB.courtRecordRetained(s, c, kinRel, familyLinks));
-        FB.killChar(s, c, { familyLinks:familyLinks });
+        const deathCause = wasChild && a < 16
+          ? childDeathCause(s, c, residentHere, hardshipHere)
+          : null;
+        FB.killChar(s, c, { familyLinks:familyLinks, deathCause:deathCause });
         if (compactRoyal && FB.compactRoyalRecordOnDeath) {
           FB.compactRoyalRecordOnDeath(s, c, {
             retentionChecked:true,
@@ -5493,8 +5537,10 @@ FB.CHANGELOG = [
           FB.spouseDied(s, c); // a grand house owes its widow(er) a reckoning
           FB.promoteSpouse(s); // under polygamy, the next wife steps up
         }
-        else if (wasChild) FB.news(s, FB.msg('news.life.child_died',
-          '🕯 Your child {name} has died, aged {age}.', { name: c.name, age: a }));
+        else if (wasChild) FB.news(s, deathCause
+          ? FB.message(childDeathNews.key, { cause:deathCause, name:c.name, age:a })
+          : FB.msg('news.life.child_died',
+            '🕯 Your child {name} has died, aged {age}.', { name:c.name, age:a }));
         else if (wasCourted) FB.news(s, FB.msg('news.life.courted_died',
           '🕯 {name}, whom you courted, has died before any wedding.', { name: c.name }));
         else if (pledgedChild) {

@@ -220,10 +220,12 @@ Settlement reservations use `grantSettlement` protection ids (`provinceId:slot`)
 persist with existing household protections and block voluntary settlement quotes
 until unreserved. They do not block conquest, succession, or involuntary loss.
 
-Grant Land also lists grantable settlements in directly held counties and opens
-the existing recipient picker and hereditary grant review. A ruler with one county
-can access this deed when a non-seat settlement is available. This is another entry
-point to existing settlement grants, with no change to eligibility or technology.
+Grant Land also lists directly held non-seat settlements, including personal baronies
+under another count, and opens the existing recipient picker and hereditary grant
+review. The character picker and settlement sheet expose those same holdings. A
+grant replaces the barony holder while its county title, fort and local dues stay
+with the count. A ruler with one county can access this deed when a non-seat
+settlement is available. Recipient eligibility and technology are unchanged.
 Settlement choices disclose their local building count and current net seasonal
 income before recipient selection. These are holding returns, not a promise of
 extra income from granting; the review separately explains transferred income and dues.
@@ -314,8 +316,9 @@ before drawing acceptance or charging anything. Successful ownership and rank
 commit together. Stale/blocked reviews and cancellation spend nothing; an ordinary
 refusal retains its existing day, cooldown and Standing consequences.
 
-Counts can grant non-seat direct settlements to adult gentle household members or
-local nobles who are not reigning rulers. Voluntary grants cost no gold or day and
+Counts can grant non-seat direct settlements, including their personally held
+baronies under another count, to adult gentle household members or local nobles
+who are not reigning rulers. Voluntary grants cost no gold or day and
 are certain; the review makes hereditary control, lost direct revenue, transferred
 upkeep, expected dues and capacity relief visible. Private property, county titles,
 strategic forts and borders do not transfer. Grant APIs revalidate recipients and

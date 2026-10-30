@@ -17,6 +17,8 @@ refreshes do not scroll again. A fresh campaign, loaded state or successor start
 a fresh readiness baseline rather than replaying old notifications. The pause
 uses `setPaused(true, {liveTick:true})` so its UI refresh retains mounted controls.
 
+Bring a motion before the council uses its next session date for the same readiness notice and pause. The vote remains a manual choice and is never selected by recurring deed automation.
+
 Automation offers independent, initially unchecked selections for immediate
 recurring deeds: rival schemes, alms, mediation, squeezing taxes, mercenaries and
 extraordinary vassal taxes. The checklist shows only deeds relevant to the current

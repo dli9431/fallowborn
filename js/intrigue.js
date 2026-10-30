@@ -825,6 +825,20 @@ window.FB = window.FB || {};
     return FB.clamp(chance, 0.05, 0.75);
   }
 
+  function accompliceEligibleForTarget(state, plotId, c, target) {
+    /* Rulers can pursue their own plots, but cannot be recruited through the
+       ordinary accomplice offer, including against their designated heir. */
+    if (FB.isReigningRealmRuler(state, c)) return false;
+    if (plotId !== 'assassination' || !target) return true;
+    var closeKin = c.spouseId === target.id || target.spouseId === c.id ||
+      FB.closeMarriageKinSnapshot(state, c, target);
+    if (!closeKin) return true;
+    /* An explicit hostile opinion is a personal motive; generic traits,
+       standing and payment are not enough to turn close kin against kin. */
+    return !!(c.opinions && c.opinions[target.id] !== undefined &&
+      finite(c.opinions[target.id], 0) <= -25);
+  }
+
   function accompliceOptions(state, plotId, context, paid, actorId,
     actorRealmId) {
     var def = defOf(plotId), out = [];
@@ -837,7 +851,8 @@ window.FB = window.FB || {};
       if (!c || c.dead || c.id === actor.id || c.id === (target && target.id) ||
           FB.ageOf(c, state.date.year) < 12 ||
           unavailableThroughCaptivity(state, c) ||
-          characterSovereign(state, c) !== sovereign) continue;
+          characterSovereign(state, c) !== sovereign ||
+          !accompliceEligibleForTarget(state, plotId, c, target)) continue;
       out.push({
         characterId:c.id, label:FB.fullName(c),
         acceptance:acceptanceChance(state, actor, c, target, paid,
@@ -1073,7 +1088,9 @@ window.FB = window.FB || {};
     var c = character(state, record.characterId);
     if (!c || c.dead || unavailableThroughCaptivity(state, c) ||
         characterSovereign(state, c) !== actorSovereign(state, actorId,
-          actorRealmId)) {
+          actorRealmId) || (!record.compelled &&
+          !accompliceEligibleForTarget(state, plot.id || plot.schemeId, c,
+            targetCharacter(state, plot.context)))) {
       plot.accomplice = null;
       return null;
     }

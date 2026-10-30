@@ -263,6 +263,90 @@ test('accomplice consent, secret refusal, and leaks are seeded and exact',
     expect(['testimony', 'material']).toContain(result.hearingEvidence);
   });
 
+test('rulers and close family need more than an ordinary assassination offer',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const home = FB.world.byId[s.player.provinceId];
+      const target = FB.makeCharacter(s, {
+        name:'Marked Relative', sex:'m', culture:home.culture,
+        religion:home.religion, born:s.date.year - 30,
+        station:2, traitsN:0
+      });
+      const spouse = FB.makeCharacter(s, {
+        name:'Loyal Spouse', sex:'f', culture:home.culture,
+        religion:home.religion, born:s.date.year - 30,
+        station:2, traitsN:0
+      });
+      const sibling = FB.makeCharacter(s, {
+        name:'Estranged Sibling', sex:'m', culture:home.culture,
+        religion:home.religion, born:s.date.year - 30,
+        station:2, traitsN:0
+      });
+      const unrelated = FB.makeCharacter(s, {
+        name:'Unrelated Accomplice', sex:'f', culture:home.culture,
+        religion:home.religion, born:s.date.year - 30,
+        station:2, traitsN:0
+      });
+      target.spouseId = spouse.id;
+      spouse.spouseId = target.id;
+      target.fatherId = sibling.fatherId = 'shared-parent';
+      const ruler = FB.materializeRealmRuler(s, FB.playerRealmId(s));
+      const context = FB.intrigueTargetOptions(s,
+        FBDATA.plots.assassination).filter(function (option) {
+          return option.characterId === target.id;
+        })[0].context;
+      function offered(paid) {
+        return FB.intrigueAccompliceOptions(s, 'assassination',
+          context, paid).map(function (option) { return option.characterId; });
+      }
+      const initial = offered(true);
+      s.player.gold = 100;
+      const gold = s.player.gold;
+      const rejected = FB.beginIntriguePlot(s, 'assassination', context,
+        'careful', ruler.id, true);
+      const goldUnspent = s.player.gold === gold;
+      sibling.opinions = sibling.opinions || {};
+      sibling.opinions[target.id] = -30;
+      const motivated = offered(false);
+      FB.beginIntriguePlot(s, 'assassination', context, 'careful');
+      s.player.plot.accomplice = {
+        characterId:ruler.id, accepted:true, compelled:false
+      };
+      FB.intrigueTickPlayerPlot(s);
+      const rulerStillHelping = !!s.player.plot.accomplice;
+      s.player.plot.accomplice = {
+        characterId:ruler.id, accepted:true, compelled:true
+      };
+      FB.intrigueTickPlayerPlot(s);
+      return {
+        rulerIsReigning:FB.isReigningRealmRuler(s, ruler),
+        rulerOffered:initial.indexOf(ruler.id) >= 0,
+        spouseOffered:initial.indexOf(spouse.id) >= 0,
+        siblingOffered:initial.indexOf(sibling.id) >= 0,
+        unrelatedOffered:initial.indexOf(unrelated.id) >= 0,
+        motivatedSiblingOffered:motivated.indexOf(sibling.id) >= 0,
+        rejected:rejected,
+        goldUnspent:goldUnspent,
+        rulerStillHelping:rulerStillHelping,
+        compelledRulerHelping:!!s.player.plot.accomplice
+      };
+    });
+
+    expect(result).toEqual({
+      rulerIsReigning:true,
+      rulerOffered:false,
+      spouseOffered:false,
+      siblingOffered:false,
+      unrelatedOffered:true,
+      motivatedSiblingOffered:true,
+      rejected:false,
+      goldUnspent:true,
+      rulerStillHelping:false,
+      compelledRulerHelping:true
+    });
+  });
+
 test('hostile plots survive save restore and never retarget after invalidation',
   async function ({ page }) {
     const result = await page.evaluate(function () {
