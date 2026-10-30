@@ -6,7 +6,8 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_568.js','data/starts_568.js','data/starts_568_ravenna.js',
-  'data/starts_rulers_568.js','data/story_ruler_agendas_568.js','js/story_ruler_agenda.js',
+  'data/starts_rulers_568.js','data/story_ruler_agendas_568.js',
+  'data/starts_rulers_568_east.js','data/story_ruler_agendas_568_east.js','js/story_ruler_agenda.js',
   'data/story_households_568_ravenna.js','data/bookmark_568_identities.js',
   'data/bookmark_568_scaffold_a.js','data/bookmark_568_scaffold_b.js',
   'data/bookmark_568_scaffold_c.js','data/bookmark_568_scaffold_d.js',
@@ -71,7 +72,7 @@ test('568 composes every physical county once, in ledger order, with unique cour
     expect(result).toEqual({count:527,inhabited:506,complete:true,ordered:true,courts:132,
       named:['Chilperic I','Guntram','Justin II','Khosrow I','Sigebert I'],
       anchors:['east_568','austrasia_568','visigoths_568','dumnonia_568'],
-      metadata:['The Lombards Depart',{year:568,season:0,day:1},'late_antique','europe_regional_2','frankish_courts_v2','migration_v1'],
+      metadata:['The Lombards Depart',{year:568,season:0,day:1},'late_antique','europe_regional_2','eastern_courts_v3','migration_v1'],
       faults:[],validated:[],pure:true});
   });
 
@@ -87,7 +88,7 @@ test('568 is offered in the picker with its implemented starts, and ordinary cod
     else await page.getByRole('button',{name:'New Game',exact:true}).click();
     await expect(page.locator('#bookmarklist')).toContainText('The Lombards Depart');
     await page.locator('#bookmarklist [data-bookmark="568"]').click();
-    for (const id of ['farmer_568','craftsman_568','ravenna_household_568','sigebert_568','chilperic_568','guntram_568'])
+    for (const id of ['farmer_568','craftsman_568','ravenna_household_568','sigebert_568','chilperic_568','guntram_568','justin_568','khosrow_568'])
       await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toBeVisible();
     for (const id of ['alboin_568','lombard_migrant_household_568'])
       await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toHaveCount(0);
@@ -112,7 +113,7 @@ for (const scenario of ['farmer_568','craftsman_568']) {
           disabled:['papacy','great_holy_wars','manorial_tenure','feudal_service','scutage','tournaments']
             .every(function (id) { return !FB.systemEnabled(s,id); }),
           errors:FBTEST.checkInvariants(),valid:FB.save.v4.validatePlatform(s)};
-      })).toEqual({start:'568',revision:'frankish_courts_v2',date:{year:568,season:0,day:1},
+      })).toEqual({start:'568',revision:'eastern_courts_v3',date:{year:568,season:0,day:1},
         provinces:527,opening:'migration_v1',
         actors:['ctesiphon_delegate_568','dvin_principal_568','hamadan_principal_568','ray_principal_568'],
         institutions:[],italy:['east_568','east_568','east_568'],disabled:true,errors:[],valid:true});
