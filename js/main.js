@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.191.0';
+FB.VERSION = '1.192.0';
 FB.CHANGELOG = [
+  { v: '1.192.0', date: '2026-10-30', changes: [
+    '568 offers Sigebert, Chilperic and Guntram as rulers with court priorities to review.'
+  ] },
   { v: '1.191.0', date: '2026-10-30', changes: [
     '711 offers Roderic and Tariq as ruler starts with court priorities to review.'
   ] },
