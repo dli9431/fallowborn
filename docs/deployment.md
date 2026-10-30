@@ -266,6 +266,12 @@ index.html declares the ordered local data and engine inputs. js/ui_modals.js st
 
 tools/settlement_import.py fills only the shared base layouts declared in data/settlements.js (867, 1066 and 476). It refuses a date whose settlements are authored in its own data/bookmark_<id>*.js files (711, 800, 1204, 493) rather than filling it from the 867 fallback. tools/i18n_catalog.py reads the 1204 period kingdom names from FBDATA.bookmarkContent['1204'].kingdomNames and the transformation option names of forms declared outside data/political_institutions.js. tools/music_catalog.py validates selector syntax only and needs no date list.
 
+Autumn 634 assets
+
+data/bookmark_634_identities.js loads before the dated regional inputs. After the 568 world and its ordinary starts, index.html loads data/bookmark_634_scaffold_a.js, data/bookmark_634_scaffold_b.js, data/bookmark_634_scaffold_c.js, data/bookmark_634_scaffold_d.js, data/starts_634_ordinary.js and data/bookmark_634.js in that order, before data/bookmark_711_terrain.js. The composer publishes the complete hidden baseline, its layouts, dated identities and Medinan government before engine compilation. The four regional scripts remain independent source declarations; no earlier world is read to construct the date at runtime.
+
+The tracked data-directory shipping rules already include these scripts. The normal itch and hosted distributions retain their ordinary language, music and storage behavior; the explicit CrazyGames package keeps its existing exclusions and flag-gated behavior. No allowlist expansion, external asset or date-specific engine module is required. The hosted offline asset list derives from index.html, so these sources belong to the same complete cached bundle as the other loaded worlds. Asset inclusion does not make the hidden date selectable or establish runtime acceptance.
+
 Spring 1241 assets
 
 The complete 1241 source set uses the existing data-directory shipping boundary. These date-owned classic scripts occur once each in index.html, in this relative order (shared and other date inputs occur between some entries):

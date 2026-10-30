@@ -7,7 +7,7 @@ const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,['index.html','data/bookmark_634_identities.js',
+dependsOnRuntime(__filename,['index.html','data/bookmark_634_identities.js','data/bookmark_634.js','data/starts_634_ordinary.js',
   'data/bookmark_568_identities.js','data/bookmark_476_wider_identities.js',
   'data/cultures.js','data/bookmarks.js','data/eras.js','js/model.js',
   'js/mods.js','js/world.js','js/ui_misc.js','js/ui_modals.js','js/crazygames.js']);
@@ -19,7 +19,7 @@ const SOURCE_FAITHS = ['insular_traditional_476','finnic_traditional_476','woodl
   'caucasian_christian_476','aksumite_christian_476','buddhist_476','brahmanical_476','sahel_traditional_476'];
 
 for (const crazy of [false,true]) {
-  test('634 staging leaves effective catalogues unchanged on ' + (crazy ? 'CrazyGames' : 'standard'),
+  test('634 identity source reload preserves composed catalogues on ' + (crazy ? 'CrazyGames' : 'standard'),
     async function ({page},info) {
       if (crazy) {
         await mockCrazyGames(page);
@@ -37,12 +37,12 @@ for (const crazy of [false,true]) {
       expect(await page.evaluate(function (before) {
         return {ids:Object.keys(FBDATA.bookmarkReligions634),
           sources:Object.keys(FBDATA.bookmarkFaithAvailability634),
-          inactive:Object.keys(FBDATA.bookmarkReligions634).every(function (id) {
-            return !FB.faithExists(id,null);
-          }),unregistered:!FBDATA.bookmarks['634'],
+          published:Object.keys(FBDATA.bookmarkReligions634).every(function (id) {
+            return FB.faithExists(id,null);
+          }),hidden:FBDATA.bookmarks['634'].hidden,
           unchanged:before.data === JSON.stringify(FBDATA) && before.state === JSON.stringify(FB.state) &&
             before.rng === FB.getRngState() && before.uid === FB.getUidCounter()};
-      },before)).toEqual({ids:FAITHS,sources:SOURCE_FAITHS,inactive:true,unregistered:true,unchanged:true});
+      },before)).toEqual({ids:FAITHS,sources:SOURCE_FAITHS,published:true,hidden:true,unchanged:true});
     });
 }
 
@@ -84,6 +84,7 @@ test('same-import date and faiths validate purely and publish through the ordina
     return {errors:FB.validateBookmark(world),faithErrors:FB.validateReligionData(null),
       earlierUnchanged:['religions','bookmarks'].every(function (key) {
         return Object.keys(earlier[key]).every(function (id) {
+          if (key === 'bookmarks' && id === '634') return true;
           return JSON.stringify(earlier[key][id]) === JSON.stringify(FBDATA[key][id]);
         });
       }),
@@ -152,7 +153,7 @@ test('source selector union preserves doctrine, all earlier dates and narrower r
       }); });
       const exact = ids.every(function (id) {
         return JSON.stringify(FBDATA.religions[id].availability.bookmarkIds) ===
-          JSON.stringify(original[id].availability.bookmarkIds.concat(['634']));
+          JSON.stringify(original[id].availability.bookmarkIds.filter(function (date) { return date !== '634'; }).concat(['634']));
       });
       const id = ids[0];
       FBDATA.religions[id].availability = {bookmarkIds:['476','493'],yearMin:476,yearMax:600,

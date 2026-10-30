@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.194.5';
+FB.VERSION = '1.194.6';
 FB.CHANGELOG = [
+  { v: '1.194.6', date: '2026-10-30', changes: [
+    'The complete 634 opening is prepared with ordinary households and remains hidden from new-campaign selection.'
+  ] },
   { v: '1.194.5', date: '2026-10-30', changes: [
     'Eastern and southern regional inputs for the 634 opening are prepared; existing beginnings retain their worlds.'
   ] },
