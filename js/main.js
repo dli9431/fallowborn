@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.9';
+FB.VERSION = '1.189.10';
 FB.CHANGELOG = [
+  { v: '1.189.10', date: '2026-10-30', changes: [
+    'Ready deed alerts pause time when a local council motion can be brought again.'
+  ] },
   { v: '1.189.9', date: '2026-10-30', changes: [
     'Intrigue accomplice offers exclude reigning rulers and require personal hostility to recruit close family for assassination.'
   ] },
