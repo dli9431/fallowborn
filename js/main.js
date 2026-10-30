@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.194.2';
+FB.VERSION = '1.194.3';
 FB.CHANGELOG = [
+  { v: '1.194.3', date: '2026-10-30', changes: [
+    'Italian and British regional inputs for the 634 opening are prepared; existing beginnings retain their worlds.'
+  ] },
   { v: '1.194.2', date: '2026-10-30', changes: [
     'Western regional inputs for the 634 opening are prepared; existing beginnings retain their worlds.'
   ] },
