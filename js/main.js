@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.192.1';
+FB.VERSION = '1.193.0';
 FB.CHANGELOG = [
+  { v: '1.193.0', date: '2026-10-30', changes: [
+    '800 offers Charlemagne and Louis as rulers with personal court priorities to review.'
+  ] },
   { v: '1.192.1', date: '2026-10-30', changes: [
     'Personally held baronies under other counts can be granted, and family land plots earn more.',
     'Childhood life histories record causes, local council alerts pause time, and intrigue recruitment follows current limits.'
