@@ -1355,6 +1355,7 @@ def extract_structured(inv: Inventory) -> None:
                          (DATA / "bookmark_568_identities.js", "bookmarkCultures568"),
                          (DATA / "bookmark_1204_terrain.js", "bookmarkCultures1204Terrain")],
             "religions": [(DATA / "bookmark_1066_inhabited.js", "bookmarkReligions1066Terrain"),
+                          (DATA / "bookmark_634_identities.js", "bookmarkReligions634"),
                           (DATA / "identities_1096.js", "bookmarkReligions1096"),
                           (DATA / "identities_1241.js", "bookmarkReligions1241"),
                           (DATA / "bookmark_711.js", "bookmarkReligions711"),
