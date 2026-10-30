@@ -2761,6 +2761,7 @@ window.FB = window.FB || {};
       ? FB.realmIdForRulerCharacter(state, c) : null;
     const me = state.chars[state.player.charId];
     // Capture family eligibility and portrait before cleanup severs the links.
+    if (typeof opts.deathCause === 'string' && opts.deathCause) c.deathCause = opts.deathCause;
     if (FB.noteLifeDeath) FB.noteLifeDeath(state, c);
     const papalClaimant = FB.isPapalClaimant && FB.isPapalClaimant(state, c);
     FB.socialAttentionWithdraw(state, c.id, true);
