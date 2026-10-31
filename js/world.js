@@ -4551,7 +4551,8 @@ window.FB = window.FB || {};
     return (state && state.dev && state.dev[pid]) || (pr ? pr.dev0 : 0) || 1;
   }
 
-  /* Development unlocks founding capacity at 3, 5, 7, and 9.
+  /* Development unlocks baseline founding capacity at 3, 5, 7, and 9.
+     National settlementSlots research adds to that baseline, within the layout.
      Visibility is separately persisted by the lordship system. */
   function villageBonus(dev) {
     return (dev >= 3) + (dev >= 5) + (dev >= 7) + (dev >= 9);
@@ -4650,11 +4651,17 @@ window.FB = window.FB || {};
     return Math.min(SETTLEMENT_MAX_SLOTS, info.list.length, visible);
   };
 
+  function settlementTechnologySlots(state, pid) {
+    const owner = state && state.owner && state.owner[pid];
+    return owner && FB.techBonus ? Math.max(0, Math.floor(FB.techBonus(state, 'settlementSlots', owner))) : 0;
+  }
+
   FB.settlementCapacity = function (state, pid) {
     const info = FB.world && FB.world.sitesByProv && FB.world.sitesByProv[pid];
     if (!info) return 0;
     return Math.min(SETTLEMENT_MAX_SLOTS, info.list.length,
-      Math.max(info.authored, info.legacyBase + villageBonus(settlementDev(state, pid))));
+      Math.max(info.authored, info.legacyBase + villageBonus(settlementDev(state, pid))) +
+        settlementTechnologySlots(state, pid));
   };
 
   /* Allocation-free seam for the map renderer: whether one compiled site is
@@ -4683,9 +4690,11 @@ window.FB = window.FB || {};
       ? FB.settlementKindRank(info.list[0].kind) : 0;
     const secondBase = info && info.list[1]
       ? FB.settlementKindRank(info.list[1].kind) : 0;
+    const technology = settlementTechnologySlots(state, pid);
     function visibleAt(d) {
       return Math.min(SETTLEMENT_MAX_SLOTS,
-        Math.max(authored, legacyBase + villageBonus(d)), info ? info.list.length : SETTLEMENT_MAX_SLOTS);
+        Math.max(authored, legacyBase + villageBonus(d)) + technology,
+        info ? info.list.length : SETTLEMENT_MAX_SLOTS);
     }
     const candidates = [];
     if (visibleAt(3) > visibleAt(2)) candidates.push({ t: 3, change: 'founding_capacity' });

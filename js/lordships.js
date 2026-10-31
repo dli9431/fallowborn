@@ -205,7 +205,8 @@ window.FB = window.FB || {};
     const c = actor.kind === 'character' ? state.chars[actor.id] : actor.id === 'player'
       ? state.chars[state.player.charId] : FB.realmRulerCharacterSnapshot(state, actor.id);
     const ste = c ? FB.skillOf(c, 'ste') : 0;
-    const bonus = FB.techBonus ? FB.techBonus(state, 'domain', rid) : 0;
+    const bonus = FB.techBonus ? FB.techBonus(state, 'domain', rid) +
+      FB.techBonus(state, 'settlementDomain', rid) : 0;
     const limit = (FBDATA.balance.settlementDomainBase || 2) +
       Math.floor(ste / (FBDATA.balance.domainStewPer || 5)) + bonus;
     const over = Math.max(0, sites.length - limit);
@@ -618,7 +619,7 @@ window.FB = window.FB || {};
     else if (!living(state, p.charId) || p.dead) reason = FB.T('Choose the next household head before founding.');
     else if (!rid || !info || !count) reason = FB.T('A settled county and its current ruler are required.');
     else if (count >= Math.min(8, info.list.length)) reason = FB.T('All settlement sites in this county are already founded.');
-    else if (count >= capacity) reason = FB.T('This county has {established} settlements; current development allows {capacity}. Raise county development to unlock the next site (maximum 8).', { established:count, capacity:capacity });
+    else if (count >= capacity) reason = FB.T('This county has {established} settlements; development and technology allow {capacity}. Raise development or research settlement capacity to unlock another site (maximum 8).', { established:count, capacity:capacity });
     else if (FB.countyOccupiedOrBesieged(state, pid)) reason = FB.T('Wait until the county is free of occupation and siege.');
     else if (p.prestige < cost.prestige) reason = FB.T('You need {prestige} prestige to fund this charter.', { prestige:cost.prestige });
     else if (p.piety < cost.piety) reason = FB.T('You need {piety} piety to fund this charter.', { piety:cost.piety });
@@ -670,7 +671,7 @@ window.FB = window.FB || {};
     else if (!info || !info.list[project.settlement] || info.list[project.settlement].site !== project.site ||
         project.settlement !== FB.settlementVisibleCount(state, pid)) reason = FB.T('The reserved site is unavailable. The funded charter is retained.');
     else if (!FB.settlementCountyHolder(state, pid)) reason = FB.T('Awaiting a recognized county ruler.');
-    else if (project.settlement >= FB.settlementCapacity(state, pid)) reason = FB.T('County development must recover before the site can be established.');
+    else if (project.settlement >= FB.settlementCapacity(state, pid)) reason = FB.T('County development or settlement technology must recover before the site can be established.');
     else if (p.tier < 2) reason = FB.T('Recover Gentry standing to complete this charter.');
     else if (project.rulerFounded && FB.settlementCountyHolder(state, pid) !== 'player') reason = FB.T('Recover direct rule of the charter county to complete construction.');
     else if (!project.rulerFounded && (p.travel || p.provinceId !== pid)) reason = FB.T('Return your household to the charter county to establish its new seat.');

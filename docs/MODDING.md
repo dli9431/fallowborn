@@ -22,7 +22,7 @@ No new event trigger or effect keys or generated settlement data are introduced.
 `FBDATA.balance.settlementFoundingSeasons` defaults to 4 (90 days per season).
 Construction and investiture use the existing Gentry-to-Baron rank cost quote,
 saved when funded; changing balance does not reprice active charters.
-`FB.settlementCapacity(state, pid)` returns the development-unlocked slot limit;
+FB.settlementCapacity(state, pid) returns the development- and technology-unlocked slot limit;
 `FB.settlementVisibleCount` returns established slots. Capacity thresholds retain
 the old 3/5/7/9 schedule, but require explicit charter completion to establish a
 new slot. `settlementDevelopment.change` uses `founding_capacity`, not `new_village`.
@@ -3390,9 +3390,7 @@ deterministic generated fallback**. Two identities exist: the numeric slot (the 
 reference for buildings, land plots, manors, and enterprises) and the physical *site*
 (a globally stable slug with one longitude/latitude, derived world data that never
 enters a save). `FB.settlementsOf` returns the currently visible records as
-`{site, name, kind, x, y, authored}`; the visible count follows the legacy rule
-(2 + a plain hash bit of the province id, never the seeded RNG, +1 at dev 3/5/7/9) raised to
-the curated (non-`fill`) authored count, and generated names still come from
+site, name, kind, x, y and authored fields. Initial visibility follows the legacy rule (2 + a plain hash bit of the province id, never the seeded RNG, +1 at dev 3/5/7/9), raised to the curated authored count. Charter-era saves retain their established sites. Live founding capacity adds settlementSlots technology within the eight-site ceiling; technology never reveals a site automatically. Generated names still come from
 culture-flavored parts in
 `FBDATA.settlementNames` (in `data/cultures.js`; the `settlementNames` mod key merges
 per-culture sets, `default` covers the rest). Size follows current development — the
@@ -3813,6 +3811,8 @@ non-empty `fallback`, and none entries must not name technologies. The core base
 - Optional `cultures` / `notCultures` arrays select mutually exclusive definitions when
   a project begins. Once completed, the selected id remains valid after cultural
   succession. These restrictions remain primarily for old mods.
+Local capacity effects are optional fx.settlementSlots (additional potential founding sites per county), fx.settlementDomain (additional directly governed settlements without more direct counties), and fx.landPlotCapacity (additional family plots per established settlement). Each must be a numeric integer from 0 to 100 inclusive; omitted effects are zero. They sum through FB.techBonus and accept independently configured nonnegative integer techCaps, with shipped caps of 2, 2 and 3 respectively. Settlement sites additionally retain the intrinsic eight-slot compiled-layout ceiling. Capacity follows the physical county's sovereign for founding and plots, and the holder's sovereign for administration. Existing sites and plots remain intact above capacity; settlement overextension retains its ordinary soft penalty. FB.landPlotCapacity(state, provinceId) is the shared plot projection, defaulting to the player's home county. Neither effect creates property, population, money or an installation. JSON imports use the ordinary tech and techCaps roots and exact saved-content fingerprint; capacity adds no save schema. Independent examples are tests/e2e/fixtures/authoring/compact-estate.json and compact-county.json.
+
 - Scalar `fx` keys summed by `FB.techBonus` are `tax`/`levy` (fractional multipliers),
   `battle` (added battle power), `devCap` (development ceiling), `health` (lower ruler
   mortality), `research` (national points each season), `domain` (domain capacity),

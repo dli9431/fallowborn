@@ -10,8 +10,14 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.15';
+FB.VERSION = '1.189.17';
 FB.CHANGELOG = [
+  { v: '1.189.17', date: '2026-10-31', changes: [
+    'Research for larger family estates and more settlement capacity is now available in the main game.'
+  ] },
+  { v: '1.189.16', date: '2026-10-31', changes: [
+    'Agricultural and civic research can expand family plots, settlement founding sites and directly governed settlements.'
+  ] },
   { v: '1.189.15', date: '2026-10-30', changes: [
     'Personally held baronies under other counts can now be granted in the main game.'
   ] },

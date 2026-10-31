@@ -70,7 +70,7 @@ test('every free rank can review plots while broke and buy with the ordinary ter
         p.gold = cost;
         const bought = FB.buyLandPlot(s, 0);
         const paid = p.gold === 0 && FB.landCountAt(s, p.provinceId, 0) === 1;
-        const max = FBDATA.balance.landPlotMaxSettlement || FBDATA.balance.manorPlotRequirement;
+        const max = FB.landPlotCapacity(s);
         p.landPlots = [];
         FB.settlementsOf(s, p.provinceId).forEach(function (site, index) {
           for (let i = 0; i < max; i++) p.landPlots.push({provinceId:p.provinceId,settlement:index});
@@ -220,7 +220,7 @@ test('offers only one-plot purchases without a batch purchase dialog',
         });
         p.provinceId = provinces[0].id;
         const target = FB.settlementsOf(s, p.provinceId).length - 1;
-        const max = FBDATA.balance.landPlotMaxSettlement || FBDATA.balance.manorPlotRequirement;
+        const max = FB.landPlotCapacity(s);
         const count = ending === 'full' ? max - 1 : 0;
         p.landPlots = [];
         for (let i = 0; i < count; i++) {

@@ -1,0 +1,14 @@
+{
+  "name": "Fictional compact estate research",
+  "tech": {
+    "cadastral_surveys": {
+      "name": "Estate Parcel Planning", "icon": "📐", "domain": "governance", "cost": 40,
+      "req": ["land_registers"],
+      "history": {"attested": [500, 1000], "adoption": {"default": [800, 1200]}},
+      "desc": "A fictional estate practice expands private plots and local supervision without more founding sites.",
+      "unlocks": [], "capabilities": [],
+      "fx": {"landPlotCapacity": 2, "settlementDomain": 1}
+    }
+  },
+  "techCaps": {"landPlotCapacity": 2, "settlementDomain": 1, "settlementSlots": 1}
+}

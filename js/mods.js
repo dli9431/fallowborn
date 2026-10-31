@@ -1177,6 +1177,10 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'name') && (typeof mod.name !== 'string' || !mod.name)) {
       fail('name', 'must be a non-empty string.');
     }
+    if (mod.tech || mod.techCaps) {
+      const capacityFaults = FB.validateTechCapacityData(mod.tech, mod.techCaps);
+      if (capacityFaults.length) throw new Error(capacityFaults.join(' '));
+    }
     if (own(mod, 'intrigue') || own(mod, 'plots')) validateIntrigue(mod);
     if (own(mod, 'itemPools')) validateItemPools(mod);
     if (own(mod, 'rulerTraits')) validateRulerTraits(mod);

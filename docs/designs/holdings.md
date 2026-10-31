@@ -1,5 +1,9 @@
 # Holdings (commoner property)
 
+Research and private plot capacity
+
+FB.landPlotCapacity(state, provinceId) derives each settlement's family plot limit from the ordinary balance base (five) plus its county sovereign's landPlotCapacity research bonus, capped nationally at three extra plots. Open-Field Organization supplies one and Three-Field Rotation supplies two. This is a soft family_plot_capacity technology interaction: ordinary land purchases remain available without either technology. Independent rulers can choose these projects and continue buying household plots after taking landed rank. Subordinate households use local sovereign knowledge rather than knowledge from a foreign personal realm. The market's capacity, disabled rows and canonical purchase check share this helper. Land already owned, its consolidation yield and inheritance survive a reduction in capacity; further purchases at that site wait until there is room. No property is granted automatically and manor recognition still needs only its original five-plot cluster.
+
 CrazyGames first-business review
 
 The opening recommendation has a direct Review this business action in its coachmark and live checklist. This opens the enterprise requirements sheet with current price, funds, worker eligibility, staffing warnings and base seasonal income, followed by a separate purchase action. The recommendation does not bypass ordinary purchase eligibility, staffing or technology. A changed price, worker set or warning category requires another review before purchase; successful confirmation still spends the ordinary deed day. This is an existing-action shortcut and has no new technology impact.

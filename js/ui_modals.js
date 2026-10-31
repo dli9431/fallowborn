@@ -3196,7 +3196,7 @@ window.FB = window.FB || {};
     const countyBlocked = !status && q.established >= q.capacity;
     const countyReason = countyBlocked ? (info && q.established >= Math.min(8, info.list.length) ?
       FB.T('All settlement sites in this county are already founded.') :
-      FB.T('This county has {established} settlements; current development allows {capacity}. Raise county development to unlock the next site (maximum 8).', q)) : '';
+      FB.T('This county has {established} settlements; development and technology allow {capacity}. Raise development or research settlement capacity to unlock another site (maximum 8).', q)) : '';
     let h = '<div class="gm-body-text" data-founding-review><div class="asset-owned-row">' +
       kv('County', esc(FB.world.byId[q.provinceId].name)) +
       kv('County ruler', count ? '<button type="button" class="linklike" id="founding-ruler">' + esc(FB.fullName(count)) + '</button>' : esc(FB.T('Awaiting a ruler'))) +
@@ -3208,7 +3208,7 @@ window.FB = window.FB || {};
         FB.T('Over your holding limit: reduced income and troops.') : FB.T('Within your holding limit: no excess-holding penalty.')) + '</p>');
     if (!status) h += charterInfo('founding-capacity-details', kv('County capacity', esc(FB.T('{established}/8', q))),
       '<p>' + esc(FB.T('Charter payments are non-refundable.')) + '</p><p>' +
-      esc(countyBlocked ? countyReason : FB.T('Current development allows {capacity} settlements, out of eight physical sites.', q)) + '</p>');
+      esc(countyBlocked ? countyReason : FB.T('Development and technology allow {capacity} settlements, out of eight physical sites.', q)) + '</p>');
     if (reason && reason !== countyReason) h += '<p class="warnote" data-founding-status>' + esc(reason) + '</p>';
     h += '</div></div><div class="modal-body-actions charter-actions">';
     if (status) h += '<button class="btn" id="founding-cancel-review">' + esc(FB.T('Cancel charter...')) + '</button>';
@@ -3221,7 +3221,7 @@ window.FB = window.FB || {};
           (pid === q.provinceId ? ' selected' : '') + '>' + esc(FB.world.byId[pid].name) + '</option>'; }).join('') + '</select>' + h;
     }
     openModal(FB.T('Settlement charter'), h, { historyView:true, historyBack:true, noFocus:true, replaceView:!!replace,
-      titleDetailsHtml:'<p>' + esc(q.rulerFounded ? FB.T('Your rank and household seat stay unchanged. You control buildings in the new holding.') : FB.T('Your household seat moves to the new settlement; existing private property stays where it is.')) + '</p><p>' + esc(FB.T('County capacity shows founded sites out of eight physical sites. Development determines how many can currently be founded. Your holding limit is separate: exceeding it reduces direct settlement income and troops. New charters charge gold, prestige and any piety when funded; nothing more is charged at completion. Older charters retain their quoted completion costs.')) + '</p><p>' + esc(FB.T('One charter per household and county. Occupation or siege pauses construction. Your heir keeps the charter if you die, and a change of count does not revoke it. Residents relocate within the county; founding creates no population or development. Completion is automatic when time, local capacity and investiture requirements are met.')) + '</p>' });
+      titleDetailsHtml:'<p>' + esc(q.rulerFounded ? FB.T('Your rank and household seat stay unchanged. You control buildings in the new holding.') : FB.T('Your household seat moves to the new settlement; existing private property stays where it is.')) + '</p><p>' + esc(FB.T('County capacity shows founded sites out of eight physical sites. Development and technology determine how many can currently be founded. Your holding limit is separate: exceeding it reduces direct settlement income and troops. New charters charge gold, prestige and any piety when funded; nothing more is charged at completion. Older charters retain their quoted completion costs.')) + '</p><p>' + esc(FB.T('One charter per household and county. Occupation or siege pauses construction. Your heir keeps the charter if you die, and a change of count does not revoke it. Residents relocate within the county; founding creates no population or development. Completion is automatic when time, local capacity and investiture requirements are met.')) + '</p>' });
     if ($('founding-ruler')) $('founding-ruler').onclick = function () {
       if (!s.chars[count.id] && countId !== 'player') FB.materializeRealmRuler(s, countId, { displayOnly:true });
       UI.showCharModal(count.id, { view:'settlement-founding', provinceId:q.provinceId });
@@ -17397,8 +17397,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const p = s.player;
     const cost = FB.landPlotCost(s);
-    const max = FBDATA.balance.landPlotMaxSettlement ||
-      FBDATA.balance.manorPlotRequirement;
+    const max = FB.landPlotCapacity(s, p.provinceId);
     const settlements = FB.settlementsOf(s, p.provinceId);
     const bonus = Math.round(
       (FBDATA.balance.landConsolidationBonus || 0.10) * 100);
@@ -17410,7 +17409,9 @@ window.FB = window.FB || {};
         'Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; each settlement can hold up to {maximum} family plots.',
         { bonus:bonus, maximum:max });
     let h = '<div class="gm-body-text"><p>' + esc(introduction) +
-      '</p></div><div class="gm-list">';
+      '</p><p>' + esc(FB.T('Current capacity: {maximum} family plots per settlement. Field organization and crop rotation research can expand this limit.', {
+        maximum:max
+      })) + '</p></div><div class="gm-list">';
     for (let i = 0; i < settlements.length; i++) {
       const count = FB.landCountAt(s, p.provinceId, i);
       const full = count >= max;
@@ -22926,6 +22927,15 @@ window.FB = window.FB || {};
       amount:researchNumber(fx.research)
     }));
     if (fx.domain) out.push(FB.T('+{amount} county and settlement capacity', { amount:fx.domain }));
+    if (fx.settlementDomain) out.push(FB.T('+{amount} directly governed settlement capacity', {
+      amount:fx.settlementDomain
+    }));
+    if (fx.settlementSlots) out.push(FB.T('+{amount} founding sites per county (maximum 8)', {
+      amount:fx.settlementSlots
+    }));
+    if (fx.landPlotCapacity) out.push(FB.T('+{amount} family plots per settlement', {
+      amount:fx.landPlotCapacity
+    }));
     if (fx.seaTransport) out.push(FB.T(
       'Sea transport capacity: up to {capacity} per crossing cycle.', {
         capacity:menText(FB.state, fx.seaTransport)

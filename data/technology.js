@@ -58,7 +58,8 @@ window.FBDATA = window.FBDATA || {};
      ordinary 867 baseline instead of inflating it. */
   FBDATA.techCaps = {
     tax:0.35, levy:0.35, battle:0.15, devCap:4, health:0.03,
-    research:5, domain:2, siege:0.35, movement:0.25, seaMovement:0.40,
+    research:5, domain:2, settlementDomain:2, settlementSlots:2, landPlotCapacity:3,
+    siege:0.35, movement:0.25, seaMovement:0.40,
     education:0.20, finance:0.30, trade:0.30, supply:0.25,
     populationCapacity:0.35, populationCrisisProtection:0.10, migrationAttraction:3,
     costFloor:{ build:0.55, enterprise:0.55, training:0.65 },
@@ -105,7 +106,9 @@ window.FBDATA = window.FBDATA || {};
       county_recognition:{ mode:'none', rationale:'A vassal can settle disputed county status through superior recognition without research. Investiture resources, diplomacy and cooldowns govern this recovery route.' },
       county_challenges:{ mode:'none', rationale:'County investiture, inherited claims, authorized challenges, rebellion, usurpation and recognition are ordinary political rights. Land, superior consent, military victory and disclosed political costs govern them without a research prerequisite.' },
       settlement_founding:{ mode:'none', rationale:'A funded Gentry household may charter an unused home-county site, and county rulers may found direct settlements in directly ruled counties, without research. Time, existing development capacity, conserved local population and investiture resources govern establishment; administrative technologies retain their separate soft capacity role.' },
-      settlement_administration:{ mode:'soft', tech:['professional_bailiffs','royal_chancery'], rationale:'Baseline direct settlement government is available without research. Existing domain-capacity innovations expand both county and settlement capacity; excess holdings retain ownership with separate revenue and levy penalties.' },
+      settlement_administration:{ mode:'soft', tech:['professional_bailiffs','royal_chancery','cadastral_surveys','urban_communes'], rationale:'Baseline direct settlement government is available without research. Domain innovations expand county and settlement capacity; cadastral surveys and urban organization add settlement-only capacity. Excess holdings retain ownership with separate revenue and levy penalties.' },
+      settlement_site_capacity:{ mode:'soft', tech:['cadastral_surveys','urban_communes'], rationale:'Ordinary development-based founding remains available. Surveying and organized urban expansion increase potential sites within the compiled eight-site county layout, without establishing settlements or creating population. Funding, time, authority and local residents remain required; existing settlements survive loss of knowledge.' },
+      family_plot_capacity:{ mode:'soft', tech:['open_field_system','three_field'], rationale:'Ordinary freehold purchase remains available up to the base settlement limit. Field organization and crop rotation support additional paid family plots in each established settlement. Existing property, yield, consolidation and inheritance survive a lower capacity.' },
       settlement_lordship:{ mode:'none', rationale:'Hereditary settlement ownership, concrete petitions and voluntary grants of personally held baronies under another count (including to free adult kin of Freeholder rank outside the household), military land rewards, explicit revocation and restoration, succession, and identification of the county ruler are baseline political relationships. AI delegation and development use these same rights and existing building gates. Administrative capacity has its separate soft review.' },
       ruler_arrest:{ mode:'none', rationale:'Local arrest is baseline territorial authority; jurisdiction and physical capture, not research, limit it.' },
       judicial_custody:{ mode:'none', rationale:'Holding and inheriting prisoners is baseline ruler authority with existing escape and release paths.' },
@@ -811,13 +814,13 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['slavic','latin','nordic'], unlocks:['practice:heavy_tillage'], fx:{ tax:0.025, populationCapacity:0.02 } });
   add('open_field_system','Open-Field Organization','🧺','agriculture',[650,1000],[800,1080],['crop_rotation','heavy_plough'],
     'Scattered strips and common decisions coordinate ploughing and pasture.',
-    { leaders:['latin','slavic'], unlocks:['practice:open_fields'], fx:{ tax:0.015, populationCapacity:0.02 } });
+    { leaders:['latin','slavic'], unlocks:['practice:open_fields'], fx:{ tax:0.015, populationCapacity:0.02, landPlotCapacity:1 } });
   add('horse_collar','Horse Collar','🐴','agriculture',[600,1000],[800,1080],['ox_yokes'],
     'A rigid collar lets a horse pull hard without pressure on its throat.',
     { leaders:['steppe','byzantine','latin'], unlocks:['rule:horse_draft'], fx:{ movement:0.02 } });
   add('three_field','Three-Field Rotation','🌱','agriculture',[750,1100],[900,1180],['crop_rotation','open_field_system'],
     'Winter crop, spring crop, and fallow distribute labor and risk.',
-    { leaders:['latin','byzantine'], unlocks:['practice:three_field'], fx:{ tax:0.025, devCap:1, populationCapacity:0.03 } });
+    { leaders:['latin','byzantine'], unlocks:['practice:three_field'], fx:{ tax:0.025, devCap:1, populationCapacity:0.03, landPlotCapacity:2 } });
   add('water_meadows','Managed Water Meadows','💧','agriculture',[900,1200],[1010,1240],['irrigation_channels','haymaking'],
     'Controlled winter flooding brings early grass and heavier hay.',
     { leaders:['latin','byzantine'], unlocks:['practice:water_meadows'], fx:{ tax:0.015, populationCapacity:0.02 } });
@@ -1158,13 +1161,13 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['latin','byzantine'], unlocks:['rule:canon_law'], fx:{ research:0.15 } });
   add('urban_communes','Urban Communes','🏙','governance',[1000,1250],[1120,1280],['guild_charters','urban_markets'],
     'Sworn towns negotiate collective jurisdiction and public responsibilities.',
-    { leaders:['latin','byzantine'], unlocks:['rule:urban_communes'], fx:{ tax:0.01 } });
+    { leaders:['latin','byzantine'], unlocks:['rule:urban_communes'], fx:{ tax:0.01, settlementSlots:1, settlementDomain:1 } });
   add('scutage','Scutage','💰','governance',[1100,1250],[1180,1300],['feudal_oaths','exchequer_accounts'],
     'Cash payments commute some personal military service into royal revenue.',
     { leaders:['latin'], unlocks:['rule:scutage'], fx:{ tax:0.01 } });
   add('cadastral_surveys','Cadastral Surveys','📐','governance',[1000,1300],[1150,1320],['land_registers','geometry'],
     'Systematic description of parcels and values supports taxation and judgment.',
-    { leaders:['byzantine','latin','islamic'], unlocks:['rule:cadastral_surveys'], fx:{ tax:0.015 } });
+    { leaders:['byzantine','latin','islamic'], unlocks:['rule:cadastral_surveys'], fx:{ tax:0.015, settlementSlots:1, settlementDomain:1 } });
   add('professional_bailiffs','Professional Bailiffs','🗝','governance',[1050,1300],[1170,1320],['manorial_courts','exchequer_accounts'],
     'Paid estate officers turn accounts, collection, and supervision into a career.',
     { leaders:['latin','islamic'], unlocks:['rule:professional_bailiffs'], fx:{ domain:1 } });

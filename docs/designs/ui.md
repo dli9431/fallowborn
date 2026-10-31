@@ -199,6 +199,8 @@ All new controls use shared cards/buttons, localization and keyboard/mobile flow
 
 ## Settlement charters
 
+Capacity research uses the existing technology catalogue and detail sheet. Each effect names its scope and quantity: founding sites per county with the physical maximum of eight, directly governed settlements, or family plots per settlement. These labels also feed catalogue search. Charter capacity blockers identify development and research as the two expansion routes; fully founded layouts retain the physical-limit message. The land market shows the live local-sovereign plot limit and applies it to both row counts and purchase availability. Existing full-width actions, disclosures, scroll, focus and modal navigation remain shared.
+
 Both settlement grant lists use the shared title hover/focus tooltip and compact
 Details disclosure to explain that the direct-settlement total includes county
 seats, which transfer only with their county and are omitted from these lists.
