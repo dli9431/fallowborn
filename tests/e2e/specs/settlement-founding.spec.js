@@ -388,8 +388,8 @@ test('development blocker distinguishes unlocked capacity from eight physical si
   });
   expect(result.capacity).toBeLessThan(8);
   expect(result.ready).toBe(false);
-  expect(result.reason).toContain('current development allows ' + result.capacity);
-  expect(result.reason).toContain('Raise county development');
+  expect(result.reason).toContain('development and technology allow ' + result.capacity);
+  expect(result.reason).toContain('Raise development or research');
 });
 
 test('full county charter shows eight-site capacity and explains that every site is founded', async function ({ page }) {

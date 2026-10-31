@@ -12,6 +12,7 @@ window.FB = window.FB || {};
   };
   var SCALAR_KEYS = {
     tax:1, levy:1, battle:1, devCap:1, health:1, research:1, domain:1,
+    settlementDomain:1, settlementSlots:1, landPlotCapacity:1,
     siege:1, movement:1, seaMovement:1, education:1, finance:1, trade:1,
     populationCapacity:1, populationCrisisProtection:1, migrationAttraction:1,
     supply:1
@@ -1520,8 +1521,31 @@ window.FB = window.FB || {};
     }
   }
 
+  /* Capacity authoring is checked before a JSON mod publishes any data as
+     well as during ordinary catalogue validation. This read is detached. */
+  FB.validateTechCapacityData = function (tech, caps) {
+    var errors = [], keys = ['settlementDomain','settlementSlots','landPlotCapacity'];
+    tech = tech || {}; caps = caps || {};
+    for (var key of keys) {
+      var cap = caps[key];
+      if (cap !== undefined && (typeof cap !== 'number' || !isFinite(cap) ||
+          cap < 0 || Math.floor(cap) !== cap)) {
+        errors.push('Technology cap ' + key + ' must be a non-negative integer.');
+      }
+      for (var id in tech) if (own(tech, id)) {
+        var fx = tech[id] && tech[id].fx, value = fx && fx[key];
+        if (fx && value !== undefined && (typeof value !== 'number' || !isFinite(value) ||
+            value < 0 || value > 100 || Math.floor(value) !== value)) {
+          errors.push('Technology ' + id + ': ' + key + ' must be an integer from 0 to 100.');
+        }
+      }
+    }
+    return errors;
+  };
+
   FB.validateTechnologyData = function () {
     var errors = [], domains = FBDATA.techDomains || {};
+    errors = errors.concat(FB.validateTechCapacityData(FBDATA.tech, FBDATA.techCaps));
     var traditions = FBDATA.techTraditions || {};
     for (var domain in domains) {
       if (!own(domains, domain)) continue;

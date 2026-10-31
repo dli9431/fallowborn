@@ -144,7 +144,7 @@ test('capacity applies softly, technology expands it, and delegation does not du
   expect(r.improved).toBeGreaterThanOrEqual(r.income);
   expect(r.researchAfter).toBe(r.researchBefore);
   expect(r.review.mode).toBe('soft');
-  expect(r.review.tech).toEqual(['professional_bailiffs', 'royal_chancery']);
+  expect(r.review.tech).toEqual(['professional_bailiffs', 'royal_chancery', 'cadastral_surveys', 'urban_communes']);
 });
 
 test('baron purses settle once, reserve obligations, and pay actual construction costs', async function ({ page }) {

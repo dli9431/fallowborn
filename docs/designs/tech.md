@@ -1,5 +1,13 @@
 # National technology
 
+Research for compact realms
+
+Four existing technologies now expand local capacity without changing their ids, prerequisites, costs or historical windows. Open-Field Organization adds one family plot per settlement and Three-Field Rotation adds two, raising the ordinary limit from five to eight when both are known. Cadastral Surveys and Urban Communes each add one potential founding site per county and one directly governed settlement. The eight compiled sites per county remain the physical ceiling, so saturated counties receive only the administrative benefit. Surveying and coordinated urban expansion represent more effective use of a county's existing area, not new territory or automatic settlement creation.
+
+The settlement_site_capacity and family_plot_capacity reviews are soft: baseline development-based founding and ordinary freehold purchases remain available. The existing settlement_administration soft review now includes the two settlement-only improvements alongside Professional Bailiffs and Royal Chancery. Settlement-only capacity does not raise the direct-county limit. National caps are settlementSlots 2, settlementDomain 2 and landPlotCapacity 3, independent of the existing domain cap of 2. Independent rulers choose projects through ordinary national research; subordinate holders and household land use their local sovereign's knowledge. Player founding and player/AI delegation use the shared capacity projections.
+
+Technology supplies capacity only. Existing founding payments, construction time, authority, conserved residents, plot prices, consolidation yields and inheritance still apply. Completed knowledge in existing saves gains the effects immediately without reseeding or creating property. Conquest or lost access never deletes established sites or plots, though an unfinished charter can wait for capacity to recover. Capacity is derived and adds no saved field. Ordinary JSON tech definitions and techCaps may configure each effect separately; independent compact-estate and compact-county fixtures demonstrate distinct imported terms. The shared detail renderer makes all three effects searchable in the catalogue and shows their exact amounts.
+
 Household estate, commercial, military and learned service each have a **none**
 impact review. Useful personal work and promotion depend on experience, skills,
 Standing and (for senior literate offices) Lettered. These social appointments
@@ -17,7 +25,7 @@ existing **none** settlement_lordship review. No research blocks recovery.
 ## Settlement founding (Phase 5)
 
 `settlement_founding` is reviewed as **none**. Ordinary Gentry chartering has no
-research prerequisite; it requires an unused development-unlocked slot, construction
+research prerequisite; it requires an unused development- or technology-unlocked slot, construction
 funding, time and investiture resources. Soft settlement-administration capacity
 and individual building gates continue to govern the resulting holding.
 
@@ -32,9 +40,7 @@ there is no new research prerequisite for granting land or routine development.
 ## Settlement administration (Phase 3)
 
 `settlement_administration` has a **soft** impact review. Direct settlement capacity
-is two plus one per five Stewardship plus existing national `domain` technology
-bonuses. Professional Bailiffs and Royal Chancery expand both direct-county and
-direct-settlement capacity, disclosed together in technology effects. Player and
+is two plus one per five Stewardship plus national domain and settlementDomain technology bonuses. Professional Bailiffs and Royal Chancery expand both direct-county and direct-settlement capacity; Cadastral Surveys and Urban Communes expand direct-settlement capacity only. These effects are disclosed in technology details. Player and
 AI holders retain all holdings above capacity; each excess settlement multiplies
 personal territorial income and troops by 0.85. County capacity penalties are
 separate; incoming vassal contributions are exempt from both. There is no hard

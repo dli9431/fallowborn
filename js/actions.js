@@ -9175,12 +9175,19 @@ window.FB = window.FB || {};
     return count;
   };
 
+  FB.landPlotCapacity = function (state, provinceId) {
+    const pid = provinceId || state.player.provinceId;
+    const owner = state.owner && state.owner[pid];
+    const bonus = owner && FB.techBonus ? FB.techBonus(state, 'landPlotCapacity', owner) : 0;
+    return (FBDATA.balance.landPlotMaxSettlement || FBDATA.balance.manorPlotRequirement || 5) +
+      Math.max(0, Math.floor(bonus));
+  };
+
   FB.landAvailable = function (state) {
     const p = state.player;
     if (!canBuyFreeholdLand(state)) return [];
     const out = [];
-    const max = FBDATA.balance.landPlotMaxSettlement ||
-      FBDATA.balance.manorPlotRequirement || 5;
+    const max = FB.landPlotCapacity(state, p.provinceId);
     const settlements = FB.settlementsOf(state, p.provinceId);
     for (let i = 0; i < settlements.length; i++) {
       const count = FB.landCountAt(state, p.provinceId, i);

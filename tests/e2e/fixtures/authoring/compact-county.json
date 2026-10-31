@@ -1,0 +1,14 @@
+{
+  "name": "Fictional compact county research",
+  "tech": {
+    "cadastral_surveys": {
+      "name": "County Site Planning", "icon": "📐", "domain": "governance", "cost": 75,
+      "req": ["land_registers", "geometry"],
+      "history": {"attested": [700, 1100], "adoption": {"default": [950, 1250]}},
+      "desc": "A fictional county practice prioritizes founding sites and direct settlement government.",
+      "unlocks": [], "capabilities": [],
+      "fx": {"landPlotCapacity": 1, "settlementSlots": 2, "settlementDomain": 3}
+    }
+  },
+  "techCaps": {"landPlotCapacity": 1, "settlementDomain": 4, "settlementSlots": 2}
+}
