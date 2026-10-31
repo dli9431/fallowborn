@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.194.6';
+FB.VERSION = '1.194.7';
 FB.CHANGELOG = [
+  { v: '1.194.7', date: '2026-10-31', changes: [
+    'Fix bookmark loading when the hidden 634 opening includes a nonterritorial court.'
+  ] },
   { v: '1.194.6', date: '2026-10-30', changes: [
     'The complete 634 opening is prepared with ordinary households and remains hidden from new-campaign selection.'
   ] },

@@ -61,7 +61,7 @@
   });
   world.realms.forEach(function (r) {
     var capital = counties[r.capital];
-    if (!capital || capital.wasteland || capital.realm !== r.id)
+    if (!capital || capital.wasteland || (capital.realm !== r.id && !r.nonTerritorial))
       throw new Error('Invalid 634 capital: ' + r.id);
     if (r.liege && !own(courts, r.liege)) throw new Error('Unresolved 634 liege: ' + r.liege);
   });

@@ -35,6 +35,8 @@ const source = fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_63
 for (const crazy of [false,true]) {
   test('634 composes the complete hidden opening on ' + (crazy ? 'CrazyGames' : 'standard'),
     async function ({page},info) {
+      const pageErrors = [];
+      page.on('pageerror',function (error) { pageErrors.push(error.message); });
       if (crazy) {
         await mockCrazyGames(page);
         await page.addInitScript(function () {
@@ -68,11 +70,16 @@ for (const crazy of [false,true]) {
         });
         b.realms.forEach(function (r) {
           const capital = counties[r.capital];
-          if (!capital || capital.wasteland || capital.realm !== r.id || r.liege && !courts[r.liege])
+          if (!capital || capital.wasteland || (capital.realm !== r.id && !r.nonTerritorial) || r.liege && !courts[r.liege])
             faults.push('unresolved capital/liege ' + r.id);
           if (!FBDATA.governmentForms[r.government]) faults.push('unpublished government ' + r.id);
         });
         const validated = FB.validateBookmark(b);
+        const nonTerritorial = b.realms.filter(function (r) { return r.nonTerritorial; })
+          .map(function (r) { return [r.id,r.capital,counties[r.capital].realm]; });
+        const otherBookmarks = ['476','867','1066'].map(function (id) {
+          return {id:id,faults:FB.validateBookmark(FB.bookmark(id))};
+        });
         return {metadata:[b.id,b.name,b.date,b.era,b.geography,b.settlementLayout,b.revision,b.openingRevision],
           hidden:b.hidden,available:FB.bookmarkAvailable('634'),listed:FB.bookmarks().some(function (v) { return v.id === '634'; }),
           count:b.provinces.length,inhabited:b.provinces.filter(function (p) { return !p.wasteland; }).length,
@@ -83,7 +90,7 @@ for (const crazy of [false,true]) {
           layouts:Object.keys(layout).length,crossings:b.straits.length,
           disabled:b.systems.disable,empty:[b.localInstitutions,b.religiousHeads,b.stories,b.scripted,b.opening],
           forms:FB.governments.problems('medinan_selection_pf_634'),faiths:FB.validateReligionData(null),
-          faults:faults,validated:validated,
+          faults:faults,validated:validated,nonTerritorial:nonTerritorial,otherBookmarks:otherBookmarks,
           pure:data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
       },{order:order});
       expect(result).toEqual({metadata:['634','The Early Conquests',{year:634,season:2,day:1},'late_antique',
@@ -92,7 +99,10 @@ for (const crazy of [false,true]) {
         named:['Dagobert I','Heraclius','Oswald','Sigebert III','Umar','Yazdegerd III'],
         climates:['northern_temperate','arid'],layouts:506,crossings:22,disabled:disabled,
         empty:[{},{},[],[],{actors:{},appointments:{},estates:[],claims:[],migrations:[]}],
-        forms:[],faiths:[],faults:[],validated:[],pure:true});
+        forms:[],faiths:[],faults:[],validated:[],
+        nonTerritorial:[['aures_634','constantine','byzantium_634']],
+        otherBookmarks:[{id:'476',faults:[]},{id:'867',faults:[]},{id:'1066',faults:[]}],pure:true});
+      expect(pageErrors).toEqual([]);
     });
 }
 
@@ -129,7 +139,8 @@ test('634 missing, duplicate and unresolved regional inputs reject without publi
   const problems = await page.evaluate(function (code) {
     const original = FBDATA.bookmarkRegions634, copy = function (v) { return JSON.parse(JSON.stringify(v)); };
     const rng = FB.getRngState(), uid = FB.getUidCounter(), data = JSON.stringify(FBDATA), failures = [];
-    ['missing','missing_county','duplicate_county','duplicate_court','unknown_court','unknown_liege','wrong_capital'].forEach(function (kind) {
+    ['missing','missing_county','duplicate_county','duplicate_court','unknown_court','unknown_liege','wrong_capital',
+      'territorial_foreign_capital','nonterritorial_missing_capital','nonterritorial_scenery_capital'].forEach(function (kind) {
       FBDATA.bookmarkRegions634 = copy(original);
       const regions = FBDATA.bookmarkRegions634;
       if (kind === 'missing') { delete regions.b29; regions.e2e_extra = {}; }
@@ -139,6 +150,10 @@ test('634 missing, duplicate and unresolved regional inputs reject without publi
       if (kind === 'unknown_court') regions.b01.provinces[0].realm = 'e2e_absent';
       if (kind === 'unknown_liege') regions.b01.realms[0].liege = 'e2e_absent';
       if (kind === 'wrong_capital') regions.b01.realms[0].capital = 'medina';
+      const aures = regions.b22.realms.filter(function (r) { return r.id === 'aures_634'; })[0];
+      if (kind === 'territorial_foreign_capital') aures.nonTerritorial = false;
+      if (kind === 'nonterritorial_missing_capital') aures.capital = 'e2e_absent';
+      if (kind === 'nonterritorial_scenery_capital') aures.capital = 'w_sahara_w';
       let rejected = false;
       try { (0,eval)(code); } catch (error) { rejected = /634/.test(error.message); }
       FBDATA.bookmarkRegions634 = original;
@@ -146,7 +161,7 @@ test('634 missing, duplicate and unresolved regional inputs reject without publi
     });
     return failures;
   },source);
-  expect(problems).toEqual(Array(7).fill(true));
+  expect(problems).toEqual(Array(10).fill(true));
 });
 
 test('634 complete candidate validation rejects bad sites, faiths and capitals without changing state',async function ({page},info) {
