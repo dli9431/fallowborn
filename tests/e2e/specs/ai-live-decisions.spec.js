@@ -3,10 +3,13 @@ const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,[
   'data/ai_decisions.js','data/traits.js','data/map_data.js','js/ai_decisions.js',
-  'js/government_ai.js','js/governments.js','js/wars.js','js/world.js','js/mods.js','js/balance.js','js/armies.js',
+  'js/government_ai.js','js/governments.js','js/authority.js','data/political_institutions.js','js/wars.js','js/world.js','js/mods.js','js/balance.js','js/armies.js',
   'js/fortifications.js','js/building_profiles.js','js/lordships.js','js/treasury.js','js/building_seasons.js','js/building_operations.js',
   'js/technology.js','data/technology.js',
   'js/agency.js','js/intrigue.js','js/politics.js','data/intrigue.js','data/ambitions.js',
+  'js/holywar.js','js/papacy.js','js/religion.js','js/mobile_confederations.js','js/federates.js',
+  'js/government_selection.js','js/government_administration.js','js/government_aristocracy.js',
+  'js/government_civic.js','js/government_ecclesiastical.js',
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
 const { test,expect } = require('../support/fixture');
@@ -69,8 +72,9 @@ for (const margin of [0.5,4]) {
     await importPolicy(page,mod);
     await startDeterministicGame(page);
     const out = await page.evaluate(function () {
-      const s = FB.state, ids = Object.keys(s.realms).filter(function (id) { return id !== 'player' && s.realms[id].alive; });
-      const pid = s.player.provinceId, a = {id:'policy_a',realm:ids[0],at:pid,men:1000,units:{levy:1000},supply:100};
+      const s = FB.state, ids = Object.keys(s.realms).filter(function (id) { return id !== 'player' && s.realms[id].alive && s.realms[id].ruler; });
+      s.realms[ids[0]].ruler.mar = 5; s.realms[ids[1]].ruler.mar = 5;
+      const pid = s.player.provinceId, a = {id:'policy_a',realm:ids[0],at:pid,men:2000,units:{levy:2000},supply:100};
       const b = {id:'policy_b',realm:ids[1],at:pid,men:1000,units:{levy:1000},supply:100};
       const prior = s.armies, hostile = FB.armiesHostile;
       s.armies = [a,b];
@@ -161,3 +165,107 @@ for (const rate of [0,1]) {
     expect(out.calls.every(function (value) { return value === rate; })).toBe(true);
   });
 }
+
+for (const minimum of [0.5,10]) {
+  test('imported religious target margin ' + minimum + ' controls the actual yearly caller',async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    const mod = await page.evaluate(function (minimum) {
+      const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_religion));
+      d.parameters.minimumTargetRatio = minimum;
+      return {name:'Religious target '+minimum,aiDecisionPolicies:{religious_review:d},balance:{aiReligionPolicy:'religious_review'}};
+    },minimum);
+    await importPolicy(page,mod);
+    await startDeterministicGame(page);
+    const picked = await page.evaluate(function () {
+      const s = FB.state, saved = {}, realms = s.realms;
+      function stub(name,fn) { saved[name] = FB[name]; FB[name] = fn; }
+      FB.ensureGreatHolyWar(s); s.greatHolyWar = null;
+      s.date = {year:1200,season:0,day:1}; s.turn = 120000;
+      s.greatHolyWarHistory.firstLaunched.catholic = true;
+      s.greatHolyWarHistory.cooldownUntil = {};
+      s.realms = {papacy:{alive:true},ally:{alive:true},enemy:{alive:true}};
+      s.owner.policy_target = 'enemy';
+      let picked = null;
+      stub('ensureReligiousHeads',function () {});
+      stub('religionIds',function () { return ['catholic']; });
+      stub('religiousHeadOf',function () { return {id:'papacy'}; });
+      stub('playerPope',function () { return false; });
+      stub('realmReligionId',function (state,id) { return id === 'enemy' ? 'sunni' : 'catholic'; });
+      stub('realmRulerCharacter',function () { return null; });
+      stub('topRealm',function (state,id) { return id; });
+      stub('aiBaseHost',function () { return 1000; });
+      stub('rearmScale',function () { return 1; });
+      stub('chance',function () { return true; });
+      stub('greatHolyWarTargets',function () { return [{kingdomId:'policy_objective',holyPriority:1,
+        objectiveDevelopment:10,totalDevelopment:10,objectiveCounties:['policy_target']}]; });
+      stub('callGreatHolyWar',function (state,religion,target) { picked = target; });
+      try { FB.greatHolyWarYearly(s); return picked; }
+      finally { Object.keys(saved).forEach(function (name) { FB[name] = saved[name]; }); s.realms = realms; }
+    });
+    expect(picked).toBe(minimum === 0.5 ? 'policy_objective' : null);
+  });
+}
+
+for (const willingness of [0,1]) {
+  test('imported government agreement willingness ' + willingness + ' retains the canonical consent writer',async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    const mod = await page.evaluate(function (value) {
+      const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_government));
+      d.parameters.agreementWillingness = value;
+      return {name:'Government agreements '+value,aiDecisionPolicies:{government_review:d},balance:{aiGovernmentPolicy:'government_review'}};
+    },willingness);
+    await importPolicy(page,mod);
+    await startDeterministicGame(page);
+    const out = await page.evaluate(function () {
+      const s = FB.state, rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && id !== FB.playerRealmId(s) && s.realms[id].alive && !s.realms[id].liege; });
+      const writer = FB.authorityConsentContract, before = JSON.stringify(s), rng = FB.getRngState();
+      let calls = 0;
+      FB.authorityConsentContract = function () { calls++; return writer.apply(FB,arguments); };
+      let result;
+      try { result = FB.governments.strategy('ai','federate_contracts').consentContract(s,rid,
+        {contract:{id:'missing_policy_contract',patronRealmId:rid,payPerSeason:0,initialPay:0}}); }
+      finally { FB.authorityConsentContract = writer; }
+      const invalid = {calls:calls,refused:!result,pure:before === JSON.stringify(s)};
+      const ids = Object.keys(s.realms).filter(function (id) { return id !== 'player' && s.realms[id].alive && !s.realms[id].liege; });
+      const patron = ids[0], federate = ids[1], at = s.realms[patron].capital;
+      s.treasuryAccounting = {mode:'active'};
+      [patron,federate].forEach(function (id) { s.realms[id].treasury = {version:1,gold:100,militaryAccrued:0,retired:false}; });
+      s.armies.push({id:'policy_service',realm:federate,at:at,men:80,units:{levy:80},supply:100,path:[]});
+      const offered = FB.authorityOfferContractTemplate(s,'paid_service',
+        {patronRealmId:patron,federateRealmId:federate,hostId:'policy_service'});
+      const strategy = FB.governments.strategy('ai','federate_contracts');
+      [patron,federate].forEach(function (id) { strategy.consentContract(s,id,{contract:offered}); });
+      const row = FB.political.contract(s,offered.id);
+      return {invalid:invalid,status:row.status,approvals:Object.keys(row.approvals).length,rng:rng === FB.getRngState(),
+        noEarlyPayment:s.realms[patron].treasury.gold === 100 && s.realms[federate].treasury.gold === 100,
+        civic:FB.governments.strategy('ai','civic_decisions').goals(s,rid,{})};
+    });
+    expect(out).toEqual({invalid:{calls:willingness,refused:true,pure:true},status:willingness ? 'active' : 'offered',
+      approvals:willingness*2,rng:true,noEarlyPayment:true,civic:{warChance:0,allianceChance:0}});
+  });
+}
+
+test('live family extensions reject malformed imports atomically',async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  const out = await page.evaluate(function () {
+    const before = JSON.stringify(FBDATA), state = JSON.stringify(FB.state), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const cases = [
+      ['investment',function (d) { d.buildingRoleWeights = {missing_role:1}; }],
+      ['research',function (d) { d.domainWeights = {missing_domain:1}; }],
+      ['research',function (d) { d.domainWeights = {}; d.domainWeights[Object.keys(FBDATA.techDomains)[0]] = 5; }],
+      ['intrigue',function (d) { d.schemeOrder = ['missing_scheme']; }],
+      ['diplomacy',function (d) { d.aimOrder = ['missing_aim']; }],
+      ['religion',function (d) { d.parameters.electionPietyDivisor = 0; }],
+      ['government',function (d) { d.parameters.agreementWillingness = -1; }],
+      ['government',function (d) { d.parameters.mobileTradeCount = 1.5; }]
+    ];
+    const rejected = cases.map(function (entry) {
+      const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies['ordinary_'+entry[0]])); entry[1](d);
+      try { FB.mods.apply({aiDecisionPolicies:{invalid_live_policy:d}}); return false; }
+      catch (error) { return true; }
+    });
+    return {rejected:rejected,data:before === JSON.stringify(FBDATA),state:state === JSON.stringify(FB.state),
+      rng:rng === FB.getRngState(),uid:uid === FB.getUidCounter()};
+  });
+  expect(out).toEqual({rejected:Array(8).fill(true),data:true,state:true,rng:true,uid:true});
+});

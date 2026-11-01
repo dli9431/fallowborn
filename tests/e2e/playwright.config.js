@@ -2,6 +2,7 @@ const { defineConfig } = require('@playwright/test');
 
 const servedOrigin = 'http://127.0.0.1:4173';
 const fileProjectTests = [
+  '**/ai-live-decisions.spec.js',
   '**/ai-decision-policies.spec.js',
   '**/1204-history.spec.js',
   '**/boot.spec.js',

@@ -267,10 +267,11 @@ window.FB = window.FB || {};
     });
     const targetShare = total ? next / total : 0;
     const spouse = c && FB.spousesSnapshot(s, c).some(function (person) { return FB.faithInFold(s, person.religion, target); });
-    const score = Math.round(40 * (targetShare - (total ? old / total : 0))) +
-      (q.bishops.length ? 8 : 0) + (spouse ? 12 : 0) - FB.traitMechanic(c, 'conversionResistance', true);
-    return { allowed:q.ok && q.relation !== 'in_fold' && (targetShare >= balance('rulerConversionAIMinShare', 0.35) || spouse) &&
-      score >= balance('rulerConversionAIThreshold', 24), score:score, targetShare:targetShare, quote:q };
+    const policy = FB.aiDecisions.parameters(s,rid,'religion');
+    const score = Math.round(policy.conversionShareWeight*(targetShare-(total ? old/total : 0)))+
+      (q.bishops.length ? policy.conversionBishopWeight : 0)+(spouse ? policy.conversionSpouseWeight : 0)-FB.traitMechanic(c,'conversionResistance',true);
+    return { allowed:q.ok && q.relation !== 'in_fold' && (targetShare >= FB.balanceFor(s,rid,'rulerConversionAIMinShare') || spouse) &&
+      score >= FB.balanceFor(s,rid,'rulerConversionAIThreshold'), score:score, targetShare:targetShare, quote:q };
   };
   FB.religionYear = function (s) {
     if (!FB.systemAvailable(s, 'ruler_conversion')) return;
@@ -286,8 +287,14 @@ window.FB = window.FB || {};
       }).filter(function (q) { return q.allowed; }).sort(function (a, b) {
         return b.score - a.score || (a.quote.targetId < b.quote.targetId ? -1 : 1);
       });
-      if (options.length && FB.rng() < balance('rulerConversionAIChance', 0.06)) {
-        const best = options[0].quote;
+      if (options.length && FB.rng() < FB.balanceFor(s,rid,'rulerConversionAIChance')) {
+        const selected = FB.aiDecisions.resolve(s,rid,'religion').definition.mode === 'first' ? options[0].quote.targetId :
+          FB.aiDecisions.choose(s,rid,'religion',options.map(function (q) {
+            return {id:q.quote.targetId,eligible:true,facts:{score:q.score,strengthRatio:0,
+              importance:q.targetShare,distance:0,zeal:0}};
+          }));
+        if (!selected) return;
+        const best = options.filter(function (q) { return q.quote.targetId === selected; })[0].quote;
         FB.applyRulerFaithConversion(s, rid, best.targetId, best);
         passMemo = fresh();
       }

@@ -369,3 +369,4 @@ A successful realm-wide faith conversion updates an existing declared eliteFaith
 
 
 rulerFaithTargets is a validated whole-list JSON root shared by ruler conversion, annual conversion AI and the church-council menu. It resolves newly imported faith ids in the candidate catalogue and retains all existing authority, cost and eligibility checks.
+AI ruler profession scoring now reads typed religious preference weights while its chance, minimum resident share and threshold reuse the existing realm-scoped balance keys. Canonical confession, doctrine, office, authority, cost and reviewed conversion transactions remain the owners of eligibility and mutation. Default score arithmetic and prospective choice order are retained. No new conversion route or technology gate is introduced.

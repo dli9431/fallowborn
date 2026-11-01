@@ -1233,7 +1233,7 @@ window.FB = window.FB || {};
           if (!Object.prototype.hasOwnProperty.call(facts,metric)) facts[metric] = metric === def.domain ? 1 : 0;
         });
         return {id:row.item.id,eligible:true,facts:facts};
-      }),FB.aiDecisions.inputs(state,rid));
+      }),policy.definition.adjustments.length ? FB.aiDecisions.inputs(state,rid) : undefined);
       var ranked = report.ranking.filter(function (row) { return report.mode !== 'weighted' || row.weight > 0; });
       var selected = report.mode === 'weighted' ? scoredChoiceIndex(ranked.map(function (row) { return {score:row.weight}; }),deterministic) : ranked.length ? 0 : -1;
       var index = selected < 0 ? -1 : scored.findIndex(function (row) { return row.item.id === ranked[selected].id; });

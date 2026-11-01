@@ -1,4 +1,4 @@
-/* Pure decision defaults. Live consumers migrate individually. */
+/* Declared AI decision defaults; consumers retain their canonical transactions. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.aiDecisionPolicies = {
   ordinary_war:{ family:'war', mode:'first', parameters:{ chance:0.025,
@@ -28,9 +28,22 @@ FBDATA.aiDecisionPolicies = {
     relationshipCap:15,courtAmbitionMultiplier:1,courtMartialCenter:6,courtMartialCap:12,
     courtAgeCenter:40,courtAgeScale:10,courtAgeCap:8,courtEconomicCap:8 },
     order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] },
-  ordinary_religion:{ family:'religion', mode:'first', parameters:{ minimumTargetRatio:0.5 },
+  ordinary_religion:{ family:'religion', mode:'first', parameters:{ minimumTargetRatio:0.5,
+    participantRankWeight:100,participationTraitWeight:1,guaranteedAttackers:2,attackerJoinChance:0.55,
+    defenderJoinChance:0.3,failureMemoryYears:80,failureDefeatWeight:1,failureCollapseWeight:0.5,
+    targetHolyWeight:2,targetRatioCap:2,targetFailureWeight:2,longVowChance:0.67,shortVowChance:0.4,
+    landDesireChance:0.5,duchyDesireChance:0.55,papalInvestitureChance:0.2,papalSanctionChance:0.15,
+    papalLegationChance:0.2,investitureAcceptThreshold:45,investitureUncertainty:20,investitureCompromiseChance:0.35,
+    absolutionPetitionChance:0.3,electionRelationshipWeight:0.65,electionLearningWeight:1.8,
+    electionDiplomacyWeight:1.1,electionPietyDivisor:100,electionPrestigeDivisor:200,
+    electionCultureBonus:6,electionBlocBonus:12,electionUncertainty:7,electionLeaderWeight:2,electionCompromiseWeight:5,
+    conversionShareWeight:40,conversionBishopWeight:8,conversionSpouseWeight:12 },
     order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] },
-  ordinary_government:{ family:'government', mode:'first', parameters:{},
+  ordinary_government:{ family:'government', mode:'first', parameters:{agreementWillingness:1,serviceWillingness:1,
+    settlementWillingness:1,officeWillingness:1,negotiationWillingness:1,recruitWillingness:1,
+    mobileTradeCount:100,mobileRecruitCount:60,mobileBuyDays:90,mobileSellDays:180,mobileShortageDays:30,
+    provincialConcession:0.1,candidateDiplomacyWeight:1,candidateMartialWeight:0,
+    civicReserveMultiplier:2,civicAidAmount:5,civicAidDays:90,civicPeaceSeasons:4},
     order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] }
 };
 Object.assign(FBDATA.balance, {

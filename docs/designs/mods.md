@@ -2,7 +2,7 @@
 
 AI decision policies
 
-aiDecisionPolicies is a typed, whole-record replacement catalogue. Ordinary detached preparation validates every effective policy, trait/aim reference and selection layer before live installation or storage. The catalogue participates in authored-root fingerprints when a mod supplies it; balance policy references use the existing scalar-layer order. Import validation never compiles against or publishes the live candidate, consumes RNG or changes a decision. Applying or reloading mods invalidates transient AI policy compilation. Removal and same-name replacement recompose from the bundled baseline through the existing stack validator. Exact fields and the explicit-projection-only boundary are documented in docs/MODDING.md and docs/designs/ai-decisions.md.
+aiDecisionPolicies is a typed, whole-record replacement catalogue. Ordinary detached preparation validates every effective policy, trait/aim reference and selection layer before live installation or storage. The catalogue participates in authored-root fingerprints when a mod supplies it; balance policy references use the existing scalar-layer order. Import validation never compiles against or publishes the live candidate, consumes RNG or changes a decision. Applying or reloading mods invalidates transient AI policy compilation. Removal and same-name replacement recompose from the bundled baseline through the existing stack validator. Exact fields, live consumers and pure report versus simulation-choice boundaries are documented in docs/MODDING.md and docs/designs/ai-decisions.md.
 
 Trusted composition preparation
 

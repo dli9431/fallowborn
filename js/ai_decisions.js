@@ -1,4 +1,4 @@
-/* Trusted bounded policy protocol; never issues actions or draws randomness. */
+/* Pure bounded policy projections and explicit simulation choice adapters. */
 (function () {
   'use strict';
   var P = FB.aiDecisions = {}, cache = new WeakMap();
@@ -29,8 +29,23 @@
         relationshipDivisor:[0.01,1000],relationshipCap:[0,100],courtAmbitionMultiplier:ratio,
         courtMartialCenter:[0,100],courtMartialCap:[0,100],courtAgeCenter:[0,100],courtAgeScale:[0.01,100],
         courtAgeCap:[0,100],courtEconomicCap:[0,100]}},
-    religion:{key:'aiReligionPolicy', metrics:['score','strengthRatio','importance','distance','zeal'],parameters:{minimumTargetRatio:ratio}},
-    government:{key:'aiGovernmentPolicy', metrics:['score','cost','support','regard','distance'],parameters:{}}
+    religion:{key:'aiReligionPolicy', metrics:['score','strengthRatio','importance','distance','zeal'],
+      parameters:{minimumTargetRatio:ratio,participantRankWeight:[0,1000],participationTraitWeight:ratio,
+        guaranteedAttackers:[0,8,true],attackerJoinChance:unit,defenderJoinChance:unit,failureMemoryYears:[1,200],
+        failureDefeatWeight:ratio,failureCollapseWeight:ratio,targetHolyWeight:ratio,targetRatioCap:ratio,targetFailureWeight:ratio,
+        longVowChance:unit,shortVowChance:unit,landDesireChance:unit,duchyDesireChance:unit,
+        papalInvestitureChance:unit,papalSanctionChance:unit,papalLegationChance:unit,investitureAcceptThreshold:[0,100],
+        investitureUncertainty:[0,100],investitureCompromiseChance:unit,absolutionPetitionChance:unit,
+        electionRelationshipWeight:ratio,electionLearningWeight:ratio,electionDiplomacyWeight:ratio,
+        electionPietyDivisor:[0.01,10000],electionPrestigeDivisor:[0.01,10000],electionCultureBonus:[0,100],
+        electionBlocBonus:[0,100],electionUncertainty:[0,100],electionLeaderWeight:ratio,electionCompromiseWeight:ratio,
+        conversionShareWeight:[0,100],conversionBishopWeight:[0,100],conversionSpouseWeight:[0,100]}},
+    government:{key:'aiGovernmentPolicy', metrics:['score','cost','support','regard','distance','martial','diplomacy','age'],
+      parameters:{agreementWillingness:unit,serviceWillingness:unit,settlementWillingness:unit,officeWillingness:unit,
+        negotiationWillingness:unit,recruitWillingness:unit,mobileTradeCount:[1,2048,true],mobileRecruitCount:[0,2048,true],
+        mobileBuyDays:[0,360],mobileSellDays:[0,720],mobileShortageDays:[0,360],provincialConcession:unit,
+        candidateDiplomacyWeight:ratio,candidateMartialWeight:ratio,civicReserveMultiplier:ratio,
+        civicAidAmount:[0,100],civicAidDays:[1,360,true],civicPeaceSeasons:[0,32,true]}}
   };
   function own(o,k) { return !!o && Object.prototype.hasOwnProperty.call(o,k); }
   function plain(o) { return !!o && typeof o === 'object' && !Array.isArray(o) &&
@@ -203,7 +218,7 @@
   P.inputs = function (state, realmId) {
     var realm = state && state.realms && state.realms[realmId];
     var person = realm && FB.realmRulerCharacterSnapshot && FB.realmRulerCharacterSnapshot(state,realmId);
-    var aim = state && state.agency && state.agency.rulerAims && state.agency.rulerAims[realmId];
+    var aim = realm && FB.rulerAimSnapshot ? FB.rulerAimSnapshot(state,realmId) : null;
     return {traits:person && person.traits ? person.traits.slice() : realm && realm.ruler && realm.ruler.trait ? [realm.ruler.trait] : [],
       aim:aim && aim.id || null};
   };
@@ -212,14 +227,28 @@
     if (!policy.definition.adjustments.length) return policy.definition.parameters;
     return P.report(policy,[],P.inputs(state,realmId)).parameters;
   };
+  P.willing = function (state, realmId, family, key) {
+    var value = P.parameters(state,realmId,family)[key];
+    if (!finite(value,0,1)) throw new Error('AI willingness requires a declared probability.');
+    return value === 1 || value > 0 && FB.chance(value);
+  };
   P.diplomaticFacts = function (state, realmId, targetId) {
     var ownStrength = FB.realmStrength(state,realmId), defense = FB.realmStrength(state,targetId);
     return {score:0,distance:1,regard:FB.rulerRegard ? FB.rulerRegard(state,realmId,targetId) : 0,
       strengthRatio:ownStrength/Math.max(1,defense),
       sharedFaith:FB.realmReligionId(state,realmId) === FB.realmReligionId(state,targetId) ? 1 : 0};
   };
+  P.governmentCandidates = function (state, realmId, candidates, project) {
+    if (P.resolve(state,realmId,'government').definition.mode === 'first') return candidates;
+    var ids = P.orderCandidates(state,realmId,'government',candidates.map(function (candidate,i) {
+      return {id:String(i),eligible:true,facts:Object.assign({score:0,cost:0,support:0,regard:0,distance:0,
+        martial:0,diplomacy:0,age:0},project(candidate))};
+    }));
+    return ids.map(function (id) { return candidates[Number(id)]; });
+  };
   P.choose = function (state, realmId, family, candidates) {
-    var report = P.report(P.resolve(state,realmId,family),candidates,P.inputs(state,realmId));
+    var policy = P.resolve(state,realmId,family);
+    var report = P.report(policy,candidates,policy.definition.adjustments.length ? P.inputs(state,realmId) : undefined);
     return P.pick(report,report.mode === 'weighted' && report.totalWeight > 0 ? FB.rng() : undefined);
   };
   P.investmentDelta = function (state, realmId, definition, cost, policy) {
@@ -249,7 +278,8 @@
     return rows.map(function (r) { return r.entry; });
   };
   P.orderCandidates = function (state, realmId, family, candidates) {
-    var report = P.report(P.resolve(state,realmId,family),candidates,P.inputs(state,realmId));
+    var policy = P.resolve(state,realmId,family);
+    var report = P.report(policy,candidates,policy.definition.adjustments.length ? P.inputs(state,realmId) : undefined);
     var ids = report.ranking.map(function (row) { return row.id; });
     if (report.mode === 'weighted' && report.totalWeight > 0) {
       var first = P.pick(report,FB.rng());
