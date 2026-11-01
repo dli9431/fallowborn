@@ -87,10 +87,15 @@ window.FB = window.FB || {};
         out.push({ kind:'type', key:key });
       }
     }
+    if (FB.aiDecisions) FB.aiDecisions.selectionFaults(table,FBDATA).forEach(function (key) {
+      out.push({kind:'ai_policy',key:key});
+    });
     return out;
   };
 
   L.describe = function (problem) {
+    if (problem.kind === 'ai_policy')
+      return FB.T('Balance key {key} must name an AI policy of the matching family.', {key:problem.key});
     if (problem.kind === 'table') return FB.T('balance overrides must be an object.');
     if (problem.kind === 'unknown')
       return FB.T('balance key {key} is not in the balance table.', { key:problem.key });
@@ -128,6 +133,7 @@ window.FB = window.FB || {};
     bookmarkKeys = nextBookmark;
     current = { era:era ? eraId : null,
       bookmark:definition && definition.id !== undefined ? String(definition.id) : null };
+    if (FB.aiDecisions) FB.aiDecisions.invalidate();
     for (key in keys) if (own(keys, key)) { remember(key); compose(key); }
   };
 
