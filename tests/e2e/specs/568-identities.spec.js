@@ -8,7 +8,10 @@ const {mockCrazyGames} = require('../support/crazygames');
 const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename, ['index.html','data/bookmark_568.js','data/starts_568.js',
+dependsOnRuntime(__filename, ['index.html','js/bookmark_composition.js','js/main.js','js/mods.js','js/stories.js',
+  'data/bookmark_568_composition.js','data/story_ruler_agendas_568.js','data/story_ruler_agendas_568_east.js',
+  'data/story_households_568_ravenna.js','data/starts_568_ravenna.js','data/starts_rulers_568.js','data/starts_rulers_568_east.js',
+  'data/bookmark_568.js','data/starts_568.js',
   'data/bookmark_568_scaffold_a.js','data/bookmark_568_scaffold_b.js',
   'data/bookmark_568_scaffold_c.js','data/bookmark_568_scaffold_d.js','data/bookmark_568_identities.js',
   'data/bookmark_476_wider_identities.js','data/cultures.js','data/bookmarks.js',
@@ -56,7 +59,8 @@ for (const crazygames of [false,true]) {
             const ids = FB.faithAvailability(id,null).bookmarkIds;
             const expected = id === 'buddhist_476' ? ['476','493','1204'] :
               id === 'sahel_traditional_476' ? ['476','493','711','800','867','1204'] : ['476','493'];
-            return JSON.stringify(ids) === JSON.stringify(expected.concat(['568']));
+            const later = id === 'woodland_traditional_476' || id === 'steppe_traditional_476' || id === 'buddhist_476' ? ['634','1096'] : ['634'];
+            return JSON.stringify(ids) === JSON.stringify(expected.concat(['568'],later));
           }),
           culturesValid:FB.configureCultures(null),
           religionsValid:FB.validateReligionData(null),
@@ -166,7 +170,7 @@ test('the published definitions compile with exact 568 faith additions and retai
     doctrine:true,originals:true,noNewFaith:true,sasanianHeld:true,broad:true,pure:true});
   });
 
-test('the composer preserves a narrower faith window and consumer restriction on repeated publication',
+test('canonical composition preserves narrow faith restrictions when they make its world invalid',
   async function ({page},testInfo) {
     await openGame(page,testInfo);
     await page.evaluate(function () {
@@ -175,14 +179,19 @@ test('the composer preserves a narrower faith window and consumer restriction on
         availability:{yearMin:476,yearMax:550,eras:['late_antique'],
           bookmarkIds:['476','493'],consumers:['community']}});
     });
-    await page.addScriptTag({path:path.resolve(__dirname,'../../../data/bookmark_568.js')});
-    await page.addScriptTag({path:path.resolve(__dirname,'../../../data/bookmark_568.js')});
     expect(await page.evaluate(function () {
         const id = 'insular_traditional_476', candidate = FB.bookmark('568');
         const availability = FBDATA.religions[id].availability;
+        const before = JSON.stringify(FBDATA);
+        const reports = [1,2].map(function () {
+          return FB.bookmarkCompositions.prepare(FBDATA.bookmarkCompositionSources.spring_568.input).publish();
+        });
+        const rejectedWithoutMutation = reports.every(function (report) { return !report.published && report.worldFaults.length; }) && before === JSON.stringify(FBDATA);
         FB.invalidateCultureData(); FB.invalidateReligionData();
         const preserved = JSON.stringify(availability) === JSON.stringify({
-          yearMin:476,yearMax:550,eras:['late_antique'],bookmarkIds:['476','493','568'],consumers:['community']});
+          yearMin:476,yearMax:550,eras:['late_antique'],bookmarkIds:['476','493'],consumers:['community']});
+        // Review the existing selector gates separately from failed publication.
+        availability.bookmarkIds.push('568'); FB.invalidateReligionData();
         const yearBlocked = !FB.faithHistoricalAvailable(id,candidate,'community');
         const earlier = FB.faithHistoricalAvailable(id,FB.bookmark('493'),'community');
         availability.yearMax = 568;
@@ -191,8 +200,8 @@ test('the composer preserves a narrower faith window and consumer restriction on
         const consumerBlocked = !FB.faithHistoricalAvailable(id,candidate,'start');
         const eraBlocked = !FB.faithHistoricalAvailable(id,
           {id:'568',era:'high_medieval',date:candidate.date},'community');
-        return {preserved:preserved,yearBlocked:yearBlocked,earlier:earlier,allowed:allowed,
+        return {preserved:preserved,rejectedWithoutMutation:rejectedWithoutMutation,yearBlocked:yearBlocked,earlier:earlier,allowed:allowed,
           consumerBlocked:consumerBlocked,eraBlocked:eraBlocked,
           valid:FB.validateReligionData(null)};
-    })).toEqual({preserved:true,yearBlocked:true,earlier:true,allowed:true,consumerBlocked:true,eraBlocked:true,valid:[]});
+    })).toEqual({preserved:true,rejectedWithoutMutation:true,yearBlocked:true,earlier:true,allowed:true,consumerBlocked:true,eraBlocked:true,valid:[]});
   });

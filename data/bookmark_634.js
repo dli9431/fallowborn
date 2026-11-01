@@ -101,9 +101,23 @@
     };
     var b = FBDATA.bookmarkCandidates['634'];
     Object.keys(world).forEach(function (key) { b[key] = world[key]; });
+    // Shared physical declarations are inputs, independent of whether the
+    // earlier world that first used them passes its own validation.
+    Object.keys(layouts).forEach(function (county) {
+      layouts[county].forEach(function (slot) {
+        if (own(sites,slot.site) || own(FBDATA.settlementSites,slot.site)) return;
+        Object.keys(FBDATA.bookmarkRegions568 || {}).forEach(function (region) {
+          var declarations = FBDATA.bookmarkRegions568[region].settlementSites;
+          if (!own(declarations,slot.site)) return;
+          if (own(sites,slot.site) && JSON.stringify(sites[slot.site]) !== JSON.stringify(declarations[slot.site]))
+            throw new Error('Conflicting shared 634 site declaration: ' + slot.site);
+          sites[slot.site] = copy(declarations[slot.site]);
+        });
+      });
+    });
     source.input = {id:'autumn_634',source:source.source,bookmark:copy(b),
       catalogs:{settlementLayouts:{'634_opening':layouts},settlementSites:sites,
-        governmentForms:forms,religions:copy(FBDATA.bookmarkReligions634)},
+        governmentForms:forms,religions:copy(FBDATA.bookmarkReligions634),cultures:copy(FBDATA.bookmarkCultures568)},
       availability:availability,
       starts:stagedStarts.map(function (definition) {
         return {definition:copy(definition),locations:inhabited.slice(),source:'data/starts_634_ordinary.js',after:startOrder[definition.id]};

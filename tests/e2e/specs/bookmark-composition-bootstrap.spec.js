@@ -5,6 +5,7 @@ const {test,expect} = require('../support/fixture');
 const {installPageGuards} = require('../support/page-contract');
 const {openGame} = require('../support/game/navigation');
 const {beginBookmarkFromTitle,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
+const {installLegacy568} = require('../support/game/bookmark-composition-legacy');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 // Committed c251ccd2 source, kept immutable as the pre-conversion oracle.
 // It executes only inside the owner's approved browser harness.
@@ -16,7 +17,10 @@ dependsOnRuntime(__filename,['index.html','data/bookmark_634.js','data/starts_63
   'data/bookmarks.js','data/geographies.js','data/geography_expansion.js','data/cultures.js',
   'data/political_institutions.js','js/bookmark_composition.js','js/main.js','js/mods.js',
   'js/stories.js','js/title_ids.js','js/world.js','js/starts.js','js/bookmark_setup.js',
-  'js/model.js','js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js']);
+  'js/model.js','js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js',
+  'data/bookmark_568.js','data/bookmark_568_composition.js','data/starts_568.js','data/starts_568_ravenna.js',
+  'data/starts_rulers_568.js','data/starts_rulers_568_east.js','data/story_ruler_agendas_568.js',
+  'data/story_ruler_agendas_568_east.js','data/story_households_568_ravenna.js']);
 
 async function catalogue(page) {
   return page.evaluate(function () {
@@ -33,6 +37,7 @@ test('shared 634 boot preserves the former catalogue fingerprint and restores an
   const oldContext = await browser.newContext(), oldPage = await oldContext.newPage();
   const oldGuard = installPageGuards(oldPage);
   try {
+    await installLegacy568(oldPage);
     await oldPage.route('**/data/bookmark_634.js',function (route) {
       return route.fulfill({contentType:'application/javascript',body:legacy});
     });

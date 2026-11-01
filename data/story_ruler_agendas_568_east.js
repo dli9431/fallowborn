@@ -50,23 +50,31 @@ FBDATA.rulerAgendas_568_east = {
 (function () {
   'use strict';
   function copy(value) { return JSON.parse(JSON.stringify(value)); }
-  Object.keys(FBDATA.rulerAgendas_568_east).forEach(function (id) {
-    if (FBDATA.storyInstances[id]) throw new Error('Duplicate story instance ' + id + '.');
-    FBDATA.storyInstances[id] = FBDATA.rulerAgendas_568_east[id];
-  });
-  var b = FBDATA.bookmarks['568'];
-  var source = Object.assign({},b,b.revisions.baseline,b.revisions[b.revision]);
-  var ids = FBDATA.startScenarios_rulers_568_east.map(function (scenario) { return scenario.id; });
-  if (!source.realms.some(function (realm) { return realm.id === 'east_568' && realm.government === 'roman_civic'; }) ||
-      !source.realms.some(function (realm) { return realm.id === 'sasanian_568' && realm.government === 'aristocratic_monarchy'; }))
-    throw new Error('Missing original eastern courts for 568 revision.');
-  var previous = copy(source.starts || []);
-  var locations = copy(source.startLocations);
-  locations.justin_568 = ['constantinople'];
-  locations.khosrow_568 = ['baghdad'];
-  b.revisions.eastern_courts_v3 = {
-    realms:copy(source.realms),startLocations:locations,settlementLayout:source.settlementLayout,
-    starts:previous.concat(ids.filter(function (id) { return previous.indexOf(id) < 0; }))
-  };
-  b.revision = 'eastern_courts_v3';
+  var draft = FBDATA.bookmarkCompositionDrafts && FBDATA.bookmarkCompositionDrafts.spring_568;
+  if (!draft) return;
+  try {
+    [['justin_568','justin_agenda_568'],['khosrow_568','khosrow_agenda_568']].forEach(function (pair) {
+      var unit = draft.starts.find(function (unit) { return unit.definition.id === pair[0]; });
+      if (!unit) throw new Error('Missing 568 eastern start unit: ' + pair[0]);
+      try {
+        unit.storyInstances = {}; unit.storyInstances[pair[1]] = copy(FBDATA.rulerAgendas_568_east[pair[1]]);
+        unit.storyAfter = FB.bookmarkCompositions.captureStories('spring_568',pair[0],unit.storyInstances);
+      } catch (error) { unit.faults = ['data/story_ruler_agendas_568_east.js: ' + error.message]; }
+    });
+    var b = draft.bookmark;
+    var source = Object.assign({},b,b.revisions.baseline,b.revisions[b.revision]);
+    var ids = FBDATA.startScenarios_rulers_568_east.map(function (scenario) { return scenario.id; });
+    if (!source.realms.some(function (realm) { return realm.id === 'east_568' && realm.government === 'roman_civic'; }) ||
+        !source.realms.some(function (realm) { return realm.id === 'sasanian_568' && realm.government === 'aristocratic_monarchy'; }))
+      throw new Error('Missing original eastern courts for 568 revision.');
+    var previous = copy(source.starts || []);
+    var locations = copy(source.startLocations);
+    locations.justin_568 = ['constantinople'];
+    locations.khosrow_568 = ['baghdad'];
+    b.revisions.eastern_courts_v3 = {
+      realms:copy(source.realms),startLocations:locations,settlementLayout:source.settlementLayout,
+      starts:previous.concat(ids.filter(function (id) { return previous.indexOf(id) < 0; }))
+    };
+    b.revision = 'eastern_courts_v3';
+  } catch (error) { draft.faults.push({source:'data/story_ruler_agendas_568_east.js',message:error.message}); }
 })();

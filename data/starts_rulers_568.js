@@ -30,4 +30,14 @@ FBDATA.startScenarios_rulers_568 = [
     tracks:['guntram_agenda_568'], trackLocations:{guntram_agenda_568:['orleans']}, onboarding:'ruler',
     intro:'You are Guntram at the Orleans court. Review the holdings and people who remain in this campaign. Later family and diplomatic outcomes follow ordinary decisions.' }
 ];
-Array.prototype.push.apply(FBDATA.startScenarios,FBDATA.startScenarios_rulers_568);
+(function () {
+  'use strict';
+  var draft = FBDATA.bookmarkCompositionDrafts && FBDATA.bookmarkCompositionDrafts.spring_568;
+  if (!draft) return;
+  try {
+    var positions = FB.bookmarkCompositions.captureStarts('spring_568','frankish',FBDATA.startScenarios_rulers_568);
+    FBDATA.startScenarios_rulers_568.forEach(function (definition) {
+      draft.starts.push({definition:JSON.parse(JSON.stringify(definition)),source:'data/starts_rulers_568.js',after:positions[definition.id]});
+    });
+  } catch (error) { draft.faults.push({source:'data/starts_rulers_568.js',message:error.message}); }
+})();

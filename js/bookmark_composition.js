@@ -5,7 +5,8 @@ window.FB = window.FB || {};
   'use strict';
   var owners = Object.create(null);
   var sourceReports = Object.create(null);
-  var startOrder = [], knownStarts = Object.create(null), startGroups = Object.create(null);
+  var startStream = {ids:[],known:Object.create(null),groups:Object.create(null)};
+  var storyStream = {ids:[],known:Object.create(null),groups:Object.create(null)};
   var faithOrders = Object.create(null), faithCaptures = Object.create(null);
   var catalogs = ['geographies','cultures','cultureDoctrineDefaults','religions','governmentForms',
     'settlementSites','settlementLayouts','administrationProfiles','aristocraticProfiles',
@@ -87,37 +88,52 @@ window.FB = window.FB || {};
   }
   /* Capture source positions without invoking engine validators or installing
      declarations. Live append-only contributors join the same logical order. */
-  function captureStarts(owner, group, definitions) {
+  function captureGroup(owner, group, definitions, live, stream, limit, kind) {
     captureOwner(owner); captureOwner(group);
-    var label = 'Composition start group ' + owner + '/' + group;
+    var label = 'Composition ' + kind + ' group ' + owner + '/' + group;
     if (!Array.isArray(definitions) || definitions.length > 512) throw new Error(label + ': invalid declarations.');
     var ids = [], key = JSON.stringify([owner,group]);
     for (var i = 0; i < definitions.length; i++) {
       var row = definitions[i], descriptor = plain(row) && Object.getOwnPropertyDescriptor(row,'id');
       var id = descriptor && descriptor.value;
       if (typeof id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(id) || id.length > 200 || ids.indexOf(id) >= 0)
-        throw new Error(label + ': invalid or duplicate start id.');
+        throw new Error(label + ': invalid or duplicate declaration id.');
       ids.push(id);
     }
-    if (own(startGroups,key)) {
-      if (!equal(startGroups[key].ids,ids)) throw new Error(label + ': captured ids changed; reload the sources.');
-      return copy(startGroups[key].positions);
+    if (own(stream.groups,key)) {
+      if (!equal(stream.groups[key].ids,ids)) throw new Error(label + ': captured ids changed; reload the sources.');
+      return copy(stream.groups[key].positions);
     }
-    if (!Array.isArray(FBDATA.startScenarios)) throw new Error(label + ': missing live start catalogue.');
+    if (!Array.isArray(live)) throw new Error(label + ': missing live catalogue.');
     var liveIds = [];
-    FBDATA.startScenarios.forEach(function (row) {
+    live.forEach(function (row) {
       var descriptor = plain(row) && Object.getOwnPropertyDescriptor(row,'id');
       var id = descriptor && descriptor.value;
       if (typeof id === 'string' && id && id.length <= 200) liveIds.push(id);
     });
-    appendObserved(startOrder,knownStarts,liveIds,4096);
-    if (startOrder.length + ids.length > 4096 || Object.keys(startGroups).length >= 4096)
+    appendObserved(stream.ids,stream.known,liveIds,limit);
+    if (stream.ids.length + ids.length > limit || Object.keys(stream.groups).length >= limit)
       throw new Error(label + ': logical order exceeds its limit.');
-    ids.forEach(function (id) { if (own(knownStarts,id)) throw new Error(label + ': start already declared: ' + id); });
+    ids.forEach(function (id) { if (own(stream.known,id)) throw new Error(label + ': declaration already captured or installed: ' + id); });
     var positions = {};
-    ids.forEach(function (id) { positions[id] = startOrder.slice(); knownStarts[id] = true; startOrder.push(id); });
-    startGroups[key] = {ids:ids.slice(),positions:positions};
+    ids.forEach(function (id) { positions[id] = stream.ids.slice(); stream.known[id] = true; stream.ids.push(id); });
+    stream.groups[key] = {ids:ids.slice(),positions:positions};
     return copy(positions);
+  }
+  function captureStarts(owner, group, definitions) {
+    return captureGroup(owner,group,definitions,FBDATA.startScenarios,startStream,4096,'start');
+  }
+  function captureStories(owner, group, declarations) {
+    if (!plain(declarations)) throw new Error('Composition story capture needs a declaration map.');
+    function rows(table) {
+      return Object.keys(table || {}).map(function (id) {
+        var descriptor = Object.getOwnPropertyDescriptor(table,id), row = descriptor && descriptor.value;
+        var key = plain(row) && Object.getOwnPropertyDescriptor(row,'id');
+        if (!key || key.value !== id) throw new Error('Composition story capture needs matching plain ids.');
+        return row;
+      });
+    }
+    return captureGroup(owner,group,rows(declarations),rows(FBDATA.storyInstances),storyStream,2048,'story');
   }
   function captureAvailability(owner, patches) {
     captureOwner(owner); data(patches);
@@ -214,11 +230,36 @@ window.FB = window.FB || {};
       payload.religions = payload.religions || {}; payload.religions[id] = next;
     });
   }
-  function preparePayload(payload, worldId, base, complete) {
+  function storyPlacements(target, unit) {
+    if (unit.storyAfter === undefined) return;
+    if (!plain(unit.storyAfter)) throw new Error('Composition story placement must be a map.');
+    Object.keys(unit.storyAfter).forEach(function (id) {
+      if (!own(unit.storyInstances,id)) throw new Error('Story placement must belong to its start graph: ' + id);
+      predecessorIds(unit.storyAfter[id],id,2048,'story placement.' + id);
+      target[id] = copy(unit.storyAfter[id]);
+    });
+  }
+  function orderedStories(base, additions, placements) {
+    var combined = Object.assign({},base,additions), ids = Object.keys(base || {});
+    Object.keys(additions || {}).forEach(function (id) {
+      if (own(base,id)) return;
+      var at = own(placements,id) ? afterIndex(ids,placements[id],false) : ids.length;
+      ids.splice(at,0,id);
+    });
+    var result = {};
+    ids.forEach(function (id) { result[id] = combined[id]; });
+    return result;
+  }
+  function preparePayload(payload, worldId, base, complete, placements) {
     var normalized = FB.titleIds.normalizeMod(payload);
+    var reviewBase = base;
+    if (payload.storyInstances && placements && Object.keys(placements).length) {
+      reviewBase = Object.assign({},base);
+      reviewBase.storyInstances = orderedStories(base.storyInstances,payload.storyInstances,placements);
+    }
     // Normalize for proof only. Bundled publication retains authored title
     // spellings so conversion cannot silently change mod fingerprints.
-    return {payload:copy(payload), prepared:FB.mods.prepareComposition(normalized, worldId, base, complete)};
+    return {payload:copy(payload), prepared:FB.mods.prepareComposition(normalized, worldId, reviewBase, complete)};
   }
   function addStart(world, unit) {
     var id = unit.definition.id;
@@ -309,7 +350,7 @@ window.FB = window.FB || {};
     if (!Array.isArray(units) || units.length > 512) throw new Error('Composition starts must be a bounded list.');
     var report = {id:spec.id, source:source(spec.source), bookmarkId:worldId, ready:false, worldFaults:[], starts:[]};
     units.forEach(function (unit) {
-      fields(unit, ['definition','storyInstances','locations','bindings','requires','source','after'], 'start unit');
+      fields(unit, ['definition','storyInstances','locations','bindings','requires','source','after','storyAfter','faults'], 'start unit');
       var id = unit.definition && unit.definition.id;
       if (typeof id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(id) || own(ids, id))
         throw new Error('Invalid or duplicate start ownership: ' + id);
@@ -338,7 +379,7 @@ window.FB = window.FB || {};
     availability(payload, spec.availability === undefined ? {} : spec.availability, worldId, live);
     var base = preparePayload(payload, worldId, live), stage = base.prepared.data;
     messages(base.payload.storyInstances);
-    var accepted = Object.create(null), pending = units.map(function (unit, index) { return index; });
+    var accepted = Object.create(null), storyOrder = Object.create(null), pending = units.map(function (unit, index) { return index; });
     while (pending.length) {
       var progress = false;
       pending.slice().forEach(function (index) {
@@ -353,6 +394,12 @@ window.FB = window.FB || {};
         else if (required.some(function (id) { return !accepted[id]; })) status.faults.push('Required start unit was rejected.');
         if (!status.faults.length) {
           try {
+            if (unit.faults !== undefined) {
+              if (!Array.isArray(unit.faults) || !unit.faults.length || unit.faults.length > 32 || unit.faults.some(function (fault) {
+                return typeof fault !== 'string' || !fault;
+              })) throw new Error('Start assembly faults must be nonempty messages.');
+              throw new Error(unit.faults.join('\n'));
+            }
             if (unit.after !== undefined) {
               if (spec.startAfter !== undefined) throw new Error('A start cannot own both global and per-unit placement.');
               predecessorIds(unit.after,status.id,4096,'start placement.' + status.id);
@@ -365,9 +412,11 @@ window.FB = window.FB || {};
             var patch = {bookmarks:{}, startScenarios:[copy(unit.definition)]};
             patch.bookmarks[worldId] = copy(stage.bookmarks[worldId]); addStart(patch.bookmarks[worldId], unit);
             merge(patch, {storyInstances:unit.storyInstances === undefined ? {} : unit.storyInstances}, stage);
-            var next = preparePayload(patch, worldId, stage);
+            var nextOrder = Object.assign(Object.create(null),storyOrder);
+            storyPlacements(nextOrder,unit);
+            var next = preparePayload(patch, worldId, stage, false, nextOrder);
             messages(next.prepared.data.storyInstances, live);
-            stage = next.prepared.data; accepted[status.id] = true; status.ready = true;
+            stage = next.prepared.data; storyOrder = nextOrder; accepted[status.id] = true; status.ready = true;
           } catch (error) { status.revision = error.compositionRevision || null; status.faults.push(error.message); }
         }
         pending.splice(pending.indexOf(index), 1); progress = true;
@@ -386,7 +435,7 @@ window.FB = window.FB || {};
       finalPayload.startScenarios.push(copy(unit.definition));
       merge(finalPayload, {storyInstances:unit.storyInstances || {}}, live);
     });
-    var final = preparePayload(finalPayload, worldId, live, true);
+    var final = preparePayload(finalPayload, worldId, live, true, storyOrder);
     messages(final.payload.storyInstances);
     if (own(live.bookmarks, worldId) && !equal(live.bookmarks[worldId], final.payload.bookmarks[worldId]))
       throw new Error('Conflicting composition world: ' + worldId);
@@ -394,7 +443,7 @@ window.FB = window.FB || {};
     var placements = Object.create(null);
     units.forEach(function (unit) { if (accepted[unit.definition.id] && unit.after !== undefined) placements[unit.definition.id] = copy(unit.after); });
     return {report:report, payload:final.payload, prepared:final.prepared, fingerprint:fingerprint,
-      startAfter:spec.startAfter,placements:placements};
+      startAfter:spec.startAfter,placements:placements,storyPlacements:storyOrder};
   }
   function publication(plan, live) {
     var next = Object.assign({}, live), changed = false, payload = plan.payload;
@@ -422,13 +471,14 @@ window.FB = window.FB || {};
           if (own(live[table], id) && equal(live[table][id], value)) return;
           result[id] = copy(value); touched = true; changed = true;
         });
-        if (touched) next[table] = result;
+        if (touched) next[table] = table === 'storyInstances' ? orderedStories(live[table],result,plan.storyPlacements) : result;
       }
     });
     return {data:next, changed:changed};
   }
   FB.bookmarkCompositions = {
     captureStarts:captureStarts,
+    captureStories:captureStories,
     captureAvailability:captureAvailability,
     /* Sources stage data before engine loading. Publication waits until all
        validators/factories exist, ahead of the bundled mod baseline snapshot. */

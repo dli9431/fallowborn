@@ -44,7 +44,8 @@ for (const crazy of [false,true]) {
         sites:FBDATA.settlementSites,layouts:FBDATA.settlementLayouts,faiths:FBDATA.religions,
         forms:FBDATA.governmentForms,starts:FBDATA.startScenarios});
       window.__orderingStage.placements = FBDATA.bookmarkCompositionSources.autumn_634.input.starts.map(function (unit) { return unit.after; });
-      window.__orderingStage.expected = [window.__orderingLiveStarts,window.__orderingLiveStarts.concat(['farmer_634'])];
+      var earlier = ['farmer_568','craftsman_568','ravenna_household_568','sigebert_568','chilperic_568','guntram_568'];
+      window.__orderingStage.expected = [window.__orderingLiveStarts.concat(earlier),window.__orderingLiveStarts.concat(earlier,['farmer_634'])];
     `;
     await page.route('**/data/bookmark_634.js',function (route) {
       return route.fulfill({contentType:'application/javascript',body:before + source634 + after});
@@ -74,6 +75,13 @@ for (const reversed of [false,true]) for (const failure of ['none','world','star
       const rng = FB.getRngState(), uid = FB.getUidCounter(), state = FB.state, world = FB.world;
       const snapshot = JSON.stringify(FBDATA), english = JSON.stringify(FB.englishMessages());
       const registered = Object.keys(FBDATA.bookmarks);
+      const graphIds = ['ordering_harbor_track','ordering_live_graph_between','ordering_dune_track','ordering_live_graph_later'];
+      function graphFor(input,id) {
+        const graph = JSON.parse(JSON.stringify(Object.values(input.catalogs.storyInstances)[0])); graph.id = id;
+        input.starts[0].storyInstances = {}; input.starts[0].storyInstances[id] = graph;
+        input.starts[0].definition.tracks = [id]; delete input.starts[0].definition.trackLocations;
+        input.starts[0].storyAfter = FB.bookmarkCompositions.captureStories(input.id,'personal',input.starts[0].storyInstances);
+      }
       const faithId = Object.keys(FBDATA.religions).find(function (id) {
         const ids = FBDATA.religions[id].availability && FBDATA.religions[id].availability.bookmarkIds;
         return Array.isArray(ids) && ids.length && registered.some(function (bookmarkId) { return ids.indexOf(bookmarkId) < 0; });
@@ -84,18 +92,23 @@ for (const reversed of [false,true]) for (const failure of ['none','world','star
       a.availability = FB.bookmarkCompositions.captureAvailability(a.id,patchA);
       const early = FB.bookmarkCompositions.captureStarts(a.id,'earlier',a.starts.slice(0,2).map(function (unit) { return unit.definition; }));
       a.starts.slice(0,2).forEach(function (unit) { unit.after = early[unit.definition.id]; });
+      graphFor(a,graphIds[0]);
       const capturePure = snapshot === JSON.stringify(FBDATA) && english === JSON.stringify(FB.englishMessages());
       function liveStart(id) {
         const row = JSON.parse(JSON.stringify(FBDATA.startScenarios.find(function (row) { return row.id === 'farmer_634'; })));
         row.id = id; row.bookmarkIds = ['867']; FBDATA.startScenarios.push(row); return row;
       }
       const between = liveStart('ordering_live_between');
+      const betweenGraph = JSON.parse(JSON.stringify(FBDATA.storyInstances.ravenna_household_track_568));
+      betweenGraph.id = graphIds[1]; FBDATA.storyInstances[betweenGraph.id] = betweenGraph;
       FBDATA.religions[faithId].availability.bookmarkIds.push(liveEdge);
       const patchB = {}; patchB[faithId] = {bookmarkIds:[b.bookmark.id]};
       b.availability = FB.bookmarkCompositions.captureAvailability(b.id,patchB);
       const middle = FB.bookmarkCompositions.captureStarts(b.id,'middle',b.starts.map(function (unit) { return unit.definition; }));
       b.starts.forEach(function (unit) { unit.after = middle[unit.definition.id]; });
+      graphFor(b,graphIds[2]);
       const later = liveStart('ordering_live_later');
+      const laterGraph = JSON.parse(JSON.stringify(betweenGraph)); laterGraph.id = graphIds[3]; FBDATA.storyInstances[laterGraph.id] = laterGraph;
       const late = FB.bookmarkCompositions.captureStarts(a.id,'later',[a.starts[2].definition]);
       a.starts[2].after = late[a.starts[2].definition.id];
       if (inputs.failure === 'world') a.bookmark.realms[0].capital = 'ordering_missing_capital';
@@ -114,14 +127,20 @@ for (const reversed of [false,true]) for (const failure of ['none','world','star
       return {capturePure:capturePure,reports:reports.filter(function (row) { return row.id === a.id || row.id === b.id; }),
         actual:FBDATA.startScenarios.map(function (row) { return row.id; }),expected:expected,
         faith:FBDATA.religions[faithId],expectedFaith:expectedFaith,repeat:installed === FBDATA && after === JSON.stringify(FBDATA),
+        graphOrder:Object.keys(FBDATA.storyInstances).filter(function (id) { return graphIds.indexOf(id) >= 0; }),
+        registryOrder:FB.stories.list().map(function (story) { return story.id; }).filter(function (id) { return graphIds.indexOf(id) >= 0; }),
+        expectedGraphs:(keepFirst ? [graphIds[0]] : []).concat(graphIds.slice(1)),
+        liveGraphs:FBDATA.storyInstances[betweenGraph.id] === betweenGraph && FBDATA.storyInstances[laterGraph.id] === laterGraph,
         unowned:FBDATA.startScenarios.indexOf(between) >= 0 && FBDATA.startScenarios.indexOf(later) >= 0,
         faults:[b.bookmark.id].concat(keepA ? [a.bookmark.id] : []).map(function (id) { return FB.validateBookmark(FB.bookmark(id)); }),
         worldAbsent:!FBDATA.bookmarks[a.bookmark.id],
         pure:rng === FB.getRngState() && uid === FB.getUidCounter() && state === FB.state && world === FB.world};
     },{a:inputFor('harbor'),b:inputFor('dune'),reversed:reversed,failure:failure});
-    expect(result).toMatchObject({capturePure:true,repeat:true,unowned:true,pure:true});
+    expect(result).toMatchObject({capturePure:true,repeat:true,unowned:true,liveGraphs:true,pure:true});
     expect(result.actual).toEqual(result.expected);
     expect(result.faith).toEqual(result.expectedFaith);
+    expect(result.graphOrder).toEqual(result.expectedGraphs);
+    expect(result.registryOrder).toEqual(result.expectedGraphs);
     expect(result.faults.every(function (faults) { return !faults.length; })).toBe(true);
     const a = result.reports.find(function (row) { return row.id === 'harbor_ordering'; });
     const b = result.reports.find(function (row) { return row.id === 'dune_ordering'; });
@@ -152,6 +171,14 @@ test('capture is detached, repeatable and atomic when a source changes or has in
     const repeated = FB.bookmarkCompositions.captureStarts('ordering_valid','first',records);
     const changed = rejects(function () { FB.bookmarkCompositions.captureStarts('ordering_valid','first',[{id:'ordering_changed'}]); });
     const duplicate = rejects(function () { FB.bookmarkCompositions.captureStarts('ordering_other','first',records); });
+    const storyAccessors = rejects(function () { FB.bookmarkCompositions.captureStories('ordering_story_accessors','first',{ordering_accessor:accessor}); });
+    const declarations = {ordering_metadata_story:{id:'ordering_metadata_story'}};
+    const graphPositions = FB.bookmarkCompositions.captureStories('ordering_story_valid','first',declarations);
+    const expectedStories = Object.keys(FBDATA.storyInstances);
+    const exactStories = JSON.stringify(graphPositions.ordering_metadata_story) === JSON.stringify(expectedStories);
+    graphPositions.ordering_metadata_story.push('ordering_external_mutation');
+    const repeatedStories = FB.bookmarkCompositions.captureStories('ordering_story_valid','first',declarations);
+    const changedStories = rejects(function () { FB.bookmarkCompositions.captureStories('ordering_story_valid','first',{ordering_changed_story:{id:'ordering_changed_story'}}); });
     const faithId = Object.keys(FBDATA.religions).find(function (id) {
       return Array.isArray(FBDATA.religions[id].availability && FBDATA.religions[id].availability.bookmarkIds);
     });
@@ -164,14 +191,17 @@ test('capture is detached, repeatable and atomic when a source changes or has in
     const different = {}; different[faithId] = {bookmarkIds:['ordering_changed_world']};
     const changedEdges = rejects(function () { FB.bookmarkCompositions.captureAvailability('ordering_good_edges',different); });
     return {invalid:invalid,accessors:accessors,reads:reads,changed:changed,duplicate:duplicate,badEdges:badEdges,changedEdges:changedEdges,exact:exact,
+      storyAccessors:storyAccessors,exactStories:exactStories,repeatedStories:repeatedStories.ordering_metadata_story,expectedStories:expectedStories,changedStories:changedStories,
       repeated:repeated.ordering_fresh,expected:expected,edgePrefix:edgePrefix,expectedEdges:FBDATA.religions[faithId].availability.bookmarkIds,
       repeatedEdges:repeatedEdges[faithId].afterBookmarkIds,
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
   });
-  expect(result).toMatchObject({invalid:true,accessors:true,reads:0,changed:true,duplicate:true,badEdges:true,changedEdges:true,exact:true,pure:true});
+  expect(result).toMatchObject({invalid:true,accessors:true,reads:0,changed:true,duplicate:true,badEdges:true,changedEdges:true,exact:true,pure:true,
+    storyAccessors:true,exactStories:true,changedStories:true});
   expect(result.repeated).toEqual(result.expected);
   expect(result.edgePrefix).toEqual(result.expectedEdges);
   expect(result.repeatedEdges).toEqual(result.expectedEdges);
+  expect(result.repeatedStories).toEqual(result.expectedStories);
 });
 
 test('availability capture can reference a prior staged faith without publishing it',async function ({page},info) {
@@ -194,7 +224,7 @@ test('availability capture can reference a prior staged faith without publishing
   expect(result.edges).toEqual(['harbor_world','dune_world']);
 });
 
-test('invalid per-start placement withholds only that start and plural edge hints do not become selectors',async function ({page},info) {
+test('invalid start and graph placements withhold their owners and plural edge hints do not become selectors',async function ({page},info) {
   await openGame(page,info);
   const result = await page.evaluate(function (input) {
     const faithId = Object.keys(FBDATA.religions).find(function (id) {
@@ -202,14 +232,20 @@ test('invalid per-start placement withholds only that start and plural edge hint
     });
     const edges = FBDATA.religions[faithId].availability.bookmarkIds.slice(), before = JSON.stringify(FBDATA);
     input.starts[0].after = [input.starts[0].definition.id];
+    const graph = JSON.parse(JSON.stringify(input.catalogs.storyInstances.harbor_existing_track)); graph.id = 'ordering_invalid_story';
+    input.starts[1].storyInstances = {ordering_invalid_story:graph}; input.starts[1].definition.tracks = [graph.id];
+    delete input.starts[1].definition.trackLocations;
+    input.starts[1].storyAfter = {ordering_invalid_story:[graph.id]};
     input.availability = {}; input.availability[faithId] = {bookmarkIds:[input.bookmark.id],afterBookmarkIds:['ordering_absent_predecessor']};
     const ticket = FB.bookmarkCompositions.prepare(input), preview = ticket.preview(), detached = before === JSON.stringify(FBDATA), report = ticket.publish();
     return {report:report,detached:detached,preview:preview,edges:FBDATA.religions[faithId].availability.bookmarkIds,
       expected:[input.bookmark.id].concat(edges),faults:FB.mods.validate(preview)};
   },inputFor('harbor'));
   expect(result).toMatchObject({report:{published:true},detached:true,faults:[]});
-  expect(result.report.starts.map(function (unit) { return unit.ready; })).toEqual([false,true,true]);
+  expect(result.report.starts.map(function (unit) { return unit.ready; })).toEqual([false,false,true]);
   expect(result.report.starts[0].faults.join(' ')).toContain('predecessor');
+  expect(result.report.starts[1].faults.join(' ')).toContain('predecessor');
+  expect(result.preview.storyInstances.ordering_invalid_story).toBeUndefined();
   expect(result.edges).toEqual(result.expected);
   expect(result.preview.startScenarios.some(function (row) { return Object.prototype.hasOwnProperty.call(row,'after'); })).toBe(false);
 });
@@ -219,11 +255,15 @@ test('a placed preview retains the ordinary JSON file import contract',async fun
   const candidate = await page.evaluate(function (input) {
     const positions = FB.bookmarkCompositions.captureStarts(input.id,'all',input.starts.map(function (unit) { return unit.definition; }));
     input.starts.forEach(function (unit) { unit.after = positions[unit.definition.id]; });
+    const graph = JSON.parse(JSON.stringify(input.catalogs.storyInstances.dune_existing_track)); graph.id = 'ordering_imported_track';
+    input.starts[0].storyInstances = {ordering_imported_track:graph}; input.starts[0].definition.tracks = [graph.id];
+    delete input.starts[0].definition.trackLocations;
+    input.starts[0].storyAfter = FB.bookmarkCompositions.captureStories(input.id,'personal',input.starts[0].storyInstances);
     const ticket = FB.bookmarkCompositions.prepare(input);
     return {report:ticket.report(),preview:ticket.preview()};
   },inputFor('dune'));
   expect(candidate.report.ready).toBe(true);
-  expect(candidate.preview.startScenarios.every(function (row) { return !Object.prototype.hasOwnProperty.call(row,'after'); })).toBe(true);
+  expect(candidate.preview.startScenarios.every(function (row) { return !Object.prototype.hasOwnProperty.call(row,'after') && !Object.prototype.hasOwnProperty.call(row,'storyAfter'); })).toBe(true);
   candidate.preview.name = 'Dune placed preview';
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({name:'dune-placed-preview.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(candidate.preview))});
