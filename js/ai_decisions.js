@@ -20,7 +20,9 @@
         historicalFloor:ratio,horizonFloor:ratio,horizonCap:ratio,horizonMultiplier:ratio,
         futureThreshold:ratio,futureMultiplier:ratio,timelyMultiplier:ratio,aggressionMultiplier:ratio,
         wartimeMultiplier:ratio,rankMultiplier:ratio,commerceCoastalMultiplier:ratio,
-        seaCoastalMultiplier:ratio,seaInlandMultiplier:ratio,priorityMultiplier:ratio}},
+        seaCoastalMultiplier:ratio,seaInlandMultiplier:ratio,priorityMultiplier:ratio,
+        transportCoastalMultiplier:ratio,transportInlandMultiplier:ratio,slotUnlockMultiplier:ratio,
+        economyUnlockMultiplier:ratio,unitUnlockMultiplier:ratio,ruleUnlockMultiplier:ratio,practiceUnlockMultiplier:ratio}},
     intrigue:{key:'aiIntriguePolicy', metrics:['score','hostility','motive','weight','schemePriority'],parameters:{baseWeight:ratio,chanceRate:unit,maximumChance:unit}},
     diplomacy:{key:'aiDiplomacyPolicy', metrics:['score','distance','regard','strengthRatio','sharedFaith'],parameters:{allianceChance:unit}},
     religion:{key:'aiReligionPolicy', metrics:['score','strengthRatio','importance','distance','zeal'],parameters:{minimumTargetRatio:ratio}},
@@ -45,9 +47,16 @@
   }
   function recordFaults(d, data, path) {
     var errors = [];
-    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments','buildingRoleWeights'],path,errors)) return errors;
+    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments','buildingRoleWeights','domainWeights'],path,errors)) return errors;
     if (!own(families,d.family)) return errors.concat(path + '.family is unregistered.');
     var f = families[d.family], names = Object.keys(f.parameters);
+    if (own(d,'domainWeights')) {
+      if (d.family !== 'research') errors.push(path + '.domainWeights requires research.');
+      if (fields(d.domainWeights,Object.keys(data.techDomains || {}),path + '.domainWeights',errors))
+        Object.keys(d.domainWeights).forEach(function (domain) {
+          if (!finite(d.domainWeights[domain],0,4)) errors.push(path + '.domainWeights is out of range.');
+        });
+    }
     if (own(d,'buildingRoleWeights')) {
       if (d.family !== 'investment') errors.push(path + '.buildingRoleWeights requires investment.');
       if (fields(d.buildingRoleWeights,Object.keys(FB.BUILDING_ROLES || {}),path + '.buildingRoleWeights',errors))

@@ -5,6 +5,7 @@ dependsOnRuntime(__filename,[
   'data/ai_decisions.js','data/traits.js','data/map_data.js','js/ai_decisions.js',
   'js/government_ai.js','js/governments.js','js/wars.js','js/world.js','js/mods.js','js/balance.js','js/armies.js',
   'js/fortifications.js','js/building_profiles.js','js/lordships.js','js/treasury.js','js/building_seasons.js','js/building_operations.js',
+  'js/technology.js','data/technology.js',
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
 const { test,expect } = require('../support/fixture');
@@ -103,5 +104,32 @@ for (const role of ['scholarship','worship']) {
       return {first:FB.buildingRole(ordered[0].id),pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     });
     expect(out).toEqual({first:role,pure:true});
+  });
+}
+
+for (const weight of [0,2]) {
+  test('imported research domain weight ' + weight + ' reaches the real score and seasonal slot selection',async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    const mod = await page.evaluate(function (weight) {
+      const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_research));
+      d.domainWeights = {};
+      Object.keys(FBDATA.techDomains).forEach(function (domain) { d.domainWeights[domain] = weight; });
+      return {name:'Research '+weight,aiDecisionPolicies:{research_review:d},balance:{aiResearchPolicy:'research_review'}};
+    },weight);
+    await importPolicy(page,mod);
+    await startDeterministicGame(page);
+    const out = await page.evaluate(function () {
+      const s = FB.state, rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive && !s.realms[id].liege; });
+      const candidate = FB.techCandidates(s,rid,true).find(function (row) { return row.available; });
+      const record = FB.realmTechRecord(s,rid), knownBefore = JSON.stringify(record.completed);
+      const score = FB.techAIScore(s,candidate.id,rid), scoreDidNotGrant = knownBefore === JSON.stringify(record.completed);
+      record.active = [];
+      const completed = JSON.stringify(record.completed);
+      FB.techSeason(s,false);
+      return {score:score,active:record.active.length,scoreDidNotGrant:scoreDidNotGrant,completed:completed === JSON.stringify(record.completed)};
+    });
+    expect(out.scoreDidNotGrant).toBe(true);
+    if (!weight) expect(out).toMatchObject({score:0,active:0,completed:true});
+    else { expect(out.score).toBeGreaterThan(0); expect(out.active).toBeGreaterThan(0); }
   });
 }
