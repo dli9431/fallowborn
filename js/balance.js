@@ -90,10 +90,15 @@ window.FB = window.FB || {};
     if (FB.aiDecisions) FB.aiDecisions.selectionFaults(table,FBDATA).forEach(function (key) {
       out.push({kind:'ai_policy',key:key});
     });
+    if (FB.aiDecisions) FB.aiDecisions.balanceFaults(table).forEach(function (key) {
+      out.push({kind:'ai_value',key:key});
+    });
     return out;
   };
 
   L.describe = function (problem) {
+    if (problem.kind === 'ai_value')
+      return FB.T('AI tuning key {key} must stay within its declared bounds.', {key:problem.key});
     if (problem.kind === 'ai_policy')
       return FB.T('Balance key {key} must name an AI policy of the matching family.', {key:problem.key});
     if (problem.kind === 'table') return FB.T('balance overrides must be an object.');

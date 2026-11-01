@@ -2,6 +2,8 @@ AI decision authoring
 
 Scope
 
+Live campaign consumers use aiWarPolicy for consideration, strength margin, maximum offensive commitments and aggression appetite, with explicit government warChance overriding the policy. The legacy bellicose field retains its exact effect. New ordinary targets use aiExpansionPolicy with legal candidates and one batched regional fact projection; default aggression ascending/id tie order preserves the former selector without an RNG draw. Custom weighted choices draw once. Raids keep one uniform target draw by default; aiRaidTargetDevelopmentWeight in [0,100] optionally weights developed counties. aiRaidChance and breakawayChance now use the ordinary realm-scoped balance reader. Explicit zero raid chance is respected instead of falling through the former logical-or default. Ownership, legal checks and financial transactions remain canonical.
+
 AI choices have separate candidate enumeration, canonical eligibility, pure facts, preference evaluation, selection and apply steps. Authorable preferences never supply legal permission, resources, ownership, technology, physical reach or combat power. Trusted engine modules retain those algorithms and transactions. The policy infrastructure described here exposes pure decision projections; existing live AI consumers keep their current code until individually converted. No additional scheduler, autonomous action or strategic planner is installed by loading this API.
 
 Active decision inventory

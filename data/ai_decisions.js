@@ -27,6 +27,7 @@ FBDATA.aiDecisionPolicies = {
     order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] }
 };
 Object.assign(FBDATA.balance, {
+  aiRaidTargetDevelopmentWeight:0,
   aiWarPolicy:'ordinary_war', aiExpansionPolicy:'ordinary_expansion', aiTacticsPolicy:'ordinary_tactics',
   aiInvestmentPolicy:'ordinary_investment', aiResearchPolicy:'ordinary_research',
   aiIntriguePolicy:'ordinary_intrigue', aiDiplomacyPolicy:'ordinary_diplomacy',

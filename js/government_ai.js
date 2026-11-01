@@ -5,9 +5,10 @@
   var rules = G.register('ai', 'realm_decisions', {
     goals:function (state, rid) {
       var realm = state.realms[rid], params = G.parameters(state, rid, 'ai');
+      var war = FB.aiDecisions.parameters(state,rid,'war');
       return { warChance:params.warChance !== undefined ? params.warChance :
-        realm && realm.ruler && realm.ruler.personality === 'bellicose' ? 0.08 : 0.025,
-        allianceChance:0.08 };
+        realm && realm.ruler && realm.ruler.personality === 'bellicose' ? war.bellicoseChance : war.chance,
+        allianceChance:FB.aiDecisions.parameters(state,rid,'diplomacy').allianceChance };
     },
     canNegotiate:function () { return false; },
     consentContract:function () { return false; },

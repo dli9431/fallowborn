@@ -6819,7 +6819,7 @@ window.FB = window.FB || {};
         ? FB.identityTerritoryShare(state, 'culture', cult, rid) : 0)
       : 1;
     if (raidShare <= 0) return;
-    const baseChance = (B && B.aiRaidChance) || 0.12;
+    const baseChance = FB.balanceFor(state,rid,'aiRaidChance');
     if (!FB.chance(baseChance * (0.5 + 0.5 * (r.aggression || 1)) *
         raidShare)) return;
 
@@ -6868,7 +6868,14 @@ window.FB = window.FB || {};
     }
 
     if (!targets.length) return;
-    const targetPid = targets[Math.floor(FB.rng() * targets.length)];
+    const developmentWeight = FB.balanceFor(state,rid,'aiRaidTargetDevelopmentWeight');
+    const weights = targets.map(function (pid) { return 1 + Math.max(0,state.dev[pid] || 0) * developmentWeight; });
+    let targetRoll = FB.rng() * weights.reduce(function (sum,n) { return sum + n; },0);
+    let targetPid = targets[targets.length - 1];
+    for (let ti=0;ti<targets.length;ti++) {
+      if (targetRoll < weights[ti]) { targetPid = targets[ti]; break; }
+      targetRoll -= weights[ti];
+    }
     const targetPr = FB.world.byId[targetPid];
     if (!targetPr) return;
 
@@ -7728,7 +7735,7 @@ window.FB = window.FB || {};
     return aiDejureTotals;
   }
 
-  function aiExpansionProfile(state, realmId) {
+  function aiExpansionProfile(state, realmId, territory) {
     rcEnsure(state);
     const profile = {
       realmId:realmId,
@@ -7736,7 +7743,7 @@ window.FB = window.FB || {};
       capital:FB.dejureOf(state.realms[realmId] &&
         state.realms[realmId].capital)
     };
-    for (const pid of (rc.provs[realmId] || [])) {
+    for (const pid of (territory || rc.provs[realmId] || [])) {
       const dj = FB.dejureOf(pid);
       if (dj.duchy) profile.duchy[dj.duchy] =
         (profile.duchy[dj.duchy] || 0) + 1;
@@ -7810,6 +7817,15 @@ window.FB = window.FB || {};
   FB.aiExpansionPriority = function (state, realmId, pid) {
     return aiExpansionPriorityWithProfile(
       state, aiExpansionProfile(state, realmId), pid);
+  };
+  FB.aiExpansionFacts = function (state, realmId, counties, territory) {
+    const profile = aiExpansionProfile(state,realmId,territory), facts = Object.create(null);
+    counties.forEach(function (pid) {
+      const p = aiExpansionPriorityWithProfile(state,profile,pid);
+      facts[pid] = {consolidationBand:p.band,core:p.core,remaining:p.remaining,
+        contacts:p.contacts,development:p.development,score:0};
+    });
+    return facts;
   };
 
   function aiExpansionProvincePlan(state, profile, loserRealm, allowed) {
@@ -8506,7 +8522,7 @@ window.FB = window.FB || {};
      rebellion or a second civil-war system. */
   FB.vassalBreakawayChance = function (state, rid) {
     const base = FB.clamp(
-      aggressionBalance('breakawayChance', 0.015), 0, 1);
+      FB.balanceFor(state,rid,'breakawayChance'), 0, 1);
     const realm = state && state.realms && state.realms[rid];
     const support = FB.rebelSupportMultiplier
       ? FB.rebelSupportMultiplier(state, rid) : 1;

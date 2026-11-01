@@ -3,6 +3,7 @@
   'use strict';
   var P = FB.aiDecisions = {}, cache = new WeakMap();
   var unit = [0,1], ratio = [0,10], count = [0,2048,true];
+  var tuning = {aiRaidTargetDevelopmentWeight:[0,100]};
   var families = {
     war:{key:'aiWarPolicy', metrics:['strengthRatio','support','burden','score'],
       parameters:{chance:unit,bellicoseChance:unit,minimumStrengthRatio:ratio,
@@ -104,6 +105,7 @@
       errors = errors.concat(recordFaults(table[key],data,'aiDecisionPolicies.' + key));
     });
     function selections(balance,path,required) {
+      errors = errors.concat(P.balanceFaults(balance).map(function (key) { return path + '.' + key + ' is out of range.'; }));
       Object.keys(families).forEach(function (family) {
         var key = families[family].key;
         if (!required && !own(balance,key)) return;
@@ -130,6 +132,11 @@
     return errors;
   };
   P.invalidate = function () { cache = new WeakMap(); };
+  P.balanceFaults = function (balance) {
+    return Object.keys(tuning).filter(function (key) {
+      return own(balance,key) && !finite(balance[key],tuning[key][0],tuning[key][1]);
+    });
+  };
   P.selectionFaults = function (balance, data) {
     var faults = [], table = data.aiDecisionPolicies;
     Object.keys(families).forEach(function (family) {
@@ -159,6 +166,32 @@
     var policy = P.compile(FB.balanceFor(state,realmId,families[family].key));
     if (policy.definition.family !== family) throw new Error('AI decision policy family mismatch.');
     return policy;
+  };
+  // Snapshot existing identity owners; never materialize a ruler or persist a policy.
+  P.inputs = function (state, realmId) {
+    var realm = state && state.realms && state.realms[realmId];
+    var person = realm && FB.realmRulerCharacterSnapshot && FB.realmRulerCharacterSnapshot(state,realmId);
+    var aim = state && state.agency && state.agency.rulerAims && state.agency.rulerAims[realmId];
+    return {traits:person && person.traits ? person.traits.slice() : realm && realm.ruler && realm.ruler.trait ? [realm.ruler.trait] : [],
+      aim:aim && aim.id || null};
+  };
+  P.parameters = function (state, realmId, family) {
+    var policy = P.resolve(state,realmId,family);
+    if (!policy.definition.adjustments.length) return policy.definition.parameters;
+    return P.report(policy,[],P.inputs(state,realmId)).parameters;
+  };
+  P.choose = function (state, realmId, family, candidates) {
+    var report = P.report(P.resolve(state,realmId,family),candidates,P.inputs(state,realmId));
+    return P.pick(report,report.mode === 'weighted' && report.totalWeight > 0 ? FB.rng() : undefined);
+  };
+  P.orderCandidates = function (state, realmId, family, candidates) {
+    var report = P.report(P.resolve(state,realmId,family),candidates,P.inputs(state,realmId));
+    var ids = report.ranking.map(function (row) { return row.id; });
+    if (report.mode === 'weighted' && report.totalWeight > 0) {
+      var first = P.pick(report,FB.rng());
+      ids = [first].concat(ids.filter(function (id) { return id !== first; }));
+    }
+    return ids;
   };
   P.report = function (policy, candidates, inputs) {
     var d = policy.definition, f = families[d.family], errors = [];
