@@ -10,7 +10,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,['index.html','data/bookmark_634_identities.js','data/bookmark_634.js','data/starts_634_ordinary.js',
   'data/bookmark_568_identities.js','data/bookmark_476_wider_identities.js',
   'data/cultures.js','data/bookmarks.js','data/eras.js','js/model.js',
-  'js/mods.js','js/world.js','js/ui_misc.js','js/ui_modals.js','js/crazygames.js']);
+  'js/mods.js','js/world.js','js/bookmark_composition.js','js/main.js','js/ui_misc.js','js/ui_modals.js','js/crazygames.js']);
 
 const FAITHS = ['early_islam_634','zoroastrian_sasanian_634','west_syriac_lay_634'];
 const SOURCE_FAITHS = ['insular_traditional_476','finnic_traditional_476','woodland_traditional_476',
@@ -153,7 +153,7 @@ test('source selector union preserves doctrine, all earlier dates and narrower r
       }); });
       const exact = ids.every(function (id) {
         return JSON.stringify(FBDATA.religions[id].availability.bookmarkIds) ===
-          JSON.stringify(original[id].availability.bookmarkIds.filter(function (date) { return date !== '634'; }).concat(['634']));
+          JSON.stringify(original[id].availability.bookmarkIds);
       });
       const id = ids[0];
       FBDATA.religions[id].availability = {bookmarkIds:['476','493'],yearMin:476,yearMax:600,

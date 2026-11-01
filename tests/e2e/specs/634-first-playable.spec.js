@@ -20,6 +20,7 @@ dependsOnRuntime(__filename,[
   'data/political_institutions.js','data/assembly_polities.js','data/aristocratic_courts.js',
   'data/government_rollout.js','data/communal_revisions.js',
   'js/model.js','js/world.js','js/main.js','js/starts.js','js/bookmark_setup.js',
+  'js/bookmark_composition.js','js/mods.js','js/stories.js','js/messages.js',
   'js/governments.js','js/government_recognition.js','js/government_elective.js','js/government_selection.js','js/climate.js',
   'js/government_civic.js','js/institutions.js','js/religious_institutions.js',
   'js/save.js','js/save_v4.js','js/systems.js','js/crazygames.js'
@@ -116,6 +117,7 @@ test('634 reuses shared site metadata and publishes detached starts once',async 
     (0,eval)(input.startSource);
     const stagingInert = before === JSON.stringify(FBDATA);
     (0,eval)(input.source);
+    FB.bookmarkCompositions.publishPending();
     return {siteFields:Object.keys(FBDATA.bookmarkRegions634.b28.settlementSites[siteId]).sort(),
       named:Array.isArray(site.names) && site.names.length > 0,
       preserved:site === FBDATA.settlementSites[siteId] && JSON.stringify(site) === siteSnapshot,
@@ -139,7 +141,11 @@ test('failed 634 composition leaves other bookmarks and ordinary starts playable
       body:'delete FBDATA.bookmarkRegions634.b29;\n' + source});
   });
   await openGame(page,info);
-  expect(pageErrors).toEqual(['Incomplete 634 regional declarations']);
+  expect(pageErrors).toEqual([]);
+  expect(await page.evaluate(function () {
+    return FB.bookmarkCompositions.sourceReports().find(function (report) { return report.id === 'autumn_634'; });
+  })).toMatchObject({published:false,source:'data/bookmark_634.js',bookmarkId:'634',
+    worldFaults:['Incomplete 634 regional declarations']});
   expect(await page.evaluate(function () {
     return {registered:!!FBDATA.bookmarks['634'],
       staged:FBDATA.startScenarios_634_ordinary.map(function (row) { return row.id; }),
@@ -186,6 +192,7 @@ test('634 missing, duplicate and unresolved regional inputs reject without publi
     const original = FBDATA.bookmarkRegions634, copy = function (v) { return JSON.parse(JSON.stringify(v)); };
     const rng = FB.getRngState(), uid = FB.getUidCounter(), data = JSON.stringify(FBDATA), failures = [];
     const originalStarts = FBDATA.startScenarios_634_ordinary;
+    const originalSource = FBDATA.bookmarkCompositionSources.autumn_634, originalCandidate = FBDATA.bookmarkCandidates['634'];
     ['missing','missing_county','duplicate_county','duplicate_court','unknown_court','unknown_liege','wrong_capital',
       'territorial_foreign_capital','nonterritorial_missing_capital','nonterritorial_scenery_capital',
       'site_coordinates','site_names','missing_starts','duplicate_start','conflicting_start'].forEach(function (kind) {
@@ -208,15 +215,73 @@ test('634 missing, duplicate and unresolved regional inputs reject without publi
       if (kind === 'missing_starts') delete FBDATA.startScenarios_634_ordinary;
       if (kind === 'duplicate_start') FBDATA.startScenarios_634_ordinary.push(copy(originalStarts[0]));
       if (kind === 'conflicting_start') FBDATA.startScenarios_634_ordinary[0].gold += 1;
-      let rejected = false;
-      try { (0,eval)(code); } catch (error) { rejected = /634/.test(error.message); }
+      (0,eval)(code);
+      const report = FB.bookmarkCompositions.publishPending().find(function (report) { return report.id === 'autumn_634'; });
+      const rejected = !report.published && report.worldFaults.some(function (fault) { return /634/.test(fault); });
       FBDATA.bookmarkRegions634 = original;
       FBDATA.startScenarios_634_ordinary = originalStarts;
+      FBDATA.bookmarkCompositionSources.autumn_634 = originalSource;
+      FBDATA.bookmarkCandidates['634'] = originalCandidate;
       failures.push(rejected && data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter());
     });
     return failures;
   },source);
   expect(problems).toEqual(Array(15).fill(true));
+});
+
+for (const crazy of [false,true]) {
+  test('a bad 634 start leaves its sibling playable on ' + (crazy ? 'CrazyGames' : 'standard'),async function ({page},info) {
+    test.skip(!info.project.name.endsWith('-served'),'Response interception requires the served origin.');
+    await page.route('**/data/bookmark_634.js',function (route) {
+      return route.fulfill({contentType:'application/javascript',body:'FBDATA.startScenarios_634_ordinary[0].gold = -1;\n' + source});
+    });
+    if (crazy) {
+      await mockCrazyGames(page);
+      await page.addInitScript(function () {
+        window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage';
+      });
+      await openCrazyGame(page,info);
+    } else await openGame(page,info);
+    const result = await page.evaluate(function () {
+      const report = FB.bookmarkCompositions.sourceReports().find(function (report) { return report.id === 'autumn_634'; });
+      return {report:report,starts:FBDATA.startScenarios.filter(function (row) {
+        return row.bookmarkIds && row.bookmarkIds.indexOf('634') >= 0;
+      }).map(function (row) { return row.id; }),locations:Object.keys(FB.bookmark('634').startLocations),
+      faults:['634','476','867','1066'].map(function (id) { return FB.validateBookmark(FB.bookmark(id)); }),
+      diagnostics:FB.bookmarkRuntimeDiagnostics().filter(function (row) { return row.startId === 'farmer_634'; })};
+    });
+    expect(result.report).toMatchObject({published:true,starts:[{id:'farmer_634',ready:false,revision:'baseline'},
+      {id:'craftsman_634',ready:true}]});
+    expect(result.report.starts[0].faults.join(' ')).toContain('gold');
+    expect(result.starts).toEqual(['craftsman_634']);
+    expect(result.locations).toEqual(['craftsman_634']);
+    expect(result.faults).toEqual([[],[],[],[]]);
+    expect(result.diagnostics).toHaveLength(1);
+    expect(result.diagnostics[0]).toMatchObject({source:'data/starts_634_ordinary.js',bookmarkId:'634',startId:'farmer_634'});
+    await beginBookmarkFromTitle(page,'634','craftsman_634');
+    expect(await page.evaluate(function () { return FB.state.start.scenarioId; })).toBe('craftsman_634');
+  });
+}
+
+test('canonical 634 world rejection withholds its owned catalogues and keeps other worlds available',async function ({page},info) {
+  test.skip(!info.project.name.endsWith('-served'),'Response interception requires the served origin.');
+  await page.route('**/data/bookmark_634.js',function (route) {
+    return route.fulfill({contentType:'application/javascript',body:
+      "FBDATA.bookmarkRegions634.b22.realms.find(function (r) { return r.id === 'aures_634'; }).capital = 'composition_unknown_capital';\n" + source});
+  });
+  await openGame(page,info);
+  const result = await page.evaluate(function () {
+    return {report:FB.bookmarkCompositions.sourceReports().find(function (report) { return report.id === 'autumn_634'; }),
+      absent:!FBDATA.bookmarks['634'] && !FBDATA.settlementLayouts['634_opening'] &&
+        !FBDATA.governmentForms.medinan_selection_pf_634 && !FBDATA.religions.early_islam_634 &&
+        !FBDATA.startScenarios.some(function (s) { return s.id === 'farmer_634' || s.id === 'craftsman_634'; }),
+      edgesPreserved:Object.keys(FBDATA.bookmarkFaithAvailability634).every(function (id) {
+        return FBDATA.religions[id].availability.bookmarkIds.indexOf('634') < 0;
+      }),faults:['476','867','1066'].map(function (id) { return FB.validateBookmark(FB.bookmark(id)); })};
+  });
+  expect(result).toMatchObject({report:{published:false},absent:true,edgesPreserved:true,faults:[[],[],[]]});
+  expect(result.report.worldFaults.join(' ')).toContain('composition_unknown_capital');
+  await beginBookmarkFromTitle(page,'867');
 });
 
 test('634 complete candidate validation rejects bad sites, faiths and capitals without changing state',async function ({page},info) {

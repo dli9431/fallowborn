@@ -2463,6 +2463,7 @@ FB.CHANGELOG = [
          A changed mod string therefore falls back to that exact current English. */
       FB.sealChancePolicies();
       FB.stories.sealTypes();
+      FB.bookmarkCompositions.publishPending();
       FB.stories.load(); // base instances; each mod compiles a detached candidate
       FB.mods.applyStored();
       FB.stories.seal(); // effective instances are fixed before any world is generated

@@ -10,6 +10,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_634_scaffold_d.js','data/bookmark_634_identities.js','data/bookmark_634.js',
+  'js/bookmark_composition.js','js/main.js',
   'data/bookmark_568_scaffold_a.js','data/bookmark_568_scaffold_b.js',
   'data/bookmark_568_scaffold_c.js','data/bookmark_568_scaffold_d.js',
   'data/bookmark_568_identities.js','data/bookmark_476_wider_identities.js',

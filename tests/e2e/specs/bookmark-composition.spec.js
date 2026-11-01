@@ -248,9 +248,10 @@ test('additive faith availability preserves other dates and rejects undeclared o
       return row.availability && Array.isArray(row.availability.bookmarkIds) && row.availability.bookmarkIds.length;
     });
     const prior = JSON.parse(JSON.stringify(FBDATA.religions[id]));
-    input.availability = {}; input.availability[id] = {bookmarkIds:[input.bookmark.id]};
+    input.availability = {}; input.availability[id] = {bookmarkIds:[input.bookmark.id],
+      afterBookmarkId:prior.availability.bookmarkIds[0]};
     const published = FB.bookmarkCompositions.prepare(input).publish();
-    const expected = JSON.parse(JSON.stringify(prior)); expected.availability.bookmarkIds.push(input.bookmark.id);
+    const expected = JSON.parse(JSON.stringify(prior)); expected.availability.bookmarkIds.splice(1,0,input.bookmark.id);
     const actual = JSON.stringify(FBDATA.religions[id]), live = FBDATA;
     const changed = JSON.parse(JSON.stringify(input)); changed.id = 'composition_bad_availability';
     changed.availability[id].bookmarkIds = ['composition_unowned_world'];
@@ -393,3 +394,44 @@ for (const prefix of ['harbor','dune']) {
     expect(imported.sig).toMatch(/^effective-1-/);
   });
 }
+
+test('explicit placement preserves start order and authored title identifiers',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function (input) {
+    const before = FBDATA.startScenarios.map(function (start) { return start.id; });
+    input.startAfter = before[0];
+    const bad = JSON.parse(JSON.stringify(input)); bad.startAfter = 'composition_missing_anchor';
+    const live = FBDATA, snapshot = JSON.stringify(FBDATA), rejected = FB.bookmarkCompositions.prepare(bad).publish();
+    const pure = live === FBDATA && snapshot === JSON.stringify(FBDATA);
+    const ticket = FB.bookmarkCompositions.prepare(input), preview = ticket.preview(), report = ticket.publish();
+    const world = FBDATA.bookmarks[input.bookmark.id];
+    return {rejected:rejected,pure:pure,report:report,
+      actual:FBDATA.startScenarios.map(function (start) { return start.id; }),
+      expected:before.slice(0,1).concat(input.starts.map(function (unit) { return unit.definition.id; }),before.slice(1)),
+      titleKeys:Object.keys(world.duchies),expectedKeys:Object.keys(input.bookmark.duchies),
+      rawReference:world.provinces[0].duchy,expectedReference:input.bookmark.provinces[0].duchy,
+      importFaults:FB.mods.validate(preview),faults:FB.validateBookmark(FB.bookmark(input.bookmark.id))};
+  },composition('harbor'));
+  expect(result).toMatchObject({pure:true,rejected:{published:false},report:{published:true},importFaults:[],faults:[]});
+  expect(result.rejected.worldFaults.join(' ')).toContain('startAfter');
+  expect(result.actual).toEqual(result.expected);
+  expect(result.titleKeys).toEqual(result.expectedKeys);
+  expect(result.rawReference).toBe(result.expectedReference);
+});
+
+test('a malformed staged source cannot prevent an independent queued world from publishing',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function (input) {
+    FBDATA.bookmarkCompositionSources.composition_broken_source = null;
+    FBDATA.bookmarkCompositionSources[input.id] = {source:input.source,bookmarkId:input.bookmark.id,input:input};
+    const rng = FB.getRngState(), uid = FB.getUidCounter(), state = FB.state;
+    const reports = FB.bookmarkCompositions.publishPending(), good = reports.find(function (r) { return r.id === input.id; });
+    const bad = reports.find(function (r) { return r.id === 'composition_broken_source'; });
+    good.worldFaults.push('Mutated detached readback');
+    return {good:FB.bookmarkCompositions.sourceReports().find(function (r) { return r.id === input.id; }),bad:bad,
+      registered:!!FBDATA.bookmarks[input.bookmark.id],faults:FB.validateBookmark(FB.bookmark(input.bookmark.id)),
+      pure:rng === FB.getRngState() && uid === FB.getUidCounter() && state === FB.state};
+  },composition('harbor'));
+  expect(result).toMatchObject({good:{published:true,worldFaults:[]},bad:{published:false},registered:true,faults:[],pure:true});
+  expect(result.bad.worldFaults.join(' ')).toContain('composition source must be an object');
+});

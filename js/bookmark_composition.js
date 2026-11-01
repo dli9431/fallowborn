@@ -3,6 +3,7 @@
 (function () {
   'use strict';
   var owners = Object.create(null);
+  var sourceReports = Object.create(null);
   var catalogs = ['geographies','cultures','cultureDoctrineDefaults','religions','governmentForms',
     'settlementSites','settlementLayouts','administrationProfiles','aristocraticProfiles',
     'civicProfiles','constituencyProfiles','ecclesiasticalProfiles','mobileProfiles','storyInstances'];
@@ -97,19 +98,27 @@
     if (!plain(patches)) throw new Error('Composition availability must be an object.');
     Object.keys(patches).forEach(function (id) {
       var patch = patches[id], prior = base.religions[id];
-      fields(patch, ['bookmarkIds'], 'availability.' + id);
+      fields(patch, ['bookmarkIds','afterBookmarkId'], 'availability.' + id);
       if (!prior || !prior.availability || !Array.isArray(prior.availability.bookmarkIds) ||
           !Array.isArray(patch.bookmarkIds) || patch.bookmarkIds.length !== 1 || patch.bookmarkIds[0] !== bookmarkId)
         throw new Error('Invalid additive composition availability: ' + id);
+      if (own(patch,'afterBookmarkId') && patch.afterBookmarkId !== null &&
+          (typeof patch.afterBookmarkId !== 'string' || patch.afterBookmarkId === bookmarkId ||
+            prior.availability.bookmarkIds.indexOf(patch.afterBookmarkId) < 0))
+        throw new Error('Invalid composition availability anchor: ' + id);
       if (prior.availability.bookmarkIds.indexOf(bookmarkId) >= 0) return;
       if (payload.religions && own(payload.religions, id)) throw new Error('Overlapping faith ownership: ' + id);
-      var next = copy(prior); next.availability.bookmarkIds.push(bookmarkId);
+      var next = copy(prior), at = !own(patch,'afterBookmarkId') ? next.availability.bookmarkIds.length :
+        patch.afterBookmarkId === null ? 0 : next.availability.bookmarkIds.indexOf(patch.afterBookmarkId) + 1;
+      next.availability.bookmarkIds.splice(at,0,bookmarkId);
       payload.religions = payload.religions || {}; payload.religions[id] = next;
     });
   }
   function preparePayload(payload, worldId, base, complete) {
     var normalized = FB.titleIds.normalizeMod(payload);
-    return {payload:normalized, prepared:FB.mods.prepareComposition(normalized, worldId, base, complete)};
+    // Normalize for proof only. Bundled publication retains authored title
+    // spellings so conversion cannot silently change mod fingerprints.
+    return {payload:copy(payload), prepared:FB.mods.prepareComposition(normalized, worldId, base, complete)};
   }
   function addStart(world, unit) {
     var id = unit.definition.id;
@@ -138,7 +147,7 @@
   function build(input, live) {
     data(input);
     var spec = copy(input);
-    fields(spec, ['id','source','bookmark','catalogs','availability','starts'], 'composition');
+    fields(spec, ['id','source','bookmark','catalogs','availability','starts','startAfter'], 'composition');
     if (typeof spec.id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(spec.id) || !plain(spec.bookmark))
       throw new Error('Composition needs an owner id and a complete bookmark.');
     var fingerprint = stable(spec);
@@ -157,6 +166,9 @@
       ids[id] = true;
       report.starts.push({id:id, source:source(unit.source) || report.source, ready:false, revision:null, faults:[]});
     });
+    if (spec.startAfter !== undefined && (typeof spec.startAfter !== 'string' || own(ids, spec.startAfter) ||
+        live.startScenarios.filter(function (start) { return start && start.id === spec.startAfter; }).length !== 1))
+      throw new Error('Composition startAfter must name one existing unowned start.');
     /* Start-owned references are installed only after that start validates.
        A world-owned dependency on an optional start is an ownership error. */
     [spec.bookmark].concat(Object.keys(spec.bookmark.revisions || {}).map(function (key) {
@@ -225,24 +237,29 @@
     if (own(live.bookmarks, worldId) && !equal(live.bookmarks[worldId], final.payload.bookmarks[worldId]))
       throw new Error('Conflicting composition world: ' + worldId);
     report.ready = true;
-    return {report:report, payload:final.payload, prepared:final.prepared, fingerprint:fingerprint};
+    return {report:report, payload:final.payload, prepared:final.prepared, fingerprint:fingerprint,startAfter:spec.startAfter};
   }
   function publication(plan, live) {
     var next = Object.assign({}, live), changed = false, payload = plan.payload;
     Object.keys(payload).forEach(function (table) {
       if (table === 'startScenarios') {
-        var rows = live.startScenarios.slice();
+        var rows = live.startScenarios.slice(), additions = [];
         payload.startScenarios.forEach(function (start) {
           if (rows.some(function (row) { return row && row.id === start.id; })) return;
-          rows.push(copy(start)); changed = true;
+          additions.push(copy(start)); changed = true;
         });
-        if (rows.length !== live.startScenarios.length) next.startScenarios = rows;
+        if (additions.length) {
+          var at = plan.startAfter === undefined ? rows.length : rows.findIndex(function (row) {
+            return row && row.id === plan.startAfter;
+          }) + 1;
+          Array.prototype.splice.apply(rows, [at,0].concat(additions)); next.startScenarios = rows;
+        }
       } else {
         var result = Object.assign({}, live[table]), touched = false;
         Object.keys(payload[table]).forEach(function (id) {
-          var value = plan.prepared.data[table][id];
+          var value = payload[table][id];
           if (own(live[table], id) && equal(live[table][id], value)) return;
-          result[id] = value; touched = true; changed = true;
+          result[id] = copy(value); touched = true; changed = true;
         });
         if (touched) next[table] = result;
       }
@@ -250,6 +267,43 @@
     return {data:next, changed:changed};
   }
   FB.bookmarkCompositions = {
+    /* Sources stage data before engine loading. Publication waits until all
+       validators/factories exist, ahead of the bundled mod baseline snapshot. */
+    publishPending:function () {
+      var pending = FBDATA.bookmarkCompositionSources || {};
+      Object.keys(pending).forEach(function (key) {
+        var source = pending[key], report;
+        try {
+          fields(source,['source','bookmarkId','startAfter','availabilityAfter','input','faults'],'composition source');
+          if (source.faults !== undefined) {
+            if (!Array.isArray(source.faults) || !source.faults.length || source.faults.some(function (fault) {
+              return typeof fault !== 'string' || !fault;
+            })) throw new Error('Composition source faults must be nonempty messages.');
+            throw new Error(source.faults.join('\n'));
+          }
+          if (plain(source.input) && (source.input.id !== key ||
+              !plain(source.input.bookmark) || source.input.bookmark.id !== source.bookmarkId))
+            throw new Error('Composition source ownership does not match its envelope.');
+          report = FB.bookmarkCompositions.prepare(source.input).publish();
+          if (!report.id) report.id = key;
+          if (!report.source && typeof source.source === 'string') report.source = source.source;
+          if (!report.bookmarkId && typeof source.bookmarkId === 'string') report.bookmarkId = source.bookmarkId;
+        } catch (error) {
+          report = {id:key,source:source && typeof source.source === 'string' ? source.source : null,
+            bookmarkId:source && typeof source.bookmarkId === 'string' ? source.bookmarkId : null,
+            ready:false,published:false,reused:false,worldFaults:[error.message],starts:[]};
+        }
+        sourceReports[key] = copy(report);
+        var definition = {id:report.bookmarkId};
+        FB.recordBookmarkRuntimeFaults('world_definition',definition,null,report.worldFaults,report.source);
+        (report.starts || []).forEach(function (start) {
+          FB.recordBookmarkRuntimeFaults('start_requirements',Object.assign({},definition,{revision:start.revision}),
+            {id:start.id},start.faults,start.source);
+        });
+      });
+      return FB.bookmarkCompositions.sourceReports();
+    },
+    sourceReports:function () { return Object.keys(sourceReports).map(function (id) { return copy(sourceReports[id]); }); },
     prepare:function (input) {
       var live = FBDATA, before = JSON.stringify(live), english = JSON.stringify(FB.englishMessages());
       var registry = FB.stories.list(), plan, failure, published;
