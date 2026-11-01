@@ -102,6 +102,7 @@
     if (playerRules(s, rid) || !live(s, rid)) return false;
     var due = row.payPerSeason + (row.initialPaidTurn === undefined ? row.initialPay || 0 : 0);
     if (rid === row.patronRealmId && due && FB.treasuryAvailable(s, rid) < due) return false;
+    if (!FB.aiDecisions.willing(s,rid,'government','agreementWillingness')) return false;
     return FB.authorityConsentContract(s, row.id, rid);
   }
   function propose(s, row) {
@@ -109,6 +110,7 @@
         playerRules(s, row.patronRealmId)) return false;
     var choice = s.owner[row.target] === row.patronRealmId &&
       FB.settlementCountyHolder(s, row.target) === row.patronRealmId ? 'land' : 'service';
+    if (!FB.aiDecisions.willing(s,row.realmId,'government',choice === 'land' ? 'settlementWillingness' : 'serviceWillingness')) return false;
     return FB.federateRequest(s, row.id, choice);
   }
   FB.governments.register('ai', 'federate_contracts', { consentContract:function (s, rid, c) { return ai(s, rid, c.contract); },

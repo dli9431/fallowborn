@@ -446,16 +446,25 @@
           actor:{ kind:'constituency', realmId:rid, id:interest.id }, memberId:interest.id, characterId:nominee }));
       }
       var candidates = S.candidates(s, rid), chosen = null, best = -1;
+      var ratings = [];
       candidates.forEach(function (id) {
         var score = S.constituency(s, rid).reduce(function (n, m) { return n + (!response(s, rid, m, id, p.terms).reason ? m.weight : 0); }, 0);
+        ratings.push({id:id,score:score});
         if (score > best || score === best && p.procedure && p.procedure.designation && tree(s, rid).designatedHeirId === id) { chosen = id; best = score; }
       });
-      if (!chosen) {
+      if (ratings.length && FB.aiDecisions.resolve(s,rid,'government').definition.mode !== 'first') {
+        var ranked = FB.aiDecisions.governmentCandidates(s,rid,ratings,function (candidate) {
+          return {score:candidate.score,support:candidate.score,cost:p.negotiationCost};
+        });
+        chosen = ranked.length ? ranked[0].id : null;
+      }
+      if (!ratings.length) {
         var t = tree(s, rid);
         v.status = Object.keys(t.members).some(function (id) { return eligible(s, rid, t.members[id], false, true); }) ? 'minority' : 'vacant';
         return false;
       }
-      var q = S.quote(s, rid, { action:'negotiate', actor:actor, candidateId:chosen, terms:p.terms });
+      var q = chosen && FB.aiDecisions.willing(s,rid,'government','negotiationWillingness') ?
+        S.quote(s,rid,{action:'negotiate',actor:actor,candidateId:chosen,terms:p.terms}) : {allowed:false,reasonId:'declined'};
       if (q.allowed) S.apply(s, q);
       else if (q.reasonId === 'funds') S.constituency(s, rid).forEach(function (m) {
         var vote = S.quote(s, rid, { action:'support', actor:{ kind:'constituency', realmId:rid, id:m.id },

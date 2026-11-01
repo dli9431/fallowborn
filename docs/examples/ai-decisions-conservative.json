@@ -1,0 +1,196 @@
+{
+  "name": "Conservative AI stewardship",
+  "aiDecisionPolicies": {
+    "cautious_war": {
+      "family": "war",
+      "mode": "first",
+      "parameters": {
+        "chance": 0.01,
+        "bellicoseChance": 0.025,
+        "minimumStrengthRatio": 1.6,
+        "maximumCommitments": 1,
+        "aggressionAppetite": 0.5,
+        "bellicoseAppetite": 1
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": [
+        {
+          "kind": "trait",
+          "id": "content",
+          "multiply": {
+            "chance": 0.5
+          }
+        }
+      ]
+    },
+    "cautious_frontier": {
+      "family": "expansion",
+      "mode": "ordered",
+      "parameters": {},
+      "order": [
+        {
+          "metric": "aggression",
+          "direction": "asc"
+        },
+        {
+          "metric": "defensiveStrength",
+          "direction": "asc"
+        },
+        {
+          "metric": "contacts",
+          "direction": "desc"
+        }
+      ],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "id",
+      "adjustments": []
+    },
+    "careful_investment": {
+      "family": "investment",
+      "mode": "first",
+      "parameters": {
+        "capitalPriority": 0,
+        "frontierPriority": 1,
+        "interiorPriority": 2,
+        "developmentWeight": 0,
+        "fortDevelopmentWeight": 1,
+        "buildOrderWeight": 1,
+        "benefitWeight": 0,
+        "costWeight": 0.01,
+        "upkeepWeight": 0,
+        "profileScoreWeight": 1,
+        "baronPreference": 1,
+        "operationSpending": 1
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": [],
+      "buildingRoleWeights": {
+        "worship": 100
+      }
+    },
+    "stewardship_research": {
+      "family": "research",
+      "mode": "weighted",
+      "parameters": {
+        "baseScore": 10,
+        "exposureMultiplier": 2.25,
+        "historicalBase": 1.5,
+        "historicalSlope": 0.18,
+        "historicalFloor": 0.25,
+        "horizonFloor": 0.35,
+        "horizonCap": 2,
+        "horizonMultiplier": 3,
+        "futureThreshold": 4,
+        "futureMultiplier": 0.12,
+        "timelyMultiplier": 1.35,
+        "aggressionMultiplier": 0.4,
+        "wartimeMultiplier": 2,
+        "rankMultiplier": 0.2,
+        "commerceCoastalMultiplier": 1.2,
+        "seaCoastalMultiplier": 1.8,
+        "seaInlandMultiplier": 0.45,
+        "priorityMultiplier": 6,
+        "transportCoastalMultiplier": 1.25,
+        "transportInlandMultiplier": 0.5,
+        "slotUnlockMultiplier": 1.8,
+        "economyUnlockMultiplier": 1.35,
+        "unitUnlockMultiplier": 1.25,
+        "ruleUnlockMultiplier": 1.1,
+        "practiceUnlockMultiplier": 1.03
+      },
+      "order": [],
+      "weights": {
+        "score": 1
+      },
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": [],
+      "domainWeights": {
+        "governance": 2,
+        "agriculture": 2,
+        "warfare": 0.5
+      }
+    },
+    "guarded_tactics": {
+      "family": "tactics",
+      "mode": "first",
+      "parameters": {
+        "engagementMargin": 1.6,
+        "objectiveFirst": 0
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": []
+    },
+    "deliberate_government": {
+      "family": "government",
+      "mode": "first",
+      "parameters": {
+        "agreementWillingness": 1,
+        "serviceWillingness": 1,
+        "settlementWillingness": 1,
+        "officeWillingness": 1,
+        "negotiationWillingness": 1,
+        "recruitWillingness": 1,
+        "mobileTradeCount": 100,
+        "mobileRecruitCount": 60,
+        "mobileBuyDays": 90,
+        "mobileSellDays": 180,
+        "mobileShortageDays": 30,
+        "provincialConcession": 0.05,
+        "candidateDiplomacyWeight": 1,
+        "candidateMartialWeight": 0,
+        "civicReserveMultiplier": 2,
+        "civicAidAmount": 5,
+        "civicAidDays": 90,
+        "civicPeaceSeasons": 4
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": []
+    }
+  },
+  "balance": {
+    "aiWarPolicy": "cautious_war",
+    "aiExpansionPolicy": "cautious_frontier",
+    "aiInvestmentPolicy": "careful_investment",
+    "aiResearchPolicy": "stewardship_research"
+  },
+  "governmentForms": {
+    "cautious_court": {
+      "legalTradition": {
+        "default": "faith"
+      },
+      "levy": "feudal_levy",
+      "revenue": "demesne_revenue",
+      "council": "royal_council",
+      "diplomacy": "territorial_diplomacy",
+      "holders": "feudal_vassals",
+      "succession": "dynastic",
+      "territory": "fixed",
+      "consent": "territorial",
+      "ladder": "inherited_ladder",
+      "ai": "realm_decisions",
+      "systems": {
+        "enable": [
+          "feudal_service"
+        ]
+      },
+      "balance": {
+        "aiTacticsPolicy": "guarded_tactics",
+        "aiGovernmentPolicy": "deliberate_government"
+      }
+    }
+  }
+}

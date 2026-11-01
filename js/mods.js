@@ -21,6 +21,7 @@ window.FBMODS = window.FBMODS || [];
   let modFailure = '';
   const authoringRoots = ['fortProfiles','siegeSupportProfiles','buildingProfiles','positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','rulerFaithTargets','federateServiceStarts','federateMigrations','rankPrestigeYearly','historicalAmbitions','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','freedomTerms','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','quickStarts','traitMechanics','authorityOffices','legitimacySources','customaryBases'];
   const authoredRoots = Object.create(null);
+  authoringRoots.push('aiDecisionPolicies');
   let baseCatalogues = null;
   var timingAllowed = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[?::1\]?)$/.test(location.hostname);
   var timingEnabled = timingAllowed && /(?:^|[?&])modTiming=1(?:&|$)/.test(location.search);
@@ -285,7 +286,7 @@ window.FBMODS = window.FBMODS || [];
     cultureTraditions:true, cultures:true, cultureDoctrineDefaults:true,
     doctrineCatalogs:true, religions:true, religiousPaths:true, religiousOfficeRanks:true,
     religiousAffiliations:true, religiousInstitutionProfiles:true, religiousActivities:true, religiousPatronage:true,
-    traits:true, traitMechanics:true,
+    traits:true, traitMechanics:true, aiDecisionPolicies:true,
     ailments:true, modifiers:true, buildings:true, forts:true, siteResourceProfiles:true,
     buildingInstitutionProfiles:true, buildingOperationProfiles:true, buildingProfiles:true, fortProfiles:true, productionGoods:true, productionRecipes:true, productionExchangeProfiles:true, productionProducerProfiles:true, siegeSupportProfiles:true, relayServiceProfiles:true,
     buildingSeasonProfiles:true, maritimeWorkProfiles:true,
@@ -2282,6 +2283,10 @@ window.FBMODS = window.FBMODS || [];
     if (lifecycleFaults.length) fail('events', lifecycleFaults.join(' '));
     const traitFaults = FB.validateTraitMechanics(FBDATA.traitMechanics);
     if (traitFaults.length) fail('traitMechanics', traitFaults.join(' '));
+    if (own(mod,'aiDecisionPolicies') && !plainObject(mod.aiDecisionPolicies))
+      fail('aiDecisionPolicies','must be an object keyed by id.');
+    const decisionFaults = FB.aiDecisions.catalogFaults(FBDATA,mod.balance);
+    if (decisionFaults.length) fail('aiDecisionPolicies',decisionFaults.join(' '));
     const chanceFaults = FB.validateEventChances(FBDATA.eventChances, FBDATA.events);
     if (chanceFaults.length) fail('eventChances', chanceFaults.join(' '));
     for (const tableId of ['events','traits','policies','privileges','elections',
@@ -3006,6 +3011,8 @@ window.FBMODS = window.FBMODS || [];
       if (mod[key]) mergeTable(FBDATA[key], mod[key]);
     });
     if (mod.traitMechanics) mergeTable(FBDATA.traitMechanics, mod.traitMechanics);
+    if (mod.aiDecisionPolicies) mergeTable(FBDATA.aiDecisionPolicies,mod.aiDecisionPolicies);
+    FB.aiDecisions.invalidate();
     if (mod.tournaments || mod.tournamentRules) Object.assign(FBDATA.tournamentRules, prepared.data.tournamentRules);
     if (mod.agencyRules) mergeTable(FBDATA.agencyRules, mod.agencyRules);
     if (mod.parliamentAgendas) mergeTable(FBDATA.parliamentAgendas, mod.parliamentAgendas);
@@ -3060,6 +3067,11 @@ window.FBMODS = window.FBMODS || [];
       try { M.apply(JSON.parse(text)); }
       catch (e) { modFailure = 'Invalid stored mod: ' + e.message; }
     }
+    if (!modFailure) {
+      const faults = FB.aiDecisions.catalogFaults(FBDATA,null,{worlds:false});
+      if (faults.length) modFailure = faults.join(' ');
+    }
+    FB.aiDecisions.invalidate();
     if (FB.configureCurrency) {
       currencyInvalid = !FB.configureCurrency(
         currencySupplied ? FBDATA.currency : null,

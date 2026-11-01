@@ -163,9 +163,13 @@
     if (!E.active(s,rid) || !E.row(s,rid) || !s.realms[rid].alive) return false;
     E.sync(s,rid);
     var r = E.row(s,rid), p = E.profile(s,rid), c = E.incumbent(s,rid);
-    if (!c && p.source === 'local_office') {
+    if (!c && p.source === 'local_office' && FB.aiDecisions.willing(s,rid,'government','officeWillingness')) {
       // Canonical local appointment, never a new person or a head election.
       var candidates = FB.localOfficeCandidates(s,r.institutionId);
+      candidates = FB.aiDecisions.governmentCandidates(s,rid,candidates,function (cid) {
+        var c = s.chars[cid], diplomacy = FB.skillSnapshot(s,c,'dip');
+        return {score:diplomacy,diplomacy:diplomacy,martial:FB.skillSnapshot(s,c,'mar'),age:s.date.year-c.born};
+      });
       candidates.some(function (cid) { return cid !== s.player.charId && E.apply(s,E.review(s,rid,'appoint',{ candidateId:cid })); });
     }
     var proof = (s.authority.recognitions || []).filter(function (entry) { return entry.id === r.temporalRecognitionId; })[0];

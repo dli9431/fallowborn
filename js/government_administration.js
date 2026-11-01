@@ -468,6 +468,11 @@
       return id !== s.player.charId && !c.dead && !c.unfree && territory.indexOf(FB.characterResidence(s,c)) >= 0 &&
         !FB.realmIdForRulerCharacter(s,id);
     }).sort();
+    if (!FB.aiDecisions.willing(s,rid,'government','officeWillingness')) { FB.publicRecognitionAI(s,rid); return; }
+    people = FB.aiDecisions.governmentCandidates(s,rid,people,function (id) {
+      var c = s.chars[id], diplomacy = FB.skillSnapshot(s,c,'dip'), martial = FB.skillSnapshot(s,c,'mar');
+      return {score:diplomacy,diplomacy:diplomacy,martial:martial,age:s.date.year-c.born,cost:profile.appointmentCost};
+    });
     // Existing courts and local people only. Vacancy never generates a count.
     for (var officeId of profile.offices) for (var pid of territory) {
       var def = FBDATA.authorityOffices[officeId], scope = {kind:'county',id:pid};

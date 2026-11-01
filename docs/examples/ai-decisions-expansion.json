@@ -1,0 +1,203 @@
+{
+  "name": "Expansion and investment AI",
+  "aiDecisionPolicies": {
+    "expansive_war": {
+      "family": "war",
+      "mode": "first",
+      "parameters": {
+        "chance": 0.04,
+        "bellicoseChance": 0.08,
+        "minimumStrengthRatio": 1.2,
+        "maximumCommitments": 2,
+        "aggressionAppetite": 1,
+        "bellicoseAppetite": 1.5
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": [
+        {
+          "kind": "trait",
+          "id": "ambitious",
+          "multiply": {
+            "chance": 1.5
+          }
+        },
+        {
+          "kind": "aim",
+          "id": "expand_realm",
+          "multiply": {
+            "chance": 1.25
+          }
+        }
+      ]
+    },
+    "compact_frontier": {
+      "family": "expansion",
+      "mode": "ordered",
+      "parameters": {},
+      "order": [
+        {
+          "metric": "aggression",
+          "direction": "asc"
+        },
+        {
+          "metric": "contacts",
+          "direction": "desc"
+        },
+        {
+          "metric": "development",
+          "direction": "desc"
+        }
+      ],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "id",
+      "adjustments": []
+    },
+    "learning_investment": {
+      "family": "investment",
+      "mode": "first",
+      "parameters": {
+        "capitalPriority": 0,
+        "frontierPriority": 1,
+        "interiorPriority": 2,
+        "developmentWeight": 0,
+        "fortDevelopmentWeight": 1,
+        "buildOrderWeight": 1,
+        "benefitWeight": 0.25,
+        "costWeight": 0,
+        "upkeepWeight": 0,
+        "profileScoreWeight": 1,
+        "baronPreference": 1,
+        "operationSpending": 1
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": [],
+      "buildingRoleWeights": {
+        "scholarship": 100
+      }
+    },
+    "innovating_research": {
+      "family": "research",
+      "mode": "weighted",
+      "parameters": {
+        "baseScore": 10,
+        "exposureMultiplier": 2.25,
+        "historicalBase": 1.5,
+        "historicalSlope": 0.18,
+        "historicalFloor": 0.25,
+        "horizonFloor": 0.35,
+        "horizonCap": 2,
+        "horizonMultiplier": 3,
+        "futureThreshold": 4,
+        "futureMultiplier": 0.12,
+        "timelyMultiplier": 1.35,
+        "aggressionMultiplier": 0.4,
+        "wartimeMultiplier": 2,
+        "rankMultiplier": 0.2,
+        "commerceCoastalMultiplier": 1.2,
+        "seaCoastalMultiplier": 1.8,
+        "seaInlandMultiplier": 0.45,
+        "priorityMultiplier": 6,
+        "transportCoastalMultiplier": 1.25,
+        "transportInlandMultiplier": 0.5,
+        "slotUnlockMultiplier": 1.8,
+        "economyUnlockMultiplier": 1.35,
+        "unitUnlockMultiplier": 1.25,
+        "ruleUnlockMultiplier": 1.1,
+        "practiceUnlockMultiplier": 1.03
+      },
+      "order": [],
+      "weights": {
+        "score": 1
+      },
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": [],
+      "domainWeights": {
+        "learning": 2,
+        "commerce": 1.5,
+        "warfare": 1.2
+      }
+    },
+    "objective_tactics": {
+      "family": "tactics",
+      "mode": "first",
+      "parameters": {
+        "engagementMargin": 0.9,
+        "objectiveFirst": 1
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": []
+    },
+    "active_government": {
+      "family": "government",
+      "mode": "first",
+      "parameters": {
+        "agreementWillingness": 1,
+        "serviceWillingness": 1,
+        "settlementWillingness": 1,
+        "officeWillingness": 1,
+        "negotiationWillingness": 1,
+        "recruitWillingness": 1,
+        "mobileTradeCount": 100,
+        "mobileRecruitCount": 60,
+        "mobileBuyDays": 90,
+        "mobileSellDays": 180,
+        "mobileShortageDays": 30,
+        "provincialConcession": 0.15,
+        "candidateDiplomacyWeight": 1,
+        "candidateMartialWeight": 1,
+        "civicReserveMultiplier": 2,
+        "civicAidAmount": 5,
+        "civicAidDays": 90,
+        "civicPeaceSeasons": 4
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": []
+    }
+  },
+  "balance": {
+    "aiWarPolicy": "expansive_war",
+    "aiExpansionPolicy": "compact_frontier",
+    "aiInvestmentPolicy": "learning_investment",
+    "aiResearchPolicy": "innovating_research"
+  },
+  "governmentForms": {
+    "expansive_court": {
+      "legalTradition": {
+        "default": "faith"
+      },
+      "levy": "feudal_levy",
+      "revenue": "demesne_revenue",
+      "council": "royal_council",
+      "diplomacy": "territorial_diplomacy",
+      "holders": "feudal_vassals",
+      "succession": "dynastic",
+      "territory": "fixed",
+      "consent": "territorial",
+      "ladder": "inherited_ladder",
+      "ai": "realm_decisions",
+      "systems": {
+        "enable": [
+          "feudal_service"
+        ]
+      },
+      "balance": {
+        "aiTacticsPolicy": "objective_tactics",
+        "aiGovernmentPolicy": "active_government"
+      }
+    }
+  }
+}

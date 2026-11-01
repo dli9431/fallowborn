@@ -406,7 +406,11 @@
       if (prior && prior.generation === FB.realmRulerGeneration(s,rid) && same(prior.principal,m.principal) &&
           (prior.candidateId === null || candidates.some(function (c) { return c.id === prior.candidateId; }))) return;
       var ordered = candidates.slice().sort(function (a,b) { return b.military - a.military || a.born - b.born || a.id.localeCompare(b.id); });
+      if (m.id !== 'court') ordered = FB.aiDecisions.governmentCandidates(s,rid,ordered,function (c) {
+        return {score:c.military,martial:c.military,age:s.date.year-c.born};
+      });
       var candidate = m.id === 'court' ? candidates[0] : ordered[0];
+      if (!candidate) return;
       var q = R.supportQuote(s,m.principal,rid,m.id,candidate.id,p.defaultTerms);
       if (q.allowed) R.applySupport(s,q);
     });
@@ -426,9 +430,11 @@
       var voice = A.constituency(s,rid).filter(function (v) { return v.id === m.id; })[0];
       if (voice && voice.active && FB.countyPopularSupport(s,m.scope.id) < p.refusalSupport && voice.terms.status === 'assent') {
         A.apply(s,A.provincialQuote(s,voice.principal,rid,m.id,'withhold'));
-      } else if (voice && voice.active && voice.terms.status === 'withheld') {
+      } else if (voice && voice.active && voice.terms.status === 'withheld' && FB.aiDecisions.willing(s,rid,'government','negotiationWillingness')) {
+        var preference = FB.aiDecisions.parameters(s,rid,'government');
         var q = A.provincialQuote(s,{kind:'realm',id:rid},rid,m.id,'negotiate',
-          {revenue:Math.max(p.minimumRevenue,p.defaultTerms.revenue - 0.1),levy:Math.max(p.minimumLevy,p.defaultTerms.levy - 0.1)});
+          {revenue:Math.max(p.minimumRevenue,p.defaultTerms.revenue-preference.provincialConcession),
+            levy:Math.max(p.minimumLevy,p.defaultTerms.levy-preference.provincialConcession)});
         if (q.allowed) A.apply(s,q);
       }
     });

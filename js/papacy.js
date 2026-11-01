@@ -1191,16 +1191,17 @@ window.FB = window.FB || {};
   }
 
   function candidateScore(state, election, elector, candidate, uncertain) {
+    var preference = FB.aiDecisions.parameters(state,FB.realmIdForRulerCharacter(state,elector.id),'religion');
     var electorRecord = papalRecord(state, elector.id);
     var candidateRecord = papalRecord(state, candidate.id);
-    var score = relationshipScore(state, elector, candidate) * 0.65;
-    score += FB.skillOf(candidate, 'lea') * 1.8;
-    score += FB.skillOf(candidate, 'dip') * 1.1;
-    score += candidatePiety(state, candidate) / 100;
-    score += candidatePrestige(state, candidate) / 200;
-    if (elector.culture === candidate.culture) score += 6;
+    var score = relationshipScore(state,elector,candidate)*preference.electionRelationshipWeight;
+    score += FB.skillOf(candidate,'lea')*preference.electionLearningWeight;
+    score += FB.skillOf(candidate,'dip')*preference.electionDiplomacyWeight;
+    score += candidatePiety(state,candidate)/preference.electionPietyDivisor;
+    score += candidatePrestige(state,candidate)/preference.electionPrestigeDivisor;
+    if (elector.culture === candidate.culture) score += preference.electionCultureBonus;
     if (electorRecord && candidateRecord &&
-        electorRecord.bloc === candidateRecord.bloc) score += 12;
+        electorRecord.bloc === candidateRecord.bloc) score += preference.electionBlocBonus;
     if (candidate.traits) {
       if (electorRecord && electorRecord.bloc === 'reform') score += FB.traitMechanic(candidate, 'papalReformSupport', true);
       score += FB.traitMechanic(candidate, 'papalSupport', true);
@@ -1233,10 +1234,10 @@ window.FB = window.FB || {};
     }
     if (election.round > 6) {
       var leader = election.lastLeaderId;
-      if (leader === candidate.id) score += (election.round - 6) * 2;
-      if (candidate.id === election.compromiseId) score += (election.round - 5) * 5;
+      if (leader === candidate.id) score += (election.round-6)*preference.electionLeaderWeight;
+      if (candidate.id === election.compromiseId) score += (election.round-5)*preference.electionCompromiseWeight;
     }
-    if (uncertain) score += FB.rf(-7, 7);
+    if (uncertain) score += FB.rf(-preference.electionUncertainty,preference.electionUncertainty);
     return score;
   }
 
@@ -1912,12 +1913,13 @@ window.FB = window.FB || {};
         '📜 The Pope demands that your realm surrender lay investiture.', {}));
       return { pending:true };
     }
-    var accepts = investitureDemandScore(state, obedience, sovereign) +
-      FB.rf(-20, 20) >= 45;
+    var preference = FB.aiDecisions.parameters(state,sovereign,'religion');
+    var accepts = investitureDemandScore(state,obedience,sovereign)+
+      FB.rf(-preference.investitureUncertainty,preference.investitureUncertainty) >= preference.investitureAcceptThreshold;
     if (accepts) {
       FB.setInvestiturePolicy(state,
         FB.papalPolicyAvailable(state, FB.papalPolicyDefault('compromise')) &&
-        FB.chance(0.35) ? FB.papalPolicyDefault('compromise') : FB.papalPolicyDefault('religious'), sovereign, true);
+        FB.chance(preference.investitureCompromiseChance) ? FB.papalPolicyDefault('compromise') : FB.papalPolicyDefault('religious'), sovereign, true);
     } else {
       record.refusedTurn = state.turn;
       FB.adjustPapalAuthority(state, obedience.id,
@@ -3002,10 +3004,11 @@ window.FB = window.FB || {};
 
   function aiPapalPolicy(state, obedience) {
     if (!obedience.claimantId || obedience.claimantId === state.player.charId) return;
+    var preference = FB.aiDecisions.parameters(state,FB.realmIdForRulerCharacter(state,obedience.claimantId),'religion');
     obedience.piety = (obedience.piety || 0) + 35;
     if (obedience.authority >= definition().authority.gates.investiture &&
         FB.papalInstitutionActive(state, 'investiture_reform') &&
-        FB.chance(0.2)) {
+        FB.chance(preference.papalInvestitureChance)) {
       var lay = [];
       var sovereigns = livingCatholicSovereigns(state);
       for (var i = 0; i < sovereigns.length; i++) {
@@ -3019,7 +3022,7 @@ window.FB = window.FB || {};
     }
     if (FB.systemAvailable(state, 'excommunication') &&
         obedience.authority >= definition().authority.gates.sanctions &&
-        FB.chance(0.15)) {
+        FB.chance(preference.papalSanctionChance)) {
       var targets = FB.papalRulerTargets(state);
       for (i = 0; i < targets.length; i++) {
         var cause = sanctionCause(state, targets[i].c.id, obedience.id);
@@ -3027,7 +3030,7 @@ window.FB = window.FB || {};
             state, targets[i].c, obedience.id, false)) break;
       }
     }
-    if (FB.chance(0.2)) {
+    if (FB.chance(preference.papalLegationChance)) {
       FB.adjustPapalAuthority(state, obedience.id,
         definition().balance.popeLegationAuthority || 1, 'legation');
     }
@@ -3305,7 +3308,7 @@ window.FB = window.FB || {};
       var status = target &&
         FB.papalAbsolutionStatus(state, target.id);
       if (!target || target.dead || !status || !status.ready ||
-          !FB.chance(0.3)) continue;
+          !FB.chance(FB.aiDecisions.parameters(state,sentence.targetRealmId,'religion').absolutionPetitionChance)) continue;
       sentence.lastPetitionTurn = state.turn;
       var realm = sentence.targetRealmId &&
         state.realms[sentence.targetRealmId];

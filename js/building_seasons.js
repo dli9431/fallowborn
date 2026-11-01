@@ -277,6 +277,8 @@
       if (count>=32)return;
       var who=FB.settlementHolder(s,a.countyId,a.slot);
       if(!who || who.id==='player' || who.kind==='character' && who.id===s.player.charId)return;
+      var realm=who.kind==='realm' ? who.id : FB.settlementCountyHolder(s,a.countyId);
+      if(!FB.aiDecisions.parameters(s,realm,'investment').operationSpending)return;
       var review=S.quote(s,{operation:'open',assignmentId:a.id,actor:who,lotId:null});
       if (review.allowed) {
         var preview=copy(s);apply(preview,review,false);

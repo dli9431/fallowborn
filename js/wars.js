@@ -1140,7 +1140,8 @@
     const burden = hit * Math.max(0, declaration.days || 0) / 360 / 200 +
       conquestHit * Math.max(0, conquest.days || 0) / 360 / 400;
     const realm = state.realms[rid];
-    const appetite = realm && realm.ruler && realm.ruler.personality === 'bellicose' ? 1.5 : 1;
+    const policy = FB.aiDecisions.parameters(state,rid,'war');
+    const appetite = realm && realm.ruler && realm.ruler.personality === 'bellicose' ? policy.bellicoseAppetite : policy.aggressionAppetite;
     return { allowed:allowed, chance:allowed ? Math.min(1, appetite / (1 + burden)) : 0,
       declarationHit:hit, conquestHit:conquestHit, worstOwnedSupport:worst, targetSupport:targetSupport };
   };
@@ -1160,7 +1161,8 @@
       return (holy.participants[camp] || []).some(function (p) { return p.realm === rid; });
     });
     const commitments = FB.realmWars(state, rid).filter(function (w) { return w.attacker === rid; }).length + (holyCommitment ? 1 : 0);
-    if (commitments >= 2 || !FB.chance(FB.governments.call(state, rid, 'ai', 'goals', {}).warChance)) return;
+    const policy = FB.aiDecisions.parameters(state,rid,'war');
+    if (commitments >= policy.maximumCommitments || !FB.chance(FB.governments.call(state, rid, 'ai', 'goals', {}).warChance)) return;
     const seen = {}, candidates = [];
     // One ruler's read-only candidate pass; discard before another ruler can
     // declare, change Standing, or otherwise alter military projections.
@@ -1175,7 +1177,7 @@
         if (seen[nb]) return;
         seen[nb] = 1;
         const enemy = FB.warTargetDefender(state, rid, nb);
-        if (!enemy || strength(rid) < strength(enemy) * 1.2) return;
+        if (!enemy || strength(rid) < strength(enemy) * policy.minimumStrengthRatio) return;
         const rights = territorialRightsForInspection(state, rid, nb, inspection);
         const cause = Object.assign({ enemy:enemy }, rights[0] || { type:'aggression', target:nb });
         if (FB.sameFaithHeadWarPolicy(state, FB.realmReligionId(state, rid), enemy, nb)) return;
@@ -1183,9 +1185,14 @@
         if (preview.valid) candidates.push({ cause:cause, preview:preview });
       });
     });
-    candidates.sort(function (a, b) { return (a.cause.type === 'aggression') - (b.cause.type === 'aggression') || (a.cause.target < b.cause.target ? -1 : a.cause.target > b.cause.target ? 1 : 0); });
     if (!candidates.length) return;
-    const picked = candidates[0], cause = picked.cause;
+    const facts = FB.aiExpansionFacts(state,rid,candidates.map(function (c) { return c.cause.target; }),inspection.frontier);
+    const chosen = FB.aiDecisions.choose(state,rid,'expansion',candidates.map(function (c) {
+      return {id:c.cause.target,eligible:true,facts:Object.assign(facts[c.cause.target],{
+        aggression:c.cause.type === 'aggression' ? 1 : 0,defensiveStrength:strength(c.cause.enemy)})};
+    }));
+    if (!chosen) return;
+    const picked = candidates.filter(function (c) { return c.cause.target === chosen; })[0], cause = picked.cause;
     if (cause.type === 'aggression') {
       const risk = FB.aiAggressionAssessment(state, rid, cause.target, inspection.frontier);
       if (!risk.allowed || !FB.chance(risk.chance)) return;

@@ -374,8 +374,9 @@ window.FB = window.FB || {};
 
   function participantScore(state, rid) {
     var realm = state.realms[rid], zeal = 0;
+    var policy = FB.aiDecisions.parameters(state,rid,'religion');
     zeal = FB.traitMechanic(realm && realm.ruler, 'holyWarParticipation');
-    return paperStrength(state, rid) + ((realm && realm.rank) || 1) * 100 + zeal;
+    return paperStrength(state,rid)+((realm && realm.rank) || 1)*policy.participantRankWeight+zeal*policy.participationTraitWeight;
   }
 
   /* Call-time AI policy only: never used by eligibility, UI previews or the
@@ -384,6 +385,7 @@ window.FB = window.FB || {};
     var history = ensureHistory(state);
     if (!targets.length) return null;
     if (!history.firstLaunched[religionId]) return targets[0];
+    var policy = FB.aiDecisions.parameters(state,callerRealm,'religion'), rated = [];
     var strengths = {}, attackers = [], defenders = [], owners = {};
     function baseStrength(rid) {
       if (FB.mobile && FB.mobile.active(state, rid)) return paperStrength(state, rid);
@@ -413,8 +415,8 @@ window.FB = window.FB || {};
       var realm = state.realms[rid], base = baseStrength(rid);
       strengths[rid] = base * (FB.rearmScale ? FB.rearmScale(state, rid) : 1);
       var row = { id:rid, strength:strengths[rid],
-        score:Math.max(1, base) + (realm.rank || 1) * 100 +
-          FB.traitMechanic(realm.ruler, 'holyWarParticipation') };
+        score:Math.max(1,base)+(realm.rank || 1)*FB.aiDecisions.parameters(state,rid,'religion').participantRankWeight+
+          FB.traitMechanic(realm.ruler,'holyWarParticipation')*FB.aiDecisions.parameters(state,rid,'religion').participationTraitWeight };
       (inFold ? attackers : defenders).push(row);
     }
     function byScore(a, b) {
@@ -424,21 +426,22 @@ window.FB = window.FB || {};
     defenders.sort(byScore);
     var cap = B('greatHolyWarVolunteersPerCamp', 8), attack = 0, slots = 0;
     for (var a = 0; a < attackers.length && slots < cap; a++) {
-      var probability = Math.min(cap - slots, a < 2 ? 1 : 0.55);
+      var willingness = FB.aiDecisions.parameters(state,attackers[a].id,'religion');
+      var probability = Math.min(cap-slots,a < willingness.guaranteedAttackers ? 1 : willingness.attackerJoinChance);
       attack += attackers[a].strength * probability;
       slots += probability;
     }
     /* History is already bounded to 24 campaigns. Aggregate once, with an
        eighty-year linear decay, so a defeat is neither forgotten at the
        eighteen-year cooldown nor a permanent prohibition. */
-    var failures = {}, horizon = 80 * 360;
+    var failures = {}, horizon = policy.failureMemoryYears*360;
     for (var h = 0; h < history.campaigns.length; h++) {
       var past = history.campaigns[h];
       if (!past || past.religion !== religionId || !isFinite(past.turn)) continue;
       var age = state.turn - past.turn;
       if (age < 0 || age >= horizon) continue;
-      var weight = past.outcome === 'defenders' ? 1 :
-        past.outcome === 'collapsed' && past.reason === 'strength' ? 0.5 : 0;
+      var weight = past.outcome === 'defenders' ? policy.failureDefeatWeight :
+        past.outcome === 'collapsed' && past.reason === 'strength' ? policy.failureCollapseWeight : 0;
       failures[past.target] = (failures[past.target] || 0) + weight * (1 - age / horizon);
     }
     var best = null, bestScore = -1;
@@ -456,21 +459,29 @@ window.FB = window.FB || {};
       slots = 0;
       for (var d = 0; d < defenders.length && slots < cap; d++) {
         if (mandatory[defenders[d].id]) continue;
-        var chance = Math.min(cap - slots, 0.3);
+        var chance = Math.min(cap-slots,FB.aiDecisions.parameters(state,defenders[d].id,'religion').defenderJoinChance);
         defense += defenders[d].strength * chance;
         slots += chance;
       }
       var ratio = attack / Math.max(1, defense);
-      if (ratio < 0.5) continue;
-      var importance = 1 + 2 * target.holyPriority +
+      if (ratio < policy.minimumTargetRatio) continue;
+      var importance = 1 + policy.targetHolyWeight * target.holyPriority +
         target.objectiveDevelopment / Math.max(1, target.totalDevelopment);
-      var score = importance * Math.min(2, ratio) /
-        (1 + 2 * (failures[target.kingdomId] || 0));
+      var score = importance*Math.min(policy.targetRatioCap,ratio)/(1+policy.targetFailureWeight*(failures[target.kingdomId] || 0));
+      var origin = FB.world.byId[state.realms[callerRealm] && state.realms[callerRealm].capital];
+      var destination = FB.world.byId[target.objectiveCounties[0]];
+      var dx = origin && destination ? origin.cx-destination.cx : 0, dy = origin && destination ? origin.cy-destination.cy : 0;
+      rated.push({id:target.kingdomId,eligible:true,facts:{score:score,strengthRatio:ratio,importance:importance,
+        distance:dx*dx+dy*dy,zeal:FB.traitMechanic(state.realms[callerRealm] && state.realms[callerRealm].ruler,'holyWarParticipation')},target:target});
       if (score > bestScore || (score === bestScore &&
           target.kingdomId < best.kingdomId)) {
         best = target;
         bestScore = score;
       }
+    }
+    if (FB.aiDecisions.resolve(state,callerRealm,'religion').definition.mode !== 'first' && rated.length) {
+      var chosen = FB.aiDecisions.choose(state,callerRealm,'religion',rated.map(function (r) { return {id:r.id,eligible:r.eligible,facts:r.facts}; }));
+      return chosen ? rated.filter(function (r) { return r.id === chosen; })[0].target : null;
     }
     return best;
   }
@@ -595,21 +606,22 @@ window.FB = window.FB || {};
     var realm = state.realms[participant.realm], ruler = realm && realm.ruler;
     var hash = stableNumber(campaign.id + ':' + participant.realm);
     var longVow = FB.traitMechanic(ruler, 'holyWarLongVow');
+    var policy = FB.aiDecisions.parameters(state,participant.realm,'religion');
     participant.vowSeasons = longVow
-      ? (deterministic ? (hash % 3 ? 12 : 8) : (FB.chance(0.67) ? 12 : 8))
-      : (deterministic ? (hash % 2 ? 8 : 4) : (FB.chance(0.4) ? 8 : 4));
+      ? (deterministic ? (hash % 3 ? 12 : 8) : (FB.chance(policy.longVowChance) ? 12 : 8))
+      : (deterministic ? (hash % 2 ? 8 : 4) : (FB.chance(policy.shortVowChance) ? 8 : 4));
     if (FB.traitMechanic(ruler, 'holyWarSacredDesire')) {
       participant.desire = { kind:'sacred', id:null };
     } else if (FB.traitMechanic(ruler, 'holyWarCrownDesire')) {
       participant.desire = { kind:'crown', id:null };
     } else {
-      var land = deterministic ? hash % 2 === 0 : FB.chance(0.5);
+      var land = deterministic ? hash % 2 === 0 : FB.chance(policy.landDesireChance);
       if (!land) {
         participant.desire = { kind:'honor', id:null };
       } else {
         var duchies = objectiveDuchies(campaign);
         var chooseDuchy = duchies.length &&
-          (deterministic ? hash % 3 !== 0 : FB.chance(0.55));
+          (deterministic ? hash % 3 !== 0 : FB.chance(policy.duchyDesireChance));
         if (chooseDuchy) {
           participant.desire = {
             kind:'duchy',
@@ -658,7 +670,8 @@ window.FB = window.FB || {};
     });
     var cap = B('greatHolyWarVolunteersPerCamp', 8);
     for (var i = 0; i < candidates.length && voluntaryCount(campaign, 'attackers') < cap; i++) {
-      if (i >= 2 && !FB.chance(0.55)) continue;
+      var policy = FB.aiDecisions.parameters(state,candidates[i],'religion');
+      if (i >= policy.guaranteedAttackers && !FB.chance(policy.attackerJoinChance)) continue;
       if (FB.mobile && FB.mobile.active(state, candidates[i])) {
         var mobileLeader = FB.mobile.leader(state, candidates[i]);
         if (mobileLeader && mobileLeader.id !== state.player.charId) {
@@ -717,7 +730,7 @@ window.FB = window.FB || {};
     });
     var cap = B('greatHolyWarVolunteersPerCamp', 8);
     for (var j = 0; j < candidates.length && voluntaryCount(campaign, 'defenders') < cap; j++) {
-      if (!FB.chance(0.3)) continue;
+      if (!FB.chance(FB.aiDecisions.parameters(state,candidates[j],'religion').defenderJoinChance)) continue;
       if (FB.mobile && FB.mobile.active(state, candidates[j])) {
         var mobileLeader = FB.mobile.leader(state, candidates[j]);
         if (mobileLeader && mobileLeader.id !== state.player.charId) {
