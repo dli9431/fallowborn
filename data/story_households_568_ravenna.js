@@ -75,24 +75,32 @@ FBDATA.openingProfiles_568_ravenna = {
 
 (function () {
   'use strict';
-  var def = FBDATA.householdTracks_568_ravenna.ravenna_household_track_568;
-  var local = { all:[{ kind:'home', provinceId:'ravenna' }, { kind:'present', provinceId:'ravenna' }] };
-  function route(when, next) { return { when:when, next:next }; }
-  ['household','supplies','customers','working','earned','outlook','departure'].forEach(function (id) {
-    def.stages[id].transitions = [route({ not:local }, 'remote')];
-  });
-  def.stages.travelling.transitions = [
-    route({ kind:'home', provinceId:'bologna' }, 'resettled'),
-    route({ kind:'arrived', provinceId:'bologna' }, 'arrival'),
-    route({ not:{ kind:'journey', provinceId:'bologna' } }, 'interrupted_journey')
-  ];
-  def.stages.arrival.transitions = [
-    route({ kind:'home', provinceId:'bologna' }, 'resettled'),
-    route({ not:{ kind:'arrived', provinceId:'bologna' } }, 'interrupted_journey')
-  ];
-  def.stages.returning.transitions = [
-    route({ all:[local, { not:{ kind:'journey', provinceId:'bologna' } }] }, 'returned'),
-    route({ not:{ kind:'journey', provinceId:'bologna' } }, 'interrupted_journey')
-  ];
-  Object.assign(FBDATA.storyInstances, FBDATA.householdTracks_568_ravenna, FBDATA.openingProfiles_568_ravenna);
+  var draft = FBDATA.bookmarkCompositionDrafts && FBDATA.bookmarkCompositionDrafts.spring_568;
+  if (!draft) return;
+  var unit = draft.starts.find(function (unit) { return unit.definition.id === 'ravenna_household_568'; });
+  if (!unit) { draft.faults.push({source:'data/story_households_568_ravenna.js',message:'Missing 568 Ravenna start unit.'}); return; }
+  try {
+    var def = FBDATA.householdTracks_568_ravenna.ravenna_household_track_568;
+    var local = { all:[{ kind:'home', provinceId:'ravenna' }, { kind:'present', provinceId:'ravenna' }] };
+    function route(when, next) { return { when:when, next:next }; }
+    ['household','supplies','customers','working','earned','outlook','departure'].forEach(function (id) {
+      def.stages[id].transitions = [route({ not:local }, 'remote')];
+    });
+    def.stages.travelling.transitions = [
+      route({ kind:'home', provinceId:'bologna' }, 'resettled'),
+      route({ kind:'arrived', provinceId:'bologna' }, 'arrival'),
+      route({ not:{ kind:'journey', provinceId:'bologna' } }, 'interrupted_journey')
+    ];
+    def.stages.arrival.transitions = [
+      route({ kind:'home', provinceId:'bologna' }, 'resettled'),
+      route({ not:{ kind:'arrived', provinceId:'bologna' } }, 'interrupted_journey')
+    ];
+    def.stages.returning.transitions = [
+      route({ all:[local, { not:{ kind:'journey', provinceId:'bologna' } }] }, 'returned'),
+      route({ not:{ kind:'journey', provinceId:'bologna' } }, 'interrupted_journey')
+    ];
+    var declarations = Object.assign({},FBDATA.householdTracks_568_ravenna,FBDATA.openingProfiles_568_ravenna);
+    var positions = FB.bookmarkCompositions.captureStories('spring_568','ravenna',declarations);
+    unit.storyInstances = JSON.parse(JSON.stringify(declarations)); unit.storyAfter = positions;
+  } catch (error) { unit.faults = ['data/story_households_568_ravenna.js: ' + error.message]; }
 })();

@@ -61,36 +61,58 @@ FBDATA.rulerAgendas_568 = {
 (function () {
   'use strict';
   function copy(value) { return JSON.parse(JSON.stringify(value)); }
-  Object.keys(FBDATA.rulerAgendas_568).forEach(function (id) {
-    if (FBDATA.storyInstances[id]) throw new Error('Duplicate story instance ' + id + '.');
-    FBDATA.storyInstances[id] = FBDATA.rulerAgendas_568[id];
-  });
-  var b = FBDATA.bookmarks['568'];
-  var source = Object.assign({},b,b.revisions.baseline,b.revisions[b.revision]);
-  var ids = FBDATA.startScenarios_rulers_568.map(function (scenario) { return scenario.id; });
-  var applicable = FBDATA.startScenarios.filter(function (scenario) {
-    return (!scenario.bookmarkIds || scenario.bookmarkIds.indexOf('568') >= 0) &&
-      (!scenario.eras || scenario.eras.indexOf(b.era) >= 0);
-  }).map(function (scenario) { return scenario.id; });
-  var previous = source.starts ? copy(source.starts) : applicable.filter(function (id) { return ids.indexOf(id) < 0; });
-  ['baseline','migration_v1'].forEach(function (revision) {
-    if (!b.revisions[revision].starts) b.revisions[revision].starts = previous.filter(function (id) { return ids.indexOf(id) < 0; });
-  });
-  var realms = copy(source.realms);
-  var austrasia = realms.find(function (realm) { return realm.id === 'austrasia_568'; });
-  if (!austrasia || !austrasia.royalCourt || austrasia.royalCourt.members.length)
-    throw new Error('Missing original Austrasian court for 568 revision.');
-  austrasia.royalCourt = { spouseId:'brunhild',members:[
-    {id:'brunhild',name:'Brunhild',sex:'f',born:545,culture:'gothic',religion:'nicene',
-      spouseId:'ruler',homeProvinceId:'metz'}
-  ]};
-  var locations = copy(source.startLocations);
-  locations.sigebert_568 = ['metz'];
-  locations.chilperic_568 = ['laon'];
-  locations.guntram_568 = ['orleans'];
-  b.revisions.frankish_courts_v2 = {
-    realms:realms, startLocations:locations, settlementLayout:source.settlementLayout,
-    starts:previous.concat(ids.filter(function (id) { return previous.indexOf(id) < 0; }))
-  };
-  b.revision = 'frankish_courts_v2';
+  var draft = FBDATA.bookmarkCompositionDrafts && FBDATA.bookmarkCompositionDrafts.spring_568;
+  if (!draft) return;
+  try {
+    [['sigebert_568','sigebert_agenda_568'],['chilperic_568','chilperic_agenda_568'],['guntram_568','guntram_agenda_568']].forEach(function (pair) {
+      var unit = draft.starts.find(function (unit) { return unit.definition.id === pair[0]; });
+      if (!unit) throw new Error('Missing 568 Frankish start unit: ' + pair[0]);
+      try {
+        unit.storyInstances = {}; unit.storyInstances[pair[1]] = copy(FBDATA.rulerAgendas_568[pair[1]]);
+        unit.storyAfter = FB.bookmarkCompositions.captureStories('spring_568',pair[0],unit.storyInstances);
+      } catch (error) { unit.faults = ['data/story_ruler_agendas_568.js: ' + error.message]; }
+    });
+    var b = draft.bookmark;
+    var source = Object.assign({},b,b.revisions.baseline,b.revisions[b.revision]);
+    var ids = FBDATA.startScenarios_rulers_568.map(function (scenario) { return scenario.id; });
+    var scenarios = FBDATA.startScenarios.filter(function (scenario) {
+      return !draft.starts.some(function (unit) { return unit.definition.id === scenario.id; });
+    });
+    draft.starts.forEach(function (unit) {
+      var at = 0;
+      unit.after.forEach(function (id) {
+        var index = scenarios.findIndex(function (scenario) { return scenario.id === id; });
+        if (index >= 0) at = Math.max(at,index + 1);
+      });
+      scenarios.splice(at,0,unit.definition);
+    });
+    var applicable = scenarios.filter(function (scenario) {
+      if (draft.starts.some(function (unit) { return unit.definition.id === scenario.id; })) return true;
+      return (!scenario.bookmarkIds || scenario.bookmarkIds.indexOf('568') >= 0) &&
+        (!scenario.eras || scenario.eras.indexOf(b.era) >= 0);
+    }).map(function (scenario) { return scenario.id; });
+    var previous = draft.previousStarts ? copy(draft.previousStarts) :
+      source.starts ? copy(source.starts) : applicable.filter(function (id) { return ids.indexOf(id) < 0; });
+    draft.previousStarts = copy(previous);
+    ['baseline','migration_v1'].forEach(function (revision) {
+      if (!b.revisions[revision].starts) b.revisions[revision].starts = previous.filter(function (id) { return ids.indexOf(id) < 0; });
+    });
+    var realms = copy(source.realms);
+    var austrasia = realms.find(function (realm) { return realm.id === 'austrasia_568'; });
+    if (!austrasia || !austrasia.royalCourt || austrasia.royalCourt.members.length)
+      throw new Error('Missing original Austrasian court for 568 revision.');
+    austrasia.royalCourt = { spouseId:'brunhild',members:[
+      {id:'brunhild',name:'Brunhild',sex:'f',born:545,culture:'gothic',religion:'nicene',
+        spouseId:'ruler',homeProvinceId:'metz'}
+    ]};
+    var locations = copy(source.startLocations);
+    locations.sigebert_568 = ['metz'];
+    locations.chilperic_568 = ['laon'];
+    locations.guntram_568 = ['orleans'];
+    b.revisions.frankish_courts_v2 = {
+      realms:realms, startLocations:locations, settlementLayout:source.settlementLayout,
+      starts:previous.concat(ids.filter(function (id) { return previous.indexOf(id) < 0; }))
+    };
+    b.revision = 'frankish_courts_v2';
+  } catch (error) { draft.faults.push({source:'data/story_ruler_agendas_568.js',message:error.message}); }
 })();

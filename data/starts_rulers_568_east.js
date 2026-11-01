@@ -21,4 +21,14 @@ FBDATA.startScenarios_rulers_568_east = [
     tracks:['khosrow_agenda_568'], trackLocations:{khosrow_agenda_568:['baghdad']}, onboarding:'ruler',
     intro:'You are Khosrow I at Ctesiphon, represented by the Baghdad county on this map. Review the living household, provincial service and resources. Later war and succession remain open.' }
 ];
-Array.prototype.push.apply(FBDATA.startScenarios,FBDATA.startScenarios_rulers_568_east);
+(function () {
+  'use strict';
+  var draft = FBDATA.bookmarkCompositionDrafts && FBDATA.bookmarkCompositionDrafts.spring_568;
+  if (!draft) return;
+  try {
+    var positions = FB.bookmarkCompositions.captureStarts('spring_568','eastern',FBDATA.startScenarios_rulers_568_east);
+    FBDATA.startScenarios_rulers_568_east.forEach(function (definition) {
+      draft.starts.push({definition:JSON.parse(JSON.stringify(definition)),source:'data/starts_rulers_568_east.js',after:positions[definition.id]});
+    });
+  } catch (error) { draft.faults.push({source:'data/starts_rulers_568_east.js',message:error.message}); }
+})();

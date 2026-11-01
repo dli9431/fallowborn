@@ -14,22 +14,13 @@
   FBDATA.bookmarkCompositionSources = FBDATA.bookmarkCompositionSources || {};
   var source = {source:'data/bookmark_634.js',bookmarkId:'634'};
   try {
-    var previous = FBDATA.bookmarkCompositionSources.autumn_634;
-    var lastStart = FBDATA.startScenarios && FBDATA.startScenarios[FBDATA.startScenarios.length - 1];
-    source.startAfter = previous ? previous.startAfter : lastStart && lastStart.id;
-    if (typeof source.startAfter !== 'string') throw new Error('Missing 634 start placement anchor');
+    var stagedStarts = FBDATA.startScenarios_634_ordinary;
+    if (!Array.isArray(stagedStarts) || !stagedStarts.length)
+      throw new Error('Missing 634 ordinary start declarations');
+    var startOrder = FB.bookmarkCompositions.captureStarts('autumn_634','ordinary',stagedStarts);
     if (!FBDATA.bookmarkReligions634 || !FBDATA.bookmarkFaithAvailability634)
       throw new Error('Missing 634 identity declarations');
-    var availability = copy(FBDATA.bookmarkFaithAvailability634);
-    source.availabilityAfter = previous && previous.availabilityAfter ? copy(previous.availabilityAfter) : {};
-    Object.keys(availability).forEach(function (id) {
-      if (!own(source.availabilityAfter,id)) {
-        var faith = FBDATA.religions[id], ids = faith && faith.availability && faith.availability.bookmarkIds;
-        if (!Array.isArray(ids)) throw new Error('Missing 634 source-faith selector: ' + id);
-        source.availabilityAfter[id] = ids.length ? ids[ids.length - 1] : null;
-      }
-      availability[id].afterBookmarkId = source.availabilityAfter[id];
-    });
+    var availability = FB.bookmarkCompositions.captureAvailability('autumn_634',FBDATA.bookmarkFaithAvailability634);
     var order = ['b01','b02','b03','b04','b05','b06','b07','b08','b09','b10',
       'b11','b12','b13','b14','b15','b16','b17','b18','b19','b20','b21',
       'b22','b23','b24','b25','b26','b27','b28','b29',
@@ -95,10 +86,6 @@
       .map(function (p) { return p.id; });
     world.openingRevisions = {baseline:copy(world.opening)};
 
-    var stagedStarts = FBDATA.startScenarios_634_ordinary;
-    if (!Array.isArray(stagedStarts) || !stagedStarts.length)
-      throw new Error('Missing 634 ordinary start declarations');
-
     /* No live catalogue receives a partial regional world. Literal metadata
        remains statically extractable under the ordinary bookmark text owners. */
     FBDATA.bookmarkCandidates = FBDATA.bookmarkCandidates || {};
@@ -114,12 +101,26 @@
     };
     var b = FBDATA.bookmarkCandidates['634'];
     Object.keys(world).forEach(function (key) { b[key] = world[key]; });
-    source.input = {id:'autumn_634',source:source.source,bookmark:copy(b),startAfter:source.startAfter,
+    // Shared physical declarations are inputs, independent of whether the
+    // earlier world that first used them passes its own validation.
+    Object.keys(layouts).forEach(function (county) {
+      layouts[county].forEach(function (slot) {
+        if (own(sites,slot.site) || own(FBDATA.settlementSites,slot.site)) return;
+        Object.keys(FBDATA.bookmarkRegions568 || {}).forEach(function (region) {
+          var declarations = FBDATA.bookmarkRegions568[region].settlementSites;
+          if (!own(declarations,slot.site)) return;
+          if (own(sites,slot.site) && JSON.stringify(sites[slot.site]) !== JSON.stringify(declarations[slot.site]))
+            throw new Error('Conflicting shared 634 site declaration: ' + slot.site);
+          sites[slot.site] = copy(declarations[slot.site]);
+        });
+      });
+    });
+    source.input = {id:'autumn_634',source:source.source,bookmark:copy(b),
       catalogs:{settlementLayouts:{'634_opening':layouts},settlementSites:sites,
-        governmentForms:forms,religions:copy(FBDATA.bookmarkReligions634)},
+        governmentForms:forms,religions:copy(FBDATA.bookmarkReligions634),cultures:copy(FBDATA.bookmarkCultures568)},
       availability:availability,
       starts:stagedStarts.map(function (definition) {
-        return {definition:copy(definition),locations:inhabited.slice(),source:'data/starts_634_ordinary.js'};
+        return {definition:copy(definition),locations:inhabited.slice(),source:'data/starts_634_ordinary.js',after:startOrder[definition.id]};
       })};
   } catch (error) { source.faults = [error.message]; }
   FBDATA.bookmarkCompositionSources.autumn_634 = source;

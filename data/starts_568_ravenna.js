@@ -12,5 +12,15 @@ FBDATA.startScenarios_568_ravenna = [
     trackLocations:{ ravenna_household_track_568:['ravenna'], opening_ravenna_568:['ravenna'] },
     intro:'You are {name}, an artisan of {province}. Your family needs customers and enough money for the next purchase. Open your household story in Deeds to weigh work, household supplies and a journey ahead on your own.' }
 ];
-Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_568_ravenna);
-FBDATA.bookmarks['568'].startLocations.ravenna_household_568 = ['ravenna'];
+(function () {
+  'use strict';
+  var draft = FBDATA.bookmarkCompositionDrafts && FBDATA.bookmarkCompositionDrafts.spring_568;
+  if (!draft) return;
+  try {
+    var positions = FB.bookmarkCompositions.captureStarts('spring_568','ravenna',FBDATA.startScenarios_568_ravenna);
+    FBDATA.startScenarios_568_ravenna.forEach(function (definition) {
+      draft.starts.push({definition:JSON.parse(JSON.stringify(definition)),source:'data/starts_568_ravenna.js',after:positions[definition.id]});
+    });
+    if (draft.bookmark) draft.bookmark.startLocations.ravenna_household_568 = ['ravenna'];
+  } catch (error) { draft.faults.push({source:'data/starts_568_ravenna.js',message:error.message}); }
+})();

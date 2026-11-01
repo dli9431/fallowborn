@@ -5,7 +5,8 @@ const {beginBookmark,restoreBookmark,facts} = require('../support/game/bookmark-
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_568.js','data/starts_568.js','data/starts_568_ravenna.js',
+  'index.html','js/bookmark_composition.js','js/mods.js','js/stories.js','data/bookmark_568_composition.js',
+  'data/bookmark_568.js','data/starts_568.js','data/starts_568_ravenna.js',
   'data/starts_rulers_568.js','data/story_ruler_agendas_568.js',
   'data/starts_rulers_568_east.js','data/story_ruler_agendas_568_east.js','js/story_ruler_agenda.js',
   'data/story_households_568_ravenna.js','data/bookmark_568_identities.js',

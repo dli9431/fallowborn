@@ -12,4 +12,4 @@ FBDATA.startScenarios_568 = [
     tier:1,profession:'craftsman',gold:15,prestige:5,piety:0,
     intro:'You are {name}, learning a craft in {province}. Work, household ties and the local market offer a place to begin your family’s story.'}
 ];
-Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_568);
+/* The complete ownership adapter captures this group's source position. */
