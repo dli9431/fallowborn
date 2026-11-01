@@ -9,7 +9,7 @@
       parameters:{chance:unit,bellicoseChance:unit,minimumStrengthRatio:ratio,
         maximumCommitments:count,aggressionAppetite:ratio,bellicoseAppetite:ratio}},
     expansion:{key:'aiExpansionPolicy', metrics:['aggression','consolidationBand','core','remaining','contacts','development','defensiveStrength','score'],parameters:{}},
-    tactics:{key:'aiTacticsPolicy', metrics:['attackPower','defensePower','distance','objective','score'],parameters:{engagementMargin:[0.5,4]}},
+    tactics:{key:'aiTacticsPolicy', metrics:['attackPower','defensePower','distance','objective','score'],parameters:{engagementMargin:[0.5,4],objectiveFirst:[0,1,true]}},
     investment:{key:'aiInvestmentPolicy', metrics:['capitalPriority','development','buildOrder','cost','upkeep','benefit','frontier','score'],parameters:{}},
     research:{key:'aiResearchPolicy', metrics:['score','cost','exposed','historicalMultiplier','warfare','governance','commerce','seafaring','learning','agriculture','crafts'],
       parameters:{baseScore:[0,100],exposureMultiplier:ratio,historicalBase:ratio,historicalSlope:ratio,

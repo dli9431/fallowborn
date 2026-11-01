@@ -3131,6 +3131,24 @@ window.FB = window.FB || {};
      holy-war goal — screening and besieging while the main host fights. */
   // Orders read fixed positions and strength. Discard before marching or fighting.
   let orderQueries = null;
+  function tacticalParameters(state, realmId) {
+    if (!orderQueries || orderQueries.state !== state) return FB.aiDecisions.parameters(state,realmId,'tactics');
+    const policies = orderQueries.tactical || (orderQueries.tactical = Object.create(null));
+    return policies[realmId] || (policies[realmId] = FB.aiDecisions.parameters(state,realmId,'tactics'));
+  }
+  function tacticalTargets(state, army, targets, objective) {
+    if (army.realm === 'player' || FB.aiDecisions.resolve(state,army.realm,'tactics').definition.mode === 'first') return targets;
+    const at = FB.world.byId[army.at];
+    const ids = FB.aiDecisions.orderCandidates(state,army.realm,'tactics',targets.map(function (pid) {
+      const p = FB.world.byId[pid], dx = p && at ? p.cx-at.cx : 0, dy = p && at ? p.cy-at.cy : 0;
+      let defense = 0;
+      for (const enemy of orderEnemies(state,army)) if (enemy.at === pid && orderHostile(state,army,enemy))
+        defense += battlePower(state,enemy,pid,'defense');
+      return {id:pid,eligible:true,facts:{distance:dx*dx+dy*dy,objective:objective(pid) ? 1 : 0,
+        attackPower:battlePower(state,army,pid,'attack'),defensePower:defense,score:0}};
+    }));
+    return ids;
+  }
   function orderHostile(state, army, other) {
     if (!orderQueries || orderQueries.state !== state) return FB.armiesHostile(state, army, other);
     // Campaign selection may depend on warId; whether realms are hostile
@@ -3206,6 +3224,10 @@ window.FB = window.FB || {};
     const detachment = (primaryByRealm
       ? primaryByRealm[army.realm]
       : FB.hostOf(state, army.realm)) !== army;
+    if (tacticalParameters(state,army.realm).objectiveFirst && FB.ordinaryWarById(state,army.warId)) {
+      const objective = FB.armyCampaignAdvanceGoal(state,army);
+      if (objective) return objective;
+    }
     if (!detachment) {
       const pursuit = FB.armyPursuitGoal(state, army);
       if (pursuit) return pursuit;
@@ -3244,6 +3266,12 @@ window.FB = window.FB || {};
       candidates.push({ host:o, distance:d, order:candidates.length });
     }
     candidates.sort(function (a, b) { return a.distance - b.distance || a.order - b.order; });
+    if (army.realm !== 'player' && FB.aiDecisions.resolve(state,army.realm,'tactics').definition.mode !== 'first') {
+      const counties = [];
+      candidates.forEach(function (c) { if (counties.indexOf(c.host.at) < 0) counties.push(c.host.at); });
+      const ranked = tacticalTargets(state,army,counties,function () { return false; });
+      candidates.sort(function (a,b) { return ranked.indexOf(a.host.at)-ranked.indexOf(b.host.at) || a.order-b.order; });
+    }
     for (const candidate of candidates) {
       const pid = candidate.host.at;
       if (!FB.armyCanPursue(state, army, pid)) continue;
@@ -3263,7 +3291,9 @@ window.FB = window.FB || {};
       const occupied = war.occupations && war.occupations[o.target] && war.occupations[o.target].occupied;
       return attacking ? !occupied : !!occupied;
     });
-    for (const objective of pending) {
+    const ranked = tacticalTargets(state,army,pending.map(function (o) { return o.target; }),function () { return true; });
+    for (const target of ranked) {
+      const objective = pending.filter(function (o) { return o.target === target; })[0];
       const route = FB.armyHasRouteTo(state, army, objective.target) ||
         FB.findArmyPath(state, army, objective.target);
       if (!route) continue;
@@ -3329,7 +3359,12 @@ window.FB = window.FB || {};
       else targets = [FB.greatHolyWarArmyGoal(state, lead.realm, lead.at)].filter(Boolean);
       enemies.forEach(function (a) { if (targets.indexOf(a.at) < 0) targets.push(a.at); });
       const edge = lead.realm === 'player' && FB.game.auto && FB.game.auto.style === 'bold' ? 0.85 :
-        lead.realm === 'player' && FB.game.auto && FB.game.auto.style === 'safe' ? 1.3 : 1.1;
+        lead.realm === 'player' && FB.game.auto && FB.game.auto.style === 'safe' ? 1.3 :
+        lead.realm === 'player' ? 1.1 : tacticalParameters(state,lead.realm).engagementMargin;
+      targets = tacticalTargets(state,lead,targets,function (pid) {
+        return war ? war.objectives.some(function (o) { return o.target === pid; }) :
+          (state.greatHolyWar.objectiveCounties || []).indexOf(pid) >= 0;
+      });
       let goal = lead.at;
       for (const pid of targets) {
         const defense = enemies.filter(function (a) { return a.at === pid; }).reduce(function (n, a) { return n + battlePower(state, a, pid, 'defense'); }, 0);
@@ -3469,7 +3504,8 @@ window.FB = window.FB || {};
         defending += battlePower(state, other, pid, 'defense');
       }
     }
-    const result = !defending || battlePower(state, army, pid, 'attack') >= defending * 1.1;
+    const margin = army.realm === 'player' ? 1.1 : tacticalParameters(state,army.realm).engagementMargin;
+    const result = !defending || battlePower(state, army, pid, 'attack') >= defending * margin;
     if (queries) {
       if (!cached) { cached = Object.create(null); queries.pursuit.set(army, cached); }
       cached[pid] = result;

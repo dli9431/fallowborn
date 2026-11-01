@@ -3,7 +3,7 @@ const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,[
   'data/ai_decisions.js','data/traits.js','data/map_data.js','js/ai_decisions.js',
-  'js/government_ai.js','js/governments.js','js/wars.js','js/world.js','js/mods.js','js/balance.js',
+  'js/government_ai.js','js/governments.js','js/wars.js','js/world.js','js/mods.js','js/balance.js','js/armies.js',
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
 const { test,expect } = require('../support/fixture');
@@ -54,3 +54,29 @@ test('ordinary raid zero and malformed tuning retain paid and eligibility owners
   });
   expect(out).toEqual({bad:true,unchanged:true,zero:true});
 });
+
+for (const margin of [0.5,4]) {
+  test('imported tactical margin ' + margin + ' controls voluntary AI pursuit only',async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    const mod = await page.evaluate(function (margin) {
+      const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_tactics));
+      d.parameters.engagementMargin = margin;
+      return {name:'Tactical margin '+margin,aiDecisionPolicies:{tactical_review:d},balance:{aiTacticsPolicy:'tactical_review'}};
+    },margin);
+    await importPolicy(page,mod);
+    await startDeterministicGame(page);
+    const out = await page.evaluate(function () {
+      const s = FB.state, ids = Object.keys(s.realms).filter(function (id) { return id !== 'player' && s.realms[id].alive; });
+      const pid = s.player.provinceId, a = {id:'policy_a',realm:ids[0],at:pid,men:1000,units:{levy:1000},supply:100};
+      const b = {id:'policy_b',realm:ids[1],at:pid,men:1000,units:{levy:1000},supply:100};
+      const prior = s.armies, hostile = FB.armiesHostile;
+      s.armies = [a,b];
+      FB.armiesHostile = function (state,x,y) { return x.realm !== y.realm; };
+      try {
+        const before = JSON.stringify(s), rng = FB.getRngState();
+        return {pursue:FB.armyCanPursue(s,a,pid),pure:before === JSON.stringify(s) && rng === FB.getRngState()};
+      } finally { s.armies = prior; FB.armiesHostile = hostile; }
+    });
+    expect(out).toEqual({pursue:margin === 0.5,pure:true});
+  });
+}

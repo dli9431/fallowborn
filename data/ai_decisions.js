@@ -6,7 +6,7 @@ FBDATA.aiDecisionPolicies = {
     aggressionAppetite:1, bellicoseAppetite:1.5 }, order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] },
   ordinary_expansion:{ family:'expansion', mode:'ordered', parameters:{},
     order:[{metric:'aggression',direction:'asc'}], weights:{}, bias:0, tieBreak:'id', adjustments:[] },
-  ordinary_tactics:{ family:'tactics', mode:'first', parameters:{ engagementMargin:1.1 },
+  ordinary_tactics:{ family:'tactics', mode:'first', parameters:{ engagementMargin:1.1, objectiveFirst:0 },
     order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] },
   ordinary_investment:{ family:'investment', mode:'first', parameters:{},
     order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] },
