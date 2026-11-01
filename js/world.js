@@ -7740,10 +7740,12 @@ window.FB = window.FB || {};
     const profile = {
       realmId:realmId,
       duchy:{}, kingdom:{}, empire:{},
+      territory:territory ? Object.create(null) : null,
       capital:FB.dejureOf(state.realms[realmId] &&
         state.realms[realmId].capital)
     };
     for (const pid of (territory || rc.provs[realmId] || [])) {
+      if (profile.territory) profile.territory[pid] = true;
       const dj = FB.dejureOf(pid);
       if (dj.duchy) profile.duchy[dj.duchy] =
         (profile.duchy[dj.duchy] || 0) + 1;
@@ -7790,7 +7792,7 @@ window.FB = window.FB || {};
     }
     let contacts = 0;
     const adj = FB.world.adj[pid] || {};
-    for (const nb in adj) if (state.owner[nb] === profile.realmId) contacts++;
+    for (const nb in adj) if (profile.territory ? profile.territory[nb] : state.owner[nb] === profile.realmId) contacts++;
     return {
       pid:pid,
       band:band,

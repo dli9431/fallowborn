@@ -112,7 +112,8 @@ window.FB = window.FB || {};
       return 'secure_dynasty';
     }
     var preferred = null, weight = 0;
-    (FB.aiDecisions.resolve(state,rid,'diplomacy').definition.aimOrder || AIM_IDS).forEach(function (id) {
+    var order = FB.aiDecisions.resolve(state,rid,'diplomacy').definition.aimOrder || [];
+    order.concat(AIM_IDS.filter(function (id) { return order.indexOf(id) < 0; })).forEach(function (id) {
       var score = FB.traitAimWeight(c, id);
       if (score > weight) { preferred = id; weight = score; }
     });

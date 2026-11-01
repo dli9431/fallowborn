@@ -1056,6 +1056,7 @@ window.FB = window.FB || {};
             return {id:q.id,pid:q.site.provinceId,order:def.aiBuildOrder === undefined ? 100 : def.aiBuildOrder,profileId:q.profileId || null,index:i};
           });
           const ordered = FB.aiDecisions.buildingPriorities(state,rid,choices[0].site.provinceId,entries);
+          if (!ordered.length) continue;
           chosen = choices[ordered[0].index];
         } else chosen = FB.pick(choices);
         FB.buildBarony(state, cid, chosen.site.provinceId, chosen.site.settlement, chosen.id, chosen.profileId);

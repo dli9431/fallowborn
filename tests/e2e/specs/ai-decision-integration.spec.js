@@ -11,7 +11,7 @@ dependsOnRuntime(__filename,[
   'data/ai_decisions.js','data/map_data.js','data/ambitions.js','data/traits.js','data/political_institutions.js','data/technology.js',
   'js/ai_decisions.js','js/agency.js','js/balance.js','js/governments.js','js/government_ai.js',
   'js/government_selection.js','js/government_aristocracy.js','js/authority.js','js/model.js','js/world.js',
-  'js/building_profiles.js','js/fortifications.js','js/technology.js','js/armies.js','js/treasury.js',
+  'js/building_profiles.js','js/fortifications.js','js/lordships.js','js/technology.js','js/armies.js','js/treasury.js',
   'js/mods.js','js/save.js','js/save_v4.js','js/main.js','js/util.js','js/intrigue.js','data/intrigue.js','js/crazygames.js','data/distribution_crazygames.js',
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
@@ -149,6 +149,92 @@ test('weighted retry adapters exclude zero-weight fallbacks and draw only for se
       pure:before === JSON.stringify(s) && uid === FB.getUidCounter()};
   });
   expect(out).toEqual({empty:[],buildings:[],governments:[],noDraw:true,order:['positive'],oneDraw:true,pure:true});
+});
+
+test('a private baron skips a zero-total investment choice without spending or drawing',async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  await startDeterministicGame(page);
+  const out = await page.evaluate(function () {
+    const s = FB.state,P = FB.aiDecisions,pid = s.player.provinceId,me = s.chars[s.player.charId];
+    const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_investment));
+    d.mode = 'weighted'; d.weights = {cost:0}; d.parameters.baronPreference = 1;
+    FB.mods.apply({aiDecisionPolicies:{baron_zero:d},balance:{aiInvestmentPolicy:'baron_zero'},
+      buildings:{policy_baron_work:{name:'Local work',role:'industry',cost:5,tax:2,upkeep:0,aiBuildOrder:0}}});
+    s.dev[pid] = 8; FB.rememberSettlementSites(s,pid);
+    const baron = FB.makeCharacter(s,{name:'Local Patron',station:3,born:s.date.year-30,
+      culture:me.culture,religion:me.religion,traits:[]});
+    baron.homeProvinceId = pid;
+    if (!FB.assignSettlementLordship(s,pid,1,baron.id)) throw new Error('Baron grant failed');
+    s.buildings[pid] = []; FB.invalidateBuildingIndex(s,pid);
+    const period = Math.floor(s.turn/90)+1;
+    FB.settleBaronyAccounts(s,period);
+    const root = s.settlementLordships,account = root.accounts[baron.id];
+    account.gold = 10000; root.accounts = {}; root.accounts[baron.id] = account;
+    root.developmentCursor = 0; delete root.lastDevelopmentSeason;
+    const capacity = FB.settlementCapacityProjection,rank = P.buildingPriorities;
+    let candidates = 0,empty = false;
+    // Keep unrelated automatic grants out of this construction boundary.
+    FB.settlementCapacityProjection = function () { return Object.assign({},capacity.apply(FB,arguments),{over:0}); };
+    P.buildingPriorities = function (state,rid,county,entries) {
+      const result = rank.apply(P,arguments);
+      candidates += entries.length; empty = result.length === 0; return result;
+    };
+    const buildings = JSON.stringify(s.buildings),rng = FB.getRngState(),uid = FB.getUidCounter();
+    try {
+      const result = FB.settlementLordshipSeason(s,period);
+      return {result:result,candidates:candidates > 0,empty:empty,gold:account.gold,
+        buildings:buildings === JSON.stringify(s.buildings),rng:rng === FB.getRngState(),uid:uid === FB.getUidCounter()};
+    } finally { FB.settlementCapacityProjection = capacity; P.buildingPriorities = rank; }
+  });
+  expect(out).toEqual({result:true,candidates:true,empty:true,gold:10000,buildings:true,rng:true,uid:true});
+});
+
+test('vassal expansion contacts count its territory and exclude sibling counties',async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  await startDeterministicGame(page);
+  const out = await page.evaluate(function () {
+    const s = FB.state;
+    const rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive && s.realms[id].liege; });
+    const top = FB.topRealm(s,rid);
+    const target = Object.keys(FB.world.adj).find(function (pid) { return Object.keys(FB.world.adj[pid]).length >= 3; });
+    const neighbors = Object.keys(FB.world.adj[target]),territory = neighbors.slice(0,2);
+    neighbors.forEach(function (pid) { s.owner[pid] = top; s.holder[pid] = top; });
+    territory.forEach(function (pid) { s.holder[pid] = rid; });
+    FB.invalidateRealmCache();
+    const before = JSON.stringify(s),rng = FB.getRngState(),uid = FB.getUidCounter();
+    const first = FB.aiExpansionFacts(s,rid,[target],FB.realmTerritory(s,rid))[target].contacts;
+    const sovereign = FB.aiExpansionFacts(s,top,[target],FB.realmTerritory(s,top))[target].contacts;
+    const pure = before === JSON.stringify(s);
+    s.holder[territory[1]] = top; FB.invalidateRealmCache();
+    const next = FB.aiExpansionFacts(s,rid,[target],FB.realmTerritory(s,rid))[target].contacts;
+    return {first:first,next:next,sovereign:sovereign,expectedSovereign:neighbors.length,pure:pure,
+      rng:rng === FB.getRngState(),uid:uid === FB.getUidCounter()};
+  });
+  expect(out).toMatchObject({first:2,next:1,pure:true,rng:true,uid:true});
+  expect(out.sovereign).toBe(out.expectedSovereign);
+});
+
+test('partial aim ordering preserves omitted preferences and resolves equal weights',async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  await startDeterministicGame(page);
+  const out = await page.evaluate(function () {
+    const s = FB.state;
+    const rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive && !s.realms[id].liege && FB.realmRulerCharacterSnapshot(s,id); });
+    const person = FB.realmRulerCharacterSnapshot(s,rid);
+    const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_diplomacy));
+    d.aimOrder = ['amass_wealth'];
+    FB.mods.apply({aiDecisionPolicies:{partial_aims:d},balance:{aiDiplomacyPolicy:'partial_aims'},
+      traitMechanics:{greedy:Object.assign({},FBDATA.traitMechanics.greedy,{rulerAims:{amass_wealth:20}})},
+      agencyRules:Object.assign({},FBDATA.agencyRules,{secureFamilySize:0,marriageAimAge:16})});
+    FB.ensureAgency(s); delete s.agency.rulerAims[rid];
+    person.traits = ['ambitious'];
+    const before = JSON.stringify(s),rng = FB.getRngState(),uid = FB.getUidCounter();
+    const omitted = FB.rulerAimSnapshot(s,rid).id,pure = before === JSON.stringify(s);
+    person.traits = ['ambitious','greedy'];
+    const tie = FB.rulerAimSnapshot(s,rid).id;
+    return {omitted:omitted,tie:tie,pure:pure,rng:rng === FB.getRngState(),uid:uid === FB.getUidCounter()};
+  });
+  expect(out).toEqual({omitted:'expand_realm',tie:'amass_wealth',pure:true,rng:true,uid:true});
 });
 
 test('a zero-weight government selection leaves the lawful vacancy and funds intact',async function ({page},testInfo) {
