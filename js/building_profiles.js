@@ -183,6 +183,11 @@
       return benefit > 0 ? {id:buildingId,profileId:profileId,def:d,cost:cost,
         score:benefit / Math.max(1,cost + (d.upkeep || 0) * (FBDATA.balance.realmReserveSeasons || 2))} : null;
     }).filter(function (v) { return !!v; });
+    var realm = actor.kind === 'realm' ? actor.id : FB.settlementCountyHolder(s,pid);
+    var policy = FB.aiDecisions.resolve(s,realm,'investment'), preference = FB.aiDecisions.parameters(s,realm,'investment');
+    choices.forEach(function (q) {
+      q.score = q.score*preference.profileScoreWeight+FB.aiDecisions.investmentDelta(s,realm,q.def,q.cost,policy);
+    });
     return choices.sort(function (a,b) { return b.score-a.score || a.cost-b.cost || (String(a.profileId) < String(b.profileId) ? -1 : String(a.profileId) > String(b.profileId) ? 1 : 0); });
   };
   P.reviewInheritedAI = function (s) {

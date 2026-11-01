@@ -10,7 +10,11 @@
         maximumCommitments:count,aggressionAppetite:ratio,bellicoseAppetite:ratio}},
     expansion:{key:'aiExpansionPolicy', metrics:['aggression','consolidationBand','core','remaining','contacts','development','defensiveStrength','score'],parameters:{}},
     tactics:{key:'aiTacticsPolicy', metrics:['attackPower','defensePower','distance','objective','score'],parameters:{engagementMargin:[0.5,4],objectiveFirst:[0,1,true]}},
-    investment:{key:'aiInvestmentPolicy', metrics:['capitalPriority','development','buildOrder','cost','upkeep','benefit','frontier','score'],parameters:{}},
+    investment:{key:'aiInvestmentPolicy', metrics:['capitalPriority','development','buildOrder','cost','upkeep','benefit','frontier','score'],
+      parameters:{capitalPriority:ratio,frontierPriority:ratio,interiorPriority:ratio,
+        developmentWeight:[-100,100],fortDevelopmentWeight:[-100,100],buildOrderWeight:[-100,100],
+        benefitWeight:[-100,100],costWeight:[-100,100],upkeepWeight:[-100,100],profileScoreWeight:ratio,
+        baronPreference:[0,1,true],operationSpending:[0,1,true]}},
     research:{key:'aiResearchPolicy', metrics:['score','cost','exposed','historicalMultiplier','warfare','governance','commerce','seafaring','learning','agriculture','crafts'],
       parameters:{baseScore:[0,100],exposureMultiplier:ratio,historicalBase:ratio,historicalSlope:ratio,
         historicalFloor:ratio,horizonFloor:ratio,horizonCap:ratio,horizonMultiplier:ratio,
@@ -41,9 +45,16 @@
   }
   function recordFaults(d, data, path) {
     var errors = [];
-    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments'],path,errors)) return errors;
+    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments','buildingRoleWeights'],path,errors)) return errors;
     if (!own(families,d.family)) return errors.concat(path + '.family is unregistered.');
     var f = families[d.family], names = Object.keys(f.parameters);
+    if (own(d,'buildingRoleWeights')) {
+      if (d.family !== 'investment') errors.push(path + '.buildingRoleWeights requires investment.');
+      if (fields(d.buildingRoleWeights,Object.keys(FB.BUILDING_ROLES || {}),path + '.buildingRoleWeights',errors))
+        Object.keys(d.buildingRoleWeights).forEach(function (role) {
+          if (!finite(d.buildingRoleWeights[role],-100,100)) errors.push(path + '.buildingRoleWeights is out of range.');
+        });
+    }
     if (['first','ordered','weighted'].indexOf(d.mode) < 0) errors.push(path + '.mode is unregistered.');
     if (fields(d.parameters,names,path + '.parameters',errors)) {
       names.forEach(function (k) {
@@ -183,6 +194,32 @@
   P.choose = function (state, realmId, family, candidates) {
     var report = P.report(P.resolve(state,realmId,family),candidates,P.inputs(state,realmId));
     return P.pick(report,report.mode === 'weighted' && report.totalWeight > 0 ? FB.rng() : undefined);
+  };
+  P.investmentDelta = function (state, realmId, definition, cost, policy) {
+    policy = policy || P.resolve(state,realmId,'investment');
+    var p = policy.definition.adjustments.length ? P.parameters(state,realmId,'investment') : policy.definition.parameters;
+    var benefit = (definition.tax || 0)+(definition.dev || 0)+(definition.research || 0)+
+      (definition.piety || 0)+(definition.levy || 0)+(definition.retinue || 0)+(definition.populationCapacity || 0);
+    var roles = policy.definition.buildingRoleWeights || {};
+    return (roles[definition.role] || 0)+benefit*p.benefitWeight-cost*p.costWeight-(definition.upkeep || 0)*p.upkeepWeight;
+  };
+  P.buildingPriorities = function (state, realmId, pid, entries) {
+    var policy = P.resolve(state,realmId,'investment'), p = P.parameters(state,realmId,'investment');
+    var rows = entries.map(function (entry,index) {
+      var county = entry.pid || pid;
+      var d = Object.assign({},FBDATA.buildings[entry.id],entry.profileId && FBDATA.buildingProfiles[entry.profileId].replace || {});
+      var cost = p.costWeight ? FB.buildCost(state,county,entry.id,realmId,entry.profileId) : d.cost || 0;
+      var score = -entry.order*p.buildOrderWeight+P.investmentDelta(state,realmId,d,cost,policy);
+      return {entry:entry,index:index,score:score,facts:{capitalPriority:county === state.realms[realmId].capital ? 0 : 1,
+        development:state.dev[county] || 1,buildOrder:entry.order,cost:cost,upkeep:d.upkeep || 0,
+        benefit:(d.tax || 0)+(d.dev || 0)+(d.research || 0),frontier:0,score:score}};
+    });
+    rows.sort(function (a,b) { return b.score-a.score || a.index-b.index; });
+    if (policy.definition.mode !== 'first') {
+      var ids = P.orderCandidates(state,realmId,'investment',rows.map(function (r) { return {id:String(r.index),eligible:true,facts:r.facts}; }));
+      rows.sort(function (a,b) { return ids.indexOf(String(a.index))-ids.indexOf(String(b.index)); });
+    }
+    return rows.map(function (r) { return r.entry; });
   };
   P.orderCandidates = function (state, realmId, family, candidates) {
     var report = P.report(P.resolve(state,realmId,family),candidates,P.inputs(state,realmId));

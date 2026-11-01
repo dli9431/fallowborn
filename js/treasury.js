@@ -306,7 +306,7 @@
       row.reserveTarget = reserves[rid];
       if (FB.treasuryRetrenching(state, rid)) continue;
       const excess = Math.max(0, FB.treasuryAvailable(state, rid) - reserves[rid]);
-      const amount = excess * Math.min(1, Math.max(0, FBDATA.balance.distributionSurplusRate));
+      const amount = excess * Math.min(1, Math.max(0, FB.balanceFor(state,rid,'distributionSurplusRate')));
       FB.publicDistribution(state, rid, amount, snapshot.rows[rid]);
     }
   };

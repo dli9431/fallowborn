@@ -8688,7 +8688,6 @@ window.FB = window.FB || {};
   FB.aiBuildingsYear = function (state, annualBudget) {
     if (!state || !state.realms || !state.dev) return;
     FB.buildingProfiles.reviewInheritedAI(state);
-    const maxPerYear = (FBDATA.balance && FBDATA.balance.aiMaxBuildingsPerYear) || 1;
     const changed = developmentChangesFor(state);
 
     // Reuse only after a no-purchase pass. Succession and population work have
@@ -8762,14 +8761,17 @@ window.FB = window.FB || {};
       if (!held.length) continue;
       if (reserves && (reserves[rid] === undefined || FB.treasuryAvailable(state, rid) <= reserves[rid])) continue;
       const reserveSeasons = FB.balanceFor(state, rid, 'realmReserveSeasons');
+      const maxPerYear = FB.balanceFor(state,rid,'aiMaxBuildingsPerYear');
+      const investment = FB.aiDecisions.parameters(state,rid,'investment');
 
       let builtThisYear = 0;
       const sortedCounties = held.slice().sort(function (a, b) {
-        if (a === realm.capital) return -1;
-        if (b === realm.capital) return 1;
+        const priorityA = a === realm.capital ? investment.capitalPriority : investment.interiorPriority;
+        const priorityB = b === realm.capital ? investment.capitalPriority : investment.interiorPriority;
+        if (priorityA !== priorityB) return priorityA-priorityB;
         const devA = Number(state.dev[a]) || 1;
         const devB = Number(state.dev[b]) || 1;
-        return devA - devB;
+        return (devB-devA)*investment.developmentWeight || devA-devB;
       });
 
       for (let ci = 0; ci < sortedCounties.length; ci++) {
@@ -8795,8 +8797,9 @@ window.FB = window.FB || {};
         const dev = (state.dev && state.dev[pid]) || 1;
 
         let chosen = null;
-        for (let bi = 0; bi < buildingPriority.length; bi++) {
-          const priority = buildingPriority[bi], bid = priority.id;
+        const priorities = FB.aiDecisions.buildingPriorities(state,rid,pid,buildingPriority);
+        for (let bi = 0; bi < priorities.length; bi++) {
+          const priority = priorities[bi], bid = priority.id;
           if (FB.buildingProfiles.ids(bid).length) {
             for (let slot=0; slot<settlements.length; slot++) {
               const options = FB.buildingProfiles.aiChoices(state,{kind:'realm',id:rid},pid,slot,bid).filter(function (q) {

@@ -4,6 +4,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,[
   'data/ai_decisions.js','data/traits.js','data/map_data.js','js/ai_decisions.js',
   'js/government_ai.js','js/governments.js','js/wars.js','js/world.js','js/mods.js','js/balance.js','js/armies.js',
+  'js/fortifications.js','js/building_profiles.js','js/lordships.js','js/treasury.js','js/building_seasons.js','js/building_operations.js',
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
 const { test,expect } = require('../support/fixture');
@@ -78,5 +79,29 @@ for (const margin of [0.5,4]) {
       } finally { s.armies = prior; FB.armiesHostile = hostile; }
     });
     expect(out).toEqual({pursue:margin === 0.5,pure:true});
+  });
+}
+
+for (const role of ['scholarship','worship']) {
+  test('imported investment role ' + role + ' changes the annual builder ranking without granting assets',async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    const mod = await page.evaluate(function (role) {
+      const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_investment));
+      d.buildingRoleWeights = {}; d.buildingRoleWeights[role] = 100;
+      return {name:'Investment '+role,aiDecisionPolicies:{investment_review:d},balance:{aiInvestmentPolicy:'investment_review'}};
+    },role);
+    await importPolicy(page,mod);
+    await startDeterministicGame(page);
+    const out = await page.evaluate(function () {
+      const s = FB.state, pid = s.player.provinceId, rid = s.owner[pid];
+      const entries = ['scholarship','worship'].map(function (role) {
+        const id = Object.keys(FBDATA.buildings).find(function (id) { return FBDATA.buildings[id].role === role && typeof FBDATA.buildings[id].aiBuildOrder === 'number'; });
+        return {id:id,order:FBDATA.buildings[id].aiBuildOrder,profileId:null};
+      });
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const ordered = FB.aiDecisions.buildingPriorities(s,rid,pid,entries);
+      return {first:FB.buildingRole(ordered[0].id),pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    });
+    expect(out).toEqual({first:role,pure:true});
   });
 }
