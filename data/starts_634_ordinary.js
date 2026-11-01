@@ -1,4 +1,5 @@
-/* Ordinary map-chosen households for the hidden autumn 634 opening.
+/* Staged ordinary households for the hidden autumn 634 opening.
+   The complete composer publishes detached copies after its checks succeed.
    Historical rulers and fixed story households have separate declarations. */
 FBDATA.startScenarios_634_ordinary = [
   {id:'farmer_634',bookmarkIds:['634'],alwaysUnlocked:true,
@@ -13,4 +14,3 @@ FBDATA.startScenarios_634_ordinary = [
     tier:1,profession:'craftsman',gold:15,prestige:5,piety:0,
     intro:'You are {name}, learning a craft in {province}. Work, household ties and the local market offer a place to begin your family’s story.'}
 ];
-Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_634_ordinary);

@@ -241,14 +241,26 @@
     return context;
   }
 
-  function publish(candidate) {
+  function publish(candidate, messageIds) {
     var next = candidate.list(), nextIndex = Object.create(null);
     next.forEach(function (story) { nextIndex[story.id] = story; });
+    var english = FB.englishMessages(), priorEnglish = Object.assign({}, english);
+    try {
+      next.forEach(function (story) {
+        if (messageIds && messageIds.indexOf(story.id) < 0) return;
+        var news = story.declaration && story.declaration.news || {};
+        Object.keys(news).forEach(function (key) {
+          var row = news[key], prior = english[row.key];
+          if (messageIds && prior && prior.text === row.text && prior.forms === undefined) return;
+          FB.registerMessage(row.key, {text:row.text});
+        });
+      });
+    } catch (error) {
+      Object.keys(english).forEach(function (key) { delete english[key]; });
+      Object.keys(priorEnglish).forEach(function (key) { english[key] = priorEnglish[key]; });
+      throw error;
+    }
     registry = next; byId = nextIndex;
-    next.forEach(function (story) {
-      var news = story.declaration && story.declaration.news || {};
-      Object.keys(news).forEach(function (key) { FB.registerMessage(news[key].key, { text:news[key].text }); });
-    });
   }
 
   FB.stories = {

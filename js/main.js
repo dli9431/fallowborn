@@ -2164,30 +2164,9 @@ FB.CHANGELOG = [
   /* A scenario is offered where its data allows: an optional bookmarkIds
      list and an optional eras list, matched against the bookmark's era. */
   function scenarioOffered(scenario, bookmarkId) {
-    if (!scenario || scenario.hidden && !FBDATA.reviewOpenStarts) return false;
-    if (fixedPlaceStart(scenario) && !FB.startStoryTracks(scenario, scenario.fixedProvinceId, null, FB.bookmark(bookmarkId)).length) return false;
-    if (!FB.bookmarkAvailable(bookmarkId)) return false;
-    if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmarkId) < 0) return false;
-    const offeredBookmark = FB.bookmark(bookmarkId);
-    if (!offeredBookmark || !offeredBookmark.provinces.some(function (p) {
-      return FB.startProvinceAllowed(scenario, offeredBookmark, p.id);
-    })) return false;
-    if (offeredBookmark && offeredBookmark.starts && offeredBookmark.starts.indexOf(scenario.id) < 0) return false;
-    if (scenario.existingPerson && !FB.existingPersonStartProfile(scenario, offeredBookmark)) return false;
-    if (scenario.originalPrincipal !== undefined && !FB.originalPrincipalStartProfile(scenario, offeredBookmark)) return false;
-    if (scenario.rulerRealmId) {
-      const bookmark = FB.bookmark(bookmarkId);
-      const realm = bookmark && (bookmark.realms || []).filter(function (row) {
-        return row.id === scenario.rulerRealmId;
-      })[0];
-      const ruler = FB.startRulerProfile(bookmark, realm, scenario.governmentForm);
-      if (!ruler || ruler.name !== scenario.characterName || ruler.sex !== scenario.sex ||
-          ruler.culture !== scenario.startCulture || FB.startRulerFaith(bookmark, realm) !== scenario.startReligion ||
-          (realm.government || FBDATA.eras[FB.bookmarkEra(bookmark)].defaultGovernment) !== scenario.governmentForm)
-        return false;
-    }
-    return !scenario.eras ||
-      scenario.eras.indexOf(FB.bookmarkEra(FB.bookmark(bookmarkId))) >= 0;
+    if (!scenario || scenario.hidden && !FBDATA.reviewOpenStarts || !FB.bookmarkAvailable(bookmarkId)) return false;
+    const bookmark = FB.bookmark(bookmarkId);
+    return !!bookmark && FB.startRuntimeReport(scenario, bookmark).available;
   }
 
   function scenarioUnlocked(scenario, bookmarkId) {
@@ -2316,7 +2295,9 @@ FB.CHANGELOG = [
       const seed = parts[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
       const legacy = parts.length === 5;
       const bookmarkId = legacy ? '867' : parts[1].toLowerCase();
-      const bookmark = FB.bookmark(bookmarkId);
+      let bookmark;
+      try { bookmark = FB.bookmark(bookmarkId); }
+      catch (error) { return {error:FB.bookmarkUnavailableReason(bookmarkId)}; }
       if (bookmark && !FB.bookmarkAvailable(bookmarkId)) {
         return { error: FB.bookmarkUnavailableReason(bookmarkId) };
       }
@@ -2325,7 +2306,7 @@ FB.CHANGELOG = [
       const sexPart = legacy ? 3 : 4;
       const namePart = legacy ? 4 : 5;
       const scen = FBDATA.startScenarios.filter(function (s) {
-        return s.id === parts[scenarioPart].toLowerCase() &&
+        return s && s.id === parts[scenarioPart].toLowerCase() &&
           scenarioOffered(s, bookmarkId) &&
           (!s.fixedProvinceId || s.fixedProvinceId === parts[provincePart].toLowerCase());
       })[0];
@@ -2804,7 +2785,10 @@ FB.CHANGELOG = [
         (definition.sex !== 'm' && definition.sex !== 'f')) return null;
     if (!FB.bookmarkAvailable(definition.bookmarkId)) return null;
     const bookmark = FB.bookmark(definition.bookmarkId);
-    const scenario = FBDATA.startScenarios.find(function (row) { return row.id === definition.scenarioId; });
+    const worldFaults = FB.validateBookmarkWorld(bookmark);
+    FB.recordBookmarkRuntimeFaults('world_definition', bookmark, null, worldFaults);
+    if (worldFaults.length) return null;
+    const scenario = FBDATA.startScenarios.find(function (row) { return row && row.id === definition.scenarioId; });
     const preset = familyPresetById(definition.familyPreset);
     if (!bookmark || !scenario || !preset || !scenarioUnlocked(scenario, definition.bookmarkId) ||
         !FB.startProvinceAllowed(scenario, bookmark, definition.provinceId) ||
@@ -2861,7 +2845,7 @@ FB.CHANGELOG = [
 
   function beginQuickStart(definition, details) {
     const scenario = FBDATA.startScenarios.filter(function (candidate) {
-      return candidate.id === definition.scenarioId;
+      return candidate && candidate.id === definition.scenarioId;
     })[0];
     if (!scenario || !scenarioUnlocked(scenario, definition.bookmarkId)) return;
     const seed = G.pending && G.pending.seed || freshSeed();
@@ -3529,17 +3513,37 @@ FB.CHANGELOG = [
     }
   }
 
+  /* Recheck the selected revision and installed world before touching
+     Observe mode, campaign state, RNG, uid or the generated household. */
+  function runtimeWorldReady() {
+    const active = FB.activeBookmark;
+    let current, faults;
+    try {
+      current = FB.bookmark(active.id, active.revision);
+      faults = FB.validateBookmarkWorld(current);
+      if (!faults.length && current !== active) faults = FB.validateBookmarkWorld(active);
+    } catch (error) { faults = [error.message]; }
+    FB.recordBookmarkRuntimeFaults('world_definition', current || active, null, faults);
+    if (!faults.length) return true;
+    FB.ui.openModal('Bookmark unavailable',
+      '<div class="gm-body-text"><p>' + FB.esc(faults.join('\n')) + '</p></div>');
+    return false;
+  }
+
   G.start = function () {
     if (!FB.activeBookmark || !FB.bookmarkAvailable(FB.activeBookmark.id) ||
         G.pending && G.pending.bookmarkId && G.pending.bookmarkId !== FB.activeBookmark.id) {
       FB.ui.toast(FB.bookmarkUnavailableReason(G.pending && G.pending.bookmarkId || FB.activeBookmarkId));
       return false;
     }
+    if (!runtimeWorldReady()) return false;
     const previousState = FB.state, previousRng = FB.getRngState(), previousUid = FB.getUidCounter();
-    G.observe = false;
-    document.body.classList.remove('observing');
-    const sc = G.pending && G.pending.scenario;
-    if (!scenarioUnlocked(sc) || !FB.startProvinceAllowed(sc, FB.activeBookmark, G.pending.provinceId) ||
+    const pendingScenario = G.pending && G.pending.scenario;
+    const sc = pendingScenario && FBDATA.startScenarios.find(function (row) {
+      return row && row.id === pendingScenario.id;
+    });
+    if (!FB.startRuntimeReport(sc, FB.activeBookmark).available || !scenarioUnlocked(sc) ||
+        !FB.startProvinceAllowed(sc, FB.activeBookmark, G.pending.provinceId) ||
         sc.existingPerson && (!FB.existingPersonStartProfile(sc, FB.activeBookmark) ||
           (G.pending.settlementIdx || 0) !== 0) ||
         sc.originalPrincipal !== undefined && (!FB.originalPrincipalStartProfile(sc, FB.activeBookmark) ||
@@ -3547,6 +3551,9 @@ FB.CHANGELOG = [
       showScenarios();
       return false;
     }
+    G.pending.scenario = sc;
+    G.observe = false;
+    document.body.classList.remove('observing');
     const startEffects = sc.startEffects || {};
     // re-seed before politics and characters draw on the RNG, so anyone holding
     // the same seed and making the same picks gets this exact start
@@ -3954,6 +3961,7 @@ FB.CHANGELOG = [
       FB.ui.toast(FB.bookmarkUnavailableReason(G.pending && G.pending.bookmarkId || FB.activeBookmarkId));
       return false;
     }
+    if (!runtimeWorldReady()) return false;
     G.observe = false; // startObserve sets it below; clear any stale state first
     document.body.classList.remove('observing');
     // watchers share worlds too: a bare seed re-seeds the home pick and politics

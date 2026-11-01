@@ -4,6 +4,39 @@
   'use strict';
   function own(o, key) { return !!o && Object.prototype.hasOwnProperty.call(o, key); }
   function plain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+  /* Selector validity and matching are separate: an otherwise matching
+     multi-date start may still contain an unknown bookmark reference.
+     This report is not complete start validation or runtime eligibility. */
+  FB.startSelectorReport = function (scenario, bookmark, eraId, catalogs) {
+    var faults = [], report = {matches:false, valid:false, faults:faults};
+    catalogs = catalogs || FBDATA;
+    if (!plain(scenario) || typeof scenario.id !== 'string' || !scenario.id) {
+      faults.push('Start definition is missing or has no id.'); return report;
+    }
+    var owner = 'start ' + scenario.id;
+    function list(value, label, check) {
+      if (!Array.isArray(value)) { faults.push(label + ': must be a list.'); return; }
+      var seen = Object.create(null);
+      value.forEach(function (id) {
+        if (typeof id !== 'string' || !id || own(seen, id))
+          faults.push(label + ': invalid or duplicate id ' + id + '.');
+        else { seen[id] = true; check(id); }
+      });
+    }
+    if (scenario.bookmarkIds !== undefined) list(scenario.bookmarkIds, owner + '.bookmarkIds', function (id) {
+      if (!own(catalogs.bookmarks, id)) faults.push(owner + ': unknown bookmark ' + id + '.');
+    });
+    if (scenario.eras !== undefined) list(scenario.eras, owner + '.eras', function (id) {
+      if (!own(catalogs.eras, id)) faults.push(owner + ': unknown era ' + id + '.');
+    });
+    if (eraId === undefined) eraId = FB.bookmarkEra(bookmark);
+    report.matches = !!bookmark &&
+      !(scenario.bookmarkIds !== undefined && (!Array.isArray(scenario.bookmarkIds) || scenario.bookmarkIds.indexOf(bookmark.id) < 0) ||
+        scenario.eras !== undefined && (!Array.isArray(scenario.eras) || scenario.eras.indexOf(eraId) < 0) ||
+        Array.isArray(bookmark.starts) && bookmark.starts.indexOf(scenario.id) < 0);
+    report.valid = faults.length === 0;
+    return report;
+  };
   /* Personal identity is not an effective command. This opt-in selects only
      the original direct actor of an explicitly guarded following. */
   FB.originalPrincipalStartProfile = function (scenario, bookmark, stories) {
@@ -350,7 +383,7 @@
   };
   /* Pure structural validation; world validation below owns effective places,
      story dependencies and all ordinary start eligibility. */
-  FB.startTrackOverrideFaults = function (bookmark, scenarios, stories) {
+  FB.startTrackOverrideFaults = function (bookmark, scenarios, stories, scenarioId, shapeOnly) {
     var policy = bookmark && bookmark.startTrackOverrides, errors = [];
     if (policy === undefined) return errors;
     function fault(text) { errors.push('startTrackOverrides: ' + text); }
@@ -366,16 +399,16 @@
         !Object.keys(policy.entries).length || Object.keys(policy.entries).length > 128) {
       fault('needs schema 1 and 1-128 scenario entries.'); return errors;
     }
+    if (shapeOnly) return errors;
     Object.keys(policy.entries).forEach(function (id) {
+      if (scenarioId !== undefined && id !== scenarioId) return;
       var row = policy.entries[id], scenario = scenarios.find(function (sc) { return sc.id === id; });
-      if (!scenario || scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmark.id) < 0 ||
-          scenario.eras && scenario.eras.indexOf(FB.bookmarkEra(bookmark)) < 0 ||
+      if (!scenario || !FB.startSelectorReport(scenario, bookmark).matches ||
           scenario.fixedProvinceId && !(bookmark.provinces || []).some(function (p) {
             return p && p.id === scenario.fixedProvinceId && !p.wasteland;
           }) || scenario.rulerRealmId && !(bookmark.realms || []).some(function (r) {
             return r && r.id === scenario.rulerRealmId;
-          }) ||
-          Array.isArray(bookmark.starts) && bookmark.starts.indexOf(id) < 0) fault('unknown or excluded scenario ' + id + '.');
+          })) fault('unknown or excluded scenario ' + id + '.');
       if (!keys(row, ['tracks','trackLocations']) || !ids(row.tracks, 0)) {
         fault(id + ' needs a complete unique player-track list.'); return;
       }

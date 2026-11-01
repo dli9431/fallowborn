@@ -103,7 +103,11 @@
     availability[id] = record;
   });
   Object.keys(sites).forEach(function (id) {
-    if (own(FBDATA.settlementSites, id) && JSON.stringify(FBDATA.settlementSites[id]) !== JSON.stringify(sites[id]))
+    /* A coordinate-only reference may reuse a shared site's dated names.
+       Compare the declared fields, leaving extra shared metadata intact. */
+    if (own(FBDATA.settlementSites, id) && Object.keys(sites[id]).some(function (field) {
+      return JSON.stringify(FBDATA.settlementSites[id][field]) !== JSON.stringify(sites[id][field]);
+    }))
       throw new Error('Conflicting 634 physical site: ' + id);
   });
   Object.keys(forms).forEach(function (id) {
@@ -115,6 +119,23 @@
       throw new Error('Missing 634 government form: ' + r.government);
     if (!own(faiths, r.religion) && !own(FBDATA.religions, r.religion))
       throw new Error('Missing 634 court faith: ' + r.religion);
+  });
+
+  /* Starts remain staged until their world can be published. Re-evaluating
+     an unchanged composition must not append the same starts twice. */
+  var stagedStarts = FBDATA.startScenarios_634_ordinary;
+  if (!Array.isArray(stagedStarts) || !stagedStarts.length)
+    throw new Error('Missing 634 ordinary start declarations');
+  var startIds = {}, startAdditions = [];
+  stagedStarts.forEach(function (start) {
+    if (!start || typeof start.id !== 'string' || !start.id || own(startIds, start.id) ||
+        !Array.isArray(start.bookmarkIds) || start.bookmarkIds.length !== 1 || start.bookmarkIds[0] !== '634')
+      throw new Error('Invalid 634 ordinary start declaration');
+    startIds[start.id] = true;
+    var existing = FBDATA.startScenarios.filter(function (row) { return row.id === start.id; });
+    if (existing.length > 1 || existing.length && JSON.stringify(existing[0]) !== JSON.stringify(start))
+      throw new Error('Conflicting 634 ordinary start: ' + start.id);
+    if (!existing.length) startAdditions.push(copy(start));
   });
 
   /* No live catalogue receives a partial regional world. Literal metadata
@@ -142,4 +163,5 @@
   Object.keys(availability).forEach(function (id) {
     FBDATA.religions[id] = Object.assign({},FBDATA.religions[id],{availability:availability[id]});
   });
+  Array.prototype.push.apply(FBDATA.startScenarios, startAdditions);
 })();

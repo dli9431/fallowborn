@@ -1,5 +1,13 @@
 # Mods
 
+Trusted composition preparation
+
+FB.mods.prepareComposition is the internal detached bridge used by js/bookmark_composition.js. It prepares effective catalogues and story products with ordinary record validators, scopes world validation to the owning bookmark, and checks each owned start with the shared requirement and record-schema validators. Final preparation also runs exhaustive authoring checks over the owned/referenced starts and all supplied world revisions. It restores the live data and validation caches on every exit. Ordinary validate, apply and stored-stack paths keep their existing exhaustive whole-import semantics; optional-start withholding belongs only to the trusted composer. No new mod root, storage operation, active-mod signature or saved field is added. Complete envelopes and bootstrap restrictions are documented in docs/MODDING.md.
+
+Scoped fresh-start schema validation
+
+FB.mods.startDefinitionFaults(scenario, bookmark, stories) reuses the import start-record validator for one selected resolved world. It checks the effective track replacement and canonical resources, career, family, identity and authored-rule fields without validating sibling start records or other world revisions. Runtime start reports combine these schema faults with shared per-start requirement checks before offering or constructing a beginning. Normal validate/apply/storage paths continue checking the complete candidate, every supplied start and its offered revisions, preserving atomic rejection and exact fingerprints. This runtime boundary changes no mod field, save record or gameplay capability.
+
 Recurring automation is a private permission on six audited baseline handlers,
 not an inference from a deed's `immediate` flow or a new JSON capability. New mod
 deeds remain manual-only. Effective baseline cooldown and eligibility overrides

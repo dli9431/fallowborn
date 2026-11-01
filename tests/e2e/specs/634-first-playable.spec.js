@@ -5,7 +5,7 @@ const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
-const {beginBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
+const {beginBookmark,beginBookmarkFromTitle,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -31,6 +31,7 @@ const order = ['b01','b02','b03','b04','b05','b06','b07','b08','b09','b10',
 const disabled = ['episcopal_sees','civic_institutions','papacy','excommunication','abbeys',
   'feudal_service','scutage','manorial_tenure','crown_bloc','tournaments','great_holy_wars'];
 const source = fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_634.js'),'utf8');
+const startSource = fs.readFileSync(path.resolve(__dirname,'../../../data/starts_634_ordinary.js'),'utf8');
 
 for (const crazy of [false,true]) {
   test('634 composes the complete hidden opening on ' + (crazy ? 'CrazyGames' : 'standard'),
@@ -106,6 +107,51 @@ for (const crazy of [false,true]) {
     });
 }
 
+test('634 reuses shared site metadata and publishes detached starts once',async function ({page},info) {
+  await openGame(page,info);
+  expect(await page.evaluate(function (input) {
+    const siteId = 'najran_oasis_wider_476', site = FBDATA.settlementSites[siteId];
+    const siteSnapshot = JSON.stringify(site);
+    const before = JSON.stringify(FBDATA), state = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
+    (0,eval)(input.startSource);
+    const stagingInert = before === JSON.stringify(FBDATA);
+    (0,eval)(input.source);
+    return {siteFields:Object.keys(FBDATA.bookmarkRegions634.b28.settlementSites[siteId]).sort(),
+      named:Array.isArray(site.names) && site.names.length > 0,
+      preserved:site === FBDATA.settlementSites[siteId] && JSON.stringify(site) === siteSnapshot,
+      starts:FBDATA.startScenarios_634_ordinary.map(function (staged) {
+        const published = FBDATA.startScenarios.filter(function (row) { return row.id === staged.id; });
+        return {id:staged.id,count:published.length,detached:published[0] !== staged,
+          equal:JSON.stringify(published[0]) === JSON.stringify(staged)};
+      }),stagingInert:stagingInert,unchanged:before === JSON.stringify(FBDATA) && state === FB.state &&
+        rng === FB.getRngState() && uid === FB.getUidCounter()};
+  },{source:source,startSource:startSource})).toEqual({siteFields:['x','y'],named:true,preserved:true,
+    starts:[{id:'farmer_634',count:1,detached:true,equal:true},{id:'craftsman_634',count:1,detached:true,equal:true}],
+    stagingInert:true,unchanged:true});
+});
+
+test('failed 634 composition leaves other bookmarks and ordinary starts playable',async function ({page},info) {
+  test.skip(!info.project.name.endsWith('-served'),'Response interception requires the served origin.');
+  const pageErrors = [];
+  page.on('pageerror',function (error) { pageErrors.push(error.message); });
+  await page.route('**/data/bookmark_634.js',function (route) {
+    return route.fulfill({contentType:'application/javascript',
+      body:'delete FBDATA.bookmarkRegions634.b29;\n' + source});
+  });
+  await openGame(page,info);
+  expect(pageErrors).toEqual(['Incomplete 634 regional declarations']);
+  expect(await page.evaluate(function () {
+    return {registered:!!FBDATA.bookmarks['634'],
+      staged:FBDATA.startScenarios_634_ordinary.map(function (row) { return row.id; }),
+      published:FBDATA.startScenarios.filter(function (row) {
+        return row.bookmarkIds && row.bookmarkIds.indexOf('634') >= 0;
+      }).map(function (row) { return row.id; }),
+      otherBookmarks:['476','867','1066'].map(function (id) { return FB.validateBookmark(FB.bookmark(id)); })};
+  })).toEqual({registered:false,staged:['farmer_634','craftsman_634'],published:[],otherBookmarks:[[],[],[]]});
+  await beginBookmarkFromTitle(page,'867');
+  expect(await page.evaluate(function () { return FB.state.start.id; })).toBe('867');
+});
+
 test('634 rejects picker, codes, direct creation and Observe while hidden',async function ({page},info) {
   await openGame(page,info);
   const full = page.locator('#btn-choose-beginning');
@@ -139,8 +185,10 @@ test('634 missing, duplicate and unresolved regional inputs reject without publi
   const problems = await page.evaluate(function (code) {
     const original = FBDATA.bookmarkRegions634, copy = function (v) { return JSON.parse(JSON.stringify(v)); };
     const rng = FB.getRngState(), uid = FB.getUidCounter(), data = JSON.stringify(FBDATA), failures = [];
+    const originalStarts = FBDATA.startScenarios_634_ordinary;
     ['missing','missing_county','duplicate_county','duplicate_court','unknown_court','unknown_liege','wrong_capital',
-      'territorial_foreign_capital','nonterritorial_missing_capital','nonterritorial_scenery_capital'].forEach(function (kind) {
+      'territorial_foreign_capital','nonterritorial_missing_capital','nonterritorial_scenery_capital',
+      'site_coordinates','site_names','missing_starts','duplicate_start','conflicting_start'].forEach(function (kind) {
       FBDATA.bookmarkRegions634 = copy(original);
       const regions = FBDATA.bookmarkRegions634;
       if (kind === 'missing') { delete regions.b29; regions.e2e_extra = {}; }
@@ -154,14 +202,21 @@ test('634 missing, duplicate and unresolved regional inputs reject without publi
       if (kind === 'territorial_foreign_capital') aures.nonTerritorial = false;
       if (kind === 'nonterritorial_missing_capital') aures.capital = 'e2e_absent';
       if (kind === 'nonterritorial_scenery_capital') aures.capital = 'w_sahara_w';
+      if (kind === 'site_coordinates') regions.b28.settlementSites.najran_oasis_wider_476.x += 1;
+      if (kind === 'site_names') regions.b28.settlementSites.najran_oasis_wider_476.names = [{name:'Conflicting name'}];
+      FBDATA.startScenarios_634_ordinary = copy(originalStarts);
+      if (kind === 'missing_starts') delete FBDATA.startScenarios_634_ordinary;
+      if (kind === 'duplicate_start') FBDATA.startScenarios_634_ordinary.push(copy(originalStarts[0]));
+      if (kind === 'conflicting_start') FBDATA.startScenarios_634_ordinary[0].gold += 1;
       let rejected = false;
       try { (0,eval)(code); } catch (error) { rejected = /634/.test(error.message); }
       FBDATA.bookmarkRegions634 = original;
+      FBDATA.startScenarios_634_ordinary = originalStarts;
       failures.push(rejected && data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter());
     });
     return failures;
   },source);
-  expect(problems).toEqual(Array(10).fill(true));
+  expect(problems).toEqual(Array(15).fill(true));
 });
 
 test('634 complete candidate validation rejects bad sites, faiths and capitals without changing state',async function ({page},info) {

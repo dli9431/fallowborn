@@ -699,8 +699,9 @@ window.FBMODS = window.FBMODS || [];
   /* Start rules a scenario carries as data (docs/MODDING.md): where it is
      offered, its fixed birthplace and identity, its family shapes and its
      player-track stories. */
-  function validateStartRules(scenario, rules, path, stories) {
+  function validateStartRules(scenario, rules, path, stories, runtimeWorld) {
     function freshBookmark(id) {
+      if (runtimeWorld && runtimeWorld.id === id) return runtimeWorld;
       var raw = rules.bookmarks[id];
       return FB.bookmarkRevisions(id, raw).find(function (bm) {
         return (bm.revision || 'baseline') === (raw.revision || 'baseline');
@@ -710,6 +711,7 @@ window.FBMODS = window.FBMODS || [];
        it: one that lists it, or, without a starts list, one holding its fixed
        birthplace. A start no revision offers keeps the fresh-world check. */
     function offeringBookmarks(id, scenario) {
+      if (runtimeWorld) return runtimeWorld.id === id ? [runtimeWorld] : [];
       var all = FB.bookmarkRevisions(id, rules.bookmarks[id]);
       var offered = all.filter(function (bm) {
         return Array.isArray(bm.starts) ? bm.starts.indexOf(scenario.id) >= 0
@@ -894,7 +896,7 @@ window.FBMODS = window.FBMODS || [];
             continue;
           }
           for (const bookmarkId of (Array.isArray(scenario.bookmarkIds) ? scenario.bookmarkIds : [])) {
-            if (!own(rules.bookmarks, bookmarkId)) continue;
+            if (!own(rules.bookmarks, bookmarkId) || runtimeWorld && runtimeWorld.id !== bookmarkId) continue;
             const bookmark = freshBookmark(bookmarkId);
             // Effective replacement maps are checked per revision by world validation.
             if (FB.startTrackSet(scenario, bookmark) !== scenario) continue;
@@ -913,8 +915,8 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
-  function validateStartScenarios(mod, stories) {
-    const scenarios = combinedList(FBDATA.startScenarios,
+  function validateStartScenarios(mod, stories, scope) {
+    const scenarios = scope ? [scope.scenario] : combinedList(FBDATA.startScenarios,
       mod.startScenarios, 'startScenarios');
     const refs = {
       careers:combinedTable(FBDATA.careers, mod.careers, 'careers'),
@@ -1002,9 +1004,10 @@ window.FBMODS = window.FBMODS || [];
       }
       validateStartEffects(scenario.startEffects, scenario, refs,
         path + '.startEffects');
-      validateStartRules(scenario, rules, path, stories);
+      validateStartRules(scenario, rules, path, stories, scope && scope.bookmark);
     }
     for (const id in baselineTiers) {
+      if (scope && id !== scope.scenario.id) continue;
       if (!found[id]) fail('startScenarios', 'must retain baseline id ' + id + '.');
       if (found[id].tier !== baselineTiers[id]) {
         fail('startScenarios.' + id + '.tier', 'must remain ' + baselineTiers[id] + '.');
@@ -2137,7 +2140,7 @@ window.FBMODS = window.FBMODS || [];
     });
   }
 
-  function validateBeforeApply(mod, stories) {
+  function validateBeforeApply(mod, stories, composition) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     if (own(mod,'siteResourceProfiles') && !plainObject(mod.siteResourceProfiles))
       fail('siteResourceProfiles','must be an object keyed by id.');
@@ -2198,7 +2201,7 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'careers')) validateCareers(mod);
     if (own(mod, 'rulerTraits')) validateRulerTraits(mod);
     if (own(mod, 'raidingTraditions')) validateRaidingTraditions(mod);
-    if (own(mod, 'startScenarios')) validateStartScenarios(mod, stories);
+    if (own(mod, 'startScenarios') && !composition) validateStartScenarios(mod, stories);
     if (own(mod, 'familyPresets')) validateFamilyPresets(mod);
     if (own(mod, 'religiousPaths') || own(mod, 'religions')) {
       validateReligiousPaths(mod);
@@ -2351,7 +2354,7 @@ window.FBMODS = window.FBMODS || [];
   /* Validate the same composed catalogues activation will read. Temporary
      tables are detached, including technologies normalized by their schema
      validator. Never run story init, install actions, or consume RNG here. */
-  function prepareRequirements(mod) {
+  function prepareRequirements(mod, composition) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     var live = FBDATA, staged = Object.assign({}, live), prepared;
     ['positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','federateServiceStarts','federateMigrations','rankPrestigeYearly','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','eras','wardrobes','settlementLayouts','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','traitMechanics','authorityOffices','legitimacySources','customaryBases'].forEach(function (key) {
@@ -2456,7 +2459,7 @@ window.FBMODS = window.FBMODS || [];
     try {
       window.FBDATA = staged; reset();
       var stories = FB.stories.compile(staged.storyInstances || {});
-      prepared = validateBeforeApply(mod, stories);
+      prepared = validateBeforeApply(mod, stories, composition);
       prepared.stories = stories;
       var problems = FB.balanceLayers.problems(mod.balance);
       if (problems.length) fail('balance', problems.map(FB.balanceLayers.describe).join(' '));
@@ -2483,10 +2486,45 @@ window.FBMODS = window.FBMODS || [];
           }
         }
       }
-      var ids = Object.keys(staged.bookmarks);
+      var ids = composition ? [composition.worldId] : Object.keys(staged.bookmarks);
       for (var i = 0; i < ids.length; i++) {
-        var errors = FB.validateBookmark(staged.bookmarks[ids[i]], false, stories);
+        var errors = composition ? [].concat.apply([], FB.bookmarkRevisions(ids[i], staged.bookmarks[ids[i]])
+          .map(function (world) { return FB.validateBookmarkWorld(world, stories); }))
+          : FB.validateBookmark(staged.bookmarks[ids[i]], false, stories);
         if (errors.length) fail('requirements', errors.join(' '));
+      }
+      if (composition) (mod.startScenarios || []).forEach(function (start) {
+        var hosted = false;
+        FB.bookmarkRevisions(composition.worldId, staged.bookmarks[composition.worldId]).forEach(function (world) {
+          try {
+            var report = FB.startRequirementReport(start, world, null, stories);
+            if (report.selectorFaults.length) fail('startScenarios.' + start.id, report.selectorFaults.join(' '));
+            if (!report.matches || !report.applicable) return;
+            if (report.faults.length) fail('startScenarios.' + start.id, report.faults.join(' '));
+            var shape = M.startDefinitionFaults(start, world, stories);
+            if (shape.length) fail('startScenarios.' + start.id, shape.join(' '));
+            hosted = true;
+          } catch (error) { error.compositionRevision = world.revision || null; throw error; }
+        });
+        if (!hosted) fail('startScenarios.' + start.id, 'is not hosted by the composition world.');
+      });
+      if (composition && composition.complete) {
+        // Exhaustive authoring for this ownership unit, including dangling
+        // explicit world bindings, without importing unrelated start faults.
+        var allStarts = staged.startScenarios, referenced = Object.create(null);
+        FB.bookmarkRevisions(composition.worldId, staged.bookmarks[composition.worldId]).forEach(function (world) {
+          (Array.isArray(world.starts) ? world.starts : []).forEach(function (id) { referenced[id] = true; });
+          Object.keys(world.startLocations || {}).forEach(function (id) { referenced[id] = true; });
+          Object.keys(world.startTrackOverrides && world.startTrackOverrides.entries || {}).forEach(function (id) { referenced[id] = true; });
+          var geography = staged.geographies[world.geography || staged.defaultGeography];
+          Object.keys(geography && geography.knowledge && geography.knowledge.starts || {}).forEach(function (id) { referenced[id] = true; });
+        });
+        (mod.startScenarios || []).forEach(function (start) { referenced[start.id] = true; });
+        try {
+          staged.startScenarios = allStarts.filter(function (start) { return start && own(referenced, start.id); });
+          var completeErrors = FB.validateBookmark(staged.bookmarks[composition.worldId], false, stories);
+          if (completeErrors.length) fail('requirements', completeErrors.join(' '));
+        } finally { staged.startScenarios = allStarts; }
       }
       if (!own(staged.bookmarks, staged.defaultBookmark)) fail('defaultBookmark', 'must name a registered bookmark.');
       // Match activation's title-reference gate before storing or reloading.
@@ -2525,6 +2563,34 @@ window.FBMODS = window.FBMODS || [];
       timeEnd('stored_stack', started, { validated:validated });
     }
   }
+
+  // Reuse record/schema rules for one current-world beginning. Whole imports
+  // keep their original all-record/all-revision validation and atomic commit.
+  M.startDefinitionFaults = function (scenario, bookmark, stories) {
+    try {
+      const selected = FB.startTrackSet(scenario, bookmark);
+      if (selected !== scenario) {
+        scenario = Object.assign({}, scenario, {tracks:selected.tracks});
+        if (selected.trackLocations === undefined) delete scenario.trackLocations;
+        else scenario.trackLocations = selected.trackLocations;
+      }
+      validateStartScenarios({}, stories || FB.stories, {scenario:scenario, bookmark:bookmark});
+      return [];
+    } catch (error) { return [error.message]; }
+  };
+
+  /* Trusted composers share detached import preparation without changing
+     storage, fingerprints, registries or ordinary all-or-nothing imports. */
+  M.prepareComposition = function (mod, worldId, base, complete) {
+    var live = FBDATA;
+    try {
+      if (base) window.FBDATA = base;
+      return prepareRequirements(mod, {worldId:worldId,complete:!!complete});
+    } finally {
+      window.FBDATA = live;
+      FB.invalidateCultureData(); FB.invalidateReligionData(); FB.lexicon.reset();
+    }
+  };
 
   M.validate = function (mod) {
     try { prepareRequirements(mod); return []; }
