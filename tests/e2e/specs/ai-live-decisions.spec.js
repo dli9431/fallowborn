@@ -6,6 +6,7 @@ dependsOnRuntime(__filename,[
   'js/government_ai.js','js/governments.js','js/wars.js','js/world.js','js/mods.js','js/balance.js','js/armies.js',
   'js/fortifications.js','js/building_profiles.js','js/lordships.js','js/treasury.js','js/building_seasons.js','js/building_operations.js',
   'js/technology.js','data/technology.js',
+  'js/agency.js','js/intrigue.js','js/politics.js','data/intrigue.js','data/ambitions.js',
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
 const { test,expect } = require('../support/fixture');
@@ -131,5 +132,32 @@ for (const weight of [0,2]) {
     expect(out.scoreDidNotGrant).toBe(true);
     if (!weight) expect(out).toMatchObject({score:0,active:0,completed:true});
     else { expect(out.score).toBeGreaterThan(0); expect(out.active).toBeGreaterThan(0); }
+  });
+}
+
+for (const rate of [0,1]) {
+  test('imported intrigue and diplomacy rates ' + rate + ' reach existing yearly/goals consumers',async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    const mod = await page.evaluate(function (rate) {
+      const intrigue = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_intrigue));
+      const diplomacy = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_diplomacy));
+      intrigue.parameters.chanceRate = rate; intrigue.parameters.maximumChance = 1;
+      diplomacy.parameters.allianceChance = rate;
+      return {name:'Political rate '+rate,aiDecisionPolicies:{intrigue_review:intrigue,diplomacy_review:diplomacy},
+        balance:{aiIntriguePolicy:'intrigue_review',aiDiplomacyPolicy:'diplomacy_review'}};
+    },rate);
+    await importPolicy(page,mod);
+    await startDeterministicGame(page);
+    const out = await page.evaluate(function () {
+      const s = FB.state, ids = Object.keys(s.realms).filter(function (id) { return id !== 'player' && s.realms[id].alive && !s.realms[id].liege; });
+      ids.forEach(function (id) { const c = FB.realmRulerCharacter(s,id); if (c) c.traits = ['ambitious']; s.realms[id].ruler.trait = 'ambitious'; });
+      const calls = [], chance = FB.chance;
+      FB.chance = function (p) { calls.push(p); return false; };
+      try { FB.intrigueAgencyYearly(s); } finally { FB.chance = chance; }
+      return {calls:calls,alliance:FB.governments.call(s,ids[0],'ai','goals',{}).allianceChance};
+    });
+    expect(out.alliance).toBe(rate);
+    expect(out.calls.length).toBeGreaterThan(0);
+    expect(out.calls.every(function (value) { return value === rate; })).toBe(true);
   });
 }

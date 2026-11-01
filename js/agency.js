@@ -112,7 +112,7 @@ window.FB = window.FB || {};
       return 'secure_dynasty';
     }
     var preferred = null, weight = 0;
-    AIM_IDS.forEach(function (id) {
+    (FB.aiDecisions.resolve(state,rid,'diplomacy').definition.aimOrder || AIM_IDS).forEach(function (id) {
       var score = FB.traitAimWeight(c, id);
       if (score > weight) { preferred = id; weight = score; }
     });
@@ -496,7 +496,8 @@ window.FB = window.FB || {};
     var family = def && def.family || '';
     var policy = FB.rulerAimPolicy(aim);
     if (!policy) return 0;
-    for (var row of policy.motions) if (row.motion === motionId || row.family && row.family === family) return row.value;
+    for (var row of policy.motions) if (row.motion === motionId || row.family && row.family === family)
+      return row.value*FB.aiDecisions.parameters(state,rid,'diplomacy').courtAmbitionMultiplier;
     return 0;
   };
 
@@ -999,12 +1000,16 @@ window.FB = window.FB || {};
       if (!target) {
         var adjacent = neighbors[rid] || {};
         var ids = Object.keys(adjacent).sort();
-        if (ids.length) target = ids[Math.abs(state.date.year) % ids.length];
+        if (ids.length) target = FB.aiDecisions.resolve(state,rid,'diplomacy').definition.mode === 'first' ?
+          ids[Math.abs(state.date.year) % ids.length] : FB.aiDecisions.choose(state,rid,'diplomacy',ids.map(function (id) {
+            return {id:id,eligible:true,facts:FB.aiDecisions.diplomaticFacts(state,rid,id)};
+          }));
       }
       if (!target || target === 'player' || !state.realms[target] ||
           !state.realms[target].alive) continue;
       var aim = FB.rulerAimSnapshot(state, rid);
       var amount = aim ? FBDATA.agencyRules.aims[aim.id].cultivation : 1;
+      amount *= FB.aiDecisions.parameters(state,rid,'diplomacy').cultivationMultiplier;
       FB.adjustRulerRegard(state, rid, target, amount,
         'agency:annual_cultivation');
     }
@@ -1021,6 +1026,7 @@ window.FB = window.FB || {};
       var to = peers[(i + 1) % peers.length];
       var peerAim = FB.rulerAimSnapshot(state, from.id);
       var peerAmount = peerAim ? FBDATA.agencyRules.aims[peerAim.id].peerCultivation : 1;
+      peerAmount *= FB.aiDecisions.parameters(state,from.id,'diplomacy').peerCultivationMultiplier;
       FB.adjustRulerRegard(state, from.id, to.id, peerAmount,
         'agency:court_cultivation');
     }
@@ -1100,7 +1106,8 @@ window.FB = window.FB || {};
         delete agency.rebelSupport[targetId];
       }
     }
-    if (Object.keys(agency.rebelSupport).length >= 3 || !FB.chance(FBDATA.agencyRules.rebelChance)) return;
+    if (Object.keys(agency.rebelSupport).length >= FB.aiDecisions.parameters(state,null,'diplomacy').rebelSupportCap ||
+        !FB.chance(FBDATA.agencyRules.rebelChance)) return;
     var candidates = [];
     var vassalsByTop = {};
     for (var possibleId in state.realms) {
@@ -1143,7 +1150,12 @@ window.FB = window.FB || {};
         String(a.targetRid).localeCompare(String(b.targetRid)) ||
         String(a.sponsorRid).localeCompare(String(b.sponsorRid));
     });
-    var chosen = candidates[0];
+    var selected = FB.aiDecisions.resolve(state,null,'diplomacy').definition.mode === 'first' ? '0' :
+      FB.aiDecisions.choose(state,null,'diplomacy',candidates.map(function (c,i) {
+        return {id:String(i),eligible:true,facts:Object.assign(FB.aiDecisions.diplomaticFacts(state,c.sponsorRid,c.targetRid),{score:c.hostility})};
+      }));
+    if (selected === null) return;
+    var chosen = candidates[Number(selected)];
     agency.rebelSupport[chosen.targetRid] = {
       sponsorRid:chosen.sponsorRid, startedYear:state.date.year,
       sponsorGeneration:rulerGeneration(state.realms[chosen.sponsorRid]),
@@ -1184,7 +1196,14 @@ window.FB = window.FB || {};
       return b.relevance.score + bm - a.relevance.score - am ||
         String(a.rid).localeCompare(String(b.rid));
     });
-    var chosen = candidates[0];
+    var selected = FB.aiDecisions.resolve(state,null,'diplomacy').definition.mode === 'first' ? '0' :
+      FB.aiDecisions.choose(state,null,'diplomacy',candidates.map(function (c,i) {
+        return {id:String(i),eligible:true,facts:{score:c.relevance.score+(c.marriage ? FBDATA.agencyRules.marriagePriority : 0),
+          distance:c.relevance.distance === null ? 1000000000 : c.relevance.distance,
+          regard:FB.rulerRegard(state,c.rid,'player'),strengthRatio:0,sharedFaith:c.relevance.sameReligion ? 1 : 0}};
+      }));
+    if (selected === null) return;
+    var chosen = candidates[Number(selected)];
     var realm2 = state.realms[chosen.rid];
     agency.lastPlayerApproachYear = state.date.year;
     agency.rulerAims[chosen.rid].lastApproachYear = state.date.year;

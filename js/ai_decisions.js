@@ -23,8 +23,12 @@
         seaCoastalMultiplier:ratio,seaInlandMultiplier:ratio,priorityMultiplier:ratio,
         transportCoastalMultiplier:ratio,transportInlandMultiplier:ratio,slotUnlockMultiplier:ratio,
         economyUnlockMultiplier:ratio,unitUnlockMultiplier:ratio,ruleUnlockMultiplier:ratio,practiceUnlockMultiplier:ratio}},
-    intrigue:{key:'aiIntriguePolicy', metrics:['score','hostility','motive','weight','schemePriority'],parameters:{baseWeight:ratio,chanceRate:unit,maximumChance:unit}},
-    diplomacy:{key:'aiDiplomacyPolicy', metrics:['score','distance','regard','strengthRatio','sharedFaith'],parameters:{allianceChance:unit}},
+    intrigue:{key:'aiIntriguePolicy', metrics:['score','hostility','motive','weight','schemePriority'],parameters:{baseWeight:ratio,chanceRate:unit,maximumChance:unit,minimumWeight:ratio}},
+    diplomacy:{key:'aiDiplomacyPolicy', metrics:['score','distance','regard','strengthRatio','sharedFaith'],
+      parameters:{allianceChance:unit,cultivationMultiplier:ratio,peerCultivationMultiplier:ratio,rebelSupportCap:[0,3,true],
+        relationshipDivisor:[0.01,1000],relationshipCap:[0,100],courtAmbitionMultiplier:ratio,
+        courtMartialCenter:[0,100],courtMartialCap:[0,100],courtAgeCenter:[0,100],courtAgeScale:[0.01,100],
+        courtAgeCap:[0,100],courtEconomicCap:[0,100]}},
     religion:{key:'aiReligionPolicy', metrics:['score','strengthRatio','importance','distance','zeal'],parameters:{minimumTargetRatio:ratio}},
     government:{key:'aiGovernmentPolicy', metrics:['score','cost','support','regard','distance'],parameters:{}}
   };
@@ -47,9 +51,17 @@
   }
   function recordFaults(d, data, path) {
     var errors = [];
-    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments','buildingRoleWeights','domainWeights'],path,errors)) return errors;
+    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments','buildingRoleWeights','domainWeights','schemeOrder','aimOrder'],path,errors)) return errors;
     if (!own(families,d.family)) return errors.concat(path + '.family is unregistered.');
     var f = families[d.family], names = Object.keys(f.parameters);
+    if (own(d,'aimOrder') && (d.family !== 'diplomacy' || !Array.isArray(d.aimOrder) ||
+        !d.aimOrder.length || d.aimOrder.length > 32 || d.aimOrder.some(function (aim,i) {
+          return !own(data.agencyRules && data.agencyRules.aims,aim) || d.aimOrder.indexOf(aim) !== i;
+        }))) errors.push(path + '.aimOrder needs unique known ruler aims.');
+    if (own(d,'schemeOrder') && (d.family !== 'intrigue' || !Array.isArray(d.schemeOrder) ||
+        !d.schemeOrder.length || d.schemeOrder.length > 16 || d.schemeOrder.some(function (scheme,i) {
+          return !own(data.plots,scheme) || !data.plots[scheme].hostile || d.schemeOrder.indexOf(scheme) !== i;
+        }))) errors.push(path + '.schemeOrder needs unique known hostile schemes.');
     if (own(d,'domainWeights')) {
       if (d.family !== 'research') errors.push(path + '.domainWeights requires research.');
       if (fields(d.domainWeights,Object.keys(data.techDomains || {}),path + '.domainWeights',errors))
@@ -199,6 +211,12 @@
     var policy = P.resolve(state,realmId,family);
     if (!policy.definition.adjustments.length) return policy.definition.parameters;
     return P.report(policy,[],P.inputs(state,realmId)).parameters;
+  };
+  P.diplomaticFacts = function (state, realmId, targetId) {
+    var ownStrength = FB.realmStrength(state,realmId), defense = FB.realmStrength(state,targetId);
+    return {score:0,distance:1,regard:FB.rulerRegard ? FB.rulerRegard(state,realmId,targetId) : 0,
+      strengthRatio:ownStrength/Math.max(1,defense),
+      sharedFaith:FB.realmReligionId(state,realmId) === FB.realmReligionId(state,targetId) ? 1 : 0};
   };
   P.choose = function (state, realmId, family, candidates) {
     var report = P.report(P.resolve(state,realmId,family),candidates,P.inputs(state,realmId));

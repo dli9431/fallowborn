@@ -9245,7 +9245,11 @@ window.FB = window.FB || {};
           choices.push(id2);
         }
         if (choices.length) {
-          const partner = FB.pick(choices);
+          const partner = FB.aiDecisions.resolve(state,id,'diplomacy').definition.mode === 'first' ? FB.pick(choices) :
+            FB.aiDecisions.choose(state,id,'diplomacy',choices.map(function (rid) {
+              return {id:rid,eligible:true,facts:FB.aiDecisions.diplomaticFacts(state,id,rid)};
+            }));
+          if (!partner) continue;
           if (FB.formAlliance(state, id, partner, 'dynastic')) {
             if (timing) timing.count('World annual: alliances formed');
             yearAlliances.rebuild();

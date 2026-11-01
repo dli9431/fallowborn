@@ -1039,6 +1039,7 @@ window.FB = window.FB || {};
   }
 
   FB.governmentMotionScore = function (state, bloc, motionId, courtEconomicPowerAverage) {
+    var court = FB.politicalCourt(state), preference = FB.aiDecisions.parameters(state,court && court.polityId,'diplomacy');
     var def = blocDef(bloc.archetypeId) || {};
     var motions = def.motions || {};
     var base = isFinite(Number(motions[motionId]))
@@ -1070,8 +1071,8 @@ window.FB = window.FB || {};
       var averageMartial = weightedMemberAverage(bloc, function (house) {
         return house.martial;
       });
-      martial = FB.clamp(Math.round((6 - averageMartial) * martialSlope),
-        -12, 12);
+      martial = FB.clamp(Math.round((preference.courtMartialCenter-averageMartial)*martialSlope),
+        -preference.courtMartialCap,preference.courtMartialCap);
       if (martial) reasons.push(reason('martial_inclination', martial, {
         martial:Math.round(averageMartial * 10) / 10
       }));
@@ -1082,7 +1083,7 @@ window.FB = window.FB || {};
     if (ageSlope) {
       var averageAge = bloc.averageRulerAge;
       age = FB.clamp(Math.round(
-        ((averageAge - 40) / 10) * ageSlope), -8, 8);
+        ((averageAge-preference.courtAgeCenter)/preference.courtAgeScale)*ageSlope),-preference.courtAgeCap,preference.courtAgeCap);
       reasons.push(reason('average_ruler_age', age, {
         averageAge:averageAge,
         slope:ageSlope
@@ -1097,7 +1098,7 @@ window.FB = window.FB || {};
         ? (averageEconomicPower - courtEconomicPowerAverage) /
           courtEconomicPowerAverage : 0;
       economicPower = FB.clamp(Math.round(
-        relativeEconomicPower * economicPowerSlope), -8, 8);
+        relativeEconomicPower*economicPowerSlope),-preference.courtEconomicCap,preference.courtEconomicCap);
       reasons.push(reason('economic_power', economicPower, {
         averageEconomicPower:averageEconomicPower,
         courtEconomicPowerAverage:courtEconomicPowerAverage,
@@ -1109,8 +1110,8 @@ window.FB = window.FB || {};
     if (FB.rulerRegard) {
       relationships = Math.round(weightedMemberAverage(bloc, function (house) {
         if (house.isPlayer) return 0;
-        return FB.clamp(FB.rulerRegard(state, house.id, 'player') / 6,
-          -15, 15);
+        return FB.clamp(FB.rulerRegard(state,house.id,'player')/preference.relationshipDivisor,
+          -preference.relationshipCap,preference.relationshipCap);
       }));
       if (relationships) {
         reasons.push(reason('player_relationship', relationships));
