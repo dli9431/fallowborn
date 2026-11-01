@@ -1076,6 +1076,7 @@ window.FB = window.FB || {};
     for (i = 0; i < ids.length; i++) {
       var rid = ids[i], r = state.realms[rid];
       if (rid === 'player' || !r || !r.alive || r.fortProjectYear === year) continue;
+      var preference = FB.aiDecisions.parameters(state,rid,'investment');
       var chosen = null;
       var counties = held[rid] || [];
       for (var j = 0; j < counties.length; j++) {
@@ -1090,8 +1091,9 @@ window.FB = window.FB || {};
         if ((Number(r.fortWorks) || 0) < def.work) continue;
         var candidate = {
           pid:pid, target:target, work:def.work, materialQuote:materialQuote,
-          priority:pid === r.capital ? 0 : (foreignFrontier(state, pid, rid) ? 1 : 2),
-          development:Number(state.dev[pid]) || 0
+          priority:pid === r.capital ? preference.capitalPriority :
+            (foreignFrontier(state,pid,rid) ? preference.frontierPriority : preference.interiorPriority),
+          development:(Number(state.dev[pid]) || 0)*preference.fortDevelopmentWeight
         };
         if (!chosen || candidate.priority < chosen.priority ||
             (candidate.priority === chosen.priority &&

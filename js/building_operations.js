@@ -376,6 +376,8 @@
       if (seasonalOnly && !FB.buildingSeasons.hasOperation(s,a.id)) return;
       var holder = FB.settlementHolder(s,a.countyId,a.slot);
       if (!holder || holder.id === 'player' || holder.kind === 'character' && holder.id === s.player.charId) return;
+      var realm = holder.kind === 'realm' ? holder.id : FB.settlementCountyHolder(s,a.countyId);
+      if (!FB.aiDecisions.parameters(s,realm,'investment').operationSpending) return;
       if (O.commit(s,O.quote(s,{countyId:a.countyId,settlement:a.slot,buildingId:a.buildingId,actor:holder}))) count++;
     });
     return count;

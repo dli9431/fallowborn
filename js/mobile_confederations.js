@@ -945,6 +945,7 @@
     return review && review.review.allowed && M.commit(s, review);
   }
   function approvalAI(s, rid, operation, terms) {
+    if (!FB.aiDecisions.willing(s,rid,'government',operation === 'settle' ? 'settlementWillingness' : 'agreementWillingness')) return false;
     if (M.row(s,rid).command) return decision(s,rid,operation,terms);
     if (!enact(s, rid, 'propose', {operation:operation,proposal:terms})) return false;
     M.members(s, rid).forEach(function (m) {
@@ -956,6 +957,7 @@
     var r = M.row(s, rid), p = M.profile(s, rid), moving = M.migration(s, rid);
     if (!r || !moving || !M.active(s, rid) || M.leader(s, rid) && M.leader(s, rid).id === s.player.charId) return false;
     if (r.command && !M.leader(s,rid)) return false;
+    var preference = FB.aiDecisions.parameters(s,rid,'government');
     var period=Math.floor(s.turn/90);
     if(r.lastAI===period && !r.selection && M.leader(s,rid)) return false;
     r.lastAI=period;
@@ -969,7 +971,16 @@
         if(resident && r.members.length) enact(s,rid,'replace_member',{memberId:r.members[0].id,candidateId:resident.id},{kind:'character',id:resident.id});
       }
       var candidates = M.members(s, rid).filter(function (m) { return eligible(s, rid, m.principal.id); }).sort(function (a,b) {
-        return FB.skillSnapshot(s,s.chars[b.principal.id],'dip')-FB.skillSnapshot(s,s.chars[a.principal.id],'dip') || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+        var scoreA = FB.skillSnapshot(s,s.chars[a.principal.id],'dip')*preference.candidateDiplomacyWeight+
+          FB.skillSnapshot(s,s.chars[a.principal.id],'mar')*preference.candidateMartialWeight;
+        var scoreB = FB.skillSnapshot(s,s.chars[b.principal.id],'dip')*preference.candidateDiplomacyWeight+
+          FB.skillSnapshot(s,s.chars[b.principal.id],'mar')*preference.candidateMartialWeight;
+        return scoreB-scoreA || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+      });
+      candidates = FB.aiDecisions.governmentCandidates(s,rid,candidates,function (member) {
+        var c = s.chars[member.principal.id], diplomacy = FB.skillSnapshot(s,c,'dip'), martial = FB.skillSnapshot(s,c,'mar');
+        return {score:diplomacy*preference.candidateDiplomacyWeight+martial*preference.candidateMartialWeight,
+          diplomacy:diplomacy,martial:martial,age:s.date.year-c.born};
       });
       if (candidates.length) {
         var cid = candidates[0].principal.id;
@@ -980,12 +991,13 @@
     }
     M.agreements(s,rid).filter(function (a) { return a.status === 'offered'; }).forEach(function (a) {
       var partner = FB.realmRulerCharacterSnapshot(s, a.partnerId), form = G.forRealm(s, a.partnerId);
-      if (partner && partner.id !== s.player.charId && form && form.use.ai.canNegotiate(s, a.partnerId, {}))
+      if (partner && partner.id !== s.player.charId && form && form.use.ai.canNegotiate(s, a.partnerId, {}) &&
+          FB.aiDecisions.willing(s,a.partnerId,'government','agreementWillingness'))
         enact(s, rid, 'accept', {agreementId:a.id}, {kind:'realm',id:a.partnerId});
     });
     M.agreements(s,rid).filter(function (a) {return a.kind==='protection' && a.status==='active' && a.endTurn>s.turn;}).forEach(function (a) {
       var war = FB.realmWars(s,a.partnerId)[0];
-      if(war) enact(s,rid,'service',{agreementId:a.id,warId:war.id});
+      if(war && FB.aiDecisions.willing(s,rid,'government','serviceWillingness')) enact(s,rid,'service',{agreementId:a.id,warId:war.id});
     });
     var at = moving.at;
     r.agreements = r.agreements.filter(function (a) { return a.kind==='corridor' || a.accessOrigin || a.endTurn > s.turn; });
@@ -996,16 +1008,18 @@
       if (approvalAI(s, rid, 'agreement', terms)) enact(s, rid, 'offer', terms);
       var offered=M.agreements(s,rid).filter(function (a) {return a.status==='offered' && a.partnerId===terms.partnerId;})[0];
       var ruler=offered && FB.realmRulerCharacterSnapshot(s,offered.partnerId), government=offered && G.forRealm(s,offered.partnerId);
-      if(ruler && ruler.id!==s.player.charId && government && government.use.ai.canNegotiate(s,offered.partnerId,{}))
+      if(ruler && ruler.id!==s.player.charId && government && government.use.ai.canNegotiate(s,offered.partnerId,{}) &&
+          FB.aiDecisions.willing(s,offered.partnerId,'government','agreementWillingness'))
         enact(s,rid,'accept',{agreementId:offered.id},{kind:'realm',id:offered.partnerId});
     }
-    if (!p.supplyPolicy && r.food < M.total(s, rid) * p.foodPerPerson * 90)
-      enact(s, rid, 'trade', {countyId:at,count:100,direction:'buy'});
-    else if(!p.supplyPolicy && r.food>M.total(s,rid)*p.foodPerPerson*180)
-      enact(s,rid,'trade',{countyId:at,count:100,direction:'sell'});
-    if (!p.supplyPolicy && !M.host(s, rid) && !committed(s, rid)) enact(s, rid, 'recruit', {count:60,unitId:FB.unitRoleClass('levy_infantry')});
+    if (!p.supplyPolicy && r.food < M.total(s,rid)*p.foodPerPerson*preference.mobileBuyDays)
+      enact(s,rid,'trade',{countyId:at,count:preference.mobileTradeCount,direction:'buy'});
+    else if(!p.supplyPolicy && r.food>M.total(s,rid)*p.foodPerPerson*preference.mobileSellDays)
+      enact(s,rid,'trade',{countyId:at,count:preference.mobileTradeCount,direction:'sell'});
+    if (!p.supplyPolicy && !M.host(s,rid) && !committed(s,rid) && FB.aiDecisions.willing(s,rid,'government','recruitWillingness'))
+      enact(s,rid,'recruit',{count:preference.mobileRecruitCount,unitId:FB.unitRoleClass('levy_infantry')});
     var own = FB.realmHeldCounties(s, rid), supply=p.supplyPolicy && M.supplySnapshot(s,rid);
-    var shortage=r.food<(supply ? Math.max(0,supply.campTarget-supply.campDaily) : M.total(s,rid)*p.foodPerPerson*30);
+    var shortage=r.food<(supply ? Math.max(0,supply.campTarget-supply.campDaily) : M.total(s,rid)*p.foodPerPerson*preference.mobileShortageDays);
     if (own.indexOf(at) >= 0 && !committed(s, rid)) {
       var settlement = {countyId:at,count:M.total(s,rid),final:true};
       if (approvalAI(s,rid,'settle',settlement)) enact(s,rid,'settle',settlement);

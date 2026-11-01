@@ -307,12 +307,13 @@
     });
     V.refreshRights(s,rid);
     var chief = V.chief(s,rid), cp = C.profile(s,rid);
-    if (chief && chief.id !== s.player.charId && FB.treasuryAvailable(s,rid) < cp.obligations.reserve * 2 && !(r.dues && r.dues.endTurn > s.turn))
-      V.proposalApply(s,V.proposalQuote(s,rid,'extraordinary_tax',{ amount:Math.min(5,cp.obligations.maxDues),duration:90 }));
+    var preference = FB.aiDecisions.parameters(s,rid,'government');
+    if (chief && chief.id !== s.player.charId && FB.treasuryAvailable(s,rid) < cp.obligations.reserve*preference.civicReserveMultiplier && !(r.dues && r.dues.endTurn > s.turn))
+      V.proposalApply(s,V.proposalQuote(s,rid,'extraordinary_tax',{amount:Math.min(preference.civicAidAmount,cp.obligations.maxDues),duration:preference.civicAidDays}));
     if (chief && chief.id !== s.player.charId) r.rights.filter(function (right) { return right.status === 'suspended'; }).forEach(function (right) {
       V.proposalApply(s,V.proposalQuote(s,rid,'renew',{ rightId:right.id }));
     });
-    if (chief && chief.id !== s.player.charId) FB.realmWars(s,rid).filter(function (w) { return w.seasons >= 4; }).forEach(function (w) {
+    if (chief && chief.id !== s.player.charId) FB.realmWars(s,rid).filter(function (w) { return w.seasons >= preference.civicPeaceSeasons; }).forEach(function (w) {
       V.makePeace(s,V.peaceQuote(s,rid,{ warId:w.id }));
     });
     r.debts.filter(function (d) { return d.status === 'active' && d.dueTurn <= s.turn; }).forEach(function (d) {

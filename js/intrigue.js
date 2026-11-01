@@ -1802,9 +1802,9 @@ window.FB = window.FB || {};
     return { accomplice:null, leaked:FB.chance(option.leak) };
   }
 
-  function aiTraitWeight(actor, aim) {
+  function aiTraitWeight(state, rid, actor, aim) {
     var traits = actor && actor.traits || [];
-    var weight = 1;
+    var weight = FB.aiDecisions.parameters(state,rid,'intrigue').baseWeight;
     weight += FB.traitMechanic(actor, 'intrigueAggression');
     var policy = FB.rulerAimPolicy(aim);
     if (policy) weight += policy.intrigueAggression;
@@ -1815,7 +1815,15 @@ window.FB = window.FB || {};
 
   function aiTargetPool(state, actor, rid, plotId) {
     var def = defOf(plotId);
-    return FB.intrigueTargetOptions(state, def, actor.id, rid);
+    var pool = FB.intrigueTargetOptions(state,def,actor.id,rid);
+    if (FB.aiDecisions.resolve(state,rid,'intrigue').definition.mode === 'first') return pool;
+    var ranked = FB.aiDecisions.orderCandidates(state,rid,'intrigue',pool.map(function (target,i) {
+      var person = target.characterId && state.chars[target.characterId];
+      var hostility = person ? accompliceHostility(state,actor,person) : 0;
+      return {id:String(i),eligible:true,facts:{hostility:hostility,motive:traitAccompliceMotive(actor),
+        weight:hostility,schemePriority:0,score:hostility}};
+    }));
+    return ranked.map(function (id) { return pool[Number(id)]; });
   }
 
   function duplicateMajorTarget(intrigue, plotId, context) {
@@ -1859,18 +1867,26 @@ window.FB = window.FB || {};
           })) continue;
       var aim = state.agency && state.agency.rulerAims &&
         state.agency.rulerAims[rid] && state.agency.rulerAims[rid].id;
-      var weight = aiTraitWeight(actor, aim);
-      if (weight < 0.25 || !FB.chance(Math.min(0.80, weight * 0.25))) continue;
+      var preference = FB.aiDecisions.parameters(state,rid,'intrigue');
+      var weight = aiTraitWeight(state,rid,actor,aim);
+      if (weight < preference.minimumWeight || !FB.chance(Math.min(preference.maximumChance,weight*preference.chanceRate))) continue;
       candidates.push({ rid:rid, actor:actor, weight:weight });
     }
     candidates.sort(function (a, b) {
       return b.weight - a.weight || a.rid.localeCompare(b.rid);
     });
+    if (FB.aiDecisions.resolve(state,null,'intrigue').definition.mode !== 'first') {
+      var rankedActors = FB.aiDecisions.orderCandidates(state,null,'intrigue',candidates.map(function (c) {
+        return {id:c.rid,eligible:true,facts:{score:c.weight,weight:c.weight,motive:traitAccompliceMotive(c.actor),hostility:0,schemePriority:0}};
+      }));
+      candidates.sort(function (a,b) { return rankedActors.indexOf(a.rid)-rankedActors.indexOf(b.rid); });
+    }
     for (var ci = 0; ci < candidates.length && remaining > 0 &&
         intrigue.aiSchemes.length < maxSchemes;
         ci++) {
       var candidate = candidates[ci];
-      var schemeIds = FB.traitSchemeOrder(candidate.actor) || HOSTILE_IDS.slice();
+      var schemeIds = FB.aiDecisions.resolve(state,candidate.rid,'intrigue').definition.schemeOrder ||
+        FB.traitSchemeOrder(candidate.actor) || HOSTILE_IDS.slice();
       var chosen = null;
       for (var si = 0; si < schemeIds.length && !chosen; si++) {
         var pool = aiTargetPool(state, candidate.actor, candidate.rid,

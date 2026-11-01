@@ -1047,7 +1047,17 @@ window.FB = window.FB || {};
         }
       }
       if (choices.length) {
-        const chosen = FB.pick(choices);
+        const rid = FB.settlementCountyHolder(state,choices[0].site.provinceId);
+        const preference = FB.aiDecisions.parameters(state,rid,'investment');
+        let chosen;
+        if (preference.baronPreference) {
+          const entries = choices.map(function (q,i) {
+            const def = FBDATA.buildings[q.id];
+            return {id:q.id,pid:q.site.provinceId,order:def.aiBuildOrder === undefined ? 100 : def.aiBuildOrder,profileId:q.profileId || null,index:i};
+          });
+          const ordered = FB.aiDecisions.buildingPriorities(state,rid,choices[0].site.provinceId,entries);
+          chosen = choices[ordered[0].index];
+        } else chosen = FB.pick(choices);
         FB.buildBarony(state, cid, chosen.site.provinceId, chosen.site.settlement, chosen.id, chosen.profileId);
       }
     }

@@ -1108,6 +1108,8 @@ window.FB = window.FB || {};
       rid:rid,
       record:record,
       realm:realm,
+      policy:FB.aiDecisions.resolve(state,rid,'research'),
+      parameters:FB.aiDecisions.parameters(state,rid,'research'),
       trait:realm.ruler && realm.ruler.trait,
       annual:Math.max(1, researchRate * 4),
       coastal:undefined
@@ -1124,46 +1126,48 @@ window.FB = window.FB || {};
   function techAIScoreFor(item, context) {
     var id = item.id, def = item.def, record = context.record;
     var breakdown = item.breakdown;
-    var score = 10;
-    if (item.exposed) score *= 2.25;
-    score *= Math.max(0.25, 1.5 - breakdown.historicalMultiplier * 0.18);
-    score *= Math.max(0.35, Math.min(2,
-      context.annual / Math.max(1, breakdown.total) * 3));
-    if (breakdown.historicalMultiplier >= 4) score *= 0.12;
-    else if (breakdown.historicalMultiplier <= 1) score *= 1.35;
+    var p = context.parameters, score = p.baseScore;
+    if (item.exposed) score *= p.exposureMultiplier;
+    score *= Math.max(p.historicalFloor,p.historicalBase-breakdown.historicalMultiplier*p.historicalSlope);
+    score *= Math.max(p.horizonFloor,Math.min(p.horizonCap,
+      context.annual / Math.max(1,breakdown.total)*p.horizonMultiplier));
+    if (breakdown.historicalMultiplier >= p.futureThreshold) score *= p.futureMultiplier;
+    else if (breakdown.historicalMultiplier <= 1) score *= p.timelyMultiplier;
     var realm = context.realm, trait = context.trait;
     if (def.domain === 'warfare') {
-      score *= 1 + Math.max(0, Number(realm.aggression) || 0) * 0.4;
-      if (realm.war) score *= 2;
+      score *= 1 + Math.max(0, Number(realm.aggression) || 0) * p.aggressionMultiplier;
+      if (realm.war) score *= p.wartimeMultiplier;
     } else if (def.domain === 'governance') {
-      score *= 1 + Math.max(0, (realm.rank || 1) - 2) * 0.2;
+      score *= 1 + Math.max(0, (realm.rank || 1) - 2) * p.rankMultiplier;
     } else if (def.domain === 'commerce') {
-      if (techAIRealmCoastal(context)) score *= 1.2;
+      if (techAIRealmCoastal(context)) score *= p.commerceCoastalMultiplier;
     } else if (def.domain === 'seafaring') {
-      score *= techAIRealmCoastal(context) ? 1.8 : 0.45;
+      score *= techAIRealmCoastal(context) ? p.seaCoastalMultiplier : p.seaInlandMultiplier;
     }
     var traitRules = (FBDATA.traitMechanics || {})[trait];
     var weight = traitRules && traitRules.researchWeights && traitRules.researchWeights[def.domain];
     if (weight !== undefined) score *= weight;
+    var domainWeights = context.policy.definition.domainWeights || {};
+    if (Object.prototype.hasOwnProperty.call(domainWeights,def.domain)) score *= domainWeights[def.domain];
     var seaTransport = def.fx && def.fx.seaTransport;
     if (typeof seaTransport === 'number' && isFinite(seaTransport) &&
         seaTransport >
         FB.techSeaTransportCapacity(context.state, context.rid)) {
-      score *= techAIRealmCoastal(context) ? 1.25 : 0.5;
+      score *= techAIRealmCoastal(context) ? p.transportCoastalMultiplier : p.transportInlandMultiplier;
     }
     var unlockWeight = 1;
     for (var unlockIndex = 0; unlockIndex < (def.unlocks || []).length; unlockIndex++) {
       var unlock = def.unlocks[unlockIndex];
-      if (unlock.indexOf('research_slot:') === 0) unlockWeight = Math.max(unlockWeight, 1.8);
+      if (unlock.indexOf('research_slot:') === 0) unlockWeight = Math.max(unlockWeight,p.slotUnlockMultiplier);
       else if (/^(building|enterprise|career|schooling|householdStandard):/.test(unlock)) {
-        unlockWeight = Math.max(unlockWeight, 1.35);
-      } else if (unlock.indexOf('unit:') === 0) unlockWeight = Math.max(unlockWeight, 1.25);
-      else if (unlock.indexOf('rule:') === 0) unlockWeight = Math.max(unlockWeight, 1.10);
-      else if (unlock.indexOf('practice:') === 0) unlockWeight = Math.max(unlockWeight, 1.03);
+        unlockWeight = Math.max(unlockWeight,p.economyUnlockMultiplier);
+      } else if (unlock.indexOf('unit:') === 0) unlockWeight = Math.max(unlockWeight,p.unitUnlockMultiplier);
+      else if (unlock.indexOf('rule:') === 0) unlockWeight = Math.max(unlockWeight,p.ruleUnlockMultiplier);
+      else if (unlock.indexOf('practice:') === 0) unlockWeight = Math.max(unlockWeight,p.practiceUnlockMultiplier);
     }
     score *= unlockWeight;
-    if (record.priorities[id] !== undefined) score *= 6;
-    return Math.max(0, score);
+    if (record.priorities[id] !== undefined) score *= p.priorityMultiplier;
+    return Math.min(1000000000,Math.max(0,score));
   }
 
   FB.techAIScore = function (state, id, realmId) {
@@ -1219,8 +1223,20 @@ window.FB = window.FB || {};
     var slots = FB.techSlotCount(state, rid);
     if (record.active.length >= slots) return;
     var scored = scoredTechChoices(state, rid, record, researchRate), guard = 0;
+    var metrics = FB.aiDecisions.protocol().research.metrics;
     while (record.active.length < slots && scored.length && guard++ < 8) {
-      var index = scoredChoiceIndex(scored, deterministic);
+      var policy = FB.aiDecisions.resolve(state,rid,'research');
+      var report = FB.aiDecisions.report(policy,scored.map(function (row) {
+        var def = row.item.def, facts = {score:row.score,cost:row.item.breakdown.total,
+          exposed:row.item.exposed ? 1 : 0,historicalMultiplier:row.item.breakdown.historicalMultiplier};
+        metrics.forEach(function (metric) {
+          if (!Object.prototype.hasOwnProperty.call(facts,metric)) facts[metric] = metric === def.domain ? 1 : 0;
+        });
+        return {id:row.item.id,eligible:true,facts:facts};
+      }),policy.definition.adjustments.length ? FB.aiDecisions.inputs(state,rid) : undefined);
+      var ranked = report.ranking.filter(function (row) { return report.mode !== 'weighted' || row.weight > 0; });
+      var selected = report.mode === 'weighted' ? scoredChoiceIndex(ranked.map(function (row) { return {score:row.weight}; }),deterministic) : ranked.length ? 0 : -1;
+      var index = selected < 0 ? -1 : scored.findIndex(function (row) { return row.item.id === ranked[selected].id; });
       if (index < 0) break;
       var choice = scored[index].item;
       scored.splice(index, 1);

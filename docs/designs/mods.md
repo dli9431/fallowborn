@@ -1,5 +1,9 @@
 # Mods
 
+AI decision policies
+
+aiDecisionPolicies is a typed, whole-record replacement catalogue. Ordinary detached preparation validates every effective policy, trait/aim reference and selection layer before live installation or storage. The catalogue participates in authored-root fingerprints when a mod supplies it; balance policy references use the existing scalar-layer order. Import validation never compiles against or publishes the live candidate, consumes RNG or changes a decision. Applying or reloading mods invalidates transient AI policy compilation. Removal and same-name replacement recompose from the bundled baseline through the existing stack validator. Exact fields, live consumers and pure report versus simulation-choice boundaries are documented in docs/MODDING.md and docs/designs/ai-decisions.md.
+
 Trusted composition preparation
 
 FB.mods.prepareComposition is the internal detached bridge used by js/bookmark_composition.js. It prepares effective catalogues and story products with ordinary record validators, scopes world validation to the owning bookmark, and checks each owned start with the shared requirement and record-schema validators. Final preparation also runs exhaustive authoring checks over the owned/referenced starts and all supplied world revisions. It restores the live data and validation caches on every exit. Ordinary validate, apply and stored-stack paths keep their existing exhaustive whole-import semantics; optional-start withholding belongs only to the trusted composer. No new mod root, storage operation, active-mod signature or saved field is added. Complete envelopes and bootstrap restrictions are documented in docs/MODDING.md.
