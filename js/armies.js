@@ -3145,7 +3145,7 @@ window.FB = window.FB || {};
       for (const enemy of orderEnemies(state,army)) if (enemy.at === pid && orderHostile(state,army,enemy))
         defense += battlePower(state,enemy,pid,'defense');
       return {id:pid,eligible:true,facts:{distance:dx*dx+dy*dy,objective:objective(pid) ? 1 : 0,
-        attackPower:battlePower(state,army,pid,'attack'),defensePower:defense,score:0}};
+        attackPower:battlePower(state,army,pid,'attack'),defensePower:defense}};
     }));
     return ids;
   }
@@ -3256,7 +3256,7 @@ window.FB = window.FB || {};
   }
 
   FB.armyPursuitGoal = function (state, army) {
-    const candidates = [];
+    let candidates = [];
     const pa = FB.world.byId[army.at];
     for (const o of orderEnemies(state, army)) {
       if (o === army || (!orderQueries && !FB.armiesHostile(state, army, o))) continue;
@@ -3270,6 +3270,7 @@ window.FB = window.FB || {};
       const counties = [];
       candidates.forEach(function (c) { if (counties.indexOf(c.host.at) < 0) counties.push(c.host.at); });
       const ranked = tacticalTargets(state,army,counties,function () { return false; });
+      candidates = candidates.filter(function (c) { return ranked.indexOf(c.host.at) >= 0; });
       candidates.sort(function (a,b) { return ranked.indexOf(a.host.at)-ranked.indexOf(b.host.at) || a.order-b.order; });
     }
     for (const candidate of candidates) {

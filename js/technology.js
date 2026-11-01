@@ -1223,7 +1223,7 @@ window.FB = window.FB || {};
     var slots = FB.techSlotCount(state, rid);
     if (record.active.length >= slots) return;
     var scored = scoredTechChoices(state, rid, record, researchRate), guard = 0;
-    var metrics = FB.aiDecisions.protocol().research.metrics;
+    var metrics = FB.aiDecisions.protocol('research').metrics;
     while (record.active.length < slots && scored.length && guard++ < 8) {
       var policy = FB.aiDecisions.resolve(state,rid,'research');
       var report = FB.aiDecisions.report(policy,scored.map(function (row) {

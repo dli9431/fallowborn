@@ -186,7 +186,7 @@
     var realm = actor.kind === 'realm' ? actor.id : FB.settlementCountyHolder(s,pid);
     var policy = FB.aiDecisions.resolve(s,realm,'investment'), preference = FB.aiDecisions.parameters(s,realm,'investment');
     choices.forEach(function (q) {
-      q.score = q.score*preference.profileScoreWeight+FB.aiDecisions.investmentDelta(s,realm,q.def,q.cost,policy);
+      q.score = q.score*preference.profileScoreWeight+FB.aiDecisions.investmentDelta(s,realm,q.def,q.cost,policy,preference);
     });
     return choices.sort(function (a,b) { return b.score-a.score || a.cost-b.cost || (String(a.profileId) < String(b.profileId) ? -1 : String(a.profileId) > String(b.profileId) ? 1 : 0); });
   };

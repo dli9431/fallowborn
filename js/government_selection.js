@@ -453,16 +453,17 @@
         if (score > best || score === best && p.procedure && p.procedure.designation && tree(s, rid).designatedHeirId === id) { chosen = id; best = score; }
       });
       if (ratings.length && FB.aiDecisions.resolve(s,rid,'government').definition.mode !== 'first') {
-        chosen = FB.aiDecisions.governmentCandidates(s,rid,ratings,function (candidate) {
+        var ranked = FB.aiDecisions.governmentCandidates(s,rid,ratings,function (candidate) {
           return {score:candidate.score,support:candidate.score,cost:p.negotiationCost};
-        })[0].id;
+        });
+        chosen = ranked.length ? ranked[0].id : null;
       }
-      if (!chosen) {
+      if (!ratings.length) {
         var t = tree(s, rid);
         v.status = Object.keys(t.members).some(function (id) { return eligible(s, rid, t.members[id], false, true); }) ? 'minority' : 'vacant';
         return false;
       }
-      var q = FB.aiDecisions.willing(s,rid,'government','negotiationWillingness') ?
+      var q = chosen && FB.aiDecisions.willing(s,rid,'government','negotiationWillingness') ?
         S.quote(s,rid,{action:'negotiate',actor:actor,candidateId:chosen,terms:p.terms}) : {allowed:false,reasonId:'declined'};
       if (q.allowed) S.apply(s, q);
       else if (q.reasonId === 'funds') S.constituency(s, rid).forEach(function (m) {

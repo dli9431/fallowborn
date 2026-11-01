@@ -1821,7 +1821,7 @@ window.FB = window.FB || {};
       var person = target.characterId && state.chars[target.characterId];
       var hostility = person ? accompliceHostility(state,actor,person) : 0;
       return {id:String(i),eligible:true,facts:{hostility:hostility,motive:traitAccompliceMotive(actor),
-        weight:hostility,schemePriority:0,score:hostility}};
+        weight:hostility,score:hostility}};
     }));
     return ranked.map(function (id) { return pool[Number(id)]; });
   }
@@ -1877,8 +1877,9 @@ window.FB = window.FB || {};
     });
     if (FB.aiDecisions.resolve(state,null,'intrigue').definition.mode !== 'first') {
       var rankedActors = FB.aiDecisions.orderCandidates(state,null,'intrigue',candidates.map(function (c) {
-        return {id:c.rid,eligible:true,facts:{score:c.weight,weight:c.weight,motive:traitAccompliceMotive(c.actor),hostility:0,schemePriority:0}};
+        return {id:c.rid,eligible:true,facts:{score:c.weight,weight:c.weight,motive:traitAccompliceMotive(c.actor),hostility:0}};
       }));
+      candidates = candidates.filter(function (c) { return rankedActors.indexOf(c.rid) >= 0; });
       candidates.sort(function (a,b) { return rankedActors.indexOf(a.rid)-rankedActors.indexOf(b.rid); });
     }
     for (var ci = 0; ci < candidates.length && remaining > 0 &&

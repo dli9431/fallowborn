@@ -406,10 +406,11 @@
       if (prior && prior.generation === FB.realmRulerGeneration(s,rid) && same(prior.principal,m.principal) &&
           (prior.candidateId === null || candidates.some(function (c) { return c.id === prior.candidateId; }))) return;
       var ordered = candidates.slice().sort(function (a,b) { return b.military - a.military || a.born - b.born || a.id.localeCompare(b.id); });
-      ordered = FB.aiDecisions.governmentCandidates(s,rid,ordered,function (c) {
+      if (m.id !== 'court') ordered = FB.aiDecisions.governmentCandidates(s,rid,ordered,function (c) {
         return {score:c.military,martial:c.military,age:s.date.year-c.born};
       });
       var candidate = m.id === 'court' ? candidates[0] : ordered[0];
+      if (!candidate) return;
       var q = R.supportQuote(s,m.principal,rid,m.id,candidate.id,p.defaultTerms);
       if (q.allowed) R.applySupport(s,q);
     });

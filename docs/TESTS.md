@@ -1,3 +1,7 @@
+AI decision integration coverage
+
+ai-decision-integration.spec.js exercises complete multi-family ordinary JSON imports with government overrides, spent-resource restore, a single seeded research boundary, current traits/aims and real ruler succession, state isolation, exact changed-content rejection, unsafe declarations, empty weighted retry lists, and neutral standard/CrazyGames behavior. It uses the real entrypoint and staged boundary hooks without long simulations. File, served Chromium, Firefox and WebKit select this suite. ai-decision-policies.spec.js covers the pure protocol/import/layer lifecycle and ai-live-decisions.spec.js covers individual live consumers. Exact commands and runtime, device, package and performance evidence requirements are in docs/research/ai-decision-acceptance.md.
+
 Complete Danube corridor acceptance
 
 tests/e2e/specs/danube-corridor.spec.js uses the existing 1096 geography, counties, generated direct holders and public courts through two ordinary JSON Mods imports per complete acceptance case. The test-only route declarations in tests/e2e/fixtures/authoring/danube-corridor-cases.json contrast 240 fighters with 360 civilians and 160 fighters with 160 civilians, different prices, capacity and finite terms, with fourteen-day supply targets. Cologne, Regensburg, Wien, Sirmium, Serdica, Philippopolis, Adrianople and Constantinople are coarse simulation endpoints. They assert no exact historical road or itinerary. Anonymous review commands and their finite opening resources belong only to the imported fixtures.

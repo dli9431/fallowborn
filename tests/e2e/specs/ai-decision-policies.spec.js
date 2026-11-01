@@ -6,17 +6,22 @@ dependsOnRuntime(__filename, [
   'data/ai_decisions.js','data/ambitions.js','data/traits.js','data/eras.js',
   'data/political_institutions.js','js/ai_decisions.js','js/balance.js',
   'js/governments.js','js/government_ai.js','js/authority.js','js/mods.js',
-  'js/world.js','js/save.js','js/save_v4.js','js/main.js',
+  'js/world.js','js/save.js','js/save_v4.js','js/main.js','js/crazygames.js','data/distribution_crazygames.js',
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { openCrazyGame } = require('../support/game/crazygames-title');
+const { mockCrazyGames } = require('../support/crazygames');
 
 for (const distribution of ['standard','crazygames']) {
   test(distribution + ' neutral policies report without changing data, state, RNG or identities', async function ({ page }, testInfo) {
-    if (distribution === 'crazygames') await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-    await openGame(page,testInfo);
+    if (distribution === 'crazygames') {
+      await mockCrazyGames(page);
+      await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
+      await openCrazyGame(page,testInfo);
+    } else await openGame(page,testInfo);
     const result = await page.evaluate(function () {
       const P = FB.aiDecisions, before = JSON.stringify(FBDATA), state = JSON.stringify(FB.state);
       const rng = FB.getRngState(), uid = FB.getUidCounter(), ids = [];

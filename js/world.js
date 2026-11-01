@@ -7823,7 +7823,7 @@ window.FB = window.FB || {};
     counties.forEach(function (pid) {
       const p = aiExpansionPriorityWithProfile(state,profile,pid);
       facts[pid] = {consolidationBand:p.band,core:p.core,remaining:p.remaining,
-        contacts:p.contacts,development:p.development,score:0};
+        contacts:p.contacts,development:p.development};
     });
     return facts;
   };

@@ -5,11 +5,11 @@
   var unit = [0,1], ratio = [0,10], count = [0,2048,true];
   var tuning = {aiRaidTargetDevelopmentWeight:[0,100]};
   var families = {
-    war:{key:'aiWarPolicy', metrics:['strengthRatio','support','burden','score'],
+    war:{key:'aiWarPolicy', metrics:[],
       parameters:{chance:unit,bellicoseChance:unit,minimumStrengthRatio:ratio,
         maximumCommitments:count,aggressionAppetite:ratio,bellicoseAppetite:ratio}},
-    expansion:{key:'aiExpansionPolicy', metrics:['aggression','consolidationBand','core','remaining','contacts','development','defensiveStrength','score'],parameters:{}},
-    tactics:{key:'aiTacticsPolicy', metrics:['attackPower','defensePower','distance','objective','score'],parameters:{engagementMargin:[0.5,4],objectiveFirst:[0,1,true]}},
+    expansion:{key:'aiExpansionPolicy', metrics:['aggression','consolidationBand','core','remaining','contacts','development','defensiveStrength'],parameters:{}},
+    tactics:{key:'aiTacticsPolicy', metrics:['attackPower','defensePower','distance','objective'],parameters:{engagementMargin:[0.5,4],objectiveFirst:[0,1,true]}},
     investment:{key:'aiInvestmentPolicy', metrics:['capitalPriority','development','buildOrder','cost','upkeep','benefit','frontier','score'],
       parameters:{capitalPriority:ratio,frontierPriority:ratio,interiorPriority:ratio,
         developmentWeight:[-100,100],fortDevelopmentWeight:[-100,100],buildOrderWeight:[-100,100],
@@ -23,7 +23,7 @@
         seaCoastalMultiplier:ratio,seaInlandMultiplier:ratio,priorityMultiplier:ratio,
         transportCoastalMultiplier:ratio,transportInlandMultiplier:ratio,slotUnlockMultiplier:ratio,
         economyUnlockMultiplier:ratio,unitUnlockMultiplier:ratio,ruleUnlockMultiplier:ratio,practiceUnlockMultiplier:ratio}},
-    intrigue:{key:'aiIntriguePolicy', metrics:['score','hostility','motive','weight','schemePriority'],parameters:{baseWeight:ratio,chanceRate:unit,maximumChance:unit,minimumWeight:ratio}},
+    intrigue:{key:'aiIntriguePolicy', metrics:['score','hostility','motive','weight'],parameters:{baseWeight:ratio,chanceRate:unit,maximumChance:unit,minimumWeight:ratio}},
     diplomacy:{key:'aiDiplomacyPolicy', metrics:['score','distance','regard','strengthRatio','sharedFaith'],
       parameters:{allianceChance:unit,cultivationMultiplier:ratio,peerCultivationMultiplier:ratio,rebelSupportCap:[0,3,true],
         relationshipDivisor:[0.01,1000],relationshipCap:[0,100],courtAmbitionMultiplier:ratio,
@@ -92,6 +92,7 @@
         });
     }
     if (['first','ordered','weighted'].indexOf(d.mode) < 0) errors.push(path + '.mode is unregistered.');
+    if (d.family === 'war' && d.mode !== 'first') errors.push(path + ' war uses parameter choices only.');
     if (fields(d.parameters,names,path + '.parameters',errors)) {
       names.forEach(function (k) {
         var spec = f.parameters[k], value = d.parameters[k];
@@ -141,6 +142,18 @@
           });
         }
       });
+    }
+    if (!errors.length && d.family === 'research' && d.parameters.horizonFloor > 0) {
+      // Any trait subset and at most one aim must be safe before publication.
+      var horizonRatio = d.parameters.horizonFloor/d.parameters.horizonCap, aimRatio = 1;
+      d.adjustments.forEach(function (a) {
+        var floor = own(a.multiply,'horizonFloor') ? a.multiply.horizonFloor : 1;
+        var cap = own(a.multiply,'horizonCap') ? a.multiply.horizonCap : 1;
+        var ratio = floor ? floor/cap : 0;
+        if (a.kind === 'aim') aimRatio = Math.max(aimRatio,ratio);
+        else horizonRatio *= Math.max(1,ratio);
+      });
+      if (horizonRatio*aimRatio > 1) errors.push(path + ' research horizon adjustments can invert their bounds.');
     }
     return errors;
   }
@@ -193,7 +206,11 @@
     });
     return faults;
   };
-  P.protocol = function () { return copy(families); };
+  P.protocol = function (family) {
+    if (family === undefined) return copy(families);
+    if (!own(families,family)) throw new Error('Unknown AI decision family.');
+    return copy(families[family]);
+  };
   P.compile = function (policyId, data) {
     data = data || FBDATA;
     var table = data.aiDecisionPolicies, definition = own(table,policyId) && table[policyId];
@@ -234,7 +251,10 @@
   };
   P.diplomaticFacts = function (state, realmId, targetId) {
     var ownStrength = FB.realmStrength(state,realmId), defense = FB.realmStrength(state,targetId);
-    return {score:0,distance:1,regard:FB.rulerRegard ? FB.rulerRegard(state,realmId,targetId) : 0,
+    var realm = state.realms[realmId], target = state.realms[targetId];
+    var a = realm && FB.world.byId[realm.capital], b = target && FB.world.byId[target.capital];
+    var dx = a && b ? a.cx-b.cx : 0, dy = a && b ? a.cy-b.cy : 0;
+    return {score:0,distance:dx*dx+dy*dy,regard:FB.rulerRegard ? FB.rulerRegard(state,realmId,targetId) : 0,
       strengthRatio:ownStrength/Math.max(1,defense),
       sharedFaith:FB.realmReligionId(state,realmId) === FB.realmReligionId(state,targetId) ? 1 : 0};
   };
@@ -251,9 +271,9 @@
     var report = P.report(policy,candidates,policy.definition.adjustments.length ? P.inputs(state,realmId) : undefined);
     return P.pick(report,report.mode === 'weighted' && report.totalWeight > 0 ? FB.rng() : undefined);
   };
-  P.investmentDelta = function (state, realmId, definition, cost, policy) {
+  P.investmentDelta = function (state, realmId, definition, cost, policy, parameters) {
     policy = policy || P.resolve(state,realmId,'investment');
-    var p = policy.definition.adjustments.length ? P.parameters(state,realmId,'investment') : policy.definition.parameters;
+    var p = parameters || (policy.definition.adjustments.length ? P.parameters(state,realmId,'investment') : policy.definition.parameters);
     var benefit = (definition.tax || 0)+(definition.dev || 0)+(definition.research || 0)+
       (definition.piety || 0)+(definition.levy || 0)+(definition.retinue || 0)+(definition.populationCapacity || 0);
     var roles = policy.definition.buildingRoleWeights || {};
@@ -261,26 +281,36 @@
   };
   P.buildingPriorities = function (state, realmId, pid, entries) {
     var policy = P.resolve(state,realmId,'investment'), p = P.parameters(state,realmId,'investment');
+    var definition = policy.definition, needsCost = p.costWeight || own(definition.weights,'cost') ||
+      definition.order.some(function (row) { return row.metric === 'cost'; });
+    var needsFrontier = own(definition.weights,'frontier') || definition.order.some(function (row) { return row.metric === 'frontier'; });
+    var ownTop = needsFrontier && FB.topRealm(state,realmId);
     var rows = entries.map(function (entry,index) {
       var county = entry.pid || pid;
       var d = Object.assign({},FBDATA.buildings[entry.id],entry.profileId && FBDATA.buildingProfiles[entry.profileId].replace || {});
-      var cost = p.costWeight ? FB.buildCost(state,county,entry.id,realmId,entry.profileId) : d.cost || 0;
-      var score = -entry.order*p.buildOrderWeight+P.investmentDelta(state,realmId,d,cost,policy);
+      var cost = needsCost ? FB.buildCost(state,county,entry.id,realmId,entry.profileId) : d.cost || 0;
+      var frontier = needsFrontier && Object.keys(FB.world.adj[county] || {}).some(function (neighbor) {
+        return state.owner[neighbor] && state.owner[neighbor] !== ownTop;
+      });
+      var score = -entry.order*p.buildOrderWeight+P.investmentDelta(state,realmId,d,cost,policy,p);
       return {entry:entry,index:index,score:score,facts:{capitalPriority:county === state.realms[realmId].capital ? 0 : 1,
         development:state.dev[county] || 1,buildOrder:entry.order,cost:cost,upkeep:d.upkeep || 0,
-        benefit:(d.tax || 0)+(d.dev || 0)+(d.research || 0),frontier:0,score:score}};
+        benefit:(d.tax || 0)+(d.dev || 0)+(d.research || 0),frontier:frontier ? 1 : 0,score:score}};
     });
     rows.sort(function (a,b) { return b.score-a.score || a.index-b.index; });
     if (policy.definition.mode !== 'first') {
       var ids = P.orderCandidates(state,realmId,'investment',rows.map(function (r) { return {id:String(r.index),eligible:true,facts:r.facts}; }));
-      rows.sort(function (a,b) { return ids.indexOf(String(a.index))-ids.indexOf(String(b.index)); });
+      var byIndex = Object.create(null);
+      rows.forEach(function (row) { byIndex[row.index] = row; });
+      rows = ids.map(function (id) { return byIndex[id]; });
     }
     return rows.map(function (r) { return r.entry; });
   };
   P.orderCandidates = function (state, realmId, family, candidates) {
     var policy = P.resolve(state,realmId,family);
     var report = P.report(policy,candidates,policy.definition.adjustments.length ? P.inputs(state,realmId) : undefined);
-    var ids = report.ranking.map(function (row) { return row.id; });
+    var ids = report.ranking.filter(function (row) { return report.mode !== 'weighted' || row.weight > 0; })
+      .map(function (row) { return row.id; });
     if (report.mode === 'weighted' && report.totalWeight > 0) {
       var first = P.pick(report,FB.rng());
       ids = [first].concat(ids.filter(function (id) { return id !== first; }));
