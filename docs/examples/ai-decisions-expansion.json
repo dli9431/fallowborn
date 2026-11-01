@@ -1,0 +1,17 @@
+{
+  "name": "Expansion AI decision projections",
+  "aiDecisionPolicies": {
+    "expansive_war": {
+      "family": "war", "mode": "first",
+      "parameters": { "chance": 0.04, "bellicoseChance": 0.08, "minimumStrengthRatio": 1.2, "maximumCommitments": 2, "aggressionAppetite": 1, "bellicoseAppetite": 1.5 },
+      "order": [], "weights": {}, "bias": 0, "tieBreak": "input",
+      "adjustments": [{ "kind": "trait", "id": "ambitious", "multiply": { "chance": 1.5 } }, { "kind": "aim", "id": "expand_realm", "multiply": { "chance": 1.25 } }]
+    },
+    "compact_frontier": {
+      "family": "expansion", "mode": "ordered", "parameters": {},
+      "order": [{ "metric": "aggression", "direction": "asc" }, { "metric": "contacts", "direction": "desc" }, { "metric": "development", "direction": "desc" }],
+      "weights": {}, "bias": 0, "tieBreak": "id", "adjustments": []
+    }
+  },
+  "balance": { "aiWarPolicy": "expansive_war", "aiExpansionPolicy": "compact_frontier" }
+}

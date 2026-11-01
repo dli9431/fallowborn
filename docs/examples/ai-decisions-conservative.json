@@ -1,0 +1,17 @@
+{
+  "name": "Conservative AI decision projections",
+  "aiDecisionPolicies": {
+    "cautious_war": {
+      "family": "war", "mode": "first",
+      "parameters": { "chance": 0.01, "bellicoseChance": 0.025, "minimumStrengthRatio": 1.6, "maximumCommitments": 1, "aggressionAppetite": 0.5, "bellicoseAppetite": 1 },
+      "order": [], "weights": {}, "bias": 0, "tieBreak": "input",
+      "adjustments": [{ "kind": "trait", "id": "content", "multiply": { "chance": 0.5 } }]
+    },
+    "cautious_frontier": {
+      "family": "expansion", "mode": "ordered", "parameters": {},
+      "order": [{ "metric": "aggression", "direction": "asc" }, { "metric": "defensiveStrength", "direction": "asc" }, { "metric": "contacts", "direction": "desc" }],
+      "weights": {}, "bias": 0, "tieBreak": "id", "adjustments": []
+    }
+  },
+  "balance": { "aiWarPolicy": "cautious_war", "aiExpansionPolicy": "cautious_frontier" }
+}
