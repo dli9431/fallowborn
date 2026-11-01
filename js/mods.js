@@ -2499,8 +2499,8 @@ window.FBMODS = window.FBMODS || [];
           try {
             var report = FB.startRequirementReport(start, world, null, stories);
             if (report.selectorFaults.length) fail('startScenarios.' + start.id, report.selectorFaults.join(' '));
-            if (!report.matches || !report.applicable) return;
             if (report.faults.length) fail('startScenarios.' + start.id, report.faults.join(' '));
+            if (!report.matches || !report.applicable) return;
             var shape = M.startDefinitionFaults(start, world, stories);
             if (shape.length) fail('startScenarios.' + start.id, shape.join(' '));
             hosted = true;

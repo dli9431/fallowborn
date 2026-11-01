@@ -122,6 +122,56 @@
   }
   function addStart(world, unit) {
     var id = unit.definition.id;
+    if (unit.bindings !== undefined) {
+      fields(unit.bindings,['root','revisions'],'start bindings');
+      if (unit.locations !== undefined) throw new Error('A start cannot own both locations and explicit bindings.');
+      var revisions = unit.bindings.revisions === undefined ? {} : unit.bindings.revisions;
+      if (!plain(revisions)) throw new Error('Start binding revisions must be a map.');
+      Object.keys(revisions).forEach(function (revision) {
+        if (!own(world.revisions,revision)) throw new Error('Unknown start binding revision: ' + revision);
+      });
+      function apply(layer, binding, revision) {
+        try {
+          if (binding === undefined) binding = {};
+          fields(binding,['offered','after','locations','trackOverride'],'start binding');
+          if (own(binding,'offered') && typeof binding.offered !== 'boolean')
+            throw new Error('Start binding offered must be boolean.');
+          if (Array.isArray(layer.starts)) {
+            if (!own(binding,'offered')) throw new Error('An explicit start list needs an explicit offered binding.');
+            if (binding.offered) {
+              if (binding.after !== undefined && (!Array.isArray(binding.after) || binding.after.length > 512 ||
+                  binding.after.some(function (anchor,i) {
+                    return typeof anchor !== 'string' || !anchor || anchor.length > 200 || anchor === id || binding.after.indexOf(anchor) !== i;
+                  }))) throw new Error('Start binding after must be a unique predecessor list.');
+              var at = layer.starts.length;
+              if (binding.after !== undefined) {
+                at = 0;
+                binding.after.forEach(function (anchor) {
+                  var index = layer.starts.indexOf(anchor);
+                  if (index >= 0) at = Math.max(at,index + 1);
+                });
+              }
+              layer.starts.splice(at,0,id);
+            } else if (binding.after !== undefined || binding.trackOverride !== undefined)
+              throw new Error('An excluded start binding cannot own placement or tracks.');
+          } else if (own(binding,'offered') || binding.after !== undefined)
+            throw new Error('Offered bindings require an explicit start list.');
+          if (binding.locations !== undefined) {
+            if (!plain(layer.startLocations)) throw new Error('Location bindings require an explicit startLocations table.');
+            layer.startLocations[id] = copy(binding.locations);
+          }
+          if (binding.trackOverride !== undefined) {
+            if (layer.startTrackOverrides === undefined) layer.startTrackOverrides = {schema:1,entries:{}};
+            if (!plain(layer.startTrackOverrides) || !plain(layer.startTrackOverrides.entries))
+              throw new Error('Track bindings require a valid startTrackOverrides table.');
+            layer.startTrackOverrides.entries[id] = copy(binding.trackOverride);
+          }
+        } catch (error) { error.compositionRevision = revision; throw error; }
+      }
+      apply(world,unit.bindings.root,null);
+      Object.keys(world.revisions || {}).forEach(function (revision) { apply(world.revisions[revision],revisions[revision],revision); });
+      return;
+    }
     [world].concat(Object.keys(world.revisions || {}).map(function (key) { return world.revisions[key]; }))
       .forEach(function (layer) {
         if (Array.isArray(layer.starts) && layer.starts.indexOf(id) < 0) layer.starts.push(id);
@@ -159,7 +209,7 @@
     if (!Array.isArray(units) || units.length > 512) throw new Error('Composition starts must be a bounded list.');
     var report = {id:spec.id, source:source(spec.source), bookmarkId:worldId, ready:false, worldFaults:[], starts:[]};
     units.forEach(function (unit) {
-      fields(unit, ['definition','storyInstances','locations','requires','source'], 'start unit');
+      fields(unit, ['definition','storyInstances','locations','bindings','requires','source'], 'start unit');
       var id = unit.definition && unit.definition.id;
       if (typeof id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(id) || own(ids, id))
         throw new Error('Invalid or duplicate start ownership: ' + id);
