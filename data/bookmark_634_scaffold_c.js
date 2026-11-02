@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_634_scaffold_c.js","bookmarks":["634"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Autumn 634 first-pass world, quadrant c. Independent literal declarations
    retain the 568 physical partition and provisional local communities.
    Courts are redated; no world, actor or catalogue is activated here.
@@ -703,3 +704,4 @@ FBDATA.bookmarkRegions634.scenery_c = {
   opening:{"actors":{},"appointments":{},"estates":[],"claims":[],"migrations":[]},
   storyIds:[]
 };
+});

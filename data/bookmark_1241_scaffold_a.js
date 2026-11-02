@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1241_scaffold_a.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 1241 first-pass regional declarations. Loading stages ordinary
    bookmark fields only. Research and reconstruction limits are recorded
    in docs/research/1241-bookmark.md. No partial bookmark is registered. */
@@ -463,3 +464,4 @@ FBDATA.bookmarkRegions1241.france_south_alps = {
   straits:[],
   provinceGroups:{}
 };
+});

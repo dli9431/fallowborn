@@ -122,19 +122,21 @@ window.FB = window.FB || {};
     if (c.dead) return false;
     const exile = state.justice && state.justice.exiles && state.justice.exiles[c.id];
     if (exile && exile.endTurn > state.turn) return false;
-    if (FB.isExternalHouseholdAuthority &&
-        FB.isExternalHouseholdAuthority(state, c)) {
-      return false;
+    function householdAuthority() {
+      return !FB.isExternalHouseholdAuthority || !FB.isExternalHouseholdAuthority(state, c);
     }
-    if (c.spouseId === me.id || me.spouseId === c.id) return true;
+    // Most world characters are unrelated. Establish a household link before
+    // consulting political authority, whose cold lookup can scan every realm.
+    if (c.spouseId === me.id || me.spouseId === c.id) return householdAuthority();
     const retainers = state.player.retainers || [];
     for (let i = 0; i < retainers.length; i++) {
-      if (retainers[i] && retainers[i].charId === c.id) return true;
+      if (retainers[i] && retainers[i].charId === c.id) return householdAuthority();
     }
     if (FB.isInheritedHouseholdMember &&
-        FB.isInheritedHouseholdMember(state, cid, familyLinks)) return true;
+        FB.isInheritedHouseholdMember(state, cid, familyLinks)) return householdAuthority();
     if (!FB.playerDescendantKind ||
         !FB.playerDescendantKind(state, c.id)) return false;
+    if (!householdAuthority()) return false;
     /* Unmarried children and grandchildren live in the managed household.
        Check both link directions because polygynous wives point to the
        husband while only his first wife is stored on him. */

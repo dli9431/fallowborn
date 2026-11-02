@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_world_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* One current undertaking; later historical outcomes are not dated events. */
 window.FBDATA = window.FBDATA || {};
 (function () {
@@ -15,3 +16,4 @@ window.FBDATA = window.FBDATA || {};
   });
   bookmark.stories = bookmark.stories.concat(ids);
 })();
+});

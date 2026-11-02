@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_novgorod_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Local decisions consume only the ordinary household and work contracts. */
 window.FBDATA = window.FBDATA || {};
 
@@ -81,3 +82,4 @@ FBDATA.openingProfiles_novgorod_1241 = {
   });
   Object.assign(FBDATA.storyInstances, FBDATA.householdTracks_novgorod_1241, FBDATA.openingProfiles_novgorod_1241);
 })();
+});

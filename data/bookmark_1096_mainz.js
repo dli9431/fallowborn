@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1096_mainz.js","bookmarks":["1096"],"catalogs":["settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* A fresh dated shelter revision; retained worlds acquire no new people. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.bookmarkRevisionContent_1096_mainz={
@@ -40,3 +41,4 @@ FBDATA.bookmarkRevisionContent_1096_mainz={
     stories:prior.stories.concat(['mainz_refuge_1096'])};
   b.revision='mainz_household_v1';
 })();
+});

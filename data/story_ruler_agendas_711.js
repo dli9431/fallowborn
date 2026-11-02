@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_ruler_agendas_711.js","bookmarks":["711"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal reviews record priorities and source choices without forcing a historical outcome. */
 window.FBDATA = window.FBDATA || {};
 
@@ -71,3 +72,4 @@ FBDATA.rulerAgendas_711 = {
     FBDATA.storyInstances[id] = FBDATA.rulerAgendas_711[id];
   });
 })();
+});

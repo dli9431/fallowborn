@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_568_scaffold_b.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 568 first-pass regional declarations, quadrant b.
    Public 493 county/community/layout inputs with dated political reconstructions.
    Historical limits: docs/research/568-bookmark.md.
@@ -393,3 +394,4 @@ FBDATA.bookmarkRegions568.arabia = {
     "tayma_oasis":[{"site":"tayma_oasis_493","name":"Tayma","kind":"village"}]
   }
 };
+});

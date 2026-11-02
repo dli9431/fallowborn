@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_493_history.js","bookmarks":["493"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Independent late antique opportunities. Dates open ordinary campaigns;
    they never force a ruler death, conversion, succession or territorial award. */
 window.FBDATA = window.FBDATA || {};
@@ -90,3 +91,4 @@ FBDATA.storyCampaigns493 = {
     } }
 };
 Object.assign(FBDATA.storyCampaigns, FBDATA.storyCampaigns493);
+});

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -17,6 +18,7 @@ async function imported(page,info,prefix,stem) {
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+(stem || 'dispersed-camps')+'-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   await beginBookmark(page,info,prefix+'_world',prefix+'_household');
 }

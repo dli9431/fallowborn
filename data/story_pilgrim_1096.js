@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_pilgrim_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal decisions delegate work and pilgrimage to their ordinary owners. */
 window.FBDATA = window.FBDATA || {};
 
@@ -102,3 +103,4 @@ FBDATA.openingProfiles_pilgrim_1096 = {
   ];
   Object.assign(FBDATA.storyInstances, FBDATA.householdTracks_pilgrim_1096, FBDATA.openingProfiles_pilgrim_1096);
 })();
+});

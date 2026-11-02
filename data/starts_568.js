@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_568.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Map-chosen ordinary roles for the Spring 568 world. */
 FBDATA.startScenarios_568 = [
   {id:'farmer_568',bookmarkIds:['568'],alwaysUnlocked:true,
@@ -13,3 +14,4 @@ FBDATA.startScenarios_568 = [
     intro:'You are {name}, learning a craft in {province}. Work, household ties and the local market offer a place to begin your family’s story.'}
 ];
 /* The complete ownership adapter captures this group's source position. */
+});

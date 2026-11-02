@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
@@ -22,6 +23,7 @@ async function startImported(page,info,prefix,input) {
   await page.locator('#modfile').setInputFiles({name:'mobile-principals-'+prefix+'.json',
     mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];
   },prefix);

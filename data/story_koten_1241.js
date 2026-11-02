@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_koten_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal records do not exercise the following's public mandate. */
 window.FBDATA = window.FBDATA || {};
 
@@ -49,3 +50,4 @@ FBDATA.householdTracks_koten_1241 = {
   });
   Object.assign(FBDATA.storyInstances,FBDATA.householdTracks_koten_1241);
 })();
+});

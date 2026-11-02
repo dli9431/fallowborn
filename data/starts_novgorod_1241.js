@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_novgorod_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* A fictional local household, separate from the city's princely office. */
 window.FBDATA = window.FBDATA || {};
 
@@ -14,3 +15,4 @@ FBDATA.startScenarios_novgorod_1241 = [
 ];
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_novgorod_1241);
 FBDATA.bookmarks['1241'].startLocations.novgorod_household_1241 = ['novgorod'];
+});

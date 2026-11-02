@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
@@ -239,6 +240,7 @@ async function imported(page,info,label,withPersonal) {
   await page.locator('#modfile').setInputFiles({name:'world-'+label+'.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(source))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (id) {return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(id);},id);
   await beginBookmark(page,info,prefix+'_world',prefix+'_household');
   return {id:id,notice:notice,county:county,rid:label==='harbor' ? 'harbor_following' : 'dune_coalition',

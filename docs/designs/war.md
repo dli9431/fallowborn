@@ -1,5 +1,7 @@
 # Wars
 
+Realm adoption remaps the live attacker, defender, cause enemy and objective enemies together. An opening ruler adopted by the player must leave each retained war pointing at the same current opponent. Immutable mobile opening-campaign provenance retains its original declared realm id; it is checked through the campaign's realm mapping rather than rewritten or repaired on save.
+
 Household evidence boundary
 
 Field hosts and mobile columns retain their own actual county positions and exact ordinary-war assignments. Household campaign notices may read those living hosts through the existing campaign source adapter, without moving a host or resolving combat. A civilian camp, intended route or campaign objective supplies no actual battle fact. Player war feedback and tracked ruler life events retain their existing distinct scopes; they are not a universal household battle ledger. A campaign result or change of county control establishes neither a local clash nor a settlement attack, casualties, household loss or relief entitlement. The observer's costless shared receipt changes only its recorded response. See docs/designs/stories.md for campaign reach, expiry and exact-site source requirements.

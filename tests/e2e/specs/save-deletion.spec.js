@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/save.js', 'js/main.js', 'js/ui_modals.js', 'js/ui_misc.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
@@ -39,6 +40,7 @@ for (const fallback of [false, true]) {
     expect(result.pref).toBe('keep');
     expect(result.usage.localStorage).toBeGreaterThan(0);
     if (!fallback) expect(result.usage.indexedDB).toBeGreaterThan(0);
+    await prepareGameContent(page);
     await page.reload(); await page.waitForFunction(function () { return FB.game.bootReady; });
     expect(await page.evaluate(function () { return FB.save.hasAnySave(); })).toBe(false);
   });

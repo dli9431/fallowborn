@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test, expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
@@ -263,6 +264,7 @@ test('ordinary JSON imports can vary the assembly policy and reject invalid isla
     if (errors.length) throw new Error(errors.join('\n'));
     return FB.mods.store(text);
   })).not.toBe(false);
+  await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && !!FBDATA.constituencyProfiles.island_review_voice;
   });

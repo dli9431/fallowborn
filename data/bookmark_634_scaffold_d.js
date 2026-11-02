@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_634_scaffold_d.js","bookmarks":["634"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Autumn 634 first-pass world, quadrant d. These literals stage composition inputs.
    Physical anchors remain unchanged; no world, faith or government is published here.
    Regional reconstructions and held people: docs/research/634-bookmark.md. */
@@ -772,3 +773,4 @@ FBDATA.bookmarkRevisionContent_634_scenery_d = {
   opening:{}
 };
 FBDATA.bookmarkRegions634.scenery_d = FBDATA.bookmarkRevisionContent_634_scenery_d;
+});

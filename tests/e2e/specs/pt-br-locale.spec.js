@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/i18n.js', 'js/main.js', 'js/ui_modals.js',
@@ -18,6 +19,7 @@ test('Brazilian Portuguese loads as a selectable Preview locale',
     await expect(page.locator('#title:not(.hidden)')).toBeVisible({
       timeout:30 * 1000
     });
+    await prepareGameContent(page);
     await expect.poll(function () {
       return page.evaluate(function () {
         return !!(window.FB && FB.game && FB.game.bootReady);

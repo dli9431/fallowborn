@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
@@ -15,6 +16,7 @@ async function importExample(page,info,name,ruler) {
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/site-resources-' + name + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (name) { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks['resource_' + name]; },name);
   if (!ruler) return beginBookmark(page,info,'resource_' + name,'resource_' + name + '_household');
   const full = page.locator('#btn-choose-beginning');

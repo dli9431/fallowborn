@@ -64,6 +64,8 @@ A command with mobile.civilianCamps may keep its independently located military 
 
 Existing opening campaigns
 
+Opening opponent identity is resolved through the saved bookmark actor index. Compact saves may omit the character record's redundant id, but an explicit conflicting id or a missing character still rejects. Ruler adoption remaps live war causes and objectives to player while retaining the opening marker's declared realm id. Matching restore preserves the existing wars, hosts and provenance without replaying their initialization.
+
 Optional mobile.openingCampaigns declares one to four existing ordinary aggression campaigns for the original authored command. Each has one inhabited objective, an explicit original living sovereign ruler and generation, and one or more distinct declared columns. No opponent repeats and no column belongs to two opening campaigns. An unassigned column remains unassigned. Every host still comes from the exact existing muster and food partition. This option supplies no additional force, territorial title, occupation, prior victory, casualty, payment or completed route.
 
 This bounded option requires an opening, columns and the command's war permission. Preparation, protective guard, dispersed civilian camps, landedCommandLink and a homeAuthority policy on the command form are incompatible. A sponsor, opening-access partner or realm-ruler superior cannot also be an opening opponent. Each opponent is a territorial sovereign with an original opening actor reference; subordinate and mobile opponents remain outside this contract. These are authoring bounds, not permission to weaken their ordinary owners. Omission preserves all existing declarations and saves.

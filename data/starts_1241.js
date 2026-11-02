@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Household and existing-court openings in the Spring 1241 world. */
 window.FBDATA = window.FBDATA || {};
 
@@ -39,3 +40,4 @@ FBDATA.startScenarios_1241 = [
     intro:'You are Yaroslav Vsevolodovich at Vladimir-on-the-Klyazma, within the broad Suzdal county. Your family retains its own people and homes. Novgorod is a separate court; later recognition and tribute are not opening obligations. Review current resources and choose your priorities through the court agenda in Deeds.' }
 ];
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_1241);
+});

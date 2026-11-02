@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -33,6 +34,7 @@ async function begin(page,info,label,modified,importFile) {
     await openGame(page,info);
   }
   const prefix=label==='harbor' ? 'harbor' : 'dune';
+  await prepareGameContent(page);
   await page.waitForFunction(function () {return window.FB && FB.game && FB.game.bootReady;});
   expect(await page.evaluate(function (prefix) {
     FB.mods.assertReady();return !!FBDATA.bookmarks[prefix+'_world'];

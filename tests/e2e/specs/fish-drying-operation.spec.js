@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -16,6 +17,7 @@ async function boot(page,info,kind,options) {
   await page.locator('#modfile').setInputFiles(options.custom ? {name:'fish-example.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(options.custom))} :
     path.resolve(__dirname,'../fixtures/authoring/fish-drying-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
   if (options.npc) await beginBookmark(page,info,'fish_'+kind,'fish_'+kind+'_household');
   else {

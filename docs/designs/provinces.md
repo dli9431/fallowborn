@@ -1,5 +1,9 @@
 # Provinces & the map
 
+Map construction scheduling
+
+Rasterization, seed assignment, connectivity, adjacency and settlement compilation retain their original ordered chunks. The asynchronous builder processes several small chunks in a turn, then yields once its work clock reaches an eight-millisecond budget. An individual chunk can exceed that budget; the builder always completes at least one chunk before yielding. This avoids a timer delay for every tiny chunk without changing geometry, settlement order, progress callbacks, activation serialization or seeded state. deferred-menu.spec.js compares different synthetic work-clock increments for identical map output and progress, with fewer timer waits when several chunks fit in a turn.
+
 Spring 568 regional staging
 
 data/bookmark_568_scaffold_a.js stages 126 inhabited counties and two scenery cells on the existing europe_regional_2 anchors. Its five literal regions contain date-owned politics, district labels, ordered layouts and climate assignments. The central and eastern Iranian oases use the earlier inhabited corridor presentation with development 1; Dasht-e Kavir and Dasht-e Lut remain scenery. Hira includes an Arabian Christian resident choice through the existing weighted-community contract; the corrected mix retains its principal identity, total population and generated court. Loading the file changes no active bookmark, settlement layout, physical site, radius, route or saved geography. Complete world composition publishes the staging tables separately. This is content using existing habitation and government capabilities, with no new technology-impact entry. Evidence and first-pass limits are in docs/research/568-bookmark.md.

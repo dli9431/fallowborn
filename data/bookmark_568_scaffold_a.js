@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_568_scaffold_a.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 568 first-pass regions. These literals stage composition inputs only.
    Physical anchors are reused; every court and opening actor belongs to 568.
    Evidence, generated principals and limitations: docs/research/568-bookmark.md. */
@@ -575,3 +576,4 @@ FBDATA.bookmarkRegions568.britain_west = {
   },
   storyIds:[]
 };
+});

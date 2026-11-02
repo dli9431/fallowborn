@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_antioch_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* The existing Antioch court supplies its incumbent and household once. */
 window.FBDATA = window.FBDATA || {};
 
@@ -18,3 +19,4 @@ FBDATA.startScenarios_antioch_1096 = [
 ];
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_antioch_1096);
 FBDATA.bookmarks['1096'].startLocations.yaghi_siyan_1096 = ['antioch'];
+});

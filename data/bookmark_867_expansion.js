@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_867_expansion.js","bookmarks":["867"],"catalogs":["geographies","cultures","settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Spring 867 district declarations. Retained worlds are independent of this
    fresh revision. Sources and reconstruction limits: docs/research/867-districts.md.
    Physical seeds, unnamed people and simulation shares do not prove borders,
@@ -130,3 +131,4 @@ FBDATA.bookmarkDistricts867 = [
   var b = FBDATA.bookmarks['867'];
   b.revisions.jewish_samaritan_v3 = Object.assign({},b.revisions.inhabited_v2);
 })();
+});

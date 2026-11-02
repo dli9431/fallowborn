@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
@@ -20,6 +21,7 @@ async function start(page,info,label,npc) {
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/early-worship-' + label + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.monastic_house; });
   const world = label === 'river' ? 'inventory_estuary' : 'inventory_uplands';
   await beginBookmark(page,info,world,world + '_household');
@@ -369,6 +371,7 @@ test('ordinary mod removal refuses the imported save without installing a replac
   });
   await page.evaluate(function(){FB.ui.showMods();});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('[data-unmod="0"]').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB&&FB.game&&FB.game.bootReady;});
   const r=await page.evaluate(function(save){
     const before=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -387,6 +390,7 @@ test('changed ordinary foundation terms cannot reuse the original imported save 
   await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles({name:'changed-worship.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(changed))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB&&FB.game&&FB.game.bootReady;});
   expect(await page.evaluate(function(before){
     return FB.mods.sig()!==before.signature&&!FB.game.loadData(JSON.parse(before.save));

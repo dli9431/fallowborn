@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
@@ -34,6 +35,7 @@ async function importAndBegin(page,info,configuration,countyIds) {
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles({name:'danube-route.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () {return window.FB && FB.game && FB.game.bootReady && FB.bookmark('1096').revision==='route_review_v1';});
   await beginBookmarkFromTitle(page,'1096','pilgrim_household_1096');
   await page.evaluate(installCorridorCase,configuration);

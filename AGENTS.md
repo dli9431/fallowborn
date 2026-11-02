@@ -72,6 +72,10 @@ behavior, itch.io iframe behavior, real mobile browsers, and subjective game fee
 
 Do not write long multi-year simulation tests. A 20-year 476 campaign test took about 12 minutes and still failed, which proves nothing and blocks the suite. Advance at most one season (90 days) of daily simulation in a test, and only when the daily loop itself is the behavior under test. For annual or long-run rules, stage the dated state directly and call the yearly or boundary hook once or twice. Keep every test well inside the default 60-second timeout, and do not raise test.setTimeout to make a long journey fit. Multi-year stability belongs to targeted boundary tests and owner playthroughs, not browser journeys.
 
+Local load measurements
+
+For owner-controlled startup diagnostics, append ?loadTiming=1 to the local game URL and reload. This records the main menu, bookmark selection and game loading, including Quick Start, Observe and saved games. Each load prints a console report; JSON.stringify(FB.game.loadTiming.reports(), null, 2) returns the latest twenty reports for copying. FB.game.loadTiming.enable(true) enables subsequent loads in the current page, and enable(false) disables them when no load is active. This is local-only, opt-in and transient. Interpret operation selfMs without double counting totalMs, and keep unattributed time distinct from measured synchronous work. The measurement contract is in docs/designs/ui.md. Agents may author coverage in tests/e2e/specs/load-timing.spec.js and inspect owner-provided reports, but must not run measurements or the harness themselves.
+
 ### Local fast-forward profiler
 
 The built-in profiler in `js/main.js` is disabled by default and available only
@@ -135,13 +139,11 @@ reaches `dev` through a branch merge, bumps `FB.VERSION` (top of `js/main.js`), 
 (a docs-only commit ships nothing, so it needs
 no bump — `FB.VERSION` is purely a cache-bust key; see `docs/VERSIONS.md`). It is the cache-bust
 key for *both* distribution targets: the itch `?v=` stamp and
-play.fallowborn.com's immutable asset caching both key on it. Ship changed files without bumping
-it and returning players are served **stale** `js`/`css`/`data` — and on play.fallowborn.com the
-`immutable` cache keeps them stale until the next bump. Bump `FB.VERSION` and `FB.CHANGELOG`
-together (see `docs/VERSIONS.md`). The bump is an **integration** step: do it in your commit when
-working directly on `main`, but leave `FB.VERSION`/`FB.CHANGELOG` untouched on a feature branch
-and let the merge assign them (see *Git workflow*) — otherwise parallel branches all grab the
-same number and collide.
+play.fallowborn.com's immutable asset caching both key on it.
+
+Ship changed files without bumping FB.VERSION and returning players are served stale js/css/data assets. On play.fallowborn.com, immutable caching keeps them stale until the next bump.
+
+Version assignment is an integration step: bump FB.VERSION in your commit when working directly on main, but leave FB.VERSION and FB.CHANGELOG untouched on a feature branch and let the merge assign them. Add a changelog entry for player-facing changes not already covered. When promoting dev into main, keep the existing entries once and do not repeat or paraphrase them under the new cache version. See docs/VERSIONS.md and Git workflow below.
 
 ## Distribution isolation
 
@@ -206,26 +208,15 @@ docs-only commits do not assign one, so those commits are exempt.
    then delete the branch with `git branch -d <branch>` (use `-d`, not `-D`, so Git
    refuses if it is not fully merged).
 
-**The `dev` branch is long-lived — never delete it.** It survives its merges into `main`
-and serves as the owner's test branch for larger changes. Every merge of any branch into `dev`
-must use the same test-authoring, version/changelog, optional i18n regeneration, and
-commit-message workflow as a merge into `main`. A later merge of `dev` into `main` follows that
-workflow again.
-When `dev` itself is the source branch, skip step 3's deletion for it.
+The dev branch is long-lived - never delete it. It survives its merges into main and serves as the owner's test branch for larger changes. Every merge of any branch into dev must use the same test-authoring, version/changelog, optional i18n regeneration, and commit-message workflow as a merge into main. A later merge of dev into main follows that workflow again, with a fresh FB.VERSION and versioned commit subject, but preserves the existing changelog entries without announcing those changes again. Add a new entry only for player-facing changes introduced during the merge that are not already covered. When dev itself is the source branch, skip step 3's deletion for it.
 
 **Integration-owned artifacts — assign them at the merge, never on the branch.** A few things are
 touched by *every* change at the same spot, so doing them on a branch guarantees a conflict with
 every other branch in flight (parallel worktrees are unaware of each other):
 
-1. **`FB.VERSION` + `FB.CHANGELOG`** (top of `js/main.js`) — at the merge, pick the next free
-   version — **usually a PATCH (last number: balance, tweak, or fix); reserve a MINOR bump for a
-   genuinely new feature, per `docs/VERSIONS.md`** — and write the changelog line from the
-   branch's description. Put the same version in the integration commit subject. Keep each
-   `FB.CHANGELOG` entry **short, plain, and general — one or two sentences** that name the
-   feature and hint where the player runs into it, not the full mechanics. Players read it in
-   the in-game changelog modal; they want a pointer to the new thing, not a spec. See
-   `docs/VERSIONS.md`.
-2. **The i18n catalogs** (`data/lang_*.js`, `tools/i18n_manifest.json`) - catalog regeneration is
+Version and changelog: FB.VERSION and FB.CHANGELOG live at the top of js/main.js. At the merge, pick the next free version, usually a PATCH; reserve a MINOR bump for a genuinely new feature under docs/VERSIONS.md. Put the same version in the integration commit subject. For changes not already covered, write a short, plain changelog entry from the branch's description: one or two sentences naming the feature and hinting where the player encounters it. When merging dev into main, preserve existing entries once; do not repeat or paraphrase them, or add a message merely saying they are now available in main. If the merge introduces no uncovered player-facing change, bump FB.VERSION without adding an empty or merge-only changelog entry. The current cache version may therefore differ from the newest changelog entry's version. See docs/VERSIONS.md.
+
+The i18n catalogs (data/lang_*.js, tools/i18n_manifest.json) - catalog regeneration is
    optional for commits and merges into `main` or `dev` while the unauthenticated translation
    endpoint is unreliable. A commit or merge request alone does not authorize catalog commands.
    Run them only when the owner also explicitly asks to regenerate or update i18n. Do not run
@@ -260,7 +251,9 @@ to `main` auto-deploys play.fallowborn.com).
 `index.html` loads classic (non-module) scripts in a fixed order; everything hangs off two
 globals. **Load order matters** — do not reorder the `<script>` tags casually:
 
-Metadata capture exception: js/bookmark_composition.js initializes immediately after data/starts.js, before the dated builders. It defines the composer namespace and pure source-order capture methods. Canonical validation/publication requires the complete engine and remains a main.js bootstrap step. js/util.js preserves this early FB namespace. Do not invoke engine-dependent composition methods from data loading.
+Metadata capture exception: js/bookmark_composition.js initializes immediately after data/starts.js, followed by js/bookmark_sources.js, before the dated builders. They define pure source-order capture and a private native authoring view. Canonical validation/publication requires the complete engine and runs through main.js deferred content preparation after a player requests campaign content. js/util.js preserves this early FB namespace. Do not invoke engine-dependent composition methods from data loading.
+
+The external data and engine tags use defer so fetching does not stop HTML parsing. Execution still follows document order and completes before DOMContentLoaded. Keep defer on newly added bundled scripts, including mods; do not mix async or parser-blocking dependencies into that sequence. Early inline shell scripts must remain independent of the deferred runtime. Initial local load reports include source authoring CPU and resource timing separately.
 
 - Data files first, all writing to `window.FBDATA`: `data/map_data.js` (land polygons, de
   jure empires/kingdoms/duchies, realms, straits, scripted history, `FBDATA.balance`),
@@ -511,14 +504,12 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `docs/deployment.md` — the two distribution targets and how `FB.VERSION` busts both caches.
 - `docs/i18n-authoring.md` — how to route new player-facing text; the catalog regenerate/merge recipe.
 - `docs/designs/` — per-system design decisions (index above).
-- `docs/VERSIONS.md` — version numbering (semver) and changelog rules. `FB.VERSION` / `FB.CHANGELOG`
-  live at the top of `js/main.js`; every change landing on `main` bumps them, **assigned at
-  integration** (see *Git workflow*) — `FB.VERSION` is the cache-bust key, so skipping it serves
-  stale assets.
+
+Versioning reference: docs/VERSIONS.md covers version numbering and changelog rules. FB.VERSION and FB.CHANGELOG live at the top of js/main.js and are assigned at integration. Shipped-code changes landing on main require a fresh cache version; changes already recorded on dev do not receive duplicate changelog messages when promoted to main.
 
 Historical story type loading
 
-index.html loads data/story_instances.js after bookmark instance sources, including data/story_courts_476.js. js/story_campaign.js, js/story_history.js, js/story_agreements.js, js/royal_settlements.js, js/story_polity_foundation.js, js/story_settlements.js, js/story_courts.js and js/story_track.js load after js/stories.js and before js/main.js. story_track.js depends on story_courts.js. Reusable type files register factories only. At boot, js/main.js seals factory registration (FB.stories.sealTypes), compiles and publishes the bundled FBDATA.storyInstances (FB.stories.load), applies stored mods (FB.mods.applyStored; each mod, including runtime JSON storyInstances, is validated against a detached candidate registry before anything is published), then seals the effective instances (FB.stories.seal) before any world is generated. The compiler places declaration-owned instance batches at their registrationBefore and registrationAfter data anchors, preserving attachment and RNG dispatch order. New type files must declare their source and never select historical content through literal ids. Structural spellings that collide with content ids require explicit protocolFiles reviews and exact per-file counts in the content-id allowlist. Keep protocol literals in their owning files; do not hide them behind shared token tables.
+index.html loads data/story_instances.js after bookmark instance sources, including data/story_courts_476.js. js/story_campaign.js, js/story_history.js, js/story_agreements.js, js/royal_settlements.js, js/story_polity_foundation.js, js/story_settlements.js, js/story_courts.js and js/story_track.js load after js/stories.js and before js/main.js. story_track.js depends on story_courts.js. Reusable type files register factories only. At title boot, js/main.js seals factory registration (FB.stories.sealTypes). Unmodded bookmark setup first reviews only its selected date and graphs without sealing instances or capturing the mod baseline. At campaign start or another request for complete content, FB.game.prepareContent restores the pristine authoring baseline, compiles and publishes the bundled FBDATA.storyInstances (FB.stories.load), applies stored mods (FB.mods.applyStored; each mod, including runtime JSON storyInstances, is validated against a detached candidate registry before anything is published), then seals the effective instances (FB.stories.seal) before any world is generated. The compiler places declaration-owned instance batches at their registrationBefore and registrationAfter data anchors, preserving attachment and RNG dispatch order. New type files must declare their source and never select historical content through literal ids. Structural spellings that collide with content ids require explicit protocolFiles reviews and exact per-file counts in the content-id allowlist. Keep protocol literals in their owning files; do not hide them behind shared token tables.
 
 Expanded 476 load order
 
@@ -529,4 +520,4 @@ Data authoring contract
 
 New or converted gameplay capabilities must expose their meaningful supported variation through typed data and the ordinary runtime JSON mod path. Read docs/data-authoring.md and the owning schema in docs/MODDING.md. Built-in declarations and imported declarations use the same consumers, pure candidate validation, player/AI gates, shared UI projections and canonical transactions. Preserve stable saved identities and exact mod fingerprints. Author two independent configurations with different behavior, including one real JSON import; a preloaded fixture or test-only executable registration does not establish mod support. Keep executable strategies and factories in trusted engine modules. Record intrinsic invariants and unresolved authoring boundaries honestly.
 
-js/bookmark_composition.js initializes after data/starts.js. Pure captureStarts/captureStories/captureAvailability calls record logical source positions while data loads; validators and story factories are used only after the complete engine exists. data/bookmark_568_composition.js and data/bookmark_634.js stage their ownership units; js/main.js publishes staged sources before FB.stories.load and FB.mods.applyStored capture bundled declarations. Other dated composers keep their current consumers until individually converted. Preserve authored title spellings, surviving predecessor order, retained revision bindings and later contributors explicitly, following docs/MODDING.md. Keep the private debug loader at the same early metadata position; no private source belongs in this repository.
+js/bookmark_composition.js initializes after data/starts.js, followed by js/bookmark_sources.js. Pure captureStarts/captureStories/captureAvailability calls record logical source positions while data loads; validators and story factories are used only after the complete engine exists. All eleven complete date chains assemble against bookmarkSources.stage's private FBDATA view in their original order. Shared rollouts declare explicit affected dates and isolate each callback with scope. data/bookmark_sources.js seals the manifest after data/bookmark_1066_north_atlantic.js. Unmodded setup and campaign entry review only the selected date, its retained revisions and required shared dependencies. Begin, Quick Start, Observe and saved lives finish that date's story registry and runtime configuration. Mods and authoring retain complete source publication before FB.mods.applyStored captures the pristine baseline; setup snapshots never become that baseline. Campaign constructors require FB.game.campaignReady(id) and still recheck the current world and selected start. The lightweight title and date picker use display metadata only. FB.game.bootReady signals title readiness; FB.game.contentReady signals complete catalogue preparation. Preserve authored title spellings, surviving predecessor order, typed dependencies, retained revision bindings and later contributors explicitly, following docs/MODDING.md. Keep the private debug loader aligned at both boundaries; no private source belongs in this repository.

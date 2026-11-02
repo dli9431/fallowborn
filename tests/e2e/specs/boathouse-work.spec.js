@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -23,6 +24,7 @@ async function boot(page,info,kind,options) {
     await page.locator('#modfile').setInputFiles({name:'boathouse-work-'+kind+'.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(m))});
   }else await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/boathouse-work-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
   const full=page.locator('#btn-choose-beginning');
   if(await full.isVisible())await full.click();

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { useReleasedStartRules } = require('../support/game/released-starts');
@@ -23,6 +24,7 @@ for (const name of ['Orin Vale-Sen','Orin-Vale-Sen','Orin Vale','Aurelian Consta
     await page.locator('#modfile').setInputFiles({ name:'encoded-court.json',mimeType:'application/json',
       buffer:Buffer.from(JSON.stringify(mod)) });
     await page.locator('#mod-apply').click();
+    await prepareGameContent(page);
     await page.waitForFunction(function () {
       return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks.harbor_world;
     });

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -16,6 +17,7 @@ async function importedStart(page, info, publicProfile) {
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/opening-goals.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('proof_private_goals'); });
   await startParityGame(page, info, { bookmark:publicProfile ? '1204' : '711',
     scenario:publicProfile ? 'siwa_delegate_1204' : 'toledo_household_711', declaredOpening:true });

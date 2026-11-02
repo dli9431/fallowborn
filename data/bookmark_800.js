@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_800.js","bookmarks":["800"],"catalogs":["settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Late 800 world registered for ordinary campaign setup.
    Independent literals own politics and settlement names;
    europe_regional supplies physical geometry and climate. */
@@ -982,3 +983,4 @@ FBDATA.settlementLayouts['800'] = {
   axum:[{ site:'axum', name:'Axum', kind:'town' }]
 };
 FBDATA.bookmarks['800'] = FBDATA.bookmarkCandidates['800'];
+});

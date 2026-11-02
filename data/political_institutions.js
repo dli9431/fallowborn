@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/political_institutions.js","bookmarks":["476"],"catalogs":["governmentForms","administrationProfiles"],"shared":["governmentForms","administrationProfiles"]}, function (FBDATA) {
 /* Fallowborn — elections, durable privileges, and collective demands.
    Definitions are replaced atomically by runtime mods. Saved records keep
    stable ids, parties, scopes, terms, and outcomes; display and forecasts are
@@ -10,6 +11,8 @@ FBDATA.rulerFaithTargets = ['nicene','homoian','chalcedonian','miaphysite'];
 
 /* Physical seats, not territorial realms. Unnamed officeholders are generated;
    Carthage's Nicene see is deliberately vacant in spring 476. */
+FBDATA.localInstitutions = {};
+FB.bookmarkSources.scope('476', function () {
 FBDATA.localInstitutions = {
   rome_senate:FBDATA.bookmarkRegions476.italy.localInstitutions.rome_senate,
   ravenna_council:FBDATA.bookmarkRegions476.italy.localInstitutions.ravenna_council,
@@ -46,6 +49,8 @@ FBDATA.bookmarks['476'].localInstitutions = Object.assign({},
 /* Phase 2 authority records name legal capacities rather than landed titles.
    The institution and scope on each appointment remain separate from owner
    and holder; these definitions never manufacture a territorial realm. */
+});
+
 FBDATA.authorityOffices = {
   magister_militum:{ name:'Magister militum', desc:'Commands one field army; no civil courts or taxes.',
     powers:['ban'], scopes:['host'], succession:'reaffirm', recognitionSources:['imperial_commission','army_acclamation'],
@@ -171,7 +176,8 @@ FBDATA.federateServiceStarts = {
 };
 /* County anchors abstract the historical march. Courts travel with the
    ordinary host; no dated outcome replaces occupation or settlement. */
-FBDATA.federateMigrations = FBDATA.bookmarkRegions476.dalmatia_east.migrations;
+FBDATA.federateMigrations = [];
+FB.bookmarkSources.scope('476', function () { FBDATA.federateMigrations = FBDATA.bookmarkRegions476.dalmatia_east.migrations; });
 /* A government form names the registered strategy (js/governments.js) that
    answers each behavior slot for a realm of that form. A slot the form leaves
    out uses its engine default, today's shared code path. consent says whether
@@ -619,3 +625,4 @@ FBDATA.parliamentAgendas = {
     "order": 7
   }
 };
+});

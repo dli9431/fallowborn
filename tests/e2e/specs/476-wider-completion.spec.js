@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
@@ -173,6 +174,7 @@ test('an imported fictional geography can expand without replacing its baseline'
     if (faults.length) throw new Error(faults.join('\n'));
     return FB.mods.store(JSON.stringify(mod));
   })).not.toBe(false);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady &&
     !!FBDATA.bookmarks.e2e_revision; });
   expect(await page.evaluate(function () {

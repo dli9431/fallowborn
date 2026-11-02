@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/government_rollout.js","bookmarks":["711","800","867","1066"],"catalogs":["administrationProfiles","ecclesiasticalProfiles"],"shared":[]}, function (FBDATA) {
 /* Dated constitutions for fresh campaigns. Retained worlds and saved profiles
    are never rewritten. See docs/research/government-rollout.md for evidence,
    approximation boundaries and explicitly unresolved consumers. */
@@ -91,6 +92,7 @@
     }
   };
   Object.keys(assignments).forEach(function (id) {
+    return FB.bookmarkSources.scope(id, function () {
     var base = FBDATA.bookmarks[id], revisions = base.revisions || {baseline:{}},
       previous = base.revision || 'baseline', changes = assignments[id];
     function compose(source) {
@@ -118,5 +120,7 @@
       base.revisions[combinedId] = compose(Object.assign({}, revisions.baseline, revisions[sourceId]));
     });
     base.revision = revisionId;
+    });
   });
 })();
+});

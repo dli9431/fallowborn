@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_ruler_agendas_568_east.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Eastern court reviews record intentions; the living world owns outcomes. */
 window.FBDATA = window.FBDATA || {};
 
@@ -78,3 +79,4 @@ FBDATA.rulerAgendas_568_east = {
     b.revision = 'eastern_courts_v3';
   } catch (error) { draft.faults.push({source:'data/story_ruler_agendas_568_east.js',message:error.message}); }
 })();
+});

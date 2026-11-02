@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/start_ambitions.js","bookmarks":["476","493","711","800","867","1066","1204"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Optional goals and named people for existing openings. These declarations
    observe campaign facts and grant no additional rewards or access. */
 FBDATA.openingProfiles = {
@@ -851,6 +852,7 @@ FBDATA.openingProfiles = {
     if (FBDATA.storyInstances[id]) throw new Error('Duplicate story instance ' + id + '.');
     FBDATA.storyInstances[id] = profile;
     FBDATA.startScenarios.forEach(function (scenario) {
+      if (!scenario || !Array.isArray(profile.scenarioIds) || scenario.tracks !== undefined && !Array.isArray(scenario.tracks)) return;
       if (profile.scenarioIds.indexOf(scenario.id) < 0) return;
       scenario.tracks = (scenario.tracks || []).concat([id]);
       if (profile.provinceIds) {
@@ -860,3 +862,4 @@ FBDATA.openingProfiles = {
     });
   });
 })();
+});

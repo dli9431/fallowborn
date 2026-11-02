@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1241_scaffold_d.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 1241 regional declarations. Physical counties and ordered
    settlement slots retain independent 1204 inputs. Dated courts and
    the explicit resident corrections are described with their limits
@@ -396,3 +397,4 @@ FBDATA.bookmarkRegions1241.afghan_indus = {
     "shebar_valley":[{"site":"shebar_valley_inhabited_1204","name":"Shibar valley","kind":"village"}]
   }
 };
+});

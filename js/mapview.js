@@ -1287,7 +1287,8 @@ window.FB = window.FB || {};
         M._fastForwardRenderPending = true;
         return;
       }
-      M.render();
+      if (FB.loadTiming) FB.loadTiming.measure('Render map',M.render,M);
+      else M.render();
     });
   };
   M.flushFastForwardRender = function () {

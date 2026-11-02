@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -22,6 +23,7 @@ async function importWorld(page, info, name, revision) {
   await page.locator('#modfile').setInputFiles(path.join(fixtureDirectory,
     'opening-infrastructure-' + name + '.json'));
   await page.locator('#mod-apply').click();
+  await prepareGameContent(page);
   await page.waitForFunction(function (name) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks['inventory_' + name];
   }, name);
@@ -315,6 +317,7 @@ test('removing the ordinary imported world rejects its marked save without adopt
   await startHousehold(page, 'estuary');
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
   await page.evaluate(function () { FB.mods.clear(); });
+  await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && !FBDATA.bookmarks.inventory_estuary;
   });

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_campaigns.js","bookmarks":["476"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Registered campaign instances. Conditions and messages are authoring data;
    the campaign story type contains no bookmark or historical-person selectors. */
 window.FBDATA = window.FBDATA || {};
@@ -26,3 +27,4 @@ Object.assign(FBDATA.storyCampaigns, FBDATA.bookmarkRegions476.italy.storyCampai
 
 Object.assign(FBDATA.storyCampaigns, FBDATA.bookmarkRegions476.dalmatia_east.campaigns);
 Object.assign(FBDATA.storyCampaigns, FBDATA.bookmarkRegions476.gaul_iberia.storyCampaigns);
+});

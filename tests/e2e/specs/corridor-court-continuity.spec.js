@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -18,6 +19,7 @@ for (const decision of ['accept','decline']) test('corridor '+decision+' preserv
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/corridor-court-continuity.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks.dune_world;});
   await beginBookmarkFromTitle(page,'dune_world','dune_household');
   const result=await page.evaluate(function (decision) {

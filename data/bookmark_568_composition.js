@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_568_composition.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Final trusted ownership assembly. All 568 contributors remain detached until
    main publishes this complete unit through the shared canonical composer. */
 (function () {
@@ -41,3 +42,4 @@
   } catch (error) { source.faults = [error.message]; }
   FBDATA.bookmarkCompositionSources.spring_568 = source;
 })();
+});

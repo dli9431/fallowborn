@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_tuscany_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.startScenarios_tuscany_1096 = [
@@ -13,3 +14,4 @@ FBDATA.startScenarios_tuscany_1096 = [
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_tuscany_1096);
+});

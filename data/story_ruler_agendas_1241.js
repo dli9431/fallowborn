@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_ruler_agendas_1241.js","bookmarks":["1241"],"catalogs":["settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Existing people and costless personal reviews; ordinary government owns effects. */
 window.FBDATA = window.FBDATA || {};
 
@@ -153,11 +154,11 @@ FBDATA.openingProfiles_rulers_1241 = {
   FBDATA.settlementLayouts['1241_royal_households_v2'] = layout;
   /* Retained campaigns keep their original people and settlement indexes. */
   var starts = FBDATA.startScenarios.filter(function (sc) {
-    return sc.id !== 'koten_1241' && (!sc.bookmarkIds || sc.bookmarkIds.indexOf('1241') >= 0) &&
-      (!sc.eras || sc.eras.indexOf(b.era) >= 0);
+    return sc && sc.id !== 'koten_1241' && FB.bookmarkSources.matches(sc,'1241',b.era);
   }).map(function (sc) { return sc.id; });
   b.revisions.baseline.starts = starts.filter(function (id) { return id !== 'bela_1241' && id !== 'yaroslav_1241' && id !== 'alexander_1241'; });
   b.revisions.royal_households_v2 = { realms:realms, settlementLayout:'1241_royal_households_v2', starts:starts.filter(function (id) { return id !== 'alexander_1241'; }) };
   b.revision = 'royal_households_v2';
   Object.assign(FBDATA.storyInstances,FBDATA.rulerAgendas_1241,FBDATA.openingProfiles_rulers_1241);
 })();
+});

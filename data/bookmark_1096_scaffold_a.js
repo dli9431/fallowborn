@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1096_scaffold_a.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 1096 regional first pass. County communities, development and
    settlement slots retain explicit 1066 simulation assumptions; court redating
    and unresolved identities are described in docs/research/1096-bookmark.md.
@@ -379,3 +380,4 @@ FBDATA.bookmarkRegions1096.maghreb = {
   opening:{"actors":{},"appointments":{},"estates":[],"claims":[],"migrations":[]},
   storyIds:[]
 };
+});

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/save.js', 'js/save_v4.js', 'js/main.js', 'js/messages.js', 'js/ui_modals.js']);
 const { test, expect } = require('../support/fixture');
@@ -41,6 +42,7 @@ test('manual saves confirm committed data and survive reload without a localStor
   expect(await storedGold(page, 'fb_slot1')).toBe(4321);
   expect(await page.evaluate(function () { return localStorage.getItem('fb_slot1'); })).toBe(null);
   await page.reload();
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return FB.game.bootReady; });
   expect(await page.evaluate(function () { return FB.save.read(1).state.player.gold; })).toBe(4321);
 });
@@ -71,6 +73,7 @@ for (const version of [3, 'prototype-v4', 4]) {
       return raw;
     }, version);
     await page.reload();
+    await prepareGameContent(page);
     await page.waitForFunction(function () { return FB.game.bootReady; });
     await expect.poll(function () { return storedGold(page, 'fb_slot1'); }).toBe(200);
     expect(await storedText(page, 'fb_slot1')).toBe(source);
@@ -104,6 +107,7 @@ test('a future-schema local slot is retained and cannot replace the accepted dat
       return raw;
     });
     await page.reload();
+    await prepareGameContent(page);
     await page.waitForFunction(function () { return FB.game.bootReady; });
     expect(await page.evaluate(function () { return localStorage.getItem('fb_slot1'); })).toBe(unsupported);
     expect(await storedText(page, 'fb_slot1')).toBe(accepted);
@@ -145,6 +149,7 @@ test('aborted database writes fall back to verified localStorage', async functio
   });
   expect(result).toEqual({ ok:true, gold:5432, local:true });
   await page.reload();
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return FB.game.bootReady; });
   await expect.poll(function () { return page.evaluate(function () { return localStorage.getItem('fb_slot2'); }); }).toBe(null);
   expect(await page.evaluate(function () { return FB.save.read(2).state.player.gold; })).toBe(5432);

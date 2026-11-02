@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/events_tutorial.js',
@@ -133,6 +134,7 @@ test('game speed defaults to fastest and persists as a bounded browser preferenc
     })).toEqual({ speedIdx:1, preference:1, stored:1 });
 
     await page.reload({ waitUntil:'domcontentloaded' });
+    await prepareGameContent(page);
     await expect.poll(function () {
       return page.evaluate(function () {
         return !!(window.FB && FB.game && FB.game.bootReady && FB.ui);
@@ -153,6 +155,7 @@ test('game speed defaults to fastest and persists as a bounded browser preferenc
       localStorage.setItem('fb_ui', JSON.stringify(stored));
     });
     await page.reload({ waitUntil:'domcontentloaded' });
+    await prepareGameContent(page);
     await expect.poll(function () {
       return page.evaluate(function () {
         return !!(window.FB && FB.game && FB.game.bootReady);
@@ -230,6 +233,7 @@ test('Settings can group Deeds into direct, personal, and ruler action types',
     }
 
     await page.reload({ waitUntil:'domcontentloaded' });
+    await prepareGameContent(page);
     await expect.poll(function () {
       return page.evaluate(function () {
         return !!(window.FB && FB.game && FB.game.bootReady && FB.ui);

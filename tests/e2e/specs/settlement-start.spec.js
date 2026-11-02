@@ -239,7 +239,7 @@ async function beginAndDismiss(page) {
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 }
 
-test('campaign start paints a locked character form before creating the life',
+test('campaign start paints its task and locks the character form before creating the life',
   async function ({ page }) {
     await reachPickScreen(page);
     await page.getByRole('button', { name:'Random Province', exact:true }).click();
@@ -257,11 +257,13 @@ test('campaign start paints a locked character form before creating the life',
         busy:document.getElementById('chargen').getAttribute('aria-busy'),
         pending:document.getElementById('chargen').classList.contains('start-pending'),
         controlsLocked:controls.every(function (control) { return control.disabled; }),
+        loading:!document.getElementById('loading').classList.contains('hidden'),
+        message:document.getElementById('loadmsg').textContent,
         state:FB.state
       };
     });
     expect(immediate).toEqual({
-      busy:'true', pending:true, controlsLocked:true, state:null
+      busy:'true', pending:true, controlsLocked:true, loading:true,message:'Creating campaign…',state:null
     });
 
     await expect(page.locator('#game:not(.hidden)')).toBeVisible();

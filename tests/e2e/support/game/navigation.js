@@ -14,7 +14,7 @@ function targetUrl(testInfo) {
     : pathToFileURL(indexPath).href;
 }
 
-async function openGame(page, testInfo) {
+async function openTitle(page, testInfo) {
   await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
   const title = page.locator('#title:not(.hidden)');
   const musicChoice = page.locator('#music-choice:not(.hidden)');
@@ -31,7 +31,25 @@ async function openGame(page, testInfo) {
   }).toBe(true);
 }
 
+async function prepareGameContent(page) {
+  await page.waitForFunction(function () { return !!(window.FB && FB.game && FB.game.bootReady); });
+  await page.evaluate(function () {
+    return new Promise(function (resolve, reject) {
+      // Historical source-oracle pages predate the deferred content boundary.
+      if (!FB.game.prepareContent) { resolve(); return; }
+      FB.game.prepareContent(function (error) { if (error) reject(error); else resolve(); });
+    });
+  });
+}
+
+async function openGame(page, testInfo) {
+  await openTitle(page, testInfo);
+  await prepareGameContent(page);
+}
+
 module.exports = {
+  openTitle:openTitle,
   openGame:openGame,
+  prepareGameContent:prepareGameContent,
   targetUrl:targetUrl
 };

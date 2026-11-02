@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('./navigation');
 const path=require('path');
 const {expect}=require('../fixture');
 const {openGame}=require('./navigation');
@@ -10,6 +11,7 @@ async function startAuthority(page,info,prefix,home) {
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../../fixtures/authoring/expedition-authority-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   if (!home) return beginBookmark(page,info,prefix+'_world',prefix+'_household');
   const sc=examples[prefix].startScenarios.find(function (sc) {return sc.id===prefix+'_home_start';});

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_silesia_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal court reviews compose existing decisions without public effects. */
 window.FBDATA = window.FBDATA || {};
 
@@ -86,3 +87,4 @@ FBDATA.openingProfiles_silesia_1241 = {
     });
   });
 })();
+});

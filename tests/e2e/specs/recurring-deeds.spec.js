@@ -26,6 +26,29 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
+test('an exact Deeds refresh shares its visible list with readiness alerts only for that refresh',async function ({page}) {
+  await waitForUiRefresh(page);
+  await page.evaluate(function () {
+    FB.game.uiPrefs.highlightReadyDeeds = true;
+    FB.ui.refreshRecurringDeedAlerts();
+    const original = FB.listInstants;
+    window.__deedVisibility = {calls:0,original:original,rng:FB.getRngState(),uid:FB.getUidCounter()};
+    FB.listInstants = function () { window.__deedVisibility.calls++; return original.apply(this,arguments); };
+    FB.ui.refresh();
+  });
+  await waitForUiRefresh(page);
+  const result = await page.evaluate(function () {
+    const probe = window.__deedVisibility, rendered = probe.calls;
+    try {
+      probe.calls = 0;
+      FB.ui.refreshRecurringDeedAlerts();
+      return {rendered:rendered,standalone:probe.calls,
+        pure:probe.rng === FB.getRngState() && probe.uid === FB.getUidCounter()};
+    } finally { FB.listInstants = probe.original; delete window.__deedVisibility; }
+  });
+  expect(result).toEqual({rendered:1,standalone:1,pure:true});
+});
+
 test('checklist excludes decisions and persists selections without executing while open',
   async function ({ page }) {
     await page.evaluate(function () { FB.ui.showAutoResolve(); });

@@ -1511,6 +1511,12 @@
       if (w.attacker === from) w.attacker = to;
       if (w.defender === from) w.defender = to;
       if (w.legacyOwner === from) w.legacyOwner = to;
+      // Causes and objectives carry live realm references too. Opening
+      // campaign provenance keeps its declared ids under its own owner.
+      if (w.casus && w.casus.enemy === from) w.casus.enemy = to;
+      (w.objectives || []).forEach(function (objective) {
+        if (objective.enemy === from) objective.enemy = to;
+      });
       if (w.casus && w.casus.rebel === from) w.casus.rebel = to;
       if (w.casus && w.casus.formerLiege === from) w.casus.formerLiege = to;
       w.defending = w.defender === 'player';

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/aristocratic_courts.js","bookmarks":["476"],"catalogs":["governmentForms","administrationProfiles","aristocraticProfiles"],"shared":["governmentForms","administrationProfiles","aristocraticProfiles"]}, function (FBDATA) {
 /* Royal houses, hereditary interests and delegated provincial service.
    Incumbents without a dated attestation are generated opening households. */
 window.FBDATA = window.FBDATA || {};
@@ -125,3 +126,4 @@ Object.assign(FBDATA.techImpactReviews.features, {
     }) : realm;
   });
 })();
+});

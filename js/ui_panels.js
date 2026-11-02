@@ -87,7 +87,7 @@ window.FB = window.FB || {};
 
   /* Independent of mounted accordion rows: closed sections can become ready.
      All bookkeeping is transient and status checks consume no game RNG. */
-  function refreshRecurringDeedAlerts() {
+  function refreshRecurringDeedAlerts(visibleDeeds) {
     const s = FB.state, g = FB.game;
     const enabled = s && g && !g.observe && g.uiPrefs.highlightReadyDeeds;
     if (!enabled && recurringAlertState === null) return;
@@ -103,7 +103,10 @@ window.FB = window.FB || {};
     if (enabled) {
       const next = {};
       const visible = {};
-      for (const item of FB.listInstants(s, { deferEligibility:true })) visible[item.a.id] = true;
+      // An exact Deeds render just enumerated visibility in this same turn.
+      // Reuse that list only for this refresh; standalone alerts re-evaluate.
+      const listed = Array.isArray(visibleDeeds) ? visibleDeeds : FB.listInstants(s, { deferEligibility:true });
+      for (const item of listed) visible[item.a.id] = true;
       for (const action of FB.recurringDeeds(s)) {
         const status = FB.instantStatus(s, action.id, {
           shown:!!visible[action.id], deferPreview:true
@@ -991,12 +994,11 @@ window.FB = window.FB || {};
   }
 
   function renderTab(name, reuse) {
-    if (name === 'char') renderChar();
-    else if (name === 'family') renderFamily();
-    else if (name === 'actions') renderActions(reuse);
-    else if (name === 'prov') renderProv();
-    else if (name === 'network') renderNetwork();
-    else renderLog();
+    const render = name === 'char' ? renderChar : name === 'family' ? renderFamily :
+      name === 'actions' ? renderActions : name === 'prov' ? renderProv :
+      name === 'network' ? renderNetwork : renderLog;
+    if (FB.loadTiming) return FB.loadTiming.measure('Render panel: ' + name,render,null,name === 'actions' ? [reuse] : []);
+    return name === 'actions' ? render(reuse) : render();
   }
 
   function renderActiveTab(options) {
@@ -1031,9 +1033,9 @@ window.FB = window.FB || {};
     if ($('leftbody').offsetParent !== null) {
       renderTab(activeLeftTab);
     }
-    renderTab(SH.activeTab);
+    const visibleDeeds = renderTab(SH.activeTab);
     updateTabNudges(FB.state);
-    refreshRecurringDeedAlerts();
+    refreshRecurringDeedAlerts(SH.activeTab === 'actions' ? visibleDeeds : null);
   }
 
   function renderDeedsWarCard(s) {
@@ -1518,14 +1520,17 @@ window.FB = window.FB || {};
       }
     });
     box.textContent = '';
-    const focuses = FB.listFocusChoices ? FB.listFocusChoices(s)
-      : FB.listFocuses(s).map(function (focus) {
+    function focusChoices() {
+      return FB.listFocusChoices ? FB.listFocusChoices(s) : FB.listFocuses(s).map(function (focus) {
         return { action:focus, can:true, reason:'', preview:null };
       });
+    }
+    const focuses = FB.loadTiming ? FB.loadTiming.measure('List focus choices',focusChoices) : focusChoices();
     /* Closed accordion groups need their visible count, not every cooldown,
        technology, and eligibility explanation. Defer that deeper work until
        a group's controls are actually constructed. */
-    const instants = FB.listInstants(s, { deferEligibility:true });
+    const instants = FB.loadTiming ? FB.loadTiming.measure('List visible deeds',FB.listInstants,FB,[s,{deferEligibility:true}]) :
+      FB.listInstants(s, { deferEligibility:true });
     const sectionItems = {};
     emptyDeedSections = {};
     for (const group of sections) {
@@ -1785,7 +1790,9 @@ window.FB = window.FB || {};
         continue;
       }
       if (group.type !== 'deeds') {
-        box.insertAdjacentHTML('beforeend', deedStaticSectionHtml(s, group));
+        const html = FB.loadTiming ? FB.loadTiming.measure('Render Deeds section: ' + group.id,deedStaticSectionHtml,null,[s,group]) :
+          deedStaticSectionHtml(s, group);
+        box.insertAdjacentHTML('beforeend', html);
         continue;
       }
       const ga = sectionItems[group.id];
@@ -1976,6 +1983,7 @@ window.FB = window.FB || {};
     deedStatusRefreshedTurn = s.turn;
     actionsDirty = false;
     if (lessonDeed && UI.refreshCoachmarkTarget) UI.refreshCoachmarkTarget();
+    return instants;
   }
 
   /* Flowing time changes cooldown and resource eligibility much more often

@@ -9,6 +9,7 @@
      This report is not complete start validation or runtime eligibility. */
   FB.startSelectorReport = function (scenario, bookmark, eraId, catalogs) {
     var faults = [], report = {matches:false, valid:false, faults:faults};
+    var setupReferences = !catalogs && FB.bookmarkSources && FB.bookmarkSources.setupKnowsBookmark;
     catalogs = catalogs || FBDATA;
     if (!plain(scenario) || typeof scenario.id !== 'string' || !scenario.id) {
       faults.push('Start definition is missing or has no id.'); return report;
@@ -24,7 +25,7 @@
       });
     }
     if (scenario.bookmarkIds !== undefined) list(scenario.bookmarkIds, owner + '.bookmarkIds', function (id) {
-      if (!own(catalogs.bookmarks, id)) faults.push(owner + ': unknown bookmark ' + id + '.');
+      if (!own(catalogs.bookmarks, id) && !(setupReferences && setupReferences(id))) faults.push(owner + ': unknown bookmark ' + id + '.');
     });
     if (scenario.eras !== undefined) list(scenario.eras, owner + '.eras', function (id) {
       if (!own(catalogs.eras, id)) faults.push(owner + ': unknown era ' + id + '.');
@@ -116,11 +117,14 @@
         !plain(b.location) || JSON.stringify(b.location) !== JSON.stringify(profile.guard.location) ||
         !Array.isArray(b.partyIds) || b.partyIds.length !== profile.guard.actorIds.length) bad();
     var original = FB.bookmarkActor(s, b.actorId), mobile = FB.mobile.row(s, b.realmId), guard = mobile && mobile.guardedParty;
-    if (!original || original.id !== b.charId || original.born !== profile.person.born || original.sex !== profile.person.sex ||
+    // Saved actor indexes retain identities when the wire codec omits char.id.
+    var actors = s.bookmarkSetup && s.bookmarkSetup.actors || {};
+    if (!original || actors[b.actorId] !== b.charId || own(original, 'id') && original.id !== b.charId ||
+        original.born !== profile.person.born || original.sex !== profile.person.sex ||
         !guard || guard.characterIds[0] !== b.charId || JSON.stringify(guard.characterIds) !== JSON.stringify(b.partyIds)) bad();
     profile.guard.actorIds.forEach(function (id, i) {
       var person = FB.bookmarkActor(s, id);
-      if (!person || person.id !== b.partyIds[i]) bad();
+      if (!person || actors[id] !== b.partyIds[i] || own(person, 'id') && person.id !== b.partyIds[i]) bad();
     });
     // The original remains provenance after death or a later player succession.
     // Current office, residence, private wealth and guard status have other owners.

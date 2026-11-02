@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_476_dalmatia_east.js","bookmarks":["476"],"catalogs":["cultures","settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* 476 dalmatia east snapshot. Stable grid ids, authored politics.
    realm is both sovereign owner and direct holder under these governments.
    No later bookmark supplies owners, communities or title groups. */
@@ -638,3 +639,4 @@ FBDATA.events.push(
       { label:'Keep the purse closed.', desc:'The imperial court must answer the frontier demand.', effects:{} }
     ] }
 );
+});

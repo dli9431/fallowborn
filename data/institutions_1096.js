@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/institutions_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Dated local participation and one evidenced episcopal vacancy.
    These declarations grant no property, protective capacity or public funds.
    The bookmark composer publishes detached copies for fresh campaigns only.
@@ -29,3 +30,4 @@ FBDATA.bookmarkInstitutions1096 = {
     officeSystem:null,jurisdictionIds:['durham'],vacant:true,freshOnly:true
   }
 };
+});

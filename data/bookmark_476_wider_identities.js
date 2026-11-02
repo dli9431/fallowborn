@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_476_wider_identities.js","bookmarks":["476"],"catalogs":["cultures","religions"],"shared":[]}, function (FBDATA) {
 /* Regional presentation catalogues. Pools use ordinary name forms or openly
    reconstructed forms where local anthroponymy is unavailable. The named
    historical incumbents discussed in the evidence notes are excluded;
@@ -1203,3 +1204,4 @@ FBDATA.bookmarkReligions476Wider = {
 };
 Object.assign(FBDATA.cultures,FBDATA.bookmarkCultures476Wider);
 Object.assign(FBDATA.religions,FBDATA.bookmarkReligions476Wider);
+});

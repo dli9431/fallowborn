@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_household_effects_711_800_1204.js","bookmarks":["711","800","1204"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Local reports follow committed public records; household transactions keep their ordinary owners. */
 FBDATA.householdEffects_711_800_1204 = {
   "household_effects_strait_crossing_711": {
@@ -3649,6 +3650,7 @@ FBDATA.householdEffects_711_800_1204 = {
   'use strict';
   Object.assign(FBDATA.storyInstances, FBDATA.householdEffects_711_800_1204);
   ['711','800','1204'].forEach(function (id) {
+    return FB.bookmarkSources.scope(id, function () {
     var raw = FBDATA.bookmarks[id], original = (raw.stories || []).slice();
     function attach(bookmark, inherited) {
       var stories = (bookmark.stories || inherited).slice();
@@ -3661,5 +3663,7 @@ FBDATA.householdEffects_711_800_1204 = {
     attach(raw, original);
     var baseline = Object.assign({}, raw, raw.revisions && raw.revisions.baseline);
     Object.keys(raw.revisions || {}).forEach(function (revision) { attach(raw.revisions[revision], baseline.stories); });
+    });
   });
 })();
+});

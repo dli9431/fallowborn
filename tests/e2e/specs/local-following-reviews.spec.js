@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -27,6 +28,7 @@ async function start(page,info,prefix,home) {
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/local-following-reviews-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   if (!home) {await beginBookmark(page,info,prefix+'_world',prefix+'_household');return;}
   const code=await page.evaluate(function (prefix) {

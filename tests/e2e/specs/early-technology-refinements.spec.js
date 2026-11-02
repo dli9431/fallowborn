@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -281,6 +282,7 @@ for (const input of [
     await openGame(page,info); await page.evaluate(function () { FB.ui.showMods(); });
     await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+input.file));
     await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
     await page.waitForFunction(function (p) {
       return window.FB && FB.game && FB.game.bootReady && FBDATA.tech[p.id].cost === p.cost;
     },input);

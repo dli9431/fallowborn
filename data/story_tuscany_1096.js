@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_tuscany_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* These dated reviews record personal priorities. Ordinary government,
    diplomacy and war retain ownership of actual commitments. */
 FBDATA.rulerAgendas_tuscany_1096 = {
@@ -77,3 +78,4 @@ FBDATA.openingProfiles_tuscany_1096 = {
 };
 
 Object.assign(FBDATA.storyInstances, FBDATA.rulerAgendas_tuscany_1096, FBDATA.openingProfiles_tuscany_1096);
+});

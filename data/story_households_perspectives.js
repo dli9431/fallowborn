@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_perspectives.js","bookmarks":["1204"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Private household plans use ordinary work, supplies and personal travel. */
 window.FBDATA = window.FBDATA || {};
 
@@ -88,3 +89,4 @@ FBDATA.householdTracks_perspectives = {
     route({ not:{ kind:'arrived', provinceId:'nicaea' } }, 'interrupted_journey'), route({ not:nicaean }, 'destination_changed')];
   Object.assign(FBDATA.storyInstances, FBDATA.householdTracks_perspectives);
 })();
+});

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_493.js","bookmarks":["493"],"catalogs":["settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Spring 493 review candidate. All politics and layouts are independent literal
    declarations. Shared physical-site ids do not borrow another date's state.
    See docs/research/493-bookmark.md for sourced identities and approximations. */
@@ -884,3 +885,4 @@ FBDATA.bookmarkCandidates['493'] = {
   scripted:[]
 };
 FBDATA.bookmarks['493'] = FBDATA.bookmarkCandidates['493'];
+});

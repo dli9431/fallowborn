@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const fs = require('fs');
 const { test, expect } = require('../support/fixture');
@@ -27,6 +28,7 @@ async function importExample(page, info, name) {
   await page.locator('#modfile').setInputFiles(path.join(fixtureDirectory,
     'opening-infrastructure-' + name + '.json'));
   await page.locator('#mod-apply').click();
+  await prepareGameContent(page);
   await page.waitForFunction(function (name) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks['inventory_' + name];
   }, name);

@@ -1,12 +1,15 @@
+FB.bookmarkSources.stage({"source":"data/christian_rollout.js","bookmarks":["476","711","800","867","1066","1204"],"catalogs":["settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Independent dated institutions. Numerical eligibility and service costs are
    simulation rules; see docs/research/christian-institutions.md for sources. */
 (function () {
   'use strict';
   // A city anchor for this revised world is not an identified church building.
+  FB.bookmarkSources.scope('800', function () {
   var samarkandLayout = FBDATA.settlementLayouts['800_inhabited_v2'];
   samarkandLayout.samarkand = (samarkandLayout.samarkand || []).concat([
     {site:'samarkand',name:'Samarkand',kind:'city'}
   ]);
+  });
   var openings = [
     {id:'476',revisions:['wider_v2'],institutions:{
       ctesiphon_catholicos_476:{city:'Ctesiphon',kind:'patriarchate',
@@ -131,6 +134,7 @@
     }}
   ];
   openings.forEach(function (opening) {
+    return FB.bookmarkSources.scope(opening.id, function () {
     var base = FBDATA.bookmarks[opening.id];
     opening.revisions.forEach(function (rid) {
       var revision = base.revisions[rid];
@@ -138,5 +142,7 @@
         JSON.parse(JSON.stringify(opening.institutions)),
         rid === 'inhabited_v2_governments_v2' ? JSON.parse(JSON.stringify(opening.expanded || {})) : {});
     });
+    });
   });
 })();
+});

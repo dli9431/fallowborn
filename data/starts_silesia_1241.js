@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_silesia_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Adopt the existing Silesian ducal court and its declared household. */
 window.FBDATA = window.FBDATA || {};
 
@@ -17,3 +18,4 @@ FBDATA.startScenarios_silesia_1241 = [
 ];
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_silesia_1241);
 FBDATA.bookmarks['1241'].startLocations.henry_pious_1241 = ['wroclaw'];
+});

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['data/relay_services.js','js/relay_services.js',
   'data/building_profiles.js','js/building_profiles.js',
@@ -136,6 +137,7 @@ for (const bookmark of ['476', '867', '1066']) {
         bookmark:bookmark, authority:bookmark === '476', chronicle:true
       });
       await page.reload({ waitUntil:'domcontentloaded' });
+      await prepareGameContent(page);
       await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
       expect(await page.evaluate(function () {
         const saved = FB.save.read(1);
@@ -380,6 +382,7 @@ test('localStorage v3 Continue upgrades only on a successful v4 save',
       return raw;
     });
     await page.reload({ waitUntil:'domcontentloaded' });
+    await prepareGameContent(page);
     await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
     expect(await page.evaluate(function () { return localStorage.getItem('fb_auto'); })).toBe(legacy);
     await page.locator('#btn-continue').click();

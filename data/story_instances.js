@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_instances.js","bookmarks":["476","493","711","800","1204"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* The single load-time instance catalogue. Source tables organize bookmark
    authoring; only this table registers instances. Anchors preserve the original
    story and RNG dispatch order across the declaration batches. */
@@ -23,3 +24,4 @@
     FBDATA.storyInstances[id] = FBDATA.storyCourts476[id];
   });
 })();
+});

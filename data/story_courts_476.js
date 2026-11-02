@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_courts_476.js","bookmarks":["476"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Historical court and household instances. No executable story hooks live here. */
 FBDATA.storyCourts476 = {
   "western_court_476": {
@@ -2183,3 +2184,4 @@ FBDATA.storyCourts476 = {
     }
   }
 };
+});

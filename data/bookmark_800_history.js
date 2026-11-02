@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_800_history.js","bookmarks":["800"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Conditional opportunities use the existing campaign factory. No calendar
    entry grants land, kills a ruler or changes an unrelated campaign's law. */
 window.FBDATA = window.FBDATA || {};
@@ -142,3 +143,4 @@ FBDATA.storyRecordMigrations = [{ sourceId:'carolingian_settlements_800',
     { id:'gifts_800', recordField:'opportunities.gifts', fields:{} },
     { id:'recognition_800', recordField:'opportunities.recognition', fields:{} },
     { id:'verdun_800', recordField:'opportunities.verdun', fields:{ pressure:'pressure' } }] }];
+});

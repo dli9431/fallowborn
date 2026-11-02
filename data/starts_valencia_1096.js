@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_valencia_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Adopt the existing Valencian court and its single authored household. */
 window.FBDATA = window.FBDATA || {};
 
@@ -17,3 +18,4 @@ FBDATA.startScenarios_valencia_1096 = [
 ];
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_valencia_1096);
 FBDATA.bookmarks['1096'].startLocations.rodrigo_diaz_1096 = ['valencia'];
+});

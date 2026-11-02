@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -22,6 +23,7 @@ async function importedStart(page, info) {
     '../fixtures/authoring/building-applicability.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }),
     page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.dated_guest_court;
   });

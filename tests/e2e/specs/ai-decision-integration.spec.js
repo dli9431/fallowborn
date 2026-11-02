@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const { test,expect } = require('../support/fixture');
@@ -20,6 +21,7 @@ async function importExample(page,file) {
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../../../docs/examples',file));
   await Promise.all([page.waitForEvent('load'),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await expect.poll(function () { return page.evaluate(function () { return FB.game.bootReady && FB.mods.count() === 1; }); }).toBe(true);
 }
 

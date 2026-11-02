@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -16,6 +17,7 @@ async function imported(page, info, which) {
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
     '../fixtures/authoring/local-threat-' + which + '.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   await beginBookmark(page, info, which === 'river' ? 'harbor_world' : 'dune_world',
     which === 'river' ? 'harbor_household' : 'dune_household');

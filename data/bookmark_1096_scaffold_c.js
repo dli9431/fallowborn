@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1096_scaffold_c.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 1096 regional declarations, quadrant c.
    Retained physical/layout inputs with dated court and resident corrections.
    Identity and jurisdiction limits: docs/research/1096-bookmark.md.
@@ -1398,3 +1399,4 @@ FBDATA.bookmarkRevisionContent_1096_jazira = {
   }
 };
 FBDATA.bookmarkRegions1096.jazira = FBDATA.bookmarkRevisionContent_1096_jazira;
+});

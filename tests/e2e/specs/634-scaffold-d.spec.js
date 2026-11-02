@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 
 const fs = require('fs');
 const path = require('path');
@@ -454,6 +455,7 @@ test('the staged Medinan form composes with same-import faiths through ordinary 
   await page.locator('#modfile').setInputFiles({name:'634-selection-world.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(mod),'utf8')});
   await page.locator('#mod-apply').click();
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return FB.game.bootReady && FB.mods.count() === 1 && FBDATA.bookmarks['634']; });
   expect(await page.evaluate(function () {
     const form = FBDATA.governmentForms.medinan_selection_pf_634;

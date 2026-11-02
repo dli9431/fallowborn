@@ -8,7 +8,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/religious_institutions.js', 'data/political_institutions.js', 'data/ecclesiastical_profiles.js',
   'data/cultures.js', 'data/technology.js', 'js/religious_institutions.js',
-  'js/model.js', 'js/world.js', 'js/authority.js', 'js/institutions.js',
+  'js/model.js', 'js/world.js', 'js/authority.js', 'js/institutions.js', 'js/items.js',
   'js/local_office_appointments.js', 'js/mods.js', 'js/save.js', 'js/save_v4.js',
   'js/treasury.js', 'js/abbeys.js', 'js/justice.js', 'js/intrigue.js', 'js/systems.js',
   'data/actions.js', 'data/economy.js', 'data/lexicons.js', 'data/systems.js',
@@ -100,6 +100,41 @@ test.beforeEach(async function ({ page }, testInfo) {
   }
   await page.evaluate(function () { FB.game.setPaused(true); });
   await page.evaluate(installInstitutions);
+});
+
+test('membership button short-circuits the player and preserves household-only and independent-authority visibility',async function ({page}) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, me = s.chars[s.player.charId], kin = s.chars[institutionFixture.house];
+    const household = FB.isHouseholdCharacter, deed = FB.instants.find(function (row) { return row.id === 'religious_membership'; });
+    s.localInstitutions = {test_house:s.localInstitutions.test_house};
+    s.player.tier = 1;
+    Object.keys(s.chars).forEach(function (id) { s.chars[id].religion = 'tengri'; });
+    me.religion = 'catholic';
+    let householdCalls = 0;
+    FB.isHouseholdCharacter = function () { householdCalls++; return household.apply(this,arguments); };
+    const rng = FB.getRngState(), uid = FB.getUidCounter(), cases = [];
+    function inspect() {
+      const before = JSON.stringify(s), expected = FB.playerReligiousInstitutions(s).length > 0;
+      householdCalls = 0;
+      const actual = deed.show(s), calls = householdCalls;
+      cases.push({expected:expected,actual:actual,calls:calls,unchanged:before === JSON.stringify(s)});
+    }
+    try {
+      inspect();
+      me.religion = 'tengri'; inspect();
+      kin.spouseId = me.id; kin.religion = 'catholic'; inspect();
+      kin.dead = true; inspect();
+      kin.dead = false; kin.role = 'lord'; inspect();
+      return {cases:cases,pure:rng === FB.getRngState() && uid === FB.getUidCounter()};
+    } finally { FB.isHouseholdCharacter = household; }
+  });
+  expect(result.cases.map(function (row) { return row.actual; })).toEqual([true,false,true,false,false]);
+  result.cases.forEach(function (row) {
+    expect(row.actual).toBe(row.expected);
+    expect(row.unchanged).toBe(true);
+  });
+  expect(result.cases[0].calls).toBe(0);
+  expect(result.pure).toBe(true);
 });
 
 test('independent patron, headless school and fictional leaderless profiles validate through mods', async function ({ page }) {

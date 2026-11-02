@@ -37,10 +37,8 @@ Terse. No nonsense.
 - One line per change. Plain English.
 - Say what changed, not why. No "improved", "enhanced", "various", "misc".
 - No contributor names, no ticket numbers, no marketing.
-- Every player-facing change bumps the version and adds a line. Invisible refactors
-  need no line but still bump PATCH when they change shipped code (`js`/`css`/`data`/`mods`).
-  A docs-only change ships nothing — `FB.VERSION` is a cache-bust key, and docs are not
-  shipped to players — so it needs no bump and no line.
+
+Every player-facing change bumps the version and adds a line when first integrated. Promoting that recorded change from dev into main does not add another line. Invisible refactors need no line but still bump PATCH when they change shipped code (js/css/data/mods). A docs-only change needs no bump and no line because FB.VERSION is a cache-bust key for runtime assets.
 
 Entry format in `FB.CHANGELOG`:
 
@@ -53,18 +51,15 @@ Entry format in `FB.CHANGELOG`:
 
 ## Assigning the version (at integration)
 
-The version and its changelog entry are assigned **when a change lands directly on `main` or a
-branch is merged into `main` or `dev`**, not on the branch that makes the change:
+Version assignment happens when a change lands directly on main or a branch is merged into main or dev. A changelog entry is added at that integration only for player-facing changes not already covered.
 
-- **Working directly on `main`** (the default) — bump `FB.VERSION` and add the `FB.CHANGELOG`
-  entry in the same commit. That commit *is* the integration, and its subject must include the
-  assigned version.
-- **On a feature branch or worktree you will merge into `main` or `dev`** — do **not** touch
-  `FB.VERSION` or `FB.CHANGELOG`. Put the player-facing changelog line in the commit/merge
-  description; at the merge, the integrator picks the next free version, adds the entry, and
-  includes the assigned version in the final merge/integration commit subject. Every branch
-  merge into `dev` follows this same rule; a later merge of `dev` into `main` assigns the next
-  free version again.
+Working directly on main (the default): bump FB.VERSION and add any needed FB.CHANGELOG entry in the same commit. That commit is the integration, and its subject must include the assigned version.
+
+On a feature branch or worktree that will merge into main or dev: do not touch FB.VERSION or FB.CHANGELOG. Put the player-facing changelog line in the commit/merge description; at the merge, the integrator picks the next free version, adds any needed entry, and includes the assigned version in the final merge/integration commit subject. Every branch merge into dev follows this rule.
+
+Promoting dev into main: inspect the combined changelog and preserve each existing entry once, including entries first recorded on dev. Assign a fresh FB.VERSION above both branch tips for cache invalidation, normally a PATCH for a promotion alone, and use that exact version in the integration commit subject. Do not add another entry that repeats or paraphrases the imported messages, or merely says the features are now available in main. Only player-facing changes introduced during the merge and not already covered receive a new entry. If there are none, add no changelog entry for the promotion version, including no empty changes array or merge-only message. FB.VERSION may then be newer than the newest FB.CHANGELOG entry; that is intentional.
+
+Example: if v1.189.16 already says agricultural and civic research expands family plots, settlement founding sites and directly governed settlements, preserve that entry when promoting dev into main. A v1.189.17 cache bump must not add a second message saying that research for larger family estates and more settlement capacity is now available in the main game.
 
 Use this subject format for every integration commit that assigns `FB.VERSION`:
 

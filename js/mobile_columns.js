@@ -290,11 +290,15 @@
             !Array.isArray(marker.entries) || marker.entries.length!==campaigns.entries.length) fail();
         marker.entries.forEach(function (e,i) {
           var expected=campaigns.entries[i], ref=expected.opponent, person=FB.bookmarkActor(s,ref.actorId);
+          // Compact saves omit a character's redundant id. The opening actor
+          // index remains authoritative, including after ruler adoption.
+          var personId=s.bookmarkSetup && s.bookmarkSetup.actors && s.bookmarkSetup.actors[ref.actorId];
           var enemy=FB.startRealmId(s,ref.realmId);
           if (!keys(e,['id','warId','opponent','target','columns']) || e.id!==expected.id ||
               e.warId!==openingWarId(rid,expected.id) || e.target!==expected.target ||
               !keys(e.opponent,['declaredRealmId','characterId','generation']) || !person ||
-              e.opponent.declaredRealmId!==ref.realmId || e.opponent.characterId!==person.id ||
+              e.opponent.declaredRealmId!==ref.realmId || e.opponent.characterId!==personId ||
+              (own(person,'id') && person.id!==personId) ||
               e.opponent.generation!==ref.generation || !Array.isArray(e.columns) ||
               e.columns.length!==expected.columnIds.length) fail();
           e.columns.forEach(function (c,j) {

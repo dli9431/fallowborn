@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
@@ -20,6 +21,7 @@ async function start(page,info,label,revision) {
   source.bookmarks[world].revision=revision||'empty';
   await page.locator('#modfile').setInputFiles({name:'regional-milling-'+label+'.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(source))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB&&FB.game&&FB.game.bootReady;});
   await beginBookmark(page,info,world,world+'_household');
   await page.evaluate(function(label){

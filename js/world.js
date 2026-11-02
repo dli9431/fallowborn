@@ -59,7 +59,14 @@ window.FB = window.FB || {};
       throw new Error(FB.T('Invalid world revision.'));
     var catalogue = base.revisions;
     if (!catalogue) {
-      if (selected !== 'baseline') throw new Error(FB.T('Unknown world revision: {revision}', {revision:selected}));
+      if (selected !== 'baseline') {
+        // Effective worlds retain their selected stamp after dropping the
+        // revision table. Rechecking that snapshot must not select it again.
+        var original = bookmarkDefinition(base.id);
+        if (revision !== undefined || original === base || !original || !plainRecord(original.revisions) ||
+            !ownKey(original.revisions,selected) || !plainRecord(original.revisions[selected]))
+          throw new Error(FB.T('Unknown world revision: {revision}', {revision:selected}));
+      }
       return base;
     }
     if (!plainRecord(catalogue) || !ownKey(catalogue, 'baseline') ||
@@ -112,6 +119,9 @@ window.FB = window.FB || {};
 
   /* Visibility limits new campaigns, not inspection or matching save loads. */
   FB.bookmarkAvailable = function (id) {
+    if (FB.bookmarkSources && FB.bookmarkSources.setupUnavailable && FB.bookmarkSources.setupUnavailable(id)) return false;
+    var setupId = FB.bookmarkSources && FB.bookmarkSources.setupId && FB.bookmarkSources.setupId();
+    if (setupId && String(id) !== setupId) return false;
     var definition;
     try { definition = FB.bookmark(id); }
     catch (error) {
@@ -1277,11 +1287,12 @@ window.FB = window.FB || {};
   /* Cross-catalogue requirements are checked on the prepared definition,
      before activation changes the live world. No init hooks, RNG or saved
      representatives participate in authoring validation. */
-  function bookmarkRequirementContext(definition, platform, storyContext, worldFaiths) {
+  function bookmarkRequirementContext(definition, platform, storyContext, worldFaiths, sharedWorld) {
     var stories = storyContext || FB.stories;
     var errors = [], era = FBDATA.eras[platform.era];
-    var geography = FB.geography(FB.bookmarkGeography(definition));
-    var provinces = {}, realms = {}, cultures = {}, faiths = {}, starts = {};
+    var geography = sharedWorld ? sharedWorld.geography : FB.geography(FB.bookmarkGeography(definition));
+    var provinces = sharedWorld ? sharedWorld.provinces : {}, realms = sharedWorld ? sharedWorld.realms : {};
+    var cultures = {}, faiths = {}, starts = sharedWorld ? Object.assign({},sharedWorld.starts) : {};
     function fault(owner, detail) { errors.push(owner + ': ' + detail); }
     function list(value, owner, check) {
       if (!Array.isArray(value)) { fault(owner, 'must be a list.'); return; }
@@ -1291,14 +1302,25 @@ window.FB = window.FB || {};
         else { seen[id] = true; check(id); }
       });
     }
-    (definition.provinces || []).forEach(function (p) { if (p) provinces[p.id] = p; });
-    (definition.realms || []).forEach(function (r) { if (r) realms[r.id] = r; });
-    (FBDATA.startScenarios || []).forEach(function (s) { if (s) starts[s.id] = s; });
-    var sites = geographySites(geography), forms = Object.keys(platform.governments).map(function (id) {
-      return platform.governments[id];
+    if (!sharedWorld) {
+      (definition.provinces || []).forEach(function (p) { if (p) provinces[p.id] = p; });
+      (definition.realms || []).forEach(function (r) { if (r) realms[r.id] = r; });
+      (FBDATA.startScenarios || []).forEach(function (s) { if (s) starts[s.id] = s; });
+    }
+    var sites = sharedWorld ? sharedWorld.sites : geographySites(geography);
+    var forms = sharedWorld ? sharedWorld.forms : [];
+    if (!sharedWorld) Object.keys(platform.governments).forEach(function (id) {
+      var form = platform.governments[id];
+      if (forms.indexOf(form) < 0) forms.push(form);
     });
+    // Availability depends on the form, not on how many realms use it.
+    // Share exact scoped answers only within this synchronous world/start
+    // review. Another candidate or an in-place edit gets a fresh context.
+    var systemChecks = sharedWorld ? sharedWorld.systemChecks : Object.create(null);
     function system(id, faith, form) {
-      return FB.systems.enabledForBookmark(definition, id, faith, form);
+      var key = JSON.stringify([id,faith || null,form || null]);
+      if (!ownKey(systemChecks,key)) systemChecks[key] = FB.systems.enabledForBookmark(definition,id,faith,form);
+      return systemChecks[key];
     }
     function availableSystem(id, faith, form) {
       if (form) return system(id, faith, form);
@@ -1543,8 +1565,8 @@ window.FB = window.FB || {};
       });
     }
     return {definition:definition, platform:platform, stories:stories, errors:errors,
-      era:era, geography:geography, provinces:provinces, realms:realms, starts:starts,
-      cultures:cultures, faiths:faiths, forms:forms,
+      era:era, geography:geography, provinces:provinces, realms:realms, starts:starts, sites:sites,
+      cultures:cultures, faiths:faiths, forms:forms, systemChecks:systemChecks,
       worldStories:Array.isArray(definition.stories) ? definition.stories : [],
       fault:fault, list:list, identity:identity, requirements:requirements, story:story,
       availableSystem:availableSystem, worldRequirements:worldRequirements,
@@ -1626,7 +1648,7 @@ window.FB = window.FB || {};
   /* A report owns only this start's requirements and policy entries. The
      exhaustive gate below still aggregates all starts, in its prior order.
      Callers must separately validate the world and imported record schema. */
-  FB.startRequirementReport = function (start, definition, platform, storyContext, runtimeOnly) {
+  function startRequirementReport(start, definition, platform, storyContext, runtimeOnly, shared) {
     var report = {bookmarkId:definition && definition.id || null, revision:null,
       startId:start && start.id || null, matches:false, applicable:false, valid:false,
       selectorFaults:[], policyFaults:[], policyShapeFaults:[], faults:[]};
@@ -1639,19 +1661,30 @@ window.FB = window.FB || {};
     }
     var siblings = null, source = definition.revisions ? definition : bookmarkDefinition(definition.id);
     try {
-      if (source && source.revisions) siblings = bookmarkRevisionSiblings(source, runtimeOnly);
-      definition = preparedDefinition(resolveBookmarkRevision(definition));
+      if (shared && shared.prepared) {
+        siblings = shared.siblings; definition = shared.definition;
+      } else {
+        if (source && source.revisions) siblings = bookmarkRevisionSiblings(source, runtimeOnly);
+        definition = preparedDefinition(resolveBookmarkRevision(definition));
+        if (shared) {
+          shared.prepared = true; shared.siblings = siblings; shared.definition = definition;
+        }
+      }
     } catch (error) { report.faults.push(error.message); return report; }
     report.revision = definition.revision || 'baseline';
     if (!Array.isArray(definition.provinces) || !Array.isArray(definition.realms)) {
       report.faults.push('Bookmark provinces and realms must be lists.'); return report;
     }
-    platform = platform || FB.resolveBookmarkPlatform(definition);
+    platform = platform || shared && shared.platform || FB.resolveBookmarkPlatform(definition);
     /* World identities may enable a required system, but their errors and
        culture/faith checks must not become faults of this household. */
-    var world = bookmarkRequirementContext(definition, platform, storyContext);
-    world.worldRequirements();
-    var context = bookmarkRequirementContext(definition, platform, storyContext, world.faiths);
+    var faiths = shared && shared.faiths;
+    if (!faiths) {
+      var world = bookmarkRequirementContext(definition, platform, storyContext);
+      world.worldRequirements(); faiths = world.faiths;
+      if (shared) { shared.platform = platform; shared.faiths = faiths; shared.world = world; }
+    }
+    var context = bookmarkRequirementContext(definition, platform, storyContext, faiths, shared && shared.world);
     context.starts[start.id] = start;
     if (definition.starts !== undefined && !Array.isArray(definition.starts))
       context.fault('starts', 'must be a list.');
@@ -1684,6 +1717,15 @@ window.FB = window.FB || {};
     report.faults = context.errors;
     report.valid = report.faults.length === 0;
     return report;
+  }
+  FB.startRequirementReport = startRequirementReport;
+  /* One synchronous read-only review shares the world projection, never the
+     per-start errors or requirements. No cache survives this catalogue view. */
+  FB.startRequirementReports = function (starts, definition, platform, storyContext) {
+    var shared = {};
+    return starts.map(function (start) {
+      return startRequirementReport(start, definition, platform, storyContext, false, shared);
+    });
   };
 
   /* One fresh-start gate for picker, codes, Quick Start and construction.
@@ -1748,6 +1790,25 @@ window.FB = window.FB || {};
     return errors;
   };
 
+  // Retained revisions share the same immutable candidate catalogues. Reuse
+  // catalogue-only faults within this synchronous review, never across calls,
+  // source publications or imports. World and binding checks remain per-world.
+  var validationCatalogues = null;
+  function withValidationCatalogues(work) {
+    var previous = validationCatalogues;
+    if (!previous || previous.data !== FBDATA)
+      validationCatalogues = {data:FBDATA,faults:Object.create(null)};
+    try { return work(); }
+    finally { validationCatalogues = previous; }
+  }
+  function sharedValidation(key, work) {
+    var batch = validationCatalogues && validationCatalogues.data === FBDATA ? validationCatalogues : null;
+    if (batch && ownKey(batch.faults,key)) return batch.faults[key];
+    var faults = FB.loadTiming ? FB.loadTiming.measure('Validate shared catalogues',work) : work();
+    if (batch) batch.faults[key] = faults;
+    return faults;
+  }
+
   FB.validateBookmark = function validateBookmarkDefinition(definition, resolvedRevision, storyContext, worldOnly) {
     var stories = storyContext || FB.stories;
     var errors = [];
@@ -1773,8 +1834,12 @@ window.FB = window.FB || {};
         var outer = revisionSiblings;
         revisionSiblings = bookmarkRevisionSiblings(definition);
         try {
-          Object.keys(definition.revisions).forEach(function (revision) {
-            errors = errors.concat(validateBookmarkDefinition(resolveBookmarkRevision(definition, revision), true, stories, worldOnly));
+          withValidationCatalogues(function () {
+            Object.keys(definition.revisions).forEach(function (revision) {
+              // Retained worlds need the installed opening/court validators as
+              // well as this core gate. A complete review can then stand alone.
+              errors = errors.concat(FB.validateBookmark(resolveBookmarkRevision(definition, revision), true, stories, worldOnly));
+            });
           });
         } finally { revisionSiblings = outer; }
       } catch (revisionError) { fault(revisionError.message); }
@@ -1782,7 +1847,7 @@ window.FB = window.FB || {};
     }
     if (definition.hidden !== undefined && typeof definition.hidden !== 'boolean') fault('hidden must be true or false.');
     var geographyId = FB.bookmarkGeography(definition);
-    var geographyErrors = FB.validateGeography(geographyId);
+    var geographyErrors = sharedValidation('geography:' + geographyId,function () { return FB.validateGeography(geographyId); });
     for (var gx = 0; gx < geographyErrors.length; gx++) errors.push(geographyErrors[gx]);
     if (geographyErrors.length) return errors;
     if (definition.settlementLayout !== undefined && definition.settlementLayout !== null &&
@@ -1801,33 +1866,34 @@ window.FB = window.FB || {};
       for (var le = 0; le < localErrors.length; le++) fault(localErrors[le]);
     }
     if (FB.validateTechnologyData) {
-      var technologyErrors = FB.validateTechnologyData(true);
+      var technologyErrors = sharedValidation('technology',function () { return FB.validateTechnologyData(true); });
       for (var te = 0; te < technologyErrors.length; te++) errors.push(technologyErrors[te]);
     }
     if (FB.validateAuthorityData) {
-      var authorityErrors = FB.validateAuthorityData();
+      var authorityErrors = sharedValidation('authority',function () { return FB.validateAuthorityData(); });
       for (var ae = 0; ae < authorityErrors.length; ae++) errors.push(authorityErrors[ae]);
     }
     if (FB.validateCultureData) {
-      var cultureErrors = FB.validateCultureData();
+      var cultureErrors = sharedValidation('cultures',function () { return FB.validateCultureData(); });
       for (var ce = 0; ce < cultureErrors.length; ce++) errors.push(cultureErrors[ce]);
     }
     if (FB.validateReligionData) {
-      var religionErrors = FB.validateReligionData(null);
+      var religionErrors = sharedValidation('religions',function () { return FB.validateReligionData(null); });
       for (var re = 0; re < religionErrors.length; re++) errors.push(religionErrors[re]);
     }
     if (FB.validateReligionInstitutionsData) {
-      var institutionFaithErrors = FB.validateReligionInstitutionsData();
+      var institutionFaithErrors = sharedValidation('religiousInstitutions',function () { return FB.validateReligionInstitutionsData(); });
       for (var rf = 0; rf < institutionFaithErrors.length; rf++) errors.push(institutionFaithErrors[rf]);
     }
     if (FB.validateWardrobeData) {
-      var wardrobeErrors = FB.validateWardrobeData();
+      var wardrobeErrors = sharedValidation('wardrobes',function () { return FB.validateWardrobeData(); });
       for (var we = 0; we < wardrobeErrors.length; we++) errors.push(wardrobeErrors[we]);
     }
-    var governmentErrors = FB.governments.validate().concat(FB.validateEraData(),
-      FB.lexicon.validate(), FB.validateItemPresentation ? FB.validateItemPresentation() : [],
-      FB.validateLegalTraditions(), FB.systems.validateCatalogs(),
-      FB.systems.validateLayer(definition.systems, FB.T('Bookmark {id}', { id:definition.id })));
+    var governmentErrors = sharedValidation('governments',function () {
+      return FB.governments.validate().concat(FB.validateEraData(),
+        FB.lexicon.validate(), FB.validateItemPresentation ? FB.validateItemPresentation() : [],
+        FB.validateLegalTraditions(), FB.systems.validateCatalogs());
+    }).concat(FB.systems.validateLayer(definition.systems, FB.T('Bookmark {id}', { id:definition.id })));
     for (var ge = 0; ge < governmentErrors.length; ge++) errors.push(governmentErrors[ge]);
     if (!definition.id || !/^[a-z0-9_]+$/i.test(definition.id)) fault('invalid id.');
     var date = definition.date || {};
@@ -1844,13 +1910,13 @@ window.FB = window.FB || {};
     if (FB.expeditionPrograms) FB.expeditionPrograms.passagePolicyFaults(definition).forEach(fault);
     if (FB.treasuryDefinitionFaults) FB.treasuryDefinitionFaults(definition).forEach(fault);
     FB.bookmarkRequirementFaults(definition, platform, stories, worldOnly).forEach(fault);
-    FB.validateClimateData().forEach(fault);
-    FB.validateBuildingData(FBDATA.buildings, true).forEach(fault);
-    FB.buildingProfiles.catalogFaults(FBDATA).forEach(fault);
-    FB.fortProfiles.catalogFaults(FBDATA).forEach(fault);
-    FB.buildingInstitutionCatalogFaults(FBDATA).forEach(fault);
+    sharedValidation('climate',function () { return FB.validateClimateData(); }).forEach(fault);
+    sharedValidation('buildings',function () { return FB.validateBuildingData(FBDATA.buildings, true); }).forEach(fault);
+    sharedValidation('buildingProfiles',function () { return FB.buildingProfiles.catalogFaults(FBDATA); }).forEach(fault);
+    sharedValidation('fortProfiles',function () { return FB.fortProfiles.catalogFaults(FBDATA); }).forEach(fault);
+    sharedValidation('buildingInstitutions',function () { return FB.buildingInstitutionCatalogFaults(FBDATA); }).forEach(fault);
     FB.buildingInstitutionDefinitionFaults(definition, FBDATA).forEach(fault);
-    FB.validateUnitClassRoles(FBDATA.unitClasses, true).forEach(fault);
+    sharedValidation('unitClasses',function () { return FB.validateUnitClassRoles(FBDATA.unitClasses, true); }).forEach(fault);
     /* coverage, the era's technology window and realm traditions; a realm
        fault the catalogue-wide check already reported is not repeated */
     var technologyFaults = FB.bookmarkTechnologyFaults
@@ -2397,6 +2463,11 @@ window.FB = window.FB || {};
     catch (error) { return [error.message]; }
     return FB.validateBookmark(definition, true, storyContext, true);
   };
+  FB.validateBookmarkWorlds = function (definitions, storyContext) {
+    return withValidationCatalogues(function () {
+      return definitions.map(function (definition) { return FB.validateBookmarkWorld(definition,storyContext); });
+    });
+  };
 
   /* Raster results are cached per bookmark and geography base. */
   function worldCacheKey(definition) {
@@ -2728,14 +2799,19 @@ window.FB = window.FB || {};
     });
 
     let si = 0;
+    const timingLabels = ['Rasterize land','Rasterize seas','Assign province cells','Find disconnected cells',
+      'Reassign disconnected cells','Find province centers','Build adjacency','Compile settlements'];
     function step() {
       /* A throwing step must still finish the build, or activations queued
          behind it would wait forever. */
       try {
+        // Tiny polygon/row batches must not each incur another timer delay.
+        // Preserve their exact order while yielding after a short work slice.
+        const deadline = performance.now() + 8;
         while (si < steps.length) {
-          const res = steps[si]();
+          const res = FB.loadTiming ? FB.loadTiming.measure('Map: ' + timingLabels[si],steps[si],steps) : steps[si]();
           if (res !== 'repeat') si++;
-          if (si < steps.length) { setTimeout(step, 0); return; }
+          if (si < steps.length && performance.now() >= deadline) { setTimeout(step, 0); return; }
         }
       } catch (error) {
         done(error);

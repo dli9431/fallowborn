@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1096.js","bookmarks":["1096"],"catalogs":["geographies","religions","settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Independent spring 1096 world assembled from date-owned regional records.
    See docs/research/1096-bookmark.md for corrections and simulation limits. */
 window.FBDATA = window.FBDATA || {};
@@ -139,3 +140,4 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.settlementLayouts['1096'] = layout;
   FBDATA.bookmarks['1096'] = bookmark;
 })();
+});

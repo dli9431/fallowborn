@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const fs = require('fs');
 const { test, expect } = require('../support/fixture');
@@ -21,6 +22,7 @@ test.beforeEach(async function ({ page }, info) {
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
     '../fixtures/authoring/building-construction-groups.json'));
   await page.locator('#mod-apply').click();
+  await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.review_guest_house;
   });
@@ -259,6 +261,7 @@ test('changing a stored group under the same mod name rejects the previous save'
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modpaste').fill(JSON.stringify(changed));
   await page.locator('#mod-apply').click();
+  await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady &&
       FBDATA.buildings.review_guest_house.constructionGroup.maxCounty === 2;

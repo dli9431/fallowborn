@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -13,6 +14,7 @@ async function boot(page,info,kind,ruler,custom) {
   await page.locator('#modfile').setInputFiles(custom ? {name:'season-example.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(custom))} :
     path.resolve(__dirname,'../fixtures/authoring/building-seasons-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function(id){return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[id];},'season_'+kind);
   if (!ruler) return beginBookmark(page,info,'season_'+kind,'season_'+kind+'_household');
   const full=page.locator('#btn-choose-beginning');

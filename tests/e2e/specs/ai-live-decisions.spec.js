@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,[
@@ -22,6 +23,7 @@ async function importPolicy(page,source) {
     path.resolve(__dirname,'../../../docs/examples',source) :
     {name:'ai-live.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(source))});
   await Promise.all([page.waitForEvent('load'),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await expect.poll(function () { return page.evaluate(function () { return FB.game.bootReady; }); }).toBe(true);
 }
 

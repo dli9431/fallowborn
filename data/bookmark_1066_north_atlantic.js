@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1066_north_atlantic.js","bookmarks":["1066"],"catalogs":["geographies","settlementSites","settlementLayouts","constituencyProfiles","religiousActivities","religiousPatronage"],"shared":[]}, function (FBDATA) {
 /* Optional spring 1066 island world. Representation and evidence limits:
    docs/research/north-atlantic-1066.md. Retained worlds remain independent. */
 (function () {
@@ -177,3 +178,4 @@
     });
   });
 })();
+});

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
@@ -237,6 +238,7 @@ test('an ordinary JSON import can narrow the institution window without changing
   await page.locator('#modfile').setInputFiles({name:'institution-window.json',
     mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))});
   await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.mods.count() === 1; });
   expect(await page.evaluate(function () {
     const date = FB.bookmark('1096');

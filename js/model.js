@@ -1114,9 +1114,13 @@ window.FB = window.FB || {};
       if (!Array.isArray(value[key])) return 'availability.' + key + ' must be a list.';
       const seen = {};
       for (const id of value[key]) {
+        // Setup publishes one world; its shared faiths may reference other
+        // sealed dates. The source adapter limits this to the live setup root.
         if (typeof id !== 'string' || !id || own(seen, id) ||
             key === 'eras' && !own(FBDATA.eras || {}, id) ||
-            key === 'bookmarkIds' && !own(FBDATA.bookmarks || {}, id) ||
+            key === 'bookmarkIds' && !own(FBDATA.bookmarks || {}, id) &&
+              !(FB.bookmarkSources && FB.bookmarkSources.setupKnowsBookmark &&
+                FB.bookmarkSources.setupKnowsBookmark(id)) ||
             key === 'consumers' && FAITH_CONSUMERS.indexOf(id) < 0)
           return 'availability.' + key + ' must name unique known ids.';
         seen[id] = true;

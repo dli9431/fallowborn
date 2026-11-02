@@ -4260,10 +4260,16 @@ window.FB = window.FB || {};
     show:function (s) { return !!FB.playerChurchInstitutions && FB.playerChurchInstitutions(s).length > 0; },
     run:function () { if (FB.ui && FB.ui.showLocalInstitutions) FB.ui.showLocalInstitutions('church'); } },
   { id:'religious_activities', opensChoices:true, noConsume:true,
-    show:function (s) { return FB.religiousActivityPeople(s).some(function (cid) { return FB.religiousActivityVisible(s, cid); }); },
+    show:function (s) {
+      // The player is always the first candidate. Avoid enumerating every
+      // possible household member when that first candidate already qualifies.
+      return FB.religiousActivityVisible(s,s.player.charId) || FB.religiousActivityPeople(s).some(function (cid) {
+        return cid !== s.player.charId && FB.religiousActivityVisible(s, cid);
+      });
+    },
     run:function () { FB.ui.showReligiousActivities(); } },
   { id:'religious_membership', opensChoices:true, noConsume:true,
-    show:function (s) { return FB.playerReligiousInstitutions(s).length > 0; },
+    show:function (s) { return FB.hasPlayerReligiousInstitution(s); },
     run:function () { FB.ui.showReligiousInstitutions(); } },
   { id:'church_council', opensChoices:true, noConsume:true, requiresAdult:true,
     show:function (s) { return FB.station.rulesRealm(s.player, s); },
@@ -12908,7 +12914,7 @@ window.FB = window.FB || {};
     for (const a of FB.instants) {
       if (state.player.travel && !a.availableWhileTraveling) continue;
       if (a.compatibilityAlias) continue;
-      const shown = !!a.show(state);
+      const shown = !!(FB.loadTiming ? FB.loadTiming.measure('Deed visibility: ' + a.id,a.show,a,[state]) : a.show(state));
       if (!shown) continue;
       if (deferEligibility) {
         out.push({ a:a, statusDeferred:true });

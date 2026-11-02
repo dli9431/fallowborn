@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -16,6 +17,7 @@ async function boot(page,info,kind,custom,revision) {
   await page.locator('#modfile').setInputFiles(custom ? {name:'pasture-ai.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(custom))} :
     path.resolve(__dirname,'../fixtures/authoring/seasonal-pasture-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
   const full=page.locator('#btn-choose-beginning');
   if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();

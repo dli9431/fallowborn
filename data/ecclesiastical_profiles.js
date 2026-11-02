@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/ecclesiastical_profiles.js","bookmarks":[],"catalogs":["governmentForms","ecclesiasticalProfiles"],"shared":["governmentForms","ecclesiasticalProfiles"]}, function (FBDATA) {
 /* Temporal constitutions, not doctrine or a second religious election. */
 (function () {
   'use strict';
@@ -36,3 +37,4 @@
   FBDATA.techImpactReviews.features.ecclesiastical_conversion = { mode:'none', rationale:'Explicit institutional adoption validates existing office, jurisdiction and property without creating a religious election.' };
   FBDATA.techImpactReviews.features.ecclesiastical_household_careers = { mode:'none', rationale:'Clerical, administrative, household and lay service develop personal Standing independently of spiritual appointment.' };
 })();
+});

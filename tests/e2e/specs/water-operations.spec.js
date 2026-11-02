@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
@@ -19,6 +20,7 @@ async function importExample(page,info,name,custom,ruler) {
     path.resolve(__dirname,'../fixtures/authoring/water-operations-' + name + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   const origin = name === 'river' ? 'river' : 'upland';
+  await prepareGameContent(page);
   await page.waitForFunction(function (id) { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[id]; },'resource_' + origin);
   if (!ruler) return beginBookmark(page,info,'resource_' + origin,'resource_' + origin + '_household');
   const full = page.locator('#btn-choose-beginning');

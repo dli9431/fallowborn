@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_campaigns_711.js","bookmarks":["711"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Review-candidate instances of the existing campaign story type.
    Registering these records attaches nothing to an accepted bookmark.
    A missing prerequisite resolves divergence rather than forcing history. */
@@ -81,3 +82,4 @@ FBDATA.storyFoundations = {
       diverted:{ key:'news.711.asturias.diverted', text:'📜 Northern control or the course of the Gothic conquest closes the Asturian foundation opportunity.' }
     } }
 };
+});

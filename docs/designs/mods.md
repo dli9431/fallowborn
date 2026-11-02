@@ -1,10 +1,18 @@
 # Mods
 
+Deferred installation
+
+The initial title reads stored mod names and display declarations without applying them. FB.mods.menuDeclarations supplies a preview only; it neither accepts data nor establishes a save fingerprint. When mods are active, the first campaign selection or opening the Mods view prepares the complete bundled baseline before applyStored runs. Unmodded campaigns review one date and call prepareUnmodded for shared AI-policy validation and currency configuration without capturing that baseline. This path requires an empty mod stack and preserves the empty standard signature or existing CrazyGames edition signature. Complete publication restores the untouched authoring data before applyStored captures the installer snapshot when Mods or authoring require it. Existing whole-candidate validation, failure diagnostics, ordering and exact mod signatures remain authoritative. Previewed choices are resolved again against installed content before play.
+
+Composition preparation reviews mandatory retained worlds through validateBookmarkWorlds so shared catalogue checks run once within that synchronous candidate batch. Complete revision validation uses the same short-lived scope. Per-world validators and complete start checks still run. No catalogue proof survives a later review, publication or import, including after an exception or an in-place data edit.
+
 AI decision policies
 
 aiDecisionPolicies is a typed, whole-record replacement catalogue. Ordinary detached preparation validates every effective policy, trait/aim reference and selection layer before live installation or storage. The catalogue participates in authored-root fingerprints when a mod supplies it; balance policy references use the existing scalar-layer order. Import validation never compiles against or publishes the live candidate, consumes RNG or changes a decision. Applying or reloading mods invalidates transient AI policy compilation. Removal and same-name replacement recompose from the bundled baseline through the existing stack validator. Exact fields, live consumers and pure report versus simulation-choice boundaries are documented in docs/MODDING.md and docs/designs/ai-decisions.md.
 
 Trusted composition preparation
+
+Complete composition reviews batch per-start requirement reports by revision so normalization, platform resolution and world-faith preparation happen once for that batch. Record-schema checks still run for every offered start. The final exhaustive bookmark gate supplies the world checks instead of repeating an earlier world-only pass over the same final candidate. Mandatory-world preparation and ordinary all-or-nothing imports keep their existing checks. Shared batch data is local to the call and cannot survive an in-place catalogue edit or a different candidate.
 
 FB.mods.prepareComposition is the internal detached bridge used by js/bookmark_composition.js. It prepares effective catalogues and story products with ordinary record validators, scopes world validation to the owning bookmark, and checks each owned start with the shared requirement and record-schema validators. Final preparation also runs exhaustive authoring checks over the owned/referenced starts and all supplied world revisions. It restores the live data and validation caches on every exit. Ordinary validate, apply and stored-stack paths keep their existing exhaustive whole-import semantics; optional-start withholding belongs only to the trusted composer. No new mod root, storage operation, active-mod signature or saved field is added. Complete envelopes and bootstrap restrictions are documented in docs/MODDING.md.
 
@@ -96,6 +104,8 @@ kinds, and indices. See the Settlements section of `docs/MODDING.md`.
 `{id, name, desc, data}` into `window.FBMODS` via a script tag after the data files; the
 Mods dialog toggles them, and enabled ids persist in localStorage (`fb_mods_bundled`) and
 apply ahead of pasted mods.
+
+Bundled mod tags share the runtime's ordered defer sequence after data and before the engine. Fetching may overlap, but registration still executes at its original dependency position before DOMContentLoaded. Inline shell code cannot depend on deferred data or engine globals.
 
 Localization catalogs describe the core English data, but are never allowed to mutate it.
 The source hash is calculated after mods are applied. Effective event sources are indexed

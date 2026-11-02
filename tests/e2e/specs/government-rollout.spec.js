@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
@@ -297,6 +298,7 @@ test('JSON import supplies a different public-service constitution with exact-pr
       if (stored.indexOf(payload) < 0) throw new Error('The government proof mod was not stored');
     },payload)
   ]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady &&
     !!FBDATA.governmentForms.river_service_rollout; });
   await page.evaluate(function () { FB.startProgression.noteTier(3); });

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_eastern_rulers_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Each beginning adopts its single seeded eastern incumbent and household. */
 window.FBDATA = window.FBDATA || {};
 
@@ -25,3 +26,4 @@ FBDATA.startScenarios_eastern_rulers_1096 = [
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_eastern_rulers_1096);
+});

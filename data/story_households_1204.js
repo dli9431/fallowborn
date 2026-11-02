@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_1204.js","bookmarks":["1204"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* An artisan household chooses its future under the city's actual rulers. */
 window.FBDATA = window.FBDATA || {};
 
@@ -151,3 +152,4 @@ FBDATA.householdTracks_1204 = {
     scenario.trackLocations[def.id] = ['constantinople'];
   });
 })();
+});

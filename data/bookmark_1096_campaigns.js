@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1096_campaigns.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Literal display declarations use the existing dated-campaign namespace. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.bookmarkContent = FBDATA.bookmarkContent || {};
@@ -11,3 +12,4 @@ FBDATA.bookmarkContent['1096'].campaigns = {
     religion:'catholic', target:{kingdomId:'syria'}, openingCall:{schema:1}
   }
 };
+});

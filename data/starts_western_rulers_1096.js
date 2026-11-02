@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_western_rulers_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Landed western rulers adopt their single existing court and authored kin. */
 window.FBDATA = window.FBDATA || {};
 
@@ -40,3 +41,4 @@ Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_western_
 FBDATA.bookmarks['1096'].startLocations.godfrey_1096 = ['verdun'];
 FBDATA.bookmarks['1096'].startLocations.raymond_1096 = ['toulouse'];
 FBDATA.bookmarks['1096'].startLocations.bohemond_1096 = ['taranto'];
+});

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_laskaris_1204.js","bookmarks":["1204"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.startScenarios_laskaris_1204 = [
@@ -12,3 +13,4 @@ FBDATA.startScenarios_laskaris_1204 = [
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_laskaris_1204);
+});

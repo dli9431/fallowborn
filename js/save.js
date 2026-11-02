@@ -1170,7 +1170,10 @@ window.FB = window.FB || {};
       reportSaveError(e);
       return;
     }
-    setTimeout(flushAutosave, 0);
+    setTimeout(function () {
+      if (FB.loadTiming) FB.loadTiming.measure('Write queued autosave',flushAutosave,window);
+      else flushAutosave();
+    }, 0);
   };
 
   /* Export/import - a life as portable text. localStorage is a hostage on

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_711_terrain.js","bookmarks":["711"],"catalogs":["geographies","settlementSites"],"shared":[]}, function (FBDATA) {
 /* Spring 711 habitation. Physical seeds are shared; these dated residents,
    rights and courts are independent of every other opening. Evidence and
    explicit scenery decisions: docs/research/711-inhabited-terrain.md. */
@@ -160,3 +161,4 @@ FBDATA.communalRevisions['711'] = {
     })
   });
 })();
+});

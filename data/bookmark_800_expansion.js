@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_800_expansion.js","bookmarks":["800"],"catalogs":["geographies","settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Winter 800 inhabited districts. Sources and deliberately uninhabited
    candidates: docs/research/800-inhabited-terrain.md. Coordinates bound a
    district, not a surveyed polity. Numerical shares are simulation weights. */
@@ -99,3 +100,4 @@ FBDATA.communalRevisions['800'] = {
       religion:'samaritan',culture:'syriac',profileId:'samaritan_lay_congregation'}
   ]
 };
+});

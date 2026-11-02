@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_568_ravenna.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Household decisions use ordinary craft work, private costs and travel. */
 window.FBDATA = window.FBDATA || {};
 
@@ -104,3 +105,4 @@ FBDATA.openingProfiles_568_ravenna = {
     unit.storyInstances = JSON.parse(JSON.stringify(declarations)); unit.storyAfter = positions;
   } catch (error) { unit.faults = ['data/story_households_568_ravenna.js: ' + error.message]; }
 })();
+});

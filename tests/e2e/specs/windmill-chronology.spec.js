@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -248,6 +249,7 @@ test('an ordinary JSON mill uses a different inclusive window, retains assets an
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/windmill-window.json'));
   await page.locator('#mod-apply').click();
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return FB.game.bootReady && !!FBDATA.buildings.windowed_windmill; });
   await prepareLord(page);
   const r = await page.evaluate(function (mod) {

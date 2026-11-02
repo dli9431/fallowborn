@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_frederick_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.startScenarios_frederick_1241 = [
@@ -17,3 +18,4 @@ Array.prototype.push.apply(FBDATA.startScenarios,FBDATA.startScenarios_frederick
 /* The retained baseline has no camp/family reconstruction. The date-owned
    revision loaded after the start catalogue enables this ruler there. */
 FBDATA.bookmarks['1241'].startLocations.frederick_1241 = [];
+});

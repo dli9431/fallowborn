@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_ruler_agendas_568.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Court reviews record priorities only; the living world owns every outcome. */
 window.FBDATA = window.FBDATA || {};
 
@@ -88,8 +89,7 @@ FBDATA.rulerAgendas_568 = {
     });
     var applicable = scenarios.filter(function (scenario) {
       if (draft.starts.some(function (unit) { return unit.definition.id === scenario.id; })) return true;
-      return (!scenario.bookmarkIds || scenario.bookmarkIds.indexOf('568') >= 0) &&
-        (!scenario.eras || scenario.eras.indexOf(b.era) >= 0);
+      return FB.bookmarkSources.matches(scenario,'568',b.era);
     }).map(function (scenario) { return scenario.id; });
     var previous = draft.previousStarts ? copy(draft.previousStarts) :
       source.starts ? copy(source.starts) : applicable.filter(function (id) { return ids.indexOf(id) < 0; });
@@ -116,3 +116,4 @@ FBDATA.rulerAgendas_568 = {
     b.revision = 'frankish_courts_v2';
   } catch (error) { draft.faults.push({source:'data/story_ruler_agendas_568.js',message:error.message}); }
 })();
+});

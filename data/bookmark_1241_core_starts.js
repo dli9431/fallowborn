@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1241_core_starts.js","bookmarks":["1241"],"catalogs":["settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* New offerings and rural slots belong only to this fresh world. */
 FBDATA.bookmarkRevisionContent_core_starts_1241 = {
   bookmarkId:'1241', revision:'core_starts_v2',
@@ -28,3 +29,4 @@ FBDATA.bookmarkRevisionContent_core_starts_1241 = {
     openingRevisions:copy(source.openingRevisions)};
   b.revision=d.revision;
 })();
+});

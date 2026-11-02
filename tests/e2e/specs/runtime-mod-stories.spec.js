@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -18,6 +19,7 @@ async function storeAndReload(page, mod, storyId) {
       if (FB.mods.store(JSON.stringify(input)) === false) throw new Error('Mod import was rejected');
     }, mod)
   ]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (id) {
     return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(id);
   }, storyId);
@@ -29,6 +31,7 @@ test('ordinary file import creates new stories and branching tracks, reloads and
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/harbor-contracts.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('harbor_court'); });
   const imported = await page.evaluate(function () { return {
     order:FB.stories.list().map(function (d) { return d.id; }),
@@ -59,6 +62,7 @@ test('ordinary file import creates new stories and branching tracks, reloads and
   expect(journey).toEqual({ pure:true, applied:true, repeated:false, resumed:true, replay:true, result:'declined', same:true });
   await page.evaluate(function () { FB.ui.showMods(); });
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-clear').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !FB.stories.get('harbor_court'); });
   expect(await page.evaluate(function () { return FB.stories.list().map(function (d) { return d.id; }); })).toEqual(base);
 });

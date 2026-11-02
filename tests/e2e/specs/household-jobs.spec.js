@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -15,6 +16,7 @@ async function importedStart(page, info, start) {
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/household-jobs.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('quay_work_example'); });
   await beginBookmark(page, info, '867', start || 'quay_work_example_start');
   await page.evaluate(function () { FB.state.date.day = 30; });

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -325,6 +326,7 @@ for (const prefix of ['harbor','dune']) {
     await page.evaluate(function () {FB.ui.showMods();});
     await page.locator('#modfile').setInputFiles(file);
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
     await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
     await beginBookmark(page,info,prefix+'_world',prefix+'_household');
     expect(await page.evaluate(function () {

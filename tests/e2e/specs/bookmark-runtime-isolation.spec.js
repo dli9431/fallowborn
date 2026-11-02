@@ -8,7 +8,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,['index.html','js/world.js','js/starts.js','js/mods.js','js/main.js',
   'js/model.js','js/stories.js','js/save.js','js/save_v4.js','js/crazygames.js',
-  'js/ui_misc.js','js/ui_modals.js','js/bookmark_setup.js','js/story_household.js',
+  'js/ui_misc.js','js/ui_modals.js','js/bookmark_setup.js','js/government_aristocracy.js','js/story_household.js',
   'data/starts.js','data/bookmarks.js','data/eras.js','data/government_rollout.js',
   'data/bookmark_867_expansion.js','data/bookmark_1066_inhabited.js']);
 
@@ -38,6 +38,38 @@ async function finishStart(page) {
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.evaluate(function () { FB.game.setPaused(true); });
 }
+
+test('resolved fresh and retained worlds preserve world-only validation through every wrapper',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function () {
+    const raw = FBDATA.bookmarks['867'], farmer = FBDATA.startScenarios.find(function (row) { return row.id === 'farmer'; });
+    const bad = Object.assign({},farmer,{id:'runtime_scope_missing_track',bookmarkIds:['867'],tracks:['runtime_unregistered_track']});
+    FBDATA.startScenarios.push(bad);
+    [raw].concat(Object.values(raw.revisions || {})).forEach(function (layer) {
+      if (Array.isArray(layer.starts)) layer.starts.push(bad.id);
+    });
+    const before = JSON.stringify(FBDATA), state = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
+    const worlds = [FB.bookmark('867','baseline'),FB.bookmark('867')];
+    const reports = worlds.map(function (world) {
+      return {revision:world.revision,world:FB.validateBookmarkWorld(world),
+        healthy:FB.startRequirementReport(farmer,world).valid,
+        bad:FB.startRuntimeReport(bad,world).available,
+        strict:FB.validateBookmark(world).join(' ').indexOf('runtime_unregistered_track') >= 0};
+    });
+    const broken = Object.assign({},worlds[1],{realms:worlds[1].realms.map(function (row,index) {
+      return index === 0 ? Object.assign({},row,{capital:'runtime_scope_unknown_capital'}) : row;
+    })});
+    let unknown = '';
+    try { FB.bookmark('867','runtime_unknown_revision'); } catch (error) { unknown = error.message; }
+    return {reports:reports,unknown:unknown,worldStillStrict:FB.validateBookmarkWorld(broken).length > 0,
+      pure:before === JSON.stringify(FBDATA) && state === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result.reports[0].revision).toBe('baseline');
+  expect(result.reports[1].revision).not.toBe('baseline');
+  result.reports.forEach(function (row) { expect(row).toMatchObject({world:[],healthy:true,bad:false,strict:true}); });
+  expect(result).toMatchObject({worldStillStrict:true,pure:true});
+  expect(result.unknown).toContain('runtime_unknown_revision');
+});
 
 for (const crazy of [false,true]) {
   test('dangling starts do not block healthy campaigns on ' + (crazy ? 'CrazyGames' : 'standard'),

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_crossing_711.js","bookmarks":["711"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.householdTracks_crossing_711 = {
@@ -159,3 +160,4 @@ FBDATA.householdTracks_crossing_711 = {
     route({ not:{ kind:'travelling' } },'independent'));
   Object.assign(FBDATA.storyInstances, FBDATA.householdTracks_crossing_711);
 })();
+});

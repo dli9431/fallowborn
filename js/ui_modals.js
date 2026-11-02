@@ -32645,6 +32645,9 @@ window.FB = window.FB || {};
   };
 
   UI.showChronicleLibrary = function () {
+    if (!FB.game.contentReady && !(FB.state && FB.game.campaignReady(FB.state.start.id))) {
+      FB.game.withContent(UI.showChronicleLibrary,'title'); return;
+    }
     const recent = FB.save.recentChronicle && FB.save.recentChronicle();
     const savedLives = {};
     const saveSlots = ['auto', 1, 2, 3];
@@ -32802,7 +32805,7 @@ window.FB = window.FB || {};
     for (let i = 1; i <= (FB.platform.isCrazyGames ? 0 : 3); i++) {
       const d = FB.save.read(i); // one parse per slot: late saves are large
       const meta = FB.save.metaOf(d);
-      const other = !saving && meta && FB.save.otherWorld(d);
+      const other = !saving && meta && FB.game.contentReady && FB.save.otherWorld(d);
       const description = other
         ? FB.T('{save} · 🧩 another world — its mods are not the ones active now',
           { save: meta })
@@ -33735,6 +33738,7 @@ window.FB = window.FB || {};
       UI.toast(FB.T('Custom mods are unavailable in this edition.'));
       return;
     }
+    if (!FB.game.contentReady) { FB.game.withContent(UI.showMods,FB.state ? 'game' : 'title'); return; }
     const bundled = FB.mods.bundled();
     const mods = FB.mods.list();
     let h = '';

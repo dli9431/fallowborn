@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -181,6 +182,7 @@ for (const sample of [
     await openGame(page,info); await page.evaluate(function () { FB.ui.showMods(); });
     await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+sample.file));
     await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
     await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
     await startCampaign(page,'867');
     const r = await seed(page,{year:sample.year,traditions:sample.traditions});

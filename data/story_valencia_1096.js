@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_valencia_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal reviews use the existing government, household and military owners. */
 window.FBDATA = window.FBDATA || {};
 
@@ -90,3 +91,4 @@ FBDATA.openingProfiles_valencia_1096 = {
     });
   });
 })();
+});

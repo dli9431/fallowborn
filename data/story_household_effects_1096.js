@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_household_effects_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Costless local reports read only the canonical undertaking's actual result. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.householdEffects_1096 = {
@@ -23,3 +24,4 @@ FBDATA.householdEffects_1096 = {
     ]
   }
 };
+});

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_rulers_800.js","bookmarks":["800"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Existing Carolingian courts, with residence distinct from public capitals. */
 window.FBDATA = window.FBDATA || {};
 
@@ -27,3 +28,4 @@ FBDATA.startScenarios_rulers_800 = [
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_rulers_800);
+});

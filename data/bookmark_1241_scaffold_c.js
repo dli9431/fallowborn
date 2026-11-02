@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1241_scaffold_c.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 1241 regional declarations with reviewed opening corrections.
    The retained 1204 inhabited_v2 county partition, resident mixtures and
    ordered site slots are simulation inputs.
@@ -403,3 +404,4 @@ FBDATA.bookmarkRegions1241.egypt = {
   },
   climates:{"siwa_oasis":"arid"}
 };
+});

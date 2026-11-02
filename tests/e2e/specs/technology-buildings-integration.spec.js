@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -52,6 +53,7 @@ async function importExample(page, info) {
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
     '../fixtures/authoring/technology-buildings-composition.json'));
   await Promise.all([page.waitForEvent('domcontentloaded'), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && !!FBDATA.bookmarks.composition_world;
   });
@@ -256,6 +258,7 @@ for (const revision of ['inherited','empty']) {
         s === FB.state && world === FB.world && rng === FB.getRngState() && uid === FB.getUidCounter();
     },r.save)).toBe(true);
     await page.evaluate(function () { FB.mods.clear(); });
+    await prepareGameContent(page);
     await page.waitForFunction(function () {
       return window.FB && FB.game && FB.game.bootReady && !FBDATA.bookmarks.composition_world;
     });

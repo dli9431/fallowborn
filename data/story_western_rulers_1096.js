@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_western_rulers_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal reviews record intentions. Ordinary government and travel own acts. */
 FBDATA.rulerAgendas_western_1096 = {
   godfrey_agenda_1096:{ id:'godfrey_agenda_1096', type:'ruler_agenda', subjectRealmId:'lower_lotharingia_1096',
@@ -178,3 +179,4 @@ FBDATA.storyExpeditions_western_1096 = {
     waitForFormation:{preparationId:'raymond_preparation_1096',commandId:'raymond_command_1096'}}
 };
 Object.assign(FBDATA.storyInstances,FBDATA.storyExpeditions_western_1096);
+});

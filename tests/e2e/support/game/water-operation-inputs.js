@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('./navigation');
 const path = require('path');
 const {openGame} = require('./navigation');
 const {beginBookmark} = require('./bookmark-acceptance');
@@ -9,6 +10,7 @@ async function bootInputs(page,info,kind,prefix,custom) {
     path.resolve(__dirname,'../../fixtures/authoring/'+prefix+'-'+kind+'.json'));
   await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
   const key=kind==='river'?'river':'upland';
+  await prepareGameContent(page);
   await page.waitForFunction(function(key){return window.FB&&FB.game&&FB.game.bootReady&&FBDATA.bookmarks['resource_'+key];},key);
   await beginBookmark(page,info,'resource_'+key,'resource_'+key+'_household');
 }

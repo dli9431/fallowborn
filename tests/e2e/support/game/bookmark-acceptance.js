@@ -1,6 +1,6 @@
 'use strict';
 const { expect } = require('../fixture');
-const { openGame } = require('./navigation');
+const { openGame, prepareGameContent } = require('./navigation');
 const { injectBrowserHarness } = require('./browser-harness');
 const { captureWorldSnapshot } = require('./parity');
 
@@ -12,6 +12,7 @@ async function beginBookmark(page, testInfo, id, scenarioId) {
 // For a caller that already waited for the ordinary Mods reload to finish.
 // Reuse that title instead of booting the whole catalogue a second time.
 async function beginBookmarkFromTitle(page, id, scenarioId) {
+  await prepareGameContent(page);
   const setup = await page.evaluate(function (input) {
     const id = input.id;
     const bm = FB.bookmark(id);

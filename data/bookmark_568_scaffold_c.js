@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_568_scaffold_c.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 568 first-pass regional world. Literal snapshots use the 493
    county partition with explicitly disclosed 476 corridor exceptions.
    Courts are redated; shares, borders and unnamed principals remain
@@ -604,3 +605,4 @@ FBDATA.bookmarkRegions568.central_asia_sindh = {
     "gurganj_district":"arid"
   }
 };
+});

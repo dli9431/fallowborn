@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_eastern_rulers_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal priorities observe ordinary government without imposing outcomes. */
 FBDATA.rulerAgendas_eastern_rulers_1096 = {
   alexios_agenda_1096:{ id:'alexios_agenda_1096', type:'ruler_agenda', subjectRealmId:'byzantium_1096',
@@ -140,3 +141,4 @@ FBDATA.openingProfiles_eastern_rulers_1096 = {
     });
   });
 })();
+});

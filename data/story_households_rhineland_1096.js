@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_rhineland_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Attributed historical context never creates a live attack or a refuge entry. */
 window.FBDATA = window.FBDATA || {};
 
@@ -75,3 +76,4 @@ FBDATA.openingProfiles_rhineland_1096 = {
   Object.assign(FBDATA.storyInstances,FBDATA.householdTracks_rhineland_1096,
     FBDATA.householdRefuges_rhineland_1096,FBDATA.openingProfiles_rhineland_1096);
 })();
+});

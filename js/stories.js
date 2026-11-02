@@ -92,10 +92,13 @@
     return null;
   }
   function declarationFaults(def, bm, attached, context) {
-    var lookup = context || FB.stories, entries = lookup.list();
+    var lookup = context || FB.stories;
     var errors = [];
     function bad(detail) { errors.push('story ' + String(def && def.id) + ': ' + detail); }
     if (!plain(def) || !own(types, def.type)) { bad('unknown story type'); return errors; }
+    // During compilation this story is not registered yet, so there is no
+    // position to compare and no reason to copy the growing registry.
+    var entries = Array.isArray(def.requires) && def.requires.length && lookup.get(def.id) ? lookup.list() : null;
     if ((def.firstYear !== undefined || def.lastYear !== undefined) && (!Number.isInteger(def.firstYear) || !Number.isInteger(def.lastYear) ||
         def.firstYear <= 0 || def.lastYear < def.firstYear)) bad('invalid date window');
     function date(d) { return plain(d) && Number.isInteger(d.year) && d.year > 0 &&
@@ -172,6 +175,7 @@
     table = JSON.parse(JSON.stringify(table));
     var ordered = [], index = Object.create(null), visiting = Object.create(null);
     var natives = Object.create(null), ids = Object.keys(table);
+    var anchors = {registrationBefore:Object.create(null), registrationAfter:Object.create(null)};
     if (ids.length > 2048) throw new Error('storyInstances exceeds the 2048 instance limit.');
     var context = {
       get:function (id) { return own(index, id) ? index[id] : null; },
@@ -191,6 +195,10 @@
       ['registrationBefore','registrationAfter'].forEach(function (key) {
         if (d[key] !== undefined && (typeof d[key] !== 'string' || d[key] === id || !own(table, d[key]) && !own(natives, d[key])))
           throw new Error(path + '.' + key + ': unknown or cyclic registration anchor.');
+        if (d[key] !== undefined) {
+          var group = anchors[key][d[key]] || (anchors[key][d[key]] = []);
+          group.push(id);
+        }
       });
       if (d.registrationBefore && d.registrationAfter) throw new Error(path + ': choose one registration anchor.');
       if (d.news !== undefined) {
@@ -219,7 +227,10 @@
       delete visiting[id];
     }
     function batch(anchor, placement, final) {
-      var pending = ids.filter(function (id) { return !own(index, id) && (final || table[id][placement] === anchor); });
+      // Preserve declaration order without rescanning every unrelated story
+      // twice for each dependency visited by the compiler.
+      var candidates = final ? ids : anchors[placement][anchor] || [];
+      var pending = candidates.filter(function (id) { return !own(index, id); });
       while (pending.length) {
         var ready = [];
         pending.forEach(function (id) {

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_pilgrim_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* A fictional Cologne household considering an ordinary personal pilgrimage. */
 window.FBDATA = window.FBDATA || {};
 
@@ -14,3 +15,4 @@ FBDATA.startScenarios_pilgrim_1096 = [
 ];
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_pilgrim_1096);
 FBDATA.bookmarks['1096'].startLocations.pilgrim_household_1096 = ['cologne'];
+});

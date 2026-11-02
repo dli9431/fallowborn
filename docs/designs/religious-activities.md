@@ -1,5 +1,9 @@
 Religious activities and patronage
 
+Deed visibility checks the protagonist first, matching the first candidate in the household participant list. A visible protagonist ends this read before enumerating household members. Otherwise the ordinary bounded household list is checked, preserving activities available only to kin and the existing participant eligibility rules.
+
+Activity visibility checks the declared period, opening, faith and actual location before consulting institution availability. It uses the canonical availability predicate without constructing detached membership, leadership, recognition or property snapshots. These are fresh reads, so closure, movement or an in-place declaration change applies immediately. Full activity quotes and transaction validation remain authoritative when the player opens or selects an activity.
+
 Ownership and declarations
 
 Campaign and mod authors supply accepted consumers in the optional religiousActivities and religiousPatronage catalogues. Shared strategies make no new historical destination, institution, legal rule or calendar claim. Travel remains player.travel, property remains abbeys.houses through the local institution's abbeyId, and outreach remains the existing population communityProject. Primary faith, offices, community membership, standing ranks and rite performance remain separate.

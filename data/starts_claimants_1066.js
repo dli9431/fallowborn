@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_claimants_1066.js","bookmarks":["1066"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.startScenarios_claimants_1066 = [
@@ -35,3 +36,4 @@ FBDATA.startScenarios_claimants_1066 = [
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_claimants_1066);
+});

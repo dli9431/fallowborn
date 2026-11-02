@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
@@ -22,6 +23,7 @@ async function imported(page, info, prefix) {
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
     '../fixtures/authoring/guarded-principal-' + prefix + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (p) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p + '_world'];
   }, prefix);
@@ -201,7 +203,10 @@ for (const prefix of ['harbor', 'dune']) {
       if (r.camps) r.camps.entries[0].food -= 7; else r.food -= 7;
       FB.stories.apply(s,id,'postpone',FB.stories.quote(s,id,'postpone'));
       const facts = function (s) {return JSON.stringify([s.start,s.player.gold,s.chars,s.stories,M.row(s,b.realmId),s.armies,s.bookmarkSetup]);};
-      const before = facts(s), saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
+      const before = facts(s), saved = JSON.parse(FB.save.serialize()), bytes = JSON.stringify(saved);
+      const compact = saved.state.chars[b.charId].id === undefined &&
+        FB.validateStartingPrincipal(saved.state) === undefined && FB.mobile.validate(saved.state) && bytes === JSON.stringify(saved);
+      FB.save.restore(saved);
       const guarded = before === facts(FB.state), stable = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
       const mutations = [function (s) { delete s.start.originalPrincipal; }, function (s) {s.start.originalPrincipal = null;},
         function (s) {s.start.originalPrincipal.version = 2;}, function (s) {s.start.originalPrincipal.extra = true;},
@@ -209,6 +214,8 @@ for (const prefix of ['harbor', 'dune']) {
         function (s) {s.start.originalPrincipal.charId = s.start.originalPrincipal.partyIds[1] || 'other';},
         function (s) {s.start.originalPrincipal.partyIds.pop();}, function (s) {s.start.originalPrincipal.guardId = 'other';},
         function (s) {s.start.originalPrincipal.location.countyId = 'other';}, function (s) {delete s.chars[b.charId];},
+        function (s) {s.chars[b.charId].id = 'other';}, function (s) {s.chars[b.charId].id = null;},
+        function (s) {s.bookmarkSetup.actors[b.actorId] = 'other';},
         function (s) {delete s.stories[id];}];
       const rejected = mutations.map(function (change) {
         const invalid = JSON.parse(JSON.stringify(saved)); change(invalid.state);
@@ -218,9 +225,9 @@ for (const prefix of ['harbor', 'dune']) {
       M.commit(FB.state,M.reviewGuard(FB.state,{realmId:b.realmId,action:'release',actor:{kind:'character',id:g.authority.characterId}}));
       FB.stories.apply(FB.state,id,'finish',FB.stories.quote(FB.state,id,'finish'));
       const after = facts(FB.state); FB.save.restore(JSON.parse(FB.save.serialize()));
-      return {guarded:guarded, rejected:rejected, released:after === facts(FB.state), phase:FB.state.stories[id].phase};
+      return {compact:compact, guarded:guarded, rejected:rejected, released:after === facts(FB.state), phase:FB.state.stories[id].phase};
     }, prefix);
-    expect(result).toEqual({guarded:true, rejected:Array(12).fill(true), released:true, phase:'done'});
+    expect(result).toEqual({compact:true, guarded:true, rejected:Array(15).fill(true), released:true, phase:'done'});
   });
 }
 

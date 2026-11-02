@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_476_outer.js","bookmarks":["476"],"catalogs":["cultures","settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Spring 476 outer regions: Britain, Scandinavia and the North Sea, Roman
    Syria and Sasanian Persia. Every added cell is literal content. Regional
    labels and generated rulers mark uncertain geography and incumbency. */
@@ -546,3 +547,4 @@ FBDATA.storyGovernmentSelections = {
   cashel_recognition_476:{ id:'cashel_recognition_476', type:'government_contest', realmId:'cashel_local_476',
     name:'Local succession at Cashel', desc:'Recognized kin seek local assent. A divided kingship preserves households and administration while public demands await recognition.' }
 };
+});

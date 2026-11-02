@@ -680,8 +680,8 @@
     return errors;
   };
   var validateBookmark = FB.validateBookmark;
-  FB.validateBookmark = function (bm, resolvedRevision, storyContext) {
-    return validateBookmark(bm, resolvedRevision, storyContext).concat(A.openingFaults(bm));
+  FB.validateBookmark = function (bm, resolvedRevision, storyContext, worldOnly) {
+    return validateBookmark(bm, resolvedRevision, storyContext, worldOnly).concat(A.openingFaults(bm));
   };
   A.validateState = function (s) {
     var fault = null, referenced = {};

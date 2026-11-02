@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_antioch_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal priorities leave every political transaction with its ordinary owner. */
 FBDATA.rulerAgendas_antioch_1096 = {
   antioch_agenda_1096:{ id:'antioch_agenda_1096', type:'ruler_agenda', subjectRealmId:'antioch_1096',
@@ -66,3 +67,4 @@ FBDATA.openingProfiles_antioch_1096 = {
     ] }
 };
 Object.assign(FBDATA.storyInstances, FBDATA.rulerAgendas_antioch_1096, FBDATA.openingProfiles_antioch_1096);
+});

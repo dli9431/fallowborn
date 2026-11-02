@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {openCrazyGame} = require('../support/game/crazygames-title');
@@ -7,7 +8,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {harbor:require('../fixtures/authoring/existing-person-harbor.json'),
   dune:require('../fixtures/authoring/existing-person-dune.json')};
 
-dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','js/mods.js','js/world.js',
+dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','js/bookmark_sources.js','js/mods.js','js/world.js',
   'js/starts.js','js/stories.js','js/story_household.js','js/story_campaign.js','js/model.js','js/messages.js',
   'js/governments.js','js/government_lineage.js','js/title_ids.js','js/religion.js','js/systems.js',
   'js/main.js','js/crazygames.js','js/lexicon.js','js/ui_misc.js','js/ui_modals.js',
@@ -29,6 +30,96 @@ function composition(prefix) {
       return {definition:definition,source:prefix + ':' + definition.id};
     })};
 }
+
+test('one rejected native start keeps healthy groups batched and preserves the individual review result',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function (input) {
+    const template = input.starts.find(function (unit) { return unit.definition.id === 'harbor_ordinary_household'; });
+    input.starts = Array.from({length:32},function (_,i) {
+      const unit = JSON.parse(JSON.stringify(template));
+      unit.definition.id = 'harbor_batch_' + i;
+      return unit;
+    });
+    input.starts[15].definition.gold = -1;
+    input.starts[16].requires = ['harbor_batch_15'];
+    input.starts[17].requires = ['harbor_batch_0'];
+    const before = JSON.stringify(FBDATA), authored = JSON.stringify(input);
+    const rng = FB.getRngState(), uid = FB.getUidCounter(), compile = FB.stories.compile;
+    let compilations = 0;
+    FB.stories.compile = function () { compilations++; return compile.apply(this,arguments); };
+    try {
+      const batched = FB.bookmarkCompositions.prepareSource(input,FBDATA);
+      const batchedCompilations = compilations;
+      const individual = FB.bookmarkCompositions.prepare(input);
+      return {batched:batched.report(),individual:individual.report(),
+        batchedPayload:batched.preview(),individualPayload:individual.preview(),
+        compilations:batchedCompilations,unchanged:before === JSON.stringify(FBDATA) &&
+          authored === JSON.stringify(input) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    } finally { FB.stories.compile = compile; }
+  },composition('harbor'));
+  expect(result.batched).toMatchObject({ready:true,worldFaults:[]});
+  expect(result.individual).toMatchObject({ready:true,worldFaults:[]});
+  expect(result.batched.starts.map(function (row) { return [row.id,row.ready]; }))
+    .toEqual(result.individual.starts.map(function (row) { return [row.id,row.ready]; }));
+  expect(result.batched.starts.filter(function (row) { return !row.ready; }).map(function (row) { return row.id; }))
+    .toEqual(['harbor_batch_15','harbor_batch_16']);
+  expect(result.batched.starts[16].faults).toContain('Required start unit was rejected.');
+  expect(result.batchedPayload).toEqual(result.individualPayload);
+  expect(result.compilations).toBeLessThan(20);
+  expect(result.unchanged).toBe(true);
+});
+
+test('reviewed native replacements require the exact unchanged foundation and an active batch',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function (input) {
+    function clone(value) { return JSON.parse(JSON.stringify(value)); }
+    const culture = input.catalogs.cultures.harbor_folk;
+    FBDATA.cultures.harbor_folk = Object.assign({},clone(culture),{name:'Earlier foundation'});
+    const siteId = 'reviewed_foundation_site';
+    const site = clone(FBDATA.settlementSites.santiago_476);
+    FBDATA.settlementSites[siteId] = clone(site);
+    input.catalogs.settlementSites = {};
+    input.catalogs.settlementSites[siteId] = Object.assign({},site,{x:site.x + 0.01});
+    const base = Object.assign({},FBDATA,{cultures:Object.assign({},FBDATA.cultures),
+      settlementSites:Object.assign({},FBDATA.settlementSites)});
+    delete base.cultures.harbor_folk;
+    delete base.settlementSites[siteId];
+    const ticket = FB.bookmarkCompositions.reviewSource(input,base), reviewed = ticket.report();
+    const outside = ticket.publish(), isPublishing = FB.bookmarkSources.isPublishing;
+    const rng = FB.getRngState(), uid = FB.getUidCounter();
+    const stale = [];
+    FB.bookmarkSources.isPublishing = function () { return true; };
+    try {
+      [[FBDATA.cultures.harbor_folk,'name','Intervening change'],[FBDATA.settlementSites[siteId],'x',site.x + 1]].forEach(function (probe) {
+        const previous = probe[0][probe[1]];
+        probe[0][probe[1]] = probe[2];
+        const root = FBDATA, before = JSON.stringify(root), registry = FB.stories.list();
+        const rejected = ticket.publish();
+        stale.push({report:rejected,unchanged:root === FBDATA && before === JSON.stringify(FBDATA) &&
+          registry.every(function (row,i) { return row === FB.stories.list()[i]; })});
+        probe[0][probe[1]] = previous;
+      });
+      const accepted = ticket.publish();
+      return {reviewed:reviewed,outside:outside,stale:stale,accepted:accepted,
+        culture:FBDATA.cultures.harbor_folk,site:FBDATA.settlementSites[siteId],
+        expectedCulture:culture,expectedSite:input.catalogs.settlementSites[siteId],
+        faults:FB.validateBookmark(FB.bookmark(input.bookmark.id)),pure:rng === FB.getRngState() && uid === FB.getUidCounter()};
+    } finally { FB.bookmarkSources.isPublishing = isPublishing; }
+  },composition('harbor'));
+  expect(result.reviewed.ready).toBe(true);
+  expect(result.outside.published).toBe(false);
+  expect(result.outside.worldFaults.join(' ')).toContain('active boot batch');
+  result.stale.forEach(function (row) {
+    expect(row.unchanged).toBe(true);
+    expect(row.report.published).toBe(false);
+    expect(row.report.worldFaults.join(' ')).toContain('Conflicting composition declaration');
+  });
+  expect(result.accepted).toMatchObject({ready:true,published:true,worldFaults:[]});
+  expect(result.culture).toEqual(result.expectedCulture);
+  expect(result.site).toEqual(result.expectedSite);
+  expect(result.faults).toEqual([]);
+  expect(result.pure).toBe(true);
+});
 
 for (const crazy of [false,true]) {
   test('independent detached compositions publish canonical catalogues on ' + (crazy ? 'CrazyGames' : 'standard'),
@@ -379,6 +470,7 @@ for (const prefix of ['harbor','dune']) {
     await page.locator('#modfile').setInputFiles({name:prefix + '-composition.json',mimeType:'application/json',
       buffer:Buffer.from(JSON.stringify(prepared.payload))});
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
     await page.waitForFunction(function (prefix) {
       return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix + '_world'];
     },prefix);

@@ -87,6 +87,8 @@ quality roll, and save format are unchanged.
 health protection. Battle, gold, prestige, and piety effects count only when worn by the
 current head. Unequipped wealth is mechanically inert. Base clothing shown by the paper
 doll is rank/profession/culture dress and never occupies an armory slot.
+Household membership establishes a spouse, retainer, inherited-family or descendant link before consulting political authority. Unrelated world characters therefore avoid authority scans. Every qualifying non-player link still excludes independent lords and rulers, and the existing death, exile and marriage rules remain authoritative.
+
 The annual mortality sweep resolves health effects only for character ids that actually
 have a loadout. Its household-residency checks reuse the sweep's reverse-family-link
 snapshot, including reverse-only spouse records, instead of rescanning every character for

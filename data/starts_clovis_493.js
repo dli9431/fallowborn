@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_clovis_493.js","bookmarks":["493"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.startScenarios_clovis_493 = [
@@ -13,3 +14,4 @@ FBDATA.startScenarios_clovis_493 = [
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_clovis_493);
+});

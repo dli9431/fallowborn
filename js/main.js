@@ -8,6 +8,7 @@ window.FB = window.FB || {};
   FB.game = G;
   FB.state = null;
   G.bootReady = false;
+  G.contentReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
 FB.VERSION = '1.194.7';
@@ -2370,6 +2371,398 @@ FB.CHANGELOG = [
   }
 
   /* ================= boot ================= */
+  // Local diagnostics only. The URL flag includes navigation in the first
+  // report; console enablement measures subsequent actions in this page.
+  const loadTiming = G.loadTiming = FB.loadTiming = (function () {
+    var enabled = localTimingAllowed() && (window.FB_LOAD_TIMING === true || /(?:^|[?&])loadTiming=1(?:&|$)/.test(window.location.search));
+    var active = null, painting = null, history = [], serial = 0;
+    function now() { return window.performance.now(); }
+    function copy(value) { return JSON.parse(JSON.stringify(value)); }
+    function measure(label, work, receiver, args) {
+      var session = active || painting;
+      if (!session) return work.apply(receiver,args || []);
+      var entry = {started:now(),children:0};
+      session.stack.push(entry);
+      try { return work.apply(receiver,args || []); }
+      finally {
+        var elapsed = now() - entry.started;
+        session.stack.pop();
+        if (session.stack.length) session.stack[session.stack.length - 1].children += elapsed;
+        else session.workMs += elapsed;
+        var row = session.rows[label] || (session.rows[label] = {label:label,calls:0,totalMs:0,selfMs:0,maxMs:0});
+        row.calls++; row.totalMs += elapsed; row.selfMs += Math.max(0,elapsed - entry.children);
+        row.maxMs = Math.max(row.maxMs,elapsed);
+      }
+    }
+    function wrap(object, key, label, completes, ticket) {
+      if (!object || typeof object[key] !== 'function') return;
+      var original = object[key], session = active;
+      function wrapped() {
+        if (active !== session) return original.apply(this,arguments);
+        var name = typeof label === 'function' ? label(arguments) : label, value, failure;
+        try {
+          value = measure(name,original,this,arguments);
+          if (ticket && value && typeof value.publish === 'function') wrap(value,'publish','Publish ' + name);
+          return value;
+        } catch (error) { failure = error; throw error; }
+        finally {
+          if (completes) finish(failure ? 'error' : value === false ? 'rejected' : 'ready',failure);
+        }
+      }
+      object[key] = wrapped;
+      session.restore.push(function () { if (object[key] === wrapped) object[key] = original; });
+    }
+    function install() {
+      function source(prefix) { return function (args) { return prefix + (args[0] && args[0].bookmark && args[0].bookmark.id || 'shared'); }; }
+      wrap(FB.bookmarkCompositions,'reviewSource',source('Review source '),false,true);
+      wrap(FB.bookmarkCompositions,'prepareSource',source('Prepare source '),false,true);
+      wrap(FB.bookmarkSources,'prepareSetup','Prepare selected bookmark');
+      [
+        [FB.mods,'prepareComposition','Composition validation'],[FB.mods,'applyStored','Mods and baseline snapshot'],
+        [FB.mods,'sig','Mod signature'],[FB.mods,'prepareUnmodded','Configure unmodded campaign'],[FB.stories,'compile','Compile story catalogue'],
+        [FB.stories,'load','Load stories'],[FB.stories,'seal','Seal stories'],[FB.stories,'start','Initialize campaign stories'],
+        [FB,'validateBookmarkWorld','Validate world'],[FB,'validateBookmark','Validate bookmark and revisions'],
+        [FB,'startRequirementReports','Batched start requirements'],[FB,'startRuntimeReport','Start eligibility'],
+        [FB.mods,'startDefinitionFaults','Start schema'],[FB.titleIds,'normalizeMod','Normalize mod titles'],
+        [FB.titleIds,'normalizeBookmark','Normalize world titles'],[FB,'validateTechnologyData','Validate technologies'],
+        [FB,'configureReligions','Configure faiths'],[FB,'configureCultures','Configure cultures'],
+        [FB,'finalizeLocale','Finalize locale'],[FB,'indexEventMessages','Index event messages'],
+        [FB,'initPolitics','Initialize politics'],[FB,'initializeOpeningInfrastructure','Initialize opening infrastructure'],
+        [FB,'ensurePopulationState','Initialize population'],[FB,'ensureMarket','Initialize markets'],
+        [FB,'treasuryInitialize','Initialize treasuries'],[FB,'mobileInitialize','Initialize mobile realms'],
+        [FB,'ensureSettlementLordships','Initialize settlement lordships'],[FB,'ensureLocalInstitutions','Initialize local institutions'],
+        [FB.production,'initialize','Initialize production'],[FB.ui,'refresh','Refresh interface'],
+        [FB.ui,'showGame','Show game interface'],[FB.ui,'wire','Wire interface'],[FB.map,'init','Initialize map canvas'],
+        [FB.map,'fitView','Fit map view'],[FB.map,'centerOn','Center map view'],
+        [FB.save,'autosave','Request autosave'],[FB.save,'restore','Restore saved state'],[FB.save.v4,'migrate','Save preflight']
+      ].forEach(function (row) { wrap(row[0],row[1],row[2]); });
+      wrap(G,'start','Create campaign',true);
+      wrap(G,'startObserve','Create observer world',true);
+    }
+    function initialScriptResources() {
+      var scripts = Object.create(null), count = 0;
+      Array.prototype.forEach.call(document.scripts,function (script) {
+        if (!script.src) return;
+        scripts[script.src] = script.getAttribute('src').split(/[?#]/)[0]; count++;
+      });
+      var resources = window.performance.getEntriesByType ? window.performance.getEntriesByType('resource') : [];
+      var rows = resources.filter(function (row) { return scripts[row.name]; }).map(function (row) {
+        return {path:scripts[row.name],durationMs:row.duration,startMs:row.startTime,responseEndMs:row.responseEnd};
+      });
+      return {scriptCount:count,resourceCount:rows.length,
+        latestResponseEndMs:rows.reduce(function (last,row) { return Math.max(last,row.responseEndMs); },0),
+        slowestResources:rows.sort(function (a,b) { return b.durationMs - a.durationMs; }).slice(0,10)};
+    }
+    function begin(kind, details, navigation) {
+      if (!enabled || !localTimingAllowed() || active) return false;
+      var started = now();
+      var bookmarkId = details && details.bookmarkId || FB.state && FB.state.start.id || FB.activeBookmarkId;
+      active = {id:++serial,kind:kind,details:Object.assign({contentReadyAtStart:!!G.contentReady || !!(G.campaignReady && G.campaignReady(bookmarkId)),
+        allCataloguesReadyAtStart:!!G.contentReady},details),started:navigation ? 0 : started,
+        rows:Object.create(null),stack:[],workMs:0,phases:[],restore:[]};
+      if (navigation) {
+        active.phases.push({label:'Navigation and initial scripts',started:0,ended:started});
+        var startup = FB.bookmarkSources && FB.bookmarkSources.takeStartupTiming && FB.bookmarkSources.takeStartupTiming();
+        if (startup) { active.rows = startup.rows; active.workMs = startup.workMs; }
+        // Resource durations include fetch/queue/cache time, not script CPU.
+        // Concurrent downloads overlap; do not add their durations together.
+        active.initialScripts = initialScriptResources();
+      }
+      install();
+      function failed(event) { finish('error',event.error || new Error(event.message || 'Load failed.')); }
+      window.addEventListener('error',failed);
+      active.restore.push(function () { window.removeEventListener('error',failed); });
+      return true;
+    }
+    function phase(label) {
+      if (!active) return null;
+      var entry = {label:label,started:now(),ended:null};
+      active.phases.push(entry);
+      return entry;
+    }
+    function endPhase(entry) { if (entry && entry.ended === null) entry.ended = now(); }
+    function finish(status, error) {
+      if (!active) return;
+      var session = active, ready = now(); active = null;
+      session.restore.reverse().forEach(function (restore) { restore(); });
+      // Queued drawing and autosave work runs after constructor readiness.
+      // Keep its explicit hooks separate from preparation and restore all
+      // temporary wrappers now, as before.
+      var paint = {rows:Object.create(null),stack:[],workMs:0};
+      if (status === 'ready') painting = paint;
+      function rows(bucket) {
+        return Object.keys(bucket.rows).map(function (key) { return bucket.rows[key]; })
+          .sort(function (a,b) { return b.selfMs - a.selfMs; });
+      }
+      function publish() {
+        var ended = now(), readyMs = ready - session.started;
+        if (painting === paint) painting = null;
+        var report = {id:session.id,kind:session.kind,details:session.details,status:status,
+          elapsedMs:ended - session.started,readyMs:readyMs,paintWaitMs:ended - ready,
+          measuredWorkMs:session.workMs,unattributedMs:Math.max(0,readyMs - session.workMs),
+          operations:rows(session),paintOperations:rows(paint),measuredPaintWorkMs:paint.workMs,
+          unattributedPaintMs:Math.max(0,ended - ready - paint.workMs),
+          phases:session.phases.map(function (row) { return {label:row.label,elapsedMs:(row.ended === null ? ready : row.ended) - row.started,incomplete:row.ended === null}; })};
+        if (session.initialScripts) report.initialScripts = session.initialScripts;
+        if (error) report.error = String(error.message || error);
+        history.push(report);
+        history.sort(function (a,b) { return a.id - b.id; });
+        if (history.length > 20) history.shift();
+        try {
+          console.groupCollapsed('[Fallowborn load] ' + report.kind + ': ' + Math.round(report.elapsedMs) + ' ms (' + status + ')');
+          console.log(copy(report));
+          console.table(report.operations);
+          if (report.initialScripts) console.table(report.initialScripts.slowestResources);
+          if (report.paintOperations.length) console.table(report.paintOperations);
+          console.table(report.phases);
+          console.groupEnd();
+        } catch (ignored) { /* Diagnostics must never affect loading. */ }
+      }
+      if (status === 'ready') requestAnimationFrame(function () { setTimeout(publish,0); });
+      else publish();
+    }
+    return {begin:begin,finish:finish,measure:measure,phase:phase,endPhase:endPhase,
+      isEnabled:function () { return enabled && localTimingAllowed(); },
+      enable:function (value) { if (active) return false; enabled = value === true && localTimingAllowed(); return enabled; },
+      reports:function () { return copy(history); },
+      current:function () { return active ? {kind:active.kind,details:copy(active.details),elapsedMs:now() - active.started} : null; }};
+  })();
+  var contentPreparing = false, contentError = null, contentWaiters = [], contentLocaleLoaded = false;
+  var campaignContentId = null, campaignContentData = null, campaignPreparing = false;
+  G.campaignReady = function (id) {
+    return G.contentReady || !!(id && campaignContentId === id && campaignContentData === FBDATA &&
+      FB.bookmarkSources.setupId() === id && !FB.mods.count());
+  };
+  function mapViewCheckpoint() {
+    return {zoom:FB.map.zoom,viewX:FB.map.viewX,viewY:FB.map.viewY,selected:FB.map.selected,playerProv:FB.map.playerProv};
+  }
+  function restoreCampaignView(view) {
+    Object.assign(FB.map,view);
+    FB.ui.mapDirty(); FB.ui.refresh(); FB.map.request();
+  }
+  function contentCheckpoint() {
+    const data = FBDATA, state = FB.state, world = FB.world, bookmark = FB.activeBookmark;
+    const geography = FB.activeGeography, geographyId = FB.activeGeographyId, era = FB.activeEra;
+    const bookmarkId = FB.activeBookmarkId, diagnostics = FB.activeBookmarkDiagnostics;
+    const restoreSources = FB.bookmarkSources.checkpoint(), english = Object.assign({},FB.englishMessages());
+    const ready = G.contentReady, selected = campaignContentId, selectedData = campaignContentData;
+    const paused = G.paused, observing = G.observe, rng = FB.getRngState(), uid = FB.getUidCounter();
+    const mapView = mapViewCheckpoint();
+    return function () {
+      FB.balanceLayers.activate(null,null);
+      window.FBDATA = data; restoreSources();
+      FB.activeBookmark = bookmark; FB.activeBookmarkId = bookmarkId; FB.activeEra = era;
+      FB.activeGeography = geography; FB.activeGeographyId = geographyId;
+      FB.activeBookmarkDiagnostics = diagnostics; FB.world = world;
+      G.SCENARIOS = data.startScenarios;
+      FB.invalidateCultureData(); FB.invalidateReligionData(); FB.lexicon.reset(); FB.governments.invalidate();
+      FB.stories.publish(FB.stories.compile(data.storyInstances || {}),[]);
+      const messages = FB.englishMessages();
+      Object.keys(messages).forEach(function (key) { if (!Object.prototype.hasOwnProperty.call(english,key)) delete messages[key]; });
+      Object.assign(messages,english);
+      FB.balanceLayers.activate(era,bookmark);
+      if (bookmark) {
+        if (FB.compileEventContent) FB.compileEventContent(era);
+        FB.configureReligions(); FB.configureCultures();
+        if (FB.indexEventMessages) FB.indexEventMessages();
+      }
+      if (FB.resetWorldDataCaches) FB.resetWorldDataCaches();
+      if (FB.invalidateRealmCache) FB.invalidateRealmCache();
+      if (geography) FB.initProjection(geography.gridWidth,geography.bounds);
+      if (world && FB.map && FB.map.useWorld) FB.map.useWorld();
+      FB.state = state; G.paused = paused; G.contentReady = ready;
+      G.observe = observing; document.body.classList.toggle('observing',!!observing);
+      campaignContentId = selected; campaignContentData = selectedData;
+      FB.setRngState(rng); FB.setUidCounter(uid);
+      if (state) restoreCampaignView(mapView);
+    };
+  }
+  function preparationProgress(fraction, message) {
+    $('loadbar').style.width = Math.round(fraction * 100) + '%';
+    // This is dynamic status now; locale finalization must not replace it
+    // with the loading screen's static initial message.
+    $('loadmsg').removeAttribute('data-i18n');
+    if (message) $('loadmsg').textContent = message;
+  }
+  function sourcePreparationMessage(status) {
+    if (!status) return FB.T('Loading bookmarks…');
+    if (status.stage === 'review') return FB.T('Checking bookmark {bookmark}…', {bookmark:status.bookmarkId});
+    if (status.stage === 'publish') return FB.T('Loading bookmark {bookmark}…', {bookmark:status.bookmarkId});
+    if (status.stage === 'shared-review') return FB.T('Checking shared content…');
+    if (status.stage === 'shared-publish') return FB.T('Loading shared content…');
+    if (status.stage === 'finalize' || status.stage === 'complete') return FB.T('Finishing bookmark setup…');
+    return FB.T('Preparing bookmarks…');
+  }
+  function afterPreparationPaint(work) {
+    requestAnimationFrame(function () { setTimeout(work,0); });
+  }
+  function withCampaignLoading(work, fallbackScreen) {
+    FB.ui.showScreen('loading');
+    preparationProgress(0,FB.T('Creating campaign…'));
+    afterPreparationPaint(function () {
+      try { work(); }
+      catch (error) { loadTiming.finish('error',error); throw error; }
+      finally {
+        // A rejected constructor may leave its caller's screen in place.
+        // Keep the loading screen from trapping that player.
+        if (!$('loading').classList.contains('hidden')) FB.ui.showScreen(fallbackScreen);
+      }
+    });
+  }
+  function titlePreparationMessage(message) {
+    $('title-boot-status').removeAttribute('data-i18n');
+    $('title-boot-status').textContent = message;
+  }
+  function preparationSteps(steps, from, to, done) {
+    var index = 0;
+    function next() {
+      preparationProgress(from + (to - from) * index / steps.length,index < steps.length ? steps[index].message : null);
+      if (index === steps.length) { done(null); return; }
+      afterPreparationPaint(function () {
+        try { steps[index++].work(); }
+        catch (error) { done(error); return; }
+        next();
+      });
+    }
+    next();
+  }
+  G.prepareContent = function (done) {
+    if (G.contentReady || contentError) { done(contentError); return; }
+    if (campaignPreparing) { done(new Error(FB.T('Content preparation is already in progress.'))); return; }
+    contentWaiters.push(done);
+    if (contentPreparing) return;
+    contentPreparing = true;
+    const priorState = FB.state, priorPaused = G.paused;
+    const priorMapView = priorState ? mapViewCheckpoint() : null;
+    const rollback = priorState ? contentCheckpoint() : null;
+    if (priorState) { FB.state = null; G.paused = true; }
+    const contentPhase = loadTiming.phase('Complete content preparation');
+    function finish(error) {
+      if (!error && priorState && !FB.state) {
+        FB.activateBookmark(priorState.start.id,function () {},function (activationError) {
+          if (activationError) { finish(activationError); return; }
+          FB.state = priorState; G.paused = priorPaused;
+          restoreCampaignView(priorMapView);
+          finish(null);
+        },{revision:priorState.start.revision || 'baseline',geography:priorState.start.geography});
+        return;
+      }
+      if (error && rollback) rollback();
+      loadTiming.endPhase(contentPhase);
+      contentError = error;
+      G.contentReady = !error;
+      if (!error) { campaignContentId = null; campaignContentData = null; }
+      contentPreparing = false;
+      var callbacks = contentWaiters; contentWaiters = [];
+      callbacks.forEach(function (callback) { callback(contentError); });
+    }
+    preparationProgress(0,FB.T('Preparing bookmarks…'));
+    afterPreparationPaint(function () {
+      try {
+        const sourcesPhase = loadTiming.phase('Publish all source catalogues');
+        FB.bookmarkCompositions.publishPending(function (fraction,status) {
+          preparationProgress(fraction * 0.8,sourcePreparationMessage(status));
+        },function (error) {
+          loadTiming.endPhase(sourcesPhase);
+          if (error) { finish(error); return; }
+          preparationSteps([
+            {message:FB.T('Loading stories…'),work:function () { FB.stories.load(); }},
+            {message:FB.T('Applying mods…'),work:function () { FB.mods.applyStored(); }},
+            {message:FB.T('Preparing stories…'),work:function () { FB.stories.seal(); }},
+            {message:FB.T('Preparing faiths and cultures…'),work:function () {
+              if (FB.configureReligions) FB.configureReligions();
+              if (FB.configureCultures) FB.configureCultures();
+              if (FB.indexEventMessages) FB.indexEventMessages();
+            }},
+            {message:FB.T('Preparing interface…'),work:function () { FB.finalizeLocale(contentLocaleLoaded); }}
+          ],0.8,1,finish);
+        });
+      } catch (error) { finish(error); }
+    });
+  };
+  G.withContent = function (next, screen) {
+    if (G.contentReady) { next(); return; }
+    FB.ui.closeModal();
+    FB.ui.showScreen('loading');
+    preparationProgress(0,FB.T('Preparing bookmarks…'));
+    G.prepareContent(function (error) {
+      if (error) {
+        FB.ui.showScreen(FB.state ? 'game' : 'title');
+        FB.ui.openModal('Bookmark unavailable', '<div class="gm-body-text"><p>' + FB.esc(error.message) + '</p></div>');
+        loadTiming.finish('error',error);
+        return;
+      }
+      if (screen !== undefined) FB.ui.showScreen(screen);
+      next();
+    });
+  };
+  function prepareCampaignContent(id, done) {
+    if (G.campaignReady(id)) { done(null,null); return; }
+    if (FB.mods.count() || FB.bookmarkSources.hasPublished()) { G.prepareContent(done); return; }
+    if (campaignPreparing || contentPreparing) { done(new Error(FB.T('Content preparation is already in progress.'))); return; }
+    const rollback = contentCheckpoint(), phase = loadTiming.phase('Prepare campaign content ' + id);
+    campaignPreparing = true;
+    // Keep a running life intact in the rollback closure while a different
+    // saved date is prepared. No simulation or autosave observes partial data.
+    FB.state = null; G.paused = true;
+    preparationSteps([
+      {message:FB.T('Checking bookmark {bookmark}…',{bookmark:id}),work:function () { FB.bookmarkSources.prepareSetup(id); }},
+      {message:FB.T('Loading stories…'),work:function () { FB.stories.load(); }},
+      {message:FB.T('Preparing shared content…'),work:function () { FB.mods.prepareUnmodded(); }},
+      {message:FB.T('Preparing stories…'),work:function () { FB.stories.seal(); }},
+      {message:FB.T('Preparing faiths and cultures…'),work:function () {
+        FB.configureReligions(); FB.configureCultures(); FB.indexEventMessages();
+      }},
+      {message:FB.T('Preparing interface…'),work:function () { FB.finalizeLocale(contentLocaleLoaded); }}
+    ],0,1,function (error) {
+      campaignPreparing = false; loadTiming.endPhase(phase);
+      if (error) rollback();
+      else { campaignContentId = id; campaignContentData = FBDATA; }
+      done(error,rollback);
+    });
+  }
+  function withCampaignContent(id, next, failed) {
+    FB.ui.closeModal(); FB.ui.showScreen('loading');
+    prepareCampaignContent(id,function (error,rollback) {
+      if (error) {
+        if (failed) failed(error);
+        FB.ui.showScreen(FB.state ? 'game' : 'title');
+        FB.ui.openModal('Bookmark unavailable','<div class="gm-body-text"><p>' + FB.esc(error.message) + '</p></div>');
+        loadTiming.finish('error',error);
+        return;
+      }
+      next(rollback);
+    });
+  }
+  function withBookmarkSetup(id, next) {
+    const sources = FB.bookmarkSources;
+    if (G.contentReady || sources && sources.setupId && sources.setupId() === id) { next(); return; }
+    // Imports may replace shared catalogues and several worlds at once. Their
+    // whole-stack gate still precedes setup; bundled dates can review locally.
+    if (!sources || !sources.prepareSetup || sources.hasPublished() || FB.mods.count()) { G.withContent(next); return; }
+    FB.ui.closeModal();
+    FB.ui.showScreen('loading');
+    preparationSteps([
+      {message:FB.T('Checking bookmark {bookmark}…', {bookmark:id}),work:function () { sources.prepareSetup(id); }},
+      {message:FB.T('Preparing faiths and cultures…'),work:function () { FB.configureReligions(); FB.configureCultures(); }},
+      {message:FB.T('Preparing interface…'),work:function () { FB.finalizeLocale(contentLocaleLoaded); }}
+    ],0,1,function (error) {
+      if (error) {
+        showBookmarks(true);
+        FB.ui.openModal('Bookmark unavailable', '<div class="gm-body-text"><p>' + FB.esc(error.message) + '</p></div>');
+        loadTiming.finish('error',error);
+        return;
+      }
+      next();
+    });
+  }
+  function prepareCampaignStart(next, screen) {
+    const id = G.pending && G.pending.bookmarkId || FB.activeBookmarkId;
+    withCampaignContent(id,function () {
+      if (FB.activeBookmarkId === id && FB.world) { FB.ui.showScreen(screen); next(); return; }
+      activatePendingBookmark(id,function () { FB.ui.showScreen(screen); next(); });
+    });
+  }
   function loadDeferredUi(done) {
     if (FB.ui && FB.ui.showMenu) { done(null); return; }
     const source = $('ui-modals-source');
@@ -2438,57 +2831,58 @@ FB.CHANGELOG = [
       button.disabled = false;
     });
     G.bootReady = true;
-    /* CrazyGames: build Play as Osric's world after the title paints, so the
-       click only sets up the campaign. The title itself stays world-free. */
-    if (FB.platform.isCrazyGames) {
-      const osric = (FBDATA.quickStarts || []).filter(function (candidate) {
-        return candidate.distributionDefault === true;
-      })[0];
-      if (osric) requestAnimationFrame(function () {
-        setTimeout(function () { FB.prepareBookmark(osric.bookmarkId); }, 0);
-      });
-    }
+    loadTiming.finish('ready');
     if (FB.music && FB.music.offerBootChoice(finishTitleBoot)) return;
     finishTitleBoot();
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    loadTiming.begin('main-menu',{},true);
     // the one legitimate Math.random(): seed the game RNG once at boot, so
     // pre-game draws (random province, name suggestions) differ per visit;
     // loading a save overwrites the state from the file
     FB.seedRng((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
     if (FB.music) FB.music.init();
+    titlePreparationMessage(FB.T('Loading language…'));
+    const localePhase = loadTiming.phase('Load selected locale');
     FB.loadSelectedLocale(function (loaded) {
-      /* Mods establish the effective English source before hashes are checked.
-         A changed mod string therefore falls back to that exact current English. */
+      loadTiming.endPhase(localePhase);
+      // The title needs chrome only. Re-finalize after deferred mods establish
+      // their effective English source and the accepted story messages.
       FB.sealChancePolicies();
       FB.stories.sealTypes();
-      FB.bookmarkCompositions.publishPending();
-      FB.stories.load(); // base instances; each mod compiles a detached candidate
-      FB.mods.applyStored();
-      FB.stories.seal(); // effective instances are fixed before any world is generated
-      if (FB.configureReligions) FB.configureReligions();
-      if (FB.configureCultures) FB.configureCultures();
-      if (FB.indexEventMessages) FB.indexEventMessages();
+      contentLocaleLoaded = loaded;
       FB.finalizeLocale(loaded);
+      titlePreparationMessage(FB.T('Loading interface…'));
       refreshOfflineStatus();
       /* Let the static title shell paint before parsing the large modal sheet.
          New Game and save loading already activate their selected bookmark,
          so the title no longer constructs an unused default world. */
       setTimeout(function () {
+        const uiPhase = loadTiming.phase('Load deferred interface script');
         loadDeferredUi(function (error) {
+          loadTiming.endPhase(uiPhase);
           if (error) {
             $('title-boot-status').textContent = error.message;
+            loadTiming.finish('error',error);
             return;
           }
+          titlePreparationMessage(FB.T('Loading interface styles…'));
+          const stylePhase = loadTiming.phase('Wait for full stylesheet');
           waitForFullStyles(function (styleError) {
+            loadTiming.endPhase(stylePhase);
             if (styleError) {
               $('title-boot-status').textContent = styleError.message;
+              loadTiming.finish('error',styleError);
               return;
             }
+            titlePreparationMessage(FB.T('Opening saved games…'));
+            const storagePhase = loadTiming.phase('Initialize save storage');
             FB.save.initStorage(function (storageError) {
+              loadTiming.endPhase(storagePhase);
               if (storageError) {
                 $('title-boot-status').textContent = FB.T('Save initialization failed: {message}. Reload to try again.', { message:storageError.message });
+                loadTiming.finish('error',storageError);
                 return;
               }
               readyTitleShell();
@@ -2569,6 +2963,12 @@ FB.CHANGELOG = [
       const definition = (FBDATA.quickStarts || []).filter(function (candidate) {
         return candidate.distributionDefault === true;
       })[0];
+      if (!G.contentReady) {
+        newGameTelemetrySeen = {};
+        G.pending = { seed:freshSeed() };
+        beginQuickStart(definition);
+        return;
+      }
       const details = quickStartDetails(definition);
       if (!details) { showNewGame(); return; }
       newGameTelemetrySeen = {};
@@ -2684,10 +3084,23 @@ FB.CHANGELOG = [
     FB.ui.openModal('Use a Seed or Start Code', h);
     $('ng-cancel').addEventListener('click', FB.ui.closeModal);
     function useSeed() {
+      const value = $('ng-seed').value;
+      if (value.trim().split('-').length >= 5) loadTiming.begin('bookmark',{entry:'shared-start-code'});
+      const parts = value.trim().split('-'), codeBookmark = parts.length === 5 ? '867' : parts[1] && parts[1].toLowerCase();
+      if (!G.contentReady && parts.length >= 5 && parts.length <= 9 &&
+          FB.bookmarkSources.setupId() !== codeBookmark &&
+          FB.bookmarkSources.menuData(FB.mods.menuDeclarations()).bookmarks.some(function (row) { return row.id === codeBookmark; })) {
+        withBookmarkSetup(codeBookmark,function () {
+          FB.ui.showScreen('bookmarks');
+          showSeedInput(); $('ng-seed').value = value; $('ng-seed-go').click();
+        });
+        return;
+      }
       const r = parseSeedInput($('ng-seed').value);
-      if (r.error) { $('ng-seed-err').textContent = FB.T(r.error); return; }
+      if (r.error) { $('ng-seed-err').textContent = FB.T(r.error); loadTiming.finish('rejected'); return; }
       if (r.scenario && !scenarioUnlocked(r.scenario, r.bookmarkId)) {
         $('ng-seed-err').textContent = scenarioUnlockText(r.scenario, true);
+        loadTiming.finish('rejected');
         return;
       }
       FB.ui.closeModal();
@@ -2701,7 +3114,8 @@ FB.CHANGELOG = [
         };
         activatePendingBookmark(r.bookmarkId, function () {
           G.pending.settlementIdx = clampSettlementIdx(r.provinceId, r.settlementIdx);
-          showChargen();
+          loadTiming.measure('Render character setup',showChargen);
+          loadTiming.finish('ready');
         });
       } else {
         G.pending = { seed: r.seed };
@@ -2722,21 +3136,28 @@ FB.CHANGELOG = [
   }
 
   function activatePendingBookmark(id, next) {
+    if (!G.contentReady && !(FB.bookmarkSources && FB.bookmarkSources.setupId && FB.bookmarkSources.setupId() === id)) {
+      withBookmarkSetup(id,function () { activatePendingBookmark(id,next); });
+      return true;
+    }
     if (!FB.bookmarkAvailable(id)) {
-      FB.ui.toast(FB.bookmarkUnavailableReason(id));
+      showBookmarks(true);
+      FB.ui.openModal('Bookmark unavailable', '<div class="gm-body-text"><p>' + FB.esc(FB.bookmarkUnavailableReason(id)) + '</p></div>');
+      loadTiming.finish('rejected');
       return false;
     }
     FB.ui.showScreen('loading');
-    $('loadbar').style.width = '0%';
-    $('loadmsg').textContent = FB.T('Drawing the known world…');
+    preparationProgress(0,FB.T('Drawing the known world…'));
+    const worldPhase = loadTiming.phase('Activate bookmark ' + id);
     FB.activateBookmark(id, function (frac, msg) {
-      $('loadbar').style.width = Math.round(frac * 100) + '%';
-      $('loadmsg').textContent = FB.T(msg);
+      preparationProgress(frac,FB.T(msg));
     }, function (error, bookmark) {
+      loadTiming.endPhase(worldPhase);
       if (error) {
         FB.ui.showScreen('title');
         FB.ui.openModal('Bookmark unavailable',
           '<div class="gm-body-text"><p>' + FB.esc(error.message) + '</p></div>');
+        loadTiming.finish('error',error);
         return;
       }
       G.pending = G.pending || {};
@@ -2747,10 +3168,12 @@ FB.CHANGELOG = [
 
   function showBookmarks(back) {
     trackNewGameScreen('starting-date');
-    renderQuickStarts();
+    const menu = !G.contentReady && FB.bookmarkSources && FB.bookmarkSources.menuData
+      ? FB.bookmarkSources.menuData(FB.mods.menuDeclarations()) : null;
+    renderQuickStarts(menu);
     const box = $('bookmarklist');
     box.innerHTML = '';
-    const bookmarks = FB.bookmarks(false);
+    const bookmarks = menu ? menu.bookmarks : FB.bookmarks(false);
     for (const bookmark of bookmarks) {
       const el = document.createElement('button');
       el.type = 'button';
@@ -2762,8 +3185,13 @@ FB.CHANGELOG = [
       })) + '</h3><p>' + FB.esc(FB.L(bookmark.desc || '')) + '</p>';
       (function (selected) {
         el.addEventListener('click', function () {
+          loadTiming.begin('bookmark',{bookmarkId:selected.id});
           rememberSetupCard('bookmarks', selected.id);
-          activatePendingBookmark(selected.id, showScenarios);
+          activatePendingBookmark(selected.id, function () {
+            try { loadTiming.measure('Render start picker',showScenarios); }
+            catch (error) { loadTiming.finish('error',error); throw error; }
+            loadTiming.finish('ready');
+          });
         });
       })(bookmark);
       box.appendChild(el);
@@ -2845,10 +3273,29 @@ FB.CHANGELOG = [
   }
 
   function beginQuickStart(definition, details) {
+    loadTiming.begin('game',{entry:'quick-start',bookmarkId:definition && definition.bookmarkId});
+    if (!G.campaignReady(definition && definition.bookmarkId)) {
+      const id = definition && definition.id;
+      withCampaignContent(definition && definition.bookmarkId,function () {
+        const current = FB.quickStartOf(id), ready = quickStartDetails(current);
+        if (!ready) {
+          showBookmarks(true);
+          const bookmarkId = current ? current.bookmarkId : definition && definition.bookmarkId;
+          const reason = bookmarkId && !FB.bookmarkAvailable(bookmarkId)
+            ? FB.bookmarkUnavailableReason(bookmarkId)
+            : FB.T('This Quick Start is unavailable. Choose another beginning.');
+          FB.ui.openModal('Quick Start', '<div class="gm-body-text"><p>' + FB.esc(reason) + '</p></div>');
+          loadTiming.finish('rejected');
+          return;
+        }
+        beginQuickStart(current,ready);
+      });
+      return;
+    }
     const scenario = FBDATA.startScenarios.filter(function (candidate) {
       return candidate && candidate.id === definition.scenarioId;
     })[0];
-    if (!scenario || !scenarioUnlocked(scenario, definition.bookmarkId)) return;
+    if (!scenario || !scenarioUnlocked(scenario, definition.bookmarkId)) { loadTiming.finish('rejected'); return; }
     const seed = G.pending && G.pending.seed || freshSeed();
     G.pending = {
       seed:seed,
@@ -2870,22 +3317,24 @@ FB.CHANGELOG = [
       /* Build the existing character controls off-screen, then consume them
          immediately. Quick Start remains the ordinary campaign constructor
          and produces the same shareable code as a manually chosen life. */
-      showChargen({ quickStart:true });
-      G.start();
+      withCampaignLoading(function () {
+        loadTiming.measure('Prepare Quick Start controls',showChargen,null,[{quickStart:true}]);
+        G.start();
+      },'newgame');
     });
   }
 
-  function renderQuickStarts() {
+  function renderQuickStarts(menu) {
     const section = $('quickstart-section');
     const divider = $('quickstart-divider');
     const box = $('quickstartlist');
     box.innerHTML = '';
-    const definitions = FBDATA.quickStarts || [];
+    const definitions = menu ? menu.quickStarts.map(function (row) { return row.definition; }) : FBDATA.quickStarts || [];
     for (const definition of definitions) {
-      const details = quickStartDetails(definition);
+      const details = menu ? menu.quickStarts.find(function (row) { return row.definition.id === definition.id; }).details : quickStartDetails(definition);
       if (!details) continue;
-      const culture = FB.cultureOf(details.community.culture);
-      const religion = FB.religionOf(details.community.religion);
+      const culture = details.culture || FB.cultureOf(details.community.culture);
+      const religion = details.religion || FB.religionOf(details.community.religion);
       const location = FB.T('{settlement}, {province}', {
         settlement:details.settlement.name,
         province:FB.L(details.province.name)
@@ -3071,7 +3520,12 @@ FB.CHANGELOG = [
     obs.innerHTML = '<h3>' + FB.esc(FB.T('👁 Observe')) + '</h3><p>' +
       FB.esc(FB.T('Watch the world without a playable character or personal events.')) +
       '</p>';
-    obs.addEventListener('click', function () { G.startObserve(); });
+    obs.addEventListener('click', function () {
+      loadTiming.begin('game',{entry:'observe',bookmarkId:FB.activeBookmarkId});
+      function beginObserve() { withCampaignLoading(G.startObserve,'newgame'); }
+      if (!G.campaignReady(FB.activeBookmarkId)) prepareCampaignStart(beginObserve,'newgame');
+      else beginObserve();
+    });
     box.appendChild(obs);
     FB.ui.showScreen('newgame', back ? setupRestore('newgame') : undefined);
   }
@@ -3467,20 +3921,17 @@ FB.CHANGELOG = [
 
   /* The click must produce a paint before deterministic campaign creation and
      first-map setup occupy the main thread. G.start itself stays synchronous
-     for seed tests and internal callers; only the player gesture takes this
-     painted handoff. */
+     and requires the selected campaign's content; the player gesture finishes
+     that preparation before taking this painted handoff. */
   function beginCampaignStart() {
     if (campaignStartPending) return;
+    loadTiming.begin('game',{entry:'new-campaign',bookmarkId:G.pending && G.pending.bookmarkId || FB.activeBookmarkId});
+    if (!G.campaignReady(G.pending && G.pending.bookmarkId || FB.activeBookmarkId)) { prepareCampaignStart(beginCampaignStart,'chargen'); return; }
     lockCampaignStart(true);
-    requestAnimationFrame(function () {
-      setTimeout(function () {
-        try {
-          G.start();
-        } finally {
-          lockCampaignStart(false);
-        }
-      }, 0);
-    });
+    withCampaignLoading(function () {
+      try { G.start(); }
+      finally { lockCampaignStart(false); }
+    },'chargen');
   }
 
   function startFlags(effects) {
@@ -3532,6 +3983,7 @@ FB.CHANGELOG = [
   }
 
   G.start = function () {
+    if (!G.campaignReady(FB.activeBookmarkId)) return false;
     if (!FB.activeBookmark || !FB.bookmarkAvailable(FB.activeBookmark.id) ||
         G.pending && G.pending.bookmarkId && G.pending.bookmarkId !== FB.activeBookmark.id) {
       FB.ui.toast(FB.bookmarkUnavailableReason(G.pending && G.pending.bookmarkId || FB.activeBookmarkId));
@@ -3957,6 +4409,7 @@ FB.CHANGELOG = [
      ever ticks — passDay only turns the calendar and runs the world. Nothing
      is autosaved: an afternoon of watching must not bury a real life. */
   G.startObserve = function () {
+    if (!G.campaignReady(FB.activeBookmarkId)) return false;
     if (!FB.activeBookmark || !FB.bookmarkAvailable(FB.activeBookmark.id) ||
         G.pending && G.pending.bookmarkId && G.pending.bookmarkId !== FB.activeBookmark.id) {
       FB.ui.toast(FB.bookmarkUnavailableReason(G.pending && G.pending.bookmarkId || FB.activeBookmarkId));
@@ -6794,29 +7247,51 @@ FB.CHANGELOG = [
   /* ================= save/load/title ================= */
   G.loadSlot = function (slot) {
     const data = FB.save.read(slot);
-    if (!data) { FB.ui.toast('No save found.'); return; }
+    loadTiming.begin('game',{entry:'saved-game',bookmarkId:data ? FB.save.bookmarkOf(data) : null});
+    if (!data) { FB.ui.toast('No save found.'); loadTiming.finish('rejected'); return; }
     G.loadData(data);
   };
 
   /* shared wake-up for a save read from a slot, file, or pasted export text;
      false when the life belongs to another mod world */
-  G.loadData = function (data, afterLoad) {
+  G.loadData = function (data, afterLoad, restoreContent) {
+    loadTiming.begin('game',{entry:'saved-game',bookmarkId:FB.save.bookmarkOf(data)});
     if (!FB.save.isSupported(data)) {
       G.lastLoadError = new Error(FB.T('This save uses an unsupported format.'));
       G.lastLoadStage = 'save preflight';
       FB.ui.toast('This save uses an unsupported format.');
+      loadTiming.finish('rejected',G.lastLoadError);
       return false;
     }
+    if (!G.campaignReady(FB.save.bookmarkOf(data))) {
+      withCampaignContent(FB.save.bookmarkOf(data),function (rollback) {
+        if (G.loadData(data,afterLoad,rollback) === false) {
+          if (rollback) rollback();
+          FB.ui.showScreen(FB.state ? 'game' : 'title');
+          if (!G.lastLoadError) return;
+          FB.ui.openModal('Load Game', '<div class="gm-body-text"><p>' + FB.esc(G.lastLoadError.message) + '</p></div>');
+        }
+      },function (error) { G.lastLoadError = error; G.lastLoadStage = 'content preparation'; });
+      return true;
+    }
+    G.lastLoadError = null;
     // a life cannot wake up in the wrong world: the map ids would not fit
     if (FB.save.otherWorld(data)) {
-      FB.ui.toast(data.mods ?
+      const message = data.mods ?
         '🧩 That life was lived in a modded world. Enable the same mod(s) (Mods menu) to continue it.' :
-        '🧩 That life was lived in the unmodded world. Remove all mods (Mods menu) to continue it.');
+        '🧩 That life was lived in the unmodded world. Remove all mods (Mods menu) to continue it.';
+      G.lastLoadError = new Error(FB.T(message));
+      G.lastLoadStage = 'save preflight';
+      FB.ui.toast(message);
+      loadTiming.finish('rejected',G.lastLoadError);
       return false;
     }
     const bookmarkId = FB.save.bookmarkOf(data);
     if (!FB.bookmark(bookmarkId)) {
+      G.lastLoadError = new Error(FB.T('That life uses a starting date this game does not know.'));
+      G.lastLoadStage = 'save preflight';
       FB.ui.toast('That life uses a starting date this game does not know.');
+      loadTiming.finish('rejected',G.lastLoadError);
       return false;
     }
     G.lastLoadError = null;
@@ -6828,19 +7303,23 @@ FB.CHANGELOG = [
       G.lastLoadError = preflightError;
       G.lastLoadStage = 'core save restoration';
       FB.ui.toast('This save could not be restored. Its stored copy is unchanged.');
+      loadTiming.finish('rejected',preflightError);
       return false;
     }
     FB.ui.showScreen('loading');
-    $('loadbar').style.width = '0%';
+    preparationProgress(0,FB.T('Drawing the known world…'));
+    const savedWorldPhase = loadTiming.phase('Activate saved world ' + bookmarkId);
     FB.activateBookmark(bookmarkId, function (frac, msg) {
-      $('loadbar').style.width = Math.round(frac * 100) + '%';
-      $('loadmsg').textContent = FB.T(msg);
+      preparationProgress(frac,FB.T(msg));
     }, function (error) {
+      loadTiming.endPhase(savedWorldPhase);
       if (error) {
+        if (restoreContent) restoreContent();
         G.lastLoadError = error;
         G.lastLoadStage = 'world activation';
-        FB.ui.showScreen('title');
+        FB.ui.showScreen(restoreContent && FB.state ? 'game' : 'title');
         FB.ui.toast('That life’s world could not be activated.');
+        loadTiming.finish('error',error);
         return;
       }
       let loadStage = 'core save restoration';
@@ -6934,10 +7413,12 @@ FB.CHANGELOG = [
           }
         }
         if (afterLoad) afterLoad();
+        loadTiming.finish('ready');
       } catch (loadError) {
+        if (restoreContent) restoreContent();
         G.lastLoadError = loadError;
         G.lastLoadStage = loadStage;
-        FB.ui.showScreen('title');
+        FB.ui.showScreen(restoreContent && FB.state ? 'game' : 'title');
         const detail = loadError && loadError.message
           ? '<p><strong>' + FB.esc(FB.T('Failed during {stage}:', {
               stage:loadStage
@@ -6949,6 +7430,7 @@ FB.CHANGELOG = [
           '</p>' + detail + '</div><button class="btn primary" id="gm-go">' +
           FB.esc(FB.T('Close')) + '</button>');
         $('gm-go').addEventListener('click', function () { FB.ui.closeModal(); });
+        loadTiming.finish('error',loadError);
       }
     }, { geography:data.state && data.state.start && data.state.start.geography,
       revision:data.state && data.state.start && data.state.start.revision !== undefined

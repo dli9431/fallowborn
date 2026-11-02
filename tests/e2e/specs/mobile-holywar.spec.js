@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
@@ -22,6 +23,7 @@ async function begin(page, info, label, modified) {
     buffer:Buffer.from(JSON.stringify(modified))} : path.resolve(__dirname,'../fixtures/authoring/mobile-vow-'+label+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   const prefix = label === 'harbor' ? 'harbor' : 'dune';
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady &&
     FBDATA.bookmarks[prefix+'_world'];},prefix);
   await beginBookmark(page,info,prefix+'_world',prefix+'_household');

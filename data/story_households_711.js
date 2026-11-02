@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_711.js","bookmarks":["711"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Household decisions observe the sandbox's actual wars and ownership. */
 window.FBDATA = window.FBDATA || {};
 
@@ -165,3 +166,4 @@ FBDATA.householdTracks_711 = {
     scenario.trackLocations[def.id] = ['toledo'];
   });
 })();
+});

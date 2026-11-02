@@ -1,6 +1,6 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openGame,openTitle } = require('../support/game/navigation');
 const { startParityGame } = require('../support/game/parity');
 const { beginBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
@@ -12,12 +12,50 @@ dependsOnRuntime(__filename, [
   'js/starts.js','js/world.js','js/model.js','js/main.js','js/stories.js',
   'js/story_ruler_agenda.js','js/story_opening_goals.js','js/government_support.js',
   'js/government_lineage.js','js/government_selection.js','js/treasury.js',
-  'js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js'
+  'js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js','js/wars.js',
+  'js/mobile_columns.js','js/mobile_confederations.js','js/mobile_command.js','js/bookmark_setup.js',
+  'js/bookmark_sources.js','js/bookmark_composition.js','data/bookmark_1241_operations.js'
 ]);
 
 async function startHenry(page, info) {
   await startParityGame(page, info, {bookmark:'1241',scenario:'henry_pious_1241',declaredOpening:true});
 }
+
+test('Henry can save from a cold bookmark selection with existing mobile wars and restore compact provenance',async function ({page},info) {
+  await openTitle(page,info);
+  await page.locator('#btn-newgame').click();
+  await page.locator('[data-bookmark="1241"]').click();
+  await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
+  expect(await page.evaluate(function () { return FB.game.contentReady; })).toBe(false);
+  await page.locator('[data-scenario="henry_pious_1241"]').click();
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.locator('#btn-cg-start').click();
+  await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+  await expect(page.getByText(/Save failed:/)).toHaveCount(0);
+  const result = await page.evaluate(function () {
+    FB.game.setPaused(true);
+    const s = FB.state, rid = 'mongol_western_command_1241', mobile = FB.mobile.row(s,rid);
+    const opening = mobile.openingCampaigns.entries.find(function (row) { return row.opponent.declaredRealmId === 'silesia_1241'; });
+    const war = s.wars[opening.warId];
+    FB.mobile.validate(s);
+    const saved = JSON.parse(FB.save.serialize()), wireBefore = JSON.stringify(saved);
+    const compact = !Object.prototype.hasOwnProperty.call(saved.state.chars[opening.opponent.characterId],'id');
+    FB.mobile.validate(saved.state);
+    const invalid = JSON.parse(wireBefore);
+    invalid.state.wars[opening.warId].objectives[0].enemy = 'silesia_1241';
+    let rejected = false;
+    try { FB.mobile.validate(invalid.state); } catch (error) { rejected = true; }
+    const before = JSON.stringify([mobile,s.wars,s.armies,s.authority.migrations]);
+    FB.save.restore(saved);
+    return {declared:opening.opponent.declaredRealmId,opponent:opening.opponent.characterId === s.player.charId,
+      defender:war.defender,causeEnemy:war.casus.enemy,objectiveEnemy:war.objectives[0].enemy,
+      compact:compact,rejected:rejected,wirePure:wireBefore === JSON.stringify(saved),
+      retained:before === JSON.stringify([FB.mobile.row(FB.state,rid),FB.state.wars,FB.state.armies,FB.state.authority.migrations]),
+      valid:FB.save.v4.validatePlatform(FB.state)};
+  });
+  expect(result).toEqual({declared:'silesia_1241',opponent:true,defender:'player',causeEnemy:'player',objectiveEnemy:'player',
+    compact:true,rejected:true,wirePure:true,retained:true,valid:true});
+});
 
 test('Henry is offered only at the dated Wroclaw court and validates without changing definitions', async function ({page}, info) {
   await openGame(page, info);

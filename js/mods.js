@@ -159,6 +159,17 @@ window.FBMODS = window.FBMODS || [];
   };
 
   M.count = function () { return readAll().length + readEnabled().length; };
+  // Menu previews read declarations only. Installation, signatures and every
+  // validation remain deferred until the player requests campaign content.
+  M.menuDeclarations = function () {
+    var enabled = readEnabled(), result = M.bundled().filter(function (mod) {
+      return enabled.indexOf(mod.id) >= 0;
+    }).map(function (mod) { return mod.data; });
+    readAll().forEach(function (text) {
+      try { result.push(JSON.parse(text)); } catch (error) { /* applyStored owns the diagnostic */ }
+    });
+    return result;
+  };
   M.currencyInvalid = function () { return currencyInvalid; };
   M.bookmarkAvailable = function (id) {
     return !modFailure && (id !== '1066' || !legacyBookmarkLimited);
@@ -2491,18 +2502,25 @@ window.FBMODS = window.FBMODS || [];
           }
         }
       }
-      var ids = composition ? [composition.worldId] : Object.keys(staged.bookmarks);
+      // The complete gate below includes world checks for every revision.
+      // Mandatory-only reviews still run the world gate before adding starts.
+      var ids = composition ? (composition.complete ? [] : [composition.worldId]) : Object.keys(staged.bookmarks);
       for (var i = 0; i < ids.length; i++) {
-        var errors = composition ? [].concat.apply([], FB.bookmarkRevisions(ids[i], staged.bookmarks[ids[i]])
-          .map(function (world) { return FB.validateBookmarkWorld(world, stories); }))
+        var errors = composition ? [].concat.apply([], FB.validateBookmarkWorlds(FB.bookmarkRevisions(ids[i], staged.bookmarks[ids[i]]), stories))
           : FB.validateBookmark(staged.bookmarks[ids[i]], false, stories);
         if (errors.length) fail('requirements', errors.join(' '));
       }
-      if (composition) (mod.startScenarios || []).forEach(function (start) {
+      var compositionStarts = composition && mod.startScenarios || [];
+      var compositionWorlds = compositionStarts.length ? FB.bookmarkRevisions(composition.worldId, staged.bookmarks[composition.worldId]) : [];
+      var startReports = compositionWorlds.map(function (world) {
+        try { return FB.startRequirementReports(compositionStarts, world, null, stories); }
+        catch (error) { error.compositionRevision = world.revision || null; throw error; }
+      });
+      compositionStarts.forEach(function (start, startIndex) {
         var hosted = false;
-        FB.bookmarkRevisions(composition.worldId, staged.bookmarks[composition.worldId]).forEach(function (world) {
+        compositionWorlds.forEach(function (world, worldIndex) {
           try {
-            var report = FB.startRequirementReport(start, world, null, stories);
+            var report = startReports[worldIndex][startIndex];
             if (report.selectorFaults.length) fail('startScenarios.' + start.id, report.selectorFaults.join(' '));
             if (report.faults.length) fail('startScenarios.' + start.id, report.faults.join(' '));
             if (!report.matches || !report.applicable) return;
@@ -3067,10 +3085,26 @@ window.FBMODS = window.FBMODS || [];
       try { M.apply(JSON.parse(text)); }
       catch (e) { modFailure = 'Invalid stored mod: ' + e.message; }
     }
+    finishConfiguration();
+  };
+  // A bundled campaign needs the shared runtime configuration, but has no
+  // installed mod stack or global authoring snapshot to fingerprint. Keep the
+  // pristine baseline capture in applyStored, after complete publication.
+  M.prepareUnmodded = function () {
+    if (M.count()) throw new Error('Stored mods require complete catalogue preparation.');
+    M.assertReady();
+    const faults = FB.aiDecisions.catalogFaults(FBDATA,null,{worlds:false});
+    if (faults.length) throw new Error(faults.join(' '));
+    configureRuntime();
+  };
+  function finishConfiguration() {
     if (!modFailure) {
       const faults = FB.aiDecisions.catalogFaults(FBDATA,null,{worlds:false});
       if (faults.length) modFailure = faults.join(' ');
     }
+    configureRuntime();
+  }
+  function configureRuntime() {
     FB.aiDecisions.invalidate();
     if (FB.configureCurrency) {
       currencyInvalid = !FB.configureCurrency(
@@ -3079,5 +3113,5 @@ window.FBMODS = window.FBMODS || [];
         FBDATA.balance && FBDATA.balance.coinageSymbol
       );
     }
-  };
+  }
 })();

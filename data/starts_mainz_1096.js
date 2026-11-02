@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_mainz_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* The fictional household and bounded Mainz shelter use a fresh world revision.
    Retained campaigns keep their original institutions, people and story list. */
 window.FBDATA = window.FBDATA || {};
@@ -14,3 +15,4 @@ FBDATA.startScenarios_mainz_1096 = [
     intro:'You are {name}, a craft worker of Mainz. Your family and community have a life beyond danger. Review ordinary work and household plans in Deeds. Any refuge needs each person’s consent, actual local permission and an explicit entry.' }
 ];
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_mainz_1096);
+});

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1096_scaffold_d.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 1096 regional world. Development and settlement order retain
    independent 1066 copies; residents and owners include dated corrections.
    Courts, generated incumbents and geographic proxies are documented in
@@ -399,3 +400,4 @@ FBDATA.bookmarkRegions1096.horn_sahel = {
   opening:{"actors":{},"appointments":{},"estates":[],"claims":[],"migrations":[]},
   localInstitutions:[]
 };
+});

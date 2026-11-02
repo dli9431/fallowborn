@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_courts_800.js","bookmarks":["800"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.startScenarios_courts_800 = [
@@ -34,3 +35,4 @@ FBDATA.startScenarios_courts_800 = [
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_courts_800);
+});

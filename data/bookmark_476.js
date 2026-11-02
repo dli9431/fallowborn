@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_476.js","bookmarks":["476"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 476 on europe_regional. Five regional declarations own every inhabited
    cell; uninhabited cells retain stable geography ids and carry no politics. */
 window.FBDATA = window.FBDATA || {};
@@ -276,3 +277,4 @@ FBDATA.bookmarks['476'].openingRevisions = {
   },
   balkans_v1:FBDATA.bookmarks['476'].opening
 };
+});

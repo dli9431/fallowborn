@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_568_identities.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 568 identity declarations, published by the complete 568 composer.
    Keep these tables inert until that bookmark is registered: faith availability
    accepts only known bookmark ids, and cultures have no dated-availability gate.
@@ -55,3 +56,4 @@ FBDATA.bookmarkFaithAvailability568 = {
   brahmanical_476:{ bookmarkIds:['568'] },
   sahel_traditional_476:{ bookmarkIds:['568'] }
 };
+});

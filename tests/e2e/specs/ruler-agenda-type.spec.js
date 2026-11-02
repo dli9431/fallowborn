@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -17,6 +18,7 @@ async function importedStart(page, info, scenario) {
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/ruler-agendas.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('proof_royal_agenda'); });
   await startParityGame(page, info, { bookmark:scenario === 'peroz_476' ? '476' : '1204', scenario:scenario, declaredOpening:true });
 }
@@ -189,6 +191,7 @@ test('changing an imported agenda under the same mod name rejects its old campai
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({ name:'ruler-agendas.json', mimeType:'application/json', buffer:Buffer.from(JSON.stringify(changed)) });
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('proof_royal_agenda'); });
   const result = await page.evaluate(function (saved) {
     const live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter(), source = JSON.stringify(saved);

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_476_wider.js","bookmarks":["476"],"catalogs":["geographies","settlementSites","settlementLayouts","aristocraticProfiles","mobileProfiles"],"shared":[]}, function (FBDATA) {
 /* Spring 476 regional completion. Political and settlement declarations use
    existing public contracts. District labels do not assert a later city's
    existence. Shares, development and unnamed officials are simulation choices.
@@ -472,8 +473,7 @@ FBDATA.bookmarkWider476 = {
   });
   function startsFor(world, rule) {
     return FBDATA.startScenarios.filter(function (s) {
-      return rule.exclude.indexOf(s.id) < 0 && (!s.bookmarkIds || s.bookmarkIds.indexOf(b.id) >= 0) &&
-        (!s.eras || s.eras.indexOf(b.era) >= 0) && (!b.starts || b.starts.indexOf(s.id) >= 0 ||
+      return s && rule.exclude.indexOf(s.id) < 0 && FB.bookmarkSources.matches(s,b.id,b.era) && (!b.starts || b.starts.indexOf(s.id) >= 0 ||
           w.startsAlwaysListed.indexOf(s.id) >= 0) &&
         (!s.fixedProvinceId || world.provinces.some(function (p) {
           return p.id === s.fixedProvinceId && !p.wasteland;
@@ -518,3 +518,4 @@ FBDATA.communalRevisions['476'] = {
       religion:'samaritan',culture:'syriac',profileId:'samaritan_lay_congregation'}
   ]
 };
+});

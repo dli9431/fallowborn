@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/identities_1096.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Faith declarations for the spring 1096 opening. The complete bookmark
    composer publishes detached copies into the ordinary religions catalogue.
    Loading this source alone changes no effective faith or existing world.
@@ -35,3 +36,4 @@ FBDATA.bookmarkReligions1096 = {
 FBDATA.bookmarkFaithAvailability1096 = {
   rabbanite:{ bookmarkIds:['1096'] }
 };
+});

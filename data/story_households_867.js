@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_867.js","bookmarks":["867"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.householdTracks_867 = {
@@ -70,3 +71,4 @@ FBDATA.householdTracks_867 = {
   });
   Object.assign(FBDATA.storyInstances, FBDATA.householdTracks_867);
 })();
+});

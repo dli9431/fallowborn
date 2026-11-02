@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -30,6 +31,7 @@ async function start(page, info, label, npc, required) {
     await page.locator('#modfile').setInputFiles({name:'required-foundation.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(source))});
   } else await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/building-institutions-' + label + '.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.binding_work; });
   const world = label === 'see' ? 'inventory_estuary' : 'inventory_uplands';
   await beginBookmark(page, info, world, world + '_household');

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1204.js","bookmarks":["1204"],"catalogs":["geographies","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Late spring 1204 content. Physical counties and settlement slots
    retain their stable identities. No future partition grants are opening
    possessions. The definition is registered for ordinary campaign setup.
@@ -1514,3 +1515,4 @@ FBDATA.bookmarkContent['1204'] = {
   };
   FBDATA.bookmarks['1204'].stories.push('venetian_offices_1204');
 })();
+});

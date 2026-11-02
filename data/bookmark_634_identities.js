@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_634_identities.js","bookmarks":["634"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Autumn 634 faith declarations. These literal tables remain inert until the
    complete bookmark composer publishes detached copies after registering 634.
    No current faith, saved identity, institution or world is changed here. */
@@ -58,3 +59,4 @@ FBDATA.bookmarkFaithAvailability634 = {
   brahmanical_476:{bookmarkIds:['634']},
   sahel_traditional_476:{bookmarkIds:['634']}
 };
+});

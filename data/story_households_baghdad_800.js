@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_baghdad_800.js","bookmarks":["800"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.householdTracks_baghdad_800 = {
@@ -86,3 +87,4 @@ FBDATA.householdTracks_baghdad_800 = {
   def.stages.second_offer.transitions.push(route({ not:{ kind:'job_available', jobId:'later_copy' } }, 'independent'));
   Object.assign(FBDATA.storyInstances, FBDATA.householdTracks_baghdad_800);
 })();
+});

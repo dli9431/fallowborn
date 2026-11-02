@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/identities_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Local-practice presentation for the spring 1241 opening. The complete dated
    bookmark publishes detached copies into the ordinary religions catalogue.
    Loading this file alone changes no effective faith or existing world.
@@ -21,3 +22,4 @@ FBDATA.bookmarkReligions1241 = {
       intro:{path:'intro_other'},religiousPaths:null}
   }
 };
+});

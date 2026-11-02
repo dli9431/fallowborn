@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/civic_profiles.js","bookmarks":[],"catalogs":["governmentForms","civicProfiles","constituencyProfiles"],"shared":["governmentForms","civicProfiles","constituencyProfiles"]}, function (FBDATA) {
 /* Civic institutions and dated office policies. Influence, qualification,
    salaries and the reduced collegiate size are explicit simulation choices. */
 (function () {
@@ -77,3 +78,4 @@
   FBDATA.techImpactReviews.features.institutional_foreign_rights = { mode:'none', rationale:'Limited jurisdiction, quarters and assigned receipts are ordinary negotiated rights, without new trade or naval capabilities.' };
   FBDATA.techImpactReviews.features.civic_household_careers = { mode:'none', rationale:'Personal service and professional standing remain ordinary household progression, separate from civic office eligibility.' };
 })();
+});

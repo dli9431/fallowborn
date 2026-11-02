@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_568.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 568, composed from independent first-pass regional declarations.
    See docs/research/568-bookmark.md for the reconstruction boundaries. */
 (function () {
@@ -101,3 +102,4 @@
       administrationProfiles:administration,aristocraticProfiles:aristocracy,cultures:copy(FBDATA.bookmarkCultures568)};
   } catch (error) { draft.faults.push({source:'data/bookmark_568.js',message:error.message}); }
 })();
+});

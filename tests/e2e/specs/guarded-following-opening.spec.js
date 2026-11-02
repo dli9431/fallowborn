@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -21,6 +22,7 @@ async function imported(page,info,prefix,ordinary) {
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+
     (ordinary?'mobile-hosted-':'guarded-following-')+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
   await beginBookmark(page,info,prefix+'_world',prefix+'_household');
 }
@@ -49,6 +51,36 @@ for (const prefix of ['harbor','dune']) {
       food:3200,pure:true,valid:true,party:prefix==='harbor'?2:1});
     expect(result.total).toBe(result.initial);
     expect(result.cash).toBeGreaterThanOrEqual(70);
+  });
+
+  test(prefix+' compact guards retain indexed identities and reject forged people before adoption',async function ({page},info) {
+    await imported(page,info,prefix);
+    const result=await page.evaluate(function (prefix) {
+      const M=FB.mobile,rid=prefix+'_following',saved=JSON.parse(FB.save.serialize());
+      const s=saved.state,g=M.row(s,rid).guardedParty,host=g.authority.characterId,person=g.characterIds[0];
+      const bytes=JSON.stringify(saved),active=FB.state,before=JSON.stringify(active);
+      const rng=FB.getRngState(),uid=FB.getUidCounter();
+      const omitted=s.chars[host].id===undefined && g.characterIds.every(function (id) {return s.chars[id].id===undefined;});
+      const valid=M.validate(s),pure=bytes===JSON.stringify(saved) && before===JSON.stringify(active);
+      const changes=[function (s) {s.chars[host].id=person;},function (s) {s.chars[host].id=null;},
+        function (s) {delete s.chars[host];},function (s) {s.chars[person].id=host;},
+        function (s) {s.chars[person].id=null;},function (s) {delete s.chars[person];},
+        function (s) {s.bookmarkSetup.actors[g.declaration.hostActorId]=person;},
+        function (s) {s.bookmarkSetup.actors[g.declaration.actorIds[0]]=host;},
+        function (s) {M.row(s,rid).guardedParty.authority.characterId=person;}];
+      const rejected=changes.map(function (change) {
+        const candidate=JSON.parse(bytes);change(candidate.state);const input=JSON.stringify(candidate);
+        try {FB.save.restore(candidate);return false;} catch(error) {
+          return FB.state===active && before===JSON.stringify(active) && input===JSON.stringify(candidate) &&
+            rng===FB.getRngState() && uid===FB.getUidCounter();
+        }
+      });
+      FB.save.restore(saved);
+      return {omitted:omitted,valid:valid,pure:pure,rejected:rejected,
+        retained:JSON.stringify(M.row(FB.state,rid).guardedParty)===JSON.stringify(g),
+        expanded:FB.state.chars[host].id===host && FB.state.chars[person].id===person};
+    },prefix);
+    expect(result).toEqual({omitted:true,valid:true,pure:true,rejected:Array(9).fill(true),retained:true,expanded:true});
   });
 }
 

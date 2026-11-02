@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
@@ -68,6 +69,7 @@ test('ordinary JSON import publishes the local profile only for its dated assign
   await page.locator('#modfile').setInputFiles({name:'1241-local-practice.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(mod),'utf8')});
   await page.locator('#mod-apply').click();
+  await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks['1241'];
   });

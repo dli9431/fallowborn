@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/islamic_institutions.js","bookmarks":["1066"],"catalogs":["religiousActivities","religiousPatronage"],"shared":[]}, function (FBDATA) {
 /* Dated 1066 urban study contexts. A city anchor is not an identified madrasa,
    mosque building, historical staff list or endowment deed. */
 (function () {
@@ -38,3 +39,4 @@
     carryOpenings('1066', sourceId, sourceId + '_institutions_v1');
   });
 })();
+});

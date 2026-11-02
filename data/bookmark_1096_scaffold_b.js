@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1096_scaffold_b.js","bookmarks":["1096"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 1096 first-pass regional declarations. These blocks remain inert
    until assembled as a complete bookmark. See docs/research/1096-bookmark.md
    for the copied baseline, court reconstructions and unresolved evidence. */
@@ -472,3 +473,4 @@ FBDATA.bookmarkRevisionContent_1096_balkans = {
   }
 };
 FBDATA.bookmarkRegions1096.balkans = FBDATA.bookmarkRevisionContent_1096_balkans;
+});

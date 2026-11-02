@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
@@ -289,6 +290,7 @@ for (const sample of [
     await openGame(page,info); await page.evaluate(function () { FB.ui.showMods(); });
     await page.locator('#modfile').setInputFiles(importPath);
     await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
     await page.waitForFunction(function (input) { return FB.game.bootReady && !!FBDATA.enterprises[input.business]; },sample);
     await prepareCoast(page,info,true);
     const before = await page.evaluate(function (input) {

@@ -1,10 +1,10 @@
 'use strict';
 
 const { expect } = require('../fixture');
-const { targetUrl } = require('./navigation');
+const { targetUrl, prepareGameContent } = require('./navigation');
 
 // The caller supplies the distribution flag and SDK double before navigation.
-async function openCrazyGame(page, testInfo) {
+async function openCrazyTitle(page, testInfo) {
   await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
   await expect.poll(function () {
     return page.evaluate(function () {
@@ -23,4 +23,9 @@ async function openCrazyGame(page, testInfo) {
   await expect(page.locator('#btn-choose-beginning')).toBeEnabled();
 }
 
-module.exports = { openCrazyGame };
+async function openCrazyGame(page, testInfo) {
+  await openCrazyTitle(page, testInfo);
+  await prepareGameContent(page);
+}
+
+module.exports = { openCrazyGame, openCrazyTitle };

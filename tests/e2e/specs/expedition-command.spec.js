@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -20,6 +21,7 @@ async function importWorld(page,info,which,modified) {
     buffer:Buffer.from(JSON.stringify(modified))} : path.resolve(__dirname,'../fixtures/authoring/landed-expedition-'+which+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   const prefix=which==='harbor' ? 'harbor' : 'dune';
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
 }
 async function beginHome(page) {
@@ -243,13 +245,16 @@ test('saved links are required and strictly pinned while restore preserves unrec
     FB.treasurySpend(s,rid,2);c.imprisoned=true;
     function owned(t) {return JSON.stringify([t.bookmarkSetup,t.authority.governments[rid],M.host(t,rid),M.migration(t,rid),
       t.realms[rid].treasury,t.player.gold,Object.keys(t.chars).sort(),t.chars[c.id].imprisoned]);}
-    const saved=JSON.parse(FB.save.serialize()),before=owned(s);
+    const saved=JSON.parse(FB.save.serialize()),before=owned(s),bytes=JSON.stringify(saved);
+    const compact=saved.state.chars[c.id].id===undefined && M.validate(saved.state) && bytes===JSON.stringify(saved);
     const changes=[function (g) {delete g.landedCommandLink;},function (g) {g.landedCommandLink.schema=2;},
       function (g) {g.landedCommandLink.extra=true;},function (g) {g.landedCommandLink.characterId='missing';},
       function (g) {g.landedCommandLink.homeRealmId=rid;},function (g) {g.landedCommandLink.homeGeneration++;},
       function (g) {g.landedCommandLink.commandGeneration++;},function (g) {g.landedCommandLink.reason='safe';},
       function (g) {g.landedCommandLink.changedTurn=999;},function (g) {g.landedCommandLink.revision=-1;},
-      function (g,t) {delete t.authority.governments[rid];}];
+      function (g,t) {delete t.authority.governments[rid];},function (g,t) {t.chars[c.id].id='other';},
+      function (g,t) {t.chars[c.id].id=null;},function (g,t) {delete t.chars[c.id];},
+      function (g,t) {t.bookmarkSetup.actors.harbor_home_ruler='other';}];
     const rejected=changes.map(function (change) {
       const bad=JSON.parse(JSON.stringify(saved));change(bad.state.authority.governments[rid],bad.state);
       const bytes=JSON.stringify(bad),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -259,11 +264,11 @@ test('saved links are required and strictly pinned while restore preserves unrec
     });
     FB.save.restore(saved);
     const t=FB.state;
-    return {rejected:rejected,exact:before===owned(t),
+    return {compact:compact,rejected:rejected,exact:before===owned(t),
       suspended:!M.commandValid(t,rid),notReconciled:M.landedLink(t,rid).reason===null,
       valid:M.validate(t),rng:(saved.rng>>>0)===(FB.getRngState()>>>0),uid:saved.uid===FB.getUidCounter()};
   });
-  expect(result).toEqual({rejected:Array(11).fill(true),exact:true,suspended:true,notReconciled:true,valid:true,rng:true,uid:true});
+  expect(result).toEqual({compact:true,rejected:Array(15).fill(true),exact:true,suspended:true,notReconciled:true,valid:true,rng:true,uid:true});
 });
 
 test('the landed home start replays exactly and presents its finite separate command in the shared sheet',async function ({page},info) {

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1241_scaffold_b.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 1241 regional declarations with reviewed court/owner corrections.
    County communities and ordered slots retain the 1204 inhabited-world assumptions.
    Court identities, source limits and unresolved boundaries are in docs/research/1241-bookmark.md.
@@ -382,3 +383,4 @@ FBDATA.bookmarkRegions1241.italy_south_papacy = {
     "ajaccio":[{"site":"ajaccio_head","name":"Ajaccio","kind":"village","fill":true},{"site":"geo_bastia_3034640","name":"Bastia","kind":"village","fill":true},{"site":"geo_porto_vecchio_2985947","name":"Porto-Vecchio","kind":"village","fill":true},{"site":"geo_corte_3023506","name":"Corte","kind":"village","fill":true},{"site":"geo_biguglia_3032668","name":"Biguglia","kind":"village","fill":true},{"site":"geo_borgo_3031537","name":"Borgo","kind":"village","fill":true},{"site":"geo_calvi_3029090","name":"Calvi","kind":"village","fill":true}]
   }
 };
+});

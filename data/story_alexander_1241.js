@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_alexander_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* A personal recall opportunity. Public appointment remains with its owner. */
 window.FBDATA = window.FBDATA || {};
 
@@ -108,3 +109,4 @@ FBDATA.openingProfiles_alexander_1241 = {
   ];
   Object.assign(FBDATA.storyInstances,FBDATA.householdTracks_alexander_1241,FBDATA.openingProfiles_alexander_1241);
 })();
+});

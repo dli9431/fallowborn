@@ -1,4 +1,10 @@
+Loading from the lightweight title
+
+Continue, save slots and imported saves enter FB.game.loadData through the deferred campaign-content gate. The gate prepares the bundled baseline, effective mods, story registry and localized messages before exact mod-signature comparison, revision selection, migration or restoration. Returning true before content is ready means the load request was queued, as with asynchronous world activation. A preflight refusal after preparation displays its reason on the title. Stored saves remain unchanged. Save browsing can show stored metadata before content is ready; compatibility is checked when loading.
+
 Compact validation snapshots
+
+Guarded parties, guarded personal starts and landed expedition links validate original identities from the saved opening actor and character indexes. They accept the codec's omitted character id while rejecting explicit mismatches and missing people. Guard semantic checks use only a shallow view with the omitted id supplied, leaving compact input and live state untouched. No save-version bump, guard release, command formation or resource repair is involved.
 
 FB.save.expandedSnapshot(state) expands only the existing wire-codec omissions on a detached copy for semantic validators that require explicit character and realm identities. It performs no load repair or state adoption and does not supply optional subsystem records. Preparation first checks its raw exact record, then uses this snapshot for original-person and current-authority queries. Undertaking validation likewise retains its strict raw record while resolving same-generation parties on the expanded core snapshot; a compact missing id or alive flag cannot substitute for a changed party. Direct mobile binding and opening-issuer checks use their canonical saved indexes without expansion.
 

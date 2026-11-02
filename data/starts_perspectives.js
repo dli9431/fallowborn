@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_perspectives.js","bookmarks":["1204"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Additional household livelihoods retain the ordinary resident-community picker. */
 window.FBDATA = window.FBDATA || {};
 
@@ -14,3 +15,4 @@ FBDATA.startScenarios_perspectives = [
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_perspectives);
+});

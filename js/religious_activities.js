@@ -19,8 +19,8 @@
   FB.religiousActivityManaged = function (s, cid) {
     var c = s.chars[cid];
     return !!(c && !c.dead && (cid === s.player.charId ||
-      !(FB.isExternalHouseholdAuthority && FB.isExternalHouseholdAuthority(s, c)) &&
-      (FB.isHouseholdCharacter(s, cid) || FB.manageableKinKind(s, cid))));
+      (FB.isHouseholdCharacter(s, cid) || FB.manageableKinKind(s, cid)) &&
+      !(FB.isExternalHouseholdAuthority && FB.isExternalHouseholdAuthority(s, c))));
   };
   FB.religiousActivityPeople = function (s) {
     return [s.player.charId].concat(Object.keys(s.chars).sort().filter(function (cid) {
@@ -29,12 +29,21 @@
   };
   FB.religiousActivityVisible = function (s, cid) {
     var c = s.chars[cid || s.player.charId];
+    var institutions, location;
     return !!c && (!!c.religiousActivity || [FBDATA.religiousActivities, FBDATA.religiousPatronage].some(function (table) {
       return Object.keys(table).some(function (id) {
-        var d = table[id], ins = d.institutionId && FB.religiousInstitutionSnapshot(s, d.institutionId);
-        return live(s, d) && (!d.faithIds.length || d.faithIds.indexOf(c.religion) >= 0) &&
-          (!d.institutionId || ins && ins.available && (ins.definition.provinceId === at(s, c.id) ||
-            ins.definition.offMap && ins.definition.jurisdictionIds.indexOf(at(s, c.id)) >= 0));
+        var d = table[id];
+        if (!live(s,d) || d.faithIds.length && d.faithIds.indexOf(c.religion) < 0) return false;
+        if (!d.institutionId) return true;
+        if (!institutions) institutions = FB.localInstitutionDefinitions(s);
+        var institution = institutions[d.institutionId];
+        if (!institution) return false;
+        if (location === undefined) location = at(s,c.id);
+        if (institution.provinceId !== location &&
+            !(institution.offMap && institution.jurisdictionIds.indexOf(location) >= 0)) return false;
+        // Visibility needs availability, not detached membership, leadership,
+        // recognition and property snapshots for every declared activity.
+        return FB.religiousInstitutionAvailable(s,d.institutionId);
       });
     }));
   };

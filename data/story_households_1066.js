@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_1066.js","bookmarks":["1066"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.householdTracks_1066 = {
@@ -117,3 +118,4 @@ FBDATA.householdTracks_1066 = {
     route({ not:{ kind:'travelling' } }, 'independent_journey')];
   Object.assign(FBDATA.storyInstances, FBDATA.householdTracks_1066);
 })();
+});

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_493_world.js","bookmarks":["493"],"catalogs":["geographies","settlementSites","settlementLayouts","administrationProfiles","aristocraticProfiles"],"shared":[]}, function (FBDATA) {
 /* Independent spring 493 expansion. Root bookmark fields remain the retained
    baseline. Dated evidence and editorial limits: docs/research/493-world-evidence.md.
    Literal records are also the static localization and coverage inventory. */
@@ -1343,3 +1344,4 @@ FBDATA.communalRevisions['493'] = {
       religion:'samaritan',culture:'syriac',profileId:'samaritan_lay_congregation'}
   ]
 };
+});

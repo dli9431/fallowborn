@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_ruler_agendas_800.js","bookmarks":["800"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal priorities do not execute public or family transactions. */
 window.FBDATA = window.FBDATA || {};
 
@@ -63,3 +64,4 @@ FBDATA.rulerAgendas_800 = {
     FBDATA.storyInstances[id] = FBDATA.rulerAgendas_800[id];
   });
 })();
+});

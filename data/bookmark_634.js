@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"catalogs":["geographies","settlementSites"],"shared":[]}, function (FBDATA) {
 /* Independent autumn 634 input. Regional records stage one detached ownership
    unit; the shared engine composer validates and publishes it at boot.
    Reconstruction limits: docs/research/634-bookmark.md. */
@@ -125,3 +126,4 @@
   } catch (error) { source.faults = [error.message]; }
   FBDATA.bookmarkCompositionSources.autumn_634 = source;
 })();
+});

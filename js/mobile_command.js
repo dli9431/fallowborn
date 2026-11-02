@@ -314,10 +314,12 @@
       if (!declared) {if (link!==null || own(s.authority.governments[rid],'landedCommandLink')) badLink();}
       else {
         var actor=FB.bookmarkActor(s,declared.actorId), home=homeId(s,declared.homeRealmId);
+        var actorId=s.bookmarkSetup && s.bookmarkSetup.actors && s.bookmarkSetup.actors[declared.actorId];
         var initial=(FB.campaignBookmark(s).realms || []).filter(function (d) {return d.id===rid;})[0];
         var original=r && r.openingBindings && r.openingBindings.filter(function (b) {return b.person.actorId===declared.actorId;})[0];
         if (!keys(link,['schema','characterId','homeRealmId','homeGeneration','commandGeneration','revision','reason','changedTurn']) ||
-            Object.keys(link).length!==8 || link.schema!==1 || !actor || !original || link.characterId!==actor.id ||
+            Object.keys(link).length!==8 || link.schema!==1 || !actor || !original || link.characterId!==actorId ||
+            own(actor,'id') && actor.id!==actorId ||
             link.characterId!==original.characterId || link.homeRealmId!==declared.homeRealmId ||
             link.homeGeneration!==declared.homeGeneration || !s.realms[home] ||
             link.homeGeneration>FB.realmRulerGeneration(s,home) ||

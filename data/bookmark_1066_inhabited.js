@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1066_inhabited.js","bookmarks":["1066"],"catalogs":["geographies","cultures","religions","settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Spring 1066 district declarations. Occupation, political approximations and
    deferred candidates are documented in docs/research/1066-inhabited-terrain.md.
    Root fields and older revisions retain their complete original definitions. */
@@ -204,3 +205,4 @@ FBDATA.communalRevisions['1066'] = {
       religion:'karaite',culture:'syriac',profileId:'karaite_lay_congregation'}
   ]
 };
+});

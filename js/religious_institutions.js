@@ -146,6 +146,10 @@
       members:copy(a.row.members || {}), holderId:leader(s, a), vacant:!!a.def.officeId && !leader(s, a),
       recognitions:copy(recognitionRows(s, institutionId)), property:copy(property(s, a)) };
   };
+  FB.religiousInstitutionAvailable = function (s, institutionId) {
+    var a = at(s,institutionId);
+    return !!(a && available(s,a));
+  };
   FB.religiousInstitutionRoleEligibility = function (s, institutionId, cid, roleId) {
     var a = at(s, institutionId); return !!(a && available(s, a) && qualified(s, a, cid, roleId));
   };
@@ -212,26 +216,44 @@
     return r ? FB.dataText(s, c.id, 'religiousInstitutionProfile', r.profileId,
       catalogs().profiles[r.profileId], 'roles.' + r.roleId + '.name', {}) : '';
   };
-  FB.playerReligiousInstitutions = function (s, cid) {
-    if (!Object.keys(catalogs().profiles).length) return [];
+  function playerInstitutions(s, cid, firstOnly) {
+    if (!Object.keys(catalogs().profiles).length) return firstOnly ? false : [];
     if (!cid) {
       var union = [];
-      Object.keys(s.chars).forEach(function (id) {
+      function managed(id) {
         var c = s.chars[id];
-        if (c.dead || FB.isExternalHouseholdAuthority && FB.isExternalHouseholdAuthority(s, c) ||
-            id !== s.player.charId && !(FB.isHouseholdCharacter && FB.isHouseholdCharacter(s, id)) &&
-            !(FB.manageableKinKind && FB.manageableKinKind(s, id))) return;
-        FB.playerReligiousInstitutions(s, id).forEach(function (iid) { if (union.indexOf(iid) < 0) union.push(iid); });
+        return !!(c && !c.dead && (id === s.player.charId ||
+          FB.isHouseholdCharacter && FB.isHouseholdCharacter(s,id) ||
+          FB.manageableKinKind && FB.manageableKinKind(s,id)) &&
+          !(FB.isExternalHouseholdAuthority && FB.isExternalHouseholdAuthority(s,c)));
+      }
+      if (firstOnly) {
+        if (managed(s.player.charId) && playerInstitutions(s,s.player.charId,true)) return true;
+        return Object.keys(s.chars).some(function (id) {
+          return id !== s.player.charId && managed(id) && playerInstitutions(s,id,true);
+        });
+      }
+      Object.keys(s.chars).forEach(function (id) {
+        if (!managed(id)) return;
+        playerInstitutions(s,id,false).forEach(function (iid) { if (union.indexOf(iid) < 0) union.push(iid); });
       });
       return union.sort();
     }
     var c = s.chars[cid || s.player.charId];
-    if (!c) return [];
-    return Object.keys(s.localInstitutions || {}).sort().filter(function (iid) {
+    if (!c) return firstOnly ? false : [];
+    var ids = Object.keys(s.localInstitutions || {});
+    function visible(iid) {
       var a = at(s, iid);
       return !!(a && (member(a, c.id) || a.def.religion === c.religion &&
         (!a.def.provinceId || a.def.provinceId === home(s, c)) || patron(s, a) === 'player'));
-    });
+    }
+    return firstOnly ? ids.some(visible) : ids.sort().filter(visible);
+  }
+  FB.playerReligiousInstitutions = function (s, cid) {
+    return playerInstitutions(s,cid,false);
+  };
+  FB.hasPlayerReligiousInstitution = function (s) {
+    return playerInstitutions(s,null,true);
   };
 
   /* Explicit AI policy, bounded proposals, and the same atomic transaction. */

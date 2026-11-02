@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -8,6 +9,7 @@ async function boot(page,info,kind) {
   await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/production-construction.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
   const full=page.locator('#btn-choose-beginning');
   if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();

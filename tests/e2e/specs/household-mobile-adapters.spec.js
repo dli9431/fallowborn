@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const examples = require('../fixtures/authoring/camp-work-example.json');
 const { test, expect } = require('../support/fixture');
@@ -17,6 +18,7 @@ async function importedStart(page, info) {
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/camp-work-example.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('short_camp_service_example'); });
   await beginBookmark(page, info, '476', 'mobile_household_476');
 }

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_rulers_568_east.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Existing eastern sovereigns in the fresh 568 revision. */
 window.FBDATA = window.FBDATA || {};
 
@@ -32,3 +33,4 @@ FBDATA.startScenarios_rulers_568_east = [
     });
   } catch (error) { draft.faults.push({source:'data/starts_rulers_568_east.js',message:error.message}); }
 })();
+});

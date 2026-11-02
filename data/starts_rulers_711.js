@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_rulers_711.js","bookmarks":["711"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.startScenarios_rulers_711 = [
@@ -26,3 +27,4 @@ FBDATA.startScenarios_rulers_711 = [
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_rulers_711);
+});

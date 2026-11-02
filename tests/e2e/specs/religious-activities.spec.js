@@ -83,6 +83,90 @@ function installActivityHousehold() {
   s.chars[c.id] = c; activityFixture.member = c.id;
 }
 
+test('activity visibility avoids snapshots and preserves live institution, date, faith and location gates',async function ({page}) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, c = s.chars[s.player.charId], snapshot = FB.religiousInstitutionSnapshot;
+    const available = FB.religiousInstitutionAvailable;
+    const activities = FBDATA.religiousActivities, patronage = FBDATA.religiousPatronage;
+    const d = JSON.parse(JSON.stringify(activities.test_schooling));
+    FBDATA.religiousActivities = {test_schooling:d}; FBDATA.religiousPatronage = {};
+    const raw = FBDATA.bookmarks[s.start.id], layer = raw.revisions ? raw.revisions[s.start.revision || 'baseline'] : raw;
+    const def = layer.localInstitutions.test_activity_school, row = s.localInstitutions.test_activity_school;
+    const home = s.player.provinceId, rng = FB.getRngState(), uid = FB.getUidCounter(), cases = [];
+    let snapshotCalls = 0, availabilityCalls = 0;
+    FB.religiousInstitutionSnapshot = function () { snapshotCalls++; return snapshot.apply(this,arguments); };
+    FB.religiousInstitutionAvailable = function () { availabilityCalls++; return available.apply(this,arguments); };
+    function inspect() {
+      // Reference the previous snapshot-based decision without its new helper.
+      const a = snapshot(s,d.institutionId), before = JSON.stringify(s);
+      const expected = !!c.religiousActivity || (d.period.yearMin <= s.date.year &&
+        (d.period.yearMax === null || s.date.year <= d.period.yearMax) &&
+        (!d.openings.length || d.openings.some(function (o) { return o.id === s.start.id && o.revision === (s.start.revision || 'baseline'); })) &&
+        (!d.faithIds.length || d.faithIds.includes(c.religion)) && !!a && a.available &&
+        (a.definition.provinceId === home || a.definition.offMap && a.definition.jurisdictionIds.includes(home)));
+      availabilityCalls = 0;
+      cases.push({expected:!!expected,actual:FB.religiousActivityVisible(s,c.id),checks:availabilityCalls,
+        unchanged:before === JSON.stringify(s)});
+    }
+    try {
+      inspect();
+      d.period.yearMin = s.date.year + 1; inspect(); d.period.yearMin = 1;
+      d.faithIds = ['jewish']; inspect(); d.faithIds = ['catholic'];
+      d.openings = [{id:'no_such_opening',revision:'baseline'}]; inspect(); d.openings = [];
+      def.provinceId = 'elsewhere'; inspect();
+      def.provinceId = null; def.offMap = true; inspect();
+      def.jurisdictionIds = []; inspect(); def.jurisdictionIds = [home];
+      row.status = 'closed'; inspect(); row.status = 'active';
+      inspect();
+      delete s.localInstitutions.test_activity_school; inspect();
+      c.religiousActivity = {id:'existing_commitment'}; inspect();
+      return {cases:cases,snapshotCalls:snapshotCalls,pure:rng === FB.getRngState() && uid === FB.getUidCounter()};
+    } finally {
+      FB.religiousInstitutionSnapshot = snapshot; FB.religiousInstitutionAvailable = available;
+      FBDATA.religiousActivities = activities; FBDATA.religiousPatronage = patronage;
+    }
+  });
+  expect(result.cases.map(function (row) { return row.actual; })).toEqual([true,false,false,false,false,true,false,false,true,false,true]);
+  result.cases.forEach(function (row) {
+    expect(row.actual).toBe(row.expected);
+    expect(row.unchanged).toBe(true);
+  });
+  [1,2,3,4,6,10].forEach(function (i) { expect(result.cases[i].checks).toBe(0); });
+  expect(result.snapshotCalls).toBe(0);
+  expect(result.pure).toBe(true);
+});
+
+test('religious activity visibility skips household enumeration only when the player qualifies',async function ({page}) {
+  await page.evaluate(installActivityHousehold);
+  const result = await page.evaluate(function () {
+    const s = FB.state, actor = s.chars[s.player.charId], member = s.chars[activityFixture.member];
+    const activities = FBDATA.religiousActivities, patronage = FBDATA.religiousPatronage;
+    const people = FB.religiousActivityPeople, deed = FB.instants.find(function (row) { return row.id === 'religious_activities'; });
+    const rng = FB.getRngState(), uid = FB.getUidCounter(), faith = actor.religion;
+    let calls = 0;
+    FBDATA.religiousActivities = {test_learning:activities.test_learning}; FBDATA.religiousPatronage = {};
+    FB.religiousActivityPeople = function () { calls++; return people.apply(this,arguments); };
+    try {
+      const playerVisible = deed.show(s), playerCalls = calls;
+      actor.religion = 'tengri';
+      const expectedKin = people(s).some(function (id) { return FB.religiousActivityVisible(s,id); });
+      calls = 0;
+      const kinVisible = deed.show(s), kinCalls = calls;
+      const household = people(s).map(function (id) { return {person:s.chars[id],faith:s.chars[id].religion}; });
+      household.forEach(function (row) { row.person.religion = 'tengri'; });
+      const none = deed.show(s);
+      household.forEach(function (row) { row.person.religion = row.faith; });
+      return {playerVisible:playerVisible,playerCalls:playerCalls,kinVisible:kinVisible,expectedKin:expectedKin,
+        kinCalls:kinCalls,none:none,memberFaith:member.religion,pure:rng === FB.getRngState() && uid === FB.getUidCounter()};
+    } finally {
+      actor.religion = faith; FB.religiousActivityPeople = people;
+      FBDATA.religiousActivities = activities; FBDATA.religiousPatronage = patronage;
+    }
+  });
+  expect(result).toEqual({playerVisible:true,playerCalls:0,kinVisible:true,expectedKin:true,kinCalls:1,
+    none:false,memberFaith:'catholic',pure:true});
+});
+
 test('household participation charges one purse and observes location, health and military obligations', async function ({ page }) {
   await page.evaluate(installActivityHousehold);
   const result = await page.evaluate(function () {

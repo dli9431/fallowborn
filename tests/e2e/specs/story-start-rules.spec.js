@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { beginBookmark } = require('../support/game/bookmark-acceptance');
@@ -174,6 +175,7 @@ test('located opening goals leave an open role outside the Story group and still
   await page.locator('#modfile').setInputFiles({ name:'open-role-companion.json', mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(mod)) });
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('profile_only_open_role'); });
   await chooseDate(page, '476');
   const card = page.locator('#scenariolist [data-scenario="farmer_476"]');
@@ -273,6 +275,7 @@ for (const profile of [
     await page.locator('#modfile').setInputFiles({ name:'fixed-household-story-rules.json', mimeType:'application/json',
       buffer:Buffer.from(JSON.stringify(mod)) });
     await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
     await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('hill_household_example'); });
     await chooseDate(page, '867');
     await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts', 'Story starts', 'Open starts']);

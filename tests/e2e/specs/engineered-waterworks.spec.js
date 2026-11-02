@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
@@ -23,6 +24,7 @@ async function start(page,info,name,custom){
     path.resolve(__dirname,'../fixtures/authoring/engineered-waterworks-'+name+'.json'));
   await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
   const key=name==='supplied'?'river':'upland';
+  await prepareGameContent(page);
   await page.waitForFunction(function(key){return window.FB&&FB.game&&FB.game.bootReady&&FBDATA.bookmarks['resource_'+key];},key);
   await beginBookmark(page,info,'resource_'+key,'resource_'+key+'_household');
 }

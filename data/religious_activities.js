@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/religious_activities.js","bookmarks":[],"catalogs":["religiousActivities","religiousPatronage"],"shared":["religiousActivities","religiousPatronage"]}, function (FBDATA) {
 /* Local costs consume supplies; they create no endowed property or purse. */
 FBDATA.religiousActivities = {
   /* Household practice grants no specialist qualification. Dates and rewards
@@ -849,3 +850,4 @@ FBDATA.techImpactReviews.features.hindu_service_patronage_711 = {
 FBDATA.techImpactReviews.features.zoroastrian_later_household_learning = {
   mode:'none',rationale:'Dated local household study requires time and participation, without a discovery gate, endowed school or specialist qualification.'
 };
+});

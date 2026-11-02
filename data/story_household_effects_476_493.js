@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_household_effects_476_493.js","bookmarks":["476","493"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Local household responses to existing world stories. All choices use the
    costless notice fallback; public transactions remain with their source. */
 FBDATA.householdEffects_476_493 = {
@@ -3210,6 +3211,7 @@ FBDATA.householdEffects_476_493 = {
   'use strict';
   Object.assign(FBDATA.storyInstances, FBDATA.householdEffects_476_493);
   ['476','493'].forEach(function (id) {
+    return FB.bookmarkSources.scope(id, function () {
     var raw = FBDATA.bookmarks[id], original = (raw.stories || []).slice();
     function attach(bookmark, inherited) {
       var stories = (bookmark.stories || inherited).slice();
@@ -3222,5 +3224,7 @@ FBDATA.householdEffects_476_493 = {
     attach(raw, original);
     var baseline = Object.assign({}, raw, raw.revisions && raw.revisions.baseline);
     Object.keys(raw.revisions || {}).forEach(function (revision) { attach(raw.revisions[revision], baseline.stories); });
+    });
   });
 })();
+});

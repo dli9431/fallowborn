@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -21,6 +22,7 @@ async function begin(page, info, example) {
     '../fixtures/authoring/holywar-opening-' + example + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
   const prefix = example === 'harbor' ? 'harbor' : 'dune';
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix + '_world'];
   }, prefix);

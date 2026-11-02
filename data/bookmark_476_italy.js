@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_476_italy.js","bookmarks":["476"],"catalogs":["settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* 476 italy snapshot. Stable grid ids, authored politics.
    realm is both sovereign owner and direct holder under these governments.
    No later bookmark supplies owners, communities or title groups. */
@@ -393,3 +394,4 @@ FBDATA.events.push(
     { label:'Keep out of the quarrel.', effects:{} }
   ] }
 );
+});

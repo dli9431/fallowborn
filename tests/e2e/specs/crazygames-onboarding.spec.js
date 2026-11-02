@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'css/style.css', 'js/main.js', 'js/ui_misc.js',
@@ -20,6 +21,7 @@ const { startDeterministicGame } = require('../support/game/start');
 
 async function openPortal(page, testInfo) {
   await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
+  await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady;
   });

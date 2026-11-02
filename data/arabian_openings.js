@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/arabian_openings.js","bookmarks":["800","867","1066","1204"],"catalogs":["settlementSites","settlementLayouts","religiousActivities"],"shared":[]}, function (FBDATA) {
 /* Independently dated city-level worship reconstructions. Exact mosque
    footprints, custodians, staff, endowed property and journey access are not
    declared here. Sources and simulation terms: docs/designs/religions.md. */
@@ -13,6 +14,7 @@
     '1204':{sources:['inhabited_v2'],counties:['mecca']}
   };
   Object.keys(openings).forEach(function (id) {
+    return FB.bookmarkSources.scope(id, function () {
     var base = FBDATA.bookmarks[id], declaration = openings[id], revisions = base.revisions;
     base.revisions = Object.assign({}, revisions);
     declaration.sources.forEach(function (sourceId) {
@@ -51,5 +53,7 @@
       });
       base.revisions[revisionId] = Object.assign({}, source, {localInstitutions:institutions,settlementLayout:layoutId});
     });
+    });
   });
 })();
+});

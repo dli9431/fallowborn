@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_476_africa.js","bookmarks":["476"],"catalogs":["settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* 476 africa snapshot. Stable grid ids, authored politics.
    realm is both sovereign owner and direct holder under these governments.
    No later bookmark supplies owners, communities or title groups.
@@ -185,3 +186,4 @@ Object.assign(FBDATA.settlementLayouts['476'], FBDATA.bookmarkRegions476.africa.
 FBDATA.eventPacks = FBDATA.eventPacks || {};
 FBDATA.eventPacks.africa_476 = { eras:['late_antique'], yearMin:476, yearMax:600 };
 FBDATA.events = (FBDATA.events || []).concat(FBDATA.bookmarkRegions476.africa.events);
+});

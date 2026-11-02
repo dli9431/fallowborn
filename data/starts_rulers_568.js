@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_rulers_568.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Three existing Frankish courts in the fresh 568 revision. */
 window.FBDATA = window.FBDATA || {};
 
@@ -41,3 +42,4 @@ FBDATA.startScenarios_rulers_568 = [
     });
   } catch (error) { draft.faults.push({source:'data/starts_rulers_568.js',message:error.message}); }
 })();
+});

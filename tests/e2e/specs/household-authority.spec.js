@@ -21,6 +21,35 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('household queries reject unrelated people before political scans but still exclude related authorities',async function ({page}) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, me = s.chars[s.player.charId], guard = FB.isExternalHouseholdAuthority;
+    const c = Object.assign({},me,{id:'household_authority_probe',role:'farmer',fatherId:null,motherId:null,
+      spouseId:null,childrenIds:[],dead:false});
+    s.chars[c.id] = c;
+    const rng = FB.getRngState(), uid = FB.getUidCounter();
+    let calls = 0;
+    FB.isExternalHouseholdAuthority = function () { calls++; return guard.apply(this,arguments); };
+    try {
+      const unrelated = FB.isHouseholdCharacter(s,c.id), unrelatedCalls = calls;
+      c.spouseId = me.id;
+      const spouse = FB.isHouseholdCharacter(s,c.id);
+      c.role = 'lord';
+      const independentSpouse = FB.isHouseholdCharacter(s,c.id);
+      c.spouseId = null; c.fatherId = me.id;
+      const independentChild = FB.isHouseholdCharacter(s,c.id);
+      c.role = 'farmer';
+      const before = JSON.stringify(s);
+      const child = FB.isHouseholdCharacter(s,c.id);
+      return {unrelated:unrelated,unrelatedCalls:unrelatedCalls,spouse:spouse,
+        independentSpouse:independentSpouse,independentChild:independentChild,child:child,
+        unchanged:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    } finally { FB.isExternalHouseholdAuthority = guard; }
+  });
+  expect(result).toEqual({unrelated:false,unrelatedCalls:0,spouse:true,
+    independentSpouse:false,independentChild:false,child:true,unchanged:true});
+});
+
 test('the local lord stays outside household service after friendship and marriage',
   async function ({ page }) {
     const result = await page.evaluate(function () {

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/assembly_polities.js","bookmarks":["476"],"catalogs":["governmentForms","settlementSites","settlementLayouts","constituencyProfiles"],"shared":["governmentForms","settlementSites","settlementLayouts","constituencyProfiles"]}, function (FBDATA) {
 /* Local institutions are declared explicitly, never inferred from ethnicity,
    ruler-name gaps or development. Numbers below are simulation policy. */
 (function () {
@@ -81,3 +82,4 @@
   FBDATA.techImpactReviews.features.assembly_reserved_consent = { mode:'none', rationale:'Collective consent and refusal depend on local rights, costs and commitments rather than research.' };
   FBDATA.techImpactReviews.features.assembly_local_obligations = { mode:'none', rationale:'Bounded local dues, arbitration and defensive service are baseline community life.' };
 })();
+});

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_711.js","bookmarks":["711"],"catalogs":["cultures","religions","settlementSites"],"shared":[]}, function (FBDATA) {
 /* Spring 711 world on europe_regional, registered for ordinary campaign setup.
    Politics and community shares are literal, independent of other bookmarks.
    Empty county names lists pin the literal labels instead of base-date aliases.
@@ -1696,3 +1697,4 @@ FBDATA.storyGovernmentSelections711 = {
     name:'The northeastern crown', desc:'This court retains its own territory and political recognition. No election proves which opening Gothic claimant was legitimate.' }
 };
 FBDATA.bookmarks['711'].stories.push('toledo_crown_711', 'northeastern_crown_711');
+});

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
@@ -19,6 +20,7 @@ async function importExample(page, info, prefix, revision) {
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
     '../fixtures/authoring/revision-start-tracks-' + prefix + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix + '_world'];
   }, prefix);
@@ -332,6 +334,7 @@ test('named household offering and adopted ruler restore use effective original 
   await page.locator('#modfile').setInputFiles({name:'named-effective-tracks.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(input))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks.harbor_world; });
   expect(await page.evaluate(function () {
     const sc = FBDATA.startScenarios.find(function (row) { return row.existingPerson; });

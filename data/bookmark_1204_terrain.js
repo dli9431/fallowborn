@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1204_terrain.js","bookmarks":["1204"],"catalogs":["geographies","cultures","settlementSites","settlementLayouts","constituencyProfiles","mobileProfiles"],"shared":[]}, function (FBDATA) {
 /* Spring 1204 district declarations. The retained opening stays on its
    original geometry. Evidence, approximations and gated candidates are in
    docs/research/1204-terrain.md. No other date supplies these inhabitants. */
@@ -266,3 +267,4 @@ FBDATA.communalRevisions['1204'] = {
       religion:'samaritan',culture:'syriac',profileId:'samaritan_lay_congregation'}
   ]
 };
+});

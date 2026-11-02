@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_867_north_atlantic.js","bookmarks":["867"],"catalogs":["geographies","cultures","settlementSites","settlementLayouts","religiousActivities","religiousPatronage"],"shared":[]}, function (FBDATA) {
 /* Optional spring 867 North Atlantic world. Evidence, local authority and
    demographic reconstruction limits: docs/research/867-north-atlantic.md.
    This declaration neither selects the fresh world nor settles Iceland. */
@@ -139,3 +140,4 @@ FBDATA.bookmarkRevisionContent_north_atlantic_867 = {
   FBDATA.techImpactReviews.features.period_867_north_atlantic_habitation = {mode:'none',
     rationale:'Established island and northern mainland households and ordinary local authority require no new discovery. Existing work, equipment, settlement and travel requirements remain active.'};
 })();
+});

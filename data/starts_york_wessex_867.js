@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_york_wessex_867.js","bookmarks":["867"],"catalogs":[],"shared":[]}, function (FBDATA) {
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.startScenarios_york_wessex_867 = [
@@ -22,3 +23,4 @@ FBDATA.startScenarios_york_wessex_867 = [
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_york_wessex_867);
+});

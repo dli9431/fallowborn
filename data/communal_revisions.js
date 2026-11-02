@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/communal_revisions.js","bookmarks":["476","493","711","800","867","1066","1204"],"catalogs":["settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Communal-minority revisions (jewish_samaritan_v3).
 
    Each dated bookmark declares one table in FBDATA.communalRevisions[id]:
@@ -32,6 +33,7 @@ FBDATA.communalSites = {
   'use strict';
   function copy(value) { return JSON.parse(JSON.stringify(value)); }
   Object.keys(FBDATA.communalRevisions).forEach(function (bookmarkId) {
+    return FB.bookmarkSources.scope(bookmarkId, function () {
     var d = FBDATA.communalRevisions[bookmarkId], b = FBDATA.bookmarks[bookmarkId];
     var source = b && b.revisions && b.revisions[d.source];
     if (!source) throw new Error('Missing communal source revision: ' + bookmarkId + '/' + d.source);
@@ -80,5 +82,7 @@ FBDATA.communalSites = {
     var later = keys.slice(at + 1).map(function (key) { var value = revisions[key]; delete revisions[key]; return [key, value]; });
     revisions[d.revision] = Object.assign({},source,changes);
     later.forEach(function (row) { if (row[0] !== d.revision) revisions[row[0]] = row[1]; });
+    });
   });
 })();
+});

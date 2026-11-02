@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_alexander_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Select the original princely son without adopting his father's realm. */
 window.FBDATA = window.FBDATA || {};
 
@@ -16,3 +17,4 @@ FBDATA.startScenarios_alexander_1241 = [
     intro:'You are Alexander Yaroslavich, at Pereslavl-Zalessky with your mother and wife after leaving Novgorod. Your father retains his principality. Open your story in Deeds to consider the household and a possible northern return.' }
 ];
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_alexander_1241);
+});

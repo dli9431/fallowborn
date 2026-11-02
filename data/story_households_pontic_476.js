@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_pontic_476.js","bookmarks":["476"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* A farming household's choices follow the actual civilian camp. */
 window.FBDATA = window.FBDATA || {};
 
@@ -115,3 +116,4 @@ FBDATA.householdTracks_pontic_476 = {
     scenario.trackLocations[def.id] = ['cherson'];
   });
 })();
+});

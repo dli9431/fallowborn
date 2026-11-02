@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1241_alexander.js","bookmarks":["1241"],"catalogs":["settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Fresh homes use a separate layout; retained campaigns keep their slot ids. */
 FBDATA.bookmarkRevisionContent_alexander_1241 = {
   bookmarkId:'1241', revision:'alexander_v2',
@@ -29,3 +30,4 @@ FBDATA.bookmarkRevisionContent_alexander_1241 = {
     startLocations:locations, settlementLayout:'1241_alexander_v2'};
   b.revision=d.revision;
 })();
+});

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -21,6 +22,7 @@ async function start(page,info,prefix,input,scenario) {
   await page.locator('#modfile').setInputFiles(input ? {name:'campaigns.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(input))} : path.resolve(__dirname,'../fixtures/authoring/mobile-opening-campaigns-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   await beginBookmark(page,info,prefix+'_world',scenario || prefix+'_household');
   await page.evaluate(function () {
@@ -292,7 +294,9 @@ test('missing or forged opted-in provenance rejects detached save adoption witho
       function (r) {r.openingCampaigns.entries[0].target='dune_well';},
       function (r) {r.openingCampaigns.entries[0].columns[0].hostId='foreign';},
       function (r) {r.openingCampaigns.entries[0].columns[0].commanderId=r.leaderId+'forged';},
-      function (r,s) {s.wars[r.openingCampaigns.entries[0].warId].startedTurn=1;}];
+      function (r,s) {s.wars[r.openingCampaigns.entries[0].warId].startedTurn=1;},
+      function (r,s) {s.chars[r.openingCampaigns.entries[0].opponent.characterId].id='forged_identity';},
+      function (r,s) {delete s.chars[r.openingCampaigns.entries[0].opponent.characterId];}];
     return changes.map(function (change) {
       const saved=JSON.parse(FB.save.serialize()),s=saved.state;change(M.row(s,C.rid),s);
       const before=JSON.stringify(s),live=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -303,7 +307,7 @@ test('missing or forged opted-in provenance rejects detached save adoption witho
         rng===FB.getRngState() && uid===FB.getUidCounter();
     });
   });
-  expect(result).toEqual(Array(14).fill(true));
+  expect(result).toEqual(Array(16).fill(true));
 });
 
 test('later canonical reassignment changes the current commander without rewriting opening campaign provenance',async function ({page},info) {

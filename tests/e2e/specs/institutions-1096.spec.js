@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
@@ -271,6 +272,7 @@ test('the ordinary JSON importer retains date-local declarations and exact conte
   await page.locator('#modfile').setInputFiles({name:'institutions-1096.json',
     mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))});
   await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.mods.count() === 1; });
   await begin(page,info);
   expect(await page.evaluate(function () { return Object.keys(FB.localInstitutionDefinitions(FB.state)); })).toEqual(ids);

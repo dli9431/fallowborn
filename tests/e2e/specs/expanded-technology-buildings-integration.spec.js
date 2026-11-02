@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -304,6 +305,7 @@ async function imported(page, info, kind, sector) {
   await openGame(page,info); await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/expanded-catalogue-' + kind + '.json'));
   await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   const source = examples[kind], world = 'expanded_' + kind;
   const scenario = source.startScenarios.find(function (s) { return s.id.indexOf(kind+'_'+sector+'_') === 0 && !!s.rulerRealmId; });

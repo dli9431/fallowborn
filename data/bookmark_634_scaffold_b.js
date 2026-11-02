@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_634_scaffold_b.js","bookmarks":["634"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Autumn 634 first-pass world declarations, quadrant b.
    Independent dated literals; loading these blocks publishes no active world.
    Regional reconstructions and unresolved court identities: docs/research/634-bookmark.md. */
@@ -429,3 +430,4 @@ FBDATA.bookmarkRegions634.scenery_b = {
   opening:{"actors":{},"appointments":{},"estates":[],"claims":[],"migrations":[]},
   storyIds:[]
 };
+});

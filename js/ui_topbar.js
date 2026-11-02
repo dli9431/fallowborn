@@ -43,26 +43,31 @@ window.FB = window.FB || {};
     if (refreshQueued) return;
     refreshQueued = true;
     requestAnimationFrame(function () {
-      refreshQueued = false;
-      const runKind = queuedRefreshKind;
-      queuedRefreshKind = 0;
-      if (FB.game && FB.game.fastForwarding) {
-        refreshDeferredForFastForward = true;
-        return;
-      }
-      if (mapInteractionActive()) {
-        if (runKind > refreshDeferredForMapInteraction) {
-          refreshDeferredForMapInteraction = runKind;
-        }
-        return;
-      }
-      if (FB.state && FB.tutorialCheck) FB.tutorialCheck(FB.state);
-      if (FB.state && FB.music) FB.music.sync(FB.state);
-      refreshNow(runKind === 1);
-      if (UI.refreshCoachmarkTarget) UI.refreshCoachmarkTarget();
-      if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
+      if (FB.loadTiming) FB.loadTiming.measure('Render interface',renderQueuedRefresh);
+      else renderQueuedRefresh();
     });
   };
+  function renderQueuedRefresh() {
+    refreshQueued = false;
+    const runKind = queuedRefreshKind;
+    queuedRefreshKind = 0;
+    if (FB.game && FB.game.fastForwarding) {
+      refreshDeferredForFastForward = true;
+      return;
+    }
+    if (mapInteractionActive()) {
+      if (runKind > refreshDeferredForMapInteraction) {
+        refreshDeferredForMapInteraction = runKind;
+      }
+      return;
+    }
+    if (FB.state && FB.tutorialCheck) FB.tutorialCheck(FB.state);
+    if (FB.state && FB.music) FB.music.sync(FB.state);
+    if (FB.loadTiming) FB.loadTiming.measure('Render top bar and panels',refreshNow,null,[runKind === 1]);
+    else refreshNow(runKind === 1);
+    if (UI.refreshCoachmarkTarget) UI.refreshCoachmarkTarget();
+    if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
+  }
   UI.flushFastForwardRefresh = function (options) {
     if (!refreshDeferredForFastForward && refreshQueued) return;
     refreshDeferredForFastForward = false;

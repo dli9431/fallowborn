@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/mobile_confederations.js","bookmarks":["476"],"catalogs":["governmentForms","settlementSites","settlementLayouts","mobileProfiles"],"shared":["governmentForms","mobileProfiles"]}, function (FBDATA) {
 /* Explicit political declarations. Locations, identities and starting stock
    are data; the engine never infers mobility from culture or date. */
 (function () {
@@ -146,3 +147,4 @@
     startEffects:{landPlots:1}
   },FBDATA.mobileScenarioPresentation.mobile_household_476));
 })();
+});

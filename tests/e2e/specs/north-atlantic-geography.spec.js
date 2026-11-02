@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test, expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
@@ -78,6 +79,7 @@ async function importSurvey(page) {
     if (errors.length) throw new Error(errors.join('\n'));
     return FB.mods.store(text);
   })).not.toBe(false);
+  await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && !!FBDATA.bookmarks.na_survey;
   });

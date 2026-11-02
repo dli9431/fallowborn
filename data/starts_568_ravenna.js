@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/starts_568_ravenna.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* A fictional craft household in the Spring 568 world. */
 window.FBDATA = window.FBDATA || {};
 
@@ -24,3 +25,4 @@ FBDATA.startScenarios_568_ravenna = [
     if (draft.bookmark) draft.bookmark.startLocations.ravenna_household_568 = ['ravenna'];
   } catch (error) { draft.faults.push({source:'data/starts_568_ravenna.js',message:error.message}); }
 })();
+});

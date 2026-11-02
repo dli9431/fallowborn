@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
@@ -19,6 +20,7 @@ async function boot(page,info,inherited) {
   await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles({name:'construction.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(example(inherited)))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
   await beginBookmark(page,info,'season_dry','season_dry_household');
 }

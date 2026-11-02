@@ -226,7 +226,15 @@
   FB.mobileDay=M.day;
   var validate=M.validate;
   M.validate=function (s) {
-    var seen=Object.create(null);
+    var seen=Object.create(null), actors=s.bookmarkSetup && s.bookmarkSetup.actors || {};
+    function savedActor(actorId,id) {
+      var c=typeof id==='string' && own(actors,actorId) && actors[actorId]===id && own(s.chars,id) && s.chars[id];
+      if (!c || own(c,'id') && c.id!==id) return null;
+      // Compact saves retain identity in the actor and character indexes.
+      // Supply only that omitted id for custody and travel queries, without
+      // expanding or repairing the input before its strict validation.
+      return own(c,'id') ? c : Object.assign({},c,{id:id});
+    }
     Object.keys(s.authority && s.authority.governments || {}).forEach(function (rid) {
       var r=M.row(s,rid), spec=definition(s,rid), g=r && r.guardedParty;
       function fail() {throw new Error(FB.T('Invalid saved protective guard.'));}
@@ -237,7 +245,7 @@
           !Array.isArray(g.characterIds) || g.characterIds.length!==spec.actorIds.length ||
           !keys(g.authority,['characterId','generation']) || !whole(g.authority.generation) || !g.authority.generation ||
           g.authority.generation>FB.realmRulerGeneration(s,FB.startRealmId(s,spec.hostRealmId)) ||
-          !FB.bookmarkActor(s,spec.hostActorId) || FB.bookmarkActor(s,spec.hostActorId).id!==g.authority.characterId ||
+          !savedActor(spec.hostActorId,g.authority.characterId) ||
           ['guarded','expired','interrupted','released'].indexOf(g.status)<0 ||
           !whole(g.changedTurn) || g.changedTurn>s.turn || !whole(g.revision) || g.revision>3 || g.revision>r.revision ||
           g.status==='guarded' && (g.revision!==0 || g.changedTurn!==0) ||
@@ -249,8 +257,8 @@
             JSON.stringify(g.releasedBy)!==JSON.stringify(g.authority))) fail();
       var moving=M.migration(s,rid);
       g.characterIds.forEach(function (id,i) {
-        var c=s.chars[id], actor=FB.bookmarkActor(s,spec.actorIds[i]);
-        if (!c || !actor || actor.id!==id || seen[id] || moving && moving.courtIds.indexOf(id)>=0 ||
+        var c=savedActor(spec.actorIds[i],id);
+        if (!c || seen[id] || moving && moving.courtIds.indexOf(id)>=0 ||
             g.status!=='released' && free(s,c) && (personal(s,c) || c.homeProvinceId!==spec.location.countyId)) fail();
         seen[id]=true;
       });

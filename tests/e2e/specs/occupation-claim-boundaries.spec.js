@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
@@ -24,6 +25,7 @@ async function beginExample(page, info, prefix) {
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.join(__dirname, '../fixtures/authoring/' + prefix + '-control.json'));
   await page.locator('#mod-apply').click();
+  await prepareGameContent(page);
   await page.waitForFunction(function (id) {
     return window.FB && FB.game && FB.game.bootReady && !!FBDATA.bookmarks[id];
   }, prefix + '_control_world');

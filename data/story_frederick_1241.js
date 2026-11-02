@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_frederick_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Agenda presentation uses the shared literal rulerAgendas catalogue. */
 FBDATA.openingProfiles_frederick_1241 = {
   opening_frederick_1241:{ id:'opening_frederick_1241', type:'opening_profile',
@@ -18,3 +19,4 @@ FBDATA.openingProfiles_frederick_1241 = {
     ] }
 };
 Object.assign(FBDATA.storyInstances,FBDATA.openingProfiles_frederick_1241);
+});

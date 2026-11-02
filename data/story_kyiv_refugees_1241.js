@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_kyiv_refugees_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal decisions, ordinary craft income and an optional visit to Lutsk. */
 window.FBDATA = window.FBDATA || {};
 
@@ -106,3 +107,4 @@ FBDATA.openingProfiles_kyiv_refugees_1241 = {
   ];
   Object.assign(FBDATA.storyInstances, FBDATA.householdTracks_kyiv_refugees_1241, FBDATA.openingProfiles_kyiv_refugees_1241);
 })();
+});

@@ -1,3 +1,7 @@
+Read-only institution queries
+
+The Religious Membership deed uses hasPlayerReligiousInstitution to stop at the first visible institution. It checks the protagonist first, then the remaining managed household; household-only opportunities remain visible and independent authorities remain excluded. The modal still receives the complete sorted playerReligiousInstitutions list. Both reads share the same membership, faith, residence and patron rules and retain no visibility cache. religiousInstitutionAvailable exposes the canonical availability predicate without building a detached snapshot.
+
 Malformed opening diagnostics
 
 Definition validation returns diagnostics for an absent date or a malformed jurisdiction list without dereferencing either value. Validation remains read-only. The 476 and 493 regional population composers do not generate Buddhist clergy or congregations from resident population shares alone; those shares remain present, while unaccepted institutional foundations stay absent.

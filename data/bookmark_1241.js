@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1241.js","bookmarks":["1241"],"catalogs":["geographies","religions","settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* Independent spring 1241 world assembled from date-owned regional records.
    See docs/research/1241-bookmark.md for the first-pass limits. */
 window.FBDATA = window.FBDATA || {};
@@ -87,3 +88,4 @@ FBDATA.bookmarkCandidates['1241'] = {
   b.openingRevisions = {baseline:b.opening};
   FBDATA.bookmarks['1241'] = b;
 })();
+});

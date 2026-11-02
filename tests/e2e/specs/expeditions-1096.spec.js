@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -85,6 +86,7 @@ async function imported(page,info,label) {
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/expedition-story-'+label+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   const prefix=label==='harbor' ? 'harbor' : 'dune';
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];
   },prefix);

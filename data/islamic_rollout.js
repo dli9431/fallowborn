@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/islamic_rollout.js","bookmarks":["800","867","1066"],"catalogs":["religiousActivities","religiousPatronage"],"shared":[]}, function (FBDATA) {
 /* Dated fresh selections retain every predecessor as a resumable revision.
    Kufa is a city-level learning reconstruction, without named staff/property. */
 (function () {
@@ -15,6 +16,7 @@
       });
     });
   }
+  FB.bookmarkSources.scope('800', function () {
   var bookmark = FBDATA.bookmarks['800'], revisions = bookmark.revisions;
   bookmark.revisions = Object.assign({}, revisions);
   Object.keys(revisions).forEach(function (sourceId) {
@@ -40,15 +42,19 @@
     });
     carryOpenings('800', sourceId, sourceId + '_learning_v1');
   });
+  });
   var selected = {
     '800':'inhabited_v2_governments_v2_islamic_v1_learning_v1',
     '867':'governments_v2_islamic_v1',
     '1066':'governments_v2_islamic_v1_institutions_v1'
   };
   Object.keys(selected).forEach(function (id) {
+    return FB.bookmarkSources.scope(id, function () {
     var raw = FBDATA.bookmarks[id], revision = selected[id];
     if (!Object.prototype.hasOwnProperty.call(raw.revisions, revision))
       throw new Error('Missing Islamic rollout revision: ' + id + '/' + revision);
     raw.revision = revision;
+    });
   });
 })();
+});

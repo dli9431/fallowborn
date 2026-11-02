@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -26,6 +27,7 @@ async function importProof(page, info, prefix, begin) {
     page.waitForEvent('domcontentloaded'),
     page.locator('#mod-apply').click()
   ]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(prefix + '_court'); }, prefix);
   if (begin !== false) await beginBookmark(page, info, prefix + '_courts_900', prefix + '_court_household');
 }

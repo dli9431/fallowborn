@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
@@ -53,6 +54,7 @@ for (const example of [
     await page.evaluate(function () { FB.ui.showMods(); });
     await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../../../docs/examples',example.file));
     await Promise.all([page.waitForEvent('load'),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
     await expect.poll(function () { return page.evaluate(function () { return !!(FB.game.bootReady && FB.mods.count() === 1); }); }).toBe(true);
     const result = await page.evaluate(function (inputs) {
       const P = FB.aiDecisions;
@@ -252,6 +254,7 @@ test('ordinary stored replacement and removal discard policies from the removed 
   const source = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../docs/examples/ai-decisions-expansion.json'),'utf8'));
   async function store(mod) {
     await Promise.all([page.waitForEvent('load'),page.evaluate(function (data) { FB.mods.store(JSON.stringify(data)); },mod)]);
+    await prepareGameContent(page);
     await expect.poll(function () { return page.evaluate(function () { return FB.game.bootReady; }); }).toBe(true);
   }
   await store(source);
@@ -265,6 +268,7 @@ test('ordinary stored replacement and removal discard policies from the removed 
       removed:!Object.prototype.hasOwnProperty.call(FBDATA.aiDecisionPolicies,'expansive_war'),changed:signature !== FB.mods.sig()};
   },first)).toEqual({count:1,selected:'replacement_war',removed:true,changed:true});
   await Promise.all([page.waitForEvent('load'),page.evaluate(function () { FB.mods.removeAt(0); })]);
+  await prepareGameContent(page);
   await expect.poll(function () { return page.evaluate(function () { return FB.game.bootReady; }); }).toBe(true);
   expect(await page.evaluate(function () {
     return {count:FB.mods.count(),selected:FB.aiDecisions.resolve(null,null,'war').id,

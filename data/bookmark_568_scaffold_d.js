@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_568_scaffold_d.js","bookmarks":["568"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Spring 568 first-pass regional declarations, quadrant d.
    Date-owned literals reuse reviewed physical seeds and settlement sites.
    These blocks stay inert until the complete bookmark is composed.
@@ -651,3 +652,4 @@ FBDATA.bookmarkRevisionContent_568_horn_sahel = {
   opening:{}
 };
 FBDATA.bookmarkRegions568.horn_sahel = FBDATA.bookmarkRevisionContent_568_horn_sahel;
+});

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1241_frederick.js","bookmarks":["1241"],"catalogs":["settlementSites","settlementLayouts"],"shared":[]}, function (FBDATA) {
 /* A new fresh-campaign revision preserves the original Ravenna site indices
    and generated imperial household for already matching baseline saves. */
 FBDATA.bookmarkRevisionContent_frederick_1241 = {
@@ -46,3 +47,4 @@ FBDATA.bookmarkRevisionContent_frederick_1241 = {
   if (source.starts) b.revisions[d.revision].starts=copy(source.starts);
   b.revision=d.revision;
 })();
+});

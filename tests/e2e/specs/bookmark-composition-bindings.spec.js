@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {openCrazyGame} = require('../support/game/crazygames-title');
@@ -130,6 +131,7 @@ for (const prefix of ['harbor','dune']) {
     await page.locator('#modfile').setInputFiles({name:prefix + '-bindings.json',mimeType:'application/json',
       buffer:Buffer.from(JSON.stringify(candidate.preview))});
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
     await page.waitForFunction(function (id) { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[id]; },prefix + '_world');
     expect(await page.evaluate(function (prefix) {
       return FB.bookmarkRevisions(prefix + '_world').map(function (world) {

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
@@ -74,6 +75,7 @@ test('same-import date and faiths validate purely and publish through the ordina
   await page.locator('#modfile').setInputFiles({name:'634-identity-world.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(mod),'utf8')});
   await page.locator('#mod-apply').click();
+  await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && FB.mods.count() === 1 && FBDATA.bookmarks['634'];
   });

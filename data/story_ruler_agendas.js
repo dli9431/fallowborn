@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_ruler_agendas.js","bookmarks":["476","1204"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal reviews follow living courts and their existing transactions.
    Dates below pace decisions; they impose no historical outcome. */
 FBDATA.rulerAgendas = {
@@ -217,9 +218,11 @@ FBDATA.rulerAgendas = {
     odoacer_476:'odoacer_agenda_476', syagrius_476:'syagrius_agenda_476',
     muhammad_1204:'muhammad_agenda_1204', siwa_delegate_1204:'siwa_agenda_1204' };
   FBDATA.startScenarios.forEach(function (scenario) {
+    if (!scenario || scenario.tracks !== undefined && !Array.isArray(scenario.tracks)) return;
     var id = bindings[scenario.id];
     if (!id) return;
     scenario.tracks = (scenario.tracks || []).slice();
     if (scenario.tracks.indexOf(id) < 0) scenario.tracks.push(id);
   });
 })();
+});

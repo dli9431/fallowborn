@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_800.js","bookmarks":["800"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Local household choices leave the court's wars and succession independent. */
 window.FBDATA = window.FBDATA || {};
 
@@ -94,3 +95,4 @@ FBDATA.householdTracks_800 = {
     scenario.trackLocations[def.id] = ['aachen'];
   });
 })();
+});

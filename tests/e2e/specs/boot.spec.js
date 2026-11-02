@@ -8,12 +8,12 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame, targetUrl } = require('../support/game/navigation');
+const { openGame, openTitle, targetUrl } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('boots the real game without browser, asset, or network errors',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function () {
       /* The title no longer creates a world. Resizing it must remain safe. */
       window.dispatchEvent(new Event('resize'));
@@ -41,6 +41,7 @@ test('boots the real game without browser, asset, or network errors',
         fullStylesReady: document.getElementById('full-stylesheet')
           .getAttribute('data-ready') === 'true',
         bootReady: FB.game.bootReady,
+        contentReady: FB.game.contentReady,
         englishCatalogLoaded: !!(FBDATA.lang && FBDATA.lang.en),
         deferredModals: !!document.querySelector('script[data-deferred-ui="modals"]'),
         modalUiReady: typeof FB.ui.showMenu === 'function',
@@ -72,6 +73,7 @@ test('boots the real game without browser, asset, or network errors',
     expect(contract.stylesheets).toBeGreaterThanOrEqual(2);
     expect(contract.fullStylesReady).toBe(true);
     expect(contract.bootReady).toBe(true);
+    expect(contract.contentReady).toBe(false);
     expect(contract.englishCatalogLoaded).toBe(false);
     expect(contract.deferredModals).toBe(true);
     expect(contract.modalUiReady).toBe(true);

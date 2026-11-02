@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -20,6 +21,7 @@ async function imported(page,info,prefix,input) {
   await page.locator('#modfile').setInputFiles(input ? {name:'locations.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(input))} : path.resolve(__dirname,'../fixtures/authoring/opening-column-locations-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   await beginBookmark(page,info,prefix+'_world',prefix+'_household');
 }

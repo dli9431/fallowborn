@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/african_religious_rollout.js","bookmarks":["476","493","711","800","867","1066","1204"],"catalogs":["geographies","settlementSites","settlementLayouts","religiousActivities","religiousPatronage"],"shared":[]}, function (FBDATA) {
 /* Local meeting scopes use existing settlement anchors. These declarations
    locate lay participation, not an excavated shrine or a historical building. */
 (function () {
@@ -37,6 +38,7 @@
     });
   }
   rows.forEach(function (row) {
+    return FB.bookmarkSources.scope(row.bookmark, function () {
     var base = FBDATA.bookmarks[row.bookmark], revisions = base.revisions, found = false;
     base.revisions = Object.assign({},revisions);
     Object.keys(revisions).forEach(function (sourceId) {
@@ -69,5 +71,7 @@
       found = true;
     });
     if (!found) throw new Error('Missing African dated review world: ' + row.bookmark);
+    });
   });
 })();
+});

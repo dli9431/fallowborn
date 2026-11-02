@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_634_scaffold_a.js","bookmarks":["634"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Autumn 634 western regional inputs. Loading stages literals only.
    Courts, title partitions and community weights are first-pass abstractions.
    Scope and identity holds: docs/research/634-bookmark.md. */
@@ -478,3 +479,4 @@ FBDATA.bookmarkRegions634.scenery_a = {
   opening:{"actors":{},"appointments":{},"estates":[],"claims":[],"migrations":[]},
   storyIds:[]
 };
+});

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/story_households_1241.js","bookmarks":["1241"],"catalogs":[],"shared":[]}, function (FBDATA) {
 /* Personal choices follow ordinary work, current war status and travel. */
 window.FBDATA = window.FBDATA || {};
 
@@ -120,3 +121,4 @@ FBDATA.openingProfiles_1241 = {
   ];
   Object.assign(FBDATA.storyInstances, FBDATA.householdTracks_1241, FBDATA.openingProfiles_1241);
 })();
+});

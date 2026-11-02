@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -22,6 +23,7 @@ async function start(page,info,prefix,options) {
   await page.locator('#modfile').setInputFiles(options.mod ? {name:'passage-policy.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(options.mod))} : path.resolve(__dirname,'../fixtures/authoring/passage-policy-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   if (options.baseline) await page.evaluate(function (prefix) {FBDATA.bookmarks[prefix+'_world'].revision='baseline';},prefix);
   if (options.outside) {

@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/islamic_profiles.js","bookmarks":["800","867","1066"],"catalogs":["religiousActivities","religiousPatronage"],"shared":[]}, function (FBDATA) {
 /* Dated court identities for explicit review. County populations, historical
    incumbents and the selected fresh revisions remain independently authored. */
 (function () {
@@ -20,6 +21,7 @@
     '1066':{ fatimid_1066:'ismaili_fatimid' }
   };
   Object.keys(assignments).forEach(function (id) {
+    return FB.bookmarkSources.scope(id, function () {
     var base = FBDATA.bookmarks[id], revisions = base.revisions, changes = assignments[id];
     base.revisions = Object.assign({}, revisions);
     Object.keys(revisions).forEach(function (sourceId) {
@@ -36,5 +38,7 @@
       base.revisions[sourceId + '_islamic_v1'] = Object.assign({}, source, {realms:realms});
       carryOpenings(id, sourceId, sourceId + '_islamic_v1');
     });
+    });
   });
 })();
+});

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
@@ -99,6 +100,7 @@ test('an imported existing household report checks its authored person independe
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/existing-person-harbor.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks.harbor_world;
   });
@@ -223,6 +225,7 @@ for (const prefix of ['harbor','dune']) {
     await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
       '../fixtures/authoring/revision-start-tracks-' + prefix + '.json'));
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
     await page.waitForFunction(function (prefix) {
       return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix + '_world'];
     },prefix);

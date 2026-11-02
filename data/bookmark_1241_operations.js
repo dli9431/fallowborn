@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1241_operations.js","bookmarks":["1241"],"catalogs":["cultures","settlementSites","settlementLayouts","mobileProfiles"],"shared":[]}, function (FBDATA) {
 /* A fresh operational world. Earlier revisions retain their own opening,
    people, layout and absent mobile records. Quantities and positions are
    disclosed abstractions in docs/research/1241-bookmark.md. */
@@ -143,3 +144,4 @@
     settlementLayout:layoutId,opening:opening,openingRevision:revision,openingRevisions:openingRevisions};
   b.revision=revision;
 })();
+});

@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
@@ -10,7 +11,7 @@ const examples = {harbor:require('../fixtures/authoring/existing-person-harbor.j
   dune:require('../fixtures/authoring/existing-person-dune.json')};
 const source634 = fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_634.js'),'utf8');
 
-dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','js/main.js','js/mods.js',
+dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','js/bookmark_sources.js','data/bookmark_sources.js','js/main.js','js/mods.js',
   'js/stories.js','js/story_household.js','js/starts.js','js/world.js','js/model.js','js/messages.js',
   'js/governments.js','js/title_ids.js','js/crazygames.js','js/ui_misc.js','js/ui_modals.js',
   'data/starts.js','data/bookmarks.js','data/cultures.js','data/geographies.js','data/eras.js',
@@ -37,7 +38,7 @@ for (const crazy of [false,true]) {
       window.__orderingStage.early = FB.bookmarkCompositions.prepare({id:'ordering_early_probe',bookmark:{id:'ordering_future'}}).publish();
       window.__orderingPublicBefore = JSON.stringify({worlds:FBDATA.bookmarks,sites:FBDATA.settlementSites,
         layouts:FBDATA.settlementLayouts,faiths:FBDATA.religions,forms:FBDATA.governmentForms,starts:FBDATA.startScenarios});
-      window.__orderingLiveStarts = FBDATA.startScenarios.map(function (row) { return row.id; });
+      window.__orderingLiveStarts = FB.bookmarkSources.inspect().starts;
     `;
     const after = `
       window.__orderingStage.unchanged = window.__orderingPublicBefore === JSON.stringify({worlds:FBDATA.bookmarks,
@@ -268,6 +269,7 @@ test('a placed preview retains the ordinary JSON file import contract',async fun
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({name:'dune-placed-preview.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(candidate.preview))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks.dune_world; });
   expect(await page.evaluate(function () {
     return {faults:FB.validateBookmark(FB.bookmark('dune_world')),signature:FB.mods.sig(),

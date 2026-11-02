@@ -128,9 +128,9 @@
     return errors;
   };
   var validateBookmark = FB.validateBookmark;
-  // forward the revision flag and candidate story registry to the base check
-  FB.validateBookmark = function (bm, resolvedRevision, storyContext) {
-    var errors = validateBookmark(bm, resolvedRevision, storyContext).concat(FB.openingDefinitionFaults(bm));
+  // Preserve the selected revision, detached registry and world-only scope.
+  FB.validateBookmark = function (bm, resolvedRevision, storyContext, worldOnly) {
+    var errors = validateBookmark(bm, resolvedRevision, storyContext, worldOnly).concat(FB.openingDefinitionFaults(bm));
     if (bm && (bm.openingRevision !== undefined || bm.openingRevisions !== undefined || bm.openingLegacyRevision !== undefined)) {
       var versions = bm.openingRevisions;
       if (!plain(bm.opening) || !plain(versions) || !slug(bm.openingRevision) || !own(versions, bm.openingRevision) ||

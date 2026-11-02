@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -20,6 +21,7 @@ async function start(page,info,prefix,modified) {
     path.resolve(__dirname,'../fixtures/authoring/expedition-terms-'+
     (prefix==='harbor' ? 'harbor' : 'upland')+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
   const sc=examples[prefix].startScenarios.find(function (s) {return s.id===prefix+'_command_start';});
   const code='TERMS-'+prefix+'_world-'+sc.id+'-'+sc.fixedProvinceId+'-'+sc.sex+'-'+

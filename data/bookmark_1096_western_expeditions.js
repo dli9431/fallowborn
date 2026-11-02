@@ -1,3 +1,4 @@
+FB.bookmarkSources.stage({"source":"data/bookmark_1096_western_expeditions.js","bookmarks":["1096"],"catalogs":["mobileProfiles"],"shared":[]}, function (FBDATA) {
 /* Optional formations retain the existing home rulers and their lawful lieges. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.mobileProfiles_western_1096 = {
@@ -131,3 +132,4 @@ FBDATA.bookmarkRevisionContent_1096_western = {
   });
   b.revision='western_expeditions_v1';
 })();
+});

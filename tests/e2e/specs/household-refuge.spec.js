@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -18,6 +19,7 @@ async function start(page,info,label,input) {
   await page.locator('#modfile').setInputFiles(input ? {name:'refuge.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))} :
     path.resolve(__dirname,'../fixtures/authoring/household-refuge-'+label+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
   await page.waitForFunction(function() { return window.FB && FB.game && FB.game.bootReady; });
   await beginBookmark(page,info,label==='river'?'inventory_estuary':'shelter_hill_estuary',
     label==='river'?'inventory_estuary_household':'shelter_hill_estuary_household');

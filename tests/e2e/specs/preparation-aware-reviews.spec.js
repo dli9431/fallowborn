@@ -1,4 +1,5 @@
 'use strict';
+const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
@@ -20,6 +21,7 @@ async function begin(page,info,label,modified) {
     buffer:Buffer.from(JSON.stringify(modified || examples[label]))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   const prefix=label==='harbor' ? 'harbor' : 'dune';
+  await prepareGameContent(page);
   await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
   await beginBookmark(page,info,prefix+'_world',prefix+'_household');
   await page.evaluate(function (label) {
