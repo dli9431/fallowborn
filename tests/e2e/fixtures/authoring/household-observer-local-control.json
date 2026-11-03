@@ -1,0 +1,529 @@
+{
+  "name": "Ordinary household control notices",
+  "cultures": {
+    "dune_folk": {
+      "name": "Glassroad clans",
+      "tradition": "other",
+      "dyn": "plain",
+      "male": [
+        "Kavi",
+        "Daro",
+        "Aran"
+      ],
+      "female": [
+        "Tamar",
+        "Sela",
+        "Nari"
+      ],
+      "family": [
+        "Selen",
+        "Vara",
+        "Ash"
+      ]
+    }
+  },
+  "cultureDoctrineDefaults": {
+    "dune_folk": {
+      "learning": "steppe"
+    }
+  },
+  "religions": {
+    "dune_belief": {
+      "name": "The Open Sky",
+      "parent": "tengri",
+      "availability": {},
+      "properties": {
+        "head": null,
+        "legalTradition": "customary"
+      }
+    }
+  },
+  "geographies": {
+    "dune_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "dune_well",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "steppe"
+        },
+        {
+          "id": "dune_flats",
+          "x": 3.1,
+          "y": 2.1,
+          "terrain": "steppe"
+        },
+        {
+          "id": "dune_pass",
+          "x": 4.7,
+          "y": 2.7,
+          "terrain": "steppe"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {
+        "dune_meeting_hall": {
+          "x": 1.5,
+          "y": 1.5
+        }
+      },
+      "defaultLayout": null
+    }
+  },
+  "storyInstances": {
+    "well_control_notice": {
+      "id": "well_control_notice",
+      "type": "household_observer",
+      "title": "Local authority records",
+      "intro": "Review actual changes of local rule.",
+      "source": {
+        "type": "local_control"
+      },
+      "provinceIds": [
+        "dune_well",
+        "dune_flats"
+      ],
+      "expiryTurns": 30,
+      "requirements": {
+        "provinces": [
+          "dune_well",
+          "dune_flats"
+        ]
+      },
+      "beats": [
+        {
+          "id": "changed",
+          "trigger": "rule_changed",
+          "reach": "local",
+          "name": "A change of rule",
+          "text": "The authority over this county has changed. Ordinary household obligations remain with their existing owners.",
+          "choices": [
+            {
+              "id": "records",
+              "label": "Keep household records",
+              "detail": "A costless acknowledgment without wages, property, protection or movement.",
+              "operation": "review_records"
+            }
+          ]
+        }
+      ]
+    },
+    "well_control_alias": {
+      "id": "well_control_alias",
+      "type": "household_observer",
+      "title": "Local authority records",
+      "intro": "Review actual changes of local rule.",
+      "source": {
+        "type": "local_control"
+      },
+      "provinceIds": [
+        "dune_well"
+      ],
+      "expiryTurns": 30,
+      "requirements": {
+        "provinces": [
+          "dune_well"
+        ]
+      },
+      "beats": [
+        {
+          "id": "changed",
+          "trigger": "rule_changed",
+          "reach": "local",
+          "name": "A change of rule",
+          "text": "The authority over this county has changed. Ordinary household obligations remain with their existing owners.",
+          "choices": [
+            {
+              "id": "records",
+              "label": "Keep household records",
+              "detail": "A costless acknowledgment without wages, property, protection or movement.",
+              "operation": "review_records"
+            }
+          ]
+        }
+      ]
+    },
+    "pass_control_notice": {
+      "id": "pass_control_notice",
+      "type": "household_observer",
+      "title": "Local authority records",
+      "intro": "Review actual changes of local rule.",
+      "source": {
+        "type": "local_control"
+      },
+      "provinceIds": [
+        "dune_pass"
+      ],
+      "expiryTurns": 3,
+      "requirements": {
+        "provinces": [
+          "dune_pass"
+        ]
+      },
+      "beats": [
+        {
+          "id": "changed",
+          "trigger": "rule_changed",
+          "reach": "local",
+          "name": "A change of rule",
+          "text": "The authority over this county has changed. Ordinary household obligations remain with their existing owners.",
+          "choices": [
+            {
+              "id": "records",
+              "label": "Continue ordinary life",
+              "detail": "A costless acknowledgment without wages, property, protection or movement.",
+              "operation": "continue_livelihood"
+            }
+          ]
+        }
+      ]
+    },
+    "ordinary_household_track": {
+      "id": "ordinary_household_track",
+      "type": "household_track",
+      "title": "A private household",
+      "intro": "An ordinary household without a campaign.",
+      "homeProvinceId": "dune_well",
+      "continuity": "household",
+      "initialStage": "done",
+      "stages": {
+        "done": {
+          "name": "Ordinary life",
+          "text": "The household continues its ordinary life.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    },
+    "personal_control_track": {
+      "id": "personal_control_track",
+      "type": "household_track",
+      "title": "A private household",
+      "intro": "An ordinary household without a campaign.",
+      "homeProvinceId": "dune_well",
+      "continuity": "household",
+      "initialStage": "waiting",
+      "stages": {
+        "done": {
+          "name": "Ordinary life",
+          "text": "The household continues its ordinary life.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        },
+        "waiting": {
+          "name": "Household authority records",
+          "text": "Review an actual change of rule at home.",
+          "incident": {
+            "source": "control",
+            "provinceId": "dune_well",
+            "milestone": "rule_changed"
+          },
+          "afterIncident": "done",
+          "choices": [
+            {
+              "id": "record",
+              "label": "Keep personal records",
+              "detail": "Record this occurrence once without payment.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        }
+      }
+    },
+    "pass_ordinary_track": {
+      "id": "pass_ordinary_track",
+      "type": "household_track",
+      "title": "A private household",
+      "intro": "An ordinary household without a campaign.",
+      "homeProvinceId": "dune_pass",
+      "continuity": "household",
+      "initialStage": "done",
+      "stages": {
+        "done": {
+          "name": "Ordinary life",
+          "text": "The household continues its ordinary life.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "dune_household",
+      "name": "Wellside household",
+      "desc": "A free household beside the following.",
+      "intro": "Your household begins on the Glass Road.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 40,
+      "prestige": 5,
+      "piety": 0,
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "fixedProvinceId": "dune_well",
+      "tracks": [
+        "ordinary_household_track"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Free household",
+          "diff": "age 24"
+        }
+      },
+      "trackLocations": {
+        "ordinary_household_track": [
+          "dune_well"
+        ]
+      }
+    },
+    {
+      "id": "personal_control_household",
+      "name": "Household records",
+      "desc": "A free household beside the following.",
+      "intro": "Your household begins on the Glass Road.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 40,
+      "prestige": 5,
+      "piety": 0,
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "fixedProvinceId": "dune_well",
+      "tracks": [
+        "personal_control_track"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Free household",
+          "diff": "age 24"
+        }
+      },
+      "trackLocations": {
+        "personal_control_track": [
+          "dune_well"
+        ]
+      }
+    },
+    {
+      "id": "pass_control_household",
+      "name": "Pass household",
+      "desc": "A free household beside the following.",
+      "intro": "Your household begins on the Glass Road.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 40,
+      "prestige": 5,
+      "piety": 0,
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "fixedProvinceId": "dune_pass",
+      "tracks": [
+        "pass_ordinary_track"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Free household",
+          "diff": "age 24"
+        }
+      },
+      "trackLocations": {
+        "pass_ordinary_track": [
+          "dune_pass"
+        ]
+      }
+    }
+  ],
+  "bookmarks": {
+    "dune_world": {
+      "id": "dune_world",
+      "name": "The Glass Road",
+      "desc": "A fictional three-county authoring world.",
+      "date": {
+        "year": 900,
+        "season": 3,
+        "day": 87
+      },
+      "era": "early_medieval",
+      "geography": "dune_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "provinces": [
+        {
+          "id": "dune_well",
+          "name": "Amber Well",
+          "realm": "dune_oasis",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 6,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ],
+          "settlements": [
+            {
+              "site": "dune_meeting_hall",
+              "name": "Well Court",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "dune_flats",
+          "name": "Glass Flats",
+          "realm": "dune_oasis",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 3,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "dune_pass",
+          "name": "Red Gate",
+          "realm": "dune_gate",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 3,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "duchies": {
+        "dune_district": {
+          "name": "The Glass Road",
+          "kingdom": "dune_country"
+        }
+      },
+      "kingdoms": {
+        "dune_country": {
+          "name": "Amber Country",
+          "empire": "dune_horizon"
+        }
+      },
+      "empires": {
+        "dune_horizon": {
+          "name": "The Wide Horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "realms": [
+        {
+          "id": "dune_oasis",
+          "name": "The Amber Wells",
+          "capital": "dune_well",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "religion": "dune_belief",
+          "culture": "dune_folk",
+          "ruler": {
+            "name": "Tamar Selen",
+            "culture": "dune_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          }
+        },
+        {
+          "id": "dune_gate",
+          "name": "The Red Gate",
+          "capital": "dune_pass",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "religion": "dune_belief",
+          "culture": "dune_folk",
+          "ruler": {
+            "name": "Kavi Aran",
+            "culture": "dune_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          }
+        }
+      ],
+      "stories": [
+        "well_control_notice",
+        "well_control_alias",
+        "pass_control_notice"
+      ]
+    }
+  }
+}
