@@ -149,6 +149,8 @@ mobile-expedition-harbor.json and mobile-expedition-dune.json are complete ordin
 
 Finite local incidents
 
+Ordinary household authority reports use household_observer with source:{type:"local_control"}, declared counties and a rule_changed beat. This selects a trusted sovereign-change reader without a campaign, callback or state-field selector. The household-observer-local-control.json example supplies independent multi-county record reviews and short-lived pass continuations through ordinary Mods import. Both use seeded control baselines and the shared household receipt owner; no declaration grants taxes, wages, protection, movement or military facts. Exact-site local incidents retain their separate committed-source contract below. See docs/MODDING.md for source exclusivity, reach and save validation.
+
 local_threat composes a typed original actor, inhabited physical locality, finite calendar opportunity, optional original controlling authority, bounded operation sequence and explicit AI intent policy through storyInstances. The river and hill local-threat JSON examples import through the normal Mods picker and differ in actual actor/presence/authority, duration and behavior. Protagonist and persistent-resident facts come from their existing owners, not a source-id presence flag. The canonical transaction records at most three immutable acts and exposes them to the existing household-locality observer adapter. Unknown effects, carriers, fields and missing opted-in saved records fail closed. No harmful outcome, protection, movement, people, money or rewards are authorable through this owner; those require separately reviewed canonical consumers.
 
 Named association authoring
