@@ -187,6 +187,10 @@
         need(keys(p, ['kind','provinceId']) && slug(p.provinceId), 'location predicate');
       } else if (p.kind === 'sovereign') {
         need(keys(p, ['kind','provinceId','realmId']) && slug(p.provinceId) && slug(p.realmId), 'sovereign predicate');
+      } else if (p.kind === 'control_changed') {
+        var stage = own(def.stages, p.stageId) && def.stages[p.stageId], inc = stage && stage.incident;
+        need(keys(p, ['kind','stageId']) && slug(p.stageId) && inc &&
+          inc.source === 'control' && inc.milestone === 'rule_changed', 'control change predicate');
       } else if (p.kind === 'identity') {
         need(keys(p, ['kind','cultureId','faithId']) && (p.cultureId || p.faithId) &&
           (!p.cultureId || own(FBDATA.cultures, p.cultureId)) && (!p.faithId || own(FBDATA.religions, p.faithId)), 'identity predicate');
@@ -417,6 +421,10 @@
       if (p.kind === 'arrived') return !!s.player.travel && s.player.travel.phase === 'arrived' && s.player.travel.destinationId === p.provinceId;
       if (p.kind === 'journey') return !!s.player.travel && s.player.travel.destinationId === p.provinceId;
       if (p.kind === 'sovereign') return sovereign(s, p.provinceId) === FB.startRealmId(s, p.realmId);
+      if (p.kind === 'control_changed') {
+        var key = incident(s, t, def.stages[p.stageId]);
+        return !!key && !receipt(s, key);
+      }
       if (p.kind === 'identity') { var c = s.chars[s.player.charId]; return !!c && (!p.cultureId || c.culture === p.cultureId) && (!p.faithId || c.religion === p.faithId); }
       if (p.kind === 'year') return s.date.year >= p.min && s.date.year <= p.max;
       if (p.kind === 'calendar_window') {

@@ -1,0 +1,63 @@
+{
+  "name": "Household control review examples",
+  "storyInstances": {
+    "quay_control_example": {
+      "id": "quay_control_example", "type": "household_track",
+      "title": "A household control review", "intro": "An invented household reviews its actual local circumstances.",
+      "homeProvinceId": "paris", "continuity": "household", "initialStage": "review",
+      "requirements": {"provinces": ["paris"]},
+      "stages": {
+        "review": {
+          "name": "Review local control", "text": "A new sovereign and an unchanged routine have different reviews.",
+          "choices": [
+            {"id": "review_change", "label": "Review the change", "detail": "Continue only after an actual change of sovereign.", "when": {"kind": "control_changed", "stageId": "control_review"}, "operation": {"kind": "record_decision"}, "next": "control_review"},
+            {"id": "keep_routine", "label": "Keep the household routine", "detail": "Continue without a new control incident.", "when": {"not": {"kind": "control_changed", "stageId": "control_review"}}, "operation": {"kind": "record_decision"}, "next": "unchanged"}
+          ], "transitions": []
+        },
+        "control_review": {
+          "name": "A changed sovereign", "text": "The household records the actual control change without a grant.",
+          "incident": {"source": "control", "provinceId": "paris", "milestone": "rule_changed"}, "afterIncident": "closed",
+          "choices": [{"id": "acknowledge", "label": "Acknowledge the change", "detail": "Close this occurrence without payment.", "operation": {"kind": "record_decision"}, "next": "aftermath"}],
+          "transitions": [{"when": {"kind": "elapsed", "minDays": 3}, "next": "aftermath"}]
+        },
+        "aftermath": {
+          "name": "After the review", "text": "A closed occurrence is no longer available.",
+          "choices": [
+            {"id": "review_again", "label": "Note another available change", "detail": "Only a new occurrence permits this decision.", "when": {"kind": "control_changed", "stageId": "control_review"}, "operation": {"kind": "record_decision"}, "next": "finished"},
+            {"id": "resume", "label": "Resume the routine", "detail": "There is no unclosed occurrence to review.", "when": {"not": {"kind": "control_changed", "stageId": "control_review"}}, "operation": {"kind": "record_decision"}, "next": "finished"}
+          ], "transitions": []
+        },
+        "unchanged": {"name": "An unchanged routine", "text": "The household continues without a control incident.", "terminal": true, "choices": [], "transitions": []},
+        "closed": {"name": "Already reviewed", "text": "This occurrence was closed elsewhere.", "terminal": true, "choices": [], "transitions": []},
+        "finished": {"name": "Review complete", "text": "The household continues its private life.", "terminal": true, "choices": [], "transitions": []}
+      }
+    },
+    "hill_control_example": {
+      "id": "hill_control_example", "type": "household_track",
+      "title": "A household boundary review", "intro": "An independent household follows an automatic local-control branch.",
+      "homeProvinceId": "aachen", "continuity": "household", "initialStage": "wait",
+      "requirements": {"provinces": ["aachen"]},
+      "stages": {
+        "wait": {
+          "name": "Observe local control", "text": "The next boundary reviews the actual saved baseline.", "choices": [],
+          "transitions": [
+            {"when": {"kind": "control_changed", "stageId": "control_review"}, "next": "control_review"},
+            {"when": {"not": {"kind": "control_changed", "stageId": "control_review"}}, "next": "routine"}
+          ]
+        },
+        "control_review": {
+          "name": "A local change", "text": "An available control occurrence needs a household decision.",
+          "incident": {"source": "control", "provinceId": "aachen", "milestone": "rule_changed"}, "afterIncident": "closed",
+          "choices": [{"id": "remain", "label": "Remain at home", "detail": "Record a private decision without a reward.", "operation": {"kind": "record_decision"}, "next": "remained"}], "transitions": []
+        },
+        "routine": {"name": "The usual routine", "text": "No unclosed control occurrence is available.", "terminal": true, "choices": [], "transitions": []},
+        "remained": {"name": "Still at home", "text": "The household acknowledged the change.", "terminal": true, "choices": [], "transitions": []},
+        "closed": {"name": "An already closed occurrence", "text": "Another owner already closed this occurrence.", "terminal": true, "choices": [], "transitions": []}
+      }
+    }
+  },
+  "startScenarios": [
+    {"id": "quay_control_example_start", "name": "Quay control household", "desc": "An invented choice-based control review.", "intro": "Begin a private household at the quay.", "bookmarkIds": ["867"], "fixedProvinceId": "paris", "startCulture": "frankish", "startReligion": "catholic", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["quay_control_example"], "trackLocations": {"quay_control_example": ["paris"]}},
+    {"id": "hill_control_example_start", "name": "Hill control household", "desc": "An invented automatic control review.", "intro": "Begin a private household near the hills.", "bookmarkIds": ["867"], "fixedProvinceId": "aachen", "startCulture": "frankish", "startReligion": "catholic", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 25, "prestige": 2, "piety": 0, "tracks": ["hill_control_example"], "trackLocations": {"hill_control_example": ["aachen"]}}
+  ]
+}

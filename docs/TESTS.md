@@ -369,6 +369,8 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+household-control-predicate.spec.js imports two independent household graphs and covers unchanged baselines, actual sovereign changes before and after the track hook, choice and automatic branches, a different sovereign at fresh attachment, pure queries and detached rejection of malformed predicates. Save checks retain pending control facts, resolved and expired receipts, existing graph closure routes and missing records without reinitialization. These staged boundaries do not establish longer campaign or device acceptance.
+
 The initial suite covers:
 
 - clean boot from both targets;
