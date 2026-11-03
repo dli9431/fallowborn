@@ -369,6 +369,8 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+household-control-predicate.spec.js imports two independent household graphs and covers unchanged baselines, actual sovereign changes before and after the track hook, choice and automatic branches, a different sovereign at fresh attachment, pure queries and detached rejection of malformed predicates. Save checks retain pending control facts, resolved and expired receipts, existing graph closure routes and missing records without reinitialization. These staged boundaries do not establish longer campaign or device acceptance.
+
 household-observer-local-control.spec.js imports ordinary local-control observers in a world without campaigns. It covers seeded unchanged baselines, actual transfers, separate county cursors, local presence, generation invalidation, personal priority, shared observer receipts, independent expiry/continuation terms, pure malformed-source rejection, pending/closed/unobserved restore, absent records and strict baseline/token/receipt validation. Retained campaign and exact-site source configurations also round trip with their existing receipt versions and behavior. All boundaries are staged without a long simulation.
 
 The initial suite covers:
