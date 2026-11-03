@@ -1,0 +1,37 @@
+Build, run, and test
+
+There is no game build. The approved development-only Playwright harness lives under tests/e2e/ and may run the real committed index.html in headless Chromium from both file:// and its own local static server. It must not import game scripts as Node modules or introduce runtime dependencies into the game.
+
+From tests/e2e/: npm ci installs the pinned test dependency graph. npx playwright install chromium installs the pinned local browser revision. npm run check runs the fast node --check syntax gate. npm run test:server runs the in-process server, offline-cache, and test-runner support regressions. npm run test:fast reruns preceding Chromium-served failures, or Chromium-served specs affected since that coverage slice's last successful tracked-worktree snapshot. Its successful baseline is reused by test:changed for the Chromium-served slice. npm run test:fast:all runs the full Chromium-served suite without advancing the Chromium-file, Firefox-served, or WebKit-served baseline. npm run test:changed automatically reruns preceding Playwright failures, or runs directly edited/new specs plus the boot and determinism runtime canaries in two slices: Chromium-served from the shared fast baseline, then the other three projects from their matrix baseline. npm run test:all runs the server regression and every configured browser project. npm run test:chromium runs the file and served-origin Chromium suite. npm test is an alias for npm run test:all.
+
+When adding or updating a specification, register its shipped JS, data, and CSS inputs with dependsOnRuntime(__filename, [...]) from support/runtime-dependencies.js. Keep declarations focused; directory-wide declarations are reserved for intentional canaries such as boot and determinism. Import shared journeys directly from the relevant leaf module under support/game/ instead of recreating a common barrel module. These dependency edges are metadata for Playwright's changed-file analyzer only: test:fast uses the full graph, while test:changed bounds it to the whole-runtime canaries and directly changed test code. Never import or execute game scripts in Node. Baseline, line-ending, and helper-authoring details are documented in docs/TESTS.md.
+
+Treat shared test helpers as fan-out boundaries. If behavior belongs to one locale, browser, viewport, or scenario, keep its setup in that specification or a leaf helper imported only by the affected specifications. Do not change support/game/navigation.js, the universal fixture, or the page contract to solve a scenario-local test unless their shared contract truly changed.
+
+These commands are for owner-initiated manual runs. AI coding agents must author or update relevant tests, but must not install test browsers or dependencies and must not execute npm run check, Playwright, the static-server regression, runtime verification, or any other command from the test harness. In the final user handoff, report the tests added and state that they were not run. This is handoff-only status; never put it in a commit or merge message. Do not launch ad hoc shell browsers or servers outside this harness. Keep tests deterministic, bounded, and isolated in fresh browser contexts. Manual testing remains required for appearance, touch behavior, itch.io iframe behavior, real mobile browsers, and subjective game feel.
+
+Do not write long multi-year simulation tests. A 20-year 476 campaign test took about 12 minutes and still failed, which proves nothing and blocks the suite. Advance at most one season (90 days) of daily simulation in a test, and only when the daily loop itself is the behavior under test. For annual or long-run rules, stage the dated state directly and call the yearly or boundary hook once or twice. Keep every test well inside the default 60-second timeout, and do not raise test.setTimeout to make a long journey fit. Multi-year stability belongs to targeted boundary tests and owner playthroughs, not browser journeys.
+
+Local load measurements
+
+For owner-controlled startup diagnostics, append ?loadTiming=1 to the local game URL and reload. This records the main menu, bookmark selection and game loading, including Quick Start, Observe and saved games. Each load prints a console report; JSON.stringify(FB.game.loadTiming.reports(), null, 2) returns the latest twenty reports for copying. FB.game.loadTiming.enable(true) enables subsequent loads in the current page, and enable(false) disables them when no load is active. This is local-only, opt-in and transient. Interpret operation selfMs without double counting totalMs, and keep unattributed time distinct from measured synchronous work. The measurement contract is in docs/designs/ui.md. Agents may author coverage in tests/e2e/specs/load-timing.spec.js and inspect owner-provided reports, but must not run measurements or the harness themselves.
+
+Local fast-forward profiler
+
+The built-in profiler in js/main.js is disabled by default and available only from file:// or HTTP(S) on localhost, 127.0.0.1, or IPv6 loopback. It is session-only: nothing is stored in saves, preferences, or telemetry.
+
+For an owner-controlled measurement, pause the game and use the browser console:
+
+FB.game.fastForwardTiming.enable(true);
+
+Fast-forward a season using the normal game control, then inspect or copy:
+
+FB.game.fastForwardTiming.last JSON.stringify(FB.game.fastForwardTiming.last, null, 2)
+
+Disable with FB.game.fastForwardTiming.enable(false). Changing the setting during an active fast-forward returns false; enable it before starting the burst. Each completed burst replaces last and prints its report and tables to the console.
+
+Reports include elapsed time, simulated days, batch count, simulation time, time between batches, operation rows, and work counters. Row totalMs includes timed children; selfMs excludes them. Do not add parent and child totals together. maxMs is the slowest individual call, not the whole season. Between-batch time includes browser work; deferred paint and IndexedDB completion are not measured. Save serialization, autosave scheduling, and the final UI refresh have separate rows. Instrumentation itself has overhead.
+
+Army phases and operations cover muster/disband, orders, movement, reinforcement, supply, battles, and sieges/rebellions. Counters expose repeated projections, failed musters, cache hits, source scans, and invalidations. Annual worldTick rows break down population, rulers, succession, religion, diplomacy, and building work. Population rows include capacity/attraction, enterprise upgrade snapshots, migration, settlement changes, and community projects. Annual rows appear only when the burst crosses the year boundary; confirm worldTick.calls is present before comparing annual work with an ordinary season.
+
+Compare the same starting save and season with comparable browser conditions; changing war counts, annual work, or a warmed cache can change the workload. Use counters and self time to identify repeated work before optimizing. Preserve simulation ordering, seeded RNG, and cache invalidation behavior. New timers must remain opt-in and transient, balance enter/leave in finally, and restore wrapped functions after the burst, including errors. Relevant coverage lives in tests/e2e/specs/time-controls.spec.js, annual-world-profiling.spec.js, and army-daily-performance.spec.js. Agents may inspect owner-provided reports and saved traces, but must not run profiling or the harness themselves under the owner-controlled testing policy above.
