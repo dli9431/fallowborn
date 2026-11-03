@@ -1513,6 +1513,8 @@ Declared trait mechanics
 
 The traitMechanics catalogue supplies the supported literacy, prayer, social, intrigue, justice, religious and AI-policy effects documented in docs/MODDING.md. Consumers read the same effective rules for player previews and AI actors, with no historical trait-id branches. Existing numerical defaults and prerequisite checks are retained. Grouped alternative motives use their maximum contribution; independent yield/support channels use their documented sums. Legacy saved-trait migration and trait-award identities remain separate compatibility concerns. This conversion introduces no technology dependency, saved ledger or additional RNG draw.
 
+FB.traitIds is the shared detached behavioral-trait reader: a full character's list, including an empty list, precedes a compact record's single trait, and repeated ids contribute once in saved order. Policy inputs follow the actual current character rather than the summary's first trait. Ruler aims retain their generation-bound agency record; an absent full character uses existing compact identity and family facts without materialization. See ai-decisions.md for precedence and the legacy ordinary-war personality compatibility switch. These identity repairs change no gameplay eligibility, save format or technology capability.
+
 Household service appointments expose typed promotion, training and trait teaching through householdServiceRoles. Religious contested ranks use religiousOfficeRanks together with faith routes. Quick-start cards choose declared scenarios and family presets and use ordinary character construction. Public shapes and limits are documented in docs/MODDING.md.
 
 

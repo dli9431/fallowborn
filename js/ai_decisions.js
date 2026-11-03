@@ -234,10 +234,15 @@
   // Snapshot existing identity owners; never materialize a ruler or persist a policy.
   P.inputs = function (state, realmId) {
     var realm = state && state.realms && state.realms[realmId];
-    var person = realm && FB.realmRulerCharacterSnapshot && FB.realmRulerCharacterSnapshot(state,realmId);
-    var aim = realm && FB.rulerAimSnapshot ? FB.rulerAimSnapshot(state,realmId) : null;
-    return {traits:person && person.traits ? person.traits.slice() : realm && realm.ruler && realm.ruler.trait ? [realm.ruler.trait] : [],
-      aim:aim && aim.id || null};
+    if (!realm || !realm.alive) return {traits:[],aim:null};
+    var player = realmId === 'player';
+    var person = player ? state.player && state.chars && state.chars[state.player.charId] :
+      FB.realmRulerCharacterSnapshot(state,realmId);
+    // A character's empty list is authoritative; the compact summary may lag.
+    // Legacy personality is a war compatibility switch, never a trait alias.
+    var ruler = player ? person && !person.dead && person : person || realm.ruler;
+    var aim = FB.rulerAimSnapshot(state,realmId);
+    return {traits:FB.traitIds(ruler),aim:aim && aim.id || null};
   };
   P.parameters = function (state, realmId, family) {
     var policy = P.resolve(state,realmId,family);
