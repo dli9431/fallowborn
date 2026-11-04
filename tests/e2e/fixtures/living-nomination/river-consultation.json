@@ -1,0 +1,56 @@
+{
+  "name":"River consultation example",
+  "governmentForms":{
+    "river_consultation_demo":{
+      "holders":"direct","succession":"crown_election","territory":"fixed","consent":"local_reserved",
+      "levy":"elective_service","revenue":"elective_receipts","council":"local_interests",
+      "diplomacy":"territorial_diplomacy","ai":"elective_selection","ladder":"local_standing","officeCatalogue":[],
+      "systems":{"enable":["civic_institutions"],"disable":["episcopal_sees","roman_offices","feudal_service","estates","royal_council","scutage","manorial_tenure","colonate"]},
+      "selectionProfile":{
+        "eligibility":{"minAge":21,"ancestry":false},
+        "candidatePool":{"gentle":false,"cultures":[],"religions":[],"excludedRoles":[]},
+        "procedure":{"realmRecognition":true,"designation":false,"interimRevenue":false,"defensiveLevy":false,"livingNomination":true},
+        "tieBreak":"seniority","consensus":0.75,"quorum":1,"negotiationCost":7,
+        "terms":{"levy":0.2,"revenue":0.35},"reserved":["levy","war","grant"],
+        "members":[
+          {"id":"river_council","name":"River council","principal":{"kind":"institution","id":"river_council_demo"},"scope":"realm","basis":"public_office","weight":2,"continuity":"institution","minimumSupport":-20,"minimumMartial":0,"maximumLevy":1,"maximumRevenue":1},
+          {"id":"river_households","name":"River households","principal":{"kind":"institution","id":"river_households_demo"},"scope":"realm","basis":"public_office","weight":1,"continuity":"institution","minimumSupport":-20,"minimumMartial":0,"maximumLevy":1,"maximumRevenue":1}
+        ]
+      }
+    }
+  },
+  "geographies":{
+    "river_consultation_land":{
+      "bounds":{"lonMin":0,"lonMax":4,"latMin":0,"latMax":4},
+      "land":[[0.2,0.2,3.8,0.2,3.8,3.8,0.2,3.8]],"seas":[],"rivers":[],"gridWidth":160,"defaultLayout":null,
+      "provinces":[{"id":"river_home_demo","x":2,"y":2,"terrain":"farmland"}]
+    }
+  },
+  "settlementSites":{"river_hall_demo":{"x":2,"y":2}},
+  "settlementLayouts":{"river_consultation_layout":{"river_home_demo":[{"site":"river_hall_demo","name":"River Village","kind":"village"}]}},
+  "startScenarios":[{
+    "id":"river_farmer_demo","name":"River household","desc":"A fictional household beside the river.",
+    "intro":"The household works beside the river.","tier":1,"profession":"farmer","gold":63,"prestige":100,"piety":0,
+    "startCulture":"norse","startReligion":"norse_pagan","bookmarkIds":["river_consultation_world"],"eras":["early_medieval"],
+    "alwaysUnlocked":true,"startAge":24,"familyPresets":{"standard":{"name":"Free household","diff":"age 24"}}
+  }],
+  "bookmarks":{
+    "river_consultation_world":{
+      "id":"river_consultation_world","name":"River Consultation","desc":"A fictional weighted consultation.",
+      "date":{"year":900,"season":0,"day":1},"era":"early_medieval","geography":"river_consultation_land",
+      "settlementLayout":"river_consultation_layout","religiousHeads":{},"greatHolyWars":false,
+      "starts":["river_farmer_demo"],"stories":[],"startLocations":{"river_farmer_demo":["river_home_demo"]},
+      "provinces":[{"id":"river_home_demo","name":"River Village","realm":"river_court_demo","culture":"norse","religion":"norse_pagan","dev":4}],
+      "realms":[{"id":"river_court_demo","name":"River Court","color":"#446688","capital":"river_home_demo","rank":3,"religion":"norse_pagan","government":"river_consultation_demo",
+        "ruler":{"name":"Runa","sex":"f","culture":"norse","born":855,"mar":8,"trait":"patient"},
+        "royalCourt":{"dynasty":"River House","spouseId":null,"members":[{"id":"relative","name":"Tora","sex":"f","born":880,"culture":"norse","religion":"norse_pagan","motherId":"ruler","spouseId":null}]}}],
+      "localInstitutions":{
+        "river_council_demo":{"city":"River Village","kind":"council","provinceId":"river_home_demo","site":"river_hall_demo","culture":"roman","religion":"catholic",
+          "representative":{"name":"Marina","born":872,"sex":"f","role":"notable","station":2,"skills":{"mar":8},"traits":["patient"]}},
+        "river_households_demo":{"city":"River Village","kind":"council","provinceId":"river_home_demo","site":"river_hall_demo","culture":"norse","religion":"norse_pagan",
+          "representative":{"name":"Orin","born":880,"sex":"m","role":"notable","station":1,"skills":{"mar":2},"traits":["kind"]}}
+      },
+      "duchies":{},"kingdoms":{},"empires":{},"straits":[],"scripted":[]
+    }
+  }
+}

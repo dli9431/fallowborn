@@ -35,6 +35,13 @@
     return descent(members[m.fatherId || m.parentId], members, roots, seen) ||
       descent(members[m.motherId], members, roots, seen);
   }
+  function officeEligible(s, rid, c) {
+    var p = S.profile(s, rid);
+    return !p.eligibility.officeId || (s.authority.appointments || []).some(function (row) {
+      return row.officeId === p.eligibility.officeId && row.institutionId === rid && row.status === 'active' &&
+        row.holder.kind === 'character' && c && row.holder.id === c.id && (row.endTurn === null || row.endTurn > s.turn);
+    });
+  }
   function eligible(s, rid, m, includeRuler, ignoreAge) {
     var data = S.state(s, rid), p = S.profile(s, rid), t = tree(s, rid);
     var c = memberCharacter(s, m), person = c || m;
@@ -47,10 +54,7 @@
     if (m.branchRef && FB.royalBranchEligible && !FB.royalBranchEligible(s, rid, m)) return false;
     var occupied = !c && s.chars[FB.courtCharacterId(m.id)];
     if (occupied && (occupied.dead || !occupied.royalLine || occupied.royalLine.realmId !== rid || occupied.royalLine.memberId !== m.id)) return false;
-    if (p.eligibility.officeId && !(s.authority.appointments || []).some(function (row) {
-      return row.officeId === p.eligibility.officeId && row.institutionId === rid && row.status === 'active' &&
-        row.holder.kind === 'character' && c && row.holder.id === c.id && (row.endTurn === null || row.endTurn > s.turn);
-    })) return false;
+    if (!officeEligible(s, rid, c)) return false;
     return true;
   }
   function poolEligible(s, rid, m, c, ignoreAge) {
@@ -74,6 +78,7 @@
       var c = s.chars[id], home = id === s.player.charId ? s.player.provinceId : c.homeProvinceId;
       return !c.dead && !c.captive && !c.imprisoned && !c.exiled && !FB.justiceCustodyOf(s, id) &&
         !c.royalLine && !FB.isReigningRealmRuler(s, c) && home && s.owner[home] === rid &&
+        officeEligible(s, rid, c) &&
         s.date.year - c.born >= p.eligibility.minAge && (!p.eligibility.sex || c.sex === p.eligibility.sex) &&
         (!p.candidatePool.gentle || FB.station.isGentle(FB.station.subject(c, s), s)) &&
         poolEligible(s, rid, c, c, false);
@@ -130,6 +135,11 @@
       home:c && c.homeProvinceId || m.homeProvinceId || null } : null;
   }
   function incumbent(s, rid) { var t = tree(s, rid); return t && t.members[t.rulerMemberId]; }
+  function livingNomination(s, rid) {
+    var p = S.profile(s, rid), data = S.state(s, rid);
+    return !!(p && p.procedure && p.procedure.livingNomination === true && data &&
+      (!data.vacancy || data.vacancy.status === 'resolved') && alive(s, incumbent(s, rid)));
+  }
   function actorAllowed(s, rid, actor, candidateId, allowCandidate) {
     var r = realm(s, rid), t = tree(s, rid), candidate = t && t.members[candidateId];
     if (!actor || !r || !r.alive) return false;
@@ -241,7 +251,7 @@
       var candidateProposal = request.action === 'negotiate' || request.action === 'resolve' || request.action === 'open' && request.cause === 'lawful_removal';
       if (personalVote ? !isPrincipal : !actorAllowed(s, rid, actor, id, candidateProposal)) q.reasonId = personalVote ? 'no_mandate' : 'invalid_actor';
       else if (request.action === 'nominate') {
-        if (!v || v.status === 'resolved') q.reasonId = 'no_vacancy';
+        if ((!v || v.status === 'resolved') && !livingNomination(s, rid)) q.reasonId = 'no_vacancy';
         else if (S.nominees(s, rid).indexOf(request.characterId) < 0 ||
             ('royal_' + data.originRealmId + '_electoral_' + request.characterId).length > 160 ||
             Object.keys(t.members).filter(function (key) { return t.members[key].role === 'electoral_candidate' && alive(s, t.members[key]); }).length >= MAX_CANDIDATES ||
@@ -329,7 +339,7 @@
       t.members[key] = { id:key, name:c.name, dyn:c.dyn, sex:c.sex, born:c.born, alive:true,
         culture:c.culture, religion:c.religion, charId:c.id, parentId:null, childIds:[], role:'electoral_candidate' };
       c.royalLine = { realmId:rid, memberId:key };
-      v.candidates = S.candidates(s, rid);
+      if (v && v.status !== 'resolved') v.candidates = S.candidates(s, rid);
       FB.refreshRealmSuccession(s, rid);
     } else if (request.action === 'designate') {
       tree(s, rid).designatedHeirId = request.candidateId;
@@ -438,6 +448,17 @@
     if (data.lastPeriod === period) return false;
     data.lastPeriod = period;
     var actor = { kind:'realm', id:rid }, v = data.vacancy;
+    /* Keep one qualified admitted alternative while the incumbent lives.
+       A later loss of eligibility permits a fresh review, never designation. */
+    if (livingNomination(s, rid) && !S.candidates(s, rid).some(function (id) {
+      return tree(s, rid).members[id].role === 'electoral_candidate';
+    })) {
+      var livingInterest = S.constituency(s, rid).filter(function (m) { return m.active; })[0];
+      var livingNominee = S.nominees(s, rid)[0];
+      var admission = livingInterest && livingNominee && S.quote(s, rid, { action:'nominate',
+        actor:{ kind:'constituency', realmId:rid, id:livingInterest.id }, memberId:livingInterest.id, characterId:livingNominee });
+      if (admission && admission.allowed && S.apply(s, admission)) return true;
+    }
     if (v && v.status !== 'resolved') {
       if (p.candidatePool) {
         var interest = S.constituency(s, rid).filter(function (m) { return m.active; })[0];
@@ -508,7 +529,8 @@
         !unique(p.candidatePool.cultures) || p.candidatePool.cultures.some(function (id) { return !own(FBDATA.cultures, id); }) ||
         !unique(p.candidatePool.religions) || p.candidatePool.religions.some(function (id) { return !own(FBDATA.religions, id); }) ||
         !unique(p.candidatePool.excludedRoles) || !p.procedure)) faults.push(FB.T('Invalid elective candidate pool.'));
-    if (p.procedure !== undefined && (!p.candidatePool || !keys(p.procedure, ['realmRecognition','designation','interimRevenue','defensiveLevy']) ||
+    if (p.procedure !== undefined && (!p.candidatePool || !keys(p.procedure, ['realmRecognition','designation','interimRevenue','defensiveLevy','livingNomination']) ||
+        p.procedure.livingNomination !== undefined && typeof p.procedure.livingNomination !== 'boolean' ||
         ['realmRecognition','designation','interimRevenue','defensiveLevy'].some(function (key) { return typeof p.procedure[key] !== 'boolean'; })))
       faults.push(FB.T('Invalid electoral procedure.'));
     var seen = {};
