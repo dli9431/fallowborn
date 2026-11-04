@@ -1,8 +1,11 @@
 /* Pure bounded policy projections and explicit simulation choice adapters. */
 (function () {
   'use strict';
-  var P = FB.aiDecisions = {}, cache = new WeakMap();
+  var P = FB.aiDecisions = {}, cache = new WeakMap(), investmentSnapshots = new WeakMap();
   var unit = [0,1], ratio = [0,10], count = [0,2048,true];
+  var investmentBenefits = ['tax','dev','research','piety','levy','retinue','archers','defense','siege',
+    'populationCapacity','populationFamineProtection','populationCrisisProtection','migrationAttraction',
+    'communityFaithPressure','garrison','siegeDelay'];
   var tuning = {aiRaidTargetDevelopmentWeight:[0,100]};
   var families = {
     war:{key:'aiWarPolicy', metrics:[],
@@ -78,7 +81,7 @@
   }
   function recordFaults(d, data, path) {
     var errors = [];
-    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments','buildingRoleWeights','domainWeights','schemeOrder','aimOrder','aimOrders'],path,errors)) return errors;
+    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments','buildingRoleWeights','benefitWeights','domainWeights','schemeOrder','aimOrder','aimOrders'],path,errors)) return errors;
     if (!own(families,d.family)) return errors.concat(path + '.family is unregistered.');
     var f = families[d.family], names = Object.keys(f.parameters);
     if (own(d,'aimOrders')) {
@@ -103,13 +106,17 @@
           if (!finite(d.domainWeights[domain],0,4)) errors.push(path + '.domainWeights is out of range.');
         });
     }
-    if (own(d,'buildingRoleWeights')) {
-      if (d.family !== 'investment') errors.push(path + '.buildingRoleWeights requires investment.');
-      if (fields(d.buildingRoleWeights,Object.keys(FB.BUILDING_ROLES || {}),path + '.buildingRoleWeights',errors))
-        Object.keys(d.buildingRoleWeights).forEach(function (role) {
-          if (!finite(d.buildingRoleWeights[role],-100,100)) errors.push(path + '.buildingRoleWeights is out of range.');
+    function investmentFaults(record, at) {
+      ['buildingRoleWeights','benefitWeights'].forEach(function (key) {
+        if (!own(record,key)) return;
+        if (d.family !== 'investment') errors.push(at + '.' + key + ' requires investment.');
+        var names = key === 'buildingRoleWeights' ? Object.keys(FB.BUILDING_ROLES || {}) : investmentBenefits;
+        if (fields(record[key],names,at + '.' + key,errors)) Object.keys(record[key]).forEach(function (name) {
+          if (!finite(record[key][name],-100,100)) errors.push(at + '.' + key + ' is out of range.');
         });
+      });
     }
+    investmentFaults(d,path);
     if (['first','ordered','weighted'].indexOf(d.mode) < 0) errors.push(path + '.mode is unregistered.');
     if (d.family === 'war' && d.mode !== 'first') errors.push(path + ' war uses parameter choices only.');
     if (fields(d.parameters,names,path + '.parameters',errors)) {
@@ -149,17 +156,19 @@
       var selectors = Object.create(null);
       d.adjustments.forEach(function (a,i) {
         var p = path + '.adjustments.' + i;
-        if (!fields(a,['kind','id','multiply'],p,errors)) return;
+        if (!fields(a,['kind','id','multiply','buildingRoleWeights','benefitWeights'],p,errors)) return;
         var table = a.kind === 'trait' ? data.traits : a.kind === 'aim' ? data.agencyRules && data.agencyRules.aims : null;
         var selector = a.kind + ':' + a.id;
         if (!id(a.id) || !own(table,a.id) || selectors[selector]) errors.push(p + ' has an unknown or duplicate selector.');
         selectors[selector] = true;
         if (fields(a.multiply,names,p + '.multiply',errors)) {
-          if (!Object.keys(a.multiply).length) errors.push(p + '.multiply must not be empty.');
+          if (!Object.keys(a.multiply).length && !Object.keys(a.buildingRoleWeights || {}).length &&
+              !Object.keys(a.benefitWeights || {}).length) errors.push(p + ' needs a nonempty preference.');
           Object.keys(a.multiply).forEach(function (k) {
             if (!finite(a.multiply[k],0,4)) errors.push(p + '.multiply.' + k + ' is out of range.');
           });
         }
+        investmentFaults(a,p);
       });
     }
     if (!errors.length && d.family === 'research' && d.parameters.horizonFloor > 0) {
@@ -210,7 +219,7 @@
     });
     return errors;
   };
-  P.invalidate = function () { cache = new WeakMap(); };
+  P.invalidate = function () { cache = new WeakMap(); investmentSnapshots = new WeakMap(); };
   P.balanceFaults = function (balance) {
     return Object.keys(tuning).filter(function (key) {
       return own(balance,key) && !finite(balance[key],tuning[key][0],tuning[key][1]);
@@ -265,6 +274,13 @@
   };
   P.parameters = function (state, realmId, family) {
     var policy = P.resolve(state,realmId,family);
+    if (family === 'investment') {
+      var projection = P.report(policy,[],P.inputs(state,realmId));
+      // Profile choices reuse the same detached snapshot as their parameters.
+      // No realm, character or state identity is cached by this weak key.
+      investmentSnapshots.set(projection.parameters,projection);
+      return projection.parameters;
+    }
     if (!policy.definition.adjustments.length) return policy.definition.parameters;
     return P.report(policy,[],P.inputs(state,realmId)).parameters;
   };
@@ -295,16 +311,22 @@
     var report = P.report(policy,candidates,policy.definition.adjustments.length || policy.definition.aimOrders ? P.inputs(state,realmId) : undefined);
     return P.pick(report,report.mode === 'weighted' && report.totalWeight > 0 ? FB.rng() : undefined);
   };
-  P.investmentDelta = function (state, realmId, definition, cost, policy, parameters) {
+  P.investmentDelta = function (state, realmId, definition, cost, policy, parameters, projection) {
     policy = policy || P.resolve(state,realmId,'investment');
-    var p = parameters || (policy.definition.adjustments.length ? P.parameters(state,realmId,'investment') : policy.definition.parameters);
+    projection = projection || parameters && investmentSnapshots.get(parameters) || P.report(policy,[],P.inputs(state,realmId));
+    var p = parameters || projection.parameters;
     var benefit = (definition.tax || 0)+(definition.dev || 0)+(definition.research || 0)+
       (definition.piety || 0)+(definition.levy || 0)+(definition.retinue || 0)+(definition.populationCapacity || 0);
-    var roles = policy.definition.buildingRoleWeights || {};
-    return (roles[definition.role] || 0)+benefit*p.benefitWeight-cost*p.costWeight-(definition.upkeep || 0)*p.upkeepWeight;
+    var weights = projection.investment, score = weights.buildingRoleWeights[definition.role] || 0;
+    Object.keys(weights.benefitWeights).forEach(function (key) {
+      score += (definition[key] || 0)*weights.benefitWeights[key];
+    });
+    return Math.max(-1000000000,Math.min(1000000000,
+      score+benefit*p.benefitWeight-cost*p.costWeight-(definition.upkeep || 0)*p.upkeepWeight));
   };
   P.buildingPriorities = function (state, realmId, pid, entries) {
-    var policy = P.resolve(state,realmId,'investment'), p = P.parameters(state,realmId,'investment');
+    var policy = P.resolve(state,realmId,'investment'), projection = P.report(policy,[],P.inputs(state,realmId));
+    var p = projection.parameters;
     var definition = policy.definition, needsCost = p.costWeight || own(definition.weights,'cost') ||
       definition.order.some(function (row) { return row.metric === 'cost'; });
     var needsFrontier = own(definition.weights,'frontier') || definition.order.some(function (row) { return row.metric === 'frontier'; });
@@ -316,7 +338,8 @@
       var frontier = needsFrontier && Object.keys(FB.world.adj[county] || {}).some(function (neighbor) {
         return state.owner[neighbor] && state.owner[neighbor] !== ownTop;
       });
-      var score = -entry.order*p.buildOrderWeight+P.investmentDelta(state,realmId,d,cost,policy,p);
+      var score = Math.max(-1000000000,Math.min(1000000000,
+        -entry.order*p.buildOrderWeight+P.investmentDelta(state,realmId,d,cost,policy,p,projection)));
       return {entry:entry,index:index,score:score,facts:{capitalPriority:county === state.realms[realmId].capital ? 0 : 1,
         development:state.dev[county] || 1,buildOrder:entry.order,cost:cost,upkeep:d.upkeep || 0,
         benefit:(d.tax || 0)+(d.dev || 0)+(d.research || 0),frontier:frontier ? 1 : 0,score:score}};
@@ -350,11 +373,22 @@
         inputs.aim !== undefined && inputs.aim !== null && !id(inputs.aim)) throw new Error('Invalid AI preference inputs.');
     if (!Array.isArray(candidates) || candidates.length > 2048) throw new Error('AI decisions accept at most 2048 candidates.');
     var parameters = copy(d.parameters), applied = [], identity = Object.create(null);
+    var investment = {buildingRoleWeights:copy(d.buildingRoleWeights || {}),benefitWeights:copy(d.benefitWeights || {})};
     traits.forEach(function (t) { identity[t] = true; });
     d.adjustments.forEach(function (a) {
       if (a.kind === 'trait' ? !identity[a.id] : a.id !== inputs.aim) return;
       applied.push(a.kind + ':' + a.id);
       Object.keys(a.multiply).forEach(function (k) { parameters[k] *= a.multiply[k]; });
+      ['buildingRoleWeights','benefitWeights'].forEach(function (key) {
+        Object.keys(a[key] || {}).forEach(function (name) {
+          investment[key][name] = (investment[key][name] || 0)+a[key][name];
+        });
+      });
+    });
+    ['buildingRoleWeights','benefitWeights'].forEach(function (key) {
+      Object.keys(investment[key]).forEach(function (name) {
+        investment[key][name] = Math.max(-100,Math.min(100,investment[key][name]));
+      });
     });
     Object.keys(parameters).forEach(function (k) {
       var spec = f.parameters[k];
@@ -397,7 +431,7 @@
       }
       return d.tieBreak === 'id' ? (a.id < b.id ? -1 : a.id > b.id ? 1 : 0) : a.index - b.index;
     });
-    return {policyId:policy.id,family:d.family,mode:d.mode,definition:copy(d),parameters:parameters,adjustments:applied,
+    return {policyId:policy.id,family:d.family,mode:d.mode,definition:copy(d),parameters:parameters,adjustments:applied,investment:investment,
       candidates:rows,ranking:ranking.map(function (r) { return {id:r.id,weight:r.score}; }),
       totalWeight:ranking.reduce(function (sum,r) { return sum + r.score; },0)};
   };

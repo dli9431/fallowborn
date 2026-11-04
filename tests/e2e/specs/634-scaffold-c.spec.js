@@ -9,6 +9,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_634_scaffold_c.js','data/bookmark_634_identities.js',
+  'data/bookmark_634.js','data/bookmark_634_scaffold_b.js',
   'data/bookmark_568.js','data/bookmark_568_identities.js',
   'data/bookmark_568_scaffold_a.js','data/bookmark_568_scaffold_b.js',
   'data/bookmark_568_scaffold_c.js','data/bookmark_568_scaffold_d.js',
@@ -111,8 +112,7 @@ test('634 quadrant c resolves local references and declares its exact external c
   const before = await page.evaluate(snapshot);
   const result = await page.evaluate(function (keys) {
     const ps = {}, rs = {}, ds = {}, ks = {}, es = {}, seeds = {}, external = {}, faults = [];
-    FBDATA.geographies.europe_regional.provinces.concat(FBDATA.geographies.europe_regional_2.provinceAdditions)
-      .forEach(function (p) { seeds[p.id] = p; });
+    FB.geography('europe_regional_2').provinces.forEach(function (p) { seeds[p.id] = p; });
     keys.forEach(function (key) {
       const b = FBDATA.bookmarkRegions634[key];
       b.provinces.forEach(function (p) { ps[p.id] = p; });
@@ -151,7 +151,11 @@ test('634 quadrant c resolves local references and declares its exact external c
         const b = FBDATA.bookmarkRegions634[key];
         b.provinces.forEach(function (p) {
           const seed = seeds[p.id];
-          if (!seed || p.x !== seed.x || p.y !== seed.y || p.terrain !== seed.terrain) faults.push(p.id + ': changed physical seed');
+          if (!seed) faults.push(p.id + ': missing physical seed');
+          else ['x','y','terrain'].forEach(function (field) {
+            // Omitted fields inherit the geography; authored overrides must agree.
+            if (p[field] !== undefined && p[field] !== seed[field]) faults.push(p.id + ': changed physical seed');
+          });
           if (p.wasteland) {
             if (p.realm || p.culture || p.religion || p.communities || p.duchy || b.layouts[p.id]) faults.push(p.id + ': inhabited scenery');
             return;
@@ -230,18 +234,24 @@ test('634 quadrant c has independent physical snapshots and explicit redated cou
     });
     Object.keys(ps).forEach(function (id) {
       const p = ps[id], old = source[id];
+      const expected = JSON.parse(JSON.stringify(old));
+      if (['veligrad','olomouc','brno','praha','plzen','budejovice'].indexOf(id) >= 0) {
+        expected.culture = 'slavic';
+        expected.religion = 'slavic_pagan';
+        expected.communities = [{culture:'slavic',religion:'slavic_pagan',populationShare0:10000}];
+      }
       ['name','names','communities','culture','religion','dev','x','y','terrain','wasteland','customaryRights'].forEach(function (field) {
-        if (JSON.stringify(p[field]) !== JSON.stringify(old[field])) faults.push(id + ': changed borrowed ' + field);
+        if (JSON.stringify(p[field]) !== JSON.stringify(expected[field])) faults.push(id + ': unexpected physical or resident ' + field);
       });
       if (!p.wasteland && JSON.stringify(layouts[id]) !== JSON.stringify(sourceLayouts[id])) faults.push(id + ': changed physical layout');
       if (p === old || p.communities && p.communities === old.communities || layouts[id] && layouts[id] === sourceLayouts[id])
         faults.push(id + ': shared source object');
     });
     return {faults:faults,named:named,assemblies:assemblies.sort(),heraclius:rs.byzantium_634,
-      pannonian:['szekesfehervar','moson','zagreb','sisak'].map(function (id) { return ps[id].realm; }),
+      pannonian:['szekesfehervar','moson','zagreb','sisak','sirmium'].map(function (id) { return ps[id].realm; }),
       avar:[rs.avars_634.capital,rs.avars_634.ruler.culture,rs.avars_634.religion],
       external:[ps.limerick.realm,ps.derbent.realm,ps.van.realm],
-      imperial:['sirmium','tmutarakan','cherson','constantinople','athens','nicaea','nicosia','pliska','serdica','split']
+      imperial:['tmutarakan','cherson','constantinople','athens','nicaea','nicosia','pliska','serdica','split']
         .every(function (id) { return ps[id].realm === 'byzantium_634'; }),
       noLombards:!rs.lombards_634 && !Object.keys(ps).some(function (id) { return ps[id].realm === 'lombards_634'; })};
   },Object.keys(packets));
@@ -250,9 +260,56 @@ test('634 quadrant c has independent physical snapshots and explicit redated cou
   expect(result.heraclius).toMatchObject({capital:'constantinople',government:'roman_civic',rank:4,
     royalCourt:{members:[],spouseId:null}});
   expect(result.assemblies).toEqual(['estonian_634','finnish_634','ilmen_634','northern_gulf_634','saimaa_634','upper_volga_634']);
-  expect(result.pannonian).toEqual(['avars_634','avars_634','avars_634','avars_634']);
+  expect(result.pannonian).toEqual(['avars_634','avars_634','avars_634','avars_634','avars_634']);
   expect(result.avar).toEqual(['gyula','avar_568','steppe_traditional_476']);
   expect(result.external).toEqual(['munster_634','sasanian_634','sasanian_634']);
   expect(result.imperial).toBe(true);
   expect(result.noLombards).toBe(true);
+});
+
+test('634 quadrant c publishes corrected residents and Sirmium while retaining held courts and seams',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function () {
+    const world = FB.bookmark('634');
+    if (!world) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
+    const ps = {}, rs = {};
+    world.provinces.forEach(function (p) { ps[p.id] = p; });
+    world.realms.forEach(function (r) { rs[r.id] = r; });
+    return {
+      slavic:['veligrad','olomouc','brno','praha','plzen','budejovice'].map(function (id) {
+        const p = ps[id];
+        return [id,p.realm,p.culture,p.religion,p.communities];
+      }),
+      avar:['sirmium','zagreb','sisak','szekesfehervar','moson'].map(function (id) {
+        const p = ps[id];
+        return [id,p.realm,p.culture,p.religion];
+      }),
+      heldMorava:['nitra','bratislava'].map(function (id) {
+        const p = ps[id];
+        return [p.realm,p.culture,p.religion];
+      }),
+      localCourts:['morava_634','bohemian_634'].map(function (id) {
+        const r = rs[id];
+        return [r.capital,r.ruler.generated,r.ruler.culture,r.religion];
+      }),
+      heldOwners:['ohrid','ras','bosna','tmutarakan','cherson','derbent','van'].map(function (id) { return ps[id].realm; }),
+      munsterFaith:rs[ps.limerick.realm].religion
+    };
+  });
+  expect(result.slavic).toEqual(['veligrad','olomouc','brno','praha','plzen','budejovice'].map(function (id,index) {
+    return [id,index < 3 ? 'morava_634' : 'bohemian_634','slavic','slavic_pagan',
+      [{culture:'slavic',religion:'slavic_pagan',populationShare0:10000}]];
+  }));
+  expect(result.avar).toEqual(['sirmium','zagreb','sisak','szekesfehervar','moson'].map(function (id) {
+    return [id,'avars_634','roman','nicene'];
+  }));
+  expect(result.heldMorava).toEqual([
+    ['morava_634','elbegermanic_476','germanic_pagan'],['morava_634','elbegermanic_476','germanic_pagan']
+  ]);
+  expect(result.localCourts).toEqual([
+    ['veligrad',true,'elbegermanic_476','germanic_pagan'],['praha',true,'elbegermanic_476','germanic_pagan']
+  ]);
+  expect(result.heldOwners).toEqual(['byzantium_634','byzantium_634','byzantium_634',
+    'byzantium_634','byzantium_634','sasanian_634','sasanian_634']);
+  expect(result.munsterFaith).toBe('nicene');
 });

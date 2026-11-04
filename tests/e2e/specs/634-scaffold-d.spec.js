@@ -177,6 +177,43 @@ const packets = {
 const keys = Object.keys(packets);
 const sourcePath = path.resolve(__dirname,'../../../data/bookmark_634_scaffold_d.js');
 
+test('634 Nubian court faiths compose without converting residents or merging courts',async function ({page},info) {
+  await openGame(page,info);
+  await prepareGameContent(page);
+  expect(await page.evaluate(function () {
+    const bookmark = FB.bookmark('634');
+    if (!bookmark) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
+    const staged = FBDATA.bookmarkRegions634.b27;
+    const ids = ['makuria_634','alodia_634','nobadia_634'];
+    function courts(rows) {
+      return ids.map(function (id) {
+        const r = rows.filter(function (row) { return row.id === id; })[0];
+        return {id:r.id,capital:r.capital,religion:r.religion,ruler:r.ruler,
+          available:FB.faithHistoricalAvailable(r.religion,bookmark,'ruler')};
+      });
+    }
+    const stagedRows = staged.realms.concat(FBDATA.bookmarkRegions634.b28.realms);
+    return {staged:courts(stagedRows),composed:courts(bookmark.realms),
+      residents:['dongola','soba','qasr_ibrim'].map(function (id) {
+        const p = bookmark.provinces.filter(function (row) { return row.id === id; })[0];
+        return {id:p.id,realm:p.realm,religion:p.religion,communities:p.communities};
+      })};
+  })).toEqual((function () {
+    const courts = [
+      {id:'makuria_634',capital:'dongola',religion:'chalcedonian'},
+      {id:'alodia_634',capital:'soba',religion:'miaphysite'},
+      {id:'nobadia_634',capital:'qasr_ibrim',religion:'miaphysite'}
+    ].map(function (r) {
+      return Object.assign(r,{ruler:{generated:true,sex:'m',culture:'nubian',born:599,mar:5,trait:'patient'},available:true});
+    });
+    return {staged:courts,composed:courts,residents:['dongola','soba','qasr_ibrim'].map(function (id,i) {
+      const communities = [{culture:'nubian',religion:'nile_traditional_476',populationShare0:i === 2 ? 7500 : 10000}];
+      if (i === 2) communities.push({culture:'nubian',religion:'miaphysite',populationShare0:2500});
+      return {id:id,realm:courts[i].id,religion:'nile_traditional_476',communities:communities};
+    })};
+  }()));
+});
+
 async function stage(page) {
   await page.addScriptTag({path:sourcePath});
 }

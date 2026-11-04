@@ -1076,12 +1076,13 @@ window.FB = window.FB || {};
     for (i = 0; i < ids.length; i++) {
       var rid = ids[i], r = state.realms[rid];
       if (rid === 'player' || !r || !r.alive || r.fortProjectYear === year) continue;
-      var preference = FB.aiDecisions.parameters(state,rid,'investment');
-      var chosen = null;
+      var policy = FB.aiDecisions.resolve(state,rid,'investment');
+      var projection = FB.aiDecisions.report(policy,[],FB.aiDecisions.inputs(state,rid));
+      var preference = projection.parameters, candidates = [];
       var counties = held[rid] || [];
       for (var j = 0; j < counties.length; j++) {
         pid = counties[j];
-        if (contested[pid]) continue;
+        if (contested[pid] || FB.playerDirectlyHoldsCounty && FB.playerDirectlyHoldsCounty(state,pid)) continue;
         var materialQuote = materialEnabled && FB.fortProfiles.aiQuote(state,rid,pid);
         var retained = materialEnabled && FB.fortAt(state,pid,true);
         var materialIdentity = retained && retained.buildingProfile && FB.fortProfiles.get(retained.buildingProfile.id);
@@ -1089,19 +1090,41 @@ window.FB = window.FB || {};
         if (!target) continue;
         var def = levelDef(target);
         if ((Number(r.fortWorks) || 0) < def.work) continue;
+        var existingFort = FB.fortAt(state,pid), settlement = existingFort ? existingFort.s : 0;
+        if (!materialQuote && !projectStatus(state,pid,settlement,target,{realm:rid,ai:true,contestedChecked:true}).ok) continue;
+        var prior = existingFort && levelDef(existingFort.level) || {};
+        // Rank only the incremental defenses. A material repair restores the
+        // real ruined tier; the ordinary work transaction remains its owner.
+        var benefits = {role:'fortification',upkeep:def.upkeep-(prior.upkeep || 0),
+          defense:def.defense-(prior.defense || 0),garrison:def.garrison-(prior.garrison || 0),
+          siegeDelay:def.siegeDelay-(prior.siegeDelay || 0)};
+        var frontier = foreignFrontier(state,pid,rid);
         var candidate = {
           pid:pid, target:target, work:def.work, materialQuote:materialQuote,
           priority:pid === r.capital ? preference.capitalPriority :
-            (foreignFrontier(state,pid,rid) ? preference.frontierPriority : preference.interiorPriority),
-          development:(Number(state.dev[pid]) || 0)*preference.fortDevelopmentWeight
+            (frontier ? preference.frontierPriority : preference.interiorPriority),
+          development:(Number(state.dev[pid]) || 0)*preference.fortDevelopmentWeight,
+          score:FB.aiDecisions.investmentDelta(state,rid,benefits,def.work,policy,preference,projection),
+          facts:{capitalPriority:pid === r.capital ? 0 : 1,development:Number(state.dev[pid]) || 0,
+            buildOrder:0,cost:def.work,upkeep:benefits.upkeep,
+            benefit:benefits.defense+benefits.garrison+benefits.siegeDelay,frontier:frontier ? 1 : 0}
         };
-        if (!chosen || candidate.priority < chosen.priority ||
-            (candidate.priority === chosen.priority &&
-             candidate.development > chosen.development) ||
-            (candidate.priority === chosen.priority &&
-             candidate.development === chosen.development &&
-             candidate.pid < chosen.pid)) chosen = candidate;
+        candidate.facts.score = candidate.score;
+        candidates.push(candidate);
       }
+      candidates.sort(function (a,b) {
+        return b.score-a.score || a.priority-b.priority || b.development-a.development ||
+          (a.pid < b.pid ? -1 : a.pid > b.pid ? 1 : 0);
+      });
+      if (policy.definition.mode !== 'first') {
+        var order = FB.aiDecisions.orderCandidates(state,rid,'investment',candidates.map(function (c) {
+          return {id:c.pid,eligible:true,facts:c.facts};
+        }));
+        var byId = Object.create(null);
+        candidates.forEach(function (c) { byId[c.pid] = c; });
+        candidates = order.map(function (id) { return byId[id]; });
+      }
+      var chosen = candidates[0];
       if (!chosen) continue;
       var existing = FB.fortAt(state, chosen.pid);
       var settlement = existing ? existing.s : 0;

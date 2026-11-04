@@ -3,12 +3,15 @@
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
+const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_634_scaffold_a.js','data/bookmark_634_identities.js',
+  'data/bookmark_634.js','data/starts_634_ordinary.js','js/save.js','js/save_v4.js',
+  'js/bookmark_sources.js',
   'data/counties.js','data/geographies.js','data/geography_expansion.js',
   'data/cultures.js','data/bookmark_476_wider_identities.js','data/traits.js',
   'data/settlements.js','data/settlements_real.js','data/climate.js','data/eras.js',
@@ -146,7 +149,7 @@ test('634 western references resolve locally with only the declared eastern impe
     return {faults:faults,external:Object.keys(external),courts:Object.keys(realms).sort()};
   },Object.keys(packets));
   expect(result).toEqual({faults:[],external:['byzantium_634'],courts:[
-    'armorica_634','austrasia_634','basque_634','cantabrian_634','francia_634','frisian_coast_634','visigoths_634'
+    'aquitaine_duchy_634','armorica_634','austrasia_634','basque_634','cantabrian_634','francia_634','frisian_coast_634','visigoths_634'
   ]});
 });
 
@@ -189,13 +192,42 @@ test('634 western courts use dated incumbents, explicit identity holds and empty
       })))};
   },Object.keys(packets));
   expect(result).toEqual({faults:[],named:[
-    ['austrasia_634','Sigebert III',630,'frankish','nicene'],
+    ['austrasia_634','Sigebert III',631,'frankish','nicene'],
     ['francia_634','Dagobert I',604,'frankish','nicene']
-  ],generated:['armorica_634','basque_634','cantabrian_634','frisian_coast_634','visigoths_634'],
+  ],generated:['aquitaine_duchy_634','armorica_634','basque_634','cantabrian_634','frisian_coast_634','visigoths_634'],
   courtSeats:['toledo','paris','metz'],hierarchy:[3,3,'francia_634'],
   iberianOwners:Array(6).fill('visigoths_634'),
   localOwners:['cantabrian_634','basque_634','armorica_634','frisian_coast_634'],
   balearic:'byzantium_634',crownFaith:'nicene',retainedMinority:true,noOldCourtIds:true});
+});
+
+test('634 corrected Aquitanian court and retained western boundaries survive campaign restore',async function ({page},info) {
+  await beginBookmark(page,info,'634','farmer_634');
+  function snapshot() {
+    const s = FB.state, b = FB.campaignBookmark(s), court = s.realms.aquitaine_duchy_634;
+    const counties = ['agen','perigueux','toulouse','cahors'];
+    const held = ['bordeaux','poitiers','limoges','bayonne','auch','albi','rodez'];
+    return {
+      counties:b.provinces.filter(function (p) { return p.realm === 'aquitaine_duchy_634'; }).map(function (p) { return p.id; }).sort(),
+      holders:counties.map(function (id) { return s.holder[id]; }),
+      held:held.map(function (id) { return b.provinces.filter(function (p) { return p.id === id; })[0].realm; }),
+      court:[court.capital,court.rank,court.liege,court.ruler.culture,court.religion,court.ruler.born],
+      generated:b.realms.filter(function (r) { return r.id === 'aquitaine_duchy_634'; }).map(function (r) {
+        return [r.ruler.generated,!!r.ruler.name,!!r.royalCourt];
+      }),
+      sigebert:[s.realms.austrasia_634.capital,s.realms.austrasia_634.ruler.name,s.realms.austrasia_634.ruler.born],
+      valid:FB.save.v4.validatePlatform(s)
+    };
+  }
+  const before = await page.evaluate(snapshot);
+  expect(before).toEqual({counties:['agen','cahors','perigueux','toulouse'],
+    holders:Array(4).fill('aquitaine_duchy_634'),
+    held:['francia_634','austrasia_634','francia_634','francia_634','austrasia_634','austrasia_634','austrasia_634'],
+    court:['toulouse',2,'francia_634','frankish','nicene',599],generated:[[true,false,false]],
+    sigebert:['metz','Sigebert III',631],valid:true});
+  const saved = await page.evaluate(function () { return FB.save.serialize(); });
+  await restoreBookmark(page,saved);
+  expect(await page.evaluate(snapshot)).toEqual(before);
 });
 
 for (const crazy of [false,true]) {
@@ -211,6 +243,15 @@ for (const crazy of [false,true]) {
     const first = await page.evaluate(function (keys) {
       return keys.map(function (key) { return FBDATA.bookmarkRegions634[key]; });
     },Object.keys(packets));
+    // The sealed production adapter ignores unchanged reloads. Exercise the
+    // literal callback separately to retain source-independence coverage.
+    await page.evaluate(function () {
+      window.__westernSourceStage = FB.bookmarkSources.stage;
+      FB.bookmarkSources.stage = function (spec,author) {
+        if (spec.source !== 'data/bookmark_634_scaffold_a.js') throw new Error('Unexpected source in isolated fixture');
+        author(FBDATA);
+      };
+    });
     // Remove only source staging tables. Active retained worlds stay available for comparison.
     await page.evaluate(function (keys) {
       delete FBDATA.bookmarkRegions568;
@@ -234,5 +275,9 @@ for (const crazy of [false,true]) {
     },Object.keys(packets))).toEqual({blocks:first,neighbor:{unchanged:true}});
     await page.addScriptTag({path:shard});
     expect(await page.evaluate(snapshot)).toBe(before);
+    await page.evaluate(function () {
+      FB.bookmarkSources.stage = window.__westernSourceStage;
+      delete window.__westernSourceStage;
+    });
   });
 }
