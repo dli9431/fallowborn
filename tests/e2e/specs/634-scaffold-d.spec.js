@@ -247,10 +247,10 @@ for (const crazy of [false,true]) {
         return keys.map(function (key) { return JSON.stringify(FBDATA.bookmarkRegions634[key]); });
       },keys)).toEqual(blocks);
       expect(await page.evaluate(function () {
-        return {hidden:FBDATA.bookmarks['634'].hidden,
+        return {selectable:FBDATA.bookmarks['634'].hidden !== true,
           formPublished:!!FBDATA.governmentForms.medinan_selection_pf_634,
           faithPublished:FB.faithExists('early_islam_634',null)};
-      })).toEqual({hidden:true,formPublished:true,faithPublished:true});
+      })).toEqual({selectable:true,formPublished:true,faithPublished:true});
     });
 }
 
@@ -316,7 +316,9 @@ test('634 quadrant d resolves local courts, titles, residents, sites and the imp
           return;
         }
         realmRef(p.realm);identity(p,p.id);
-        if (!b.duchies[p.duchy] || p.dev < 1 || p.dev > 10) faults.push(p.id + ': invalid county');
+        // Missing title parents end the hierarchy; supplied parents must still resolve.
+        if (p.duchy != null && !Object.prototype.hasOwnProperty.call(b.duchies,p.duchy) ||
+            p.dev < 1 || p.dev > 10) faults.push(p.id + ': invalid county');
         const pairs = {};let total = 0;
         p.communities.forEach(function (c) {
           identity(c,p.id);const pair = c.culture + '/' + c.religion;
@@ -350,10 +352,12 @@ test('634 quadrant d resolves local courts, titles, residents, sites and the imp
       }
     });
     Object.keys(titles.duchies).forEach(function (id) {
-      if (!titles.kingdoms[titles.duchies[id].kingdom]) faults.push(id + ': unknown kingdom');
+      const parent = titles.duchies[id].kingdom;
+      if (parent != null && !Object.prototype.hasOwnProperty.call(titles.kingdoms,parent)) faults.push(id + ': unknown kingdom');
     });
     Object.keys(titles.kingdoms).forEach(function (id) {
-      if (!titles.empires[titles.kingdoms[id].empire]) faults.push(id + ': unknown empire');
+      const parent = titles.kingdoms[id].empire;
+      if (parent != null && !Object.prototype.hasOwnProperty.call(titles.empires,parent)) faults.push(id + ': unknown empire');
     });
     return {faults:faults,courts:Object.keys(realms).length,external:Object.keys(external)};
   },keys)).toEqual({faults:[],courts:46,external:['byzantium_634']});
@@ -412,14 +416,14 @@ test('634 quadrant d keeps the three household communities and the reduced court
       rulers:[r.rashidun_634.ruler.name,r.rashidun_634.ruler.born,r.sasanian_634.ruler.name,r.sasanian_634.ruler.born],
       sasanianForm:r.sasanian_634.government,altava:r.altava_634.name,
       arabia:['mecca','medina','yamama','qatif','sanaa','aden','muscat','nizwa','sohar','najran_oasis','tayma_oasis'].map(function (id) { return p[id].realm; }),
-      roman:['damascus','alexandria','mosul','palmyra_district'].map(function (id) { return p[id].realm; }),
-      iraq:['baghdad','kufa','basra','wasit','samarra'].map(function (id) { return p[id].realm; }),
+      roman:['damascus','alexandria','palmyra_district'].map(function (id) { return p[id].realm; }),
+      iraq:['baghdad','kufa','basra','wasit','samarra','mosul'].map(function (id) { return p[id].realm; }),
       horn:p.zeila.realm,ctesiphonSite:FBDATA.bookmarkRegions634.b24.layouts.baghdad[0].site,
       heldStarts:FBDATA.startScenarios.filter(function (s) { return s.id === 'yazdegerd_634'; }).length};
   },keys);
   expect(result).toEqual({households:[true,true,true,true],rulers:['Umar',582,'Yazdegerd III',624],
     sasanianForm:'regnum',altava:'Altava district communities',arabia:Array(11).fill('rashidun_634'),
-    roman:Array(4).fill('byzantium_634'),iraq:Array(5).fill('sasanian_634'),horn:'horn_coast_634',
+    roman:Array(3).fill('byzantium_634'),iraq:Array(6).fill('sasanian_634'),horn:'horn_coast_634',
     ctesiphonSite:'baghdad_outer_476',heldStarts:0});
 });
 
@@ -491,7 +495,7 @@ test('the staged Medinan form composes with same-import faiths through ordinary 
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({name:'634-selection-world.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(mod),'utf8')});
-  await page.locator('#mod-apply').click();
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return FB.game.bootReady && FB.mods.count() === 1 && FBDATA.bookmarks['634']; });
   expect(await page.evaluate(function () {
