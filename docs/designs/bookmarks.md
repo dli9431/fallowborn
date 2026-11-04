@@ -426,6 +426,10 @@ The remaining quadrants supply Oswald's Northumbrian court, Heraclius's single i
 
 The 634 Makurian and Alodian court declarations use Chalcedonian and Miaphysite affiliations respectively. Existing composition consumes these court faiths independently of resident communities, preserving generated principals, separate Dongola and Soba capitals and the separate Nobadian court. These content corrections change no technology eligibility or saved schema; existing campaigns retain their saved court faiths. docs/research/634-bookmark.md records the historical limits.
 
+Autumn 634 Italian ownership and Kent court faith
+
+Quadrant b assigns Aquileia and Padua to the existing Lombard court owned by b09 at Pavia, retaining imperial Venice and the independent resident presentations. Kent's existing generated court uses Nicene faith while Canterbury and Rochester retain their traditional-faith principal communities and copied shares. Named historical people, other borders and scenery retain their disclosed holds in docs/research/634-bookmark.md. These are fresh-opening corrections through ordinary realm and community fields; the existing composer, ruler initialization and matching save restoration remain authoritative. No new capability, technology dependency or saved field is introduced.
+
 Autumn 634 composition
 
 data/bookmark_634.js registers The Early Conquests as hidden baseline on europe_regional_2 at year 634, season 2, day 1. It assembles numbered blocks then scenery, rejecting duplicate declarations, missing physical coverage, unresolved courts, invalid capitals and conflicting shared sites or forms before publication. The complete world and 634_opening layouts are detached from regional inputs. The explicit opening, local institution, religious head, story and scripted-history collections contain no inherited historical transaction. Bookmark-level system exclusions override faith and government enables for the reduced institutional opening. Its twenty-two physical sea crossings retain their explicit earlier endpoints and classes.
