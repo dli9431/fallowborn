@@ -271,7 +271,7 @@ for (const crazy of [false,true]) {
       },{order:order});
       expect(result).toEqual({metadata:['634','The Early Conquests',{year:634,season:2,day:1},'late_antique',
         'europe_regional_2','634_opening','baseline','baseline'],hidden:false,available:true,listed:true,
-        count:527,inhabited:506,complete:true,ordered:true,courts:121,
+        count:527,inhabited:506,complete:true,ordered:true,courts:122,
         named:['Dagobert I','Heraclius','Oswald','Sigebert III','Umar','Yazdegerd III'],
         climates:['northern_temperate','arid'],layouts:506,crossings:22,disabled:disabled,
         empty:[{},{},['damascus_household_observer_634'],[],{actors:{},appointments:{},estates:[],claims:[],migrations:[]}],
