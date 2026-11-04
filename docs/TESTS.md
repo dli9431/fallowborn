@@ -738,3 +738,5 @@ Era and retained-world fixtures are covered by era-content-gating.spec.js, era-t
 Marriage finder navigation
 
 tests/e2e/specs/marriage-discovery.spec.js bounds the court and character return journeys to twelve real candidate-query results per redraw. Character journeys select existing character rows before applying the limit. Native scope and availability changes still call the real query. Each journey checks a nonzero scroll offset and the originating action's focus after Back, together with retained filter values and their open disclosure. Separate cases cover the complete candidate query and shared realm detail reads per redraw.
+
+634-damascus-household.spec.js covers the hidden complete Damascus start, resident identity and layout, ordinary craft income, stationary six-review completion, costless and stale choices, protagonist-only departure, death/succession, absent legacy records, matching hidden save continuity, actual local-control notices and remote/war silence. An independent household-plan JSON fixture is imported through Mods and retains its own exact save identity. These bounded checks do not establish device or longer campaign acceptance.

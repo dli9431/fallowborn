@@ -1,0 +1,84 @@
+{
+  "name": "Damascus independent household plans",
+  "startScenarios": [
+    {
+      "id": "damascus_household_634",
+      "name": "Damascus reserve household",
+      "desc": "An independent costless household review.",
+      "intro": "Your craft household considers its reserve.",
+      "bookmarkIds": [
+        "634"
+      ],
+      "alwaysUnlocked": true,
+      "fixedProvinceId": "damascus",
+      "startCulture": "syriac",
+      "startReligion": "chalcedonian",
+      "startAge": 24,
+      "tier": 1,
+      "profession": "craftsman",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "familyPresets": {
+        "established": {}
+      },
+      "tracks": [
+        "damascus_reserve_example"
+      ],
+      "trackLocations": {
+        "damascus_reserve_example": [
+          "damascus"
+        ]
+      }
+    }
+  ],
+  "storyInstances": {
+    "damascus_reserve_example": {
+      "id": "damascus_reserve_example",
+      "type": "household_track",
+      "title": "A private reserve",
+      "intro": "Consider ordinary savings without a reward.",
+      "homeProvinceId": "damascus",
+      "continuity": "protagonist",
+      "interruptedStage": "ended",
+      "initialStage": "reserve",
+      "requirements": {
+        "provinces": [
+          "damascus"
+        ]
+      },
+      "stages": {
+        "reserve": {
+          "name": "Keep the reserve",
+          "text": "Keep your present purse and remain at home.",
+          "choices": [
+            {
+              "id": "keep",
+              "label": "Keep these savings",
+              "detail": "No money or day cost.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "done": {
+          "name": "Plans recorded",
+          "text": "Ordinary life continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        },
+        "ended": {
+          "name": "The personal plan ended",
+          "text": "A new protagonist makes a separate plan.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    }
+  }
+}
