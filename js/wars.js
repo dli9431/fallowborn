@@ -1163,7 +1163,7 @@
     const commitments = FB.realmWars(state, rid).filter(function (w) { return w.attacker === rid; }).length + (holyCommitment ? 1 : 0);
     const policy = FB.aiDecisions.parameters(state,rid,'war');
     if (commitments >= policy.maximumCommitments || !FB.chance(FB.governments.call(state, rid, 'ai', 'goals', {}).warChance)) return;
-    const seen = {}, candidates = [];
+    const seen = Object.create(null), candidates = [];
     // One ruler's read-only candidate pass; discard before another ruler can
     // declare, change Standing, or otherwise alter military projections.
     const inspection = { frontier:FB.realmTerritory(state, rid), rights:Object.create(null) };
@@ -1172,58 +1172,72 @@
       if (!own(strengths, id)) strengths[id] = FB.realmStrength(state, id);
       return strengths[id];
     }
+    const home = Object.create(null);
+    inspection.frontier.forEach(function (pid) { home[pid] = true; });
     inspection.frontier.forEach(function (pid) {
-      Object.keys(FB.world.adj[pid] || {}).sort().forEach(function (nb) {
-        if (seen[nb]) return;
-        seen[nb] = 1;
-        const enemy = FB.warTargetDefender(state, rid, nb);
-        if (!enemy || strength(rid) < strength(enemy) * policy.minimumStrengthRatio) return;
-        const rights = territorialRightsForInspection(state, rid, nb, inspection);
-        const cause = Object.assign({ enemy:enemy }, rights[0] || { type:'aggression', target:nb });
-        if (FB.sameFaithHeadWarPolicy(state, FB.realmReligionId(state, rid), enemy, nb)) return;
-        const preview = FB.warDeclarationPreview(state, rid, [cause], inspection);
-        if (preview.valid) candidates.push({ cause:cause, preview:preview });
-      });
+      Object.keys(FB.world.adj[pid] || {}).forEach(function (nb) { if (!home[nb]) seen[nb] = true; });
+    });
+    // One bounded, stable border scan and one strength projection per defender.
+    // The ceiling matches the pure policy protocol, including in imported maps.
+    Object.keys(seen).sort().slice(0,2048).forEach(function (nb) {
+      const enemy = FB.warTargetDefender(state, rid, nb);
+      if (!enemy || strength(rid) < strength(enemy) * policy.minimumStrengthRatio) return;
+      const rights = territorialRightsForInspection(state, rid, nb, inspection);
+      const cause = Object.assign({ enemy:enemy }, rights[0] || { type:'aggression', target:nb });
+      if (FB.sameFaithHeadWarPolicy(state, FB.realmReligionId(state, rid), enemy, nb)) return;
+      const preview = FB.warDeclarationPreview(state, rid, [cause], inspection);
+      if (preview.valid) candidates.push({ cause:cause });
     });
     if (!candidates.length) return;
-    const facts = FB.aiExpansionFacts(state,rid,candidates.map(function (c) { return c.cause.target; }),inspection.frontier);
-    const chosen = FB.aiDecisions.choose(state,rid,'expansion',candidates.map(function (c) {
+    // Lawful opportunity is an invariant tier, even for custom first/weighted
+    // policies. A zero-weight lawful tier declines rather than turning aggressive.
+    const lawful = candidates.some(function (c) { return c.cause.type !== 'aggression'; });
+    const targets = candidates.filter(function (c) { return !lawful || c.cause.type !== 'aggression'; });
+    const facts = FB.aiExpansionFacts(state,rid,targets.map(function (c) { return c.cause.target; }),inspection.frontier);
+    const chosen = FB.aiDecisions.choose(state,rid,'expansion',targets.map(function (c) {
       return {id:c.cause.target,eligible:true,facts:Object.assign(facts[c.cause.target],{
         aggression:c.cause.type === 'aggression' ? 1 : 0,defensiveStrength:strength(c.cause.enemy)})};
     }));
     if (!chosen) return;
-    const picked = candidates.filter(function (c) { return c.cause.target === chosen; })[0], cause = picked.cause;
+    const picked = targets.filter(function (c) { return c.cause.target === chosen; })[0];
+    if (!picked) return;
+    const cause = picked.cause;
+    // Selection is advisory. Discard rights, frontier and strength snapshots
+    // before assembling a package or asking for current permission.
+    const current = {frontier:FB.realmTerritory(state,rid),rights:Object.create(null)};
+    if (!FB.warDeclarationPreview(state,rid,[cause],current).valid ||
+        FB.realmStrength(state,rid) < FB.realmStrength(state,cause.enemy) * FB.aiDecisions.parameters(state,rid,'war').minimumStrengthRatio ||
+        FB.sameFaithHeadWarPolicy(state,FB.realmReligionId(state,rid),cause.enemy,cause.target)) return;
     if (cause.type === 'aggression') {
-      const risk = FB.aiAggressionAssessment(state, rid, cause.target, inspection.frontier);
+      const risk = FB.aiAggressionAssessment(state, rid, cause.target, current.frontier);
       if (!risk.allowed || !FB.chance(risk.chance)) return;
     }
     const causes = [cause];
     if (cause.type !== 'aggression') {
-      const rights = FB.claimPackageCandidates(state, rid, cause.enemy, inspection), reached = {};
-      reached[cause.target] = 1;
-      let changed = true;
-      while (changed) {
-        changed = false;
-        rights.forEach(function (entry) {
-          if (reached[entry.target] || !Object.keys(FB.world.adj[entry.target] || {}).some(function (nb) { return reached[nb]; })) return;
-          reached[entry.target] = 1; changed = true;
-          causes.push(Object.assign({ enemy:cause.enemy }, entry.justifications[0]));
+      const byTarget = Object.create(null), reached = Object.create(null), queue = [cause.target];
+      FB.claimPackageCandidates(state,rid,cause.enemy,current).forEach(function (entry) { byTarget[entry.target] = entry; });
+      reached[cause.target] = true;
+      for (let i=0;i<queue.length && causes.length<2048;i++) {
+        Object.keys(FB.world.adj[queue[i]] || {}).sort().forEach(function (nb) {
+          if (causes.length >= 2048 || reached[nb] || !byTarget[nb]) return;
+          reached[nb] = true; queue.push(nb);
+          causes.push(Object.assign({ enemy:cause.enemy }, byTarget[nb].justifications[0]));
         });
       }
-      picked.preview = FB.warDeclarationPreview(state, rid, causes, inspection);
-      if (!picked.preview.valid) return;
     }
-    if (picked.preview.unlawful && picked.preview.law.level === 'permission') {
+    let preview = FB.warDeclarationPreview(state,rid,causes);
+    if (!preview.valid) return;
+    if (preview.unlawful && preview.law.level === 'permission') {
       FB.requestWarPermission(state, rid, causes);
-      picked.preview = FB.warDeclarationPreview(state, rid, causes);
-      if (picked.preview.law.liege === 'player' && picked.preview.unlawful) return;
+      preview = FB.warDeclarationPreview(state, rid, causes);
+      if (!preview.valid || preview.law.liege === 'player' && preview.unlawful) return;
     }
-    if (picked.preview.unlawful && (Number(r.favor) || 0) >= -20) return;
+    if (preview.unlawful && (Number(r.favor) || 0) >= -20) return;
     const owner = cause.enemy === 'player' ? 'player' : rid;
     const w = FB.registerOrdinaryWar(state, owner, { enemy:owner === 'player' ? rid : cause.enemy,
       defending:owner === 'player', target:cause.target, casus:causes.length > 1 ? { type:'claims', target:cause.target } : cause, legacy:false,
       objectives:causes });
-    FB.recordWarDeclaration(state, w, picked.preview);
+    FB.recordWarDeclaration(state, w, preview);
     if (owner === 'player') FB.withOrdinaryWar(state, w.id, function () { FB.warFooting(state); FB.announcePlayerDefense(state, w); });
   };
 
