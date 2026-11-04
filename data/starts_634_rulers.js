@@ -11,7 +11,17 @@ FBDATA.startScenarios_634_rulers = [
     familyPresets:{standard:{name:'Existing Medinan court',
       desc:'Adopt the present court and its resources. The opening supplies no named spouse or children.'}},
     tracks:['umar_agenda_634'],trackLocations:{umar_agenda_634:['medina']},onboarding:'ruler',
-    intro:'You are Umar at Medina after accession. Review the political mandate already in place and the resources you actually govern. Syrian and Iraqi affairs remain separate choices, with no required conquest.'}
+    intro:'You are Umar at Medina after accession. Review the political mandate already in place and the resources you actually govern. Syrian and Iraqi affairs remain separate choices, with no required conquest.'},
+  {id:'heraclius_634',bookmarkIds:['634'],hidden:true,alwaysUnlocked:true,
+    rulerRealmId:'byzantium_634',governmentForm:'roman_civic',fixedProvinceId:'constantinople',
+    characterName:'Heraclius',sex:'m',startCulture:'greek',startReligion:'chalcedonian',
+    name:'Heraclius at Constantinople',
+    desc:'Review the existing imperial court, actual eastern holdings and resources, and lawful defense or diplomacy.',
+    tier:7,profession:'noble',gold:100,prestige:120,piety:20,
+    familyPresets:{standard:{name:'Existing imperial court',
+      desc:'Adopt the present court and its resources. The opening supplies no named spouse or children.'}},
+    tracks:['heraclius_agenda_634'],trackLocations:{heraclius_agenda_634:['constantinople']},onboarding:'ruler',
+    intro:'You are Heraclius at Constantinople. This capital-based opening is a reconstruction, not an exact itinerary. Review the court and resources you actually govern; remaining here and retaining present arrangements is a complete course.'}
 ];
 /* Yazdegerd has no offered start or attached agenda in this opening. */
 (function () {
