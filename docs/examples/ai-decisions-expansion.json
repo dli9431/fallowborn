@@ -54,7 +54,19 @@
       "weights": {},
       "bias": 0,
       "tieBreak": "id",
-      "adjustments": []
+      "adjustments": [],
+      "aimOrders": {
+        "amass_wealth": [
+          {
+            "metric": "development",
+            "direction": "desc"
+          },
+          {
+            "metric": "contacts",
+            "direction": "desc"
+          }
+        ]
+      }
     },
     "learning_investment": {
       "family": "investment",
@@ -77,9 +89,27 @@
       "weights": {},
       "bias": 0,
       "tieBreak": "input",
-      "adjustments": [],
+      "adjustments": [
+        {
+          "kind": "trait",
+          "id": "literate",
+          "multiply": {},
+          "buildingRoleWeights": {
+            "scholarship": 24
+          }
+        },
+        {
+          "kind": "aim",
+          "id": "expand_realm",
+          "multiply": {},
+          "benefitWeights": {
+            "levy": 16,
+            "retinue": 16
+          }
+        }
+      ],
       "buildingRoleWeights": {
-        "scholarship": 100
+        "scholarship": 76
       }
     },
     "innovating_research": {
@@ -136,7 +166,22 @@
       "weights": {},
       "bias": 0,
       "tieBreak": "input",
-      "adjustments": []
+      "adjustments": [
+        {
+          "kind": "trait",
+          "id": "brave",
+          "multiply": {
+            "engagementMargin": 0.9
+          }
+        },
+        {
+          "kind": "trait",
+          "id": "craven",
+          "multiply": {
+            "engagementMargin": 1.2
+          }
+        }
+      ]
     },
     "active_government": {
       "family": "government",
@@ -166,13 +211,118 @@
       "bias": 0,
       "tieBreak": "input",
       "adjustments": []
+    },
+    "opportunistic_intrigue": {
+      "family": "intrigue",
+      "mode": "first",
+      "parameters": {
+        "baseWeight": 1,
+        "chanceRate": 0.4,
+        "maximumChance": 0.9,
+        "minimumWeight": 0.25
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": [],
+      "schemeOrder": [
+        "sabotage",
+        "blackmail"
+      ]
+    },
+    "assertive_diplomacy": {
+      "family": "diplomacy",
+      "mode": "first",
+      "parameters": {
+        "allianceChance": 0.04,
+        "cultivationMultiplier": 0.75,
+        "peerCultivationMultiplier": 0.75,
+        "rebelSupportCap": 3,
+        "relationshipDivisor": 6,
+        "relationshipCap": 15,
+        "courtAmbitionMultiplier": 1,
+        "courtMartialCenter": 6,
+        "courtMartialCap": 12,
+        "courtAgeCenter": 40,
+        "courtAgeScale": 10,
+        "courtAgeCap": 8,
+        "courtEconomicCap": 8
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": [],
+      "aimOrder": [
+        "expand_realm",
+        "amass_wealth"
+      ]
+    },
+    "dynastic_religion": {
+      "family": "religion",
+      "mode": "first",
+      "parameters": {
+        "minimumTargetRatio": 0.6,
+        "participantRankWeight": 100,
+        "participationTraitWeight": 1,
+        "guaranteedAttackers": 2,
+        "attackerJoinChance": 0.55,
+        "defenderJoinChance": 0.3,
+        "failureMemoryYears": 80,
+        "failureDefeatWeight": 1,
+        "failureCollapseWeight": 0.5,
+        "targetHolyWeight": 2,
+        "targetRatioCap": 2,
+        "targetFailureWeight": 2,
+        "longVowChance": 0.67,
+        "shortVowChance": 0.4,
+        "landDesireChance": 0.5,
+        "duchyDesireChance": 0.55,
+        "papalInvestitureChance": 0.2,
+        "papalSanctionChance": 0.15,
+        "papalLegationChance": 0.2,
+        "investitureAcceptThreshold": 45,
+        "investitureUncertainty": 20,
+        "investitureCompromiseChance": 0.35,
+        "absolutionPetitionChance": 0.3,
+        "electionRelationshipWeight": 0.65,
+        "electionLearningWeight": 1.8,
+        "electionDiplomacyWeight": 1.1,
+        "electionPietyDivisor": 100,
+        "electionPrestigeDivisor": 200,
+        "electionCultureBonus": 6,
+        "electionBlocBonus": 12,
+        "electionUncertainty": 7,
+        "electionLeaderWeight": 2,
+        "electionCompromiseWeight": 5,
+        "conversionShareWeight": 50,
+        "conversionBishopWeight": 8,
+        "conversionSpouseWeight": 8
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": [
+        {
+          "kind": "aim",
+          "id": "defend_faith",
+          "multiply": {
+            "targetHolyWeight": 0.75
+          }
+        }
+      ]
     }
   },
   "balance": {
     "aiWarPolicy": "expansive_war",
     "aiExpansionPolicy": "compact_frontier",
     "aiInvestmentPolicy": "learning_investment",
-    "aiResearchPolicy": "innovating_research"
+    "aiResearchPolicy": "innovating_research",
+    "aiIntriguePolicy": "opportunistic_intrigue",
+    "aiDiplomacyPolicy": "assertive_diplomacy",
+    "aiReligionPolicy": "dynastic_religion"
   },
   "governmentForms": {
     "expansive_court": {
