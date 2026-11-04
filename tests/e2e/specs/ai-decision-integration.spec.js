@@ -14,6 +14,8 @@ dependsOnRuntime(__filename,[
   'js/government_selection.js','js/government_aristocracy.js','js/authority.js','js/model.js','js/world.js',
   'js/building_profiles.js','js/fortifications.js','js/lordships.js','js/technology.js','js/armies.js','js/treasury.js',
   'js/mods.js','js/save.js','js/save_v4.js','js/main.js','js/util.js','js/intrigue.js','data/intrigue.js','js/crazygames.js','data/distribution_crazygames.js',
+  'js/holywar.js','js/religion.js','js/papacy.js','js/systems.js','data/systems.js','data/eras.js',
+  'js/messages.js',
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
 
@@ -318,6 +320,8 @@ test('investment ordering reads real quotes and changing frontier ownership with
     const top = FB.topRealm(s,rid);
     Object.keys(FB.world.adj[pid]).forEach(function (id) { s.owner[id] = top; });
     P.report = function (policy,candidates) {
+      // The parameter-only projection has no county facts to observe.
+      if (!candidates.length) return report.apply(P,arguments);
       if (policy.definition.family === 'investment') frontier = candidates[0].facts.frontier;
       return report.apply(P,arguments);
     };
@@ -420,3 +424,297 @@ for (const distribution of ['standard','crazygames']) {
     expect(await researchBoundary(page,out.rid)).toEqual(first);
   });
 }
+
+// These are local staged boundaries over a real current ruler, not a second
+// character/trait fixture shared with unrelated journeys.
+async function stageRulerChannels(page) {
+  return page.evaluate(function () {
+    const s = FB.state;
+    const rid = Object.keys(s.realms).sort().find(function (id) {
+      const r = s.realms[id];
+      return id !== 'player' && r.alive && !r.liege && FB.realmRulerCharacterSnapshot(s,id) &&
+        Object.keys(r.succession.members).length > 2 && FB.governments.forRealm(s,id).id === 'territorial';
+    });
+    if (!rid) throw new Error('Channel acceptance needs a territorial ruler with a successor');
+    FB.ensureAgency(s);
+    FB.realmTechRecord(s,rid);
+    const c = FB.realmRulerCharacterSnapshot(s,rid);
+    c.traits.slice().forEach(function (id) { FB.removeTrait(c,id); });
+    FB.realmRulerCharacter(s,rid);
+    delete s.realms[rid].ruler.personality;
+    const tech = Object.keys(FBDATA.tech).find(function (id) {
+      return FBDATA.tech[id].domain === 'warfare' && FB.techAIScore(s,id,rid) > 0;
+    });
+    if (!tech) throw new Error('Channel acceptance needs a prerequisite-eligible warfare innovation');
+    const target = FBDATA.rulerFaithTargets.find(function (id) { return id !== FB.realmReligionId(s,rid) && FB.faithAvailable(id,s,'ruler'); });
+    if (!target) throw new Error('Channel acceptance needs a declared conversion target');
+    FB.rulerFaithConversionEvaluation(s,rid,target);
+    return {rid:rid,tech:tech,target:target,neutralResearch:FB.techAIScore(s,tech,rid)};
+  });
+}
+
+async function setRulerChannels(page,ids,traits,aim) {
+  await page.evaluate(function (args) {
+    const s = FB.state,c = FB.realmRulerCharacterSnapshot(s,args.ids.rid);
+    c.traits.slice().forEach(function (id) { FB.removeTrait(c,id); });
+    args.traits.forEach(function (id) { if (!FB.addTrait(c,id,s)) throw new Error('Cannot add declared trait '+id); });
+    // Synchronization is an existing explicit owner. Pure policy reads below
+    // must neither synchronize a summary nor materialize another character.
+    FB.realmRulerCharacter(s,args.ids.rid);
+    s.agency.rulerAims[args.ids.rid] = {id:args.aim,generation:FB.realmRulerGeneration(s,args.ids.rid),sinceYear:s.date.year};
+  },{ids:ids,traits:traits,aim:aim});
+}
+
+async function rulerChannelSnapshot(page,ids) {
+  return page.evaluate(function (ids) {
+    const s = FB.state,P = FB.aiDecisions,rid = ids.rid;
+    const before = JSON.stringify(s),data = JSON.stringify(FBDATA),rng = FB.getRngState(),uid = FB.getUidCounter();
+    const inputs = P.inputs(s,rid),reports = {};
+    Object.keys(P.protocol()).forEach(function (family) { reports[family] = P.report(P.resolve(s,rid,family),[],inputs); });
+    const religion = FB.rulerFaithConversionEvaluation(s,rid,ids.target);
+    const c = FB.realmRulerCharacterSnapshot(s,rid);
+    return {inputs:inputs,war:FB.governments.call(s,rid,'ai','goals',{}).warChance,
+      strength:reports.war.parameters.minimumStrengthRatio,tactics:reports.tactics.parameters.engagementMargin,
+      investment:reports.investment.investment,investmentAdjustments:reports.investment.adjustments,
+      research:FB.techAIScore(s,ids.tech,rid),religionScore:religion.score,conversionAllowed:religion.allowed,
+      participation:FB.traitMechanic(s.realms[rid].ruler,'holyWarParticipation'),
+      intrigue:reports.intrigue.parameters,schemes:reports.intrigue.definition.schemeOrder || FB.traitSchemeOrder(c),
+      holyWeight:reports.religion.parameters.targetHolyWeight,
+      policies:Object.keys(reports).map(function (family) { return reports[family].policyId; }),
+      pure:before === JSON.stringify(s) && data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  },ids);
+}
+
+test('contrasting built-in rulers retain connected research, intrigue, faith and family aims',async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  await startDeterministicGame(page);
+  const ids = await stageRulerChannels(page);
+  await setRulerChannels(page,ids,['ambitious','brave'],'expand_realm');
+  const bold = await rulerChannelSnapshot(page,ids);
+  await setRulerChannels(page,ids,['zealous','patient','craven'],'defend_faith');
+  const guarded = await rulerChannelSnapshot(page,ids);
+  expect(bold).toMatchObject({inputs:{traits:['ambitious','brave'],aim:'expand_realm'},participation:0,pure:true,
+    investment:{buildingRoleWeights:{garrison:24,training:24},benefitWeights:{levy:16,retinue:16}}});
+  expect(bold.war).toBeCloseTo(0.0375);
+  expect(bold.tactics).toBeCloseTo(0.99);
+  expect(bold.strength).toBeCloseTo(1.08);
+  expect(bold.research/ids.neutralResearch).toBeCloseTo(1.4);
+  expect(guarded).toMatchObject({inputs:{traits:['zealous','patient','craven'],aim:'defend_faith'},participation:200,pure:true,
+    investment:{buildingRoleWeights:{worship:24,stronghold:24,fortification:24},benefitWeights:{piety:16,communityFaithPressure:8,garrison:0.5}}});
+  expect(guarded.war).toBeCloseTo(0.01875);
+  expect(guarded.tactics).toBeCloseTo(1.32);
+  expect(guarded.research).toBeCloseTo(ids.neutralResearch);
+  expect(guarded.religionScore).toBe(bold.religionScore-20);
+
+  const intrigue = await page.evaluate(function (ids) {
+    const base = JSON.parse(JSON.stringify(FB.state));
+    // Select a refusing seed, preserving the real chance algorithm and its
+    // draw. Cooldowns isolate one ruler without changing candidate rules.
+    let seed = null,afterDraw = null;
+    for (let i=1;i<=128 && seed === null;i++) {
+      FB.setRngState(i);
+      if (FB.rng() > 0.95) { seed = i; afterDraw = FB.getRngState(); }
+    }
+    if (seed === null) throw new Error('No bounded refusing seed');
+    function run(traits,aim) {
+      const s = JSON.parse(JSON.stringify(base)),record = FB.ensureIntrigue(s);
+      record.aiSchemes = []; record.startsThisYear = 0; record.startYear = s.date.year;
+      Object.keys(s.realms).forEach(function (rid) {
+        const c = FB.realmRulerCharacterSnapshot(s,rid);
+        if (c) record.cooldowns[c.id] = s.date.year+1;
+      });
+      const c = FB.realmRulerCharacterSnapshot(s,ids.rid);
+      c.traits = traits; delete record.cooldowns[c.id];
+      s.agency.rulerAims[ids.rid].id = aim;
+      FB.setRngState(seed); FB.intrigueAgencyYearly(s);
+      return {rng:FB.getRngState(),schemes:record.aiSchemes.length};
+    }
+    return {bold:run(['ambitious','brave'],'expand_realm'),guarded:run(['zealous','patient','craven'],'defend_faith'),seed:seed,afterDraw:afterDraw};
+  },ids);
+  expect(intrigue.bold).toEqual({rng:intrigue.afterDraw,schemes:0});
+  expect(intrigue.guarded).toEqual({rng:intrigue.seed,schemes:0});
+});
+
+for (const example of examples) {
+  test(example.file+' composes all nine families with current traits and durable aims',async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    await importExample(page,example.file);
+    await startDeterministicGame(page);
+    const ids = await stageRulerChannels(page),calm = example.file.includes('conservative');
+    await setRulerChannels(page,ids,['zealous','patient','craven'],'defend_faith');
+    await page.evaluate(function (args) {
+      if (!FB.authoritySetGovernment(FB.state,args.rid,args.form)) throw new Error('Cannot select imported court');
+    },{rid:ids.rid,form:example.form});
+    const current = await rulerChannelSnapshot(page,ids);
+    expect(new Set(current.policies).size).toBe(9);
+    expect(current.policies).toContain(calm ? 'restrained_intrigue' : 'opportunistic_intrigue');
+    expect(current.policies).toContain(calm ? 'observant_religion' : 'dynastic_religion');
+    expect(current.policies).toContain(calm ? 'conciliatory_diplomacy' : 'assertive_diplomacy');
+    expect(current.schemes).toEqual(calm ? ['blackmail','sabotage'] : ['sabotage','blackmail']);
+    expect(current.intrigue.chanceRate).toBe(calm ? 0.1 : 0.4);
+    expect(current.holyWeight).toBe(calm ? 3 : 1.5);
+    expect(current.tactics).toBeCloseTo(example.margin*1.2);
+    expect(current.research).toBeCloseTo(ids.neutralResearch);
+    expect(current.investment.benefitWeights).toMatchObject(calm ? {piety:16,communityFaithPressure:8} : {});
+    expect(current.investment.buildingRoleWeights[example.role]).toBe(calm ? 100 : 76);
+    expect(current.pure).toBe(true);
+    const changed = await page.evaluate(function (rid) {
+      const s = FB.state,c = FB.realmRulerCharacterSnapshot(s,rid);
+      s.realms[rid].ruler.personality = 'bellicose';
+      const legacy = FB.governments.call(s,rid,'ai','goals',{}).warChance;
+      delete s.realms[rid].ruler.personality;
+      FB.removeTrait(c,'zealous'); FB.addTrait(c,'literate',s);
+      FB.realmRulerCharacter(s,rid);
+      // Trait changes retain this generation's deliberately saved aim.
+      return {legacy:legacy,aim:FB.rulerAimSnapshot(s,rid).id};
+    },ids.rid);
+    expect(changed).toEqual({legacy:calm ? 0.025 : 0.08,aim:'defend_faith'});
+    const next = await rulerChannelSnapshot(page,ids);
+    expect(next.religionScore).toBe(current.religionScore+20);
+    expect(next.investmentAdjustments).toContain(calm ? 'aim:defend_faith' : 'trait:literate');
+    expect(next.investment.buildingRoleWeights[example.role]).toBe(calm ? 76 : 100);
+    expect(next.pure).toBe(true);
+    const frontier = await page.evaluate(function (args) {
+      const s = FB.state,P = FB.aiDecisions,record = s.agency.rulerAims[args.rid],previous = record.id;
+      const candidates = [{id:'weak',eligible:true,facts:{aggression:0,defensiveStrength:10,contacts:1,development:10}},
+        {id:'compact',eligible:true,facts:{aggression:0,defensiveStrength:20,contacts:3,development:5}},
+        {id:'blocked',eligible:false,facts:{aggression:0,defensiveStrength:0,contacts:100,development:100}}];
+      const rng = FB.getRngState(),uid = FB.getUidCounter(),base = P.orderCandidates(s,args.rid,'expansion',candidates);
+      record.id = args.calm ? 'keep_peace' : 'amass_wealth';
+      const before = JSON.stringify(s),aim = P.orderCandidates(s,args.rid,'expansion',candidates);
+      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      record.id = previous;
+      return {base:base,aim:aim,pure:pure};
+    },{rid:ids.rid,calm:calm});
+    expect(frontier).toEqual({base:calm ? ['weak','compact'] : ['compact','weak'],
+      aim:calm ? ['compact','weak'] : ['weak','compact'],pure:true});
+  });
+}
+
+test('retained ruler channels restore without replay and real succession drops the predecessor preferences',async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  await startDeterministicGame(page);
+  const ids = await stageRulerChannels(page);
+  await setRulerChannels(page,ids,['ambitious','brave'],'expand_realm');
+  const expected = await rulerChannelSnapshot(page,ids);
+  const checkpoint = await page.evaluate(function () {
+    return {save:JSON.parse(FB.save.serialize()),rng:FB.getRngState() >>> 0,uid:FB.getUidCounter()};
+  });
+  const restored = await page.evaluate(function (checkpoint) {
+    FB.save.restore(checkpoint.save);
+    return {rng:(FB.getRngState() >>> 0) === checkpoint.rng,uid:FB.getUidCounter() === checkpoint.uid,
+      revision:FB.state.start.revision === checkpoint.save.state.start.revision,
+      matching:!FB.save.otherWorld(checkpoint.save),noCache:!JSON.stringify(checkpoint.save.state).includes('aiDecisionPolicies')};
+  },checkpoint);
+  expect(restored).toEqual({rng:true,uid:true,revision:true,matching:true,noCache:true});
+  expect(await rulerChannelSnapshot(page,ids)).toEqual(expected);
+  const succession = await page.evaluate(function (rid) {
+    const s = FB.state,old = FB.realmRulerCharacterSnapshot(s,rid),generation = FB.realmRulerGeneration(s,rid);
+    s.realms[rid].ruler.personality = 'bellicose';
+    FB.killChar(s,old);
+    const current = FB.realmRulerCharacterSnapshot(s,rid);
+    if (!current || current.id === old.id) throw new Error('No actual successor');
+    current.traits.slice().forEach(function (id) { FB.removeTrait(current,id); });
+    FB.realmRulerCharacter(s,rid);
+    s.agency.rulerAims[rid] = {id:'expand_realm',generation:generation,sinceYear:s.date.year};
+    const before = JSON.stringify(s),rng = FB.getRngState(),uid = FB.getUidCounter();
+    const aim = FB.rulerAimSnapshot(s,rid);
+    const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+    FB.ensureAgency(s);
+    return {generation:FB.realmRulerGeneration(s,rid) > generation,aim:aim.id,stored:FB.rulerAimSnapshot(s,rid).id,
+      noPersonality:!Object.prototype.hasOwnProperty.call(s.realms[rid].ruler,'personality'),pure:pure};
+  },ids.rid);
+  expect(succession).toMatchObject({generation:true,noPersonality:true,pure:true});
+  expect(succession.aim).not.toBe('expand_realm');
+  expect(succession.stored).toBe(succession.aim);
+  const next = await rulerChannelSnapshot(page,ids);
+  expect(next).toMatchObject({inputs:{traits:[]},war:0.025,tactics:1.1,participation:0,pure:true});
+  expect(next.research).toBeCloseTo(ids.neutralResearch);
+  expect(next.investmentAdjustments).not.toContain('trait:brave');
+  expect(next.investmentAdjustments).not.toContain('aim:expand_realm');
+});
+
+for (const group of [
+  {name:'intrigue, diplomacy and religion',indexes:[0,1,2]},
+  {name:'investment, expansion and government',indexes:[3,4,5]}
+]) {
+  test(group.name+' changes participate in exact save fingerprints',async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    await importExample(page,'ai-decisions-conservative.json');
+    await startDeterministicGame(page);
+    const checkpoint = await page.evaluate(function () { return {saved:JSON.parse(FB.save.serialize()),signature:FB.mods.sig()}; });
+    // Reapply at the ordinary complete-catalogue boundary. Activation changes
+    // legacy world tables, which are not the mod installer's baseline.
+    await page.reload({waitUntil:'domcontentloaded'});
+    await prepareGameContent(page);
+    const source = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../docs/examples/ai-decisions-conservative.json'),'utf8'));
+    const out = await page.evaluate(function (args) {
+      const source = args.source,saved = args.checkpoint.saved,signature = args.checkpoint.signature;
+      if (signature !== FB.mods.sig() || FB.save.otherWorld(saved)) throw new Error('Original import did not reload exactly');
+      const changes = [function (m) { m.aiDecisionPolicies.restrained_intrigue.parameters.chanceRate = 0.11; },
+        function (m) { m.aiDecisionPolicies.conciliatory_diplomacy.aimOrder.reverse(); },
+        function (m) { m.aiDecisionPolicies.observant_religion.adjustments[0].multiply.targetHolyWeight = 1.4; },
+        function (m) { m.aiDecisionPolicies.careful_investment.adjustments[1].benefitWeights.piety = 15; },
+        function (m) { m.aiDecisionPolicies.cautious_frontier.aimOrders.keep_peace[1].direction = 'desc'; },
+        function (m) { m.governmentForms.cautious_court.strategyParameters = {ai:{warChance:0}}; }];
+      return args.indexes.map(function (index) {
+        const change = changes[index];
+        const m = JSON.parse(JSON.stringify(source)); change(m); FB.mods.apply(m);
+        const mismatch = signature !== FB.mods.sig() && FB.save.otherWorld(saved);
+        FB.mods.apply(source);
+        return {mismatch:mismatch,exact:signature === FB.mods.sig() && !FB.save.otherWorld(saved)};
+      });
+    },{source:source,checkpoint:checkpoint,indexes:group.indexes});
+    expect(out).toEqual(Array(3).fill({mismatch:true,exact:true}));
+  });
+}
+
+test('combined malformed imports publish no preferences, messages, storage or identities',async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  const source = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../docs/examples/ai-decisions-expansion.json'),'utf8'));
+  const out = await page.evaluate(function (source) {
+    const data = JSON.stringify(FBDATA),state = JSON.stringify(FB.state),signature = FB.mods.sig();
+    const rng = FB.getRngState(),uid = FB.getUidCounter(),storage = localStorage.getItem(FB.storageKey('fb_mods'));
+    const messages = JSON.stringify(FB.englishMessages());
+    const changes = [function (m) { m.aiDecisionPolicies.opportunistic_intrigue.schemeOrder = ['missing_scheme']; },
+      function (m) { m.aiDecisionPolicies.assertive_diplomacy.aimOrder = ['missing_aim']; },
+      function (m) { m.aiDecisionPolicies.dynastic_religion.adjustments[0].id = 'missing_aim'; },
+      function (m) { m.aiDecisionPolicies.learning_investment.adjustments[0].buildingRoleWeights = {missing_role:2}; },
+      function (m) { m.aiDecisionPolicies.objective_tactics.adjustments[0].multiply.engagementMargin = 5; },
+      function (m) { m.traitMechanics = {ambitious:{researchWeights:{warfare:5}}}; }];
+    const rejected = changes.map(function (change) {
+      const mod = JSON.parse(JSON.stringify(source)); change(mod);
+      const faults = FB.mods.validate(mod); let threw = false;
+      try { FB.mods.apply(mod); } catch (error) { threw = true; }
+      return faults.length > 0 && threw && FB.mods.store(JSON.stringify(mod)) === false;
+    });
+    return {rejected:rejected,pure:data === JSON.stringify(FBDATA) && state === JSON.stringify(FB.state) &&
+      signature === FB.mods.sig() && rng === FB.getRngState() && uid === FB.getUidCounter() &&
+      storage === localStorage.getItem(FB.storageKey('fb_mods')) && messages === JSON.stringify(FB.englishMessages())};
+  },source);
+  expect(out).toEqual({rejected:Array(6).fill(true),pure:true});
+});
+
+test('imported faith preferences cannot activate disabled institutions or override an explicit peaceful court',async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  await importExample(page,'ai-decisions-expansion.json');
+  await startDeterministicGame(page);
+  const ids = await stageRulerChannels(page);
+  await setRulerChannels(page,ids,['ambitious','brave','zealous'],'defend_faith');
+  const out = await page.evaluate(function (ids) {
+    const s = FB.state,rid = ids.rid;
+    const quiet = JSON.parse(JSON.stringify(FBDATA.governmentForms.expansive_court));
+    quiet.strategyParameters = {ai:{warChance:0}};
+    FB.mods.apply({governmentForms:{peaceful_channel_court:quiet}});
+    if (!FB.authoritySetGovernment(s,rid,'peaceful_channel_court')) throw new Error('Cannot select peaceful court');
+    s.realms[rid].ruler.personality = 'bellicose';
+    FBDATA.bookmarks[s.start.id].systems = {disable:['papacy','great_holy_wars','ruler_conversion','episcopal_sees']};
+    const before = JSON.stringify(s),rng = FB.getRngState(),uid = FB.getUidCounter();
+    const disabled = ['papacy','great_holy_wars','ruler_conversion'].every(function (id) { return !FB.systemAvailable(s,id); });
+    FB.greatHolyWarYearly(s); FB.papacyYearly(s); FB.religionYear(s);
+    return {disabled:disabled,chance:FB.governments.call(s,rid,'ai','goals',{}).warChance,
+      faith:FB.aiDecisions.parameters(s,rid,'religion').targetHolyWeight,
+      pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  },ids);
+  expect(out).toEqual({disabled:true,chance:0,faith:1.5,pure:true});
+});
