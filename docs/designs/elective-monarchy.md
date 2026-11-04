@@ -6,9 +6,11 @@ The fresh 711 Gothic courts use this form. Their opening rulers and county assig
 
 Eligibility and nomination
 
-selectionProfile.candidatePool extends the common eligibility contract with gentle standing, allowed cultures, allowed faiths and excluded personal roles. An empty culture or faith list admits any corresponding identity. Age, optional sex, freedom, captivity, exile, ancestry and optional office conditions remain explicit. The crown profile disables the ancestry restriction. Existing living members of its canonical court can stand; a living political principal can nominate a qualified local person from another house during a vacancy. A person already reigning or linked to another court's royal tree retains that role and is unavailable to this nomination path.
+selectionProfile.candidatePool extends the common eligibility contract with gentle standing, allowed cultures, allowed faiths and excluded personal roles. An empty culture or faith list admits any corresponding identity. Age, optional sex, freedom, captivity, exile, ancestry and optional office conditions remain explicit. The crown profile disables the ancestry restriction. Existing living members of its canonical court can stand; a living political principal can nominate a qualified local person from another house during a vacancy. Optional procedure.livingNomination:true additionally permits admission while the incumbent lives and vacancy is absent or resolved. Omission or false preserves vacancy-only admission. A person already reigning or linked to another court's royal tree retains that role and is unavailable to this nomination path.
 
 Nomination quotes are pure. They inspect local people without materializing candidates or advancing RNG or uid. A nomination apply revalidates the full review, then adds one electoral_candidate reference to the existing court tree and binds the person's royalLine identity. Their parents, spouse, children, private gold, dynasty, holdings and settlement property remain canonical. The selection record's current candidates remain bounded to 64; its interests remain bounded to 24. No separate dynasty frontier is fabricated for election. No payment admits an ineligible person.
+
+Living admission changes candidature only. It neither designates nor recognizes nor installs the person, and spends no funds. The royalLine storage reference does not assert a blood relationship. An incumbent may separately designate only when its procedure permits; accession still needs a lawful vacancy and current support. Later admission leaves a resolved vacancy's historical candidate list, support and accession untouched. Candidate changes and further admissions invalidate earlier designation/support reviews through the existing freshness stamp.
 
 procedure declares realmRecognition, designation, interimRevenue and defensiveLevy. Designation is unavailable in the 711 profile. The independent river regression profile permits a preference, adult female and clerical candidates from any culture or faith, different age, terms, weights and seniority ordering. A permitted designation requires a reviewed current candidate, cannot be set during an unresolved vacancy and does not supply political assent. AI only uses a preference to break equally supported proposals.
 
@@ -32,6 +34,10 @@ AI and presentation
 
 The existing seasonal government office scheduler runs selection at most once per affected court per season. AI admits a qualified local nomination through the same principal transaction, scores actual refusals and obligations, pays negotiation from its own public treasury and resolves only a currently recognized winner. A poor court can receive free direct support from its principals, with the same refusal checks. Paid negotiation is never silently free. A refusal leaves the vacancy and local possession intact.
 
+With livingNomination enabled, that same cadence reviews one admission only when no eligible electoral_candidate alternative exists. A successful living admission ends that pass without designation, assent or payment. Later seasons retain the qualified alternative rather than accumulating more; loss of eligibility permits another bounded review. Unresolved-vacancy AI remains unchanged. The political sheet states the nomination timing and separation of decisions, and offers pre-vacancy admission only to a currently authorized player principal, with the ordinary zero-cost confirmation and retained navigation.
+
+Admission reviews and outcomes retain the existing candidate's portrait. If admission removes the originating nomination control, returning focuses the candidate selector without changing the saved scroll position. Compact Details disclosures and desktop focus tooltips follow the shared review controls.
+
 Both Deeds layouts expose Elective crown for an affected household. The shared kingship sheet shows candidate qualifications, living political principals, scopes, weights, quorum, required assent, designation policy, current claims, obligations, public treasury, costs and blockers. Nomination, designation, support, accession and displacement open separate reviews. Selectors, expanded Details, scroll and semantic focus survive Back, Escape and outcome Continue. UI chrome uses FB.T, constituency labels use governmentSelection dataText and durable accession news uses the existing message descriptor.
 
 Saves, conversion and mods
@@ -48,9 +54,13 @@ electiveConversionQuote and electiveConvert expose a reviewed conversion of an e
 
 JSON mods compose registered strategy ids and the typed selection profile. They provide no executable election algorithm. Invalid pool, procedure, institutional selector or numeric bounds fail government validation. Fresh consumers using capital_elite and capital_clergy must declare a council and congregation at their capital. Engine code names no historical consumer.
 
+The optional boolean is consumed by the existing profile validator, ordinary detached Mods validation and save-v4 selection validation. No new save field or version is needed; an admitted person round-trips under the same identity before any vacancy, without replay. Omitted fields keep their exact JSON representation and changed imported procedure content still invalidates a save's mod signature. The complete fictional consultation and river fixtures under tests/e2e/fixtures/living-nomination demonstrate independent configurations, including same-import faith references and explicit institution representatives.
+
 Technology decisions
 
 elective_crown_nomination, elective_crown_accession, elective_crown_obligations and elective_crown_property each have technology impact none. Eligibility, living political assent, available funds and legal ownership supply their constraints; discovery has no credible role. Ordinary military equipment and household activities retain their own existing research conditions.
+
+The elective_crown_nomination review includes optional living-incumbent admission: its timing adds no credible discovery dependency and grants no material capacity. Separate designation and existing accession gates retain their meanings.
 
 Owner review
 

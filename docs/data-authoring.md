@@ -72,6 +72,8 @@ travel and household gates remain with their existing owners.
 
 Authoring checklist
 
+Electoral admission uses optional selectionProfile.procedure.livingNomination, a strict boolean defaulting false. It admits an existing qualified local person before a vacancy through the common selection owner, without designation, recognition, accession, payment or kinship. The unchanged candidate identity and selection schema support matching restoration without replay; do not add a saved nominee or normalize omitted procedure fields. The complete consultation.json and river-consultation.json examples under tests/e2e/fixtures/living-nomination exercise different ages, personal filters, interest weights, assent and designation policies through ordinary JSON import. The existing elective_crown_nomination technology review remains none: admission timing is a social procedure, while material capabilities retain their gates.
+
 Identify the owning catalogue and its actual gameplay, AI, UI and restore consumers. A public key alone is not proof that a newly added id has behavior. Use the complete per-system schema in docs/MODDING.md and retain its merge or replacement semantics.
 
 Name stable ids, supported fields, reference scopes, bounded values, defaults, permitted policies, localization fields and saved identities. Resolve references against the candidate effective catalogues, including same-file additions. Reject unknown operations and incompatible combinations before storing or installing a mod.

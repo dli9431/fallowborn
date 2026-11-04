@@ -732,6 +732,8 @@ The administrative monarchy specification also covers player absorption of a rec
 
 Elective monarchy coverage
 
+tests/e2e/specs/living-nomination.spec.js imports two complete fictional configurations through the Mods file picker. It covers living admission without office, payment, property or kinship changes; separate designation and lawful vacancy/support; age, personal-filter and weighted-interest differences; omitted/false JSON controls; stale principals, candidates and reviews; the 64-candidate cap and optional office qualification; bounded seasonal AI without accumulation; strict malformed-import and detached-save purity; repeated matching restoration without admission replay; exact changed-content signatures; and retained phone/desktop nomination reviews, portraits and post-admission focus. These staged checks establish no historical, longer-campaign or device acceptance.
+
 tests/e2e/specs/elective-monarchy.spec.js covers the 711 and fictional river procedures, cross-house nomination and accession, exact public-account continuity, private household and settlement receipts, accrued military expense, split assent, minority and vacancy, defensive interim powers, designation, stale reviews, malformed and old saves, technology decisions, pure reads, AI budgets and retained narrow/wide reviews. 711-bookmark.spec.js updates the fresh rollout and runs its standard/CrazyGames household and natural-season coverage. government-dispatch.spec.js includes the new explicit form, and tools/test_i18n_catalog.py covers constituency and contested-story display owners. Historical procedure, appearance, mobile touch, packaging and longer natural succession remain owner acceptance tasks.
 
 Civic republic coverage
