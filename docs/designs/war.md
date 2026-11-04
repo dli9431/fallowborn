@@ -1,5 +1,7 @@
 # Wars
 
+Ordinary seasonal declarations use the shared war preference projection. The default policy declares ambitious/wrathful versus content/kind/patient consideration and aggression-appetite multipliers, while current ruler aims adjust the strength margin through a separate channel. Exact values, neutral defaults, legacy personality compatibility and import examples are in docs/designs/ai-decisions.md. A consideration roll is separate from legal target selection, aggression support/revolt review and real treasury-backed muster. Preferences grant no permission, troops or money, and do not alter historical openings or direct player declarations. This numeric preference change creates no new technology-gated capability.
+
 Realm adoption remaps the live attacker, defender, cause enemy and objective enemies together. An opening ruler adopted by the player must leave each retained war pointing at the same current opponent. Immutable mobile opening-campaign provenance retains its original declared realm id; it is checked through the campaign's realm mapping rather than rewritten or repaired on save.
 
 Household evidence boundary
@@ -1881,8 +1883,9 @@ AI unjust-war selection evaluates next-sequence declaration and conquest support
 penalties against live county support. It refuses aggression while its realm has
 an open rebellion, or when the declaration would put any owned county, or conquest
 would put the target, at the armed-revolt threshold. Otherwise willingness is
-1 / (1 + declaration-hit * duration-years / 200 + conquest-hit * duration-years / 400),
-with a 1.5 multiplier for bellicose rulers (capped at 1). This is an additional
+projected appetite / (1 + declaration-hit * duration-years / 200 + conquest-hit * duration-years / 400),
+capped at 1. Neutral appetite is 1; the legacy bellicose switch selects 1.5,
+and ordinary trait adjustments use the shared war policy. This is an additional
 acceptance roll after the ordinary seasonal opportunity and candidate checks.
 Penalties and durations come from the actual modifiers, including escalation.
 Claim-backed wars retain their existing behavior; player declaration rules and

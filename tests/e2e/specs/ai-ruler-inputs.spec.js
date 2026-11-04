@@ -16,6 +16,9 @@ test('generated and historical rulers use their current characters while neutral
   await openGame(page,testInfo);
   await startDeterministicGame(page);
   const out = await page.evaluate(function () {
+    const neutral = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_war));
+    neutral.adjustments = [];
+    FB.mods.apply({aiDecisionPolicies:{neutral_inputs:neutral},balance:{aiWarPolicy:'neutral_inputs'}});
     const s = FB.state, P = FB.aiDecisions;
     const historical = FBDATA.realms.find(function (r) {
       return r.ruler && r.ruler.generated !== true && FB.realmRulerCharacterSnapshot(s,r.id);

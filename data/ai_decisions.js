@@ -3,7 +3,16 @@ window.FBDATA = window.FBDATA || {};
 FBDATA.aiDecisionPolicies = {
   ordinary_war:{ family:'war', mode:'first', parameters:{ chance:0.025,
     bellicoseChance:0.08, minimumStrengthRatio:1.2, maximumCommitments:2,
-    aggressionAppetite:1, bellicoseAppetite:1.5 }, order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] },
+    aggressionAppetite:1, bellicoseAppetite:1.5 }, order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[
+      {kind:'trait',id:'ambitious',multiply:{chance:1.5,aggressionAppetite:1.25}},
+      {kind:'trait',id:'wrathful',multiply:{chance:1.75,aggressionAppetite:1.4}},
+      {kind:'trait',id:'content',multiply:{chance:0.5,aggressionAppetite:0.6}},
+      {kind:'trait',id:'kind',multiply:{chance:0.7,aggressionAppetite:0.7}},
+      {kind:'trait',id:'patient',multiply:{chance:0.75,aggressionAppetite:0.8}},
+      {kind:'aim',id:'expand_realm',multiply:{minimumStrengthRatio:0.9}},
+      {kind:'aim',id:'keep_peace',multiply:{minimumStrengthRatio:1.25}},
+      {kind:'aim',id:'amass_wealth',multiply:{minimumStrengthRatio:1.1}}
+    ] },
   ordinary_expansion:{ family:'expansion', mode:'ordered', parameters:{},
     order:[{metric:'aggression',direction:'asc'}], weights:{}, bias:0, tieBreak:'id', adjustments:[] },
   ordinary_tactics:{ family:'tactics', mode:'first', parameters:{ engagementMargin:1.1, objectiveFirst:0 },

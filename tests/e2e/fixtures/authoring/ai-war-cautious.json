@@ -1,0 +1,18 @@
+{
+  "name": "Cautious war preferences",
+  "aiDecisionPolicies": {
+    "cautious_war": {
+      "family": "war", "mode": "first",
+      "parameters": {"chance": 0.01, "bellicoseChance": 0.08, "minimumStrengthRatio": 1.5,
+        "maximumCommitments": 2, "aggressionAppetite": 0.7, "bellicoseAppetite": 1.5},
+      "order": [], "weights": {}, "bias": 0, "tieBreak": "input",
+      "adjustments": [
+        {"kind": "trait", "id": "ambitious", "multiply": {"chance": 1.2, "aggressionAppetite": 1.1}},
+        {"kind": "trait", "id": "kind", "multiply": {"chance": 0.5, "aggressionAppetite": 0.6}},
+        {"kind": "aim", "id": "expand_realm", "multiply": {"minimumStrengthRatio": 0.95}},
+        {"kind": "aim", "id": "keep_peace", "multiply": {"minimumStrengthRatio": 1.2}}
+      ]
+    }
+  },
+  "balance": {"aiWarPolicy": "cautious_war"}
+}
