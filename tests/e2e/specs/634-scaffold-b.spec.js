@@ -3,12 +3,15 @@
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
+const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_634_scaffold_b.js','data/bookmark_634_identities.js',
+  'data/bookmark_634.js','data/starts_634_ordinary.js','js/bookmark_composition.js',
+  'js/bookmark_setup.js','js/save.js','js/save_v4.js',
   'data/bookmark_568_identities.js','data/bookmark_568.js',
   'data/bookmark_568_scaffold_a.js','data/bookmark_568_scaffold_b.js',
   'data/bookmark_568_scaffold_c.js','data/bookmark_568_scaffold_d.js',
@@ -208,7 +211,8 @@ test('634 quadrant b distinguishes changed courts from borrowed residents and ge
     function owners(ids) { return ids.split(' ').map(function (id) { return provinces[id].realm; }); }
     return {named:named,generated:Object.keys(realms).filter(function (id) { return realms[id].ruler.generated; }).length,
       north:owners('torino aosta milano pavia brescia verona trento friuli parma modena'),
-      imperial:owners('genoa padova venezia aquileia bologna ravenna firenze pisa siena lucca ancona roma viterbo bari taranto'),
+      corrected:owners('aquileia padova'),
+      imperial:owners('genoa venezia bologna ravenna firenze pisa siena lucca ancona roma viterbo bari taranto'),
       south:owners('spoleto perugia benevento capua salerno foggia'),
       northernBritain:owners('york scarborough bamburgh durham'),
       lombard:[realms.lombards_634.capital,realms.lombards_634.ruler.culture,realms.lombards_634.religion],
@@ -222,16 +226,55 @@ test('634 quadrant b distinguishes changed courts from borrowed residents and ge
   expect(result.named).toEqual([['northumbria_634','Oswald',604,'saxon_476','nicene',{members:[],spouseId:null}]]);
   expect(result.generated).toBe(31);
   expect(result.north).toEqual(Array(10).fill('lombards_634'));
-  expect(result.imperial).toEqual(Array(15).fill('byzantium_634'));
+  expect(result.corrected).toEqual(['lombards_634','lombards_634']);
+  expect(result.imperial).toEqual(Array(13).fill('byzantium_634'));
   expect(result.south).toEqual(['spoleto_634','spoleto_634','benevento_634','benevento_634','benevento_634','benevento_634']);
   expect(result.northernBritain).toEqual(Array(4).fill('northumbria_634'));
   expect(result.lombard).toEqual(['pavia','langobard_568','homoian']);
   expect(result.southernCourts).toEqual(['lombards_634','lombards_634']);
   expect(result.frankish).toEqual(['austrasia_634','austrasia_634']);
   expect(result.namedHold).toBe(true);
-  expect(result.kent).toEqual(['germanic_pagan','germanic_pagan']);
+  expect(result.kent).toEqual(['nicene','germanic_pagan']);
   expect(result.clyde).toBe('dumbarton');
   expect(result.irish).toBe('tara');
   expect(result.northumbrianResidents).toEqual([{culture:'brittonic',religion:'nicene',populationShare0:8000},
     {culture:'saxon_476',religion:'germanic_pagan',populationShare0:2000}]);
+});
+
+// Court faith is independent of resident faith, including after saved-world activation.
+test('634 quadrant b corrected owners and Kent court survive campaign creation and restore',async function ({page},info) {
+  await beginBookmark(page,info,'634','farmer_634');
+  function correctedFacts() {
+    const s = FB.state, b = FB.campaignBookmark(s);
+    const kent = b.realms.filter(function (r) { return r.id === 'kent_634'; })[0];
+    return {
+      faults:FB.validateBookmark(b),
+      owners:['aquileia','padova','venezia'].map(function (id) { return s.owner[id]; }),
+      courtOwners:Object.keys(FBDATA.bookmarkRegions634).filter(function (key) {
+        return FBDATA.bookmarkRegions634[key].realms.some(function (r) { return r.id === 'lombards_634'; });
+      }),
+      kent:[kent.capital,kent.ruler.generated,kent.ruler.culture,kent.ruler.born,kent.religion,
+        s.realms.kent_634.religion,FB.realmRulerCharacter(s,'kent_634').religion],
+      residents:b.provinces.filter(function (p) { return p.id === 'canterbury' || p.id === 'rochester'; })
+        .map(function (p) { return [p.id,p.culture,p.religion,p.communities]; }),
+      heldFaiths:['wessex_634','east_anglian_634'].map(function (id) { return s.realms[id].religion; }),
+      valid:FB.save.v4.validatePlatform(s)
+    };
+  }
+  const expected = {faults:[],owners:['lombards_634','lombards_634','byzantium_634'],courtOwners:['b09'],
+    kent:['canterbury',true,'saxon_476',599,'nicene','nicene','nicene'],
+    residents:['canterbury','rochester'].map(function (id) {
+      return [id,'saxon_476','germanic_pagan',[
+        {culture:'saxon_476',religion:'germanic_pagan',populationShare0:6500},
+        {culture:'brittonic',religion:'nicene',populationShare0:3500,paired:true}]];
+    }),heldFaiths:['germanic_pagan','germanic_pagan'],valid:true};
+  expect(await page.evaluate(correctedFacts)).toEqual(expected);
+  const saved = await page.evaluate(function () { return FB.save.serialize(); });
+  expect(await page.evaluate(function () {
+    return new Promise(function (resolve) {
+      FB.activateBookmark('867',null,function (error) { resolve(error && error.message || null); });
+    });
+  })).toBeNull();
+  await restoreBookmark(page,saved);
+  expect(await page.evaluate(correctedFacts)).toEqual(expected);
 });
