@@ -93,7 +93,7 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
     FBDATA.bookmarkCandidates['634'] = {
       id:'634',name:'The Early Conquests',
       desc:'Households keep their livelihoods while the Medinan, Eastern Roman and Sasanian courts face an uncertain autumn.',
-      date:{year:634,season:2,day:1},era:'late_antique',hidden:true,
+      date:{year:634,season:2,day:1},era:'late_antique',
       geography:'europe_regional_2',settlementLayout:'634_opening',
       revision:'baseline',revisions:{baseline:{}},
       openingRevision:'baseline',openingLegacyRevision:'baseline',
