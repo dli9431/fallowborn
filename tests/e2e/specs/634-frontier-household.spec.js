@@ -10,6 +10,7 @@ dependsOnRuntime(__filename,[
   'data/bookmark_634_scaffold_a.js','data/bookmark_634_scaffold_b.js',
   'data/bookmark_634_scaffold_c.js','data/bookmark_634_scaffold_d.js',
   'data/bookmark_sources.js','data/story_instances.js','data/settlements.js',
+  'data/story_households_634_damascus.js',
   'data/starts.js','data/actions.js','data/economy.js','data/systems.js','data/traits.js',
   'js/bookmark_composition.js','js/bookmark_sources.js','js/bookmark_setup.js',
   'js/story_household.js','js/story_household_observer.js','js/stories.js','js/starts.js',
@@ -62,22 +63,47 @@ test('complete hidden frontier start preserves identity, layout and exclusions',
   })).toEqual({home:'damascus',culture:'arabic',faith:'west_syriac_lay_634',age:30,family:true,actor:true,realm:false,errors:[]});
 });
 
-test('declined work and unchanged control conclude at home without payment or conquest', async function ({page},info) {
+for (const withObservers of [true,false]) {
+test('declined work and unchanged control conclude at home without payment or conquest' + (withObservers ? '' : ' with optional observers absent'), async function ({page},info) {
   await beginBookmark(page,info,'634','frontier_household_634');
   expect(await page.evaluate(function () {
-    const s = FB.state, id = 'frontier_household_track_634';
+    return FB.stories.attached(FB.state).indexOf('damascus_household_observer_634') >= 0;
+  })).toBe(true);
+  expect(await page.evaluate(function (withObservers) {
+    let s = FB.state;
+    const id = 'frontier_household_track_634';
+    const localObservers = FB.stories.list().filter(function (row) { return row.declaration && row.declaration.type === 'household_observer' &&
+      (row.declaration.provinceIds || []).indexOf('damascus') >= 0 && s.stories[row.id]; }).map(function (row) { return row.id; });
+    if (!withObservers) {
+      // A matching save may omit optional world attachments; restore must not add them.
+      const saved = JSON.parse(FB.save.serialize());
+      localObservers.forEach(function (observer) { delete saved.state.stories[observer]; });
+      saved.state.start.storyAttachments.world = saved.state.start.storyAttachments.world.filter(function (observer) {
+        return localObservers.indexOf(observer) < 0;
+      });
+      FB.save.restore(saved); s = FB.state;
+    }
+    const attachedObservers = localObservers.filter(function (observer) { return !!s.stories[observer]; });
+    const initialObservers = JSON.stringify(attachedObservers.map(function (observer) { return s.stories[observer]; }));
     const before = JSON.stringify([s.player.gold,s.player.prestige,s.player.piety,s.owner,s.chars]);
     const results = ['connections_first','decline','independent','stay'].map(function (c) {
       return FB.stories.apply(s,id,c,FB.stories.quote(s,id,c));
     });
+    attachedObservers.forEach(function (observer) { FB.stories.get(observer).day(s,s.stories[observer]); });
     return {results:results,phase:s.stories[id].phase,turn:s.turn,home:s.player.provinceId,
       controls:s.stories[id].controls,receipts:s.stories[id].householdReceipts,
       same:before === JSON.stringify([s.player.gold,s.player.prestige,s.player.piety,s.owner,s.chars]),
-      observers:FB.stories.list().filter(function (row) { return row.declaration && row.declaration.type === 'household_observer' &&
-        (row.declaration.provinceIds || []).indexOf('damascus') >= 0 && s.stories[row.id]; }).map(function (row) { return row.id; })};
-  })).toMatchObject({results:[true,true,true,true],phase:'close',turn:0,home:'damascus',
-    controls:{damascus:{before:null,turn:null}},receipts:{},same:true,observers:[]});
+      observersPresent:attachedObservers.length > 0,
+      observersUnchanged:initialObservers === JSON.stringify(attachedObservers.map(function (observer) { return s.stories[observer]; })),
+      observersQuiet:attachedObservers.every(function (observer) {
+        const t = s.stories[observer];
+        return !FB.stories.status(s,observer) && t.pending.length === 0 && Object.keys(t.householdReceipts).length === 0;
+      })};
+  },withObservers)).toMatchObject({results:[true,true,true,true],phase:'close',turn:0,home:'damascus',
+    controls:{damascus:{before:null,turn:null}},receipts:{},same:true,
+    observersPresent:withObservers,observersUnchanged:true,observersQuiet:true});
 });
+}
 
 test('focus selection, savings and unrelated work pay no story wage; actual craft income alone advances', async function ({page},info) {
   await beginBookmark(page,info,'634','frontier_household_634');
