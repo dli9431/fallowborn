@@ -274,6 +274,129 @@
     registry = next; byId = nextIndex;
   }
 
+  /* Deeds placement. FBDATA.storyPlacements maps story types, and optionally
+     single story ids, to the Deeds sections that own their kind of decision.
+     Resolution is pure: it reads current statuses, choice lists and the
+     section registry, and it stores nothing in the campaign. */
+  var PLACEMENT_FIELDS = ['section', 'fallback', 'actionTypeSection', 'icon', 'followStoryline'];
+  function placementFaults(table, sections) {
+    var errors = [], deedSections = Object.create(null);
+    (Array.isArray(sections) ? sections : []).forEach(function (section) {
+      if (plain(section) && section.type === 'deeds' && typeof section.id === 'string') deedSections[section.id] = section;
+    });
+    function section(id, layouts, path) {
+      var row = typeof id === 'string' && own(deedSections, id) ? deedSections[id] : null;
+      if (!row || layouts.indexOf(row.layout) < 0)
+        errors.push(path + ' must name a deeds section in the ' + layouts.join(' or ') + ' layout.');
+    }
+    function record(row, path, companion) {
+      if (!plain(row)) { errors.push(path + ' must be an object.'); return; }
+      Object.keys(row).forEach(function (key) {
+        if (PLACEMENT_FIELDS.indexOf(key) < 0 || key === 'followStoryline' && !companion)
+          errors.push(path + '.' + key + ' is not recognized.');
+      });
+      section(row.section, ['theme', 'both'], path + '.section');
+      if (row.fallback !== undefined) {
+        if (!Array.isArray(row.fallback) || row.fallback.length > 8) errors.push(path + '.fallback must list at most eight sections.');
+        else row.fallback.forEach(function (id, i) {
+          if (row.fallback.indexOf(id) !== i || id === row.section) errors.push(path + '.fallback repeats a section.');
+          section(id, ['theme', 'both'], path + '.fallback.' + i);
+        });
+      }
+      if (row.actionTypeSection !== undefined) section(row.actionTypeSection, ['action-type', 'both'], path + '.actionTypeSection');
+      if (row.icon !== undefined && (typeof row.icon !== 'string' || !row.icon.trim() || row.icon.length > 8))
+        errors.push(path + '.icon must be a short non-empty string.');
+      if (row.followStoryline !== undefined && typeof row.followStoryline !== 'boolean')
+        errors.push(path + '.followStoryline must be a boolean.');
+    }
+    if (!plain(table)) return ['storyPlacements must be an object.'];
+    Object.keys(table).forEach(function (key) {
+      if (['affairs', 'types', 'stories'].indexOf(key) < 0) errors.push('storyPlacements.' + key + ' is not recognized.');
+    });
+    record(table.affairs, 'storyPlacements.affairs', false);
+    if (!plain(table.types)) errors.push('storyPlacements.types must be an object keyed by story type.');
+    else Object.keys(table.types).forEach(function (type) {
+      if (!own(types, type)) errors.push('storyPlacements.types.' + type + ' names no registered story type.');
+      record(table.types[type], 'storyPlacements.types.' + type, true);
+    });
+    if (table.stories !== undefined && !plain(table.stories)) errors.push('storyPlacements.stories must be an object keyed by story id.');
+    else {
+      var ids = Object.keys(table.stories || {});
+      if (ids.length > 2048) errors.push('storyPlacements.stories exceeds 2048 entries.');
+      else ids.forEach(function (id) {
+        if (!/^[a-z][a-z0-9_]*$/.test(id)) errors.push('storyPlacements.stories.' + id + ' needs a story id.');
+        record(table.stories[id], 'storyPlacements.stories.' + id, true);
+      });
+    }
+    return errors;
+  }
+  // Mods replace affairs and merge single type or story records by key.
+  function mergePlacements(base, additions) {
+    if (!plain(additions)) return additions;
+    var out = { affairs:base && base.affairs,
+      types:Object.assign({}, base && base.types), stories:Object.assign({}, base && base.stories) };
+    Object.keys(additions).forEach(function (key) {
+      if ((key === 'types' || key === 'stories') && plain(additions[key])) Object.assign(out[key], additions[key]);
+      else out[key] = additions[key];
+    });
+    return out;
+  }
+  function placementRow(story) {
+    var table = FBDATA.storyPlacements || {};
+    if (plain(table.stories) && own(table.stories, story.id)) return table.stories[story.id];
+    var type = story.declaration && story.declaration.type;
+    return type && plain(table.types) && own(table.types, type) ? table.types[type] : null;
+  }
+  function placedSection(row, layout, available, order) {
+    var candidates = row ? [row.section].concat(row.fallback || []) : [];
+    for (var i = 0; i < candidates.length; i++) {
+      var id = FB.deeds.sectionForAction({ section:candidates[i],
+        actionTypeSection:row.actionTypeSection, flow:'choices' }, layout);
+      if (own(available, id)) return id;
+    }
+    var fallback = FB.deeds.sectionForAction({ flow:'choices' }, layout);
+    return own(available, fallback) ? fallback : order[0] || null;
+  }
+  // A world story with no choice to make is status about others: an affair.
+  function storyEntries(s) {
+    return FB.stories.cards(s).map(function (card) {
+      var story = FB.stories.get(card.id);
+      return { id:card.id, kind:card.kind, title:card.title,
+        stage:card.name && card.name !== card.title ? card.name : '',
+        progress:card.progress, decision:FB.stories.choices(s, card.id).length > 0,
+        storyline:isStoryline(story), row:placementRow(story) };
+    });
+  }
+  function placements(s, layout, sectionIds) {
+    var available = Object.create(null), order = (sectionIds || []).slice();
+    order.forEach(function (id) { available[id] = true; });
+    var table = FBDATA.storyPlacements || {};
+    var out = { sections:{}, affairs:[], affairsSection:null }, placed = [], companions = [];
+    var storylineSection = null;
+    storyEntries(s).forEach(function (entry, index) {
+      entry.index = index;
+      entry.icon = entry.row && entry.row.icon || '📖';
+      if (entry.kind === 'world' && !entry.decision) { out.affairs.push(entry); return; }
+      if (entry.row && entry.row.followStoryline) { companions.push(entry); return; }
+      entry.section = placedSection(entry.row, layout, available, order);
+      if (entry.storyline && !storylineSection) storylineSection = entry.section;
+      placed.push(entry);
+    });
+    companions.forEach(function (entry) {
+      entry.section = storylineSection || placedSection(entry.row, layout, available, order);
+      placed.push(entry);
+    });
+    // Storylines lead their section, then companion tracks, then world stories.
+    function rank(entry) { return entry.storyline ? 0 : entry.kind === 'track' ? 1 : 2; }
+    placed.sort(function (a, b) { return rank(a) - rank(b) || a.index - b.index; });
+    placed.forEach(function (entry) {
+      if (!entry.section) return;
+      (out.sections[entry.section] = out.sections[entry.section] || []).push(entry);
+    });
+    if (out.affairs.length) out.affairsSection = placedSection(table.affairs, layout, available, order);
+    return out;
+  }
+
   FB.stories = {
     /* Trusted classic scripts register reusable factories before boot seals
        the registry. Definitions contain data, not executable save fields. */
@@ -406,7 +529,7 @@
         if (registry[i].migrate) registry[i].migrate(state);
       }
     },
-    /* Deeds cards: every attached story whose status hook answers. */
+    /* Story entries: every attached story whose status hook answers. */
     cards:function (s) {
       var out = [];
       attachedList(s).forEach(function (story) {
@@ -414,10 +537,20 @@
         if (!status) return;
         out.push({ id:story.id, kind:story.kind,
           title:story.title ? story.title(s, record(s, story.id)) : story.id,
-          phase:status.phase, name:status.name, lines:status.lines || [] });
+          phase:status.phase, name:status.name, lines:status.lines || [],
+          progress:status.progress || null });
       });
       return out;
     },
+    /* Deeds placement of every story entry for one grouping layout and the
+       ids of its available deeds sections: { sections, affairs, affairsSection }. */
+    placements:placements,
+    // World stories that currently ask nothing of the player.
+    affairs:function (s) {
+      return storyEntries(s).filter(function (entry) { return entry.kind === 'world' && !entry.decision; });
+    },
+    validatePlacements:placementFaults,
+    mergePlacements:mergePlacements,
     status:function (s, id) {
       var story = FB.stories.get(id), rec = record(s, id);
       return story && rec && story.status ? story.status(s, rec) : null;
@@ -445,19 +578,21 @@
     }
   };
 
-  /* The shared story sheet. One story card in Deeds opens a list of choices
-     with their effects and conditions; each choice opens a reviewed modal,
-     and confirmation rechecks the quote. Back returns to the list; Close and
-     the outcome acknowledgment return to the Deeds card with its scroll
-     position and focus (docs/designs/ui.md). */
+  /* The shared story sheet. A story entry in its Deeds section opens a list
+     of choices with their effects and conditions; each choice opens a
+     reviewed modal, and confirmation rechecks the quote. Back returns to the
+     list; Close and the outcome acknowledgment return to the Deeds entry with
+     its scroll position and focus (docs/designs/ui.md). A story that has left
+     its section, or one reviewed through Affairs of the world, returns to the
+     Affairs entry instead. */
   if (FB.ui) {
     var UI = FB.ui;
     var cardNode = function (id) {
-      var nodes = document.querySelectorAll('[data-story-card]');
+      var nodes = document.querySelectorAll('#tab-actions [data-story-card]');
       for (var i = 0; i < nodes.length; i++) {
-        if (nodes[i].getAttribute('data-story-card') === id) return nodes[i];
+        if (id && nodes[i].getAttribute('data-story-card') === id) return nodes[i];
       }
-      return null;
+      return document.querySelector('#tab-actions [data-story-affairs]');
     };
     var returnToCard = function (id) {
       var scroller = document.getElementById('sidebody');
@@ -480,7 +615,24 @@
       var text = story.blocker && story.blocker(s, record(s, story.id), quote.reason);
       return text || FB.T('The current people, territory, route, or mandate no longer allows this choice.');
     };
-    UI.showStorySheet = function (id) {
+    /* Affairs of the world: one Deeds entry opens the read-only world stories
+       that ask nothing of the player now. Each opens the shared story sheet,
+       whose Back returns to this list. */
+    UI.showStoryAffairs = function () {
+      var esc = FB.esc, list = FB.stories.affairs(FB.state), html = '';
+      list.forEach(function (entry) {
+        html += '<button type="button" class="actionbtn" data-story-card="' + esc(entry.id) + '"><b>' +
+          esc(entry.title) + '</b>' + (entry.stage ? '<span class="adesc">' + esc(entry.stage) + '</span>' : '') + '</button>';
+      });
+      if (!list.length) html += '<p class="hint">' + esc(FB.T('Nothing is unfolding elsewhere.')) + '</p>';
+      UI.openModal(FB.T('Affairs of the world'), html, returnToCard(null));
+      document.querySelectorAll('#gm-body [data-story-card]').forEach(function (node) {
+        node.addEventListener('click', function () {
+          UI.showStorySheet(node.getAttribute('data-story-card'), { fromAffairs:true });
+        });
+      });
+    };
+    UI.showStorySheet = function (id, options) {
       var s = FB.state, story = FB.stories.get(id), rec = record(s, id);
       if (!story || !rec) return;
       if (s.player.flags && s.start && s.start.onboarding === 'ruler') s.player.flags.tut_ruler_story = 1;
@@ -506,8 +658,11 @@
           '<b>' + esc(choice.label) + '</b><br><span class="hint">' +
           esc(choice.detail) + '</span></button>';
       }
-      UI.openModal(story.title ? story.title(s, rec) : id, html,
-        returnToCard(id));
+      var navigation = returnToCard(id);
+      if (options && options.fromAffairs) {
+        navigation.historyView = true; navigation.historyBack = true;
+      }
+      UI.openModal(story.title ? story.title(s, rec) : id, html, navigation);
       document.querySelectorAll('[data-story-choice]').forEach(function (node) {
         node.addEventListener('click', function () {
           reviewChoice(id, node.getAttribute('data-story-choice'));

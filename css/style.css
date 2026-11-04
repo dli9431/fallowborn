@@ -1913,6 +1913,8 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   border-color:var(--ui-accent-color); background:#302719;
 }
 .actiongroup-toggle > span:last-child { color:var(--helper-text-color); font-size:var(--ui-label-size); white-space:nowrap; }
+/* A section holding a story whose decision waits. */
+.deed-story-marker { color:var(--ui-accent-color); font-size:0.8em; }
 .actionsubhead { color:var(--helper-text-color); font-size:var(--ui-label-size); margin:7px 3px 5px; }
 .actionsubhead.deed-section-active {
   color:var(--ui-accent-color); border-left:2px solid var(--ui-accent-color); padding-left:6px;

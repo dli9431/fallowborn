@@ -204,7 +204,7 @@ test('travelling presentation retains the existing allowlist as deed metadata',
     ].sort());
   });
 
-test('trusted registration and story cards use the same ordered section catalogue',
+test('trusted registration orders sections and story cards join their registered deeds section',
   async function ({ page }, testInfo) {
     await startParityGame(page, testInfo, { bookmark:'476',
       code:'DEEDS-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' });
@@ -218,11 +218,12 @@ test('trusted registration and story cards use the same ordered section catalogu
     const cards = page.locator('#tab-actions [data-story-card]');
     await expect(cards.first()).toBeVisible();
     const ordered = await page.evaluate(function () {
-      const card = document.querySelector('[data-story-card]');
+      const card = document.querySelector('#tab-actions [data-story-card]');
       const notice = document.querySelector('[data-action-section="e2e_notice"]');
       const focus = document.getElementById('daily-focus-list');
-      return !!(card.compareDocumentPosition(notice) & Node.DOCUMENT_POSITION_FOLLOWING) &&
-        !!(notice.compareDocumentPosition(focus) & Node.DOCUMENT_POSITION_FOLLOWING);
+      return !!card.closest('[data-action-group-body]') &&
+        !!(notice.compareDocumentPosition(focus) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+        !!(focus.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING);
     });
     expect(ordered).toBe(true);
     await cards.first().click();

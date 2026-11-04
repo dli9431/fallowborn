@@ -1,0 +1,11 @@
+{
+  "name": "Damascus ledger in Rank & Realm, goals in Faith & Community",
+  "storyPlacements": {
+    "types": {
+      "opening_profile": {"section": "faith", "actionTypeSection": "personal", "icon": "✦"}
+    },
+    "stories": {
+      "damascus_household_track_634": {"section": "realm", "fallback": ["work"], "actionTypeSection": "personal", "icon": "📒"}
+    }
+  }
+}

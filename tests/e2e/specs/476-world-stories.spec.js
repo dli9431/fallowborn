@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/actions.js', 'tests/e2e/support/game/story-placement.js',
   'data/start_ambitions.js', 'js/story_opening_goals.js',
   'data/story_household_effects_476_493.js', 'js/story_household_observer.js',
   'data/story_courts_476.js',
@@ -21,6 +22,7 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
+const { openStoryAffairs } = require('../support/game/story-placement');
 const { mockCrazyGames } = require('../support/crazygames');
 const RAILS = ['zeno_return_476','clovis_syagrius_476','theoderic_italy_476',
   'eastern_africa_476','eastern_italy_476','rugian_frontier_476','sicilian_tribute_476',
@@ -96,14 +98,15 @@ test('independent court bargaining waits for an undecided civic household',
 test('world status sheets retain their originating card and registration remains sealed',
   async function ({ page }, testInfo) {
     await start(page, testInfo);
-    await page.locator('[data-tab="actions"]').click();
-    const card = page.locator('[data-story-card="zeno_return_476"]');
-    await card.click();
+    const affairs = await openStoryAffairs(page);
+    await page.locator('#gm-body [data-story-card="zeno_return_476"]').click();
     await expect(page.locator('#genmodal')).toContainText('A displaced claimant');
     await expect(page.locator('[data-story-choice]')).toHaveCount(0);
     await page.keyboard.press('Escape');
+    await expect(page.locator('#gm-body [data-story-card="zeno_return_476"]')).toBeVisible();
+    await page.keyboard.press('Escape');
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    await expect(card).toBeFocused();
+    await expect(affairs).toBeFocused();
     const result = await page.evaluate(function () {
       const rejected = [];
       for (const action of [

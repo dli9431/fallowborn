@@ -6,7 +6,6 @@ window.FBDATA = window.FBDATA || {};
    contract; new systems can add ordinary deed sections without panel code. */
 FBDATA.deedSections = [
   { id:'tutorial', type:'tutorial', order:0, layout:'both' },
-  { id:'stories', type:'stories', order:10, layout:'both' },
   { id:'commitments', type:'commitments', order:20, layout:'both' },
   { id:'campaigns', type:'campaigns', order:30, layout:'both' },
   { id:'holy_campaign', type:'holy_campaign', order:40, layout:'both', system:'great_holy_wars' },
@@ -44,6 +43,48 @@ FBDATA.deedSections = [
     label:'👑 Ruler decisions', subhead:'Ruler decisions' }
 ];
 FBDATA.deedSectionDefaults = { theme:'realm', choices:'personal', immediate:'deeds' };
+
+/* Attached stories appear as entries inside the Deeds sections that own their
+   kind of decision. A record names a theme section, ordered fallbacks for
+   when that section is unavailable, an optional action-type section and an
+   icon. followStoryline places a companion, such as opening goals, beside the
+   storyline it accompanies. A world story that currently offers no choice
+   gathers behind the affairs entry instead of occupying a section. stories
+   overrides the type record for one story id. */
+FBDATA.storyPlacements = {
+  affairs:{ section:'war', fallback:['realm'], actionTypeSection:'personal', icon:'📜' },
+  types:{
+    household_track:{ section:'work', actionTypeSection:'personal', icon:'📖' },
+    household_observer:{ section:'work', actionTypeSection:'personal', icon:'📖' },
+    household_party:{ section:'life', actionTypeSection:'personal', icon:'📖' },
+    household_refuge:{ section:'life', actionTypeSection:'personal', icon:'📖' },
+    local_threat:{ section:'life', actionTypeSection:'personal', icon:'📖' },
+    opening_profile:{ section:'work', actionTypeSection:'personal', icon:'🎯', followStoryline:true },
+    political_track:{ section:'offices', fallback:['realm'], actionTypeSection:'personal', icon:'📖' },
+    civic_candidacy:{ section:'cities', fallback:['realm'], actionTypeSection:'personal', icon:'🏛' },
+    expedition_participation:{ section:'war', fallback:['realm'], actionTypeSection:'personal', icon:'⚔' },
+    ruler_agenda:{ section:'realm', actionTypeSection:'ruler', icon:'👑' },
+    court_settlement:{ section:'offices', fallback:['realm'], actionTypeSection:'ruler', icon:'👑' },
+    ruler_restoration:{ section:'offices', fallback:['realm'], actionTypeSection:'ruler', icon:'👑' },
+    contested_office:{ section:'offices', fallback:['realm'], actionTypeSection:'ruler', icon:'👑' },
+    polity_foundation:{ section:'offices', fallback:['realm'], actionTypeSection:'ruler', icon:'👑' },
+    government_contest:{ section:'cities', fallback:['realm'], actionTypeSection:'ruler', icon:'🏛' },
+    campaign:{ section:'war', actionTypeSection:'ruler', icon:'⚔' },
+    holy_war:{ section:'war', actionTypeSection:'ruler', icon:'⚔' },
+    expedition_preparation:{ section:'war', actionTypeSection:'ruler', icon:'⚔' },
+    expedition_program:{ section:'war', actionTypeSection:'ruler', icon:'⚔' },
+    expedition_undertaking:{ section:'war', actionTypeSection:'ruler', icon:'⚔' },
+    partition:{ section:'realm', actionTypeSection:'ruler', icon:'📜' },
+    succession_partition:{ section:'realm', actionTypeSection:'ruler', icon:'📜' },
+    designated_succession:{ section:'realm', actionTypeSection:'ruler', icon:'📜' },
+    diplomatic_exchange:{ section:'realm', actionTypeSection:'ruler', icon:'📜' },
+    recognition:{ section:'realm', actionTypeSection:'ruler', icon:'📜' },
+    treaty_settlement:{ section:'realm', actionTypeSection:'ruler', icon:'📜' },
+    tribute_cession:{ section:'realm', actionTypeSection:'ruler', icon:'📜' },
+    civilian_migration:{ section:'realm', actionTypeSection:'ruler', icon:'📜' }
+  },
+  stories:{}
+};
 
 /* County community projects are territorial policy, not personal conversion
    deeds. Land presents these definitions from an explicit county context;
