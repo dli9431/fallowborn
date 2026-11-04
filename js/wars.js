@@ -1136,7 +1136,7 @@
     const rebellion = FB.realmHasRebellion && FB.realmHasRebellion(state, rid);
     const allowed = counties.length > 0 && !rebellion && worst > threshold && targetSupport > threshold;
     // Penalize both the immediate realm-wide loss and a long-lived burden on
-    // the prize. Bellicose rulers tolerate more cost, never an imminent revolt.
+    // the prize. Projected appetite tolerates cost, never an imminent revolt.
     const burden = hit * Math.max(0, declaration.days || 0) / 360 / 200 +
       conquestHit * Math.max(0, conquest.days || 0) / 360 / 400;
     const realm = state.realms[rid];
