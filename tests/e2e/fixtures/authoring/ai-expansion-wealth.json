@@ -1,0 +1,11 @@
+{
+  "name":"Developed frontier prizes",
+  "aiDecisionPolicies":{
+    "developed_frontier":{
+      "family":"expansion","mode":"weighted","parameters":{},"order":[],
+      "weights":{"development":1,"contacts":-10},
+      "bias":0,"tieBreak":"input","adjustments":[]
+    }
+  },
+  "balance":{"aiExpansionPolicy":"developed_frontier"}
+}

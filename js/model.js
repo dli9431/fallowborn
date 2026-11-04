@@ -2289,9 +2289,14 @@ window.FB = window.FB || {};
 
   /* Bounded behavioral traits share these reads across player previews and
      AI decisions. Max combines alternative motives; sum combines yields. */
+  FB.traitIds = function (c) {
+    // An explicit list, including an empty one, precedes a compact summary.
+    var ids = c && (Array.isArray(c.traits) ? c.traits : c.trait ? [c.trait] : []) || [];
+    return ids.filter(function (id, i) { return ids.indexOf(id) === i; });
+  };
   FB.traitMechanic = function (c, key, sum) {
     var value = 0;
-    (c && (c.traits || (c.trait ? [c.trait] : [])) || []).forEach(function (id) {
+    FB.traitIds(c).forEach(function (id) {
       var rule = FBDATA.traitMechanics && FBDATA.traitMechanics[id];
       var n = rule && rule[key];
       if (typeof n === 'number' && Number.isFinite(n)) value = sum ? value + n : Math.max(value, n);
@@ -2300,7 +2305,7 @@ window.FB = window.FB || {};
   };
   FB.traitAimWeight = function (c, aim) {
     var weight = 0;
-    (c && (c.traits || (c.trait ? [c.trait] : [])) || []).forEach(function (id) {
+    FB.traitIds(c).forEach(function (id) {
       var rule = FBDATA.traitMechanics && FBDATA.traitMechanics[id];
       weight = Math.max(weight, rule && rule.rulerAims && rule.rulerAims[aim] || 0);
     });
@@ -2308,7 +2313,7 @@ window.FB = window.FB || {};
   };
   FB.traitSchemeOrder = function (c) {
     var selected = null;
-    (c && (c.traits || (c.trait ? [c.trait] : [])) || []).forEach(function (id) {
+    FB.traitIds(c).forEach(function (id) {
       var rule = FBDATA.traitMechanics && FBDATA.traitMechanics[id], order = rule && rule.schemeOrder;
       if (order && (!selected || order.priority > selected.priority)) selected = order;
     });

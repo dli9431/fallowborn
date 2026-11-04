@@ -1,5 +1,17 @@
 Deferred title and content readiness
 
+ai-expansion-ranking.spec.js stages multiple real frontier targets for sovereigns and
+vassals and checks consolidation ahead of county id, current aim alternatives, each
+geographic/defense tie-break, and the retained explicit neutral baseline. It imports
+independent consolidation and weighted-development JSON files through the ordinary
+Mods picker, validates detached weight variation and malformed nonpublication, checks
+lawful priority and zero-weight refusal, rejects stale rights/ownership/frontier/truce/
+authority and connected packages, bounds unique border inspection, and compares matching
+save restoration and real ruler succession. The neutral case in ai-decision-integration.spec.js
+selects ordinary_expansion explicitly; the focused spec covers the strategic default.
+These staged boundaries establish no full-suite, long-run balance, performance or device
+acceptance claim.
+
 bookmark-save-roundtrip.spec.js creates and saves one campaign for each of the eleven native dates, including the hidden authoring dates, then resumes through cold-title Continue and the selected-date content gate. It compares the original world, opening indexes, governments, migrations, armies and RNG/uid state. deferred-menu.spec.js additionally covers cold Henry and Koten starts and Continue in 1241. guarded-following-opening.spec.js, guarded-principal-starts.spec.js and expedition-command.spec.js check compact identity omissions, detached validation purity, missing and conflicting identities, forged actor bindings and preserved guard or command provenance.
 
 deferred-menu.spec.js samples visible loading labels on animation frames in standard and CrazyGames journeys, checks that each dated review starts with its matching label already painted, and retains completed-fraction ordering. settlement-start.spec.js checks the Creating campaign status alongside the locked character form before construction. Existing failure coverage checks that rejected preparation releases the loading screen.
@@ -33,6 +45,10 @@ support/game/navigation.js exposes openTitle for the actual lightweight title an
 AI decision integration coverage
 
 ai-decision-integration.spec.js exercises complete multi-family ordinary JSON imports with government overrides, spent-resource restore, a single seeded research boundary, current traits/aims and real ruler succession, state isolation, exact changed-content rejection, unsafe declarations, empty weighted retry lists, and neutral standard/CrazyGames behavior. It uses the real entrypoint and staged boundary hooks without long simulations. File, served Chromium, Firefox and WebKit select this suite. ai-decision-policies.spec.js covers the pure protocol/import/layer lifecycle and ai-live-decisions.spec.js covers individual live consumers. Exact commands and runtime, device, package and performance evidence requirements are in docs/research/ai-decision-acceptance.md.
+
+ai-ruler-inputs.spec.js covers generated and historical character identity, player changes, authoritative empty trait lists, compact ruler materialization, structural and saved aim precedence, unique multi-trait composition, both ordinary JSON examples, malformed-import nonpublication, explicit government zero-war preferences, and current/legacy save restoration through canonical succession. All boundaries are staged; input reads check state, RNG and uid purity.
+
+ai-war-preferences.spec.js covers default trait chance/appetite differences, separate aim margins, duplicate-trait composition, neutral fallbacks, state/RNG/uid purity, seeded declarations and refusals, actual strength filtering, government zero-war policies, truces, offensive commitments, liege permission, support/revolt refusal, unfunded and recovering muster, current restore and succession. Two complete ai-war-cautious.json and ai-war-bold.json file imports exercise distinct replacements and malformed nonpublication. The earlier all-traits baseline in ai-ruler-inputs.spec.js explicitly selects a neutral policy; neutral distribution checks use a ruler without disposition traits.
 
 Complete Danube corridor acceptance
 
@@ -366,6 +382,10 @@ Each test receives a fresh isolated browser context. The suite never assumes tha
 storage behaves like origin-backed storage.
 
 ## Current coverage
+
+household-control-predicate.spec.js imports two independent household graphs and covers unchanged baselines, actual sovereign changes before and after the track hook, choice and automatic branches, a different sovereign at fresh attachment, pure queries and detached rejection of malformed predicates. Save checks retain pending control facts, resolved and expired receipts, existing graph closure routes and missing records without reinitialization. These staged boundaries do not establish longer campaign or device acceptance.
+
+household-observer-local-control.spec.js imports ordinary local-control observers in a world without campaigns. It covers seeded unchanged baselines, actual transfers, separate county cursors, local presence, generation invalidation, personal priority, shared observer receipts, independent expiry/continuation terms, pure malformed-source rejection, pending/closed/unobserved restore, absent records and strict baseline/token/receipt validation. Retained campaign and exact-site source configurations also round trip with their existing receipt versions and behavior. All boundaries are staged without a long simulation.
 
 The initial suite covers:
 
@@ -732,3 +752,7 @@ Era and retained-world fixtures are covered by era-content-gating.spec.js, era-t
 Marriage finder navigation
 
 tests/e2e/specs/marriage-discovery.spec.js bounds the court and character return journeys to twelve real candidate-query results per redraw. Character journeys select existing character rows before applying the limit. Native scope and availability changes still call the real query. Each journey checks a nonzero scroll offset and the originating action's focus after Back, together with retained filter values and their open disclosure. Separate cases cover the complete candidate query and shared realm detail reads per redraw.
+
+634-damascus-household.spec.js covers the hidden complete Damascus start, resident identity and layout, ordinary craft income, stationary six-review completion, costless and stale choices, protagonist-only departure, death/succession, absent legacy records, matching hidden save continuity, actual local-control notices and remote/war silence. An independent household-plan JSON fixture is imported through Mods and retains its own exact save identity. These bounded checks do not establish device or longer campaign acceptance.
+
+634-first-playable.spec.js checks canonical publication diagnostics and the standard/CrazyGames trait scheme preferences, including retained ordering, excluded plots and rejection of unknown references. ai-decision-integration.spec.js compares research records structurally across restore, normalizes completed/exposed set order and RNG bit representation, and retains exact active-slot, progress, reserve, priority and UID comparisons. Its neutral ruler fixture explicitly clears current character traits; trait-sensitive behavior remains covered by ai-war-preferences.spec.js.

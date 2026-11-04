@@ -64,11 +64,30 @@
     });
     return true;
   }
+  function orderFaults(order, metrics, path, errors) {
+    if (!Array.isArray(order) || !order.length || order.length > 16) {
+      errors.push(path + ' needs one to 16 entries.'); return;
+    }
+    var seen = Object.create(null);
+    order.forEach(function (row,i) {
+      if (!fields(row,['metric','direction'],path + '.' + i,errors)) return;
+      if (metrics.indexOf(row.metric) < 0 || seen[row.metric]) errors.push(path + ' has an unknown or duplicate metric.');
+      seen[row.metric] = true;
+      if (row.direction !== 'asc' && row.direction !== 'desc') errors.push(path + ' direction must be asc or desc.');
+    });
+  }
   function recordFaults(d, data, path) {
     var errors = [];
-    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments','buildingRoleWeights','domainWeights','schemeOrder','aimOrder'],path,errors)) return errors;
+    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments','buildingRoleWeights','domainWeights','schemeOrder','aimOrder','aimOrders'],path,errors)) return errors;
     if (!own(families,d.family)) return errors.concat(path + '.family is unregistered.');
     var f = families[d.family], names = Object.keys(f.parameters);
+    if (own(d,'aimOrders')) {
+      if (d.family !== 'expansion' || d.mode !== 'ordered') errors.push(path + '.aimOrders requires ordered expansion.');
+      if (fields(d.aimOrders,Object.keys(data.agencyRules && data.agencyRules.aims || {}),path + '.aimOrders',errors))
+        Object.keys(d.aimOrders).forEach(function (aim) {
+          orderFaults(d.aimOrders[aim],f.metrics,path + '.aimOrders.' + aim,errors);
+        });
+    }
     if (own(d,'aimOrder') && (d.family !== 'diplomacy' || !Array.isArray(d.aimOrder) ||
         !d.aimOrder.length || d.aimOrder.length > 32 || d.aimOrder.some(function (aim,i) {
           return !own(data.agencyRules && data.agencyRules.aims,aim) || d.aimOrder.indexOf(aim) !== i;
@@ -234,10 +253,15 @@
   // Snapshot existing identity owners; never materialize a ruler or persist a policy.
   P.inputs = function (state, realmId) {
     var realm = state && state.realms && state.realms[realmId];
-    var person = realm && FB.realmRulerCharacterSnapshot && FB.realmRulerCharacterSnapshot(state,realmId);
-    var aim = realm && FB.rulerAimSnapshot ? FB.rulerAimSnapshot(state,realmId) : null;
-    return {traits:person && person.traits ? person.traits.slice() : realm && realm.ruler && realm.ruler.trait ? [realm.ruler.trait] : [],
-      aim:aim && aim.id || null};
+    if (!realm || !realm.alive) return {traits:[],aim:null};
+    var player = realmId === 'player';
+    var person = player ? state.player && state.chars && state.chars[state.player.charId] :
+      FB.realmRulerCharacterSnapshot(state,realmId);
+    // A character's empty list is authoritative; the compact summary may lag.
+    // Legacy personality is a war compatibility switch, never a trait alias.
+    var ruler = player ? person && !person.dead && person : person || realm.ruler;
+    var aim = FB.rulerAimSnapshot(state,realmId);
+    return {traits:FB.traitIds(ruler),aim:aim && aim.id || null};
   };
   P.parameters = function (state, realmId, family) {
     var policy = P.resolve(state,realmId,family);
@@ -268,7 +292,7 @@
   };
   P.choose = function (state, realmId, family, candidates) {
     var policy = P.resolve(state,realmId,family);
-    var report = P.report(policy,candidates,policy.definition.adjustments.length ? P.inputs(state,realmId) : undefined);
+    var report = P.report(policy,candidates,policy.definition.adjustments.length || policy.definition.aimOrders ? P.inputs(state,realmId) : undefined);
     return P.pick(report,report.mode === 'weighted' && report.totalWeight > 0 ? FB.rng() : undefined);
   };
   P.investmentDelta = function (state, realmId, definition, cost, policy, parameters) {
@@ -308,7 +332,7 @@
   };
   P.orderCandidates = function (state, realmId, family, candidates) {
     var policy = P.resolve(state,realmId,family);
-    var report = P.report(policy,candidates,policy.definition.adjustments.length ? P.inputs(state,realmId) : undefined);
+    var report = P.report(policy,candidates,policy.definition.adjustments.length || policy.definition.aimOrders ? P.inputs(state,realmId) : undefined);
     var ids = report.ranking.filter(function (row) { return report.mode !== 'weighted' || row.weight > 0; })
       .map(function (row) { return row.id; });
     if (report.mode === 'weighted' && report.totalWeight > 0) {
@@ -340,7 +364,8 @@
     // Cross-parameter bounds must still hold after adjustments.
     if (d.family === 'research' && parameters.horizonFloor > parameters.horizonCap)
       throw new Error('AI research horizonFloor exceeds horizonCap after adjustments.');
-    var seen = Object.create(null), required = d.mode === 'ordered' ? d.order.map(function (r) { return r.metric; }) : Object.keys(d.weights);
+    var order = d.aimOrders && own(d.aimOrders,inputs.aim) ? d.aimOrders[inputs.aim] : d.order;
+    var seen = Object.create(null), required = d.mode === 'ordered' ? order.map(function (r) { return r.metric; }) : Object.keys(d.weights);
     var rows = candidates.map(function (candidate,index) {
       var p = 'candidates.' + index;
       if (!fields(candidate,['id','eligible','facts'],p,errors)) return null;
@@ -366,9 +391,9 @@
     if (errors.length) throw new Error(errors.join(' '));
     var ranking = rows.filter(function (r) { return r.eligible; });
     if (d.mode === 'ordered') ranking.sort(function (a,b) {
-      for (var i=0;i<d.order.length;i++) {
-        var order = d.order[i], delta = a.facts[order.metric] - b.facts[order.metric];
-        if (delta) return order.direction === 'asc' ? delta : -delta;
+      for (var i=0;i<order.length;i++) {
+        var rule = order[i], delta = a.facts[rule.metric] - b.facts[rule.metric];
+        if (delta) return rule.direction === 'asc' ? delta : -delta;
       }
       return d.tieBreak === 'id' ? (a.id < b.id ? -1 : a.id > b.id ? 1 : 0) : a.index - b.index;
     });

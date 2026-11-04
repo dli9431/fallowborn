@@ -3,9 +3,33 @@ window.FBDATA = window.FBDATA || {};
 FBDATA.aiDecisionPolicies = {
   ordinary_war:{ family:'war', mode:'first', parameters:{ chance:0.025,
     bellicoseChance:0.08, minimumStrengthRatio:1.2, maximumCommitments:2,
-    aggressionAppetite:1, bellicoseAppetite:1.5 }, order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] },
+    aggressionAppetite:1, bellicoseAppetite:1.5 }, order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[
+      {kind:'trait',id:'ambitious',multiply:{chance:1.5,aggressionAppetite:1.25}},
+      {kind:'trait',id:'wrathful',multiply:{chance:1.75,aggressionAppetite:1.4}},
+      {kind:'trait',id:'content',multiply:{chance:0.5,aggressionAppetite:0.6}},
+      {kind:'trait',id:'kind',multiply:{chance:0.7,aggressionAppetite:0.7}},
+      {kind:'trait',id:'patient',multiply:{chance:0.75,aggressionAppetite:0.8}},
+      {kind:'aim',id:'expand_realm',multiply:{minimumStrengthRatio:0.9}},
+      {kind:'aim',id:'keep_peace',multiply:{minimumStrengthRatio:1.25}},
+      {kind:'aim',id:'amass_wealth',multiply:{minimumStrengthRatio:1.1}}
+    ] },
   ordinary_expansion:{ family:'expansion', mode:'ordered', parameters:{},
     order:[{metric:'aggression',direction:'asc'}], weights:{}, bias:0, tieBreak:'id', adjustments:[] },
+  strategic_expansion:{ family:'expansion', mode:'ordered', parameters:{},
+    order:[{metric:'consolidationBand',direction:'asc'},{metric:'core',direction:'asc'},
+      {metric:'remaining',direction:'asc'},{metric:'contacts',direction:'desc'},
+      {metric:'defensiveStrength',direction:'asc'},{metric:'development',direction:'desc'}],
+    weights:{}, bias:0, tieBreak:'id', adjustments:[], aimOrders:{
+      strengthen_crown:[{metric:'core',direction:'asc'},{metric:'consolidationBand',direction:'asc'},
+        {metric:'remaining',direction:'asc'},{metric:'contacts',direction:'desc'},
+        {metric:'defensiveStrength',direction:'asc'},{metric:'development',direction:'desc'}],
+      amass_wealth:[{metric:'development',direction:'desc'},{metric:'defensiveStrength',direction:'asc'},
+        {metric:'consolidationBand',direction:'asc'},{metric:'core',direction:'asc'},
+        {metric:'remaining',direction:'asc'},{metric:'contacts',direction:'desc'}],
+      keep_peace:[{metric:'defensiveStrength',direction:'asc'},{metric:'contacts',direction:'desc'},
+        {metric:'core',direction:'asc'},{metric:'consolidationBand',direction:'asc'},
+        {metric:'remaining',direction:'asc'},{metric:'development',direction:'desc'}]
+    } },
   ordinary_tactics:{ family:'tactics', mode:'first', parameters:{ engagementMargin:1.1, objectiveFirst:0 },
     order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] },
   ordinary_investment:{ family:'investment', mode:'first', parameters:{capitalPriority:0,frontierPriority:1,
@@ -48,7 +72,7 @@ FBDATA.aiDecisionPolicies = {
 };
 Object.assign(FBDATA.balance, {
   aiRaidTargetDevelopmentWeight:0,
-  aiWarPolicy:'ordinary_war', aiExpansionPolicy:'ordinary_expansion', aiTacticsPolicy:'ordinary_tactics',
+  aiWarPolicy:'ordinary_war', aiExpansionPolicy:'strategic_expansion', aiTacticsPolicy:'ordinary_tactics',
   aiInvestmentPolicy:'ordinary_investment', aiResearchPolicy:'ordinary_research',
   aiIntriguePolicy:'ordinary_intrigue', aiDiplomacyPolicy:'ordinary_diplomacy',
   aiReligionPolicy:'ordinary_religion', aiGovernmentPolicy:'ordinary_government'

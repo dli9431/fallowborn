@@ -29,6 +29,17 @@ const examples = [
   {file:'ai-decisions-conservative.json',form:'cautious_court',margin:1.6,role:'worship',chance:0.01,investment:'careful_investment',research:'stewardship_research'},
   {file:'ai-decisions-expansion.json',form:'expansive_court',margin:0.9,role:'scholarship',chance:0.04,investment:'learning_investment',research:'innovating_research'}
 ];
+
+// Save compaction restores set membership and omitted defaults, not object key
+// insertion order or the order of the completed/exposed technology sets.
+async function researchBoundary(page, rid) {
+  return page.evaluate(function (rid) {
+    FB.techSeason(FB.state,false);
+    const record = JSON.parse(JSON.stringify(FB.realmTechRecord(FB.state,rid)));
+    record.completed.sort(); record.exposed.sort();
+    return {record:record,rng:FB.getRngState() >>> 0,uid:FB.getUidCounter()};
+  },rid);
+}
 for (const example of examples) {
   test(example.file+' composes several live families and a scoped government through Mods',async function ({page},testInfo) {
     await openGame(page,testInfo);
@@ -62,7 +73,7 @@ for (const example of examples) {
     await openGame(page,testInfo);
     await importExample(page,example.file);
     await startDeterministicGame(page);
-    const out = await page.evaluate(function (form) {
+    const checkpoint = await page.evaluate(function (form) {
       let s = FB.state;
       const rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive && !s.realms[id].liege &&
         s.realms[id].treasury && FB.political.government(s,{kind:'realm',id:id}).formId === 'territorial'; });
@@ -71,21 +82,21 @@ for (const example of examples) {
       FB.realmTechRecord(s,rid).active = [];
       const saved = JSON.parse(FB.save.serialize()),signature = FB.mods.sig();
       const rng = FB.getRngState(),uid = FB.getUidCounter();
-      function boundary() {
-        FB.techSeason(FB.state,false);
-        return {record:JSON.stringify(FB.realmTechRecord(FB.state,rid)),rng:FB.getRngState(),uid:FB.getUidCounter()};
-      }
-      const first = boundary();
-      FB.save.restore(saved); s = FB.state;
-      const retained = {gold:s.player.gold,treasury:s.realms[rid].treasury.gold,rng:rng === FB.getRngState(),
-        uid:uid === FB.getUidCounter(),signature:signature === FB.mods.sig(),otherWorld:FB.save.otherWorld(saved),
+      return {rid:rid,saved:saved,signature:signature,rng:rng >>> 0,uid:uid};
+    },example.form);
+    const first = await researchBoundary(page,checkpoint.rid);
+    const retained = await page.evaluate(function (checkpoint) {
+      const saved = checkpoint.saved,rid = checkpoint.rid;
+      FB.save.restore(saved); const s = FB.state;
+      const retained = {gold:s.player.gold,treasury:s.realms[rid].treasury.gold,rng:checkpoint.rng === (FB.getRngState() >>> 0),
+        uid:checkpoint.uid === FB.getUidCounter(),signature:checkpoint.signature === FB.mods.sig(),otherWorld:FB.save.otherWorld(saved),
         margin:FB.aiDecisions.parameters(s,rid,'tactics').engagementMargin,
         noPolicyRecord:!JSON.stringify(saved.state).includes('aiDecisionPolicies')};
-      const second = boundary();
-      return {retained:retained,replay:JSON.stringify(first) === JSON.stringify(second)};
-    },example.form);
-    expect(out).toEqual({retained:{gold:1,treasury:7,rng:true,uid:true,signature:true,otherWorld:false,
-      margin:example.margin,noPolicyRecord:true},replay:true});
+      return retained;
+    },checkpoint);
+    expect(retained).toEqual({gold:1,treasury:7,rng:true,uid:true,signature:true,otherWorld:false,
+      margin:example.margin,noPolicyRecord:true});
+    expect(await researchBoundary(page,checkpoint.rid)).toEqual(first);
   });
 }
 
@@ -390,18 +401,22 @@ for (const distribution of ['standard','crazygames']) {
     const out = await page.evaluate(function () {
       const s = FB.state,P = FB.aiDecisions;
       const rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive && !s.realms[id].liege && FB.realmRulerCharacterSnapshot(s,id); });
+      FB.realmRulerCharacterSnapshot(s,rid).traits = [];
       delete s.realms[rid].ruler.personality;
       const before = JSON.stringify(s),rng = FB.getRngState();
       const goals = FB.governments.strategy('ai','realm_decisions').goals(s,rid,{});
+      // This case exercises the retained neutral baseline; strategic defaults have dedicated coverage.
+      FBDATA.balance.aiExpansionPolicy = 'ordinary_expansion';
       const order = P.orderCandidates(s,rid,'expansion',[{id:'z',eligible:true,facts:{aggression:1}},
         {id:'b',eligible:true,facts:{aggression:0}},{id:'a',eligible:true,facts:{aggression:0}}]);
       const pure = before === JSON.stringify(s) && rng === FB.getRngState();
       const saved = JSON.parse(FB.save.serialize());
-      function boundary() { FB.techSeason(FB.state,false); return {record:JSON.stringify(FB.realmTechRecord(FB.state,rid)),rng:FB.getRngState()}; }
-      const first = boundary(); FB.save.restore(saved); const second = boundary();
-      return {goals:goals,order:order,pure:pure,replay:JSON.stringify(first) === JSON.stringify(second),
-        noMods:FB.mods.count() === 0,margin:P.parameters(FB.state,rid,'tactics').engagementMargin};
+      return {rid:rid,saved:saved,facts:{goals:goals,order:order,pure:pure,
+        noMods:FB.mods.count() === 0,margin:P.parameters(FB.state,rid,'tactics').engagementMargin}};
     });
-    expect(out).toEqual({goals:{warChance:0.025,allianceChance:0.08},order:['a','b','z'],pure:true,replay:true,noMods:true,margin:1.1});
+    expect(out.facts).toEqual({goals:{warChance:0.025,allianceChance:0.08},order:['a','b','z'],pure:true,noMods:true,margin:1.1});
+    const first = await researchBoundary(page,out.rid);
+    await page.evaluate(function (saved) { FB.save.restore(saved); },out.saved);
+    expect(await researchBoundary(page,out.rid)).toEqual(first);
   });
 }

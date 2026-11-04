@@ -101,20 +101,23 @@ window.FB = window.FB || {};
   function aimForRealm(state, rid) {
     var realm = state.realms[rid];
     var c = rulerCharacter(state, rid);
-    var traits = c && c.traits || [];
+    var ruler = c || realm && realm.ruler;
     var family = FB.realmFamilySnapshot
       ? FB.realmFamilySnapshot(state, rid) : [];
     if (realm && realm.liege && Number(realm.favor || 0) <= FBDATA.agencyRules.hostileLiegeFavor) {
       return 'win_independence';
     }
-    if (family.length < FBDATA.agencyRules.secureFamilySize || !c ||
-        (!c.spouseId && FB.ageOf(c, state.date.year) < FBDATA.agencyRules.marriageAimAge)) {
+    var spouse = c ? c.spouseId : FB.realmConsortMember(state, rid);
+    var age = ruler && (ruler.born !== undefined
+      ? FB.ageOf(ruler, state.date.year) : Number(ruler.age) || 0);
+    if (family.length < FBDATA.agencyRules.secureFamilySize || !ruler ||
+        (!spouse && age < FBDATA.agencyRules.marriageAimAge)) {
       return 'secure_dynasty';
     }
     var preferred = null, weight = 0;
     var order = FB.aiDecisions.resolve(state,rid,'diplomacy').definition.aimOrder || [];
     order.concat(AIM_IDS.filter(function (id) { return order.indexOf(id) < 0; })).forEach(function (id) {
-      var score = FB.traitAimWeight(c, id);
+      var score = FB.traitAimWeight(ruler, id);
       if (score > weight) { preferred = id; weight = score; }
     });
     if (preferred) return preferred;
@@ -263,11 +266,12 @@ window.FB = window.FB || {};
 
   FB.rulerAimSnapshot = function (state, rid) {
     var realm = state && state.realms && state.realms[rid];
-    if (!realm || !realm.alive || rid === 'player') return null;
+    if (!realm || !realm.alive || !realm.ruler || rid === 'player') return null;
     var stored = state.agency && state.agency.rulerAims &&
       state.agency.rulerAims[rid];
-    if (stored && Number(stored.generation) === rulerGeneration(realm)) {
-      return stored;
+    if (stored && AIM_IDS.indexOf(stored.id) >= 0 &&
+        Number(stored.generation) === rulerGeneration(realm)) {
+      return Object.assign({}, stored);
     }
     return { id:aimForRealm(state, rid),
       generation:rulerGeneration(realm), sinceYear:state.date.year };

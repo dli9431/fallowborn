@@ -1,0 +1,18 @@
+{
+  "name": "Bold war preferences",
+  "aiDecisionPolicies": {
+    "bold_war": {
+      "family": "war", "mode": "first",
+      "parameters": {"chance": 0.05, "bellicoseChance": 0.08, "minimumStrengthRatio": 1.1,
+        "maximumCommitments": 1, "aggressionAppetite": 1.1, "bellicoseAppetite": 1.5},
+      "order": [], "weights": {}, "bias": 0, "tieBreak": "input",
+      "adjustments": [
+        {"kind": "trait", "id": "ambitious", "multiply": {"chance": 1.75, "aggressionAppetite": 1.3}},
+        {"kind": "trait", "id": "kind", "multiply": {"chance": 0.8, "aggressionAppetite": 0.9}},
+        {"kind": "aim", "id": "expand_realm", "multiply": {"minimumStrengthRatio": 0.8}},
+        {"kind": "aim", "id": "keep_peace", "multiply": {"minimumStrengthRatio": 1.4}}
+      ]
+    }
+  },
+  "balance": {"aiWarPolicy": "bold_war"}
+}
