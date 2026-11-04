@@ -22,7 +22,7 @@ dependsOnRuntime(__filename,[
   'data/bookmark_476_wider.js','data/bookmark_476_wider_identities.js',
   'data/bookmarks.js','data/geographies.js','data/geography_expansion.js',
   'data/settlements.js','data/settlements_real.js','data/cultures.js','data/eras.js',
-  'data/starts.js','data/climate.js','data/systems.js','data/traits.js',
+  'data/starts.js','data/climate.js','data/systems.js','data/traits.js','data/intrigue.js','data/distribution_crazygames.js',
   'data/political_institutions.js','data/assembly_polities.js','data/aristocratic_courts.js',
   'data/government_rollout.js','data/communal_revisions.js',
   'js/model.js','js/world.js','js/main.js','js/starts.js','js/bookmark_setup.js',
@@ -206,6 +206,20 @@ for (const crazy of [false,true]) {
       expect(await page.evaluate(function () {
         return FB.bookmarkCompositions.sourceReports().find(function (report) { return report.bookmarkId === '634'; });
       })).toMatchObject({ready:true,published:true,worldFaults:[]});
+      expect(await page.evaluate(function () {
+        const invalid = JSON.parse(JSON.stringify(FBDATA.traitMechanics));
+        invalid.greedy.schemeOrder.ids.push('missing_plot');
+        return {faults:FB.validateTraitMechanics(FBDATA.traitMechanics),
+          greedy:FB.traitSchemeOrder({traits:['greedy']}),
+          wrathful:FB.traitSchemeOrder({traits:['wrathful']}),
+          cruel:FB.traitSchemeOrder({traits:['cruel']}),
+          assassination:!!FBDATA.plots.assassination,widowVeil:!!FBDATA.plots.widow_veil,
+          unknownRejected:FB.validateTraitMechanics(invalid).length > 0};
+      })).toEqual({faults:[],
+        greedy:['blackmail','sabotage','fabricated_charge','abduction'].concat(crazy ? [] : ['assassination']),
+        wrathful:(crazy ? [] : ['assassination']).concat(['abduction','sabotage','fabricated_charge','blackmail']),
+        cruel:(crazy ? [] : ['assassination']).concat(['abduction','sabotage','fabricated_charge','blackmail']),
+        assassination:!crazy,widowVeil:!crazy,unknownRejected:true});
       const result = await page.evaluate(function (input) {
         const b = FB.bookmark('634'), data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
         const courts = {}, counties = {}, faults = [];

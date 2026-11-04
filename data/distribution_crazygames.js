@@ -1359,7 +1359,18 @@
   });
   FBDATA.traits = traits;
   var plots = Object.assign({}, FBDATA.plots);
-  delete plots.assassination;
-  delete plots.widow_veil;
+  var removedPlots = ['assassination', 'widow_veil'];
+  removedPlots.forEach(function (id) { delete plots[id]; });
   FBDATA.plots = plots;
+  var mechanics = Object.assign({}, FBDATA.traitMechanics);
+  Object.keys(mechanics).forEach(function (id) {
+    var rule = mechanics[id], order = rule.schemeOrder;
+    if (!order || !order.ids.some(function (plot) { return removedPlots.indexOf(plot) >= 0; })) return;
+    rule = Object.assign({}, rule);
+    var ids = order.ids.filter(function (plot) { return removedPlots.indexOf(plot) < 0; });
+    if (ids.length) rule.schemeOrder = Object.assign({}, order, { ids:ids });
+    else delete rule.schemeOrder;
+    mechanics[id] = rule;
+  });
+  FBDATA.traitMechanics = mechanics;
 })();
