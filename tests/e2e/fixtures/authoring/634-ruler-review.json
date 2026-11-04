@@ -1,0 +1,29 @@
+{
+  "name": "Medinan personal review example",
+  "storyInstances": {
+    "umar_agenda_634": {
+      "id": "umar_agenda_634",
+      "type": "ruler_agenda",
+      "subjectRealmId": "rashidun_634",
+      "title": "Present accounts",
+      "intro": "A single optional review of current resources.",
+      "stages": [
+        {
+          "id": "import_accounts_634",
+          "name": "Retain the accounts",
+          "text": "Consider the resources currently available without a public commitment.",
+          "year": 634,
+          "season": 2,
+          "choices": [
+            {
+              "id": "import_keep_634",
+              "label": "Retain present arrangements",
+              "detail": "Complete the review without a payment or reward.",
+              "operation": "agenda_priority"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
