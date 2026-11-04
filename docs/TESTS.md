@@ -92,6 +92,19 @@ Dated government rollout coverage is in tests/e2e/specs/government-rollout.spec.
 
 # Testing Fallowborn
 
+protected-scenery.spec.js covers a detached full-map configuration with 21
+protected scenic remnants and 506 unchanged inhabited declarations, and an
+independent valley.json import through the ordinary Mods file picker. It checks
+noble/commoner candidates, stale departures and arrived confirmations, direct
+materialization with player and NPC holders, unchanged resources/state/RNG/UID,
+inhabited routes, localized protection explanations, malformed-import purity,
+ordinary conversions, matching repeat restore, impossible explicit and legacy
+saved conversions, omitted-field revisions, cross-world cache resets and exact
+policy fingerprints. Residence boundaries are staged without daily simulation.
+frontier-settlement.spec.js and wasteland-save.spec.js retain their existing
+journeys and add omitted-policy eligibility and detached restore controls.
+These focused cases do not establish owner runtime, save or device acceptance.
+
 The remaining bookmark/save regression repairs cover scenario-local CrazyGames SDK initialization in 476-world-stories.spec.js, 493-bookmark.spec.js, 711-bookmark.spec.js, 711-polity-foundation.spec.js and 800-settlements.spec.js. The title helper continues to require its callers to provide the SDK double. mods.spec.js checks transactional rejection of malformed technology caps and uses registered counties for appended crossings. bookmark-platform.spec.js distinguishes an empty local institution catalogue from inherited faith-head offices.
 
 bookmark-acceptance.spec.js verifies that the data-only proof campaign has five independent coastal counties with unique community pairs and conserved opening shares. Its fact helper compares authority records without the detached serializer's schema stamp; envelope validation still checks the schema. save-v4-integration.spec.js covers opening papal roots through repeated restores. The two-year annual 476 fixture finishes eager court preparation and expired-host cleanup before capturing its exact storage baseline, because direct annual calls skip the ordinary daily lifecycle. All court, family, host, payment, RNG and uid preservation assertions remain in place.

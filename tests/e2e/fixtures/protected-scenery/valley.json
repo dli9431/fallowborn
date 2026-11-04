@@ -1,0 +1,74 @@
+{
+  "name": "Valley settlement policies",
+  "religions": {
+    "valley_custom": {
+      "name": "Valley custom",
+      "parent": "norse_pagan",
+      "availability": {},
+      "properties": { "head": null, "legalTradition": "customary" }
+    }
+  },
+  "geographies": {
+    "valley_land": {
+      "bounds": { "lonMin": 0, "lonMax": 6, "latMin": 0, "latMax": 6 },
+      "land": [[0.2,0.2,5.8,0.2,5.8,5.8,0.2,5.8]],
+      "seas": [], "rivers": [], "gridWidth": 160,
+      "defaultLayout": null,
+      "provinces": [
+        { "id": "valley_home", "x": 1.5, "y": 1.5, "terrain": "farmland" },
+        { "id": "valley_market", "x": 4.5, "y": 1.5, "terrain": "farmland" },
+        { "id": "valley_scenery", "x": 1.5, "y": 4.5, "terrain": "mountains" },
+        { "id": "valley_frontier", "x": 4.5, "y": 4.5, "terrain": "forest" }
+      ]
+    }
+  },
+  "startScenarios": [{
+    "id": "valley_farmer", "name": "Valley farmer",
+    "desc": "A free household beside the valley road.",
+    "intro": "The household tends its fields beside the road.",
+    "tier": 1, "profession": "farmer", "gold": 500, "prestige": 100, "piety": 0,
+    "startCulture": "norse", "startReligion": "valley_custom",
+    "bookmarkIds": ["valley_world"], "eras": ["early_medieval"],
+    "alwaysUnlocked": true, "startAge": 24,
+    "familyPresets": { "standard": { "name": "Free household", "diff": "age 24" } }
+  }],
+  "bookmarks": {
+    "valley_world": {
+      "id": "valley_world", "name": "The Valley",
+      "hidden": false,
+      "desc": "A fictional valley with an inhabited road and two scenic anchors.",
+      "date": { "year": 900, "season": 0, "day": 1 },
+      "era": "early_medieval", "geography": "valley_land",
+      "settlementLayout": null, "religiousHeads": {}, "greatHolyWars": false,
+      "starts": ["valley_farmer"], "stories": [],
+      "startLocations": { "valley_farmer": ["valley_home"] },
+      "provinces": [
+        { "id": "valley_home", "name": "Low Valley", "realm": "valley_court", "culture": "norse", "religion": "valley_custom", "dev": 3 },
+        { "id": "valley_market", "name": "Road Market", "realm": "valley_court", "culture": "norse", "religion": "valley_custom", "dev": 4, "settlementPolicy": "ordinary" },
+        { "id": "valley_scenery", "name": "High Ridge", "wasteland": true, "settlementPolicy": "protected" },
+        { "id": "valley_frontier", "name": "Forest Edge", "wasteland": true, "settlementPolicy": "ordinary" }
+      ],
+      "realms": [{ "id": "valley_court", "name": "Valley Court", "color": "#557744", "capital": "valley_home", "rank": 3, "religion": "valley_custom" }],
+      "duchies": {}, "kingdoms": {}, "empires": {}, "straits": [], "scripted": [],
+      "revision": "protected_v1",
+      "revisions": {
+        "baseline": {
+          "provinces": [
+            { "id": "valley_home", "name": "Low Valley", "realm": "valley_court", "culture": "norse", "religion": "valley_custom", "dev": 3 },
+            { "id": "valley_market", "name": "Road Market", "realm": "valley_court", "culture": "norse", "religion": "valley_custom", "dev": 4 },
+            { "id": "valley_scenery", "name": "High Ridge", "wasteland": true },
+            { "id": "valley_frontier", "name": "Forest Edge", "wasteland": true }
+          ]
+        },
+        "protected_v1": {
+          "provinces": [
+            { "id": "valley_home", "name": "Low Valley", "realm": "valley_court", "culture": "norse", "religion": "valley_custom", "dev": 3 },
+            { "id": "valley_market", "name": "Road Market", "realm": "valley_court", "culture": "norse", "religion": "valley_custom", "dev": 4, "settlementPolicy": "ordinary" },
+            { "id": "valley_scenery", "name": "High Ridge", "wasteland": true, "settlementPolicy": "protected" },
+            { "id": "valley_frontier", "name": "Forest Edge", "wasteland": true, "settlementPolicy": "ordinary" }
+          ]
+        }
+      }
+    }
+  }
+}

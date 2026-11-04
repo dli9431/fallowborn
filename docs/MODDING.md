@@ -1417,6 +1417,18 @@ province objects; mods merge full objects as before:
   initialize fresh games only; an existing save's `state.dev` values remain
   authoritative.
 - `wasteland: true` — impassable scenery, no realm/culture needed.
+- `settlementPolicy` — optional `ordinary` or `protected`. Omission preserves
+  ordinary settlement. `protected` is valid only on an initially wasteland
+  province and prevents both noble and commoner conversion into a county.
+  This is a boundary on a broad scenic representation, not a claim of historical
+  vacancy, ownership or a prohibition on independent inhabited travel routes.
+  Other values reject detached world and JSON mod validation. Complete revision
+  province arrays retain the field and exact effective mod fingerprints include
+  it; no default field is inserted into omitted-field declarations. Preserve a
+  released ordinary world under its own revision when introducing protection.
+  Protected-revision saves with conversion records or positive development and
+  ownership/holding evidence reject before adoption, including legacy saves.
+  Ordinary worlds keep their existing restore semantics and conversion ledger.
 - `communities` — optional ordered culture-and-faith records for a settled county, e.g.
   `"communities": [{ "culture": "gaelic", "religion": "catholic",
   "populationShare0": 8000 }, { "culture": "norse",
@@ -3633,6 +3645,10 @@ by key, and site objects replace by their required stable `id`.
   helper — the same physical conversion the `settle_waste` deed uses — then
   relocates the household through the ordinary settlement cleanup and grants
   `balance.frontierSettlementPlots` starter land plots at the county head.
+  `FB.wastelandSettlementEligible(province)` is the shared pure conversion fact
+  used by both settlement candidate paths, stale attempts and the materializer.
+  Protected scenery is excluded from frontier destinations; direct rejected
+  conversion calls grant nothing and consume no resources, RNG or identities.
   `frontier_leave_ready` (option `require`) and `frontier_go_home` back the
   persist-or-turn-back story.
 - The core `trade` purpose retains its embedded `cost`/`stake` only for direct

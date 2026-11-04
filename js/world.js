@@ -2078,6 +2078,11 @@ window.FB = window.FB || {};
     for (var pvi = 0; pvi < provinces.length; pvi++) {
       var pr = provinces[pvi];
       if (!pr || !pr.id) continue;
+      if (ownKey(pr, 'settlementPolicy') &&
+          (['ordinary','protected'].indexOf(pr.settlementPolicy) < 0 ||
+           pr.settlementPolicy === 'protected' && !pr.wasteland)) {
+        fault('province ' + pr.id + ' has invalid settlementPolicy: use ordinary, or protected on initial wasteland.');
+      }
       if (pr.customaryRights !== undefined) {
         if (pr.wasteland || !Array.isArray(pr.customaryRights))
           fault('province ' + pr.id + ' has invalid customary rights.');
@@ -2543,6 +2548,7 @@ window.FB = window.FB || {};
     const provs = FBDATA.provinces.map(function (p, i) {
       return {
         idx: i, id: p.id, name: p.name, wasteland: !!p.wasteland,
+        settlementPolicy: p.settlementPolicy,
         terrain: p.terrain || 'farmland', culture: p.culture, religion: p.religion,
         realm0: p.realm || null, dev0: p.dev || 1, duchy: p.duchy || null,
         settlements: p.settlements || null,
@@ -8188,19 +8194,50 @@ window.FB = window.FB || {};
      commoner frontier journey passes the gateway county's holder and grants
      only household property. Returns the province, or null when the land is
      not convertible. */
+  /* A broad scenic representation may be protected from county conversion.
+     This pure fact says nothing about historical inhabitants or travel on
+     independently represented inhabited counties. */
+  FB.wastelandSettlementEligible = function (province) {
+    return !!(province && province.wasteland &&
+      (province.settlementPolicy === undefined || province.settlementPolicy === 'ordinary'));
+  };
+
+  /* Check the saved revision's declarations, never the currently bound map.
+     Ownership/development also exposes conversions in pre-ledger saves. */
+  FB.validateWastelandSettlements = function (state, definition) {
+    if (!state) return true;
+    definition = definition || FB.campaignBookmark(state);
+    if (!definition) return true;
+    const records = state.wastelandSettlements || {};
+    for (const province of definition.provinces || []) {
+      if (province.settlementPolicy !== 'protected') continue;
+      const pid = province.id;
+      if (ownKey(records, pid) || state.dev && state.dev[pid] > 0 &&
+          (state.holder && state.holder[pid] || state.owner && state.owner[pid])) {
+        throw new Error(FB.T('This save converts the protected scenic region {province} into a county.',
+          {province:province.name}));
+      }
+    }
+    return true;
+  };
+
   /* Rebuild only the physical conversion; never replay settlement costs,
      ownership grants, development, population creation, promotions or news.
      Cached bookmark worlds must also forget conversions from a different life. */
   FB.restoreWastelandSettlements = function (state) {
     const world = FB.world;
     if (!world) return;
+    // Direct repair calls share detached adoption's all-or-nothing preflight.
+    FB.validateWastelandSettlements(state, {provinces:FBDATA.provinces});
     const legacy = state && !state.wastelandSettlements;
     const records = state ? (state.wastelandSettlements || {}) : {};
     const waste = {};
     for (const baseline of FBDATA.provinces) {
-      if (!baseline.wasteland) continue;
       const pid = baseline.id, pr = world.byId[pid];
       if (!pr) continue;
+      if (ownKey(baseline, 'settlementPolicy')) pr.settlementPolicy = baseline.settlementPolicy;
+      else delete pr.settlementPolicy;
+      if (!baseline.wasteland) continue;
       waste[pid] = true;
       if (legacy && state.dev && state.dev[pid] > 0 &&
           ((state.holder && state.holder[pid]) || (state.owner && state.owner[pid]))) {
@@ -8220,7 +8257,7 @@ window.FB = window.FB || {};
     world.sitesRender = world.sites.slice().sort(siteRenderCompare);
     for (const pid in records) {
       const record = records[pid], pr = world.byId[pid];
-      if (!waste[pid] || !record || typeof record.culture !== 'string' ||
+      if (!waste[pid] || !FB.wastelandSettlementEligible(pr) || !record || typeof record.culture !== 'string' ||
           typeof record.religion !== 'string' || !record.culture || !record.religion) continue;
       pr.wasteland = false;
       pr.culture = record.culture;
@@ -8235,7 +8272,7 @@ window.FB = window.FB || {};
   FB.materializeWasteland = function (state, pid, opts) {
     opts = opts || {};
     const pr = FB.world && FB.world.byId ? FB.world.byId[pid] : null;
-    if (!pr || !pr.wasteland) return null;
+    if (!FB.wastelandSettlementEligible(pr)) return null;
     const me = state.chars && state.player
       ? state.chars[state.player.charId] : null;
     const culture = opts.culture || (me && me.culture) || null;
@@ -8277,7 +8314,7 @@ window.FB = window.FB || {};
      politics and the cost. */
   FB.settleWaste = function (state, pid) {
     const p = state.player, pr = FB.world.byId[pid];
-    if (!pr || !pr.wasteland) return;
+    if (!FB.wastelandSettlementEligible(pr)) return;
     const me = state.chars[p.charId];
     const done = FB.materializeWasteland(state, pid, {
       culture: me.culture,

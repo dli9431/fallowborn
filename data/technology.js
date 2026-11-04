@@ -695,6 +695,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Withdrawing into an empty wasteland and proving a homestead is a core recovery and life-path choice for freeholders and gentry; it rides ordinary travel, holdings, and the shared wasteland materialization, and no innovation credibly unlocks walking onto empty land.'
       },
+      scenic_settlement_protection:{
+        mode:'none',
+        rationale:'Protecting a broad scenic representation from county conversion is a world-authoring boundary, independent of discoveries. Ordinary settlement, travel and holdings retain their existing gates.'
+      },
       gentry_freehold_expansion:{
         mode:'none',
         rationale:'Continuing to buy ordinary family plots after declaring a manor or taking landed rank extends baseline private property accumulation; no innovation credibly gates buying land already offered in the home county. All free ranks retain the same prices, settlement caps, yields and inheritance.'

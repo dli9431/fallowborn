@@ -515,6 +515,19 @@ Bookmark activation and new politics clear cached conversions; each loaded save
 then applies only its own table. Ownership and population remain authoritative
 in their existing saved records, including after conquest or succession.
 
+The effective saved world revision also owns optional province settlementPolicy.
+Detached preflight rejects any conversion record on a protected scenic anchor,
+or positive saved development together with holding/ownership evidence there,
+including legacy inferred conversions. It reads the saved definition rather
+than the currently active map and runs before campaign adoption. Rejection
+preserves the active campaign, catalogue, RNG, UID and stored copy. Direct
+physical repair preflights the whole batch before touching the world or ledger.
+Matching protected saves retain ordinary conversions on unprotected anchors;
+no-field worlds retain their previous restoration rules. Every cached-world
+binding resets policy from the active declaration, deleting omitted flags, so
+repeated switching cannot leak policy or conversions. There is no second ledger,
+save-format increment, conversion replay, refund or automatic migration.
+
 War-event supply refills use the host's existing saved `supply`. Optional war effect
 records add `target:'provisions'`, `provisionsDelta`, and `hostId`; existing effect
 records retain their meanings. Resupply may retain an optional `supplyRetreat` county

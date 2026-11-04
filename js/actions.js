@@ -8738,7 +8738,7 @@ window.FB = window.FB || {};
       for (const nb in (FB.world.adj[pid] || {})) {
         if (seen[nb]) continue;
         const pr = FB.world.byId[nb];
-        if (pr && pr.wasteland) { seen[nb] = 1; out.push(nb); }
+        if (FB.wastelandSettlementEligible(pr)) { seen[nb] = 1; out.push(nb); }
       }
     }
     return out;
