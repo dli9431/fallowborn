@@ -21,6 +21,27 @@ FBDATA.rulerAgendas_634 = {
         text:'Conclude these reviews with the arrangements and resources that now exist. Remaining at Medina is a complete course. Ordinary government and diplomacy continue; no city must fall and no battle or death is scheduled.',choices:[
           {id:'umar_conclude_634',label:'Conclude the reviews',detail:'Close the personal program at no cost or reward. Ordinary public actions remain available.',operation:'agenda_finish'},
           {id:'umar_retain_conclusion_634',label:'Retain present arrangements',detail:'Complete the reviews without a new public commitment or reward.',operation:'agenda_priority'}]}
+    ]},
+  heraclius_agenda_634:{id:'heraclius_agenda_634',type:'ruler_agenda',subjectRealmId:'byzantium_634',
+    title:'Heraclius: the imperial court',
+    intro:'Review your existing court, eastern holdings and available resources from Constantinople. Each review is costless; ordinary public actions retain their own authority, costs and eligibility.',
+    stages:[
+      {id:'imperial_court_review_634',name:'The present imperial court',year:634,season:2,
+        text:'Examine the current court and ordinary government records. This opening uses a reduced model of direct administration and office succession. It supplies no reconstructed seventh-century office roster or thematic mobilization.',choices:[
+          {id:'heraclius_review_court_634',label:'Prioritize the present court',detail:'Record attention to the existing court without appointing an official, changing succession or spending funds.',operation:'agenda_priority'},
+          {id:'heraclius_retain_court_634',label:'Retain present arrangements',detail:'Continue with the existing court at no cost.',operation:'agenda_priority'}]},
+      {id:'eastern_holdings_review_634',name:'Eastern holdings and resources',year:634,season:2,
+        text:'Consult the current map, actual holders, public funds and available forces. Recovered provinces are opening context, not a new grant or payment. Present ownership determines what the court governs; no Syrian loss or recovery is required.',choices:[
+          {id:'heraclius_review_east_634',label:'Prioritize current eastern holdings',detail:'Record attention to actual holdings and resources without changing a border, raising forces or granting funds.',operation:'agenda_priority'},
+          {id:'heraclius_retain_east_634',label:'Retain present arrangements',detail:'Make no new territorial or financial commitment.',operation:'agenda_priority'}]},
+      {id:'defense_diplomacy_review_634',name:'Lawful defense and diplomacy',year:634,season:2,
+        text:'Assess defense and diplomacy against the authority, neighbors and resources that now exist. Any treaty, military order or war must pass its ordinary public review. A war or victory proves no sack, expulsion, universal welcome or change of communal faith.',choices:[
+          {id:'heraclius_review_defense_634',label:'Prioritize lawful defense and diplomacy',detail:'Record a priority only. Begin no campaign, negotiate no treaty and spend no funds.',operation:'agenda_priority'},
+          {id:'heraclius_retain_defense_634',label:'Retain present arrangements',detail:'Make no new diplomatic or military commitment.',operation:'agenda_priority'}]},
+      {id:'imperial_conclusion_634',name:'Continue from Constantinople',year:634,season:2,
+        text:'Conclude these reviews with the court, holdings and resources that now exist. Remaining at Constantinople is a complete course. Ordinary public decisions continue; no journey, named battle, territorial loss or death is scheduled.',choices:[
+          {id:'heraclius_conclude_634',label:'Conclude the reviews',detail:'Close the personal program at no cost or reward. Ordinary public actions remain available.',operation:'agenda_finish'},
+          {id:'heraclius_retain_conclusion_634',label:'Retain present arrangements',detail:'Complete the reviews without a new public commitment or reward.',operation:'agenda_priority'}]}
     ]}
 };
 /* The unavailable Yazdegerd program reserves yazdegerd_agenda_634 only as a
