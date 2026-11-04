@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/world.js', 'js/save.js', 'js/main.js',
+  'js/save_v4.js',
   'js/population.js', 'js/travel.js', 'js/settlement.js', 'data/events_travel.js',
   'data/travel.js', 'data/map_data.js', 'data/counties.js', 'js/market.js', 'js/actions.js']);
 const { test, expect } = require('../support/fixture');
@@ -112,3 +113,20 @@ for (const mode of ['noble', 'commoner', 'legacy']) {
       record:{ culture:prepared.expected.culture, religion:prepared.expected.religion } });
   });
 }
+
+test('detached no-policy preflight retains legacy conversion evidence without repair', async function ({page}, testInfo) {
+  await openGame(page,testInfo);
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const state = JSON.parse(JSON.stringify(FB.state));
+    const province = FB.campaignBookmark(state).provinces.find(function (p) { return p.wasteland; });
+    delete state.wastelandSettlements;
+    state.dev[province.id] = 1; state.holder[province.id] = 'player'; state.owner[province.id] = 'player';
+    const before = JSON.stringify(state), live = FB.state, data = JSON.stringify(FBDATA);
+    const rng = FB.getRngState(), uid = FB.getUidCounter();
+    const accepted = FB.validateWastelandSettlements(state);
+    return {accepted:accepted,pure:before === JSON.stringify(state) && live === FB.state &&
+      data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result).toEqual({accepted:true,pure:true});
+});

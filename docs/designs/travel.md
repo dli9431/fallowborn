@@ -215,6 +215,18 @@ expedition can never strand the traveler.
 
 ## Frontier withdrawal and commoner settlement
 
+An optional province settlementPolicy of protected excludes that scenic anchor
+from frontier destinations and rejects a stale departure or homestead attempt.
+Omitted policy and ordinary retain the existing behavior. Noble candidates,
+frontier candidates/eligibility and direct materialization share the pure
+FB.wastelandSettlementEligible fact. Rejection precedes ownership, population,
+market, development, sites, money, plots, messages, RNG and UID changes. The
+current pickers explain protection through localized text without asserting
+historical vacancy. Independent inhabited routes remain ordinary routes.
+Technology impact scenic_settlement_protection is none: this is a boundary on
+world representation, with no credible discovery dependency. Existing travel
+and holdings gates remain unchanged.
+
 The **Withdraw into the wastes** purpose (`mode:'frontier'`, tiers 1–2,
 `repeatable`) sends a freeholder or gentry household beyond the settled world
 without granting noble land. Destinations are wasteland provinces that border

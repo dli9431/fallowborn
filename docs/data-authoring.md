@@ -56,6 +56,20 @@ Data authoring contract
 
 A JSON mod defines content by stable id and composes registered mechanics. A trusted engine module implements algorithms, pure definition validators and canonical transactions. JSON cannot provide executable code, arbitrary function calls, expressions, unrestricted state paths or direct saved-state writes.
 
+Province settlement protection uses optional settlementPolicy:ordinary or
+settlementPolicy:protected in complete bookmark/revision province arrays. Only
+initial wasteland can be protected. Omission keeps ordinary conversion and
+identity; protection consumes the same canonical eligibility, mutation and
+detached restore checks for every caller. It describes the simulation's scenic
+representation, not historical vacancy or authority. Retain an earlier released
+ordinary revision rather than migrating its conversions into a protected world.
+The independent valley.json example under tests/e2e/fixtures/protected-scenery
+imports one protected anchor, one ordinary convertible anchor and an inhabited
+road through the ordinary Mods file path. A detached full-map configuration
+protects the 21 scenic remnants while preserving all 506 inhabited declarations.
+Technology impact scenic_settlement_protection is none; ordinary material,
+travel and household gates remain with their existing owners.
+
 Authoring checklist
 
 Identify the owning catalogue and its actual gameplay, AI, UI and restore consumers. A public key alone is not proof that a newly added id has behavior. Use the complete per-system schema in docs/MODDING.md and retain its merge or replacement semantics.

@@ -2779,7 +2779,9 @@ window.FB = window.FB || {};
     const s = FB.state;
     const choices = opts.choices || [];
     if (!choices.length) {
-      UI.toast(FB.T('No qualifying destination can be reached.'));
+      UI.toast(FB.travelPurposeKind(opts.purpose) === 'frontier' && FB.world.provs.some(function (pr) { return pr.settlementPolicy === 'protected'; })
+        ? FB.T('No convertible frontier destination can be reached. Protected scenic regions cannot become counties; this does not imply that they are uninhabited.')
+        : FB.T('No qualifying destination can be reached.'));
       return;
     }
     const wasPaused = FB.game.paused;
@@ -2832,6 +2834,8 @@ window.FB = window.FB || {};
     FB.map.request();
     $('travel-picker-summary').textContent = opts.kind === 'trade_venture'
       ? FB.T('Choose a developed market on the map or from the list. The stake and route overhead are charged separately.')
+      : FB.travelPurposeKind(opts.purpose) === 'frontier' && FB.world.provs.some(function (pr) { return pr.settlementPolicy === 'protected'; })
+      ? FB.T('Choose a frontier destination. Protected scenic regions cannot become counties; this does not imply that they are uninhabited. Routes through inhabited counties remain available.')
       : FB.T('Tap a marked county or choose it from the list. Routes use settled counties and authored straits.');
     $('travel-picker-continue').disabled = true;
     $('travel-picker-back').disabled = !opts.cancelAction;
@@ -12182,7 +12186,11 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     let h = '<p class="hint">' + esc(FB.T(
       '{money:gold} and {prestige} prestige to plant a settlement on empty land. The new county answers to you — and belongs to no de jure {term:duchy}.',
-      { gold: B.settleGold, prestige: B.settlePrestige })) + '</p><div class="gm-list">';
+      { gold: B.settleGold, prestige: B.settlePrestige })) + '</p>';
+    if (FB.world.provs.some(function (pr) { return pr.settlementPolicy === 'protected'; })) {
+      h += '<p class="hint">' + esc(FB.T('Protected scenic regions cannot become counties. This does not imply that they are uninhabited.')) + '</p>';
+    }
+    h += '<div class="gm-list">';
     const candidates = FB.wastelandCandidates(s);
     for (const pid of candidates) {
       const pr = FB.world.byId[pid];

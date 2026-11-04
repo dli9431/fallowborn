@@ -631,3 +631,16 @@ test('the frontier technology impact review passes the validator',
     expect(result.errors).toEqual([]);
     expect(result.mode).toBe('none');
   });
+
+test('the shared conversion fact preserves omitted and ordinary policy without writes', async function ({page}) {
+  const result = await page.evaluate(function () {
+    const omitted = {id:'scenic_anchor',wasteland:true}, ordinary = {id:'ordinary_anchor',wasteland:true,settlementPolicy:'ordinary'};
+    const before = JSON.stringify([omitted,ordinary]), rng = FB.getRngState(), uid = FB.getUidCounter();
+    return {omitted:FB.wastelandSettlementEligible(omitted),ordinary:FB.wastelandSettlementEligible(ordinary),
+      protected:FB.wastelandSettlementEligible({wasteland:true,settlementPolicy:'protected'}),
+      inhabited:FB.wastelandSettlementEligible({wasteland:false}),
+      missing:FB.wastelandSettlementEligible(null),
+      pure:before === JSON.stringify([omitted,ordinary]) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result).toEqual({omitted:true,ordinary:true,protected:false,inhabited:false,missing:false,pure:true});
+});

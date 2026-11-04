@@ -1126,7 +1126,7 @@ window.FB = window.FB || {};
     const def = purpose(purposeId);
     const out = [];
     const seen = {};
-    if (!def || def.targeted || FB.travelEligible(state, purposeId) !== true) return out;
+    if (!def || def.targeted || FB.travelEligible(state, purposeId, {readOnly:true}) !== true) return out;
     const search = def.mode === 'developed'
       ? null : routeSearch(state.player.provinceId);
 
@@ -1180,7 +1180,7 @@ window.FB = window.FB || {};
       const provs = FB.world.provs || [];
       for (let i = 0; i < provs.length; i++) {
         const waste = provs[i];
-        if (!waste.wasteland || seen[waste.id]) continue;
+        if (!FB.wastelandSettlementEligible(waste) || seen[waste.id]) continue;
         const adjacency = FB.world.adj[waste.id] || {};
         const gateways = [];
         for (const nb in adjacency) {
@@ -1327,8 +1327,10 @@ window.FB = window.FB || {};
 
   FB.travelStart = function (state, purposeId, destinationId, destinationRealm,
       venturePayload) {
-    if (FB.travelEligible(state, purposeId) !== true) return false;
     const def = purpose(purposeId);
+    if (def && def.mode === 'frontier' && !FB.wastelandSettlementEligible(
+        FB.world && FB.world.byId[destinationId])) return false;
+    if (FB.travelEligible(state, purposeId) !== true) return false;
     if (!def || def.targeted) return false;
     const choices = FB.travelDestinations(state, purposeId);
     let choice = null;
@@ -1640,7 +1642,7 @@ window.FB = window.FB || {};
     if (!frontier || typeof frontier.gatewayId !== 'string') return false;
     if (frontier.charId !== state.player.charId) return false;
     const destination = FB.world.byId[t.destinationId];
-    return !!(destination && destination.wasteland);
+    return FB.wastelandSettlementEligible(destination);
   }
 
   function arriveDestination(state) {
@@ -2213,6 +2215,10 @@ window.FB = window.FB || {};
 
   FB.frontierSettlementEligible = function (state) {
     const p = state.player;
+    const destination = p.travel && FB.world.byId[p.travel.destinationId];
+    if (destination && destination.settlementPolicy === 'protected') {
+      return FB.T('This scenic region is protected from county settlement. This does not imply that it is uninhabited.');
+    }
     const t = FB.travelEnsure(state);
     if (!t || FB.travelPurposeKind(t.purpose) !== 'frontier') {
       return FB.T('Only a withdrawal into the wastes can found a frontier homestead.');
@@ -2280,8 +2286,8 @@ window.FB = window.FB || {};
 
   FB.frontierSettle = function (state) {
     const p = state.player;
-    const t = FB.travelEnsure(state);
     if (FB.frontierSettlementEligible(state) !== true) return false;
+    const t = FB.travelEnsure(state);
     const frontier = t.frontier;
     const pid = t.destinationId;
     const protagonist = me(state);
