@@ -1,0 +1,16 @@
+{
+  "name": "Guarded field dispositions",
+  "aiDecisionPolicies": {
+    "guarded_field": {
+      "family": "tactics", "mode": "ordered",
+      "parameters": {"engagementMargin": 1.4, "objectiveFirst": 1},
+      "order": [{"metric": "objective", "direction": "desc"}, {"metric": "distance", "direction": "asc"}],
+      "weights": {}, "bias": 0, "tieBreak": "id",
+      "adjustments": [
+        {"kind": "trait", "id": "brave", "multiply": {"engagementMargin": 0.95}},
+        {"kind": "trait", "id": "craven", "multiply": {"engagementMargin": 1.4}}
+      ]
+    }
+  },
+  "balance": {"aiTacticsPolicy": "guarded_field"}
+}

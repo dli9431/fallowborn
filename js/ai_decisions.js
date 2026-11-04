@@ -431,9 +431,13 @@
       }
       return d.tieBreak === 'id' ? (a.id < b.id ? -1 : a.id > b.id ? 1 : 0) : a.index - b.index;
     });
-    return {policyId:policy.id,family:d.family,mode:d.mode,definition:copy(d),parameters:parameters,adjustments:applied,investment:investment,
+    var report = {policyId:policy.id,family:d.family,mode:d.mode,definition:copy(d),parameters:parameters,adjustments:applied,investment:investment,
       candidates:rows,ranking:ranking.map(function (r) { return {id:r.id,weight:r.score}; }),
       totalWeight:ranking.reduce(function (sum,r) { return sum + r.score; },0)};
+    if (d.family === 'tactics') report.tactics = {neutralMargin:d.parameters.engagementMargin,
+      reason:parameters.engagementMargin < d.parameters.engagementMargin ? 'risk_accepting' :
+        parameters.engagementMargin > d.parameters.engagementMargin ? 'risk_guarded' : 'risk_neutral'};
+    return report;
   };
   P.pick = function (report, roll) {
     if (report.mode !== 'weighted') return report.ranking.length ? report.ranking[0].id : null;

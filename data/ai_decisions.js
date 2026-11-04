@@ -31,7 +31,10 @@ FBDATA.aiDecisionPolicies = {
         {metric:'remaining',direction:'asc'},{metric:'development',direction:'desc'}]
     } },
   ordinary_tactics:{ family:'tactics', mode:'first', parameters:{ engagementMargin:1.1, objectiveFirst:0 },
-    order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] },
+    order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[
+      {kind:'trait',id:'brave',multiply:{engagementMargin:0.9}},
+      {kind:'trait',id:'craven',multiply:{engagementMargin:1.2}}
+    ] },
   ordinary_investment:{ family:'investment', mode:'first', parameters:{capitalPriority:0,frontierPriority:1,
     interiorPriority:2,developmentWeight:0,fortDevelopmentWeight:1,buildOrderWeight:1,
     benefitWeight:0,costWeight:0,upkeepWeight:0,profileScoreWeight:1,baronPreference:0,operationSpending:1},
