@@ -3131,10 +3131,16 @@ window.FB = window.FB || {};
      holy-war goal — screening and besieging while the main host fights. */
   // Orders read fixed positions and strength. Discard before marching or fighting.
   let orderQueries = null;
-  function tacticalParameters(state, realmId) {
-    if (!orderQueries || orderQueries.state !== state) return FB.aiDecisions.parameters(state,realmId,'tactics');
+  function tacticalProjection(state, realmId) {
+    function project() {
+      return FB.aiDecisions.report(FB.aiDecisions.resolve(state,realmId,'tactics'),[],FB.aiDecisions.inputs(state,realmId));
+    }
+    if (!orderQueries || orderQueries.state !== state) return project();
     const policies = orderQueries.tactical || (orderQueries.tactical = Object.create(null));
-    return policies[realmId] || (policies[realmId] = FB.aiDecisions.parameters(state,realmId,'tactics'));
+    return policies[realmId] || (policies[realmId] = project());
+  }
+  function tacticalParameters(state, realmId) {
+    return tacticalProjection(state,realmId).parameters;
   }
   function tacticalTargets(state, army, targets, objective) {
     if (army.realm === 'player' || FB.aiDecisions.resolve(state,army.realm,'tactics').definition.mode === 'first') return targets;
@@ -3494,10 +3500,16 @@ window.FB = window.FB || {};
   }
 
   /* Use the battle's location and roles, including every hostile banner. */
-  FB.armyCanPursue = function (state, army, pid) {
+  FB.armyCanPursue = function (state, army, pid, recovery) {
+    // Survival and financial recovery retain the selected policy's base margin.
+    // Supply's canonical owner sets autoResupply before testing refill counties.
+    recovery = !!(recovery || army.autoResupply || army.supplyRetreat ||
+      (army.broken !== undefined && state.turn - army.broken < 40) ||
+      (FB.treasuryRetrenching && FB.treasuryRetrenching(state, army.realm)));
     const queries = orderQueries && orderQueries.state === state ? orderQueries : null;
     let cached = queries && queries.pursuit.get(army);
-    if (cached && Object.prototype.hasOwnProperty.call(cached, pid)) return cached[pid];
+    const key = JSON.stringify([pid,recovery]);
+    if (cached && Object.prototype.hasOwnProperty.call(cached, key)) return cached[key];
     let defending = 0;
     const hosts = queries ? (queries.byCounty[pid] || []) : (state.armies || []);
     for (const other of hosts) {
@@ -3505,11 +3517,12 @@ window.FB = window.FB || {};
         defending += battlePower(state, other, pid, 'defense');
       }
     }
-    const margin = army.realm === 'player' ? 1.1 : tacticalParameters(state,army.realm).engagementMargin;
+    const projection = army.realm !== 'player' && tacticalProjection(state,army.realm);
+    const margin = projection ? (recovery ? projection.tactics.neutralMargin : projection.parameters.engagementMargin) : 1.1;
     const result = !defending || battlePower(state, army, pid, 'attack') >= defending * margin;
     if (queries) {
       if (!cached) { cached = Object.create(null); queries.pursuit.set(army, cached); }
-      cached[pid] = result;
+      cached[key] = result;
     }
     return result;
   };
@@ -3519,7 +3532,7 @@ window.FB = window.FB || {};
       (state.realms[army.realm] || {}).capital;
     function safe(pid) {
       return FB.armyFriendlyProvince(state, army, pid) &&
-        FB.armyCanPursue(state, army, pid);
+        FB.armyCanPursue(state, army, pid, true);
     }
     // Home has priority even when another safe county is nearer.
     if (home && safe(home)) {

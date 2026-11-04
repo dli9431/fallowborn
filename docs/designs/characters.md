@@ -1517,6 +1517,8 @@ The traitMechanics catalogue supplies the supported literacy, prayer, social, in
 
 FB.traitIds is the shared detached behavioral-trait reader: a full character's list, including an empty list, precedes a compact record's single trait, and repeated ids contribute once in saved order. Policy inputs follow the actual current character rather than the summary's first trait. Ruler aims retain their generation-bound agency record; an absent full character uses existing compact identity and family facts without materialization. See ai-decisions.md for precedence and the legacy ordinary-war personality compatibility switch. These identity repairs change no gameplay eligibility, save format or technology capability.
 
+Tactical willingness uses only the declared brave/craven policy selectors. The default compact rulerTraits pool excludes both, so ordinary initial generation remains tactically neutral; authored profiles and later current characters can carry them, and ordinary JSON may explicitly replace the pool to include them. Materialization preserves the compact trait and succession reads the incoming person's full list. Wrathful, patient and legacy personality values imply no bravery. Risk preferences change voluntary engagement margins, leaving martial skill and actual battle-power calculation with their existing owners; see ai-decisions.md.
+
 Household service appointments expose typed promotion, training and trait teaching through householdServiceRoles. Religious contested ranks use religiousOfficeRanks together with faith routes. Quick-start cards choose declared scenarios and family presets and use ordinary character construction. Public shapes and limits are documented in docs/MODDING.md.
 
 
