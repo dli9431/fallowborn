@@ -1,5 +1,7 @@
 Deferred title and content readiness
 
+ai-tactical-risk.spec.js covers bounded brave/craven margins, neutral ordering and generated-pool participation, authoritative current-character inputs, duplicate suppression, state isolation and pure reports. Matched pursuit/objective and combined-host choices use real battle power; disconnected routes, hostile forts, siege force, hostile gathering paths and overwhelming enemies still block. Supply, fiscal regrouping, legal retreat and daily manual/delegated/expedition order ownership retain their boundaries. Two independent ordinary JSON imports exercise distinct margins and generation policies with malformed nonpublication. Matching saves retain routes, resources and exact mod signatures, and actual succession replaces predecessor preferences without a long simulation. These focused cases do not establish long-run balance or device acceptance.
+
 ai-expansion-ranking.spec.js stages multiple real frontier targets for sovereigns and
 vassals and checks consolidation ahead of county id, current aim alternatives, each
 geographic/defense tie-break, and the retained explicit neutral baseline. It imports

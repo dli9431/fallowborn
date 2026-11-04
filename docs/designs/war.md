@@ -1627,8 +1627,17 @@ supply drain/recovery, siege cadence, and objectives remain unchanged.
 
 Before deliberate pursuit, AI compares its existing attacking battle-power estimate at
 the destination against the sum of all hostile defending hosts there, including terrain.
-It needs a 110% advantage. Otherwise it regroups on reachable friendly ground that is
-not occupied by an overwhelming enemy. Forced retreats and fort pinning keep priority.
+The neutral margin is 110%; ordinary_tactics adjusts it to 99% for brave rulers and
+132% for craven rulers through the shared declared policy. The same projection applies
+to voluntary ordinary objective advances and combined, co-located offensive hosts.
+Separated hosts still gather only over uncontested routes. No relevant disposition
+retains the existing order and neutral margin. Recovery checks use the selected policy's
+unadjusted margin, including supply searches and financial regrouping. Otherwise a host
+regroups on reachable friendly ground that is not occupied by an overwhelming enemy.
+Forced retreats, fort pinning, siege feasibility, actual funding and player/manual/
+expedition order ownership keep priority. No combat-power or supply rule changes.
+See ai-decisions.md for combination bounds, generated-ruler participation and diagnostic
+reason codes. This preference tuning adds no gameplay eligibility or technology gate.
 
 ## Player-initiated settlements
 
