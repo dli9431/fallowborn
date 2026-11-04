@@ -36,6 +36,25 @@ FBDATA.aiDecisionPolicies = {
     interiorPriority:2,developmentWeight:0,fortDevelopmentWeight:1,buildOrderWeight:1,
     benefitWeight:0,costWeight:0,upkeepWeight:0,profileScoreWeight:1,baronPreference:0,operationSpending:1},
     order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] },
+  ruler_investment:{ family:'investment', mode:'first', parameters:{capitalPriority:0,frontierPriority:1,
+    interiorPriority:2,developmentWeight:0,fortDevelopmentWeight:1,buildOrderWeight:1,
+    benefitWeight:0,costWeight:0,upkeepWeight:0,profileScoreWeight:1,baronPreference:0,operationSpending:1},
+    order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[
+      {kind:'trait',id:'greedy',multiply:{},buildingRoleWeights:{marketplace:16,banking:16,milling:12,port:12}},
+      {kind:'trait',id:'literate',multiply:{},buildingRoleWeights:{scholarship:24}},
+      {kind:'trait',id:'quick',multiply:{},buildingRoleWeights:{scholarship:12}},
+      {kind:'trait',id:'genius',multiply:{},buildingRoleWeights:{scholarship:24}},
+      {kind:'trait',id:'zealous',multiply:{},buildingRoleWeights:{worship:24}},
+      {kind:'trait',id:'craven',multiply:{},buildingRoleWeights:{stronghold:24,fortification:24},benefitWeights:{garrison:0.5}},
+      {kind:'trait',id:'brave',multiply:{},buildingRoleWeights:{garrison:24,training:24}},
+      {kind:'trait',id:'wrathful',multiply:{},buildingRoleWeights:{garrison:16,training:16}},
+      {kind:'aim',id:'amass_wealth',multiply:{},benefitWeights:{tax:16}},
+      {kind:'aim',id:'defend_faith',multiply:{},benefitWeights:{piety:16,communityFaithPressure:8}},
+      {kind:'aim',id:'expand_realm',multiply:{},benefitWeights:{levy:16,retinue:16,archers:16,siege:16}},
+      {kind:'aim',id:'keep_peace',multiply:{frontierPriority:0},benefitWeights:{defense:100,siegeDelay:16}},
+      {kind:'aim',id:'strengthen_crown',multiply:{},benefitWeights:{garrison:0.5}},
+      {kind:'aim',id:'secure_dynasty',multiply:{},benefitWeights:{populationCapacity:0.01}}
+    ] },
   ordinary_research:{ family:'research', mode:'weighted', parameters:{ baseScore:10, exposureMultiplier:2.25,
     historicalBase:1.5, historicalSlope:0.18, historicalFloor:0.25,
     horizonFloor:0.35, horizonCap:2, horizonMultiplier:3, futureThreshold:4,
@@ -73,7 +92,7 @@ FBDATA.aiDecisionPolicies = {
 Object.assign(FBDATA.balance, {
   aiRaidTargetDevelopmentWeight:0,
   aiWarPolicy:'ordinary_war', aiExpansionPolicy:'strategic_expansion', aiTacticsPolicy:'ordinary_tactics',
-  aiInvestmentPolicy:'ordinary_investment', aiResearchPolicy:'ordinary_research',
+  aiInvestmentPolicy:'ruler_investment', aiResearchPolicy:'ordinary_research',
   aiIntriguePolicy:'ordinary_intrigue', aiDiplomacyPolicy:'ordinary_diplomacy',
   aiReligionPolicy:'ordinary_religion', aiGovernmentPolicy:'ordinary_government'
 });

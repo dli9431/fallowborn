@@ -1,0 +1,136 @@
+{
+  "name": "Learned investment preferences",
+  "buildings": {
+    "investment_coin": {
+      "name": "Coin works",
+      "desc": "An optional local investment.",
+      "role": "marketplace",
+      "cost": 30,
+      "upkeep": 1,
+      "aiBuildOrder": 10,
+      "maxCounty": 1,
+      "tax": 2
+    },
+    "investment_study": {
+      "name": "Study works",
+      "desc": "An optional local investment.",
+      "role": "scholarship",
+      "cost": 30,
+      "upkeep": 1,
+      "aiBuildOrder": 10,
+      "maxCounty": 1,
+      "research": 2
+    },
+    "investment_worship": {
+      "name": "Worship works",
+      "desc": "An optional local investment.",
+      "role": "worship",
+      "cost": 30,
+      "upkeep": 1,
+      "aiBuildOrder": 10,
+      "maxCounty": 1,
+      "piety": 2
+    },
+    "investment_shelter": {
+      "name": "Shelter works",
+      "desc": "An optional local investment.",
+      "role": "stronghold",
+      "cost": 30,
+      "upkeep": 1,
+      "aiBuildOrder": 10,
+      "maxCounty": 1,
+      "defense": 0.2
+    },
+    "investment_drill": {
+      "name": "Drill works",
+      "desc": "An optional local investment.",
+      "role": "garrison",
+      "cost": 30,
+      "upkeep": 1,
+      "aiBuildOrder": 10,
+      "maxCounty": 1,
+      "retinue": 2
+    },
+    "investment_work": {
+      "name": "Civic works",
+      "desc": "A selected local investment.",
+      "role": "civic",
+      "cost": 20,
+      "upkeep": 1,
+      "aiBuildOrder": -200,
+      "maxCounty": 1,
+      "tax": 2
+    }
+  },
+  "buildingProfiles": {
+    "investment_learned": {
+      "buildingId": "investment_work",
+      "name": "Learned civic works",
+      "desc": "A replacement construction option.",
+      "requiresTech": [],
+      "replace": {
+        "tax": 0,
+        "research": 4
+      }
+    },
+    "investment_guarded": {
+      "buildingId": "investment_work",
+      "name": "Guarded civic works",
+      "desc": "A replacement construction option.",
+      "requiresTech": [],
+      "replace": {
+        "tax": 0,
+        "defense": 0.2
+      }
+    }
+  },
+  "aiDecisionPolicies": {
+    "configured_investment": {
+      "family": "investment",
+      "mode": "first",
+      "parameters": {
+        "capitalPriority": 0,
+        "frontierPriority": 1,
+        "interiorPriority": 2,
+        "developmentWeight": 0,
+        "fortDevelopmentWeight": 1,
+        "buildOrderWeight": 1,
+        "benefitWeight": 0,
+        "costWeight": 0,
+        "upkeepWeight": 0,
+        "profileScoreWeight": 1,
+        "baronPreference": 0,
+        "operationSpending": 1
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "benefitWeights": {
+        "research": 12
+      },
+      "adjustments": [
+        {
+          "kind": "trait",
+          "id": "greedy",
+          "multiply": {},
+          "buildingRoleWeights": {
+            "marketplace": 24
+          }
+        },
+        {
+          "kind": "aim",
+          "id": "amass_wealth",
+          "multiply": {},
+          "benefitWeights": {
+            "tax": 12
+          }
+        }
+      ]
+    }
+  },
+  "balance": {
+    "aiInvestmentPolicy": "configured_investment",
+    "aiMaxBuildingsPerYear": 1
+  }
+}
