@@ -203,6 +203,9 @@ for (const crazy of [false,true]) {
         });
         await openCrazyGame(page,info);
       } else await openGame(page,info);
+      expect(await page.evaluate(function () {
+        return FB.bookmarkCompositions.sourceReports().find(function (report) { return report.bookmarkId === '634'; });
+      })).toMatchObject({ready:true,published:true,worldFaults:[]});
       const result = await page.evaluate(function (input) {
         const b = FB.bookmark('634'), data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
         const courts = {}, counties = {}, faults = [];
@@ -424,6 +427,9 @@ for (const crazy of [false,true]) {
       });
       await openCrazyGame(page,info);
     } else await openGame(page,info);
+    expect(await page.evaluate(function () {
+      return FB.bookmarkCompositions.sourceReports().find(function (report) { return report.bookmarkId === '634'; });
+    })).toMatchObject({ready:true,published:true,worldFaults:[]});
     const result = await page.evaluate(function () {
       const report = FB.bookmarkCompositions.sourceReports().find(function (report) { return report.id === 'autumn_634'; });
       return {report:report,starts:FBDATA.startScenarios.filter(function (row) {
