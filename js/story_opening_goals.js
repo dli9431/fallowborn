@@ -230,7 +230,9 @@
             (state === 'pending' ? ' ' + progress(s, t, g.criterion) : '') +
             (g.criterion.kind === 'hold' && state === 'pending' ? ' ' + FB.T(g.criterion.reason) : '');
         });
-        return { phase:'opening_objectives', name:FB.T('Your opening goals'), lines:lines };
+        var completed = d.goals.filter(function (g) { return t.goals[g.id].status === 'completed'; }).length;
+        return { phase:'opening_objectives', name:FB.T('Your opening goals'), lines:lines,
+          progress:{ done:completed, total:d.goals.length } };
       },
       people:function (s, t) { return d.contacts.map(function (c) {
         var id = t.contacts[c.id], person = id && s.chars[id];

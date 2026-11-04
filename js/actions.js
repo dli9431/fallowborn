@@ -4709,7 +4709,7 @@ window.FB = window.FB || {};
   }
 
   const DEED_SECTION_TYPES = {
-    tutorial:1, stories:1, commitments:1, campaigns:1, holy_campaign:1,
+    tutorial:1, commitments:1, campaigns:1, holy_campaign:1,
     household_summary:1, next_steps:1, focus:1, deeds:1
   };
 

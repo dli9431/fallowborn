@@ -64,6 +64,10 @@ window.FB = window.FB || {};
   let kinRenderedFamilyRevision = -1;
   const LEFT_TABS = ['char', 'family'];
   const actionGroupsOpen = {};
+  /* Each life opens a section once for every newly waiting story stage; a
+     later collapse by the player then stands until another stage waits. */
+  let storyDecisionsSeen = {};
+  let storyDecisionsState = null;
   const selfSectionsOpen = { titles:false, possessions:false };
   const DEED_ITEM_KEYS = ['q', 'w', 'e', 'a', 's', 'd', 'z', 'x', 'c'];
   let activeActionSection = null;
@@ -301,9 +305,38 @@ window.FB = window.FB || {};
   function actionSectionButtons(box, id) {
     const body = box.querySelector('[data-action-group-body="' + id + '"]');
     if (!body || body.hidden) return [];
+    // Story entries lead their section, so they take its first item keys.
     return id === focusSectionId()
       ? body.querySelectorAll('[data-focus-id]')
-      : body.querySelectorAll('[data-action-id]');
+      : body.querySelectorAll('[data-action-id], [data-story-card], [data-story-affairs]');
+  }
+
+  /* Attached stories sit inside the deeds sections that own their decisions
+     (FBDATA.storyPlacements); read-only world stories gather behind one
+     Affairs of the world entry. */
+  function deedStoryPlan(s, sections) {
+    if (!FB.stories || !FB.stories.placements) return { sections:{}, affairs:[], affairsSection:null };
+    return FB.stories.placements(s, deedGroupingStyle(), sections.filter(function (section) {
+      return section.type === 'deeds';
+    }).map(function (section) { return section.id; }));
+  }
+
+  function deedStorySignature(plan) {
+    return Object.keys(plan.sections).sort().map(function (id) {
+      return id + ':' + plan.sections[id].map(function (entry) {
+        return [entry.id, entry.title, entry.stage, entry.decision ? 1 : 0,
+          entry.progress ? entry.progress.done : ''].join('/');
+      }).join(',');
+    }).join('|') + '#' + plan.affairsSection + ':' + plan.affairs.length;
+  }
+
+  function deedStoryCount(plan, id) {
+    return (plan.sections[id] || []).length + (plan.affairsSection === id ? 1 : 0);
+  }
+
+  // Goals report progress; a choice of setting one aside is not a waiting decision.
+  function deedStoryWaiting(entry) {
+    return !!(entry.decision && !entry.progress);
   }
 
   function refreshDeedPanelShortcuts() {
@@ -1297,16 +1330,6 @@ window.FB = window.FB || {};
       }
       break;
     }
-    case 'stories': {
-      /* One shared card per attached story with a status; it opens the
-         shared story sheet. */
-      for (const card of FB.stories ? FB.stories.cards(s) : []) {
-        h += '<button type="button" class="actionbtn" data-story-card="' +
-          esc(card.id) + '"><b>' + esc(card.title) +
-          '</b><br><span class="hint">' + esc(card.name) + '</span></button>';
-      }
-      break;
-    }
     case 'commitments': {
       h += ongoingCommitmentsHtml(s);
       break;
@@ -1505,7 +1528,7 @@ window.FB = window.FB || {};
     const oldFocus = document.activeElement;
     let retainedFocus = null;
     if (retaining && oldFocus && box.contains(oldFocus)) {
-      for (const attr of ['id', 'data-action-id', 'data-focus-id', 'data-story-card', 'data-action-section', 'aria-controls']) {
+      for (const attr of ['id', 'data-action-id', 'data-focus-id', 'data-story-card', 'data-story-affairs', 'data-action-section', 'aria-controls']) {
         if (oldFocus.hasAttribute(attr)) {
           retainedFocus = [attr, oldFocus.getAttribute(attr)];
           break;
@@ -1531,16 +1554,22 @@ window.FB = window.FB || {};
        a group's controls are actually constructed. */
     const instants = FB.loadTiming ? FB.loadTiming.measure('List visible deeds',FB.listInstants,FB,[s,{deferEligibility:true}]) :
       FB.listInstants(s, { deferEligibility:true });
+    const storyPlan = deedStoryPlan(s, sections);
+    if (storyDecisionsState !== s) {
+      storyDecisionsState = s;
+      storyDecisionsSeen = {};
+    }
     const sectionItems = {};
     emptyDeedSections = {};
     for (const group of sections) {
       if (group.type !== 'deeds') continue;
       sectionItems[group.id] = FB.deeds.items(s, group, groupingStyle, instants);
-      if (!sectionItems[group.id].length && !group.statusLine) emptyDeedSections[group.id] = true;
+      if (!sectionItems[group.id].length && !deedStoryCount(storyPlan, group.id) &&
+          !group.statusLine) emptyDeedSections[group.id] = true;
     }
     const visibleSignature = instants.map(function (item) {
       return item.a.id;
-    }).join('|');
+    }).join('|') + '#' + deedStorySignature(storyPlan);
     function deedFlow(action) {
       if (action && action.flow === 'choices') return 'choices';
       if (action && action.flow === 'no_day') return 'no-day';
@@ -1551,10 +1580,71 @@ window.FB = window.FB || {};
       if (flow === 'no-day') return FB.T('Resolves now · no day spent');
       return FB.T('Resolves now · spends one day');
     }
+    /* Like a deed row, the face keeps only the action name; the current state
+       and the story's own description live in the shared details. */
+    function storyEntryRow(id, label, state, detail, open) {
+      const row = document.createElement('div');
+      const btn = document.createElement('button');
+      const detailsId = 'story-details-' + id;
+      row.className = 'deed-entry settcard story-entry';
+      row.setAttribute('data-deed-flow', 'choices');
+      btn.type = 'button';
+      btn.className = 'actionbtn deed-main-action';
+      btn.setAttribute('data-deed-flow', 'choices');
+      btn.setAttribute('aria-describedby', detailsId);
+      btn.textContent = label;
+      btn.addEventListener('click', open);
+      const actions = document.createElement('span');
+      actions.className = 'settcard-actions';
+      const detailsButton = document.createElement('button');
+      detailsButton.type = 'button';
+      detailsButton.className = 'btn small settcard-info deed-info';
+      detailsButton.textContent = '?';
+      detailsButton.title = FB.T('Details');
+      detailsButton.setAttribute('aria-label', FB.T('Details'));
+      detailsButton.setAttribute('aria-expanded', 'false');
+      detailsButton.setAttribute('aria-controls', detailsId);
+      actions.appendChild(detailsButton);
+      const details = document.createElement('div');
+      details.id = detailsId;
+      details.className = 'settcard-details deed-details hidden';
+      details.innerHTML = '<b>' + esc(deedFlowText('choices')) + '</b><br>' +
+        '<span class="deed-status-text">' + esc(state || detail) + '</span>' +
+        (state && detail ? '<p class="hint">' + esc(detail) + '</p>' : '');
+      row.appendChild(btn);
+      row.appendChild(actions);
+      row.appendChild(details);
+      return { row:row, button:btn };
+    }
+    /* A story entry opens the shared story sheet. Its details name the
+       current stage, or a checklist's progress, above the story's intro. */
+    function appendStoryEntries(body, groupId) {
+      for (const entry of storyPlan.sections[groupId] || []) {
+        const story = FB.stories.get(entry.id);
+        const intro = story && story.intro ? story.intro(s, FB.stories.record(s, entry.id)) : '';
+        const state = entry.progress ? FB.T('{done} of {total} goals met', entry.progress) : entry.stage;
+        const built = storyEntryRow(entry.id, entry.icon + ' ' + FB.T('{story}…', { story:entry.title }),
+          state, intro, function () {
+            UI.showStorySheet(entry.id);
+          });
+        built.button.setAttribute('data-story-card', entry.id);
+        body.appendChild(built.row);
+      }
+      if (storyPlan.affairsSection === groupId) {
+        const placement = FBDATA.storyPlacements && FBDATA.storyPlacements.affairs;
+        const built = storyEntryRow('affairs', (placement && placement.icon || '📜') + ' ' +
+          FB.T('Affairs of the world…'), FB.T('{count} unfolding elsewhere', { count:storyPlan.affairs.length }),
+          FB.T('Courts, campaigns and settlements elsewhere.'),
+          function () { UI.showStoryAffairs(); });
+        built.button.setAttribute('data-story-affairs', 'true');
+        body.appendChild(built.row);
+      }
+    }
     function buildActionGroupBody(group, items) {
       const body = document.createElement('div');
       body.className = 'actiongroup-body';
       body.setAttribute('data-action-group-body', group.id);
+      appendStoryEntries(body, group.id);
       const ih = document.createElement('div');
       ih.className = 'actionsubhead';
       ih.textContent = FB.deeds.text(s, group, 'subhead');
@@ -1805,21 +1895,35 @@ window.FB = window.FB || {};
       })) {
         actionGroupsOpen[group.id] = true;
       }
+      const sectionStories = storyPlan.sections[group.id] || [];
+      const storyWaiting = sectionStories.some(deedStoryWaiting);
+      for (const entry of sectionStories) {
+        if (!deedStoryWaiting(entry)) continue;
+        const key = entry.id + '/' + entry.stage;
+        if (storyDecisionsSeen[key]) continue;
+        storyDecisionsSeen[key] = true;
+        actionGroupsOpen[group.id] = true;
+      }
+      const total = ga.length + deedStoryCount(storyPlan, group.id);
       const toggle = document.createElement('button');
       const open = !!actionGroupsOpen[group.id];
       toggle.className = 'actiongroup-toggle';
       toggle.setAttribute('data-action-group', group.id);
       toggle.setAttribute('data-action-section', group.id);
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (storyWaiting) toggle.setAttribute('data-story-waiting', 'true');
       toggle.innerHTML = '<span>' + actionSectionHintFor(group.id) +
-        esc(FB.deeds.text(s, group, 'label')) + '</span><span>' +
-        esc(String(ga.length)) + ' ' +
+        esc(FB.deeds.text(s, group, 'label')) + (storyWaiting
+          ? ' <span class="deed-story-marker" role="img" aria-label="' +
+            esc(FB.T('A story decision is waiting')) + '" title="' +
+            esc(FB.T('A story decision is waiting')) + '">●</span>' : '') +
+        '</span><span>' + esc(String(total)) + ' ' +
         (open ? '▾' : '▸') + '</span>';
       let body = null;
       if (open) {
         body = buildActionGroupBody(group, ga);
       }
-      (function (id, items) {
+      (function (id, items, count) {
         toggle.addEventListener('click', function () {
           /* The panel summaries and eligibility checks are substantially more
              expensive than the disclosure itself. Keep this group's controls
@@ -1828,7 +1932,7 @@ window.FB = window.FB || {};
           const opening = !actionGroupsOpen[id];
           actionGroupsOpen[id] = opening;
           toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
-          toggle.lastElementChild.textContent = String(items.length) + ' ' +
+          toggle.lastElementChild.textContent = String(count) + ' ' +
             (opening ? '▾' : '▸');
           if (opening) {
             if (!body) {
@@ -1841,15 +1945,10 @@ window.FB = window.FB || {};
           }
               refreshDeedPanelShortcuts();
         });
-      })(group.id, ga);
+      })(group.id, ga, total);
       box.appendChild(toggle);
       if (body) box.appendChild(body);
     }
-    box.querySelectorAll('[data-story-card]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        UI.showStorySheet(btn.getAttribute('data-story-card'));
-      });
-    });
     box.querySelectorAll('[data-bldprov]').forEach(function (btn) {
       const retained = retainedBuildingButtons[btn.id];
       if (retained) {
@@ -2055,10 +2154,12 @@ window.FB = window.FB || {};
 
     const visible = FB.listInstants(s, { deferEligibility:true });
     const visibleIds = {};
+    // A story stage, a newly offered decision or a story moving to Affairs of
+    // the world changes the mounted entries, so it takes the exact rebuild.
     const signature = visible.map(function (item) {
       visibleIds[item.a.id] = true;
       return item.a.id;
-    }).join('|');
+    }).join('|') + '#' + deedStorySignature(deedStoryPlan(s, deedPanelSections()));
     if (signature !== actionsVisibleSignature) {
       renderActions();
       return;

@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/actions.js', 'tests/e2e/support/game/story-placement.js',
   'data/story_household_effects_476_493.js', 'js/story_household_observer.js',
   'data/story_courts_476.js',
   'index.html', 'css/style.css', 'data/eras.js', 'data/wardrobes.js',
@@ -18,6 +19,7 @@ const { openGame } = require('../support/game/navigation');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { waitForUiRefresh } = require('../support/game/ui');
+const { revealStoryCard, openStoryAffairs } = require('../support/game/story-placement');
 
 test('shipped late antique presentation validates and preserves medieval defaults',
   async function ({ page }, testInfo) {
@@ -276,12 +278,15 @@ for (const scenario of ['federate_476','curialis_476']) {
     await page.evaluate(function(){FB.game.setPaused(true);});
     await page.getByRole('button',{name:'Begin',exact:true}).click();
     await page.locator('[data-tab="actions"]').click();
-    const storyIds=['zeno_return_476','suevic_frontier_476','western_office_476','household_effects_western_court_476',
-      scenario==='federate_476'?'federate_track_476':'curialis_track_476'];
-    await expect(page.locator('[data-story-card]')).toHaveCount(storyIds.length);
-    for (const id of storyIds) {
-      await expect(page.locator('[data-story-card="'+id+'"]')).toBeVisible();
+    // Decisions sit in their deeds sections; read-only world status waits under Affairs of the world.
+    const placedIds=['household_effects_western_court_476',scenario==='federate_476'?'federate_track_476':'curialis_track_476'];
+    await expect(page.locator('#tab-actions > [data-story-card]')).toHaveCount(0);
+    for (const id of placedIds) await revealStoryCard(page,id);
+    await openStoryAffairs(page);
+    for (const id of ['zeno_return_476','suevic_frontier_476','western_office_476']) {
+      await expect(page.locator('#gm-body [data-story-card="'+id+'"]')).toBeVisible();
     }
+    await page.keyboard.press('Escape');
     const result=await page.evaluate(function(){
       const s=FB.state;
       return {era:FB.campaignEra(s),currency:FB.currencyLabel(s),

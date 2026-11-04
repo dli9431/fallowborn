@@ -1,0 +1,9 @@
+{
+  "name": "Household stories in Life & Family",
+  "storyPlacements": {
+    "types": {
+      "household_track": {"section": "life", "actionTypeSection": "personal", "icon": "🏠"}
+    },
+    "affairs": {"section": "realm", "actionTypeSection": "personal", "icon": "🗞"}
+  }
+}

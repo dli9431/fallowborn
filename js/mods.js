@@ -19,7 +19,7 @@ window.FBMODS = window.FBMODS || [];
   let legacyBookmarkLimited = false;
   let effectiveFingerprint = '';
   let modFailure = '';
-  const authoringRoots = ['fortProfiles','siegeSupportProfiles','buildingProfiles','positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','rulerFaithTargets','federateServiceStarts','federateMigrations','rankPrestigeYearly','historicalAmbitions','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','freedomTerms','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','quickStarts','traitMechanics','authorityOffices','legitimacySources','customaryBases'];
+  const authoringRoots = ['fortProfiles','siegeSupportProfiles','buildingProfiles','positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','rulerFaithTargets','federateServiceStarts','federateMigrations','rankPrestigeYearly','historicalAmbitions','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','freedomTerms','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','quickStarts','traitMechanics','authorityOffices','legitimacySources','customaryBases','storyPlacements'];
   const authoredRoots = Object.create(null);
   authoringRoots.push('aiDecisionPolicies');
   let baseCatalogues = null;
@@ -289,7 +289,7 @@ window.FBMODS = window.FBMODS || [];
     rankPrestigeYearly:true,
     historicalAmbitions:true, federateContractTerms:true,
     name:true, bookmarks:true, defaultBookmark:true, eras:true, wardrobes:true,
-    startScenarios:true, familyPresets:true, quickStarts:true, storyInstances:true,
+    startScenarios:true, familyPresets:true, quickStarts:true, storyInstances:true, storyPlacements:true,
     authorityOffices:true, legitimacySources:true, customaryBases:true,
     focuses:true, focusRoutines:true, deedEvents:true, deeds:true, deedSections:true, countyCommunityPolicies:true,
     provinces:true, realms:true, empires:true, kingdoms:true, duchies:true,
@@ -2318,7 +2318,12 @@ window.FBMODS = window.FBMODS || [];
       const errors = FB.systems.validateLayer(mod.bookmarks[id].systems, 'bookmarks.' + id);
       if (errors.length) fail('bookmarks.' + id, errors.join(' '));
     }
-    return { actions:prepareActionCatalogs(mod) };
+    const actions = prepareActionCatalogs(mod);
+    // Placement names the effective deeds sections, including this mod's own.
+    const placementFaults = FB.stories.validatePlacements(FBDATA.storyPlacements,
+      actions ? actions.sections : FBDATA.deedSections);
+    if (placementFaults.length) fail('storyPlacements', placementFaults.join(' '));
+    return { actions:actions };
   }
 
   /* Cap groups are configuration maps rather than atomic definitions. A mod
@@ -2373,7 +2378,7 @@ window.FBMODS = window.FBMODS || [];
   function prepareRequirements(mod, composition) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     var live = FBDATA, staged = Object.assign({}, live), prepared;
-    ['positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','federateServiceStarts','federateMigrations','rankPrestigeYearly','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','eras','wardrobes','settlementLayouts','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','traitMechanics','authorityOffices','legitimacySources','customaryBases'].forEach(function (key) {
+    ['positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','federateServiceStarts','federateMigrations','rankPrestigeYearly','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','eras','wardrobes','settlementLayouts','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','traitMechanics','authorityOffices','legitimacySources','customaryBases','storyPlacements'].forEach(function (key) {
       if (own(mod, key) && !plainObject(mod[key])) fail(key, 'must be an object keyed by id.');
     });
     var lists = ['historicalAmbitions','freedomTerms','startScenarios','familyPresets','quickStarts','events','travelSites','provinces','realms'];
@@ -2383,6 +2388,8 @@ window.FBMODS = window.FBMODS || [];
       if (lists.indexOf(key) >= 0) staged[key] = combinedList(live[key], mod[key], key);
       else if (own(PUBLIC_KEYS, key) && plainObject(mod[key])) staged[key] = combinedTable(live[key], mod[key], key);
     });
+    // Story placement merges type and story records individually, as activation does.
+    if (own(mod, 'storyPlacements')) staged.storyPlacements = FB.stories.mergePlacements(live.storyPlacements, mod.storyPlacements);
     staged.bookmarks = combinedBookmarks(mod);
     // Bookmark table keys are authoritative; keep the caller's records intact.
     Object.keys(staged.bookmarks).forEach(function (id) {
@@ -3047,6 +3054,7 @@ window.FBMODS = window.FBMODS || [];
     }
     if (mod.eventChances) mergeTable(FBDATA.eventChances, mod.eventChances);
     if (mod.storyInstances) mergeTable(FBDATA.storyInstances, mod.storyInstances);
+    if (mod.storyPlacements) FBDATA.storyPlacements = FB.stories.mergePlacements(FBDATA.storyPlacements, mod.storyPlacements);
     FB.stories.publish(prepared.stories);
     authoringRoots.forEach(function (key) { if (own(mod, key)) authoredRoots[key] = true; });
     // Newly exposed roots join the fingerprint only when authored. Otherwise
