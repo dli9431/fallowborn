@@ -1,5 +1,17 @@
 Deferred title and content readiness
 
+ai-expansion-ranking.spec.js stages multiple real frontier targets for sovereigns and
+vassals and checks consolidation ahead of county id, current aim alternatives, each
+geographic/defense tie-break, and the retained explicit neutral baseline. It imports
+independent consolidation and weighted-development JSON files through the ordinary
+Mods picker, validates detached weight variation and malformed nonpublication, checks
+lawful priority and zero-weight refusal, rejects stale rights/ownership/frontier/truce/
+authority and connected packages, bounds unique border inspection, and compares matching
+save restoration and real ruler succession. The neutral case in ai-decision-integration.spec.js
+selects ordinary_expansion explicitly; the focused spec covers the strategic default.
+These staged boundaries establish no full-suite, long-run balance, performance or device
+acceptance claim.
+
 bookmark-save-roundtrip.spec.js creates and saves one campaign for each of the eleven native dates, including the hidden authoring dates, then resumes through cold-title Continue and the selected-date content gate. It compares the original world, opening indexes, governments, migrations, armies and RNG/uid state. deferred-menu.spec.js additionally covers cold Henry and Koten starts and Continue in 1241. guarded-following-opening.spec.js, guarded-principal-starts.spec.js and expedition-command.spec.js check compact identity omissions, detached validation purity, missing and conflicting identities, forged actor bindings and preserved guard or command provenance.
 
 deferred-menu.spec.js samples visible loading labels on animation frames in standard and CrazyGames journeys, checks that each dated review starts with its matching label already painted, and retains completed-fraction ordering. settlement-start.spec.js checks the Creating campaign status alongside the locked character form before construction. Existing failure coverage checks that rejected preparation releases the loading screen.

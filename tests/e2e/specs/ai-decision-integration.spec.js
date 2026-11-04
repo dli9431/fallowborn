@@ -393,6 +393,8 @@ for (const distribution of ['standard','crazygames']) {
       delete s.realms[rid].ruler.personality;
       const before = JSON.stringify(s),rng = FB.getRngState();
       const goals = FB.governments.strategy('ai','realm_decisions').goals(s,rid,{});
+      // This case exercises the retained neutral baseline; strategic defaults have dedicated coverage.
+      FBDATA.balance.aiExpansionPolicy = 'ordinary_expansion';
       const order = P.orderCandidates(s,rid,'expansion',[{id:'z',eligible:true,facts:{aggression:1}},
         {id:'b',eligible:true,facts:{aggression:0}},{id:'a',eligible:true,facts:{aggression:0}}]);
       const pure = before === JSON.stringify(s) && rng === FB.getRngState();

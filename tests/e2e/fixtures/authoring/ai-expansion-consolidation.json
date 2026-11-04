@@ -1,0 +1,21 @@
+{
+  "name":"Consolidated frontiers",
+  "aiDecisionPolicies":{
+    "compact_frontier":{
+      "family":"expansion","mode":"ordered","parameters":{},
+      "order":[
+        {"metric":"consolidationBand","direction":"asc"},
+        {"metric":"core","direction":"asc"},
+        {"metric":"remaining","direction":"asc"},
+        {"metric":"contacts","direction":"desc"},
+        {"metric":"defensiveStrength","direction":"asc"},
+        {"metric":"development","direction":"desc"}
+      ],
+      "weights":{},"bias":0,"tieBreak":"id","adjustments":[],
+      "aimOrders":{
+        "amass_wealth":[{"metric":"development","direction":"desc"},{"metric":"contacts","direction":"desc"}]
+      }
+    }
+  },
+  "balance":{"aiExpansionPolicy":"compact_frontier"}
+}
