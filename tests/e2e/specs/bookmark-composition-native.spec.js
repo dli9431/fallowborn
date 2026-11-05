@@ -65,11 +65,12 @@ async function catalogue(page) {
       }
       if (legacy) retained.realms.splice(index + 1,0,change.definition);
     });
-    if (current.revision === 'scenery_protected_v1') {
+    if (current.revision === 'ordinary_settlement_v2') {
       // Only the explicitly authorized addition/default is projected away.
       retained.revision = 'baseline';
       retained.revisions = Object.assign({},current.revisions);
       delete retained.revisions.scenery_protected_v1;
+      delete retained.revisions.ordinary_settlement_v2;
     }
     // The date was deliberately made selectable after this frozen fixture.
     // The comparison below separately asserts each side's actual visibility.
@@ -147,7 +148,7 @@ test('every retained native world, start and story keeps its former complete pro
           return JSON.stringify(row) === JSON.stringify(raw.provinces[i].wasteland
             ? Object.assign({},raw.provinces[i],{settlementPolicy:'protected'}) : raw.provinces[i]);
         }),count:fresh.provinces.length,faults:FB.validateBookmark(FB.bookmark('634'))};
-    })).toEqual({current:'scenery_protected_v1',revisions:['baseline','scenery_protected_v1'],fields:['provinces'],
+    })).toEqual({current:'ordinary_settlement_v2',revisions:['baseline','scenery_protected_v1','ordinary_settlement_v2'],fields:['provinces'],
       rows:Array(527).fill(true),count:527,faults:[]});
     actual.worlds.forEach(function (world) { expect(world.faults.every(function (faults) { return !faults.length; })).toBe(true); });
     expect(await page.evaluate(function () {

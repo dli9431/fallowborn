@@ -116,7 +116,10 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
       row.settlementPolicy = 'protected';
     });
     b.revisions.scenery_protected_v1 = {provinces:protectedRows};
-    b.revision = 'scenery_protected_v1';
+    // Fresh campaigns use the ordinary settlement rules shared by other dates.
+    // Keep the protected layer unchanged for campaigns that already selected it.
+    b.revisions.ordinary_settlement_v2 = {};
+    b.revision = 'ordinary_settlement_v2';
 
     /* Bookmark source at 51c5f5751e8e29a1136aa1518e1e7c2f858728ea, with shared
        root evidence after candidate-story publication repair.
@@ -131,10 +134,13 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
     predecessor.stories = ['damascus_household_observer_634'];
     var current = copy(predecessor);
     current.revisions.scenery_protected_v1 = copy(b.revisions.scenery_protected_v1);
+    var protectedPredecessor = copy(current);
+    protectedPredecessor.revision = 'scenery_protected_v1';
+    current.revisions.ordinary_settlement_v2 = {};
     current.revision = b.revision;
-    FB.bookmarkSources.retainCatalogueTransition({
+    var transition = {
       schema:1,id:'autumn_634_scenery_protected_v1',bookmarkId:'634',retainedRevision:'baseline',
-      predecessor:predecessor,current:current,addedRevisions:['scenery_protected_v1'],bundled:[],
+      predecessor:predecessor,current:current,addedRevisions:['scenery_protected_v1','ordinary_settlement_v2'],bundled:[],
       predecessorRoots:{
         "storyPlacements": "efaf53fb34356efd2bee79f73ee412913980b9e4f5a8ba77c1c4f38c2608d043",
         "fortProfiles": "f28c8f17fd196cbf03a4388fe0c759a0d319163f043e30aa6459221cd475eece",
@@ -182,7 +188,16 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
         "customaryBases": "9cfd545edf0600b390470181bd5424fa2cdf01b48ada2a6aea2d324562340647",
         "aiDecisionPolicies": "04eaff3ee79338f5ed6f95c1f8b4a1f52b8da8fc239fcf7cf7b0b873144f516f"
       }
-    });
+    };
+    FB.bookmarkSources.retainCatalogueTransition(transition);
+    // The immediately preceding protected catalogue is a second exact source,
+    // not a chained migration. Both of its retained worlds keep their rules.
+    var protectedTransition = copy(transition);
+    protectedTransition.id = 'autumn_634_ordinary_settlement_v2';
+    protectedTransition.predecessor = protectedPredecessor;
+    protectedTransition.retainedRevision = ['baseline','scenery_protected_v1'];
+    protectedTransition.addedRevisions = ['ordinary_settlement_v2'];
+    FB.bookmarkSources.retainCatalogueTransition(protectedTransition);
     // Shared physical declarations are inputs, independent of whether the
     // earlier world that first used them passes its own validation.
     Object.keys(layouts).forEach(function (county) {
