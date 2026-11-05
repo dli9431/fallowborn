@@ -65,7 +65,7 @@
     var form=FB.governments.forRealm(s,rid);
     return form ? {formId:form.id,response:E.resolvePassagePolicy(FB.campaignBookmark(s),form.id)} : null;
   }
-  function specification(s,rid) {var d=declaration(s,rid);return d && d.mobile && d.mobile.expeditionProgram;}
+  function specification(s,rid) {var d=declaration(s,rid);return d && d.mobile ? d.mobile.expeditionProgram : undefined;}
   function canonical(c,action,terms) {
     var request={realmId:c.rid,action:action,terms:terms,actor:c.actor};
     if (c.row.columns) {request.terms.columnId=c.step.columnId;return M.reviewColumns(c.s,request);}

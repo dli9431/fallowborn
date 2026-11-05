@@ -46,7 +46,9 @@ for (const fictional of [false,true]) {
     const result=await page.evaluate(function (rid) {
       const s=FB.state,M=FB.mobile,r=M.row(s,rid),before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
       for(let i=0;i<3;i++) {M.members(s,rid);M.leader(s,rid);M.review(s,{realmId:rid,action:'recruit',terms:{count:20,unitId:FB.unitRoleClass('levy_infantry')},actor:{kind:'realm',id:rid}});}
-      return {pure:before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter(),
+      const forged=JSON.parse(JSON.stringify(s));M.row(forged,rid).expeditionProgram={schema:1};
+      let programRejected=false;try {M.validate(forged);} catch(error) {programRejected=true;}
+      return {programRejected:programRejected,pure:before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter(),
         counties:FB.realmTerritory(s,rid).length,noDynasty:!s.realms[rid].succession,
         levy:FB.aiBaseHost(s,rid),total:M.total(s,rid),initial:r.accounting.initial,
         civilians:r.members.reduce(function (n,m) {return n+m.civilians.reduce(function (v,c) {return v+c.count;},0);},0),
@@ -55,7 +57,7 @@ for (const fictional of [false,true]) {
           return Number.isInteger(M.host(s,rid).units[id]) && M.host(s,rid).units[id] >= 0;
         })};
     },rid);
-    expect(result).toMatchObject({pure:true,counties:0,noDynasty:true,levy:0,valid:true,errors:[],normalized:true});
+    expect(result).toMatchObject({programRejected:true,pure:true,counties:0,noDynasty:true,levy:0,valid:true,errors:[],normalized:true});
     expect(result.total).toBe(result.initial);expect(result.civilians+result.host).toBe(result.total);
   });
   test(label+' conserves recruitment, casualties, defeat and recovery',async function ({page},testInfo) {
