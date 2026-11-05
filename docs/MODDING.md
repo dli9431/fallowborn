@@ -5923,6 +5923,36 @@ Each interest declares a unique lowercase id other than court, name, dynasty, ac
 
 The aristocratic government uses only actual founder descent for sovereign eligibility, independently of wealth and personal office. Public commissions, perpetual local assignments, inherited customary rights and private estate deeds retain separate canonical records. Saved facts are not a mod initialization API; older forms/openings remain unchanged on restore. Optional record schemas, pure provincial/probate/stewardship/conversion reviews and preservation rules are in docs/designs/aristocratic-monarchy.md.
 
+Optional openingStewardActorId is a nonempty opening-actor slug matching an
+interest's actorId. The effective bookmark must declare that direct actor, of
+the interest's dynasty and at least minimumAge, and own the interest's county.
+Missing people, reference-only actors, wrong constituencies/dynasties, minority,
+captivity and missing jurisdiction reject before publication. A minor fresh
+court binds that already initialized active principal into the existing schema-1
+regency, with the current ruler generation and turn. The declared principal
+wins independently of interest weight. This creates no person, accession,
+sovereign, payment or private property. Adult openings bind no regency; omission
+retains earlier opening behavior. Repeated setup and restoration never seed it.
+
+The shared public-authority readiness projection distinguishes adulthood,
+capable current-generation stewardship and a minor without capable stewardship.
+Opted-in minorities and existing succession-created regencies fail closed for
+levy/war/treaty/grant/extraordinary-tax consent, public appointment/replacement
+and commission exercise, court-originated recognition and provincial
+enforcement/negotiation. Independent magnate assent/withdrawal, customary rights,
+private estates and debt repayment retain their owners. Existing lawful steward
+replacement and the profile's adulthood boundary restore readiness without
+granting the steward sovereign powers. Legacy no-opt-in minorities without a
+regency retain their earlier authority behavior. Matching saves preserve even
+an impaired historical steward until ordinary play reviews replacement.
+
+Independent complete ordinary JSON examples are
+tests/e2e/fixtures/opening-minority-stewardship/young-charter.json (age ten,
+minimumAge 16, two unequal interests, explicit first principal) and
+river-minority.json (age thirteen, minimumAge 18, threshold 0.7, three interests,
+explicit third principal despite a stronger alternative). These are fictional
+configurations, including isolated ruler-review scenarios.
+
 Mobile confederation declarations
 
 Optional mobileProfiles entries may include supplyPolicy with exactly schema:1, targetDays (integer 1-30), carryDays (integer 1-30), cashReserve (finite nonnegative public money up to 1000000000000) and optional replacement. replacement contains exactly targetMen (integer 0-100000000), maxPerReview (integer 1-10000) and unitIds (1-8 unique effective non-hired unit ids, including same-import additions). These are intrinsic ceilings, not new grants or higher population/host limits. Actual pledged pools, existing rosters and ordinary era/culture/technology gates still bound recruitment. Omission preserves the existing seasonal quotes and thirty-day carriage.

@@ -117,7 +117,7 @@
     var members = R.members(s, rid), candidates = R.candidates(s, rid);
     var seat = members.filter(function (row) { return row.id === seatId; })[0];
     var candidate = candidates.filter(function (row) { return row.id === candidateId; })[0];
-    var principal = seat && seat.principal, ruler = FB.realmRulerCharacterSnapshot(s, rid);
+    var principal = seat && seat.principal, ruler = rid === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, rid);
     var allowed = validActor(s, actor) && (candidate || policy && candidateId === null) && seat &&
       (same(actor, principal) || principal && principal.kind === 'realm' && ruler && actor.kind === 'character' && actor.id === ruler.id);
     var q = { operation:'support', actor:copy(actor || null), realmId:rid, seatId:seatId,
@@ -126,6 +126,14 @@
     q.stamp = JSON.stringify([FB.realmRulerGeneration(s, rid), members, candidates,
       votes(s, rid), FB.administrationProfile(s, rid), actor, ruler && [ruler.id,ruler.dead]]);
     if (policy) policy.support(s, rid, q, seat, candidate, terms);
+    var court = actor && (actor.kind === 'realm' && actor.id === rid ||
+      actor.kind === 'character' && ruler && actor.id === ruler.id);
+    var readiness = FB.governments.publicAuthorityReadiness(s,rid);
+    if (court && !readiness.allowed) {
+      q.allowed = false;
+      q.reason = FB.T('A minor court requires a capable adult hereditary steward for public decisions.');
+    }
+    q.stamp = JSON.stringify([q.stamp,readiness]);
     return q;
   };
   R.applySupport = function (s, reviewed) {

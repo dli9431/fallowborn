@@ -91,7 +91,8 @@
     var data = A.state(s,rid), p = A.profile(s,rid);
     return data && p ? data.interests.map(function (m) {
       var row = assignment(s,m), c = row && s.chars[row.holder.id], local = jurisdiction(s,m);
-      var active = live(s,c) && c.dyn === m.dynasty && s.date.year - c.born >= p.minimumAge &&
+      var active = !!row && row.status === 'active' && (row.endTurn === null || row.endTurn > s.turn) &&
+        live(s,c) && c.dyn === m.dynasty && s.date.year - c.born >= p.minimumAge &&
         (s.holder[m.scope.id] || s.owner[m.scope.id]) === rid && local.length === 2 && local.every(function (r) {
           return r.status === 'active' && r.strength >= 50 && same(r.beneficiary,row.holder);
         });
@@ -100,6 +101,23 @@
           revenue:1 - row.publicTerms.share, levy:row.provincialTerms.levy, status:row.provincialTerms.status
         } : null });
     }) : [];
+  };
+  A.readiness = function (s,rid) {
+    var p = A.profile(s,rid), data = A.state(s,rid), sitting = current(s,rid);
+    var succession = tree(s,rid);
+    if (!sitting && succession && succession.members) sitting = succession.members[succession.rulerMemberId];
+    var generation = FB.realmRulerGeneration(s,rid), regency = data && data.regency;
+    var adult = !!p && !!sitting && s.date.year - sitting.born >= p.minimumAge;
+    var capable = !!regency && regency.generation === generation && A.constituency(s,rid).some(function (m) {
+      return m.active && m.principal.id === regency.stewardId;
+    });
+    // Omitted opening policy retains the meaning of older, unseeded courts.
+    // A succession-created regency still requires a capable current steward.
+    var legacy = !!p && !!data && !regency && p.openingStewardActorId === undefined;
+    return {kind:adult ? 'adult' : capable ? 'stewardship' : 'minor_without_steward',
+      allowed:!!p && !!data && !!sitting && (adult || capable || legacy), legacy:legacy && !adult,
+      rulerId:sitting && sitting.id || null, rulerGeneration:generation,
+      minimumAge:p && p.minimumAge || null, stewardId:regency && regency.stewardId || null};
   };
   function members(s,rid) {
     var data = A.state(s,rid);
@@ -246,12 +264,14 @@
         (a.endTurn === null || a.endTurn > s.turn); }).reduce(function (n,a) { return n + a.publicTerms.share; },0);
       allowed = shares + 1 - terms.revenue <= 1 + 0.000001;
     }
-    allowed = allowed && (!cost || FB.treasuryAvailable(s,rid) >= cost);
+    var readiness = G.publicAuthorityReadiness(s,rid);
+    allowed = allowed && (['enforce','negotiate'].indexOf(action) < 0 || readiness.allowed) &&
+      (!cost || FB.treasuryAvailable(s,rid) >= cost);
     return {operation:'provincial',realmId:rid,interestId:id,actor:copy(actor || null),action:action,
       terms:terms ? copy(terms) : null,allowed:!!allowed,cost:cost,
       supportCost:action === 'enforce' && p ? p.enforcementSupportCost : 0,
       reason:allowed ? null : FB.T('The current principal, local jurisdiction, accepted burdens and available treasury must permit this provincial decision.'),
-      stamp:JSON.stringify([facts(s,rid),p,FB.realmRulerGeneration(s,rid),FB.treasuryAvailable(s,rid),actor,action,terms || null])};
+      stamp:JSON.stringify([facts(s,rid),p,readiness,FB.realmRulerGeneration(s,rid),FB.treasuryAvailable(s,rid),actor,action,terms || null])};
   };
   A.apply = function (s,reviewed) {
     if (!reviewed) return false;
@@ -316,17 +336,18 @@
   };
   A.stewardQuote = function (s,actor,rid) {
     var data = A.state(s,rid), p = A.profile(s,rid), sitting = current(s,rid);
-    var prior = data && data.regency, old = prior && s.chars[prior.stewardId];
+    var prior = data && data.regency;
     var active = A.constituency(s,rid).filter(function (m) { return m.active; });
-    var capable = live(s,old) && active.some(function (m) { return m.principal.id === old.id; });
+    var readiness = G.publicAuthorityReadiness(s,rid), capable = readiness.kind === 'stewardship';
     var next = active.sort(function (a,b) {
       return b.weight - a.weight || a.id.localeCompare(b.id);
     })[0];
-    var allowed = !!p && !!prior && !!sitting && s.date.year - sitting.born < p.minimumAge && !capable &&
+    var allowed = !!p && !!data && (!!prior || p.openingStewardActorId !== undefined) && !!sitting &&
+      s.date.year - sitting.born < p.minimumAge && !capable &&
       !!next && (court(s,rid,actor) || same(actor,next.principal));
     return {operation:'aristocratic_steward',realmId:rid,actor:copy(actor || null),stewardId:next && next.principal.id || null,
       allowed:!!allowed,cost:0,reason:allowed ? null : FB.T('A minor court with an incapable steward needs a living adult hereditary principal. Existing royal ancestry and provincial rights remain unchanged.'),
-      stamp:JSON.stringify([facts(s,rid),sitting,prior,next,actor,FB.realmRulerGeneration(s,rid)])};
+      stamp:JSON.stringify([facts(s,rid),sitting,prior,next,readiness,actor,FB.realmRulerGeneration(s,rid)])};
   };
   A.steward = function (s,reviewed) {
     if (!reviewed) return false;
@@ -339,7 +360,7 @@
   };
   function maintainRegency(s,rid) {
     var data = A.state(s,rid), p = A.profile(s,rid), reigning = p && current(s,rid);
-    if (!data || !data.regency || !p || !reigning) return;
+    if (!data || !p || !reigning || !data.regency && p.openingStewardActorId === undefined) return;
     if (s.date.year - reigning.born >= p.minimumAge) data.regency = null;
     else A.steward(s,A.stewardQuote(s,{kind:'realm',id:rid},rid));
   }
@@ -362,6 +383,16 @@
       if (!form || !form.aristocraticProfileId || row.aristocracy) return;
       var id = def.aristocraticProfileId || form.aristocraticProfileId, p = FBDATA.aristocraticProfiles[id], t = tree(s,rid);
       if (!p || !t || !t.members || !t.founderId) throw new Error('Missing declared royal constituency');
+      var sitting = current(s,rid), stewardId = null;
+      if (p.openingStewardActorId !== undefined && !sitting) throw new Error(FB.T('Missing declared opening sovereign.'));
+      if (p.openingStewardActorId !== undefined && sitting && s.date.year - sitting.born < p.minimumAge) {
+        var declared = p.interests.filter(function (m) { return m.actorId === p.openingStewardActorId; })[0];
+        stewardId = s.bookmarkSetup && s.bookmarkSetup.actors[p.openingStewardActorId];
+        var steward = s.chars[stewardId];
+        if (!declared || !live(s,steward) || steward.dyn !== declared.dynasty ||
+            s.date.year - steward.born < p.minimumAge || (s.holder[declared.provinceId] || s.owner[declared.provinceId]) !== rid)
+          throw new Error(FB.T('Invalid declared opening steward.'));
+      }
       row.administrationProfileId = p.administrationProfileId;
       row.aristocracy = { schema:1,profileId:id,originRealmId:rid,royalRealmId:rid,royalRoots:[t.founderId],interests:[],regency:null };
       p.interests.forEach(function (interest) {
@@ -384,6 +415,11 @@
         });
         row.aristocracy.interests.push({id:interest.id,dynasty:c.dyn,scope:at,appointmentId:office.id,rightIds:ids});
       });
+      if (stewardId) {
+        if (!A.constituency(s,rid).some(function (m) { return m.active && m.principal.id === stewardId; }))
+          throw new Error(FB.T('Opening steward requires active hereditary jurisdiction.'));
+        row.aristocracy.regency = {generation:FB.realmRulerGeneration(s,rid),stewardId:stewardId,sinceTurn:s.turn};
+      }
       FB.refreshRealmSuccession(s,rid);
       if (p.openingGovernor) {
         var input = {institutionId:rid,officeId:FB.administrationProfile(s,rid).governor,
@@ -474,7 +510,7 @@
   G.register('consent','provincial_assent',{
     local:function (s,rid,c) {
       var rows = A.constituency(s,rid).filter(function (m) { return m.scope.id === c.provinceId; });
-      return !rows.length && !(government(s,rid) && government(s,rid).publicVacancy);
+      return !rows.length && !(government(s,rid) && government(s,rid).publicVacancy) && G.publicAuthorityReadiness(s,rid).allowed;
     },
     decision:function (s,rid,c) {
       var p = A.profile(s,rid), data = A.state(s,rid), scope = c.scope || {};
@@ -483,11 +519,7 @@
       rows.forEach(function (m) { approvals[m.id] = m.active && m.terms.status === 'assent'; });
       var reserved = ['extraordinary_tax','grant'].indexOf(c.operation) >= 0;
       var vacancy = government(s,rid).publicVacancy;
-      var regency = data.regency, steward = regency && s.chars[regency.stewardId];
-      var capable = !regency || live(s,steward) && A.constituency(s,rid).some(function (m) {
-        return m.active && m.principal.id === steward.id;
-      });
-      var valid = court(s,rid,c.actor) && !vacancy && capable;
+      var valid = court(s,rid,c.actor) && !vacancy && G.publicAuthorityReadiness(s,rid).allowed;
       if (['levy','war','treaty','grant','extraordinary_tax'].indexOf(c.operation) < 0)
         return G.strategy('consent','delegated').decision(s,rid,c);
       var allowed = valid && (!reserved || rows.every(function (m) { return approvals[m.id]; }));
@@ -614,7 +646,7 @@
     var c = s.chars[cid];
     return retained(s,cid) || Object.keys(s.authority && s.authority.governments || {}).some(function (rid) {
       var data = A.state(s,rid);
-      return !!data && (data.interests.some(function (m) { return c && !c.dead && c.dyn === m.dynasty ||
+      return !!data && (data.regency && data.regency.stewardId === cid || data.interests.some(function (m) { return c && !c.dead && c.dyn === m.dynasty ||
         assignment(s,m) && assignment(s,m).holder.id === cid; }) || c && !c.dead && royalCharacter(s,rid,c,{}));
     });
   };
@@ -638,6 +670,9 @@
           administration.accession.threshold !== p.threshold ||
           !Number.isInteger(p.minimumAge) || p.minimumAge < 16 || p.minimumAge > 30 || typeof p.allowMinor !== 'boolean' ||
           !rate(p.threshold) || p.threshold < 0.5 || p.threshold >= 1 || !Number.isFinite(p.negotiationCost) || p.negotiationCost < 0 ||
+          p.openingStewardActorId !== undefined && (typeof p.openingStewardActorId !== 'string' ||
+            !/^[a-z][a-z0-9_]*$/.test(p.openingStewardActorId) || !Array.isArray(p.interests) ||
+            !p.interests.some(function (m) { return m && m.actorId === p.openingStewardActorId; })) ||
           !rate(p.minimumRevenue) || p.minimumRevenue < 0.5 || !rate(p.minimumLevy) || !keys(p.defaultTerms,['levy','revenue']) ||
           !rate(p.defaultTerms.levy) || !rate(p.defaultTerms.revenue) || p.defaultTerms.revenue >= 1 || p.defaultTerms.revenue < p.minimumRevenue ||
           p.defaultTerms.levy < p.minimumLevy || !Number.isFinite(p.refusalSupport) || !Number.isFinite(p.enforcementSupportCost) ||
@@ -669,9 +704,11 @@
       var required = p && p.interests || [];
       if (!p || !realm.royalCourt || !actors ||
           realm.administrationProfileId && realm.administrationProfileId !== p.administrationProfileId ||
+          p.openingStewardActorId !== undefined && !required.some(function (m) { return m.actorId === p.openingStewardActorId; }) ||
           required.some(function (m) {
             var c = actors && actors[m.actorId], county = (bm.provinces || []).filter(function (v) { return v.id === m.provinceId; })[0];
             return !c || c.ref || c.dyn !== m.dynasty || !county || county.realm !== realm.id ||
+              p.openingStewardActorId === m.actorId && (c.dead || c.unfree || c.exiled || c.captive || c.imprisoned) ||
               !Number.isInteger(c.born) || Number.isInteger(year) && year - c.born < p.minimumAge;
           }) || p.openingGovernor && (!actors[p.openingGovernor.actorId] || !(bm.provinces || []).some(function (v) {
             return v.id === p.openingGovernor.provinceId && v.realm === realm.id;
@@ -736,7 +773,13 @@
               !rate(vote.terms.levy) || vote.terms.revenue < p.minimumRevenue || vote.terms.levy < p.minimumLevy ||
               limits && (vote.terms.revenue > limits.maximumRevenue || vote.terms.levy > limits.maximumLevy))) fault = path + '.recognition';
       });
-      if (data.regency !== null && (!keys(data.regency,['generation','stewardId','sinceTurn']) || Object.keys(data.regency).length !== 3 ||
+      // Detached saves may omit alive, character ids and the ruler's charId.
+      // The canonical saved member's birth is sufficient for the age boundary.
+      var sitting = rid === 'player' ? s.chars[s.player.charId] : source.members[source.rulerMemberId];
+      var optedMinor = form && form.aristocraticProfileId && p.openingStewardActorId !== undefined &&
+        sitting && s.date.year - sitting.born < p.minimumAge;
+      if (optedMinor && (!data.regency || data.regency.generation !== FB.realmRulerGeneration(s,rid)) ||
+          data.regency !== null && (!keys(data.regency,['generation','stewardId','sinceTurn']) || Object.keys(data.regency).length !== 3 ||
           !Number.isInteger(data.regency.generation) || data.regency.generation < 1 ||
           data.regency.generation > FB.realmRulerGeneration(s,rid) || !own(s.chars,data.regency.stewardId) ||
           !data.interests.some(function (m) { return m.dynasty === s.chars[data.regency.stewardId].dyn; }) ||
