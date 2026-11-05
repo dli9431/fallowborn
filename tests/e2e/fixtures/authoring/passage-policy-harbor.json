@@ -272,6 +272,14 @@
           "name": "Free household",
           "diff": "age 24"
         }
+      },
+      "tracks": [
+        "harbor_private_household"
+      ],
+      "trackLocations": {
+        "harbor_private_household": [
+          "harbor_quay"
+        ]
       }
     }
   ],
@@ -767,6 +775,42 @@
         "targetDays": 14,
         "carryDays": 21,
         "cashReserve": 12
+      }
+    }
+  },
+  "storyInstances": {
+    "harbor_private_household": {
+      "id": "harbor_private_household",
+      "type": "household_track",
+      "title": "A family at home",
+      "intro": "Choose ordinary household life.",
+      "homeProvinceId": "harbor_quay",
+      "continuity": "household",
+      "initialStage": "review",
+      "stages": {
+        "review": {
+          "name": "Review the household",
+          "text": "Consider your own household.",
+          "choices": [
+            {
+              "id": "stay",
+              "label": "Remain at home",
+              "detail": "Keep your own household without a reward.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "done": {
+          "name": "Review complete",
+          "text": "Your ordinary life continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
       }
     }
   }
