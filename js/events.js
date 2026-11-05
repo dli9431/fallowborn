@@ -6110,6 +6110,7 @@ window.FB = window.FB || {};
   }
 
   FB.validateTenureData = function (catalogue, dutiesCatalogue, rightsCatalogue, eventDefinitions) {
+    const nativeSelectors = !catalogue && FB.bookmarkSources && FB.bookmarkSources.nativeSelectorKnowsBookmark;
     catalogue = catalogue || (FBDATA && FBDATA.tenureArchetypes);
     dutiesCatalogue = dutiesCatalogue || (FBDATA && FBDATA.tenureDuties);
     rightsCatalogue = rightsCatalogue || (FBDATA && FBDATA.tenureRights);
@@ -6243,7 +6244,8 @@ window.FB = window.FB || {};
             throw new Error('Archetype ' + archKey + ' selector ' + rule.field +
               ' contains duplicate value ' + value + '.');
           }
-          if (rule.known.length && rule.known.indexOf(value) < 0) {
+          if (rule.known.length && rule.known.indexOf(value) < 0 &&
+              !(rule.field === 'bookmarksAny' && nativeSelectors && nativeSelectors(value))) {
             throw new Error('Archetype ' + archKey + ' selector ' + rule.field +
               ' names unknown ' + rule.noun + ': ' + value);
           }

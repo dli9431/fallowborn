@@ -1167,3 +1167,7 @@ Event pack membership must be explicit even for declarations inserted before a f
 Social station queries
 
 Friendship thresholds and lowborn participant selection ask the named social-station queries, preserving the current era and government interpretation. Numeric comparisons remain only in validated data boundaries recorded by the station source lint.
+
+Native tenure selector references
+
+Runtime validation of the native tenure catalogue recognizes date ids in the sealed source manifest while the live data root belongs to its accepted selected or complete publication. A deliberately withheld date remains a reference identity, not a selectable or initialized world. This exemption applies only to native bookmark selectors. Explicit catalogue validation and detached JSON candidates must resolve their own references; unknown dates and duplicate selectors still reject. Tenure formation, saved records and matching against the actual campaign remain unchanged.

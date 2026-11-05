@@ -601,6 +601,13 @@
   C.setupKnowsBookmark = function (id) {
     return !!setup && setup.data === FBDATA && declared.indexOf(id) >= 0;
   };
+  // Global native selector tables can retain references to a withheld date.
+  // This answers reference identity only, never availability or world validity.
+  // Detached mod/composition candidates cannot borrow this live source context.
+  C.nativeSelectorKnowsBookmark = function (id) {
+    return (!!setup && setup.data === FBDATA || !!published && publishedData === FBDATA) &&
+      declared.indexOf(id) >= 0;
+  };
   C.prepareSetup = function (id) {
     if (publishing || published || FB.state) throw new Error('Setup preparation requires an unstarted, unpublished campaign.');
     if (own(setupFaults,id)) throw new Error(setupFaults[id]);

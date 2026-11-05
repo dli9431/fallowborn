@@ -102,6 +102,87 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
     };
     var b = FBDATA.bookmarkCandidates['634'];
     Object.keys(world).forEach(function (key) { b[key] = world[key]; });
+    /* The source world remains the retained baseline. Only this revision owns
+       the 21 scenic opt-ins; regional scaffold rows keep their original meaning. */
+    var predecessor = copy(b);
+    var protectedRows = copy(b.provinces);
+    var protectedIds = ['w_sahara_w','w_sahara_c','w_sahara_e','w_sahel','w_nubia','w_arabia',
+      'w_nefud','w_syrian','w_kavir','w_lut','w_registan','w_hindukush',
+      'w_sulaiman','w_thar','w_karakum','w_kyzylkum','w_steppe_e',
+      'w_ural','w_taiga','w_north','w_lapland'];
+    protectedIds.forEach(function (id) {
+      var row = protectedRows.find(function (p) { return p.id === id; });
+      if (!row || !row.wasteland) throw new Error('Missing 634 scenic anchor: ' + id);
+      row.settlementPolicy = 'protected';
+    });
+    b.revisions.scenery_protected_v1 = {provinces:protectedRows};
+    b.revision = 'scenery_protected_v1';
+
+    /* Bookmark source at 51c5f5751e8e29a1136aa1518e1e7c2f858728ea, with shared
+       root evidence after candidate-story publication repair.
+       Later contributors still own their starts and stories. These retained
+       bindings are evidence only, never published in place of those owners.
+       The shared proof rejects withheld or changed contributions. */
+    predecessor.startLocations = {
+      farmer_634:inhabited.slice(),craftsman_634:inhabited.slice(),
+      ctesiphon_household_634:['baghdad'],umar_634:['medina'],heraclius_634:['constantinople'],
+      damascus_household_634:['damascus'],frontier_household_634:['damascus'],medina_household_634:['medina']
+    };
+    predecessor.stories = ['damascus_household_observer_634'];
+    var current = copy(predecessor);
+    current.revisions.scenery_protected_v1 = copy(b.revisions.scenery_protected_v1);
+    current.revision = b.revision;
+    FB.bookmarkSources.retainCatalogueTransition({
+      schema:1,id:'autumn_634_scenery_protected_v1',bookmarkId:'634',retainedRevision:'baseline',
+      predecessor:predecessor,current:current,addedRevisions:['scenery_protected_v1'],bundled:[],
+      predecessorRoots:{
+        "storyPlacements": "efaf53fb34356efd2bee79f73ee412913980b9e4f5a8ba77c1c4f38c2608d043",
+        "fortProfiles": "f28c8f17fd196cbf03a4388fe0c759a0d319163f043e30aa6459221cd475eece",
+        "siegeSupportProfiles": "c89a148be40e6752261e3038609a4b68de22fa3bfdaf32f884edffb8480b9bbe",
+        "buildingProfiles": "0d12ad5eee9886aafdff27e68416b7f432fa99840e09a6e0d7d78979a9d9e9bf",
+        "positionRules": "b25a89a5dd5b73ded99e2a7bb8aadd9fdceda8c90e53d9b693f60c17a782e356",
+        "policyGovernance": "b87012499af17df271d85e168a02b18911298fb518f3dc88aad137cb4b34a4cb",
+        "marketRaidYields": "d3a43b0d6a03e7b06240e0042b8be7ecec97173370f80a99e9da5de6ff28cac3",
+        "authoringDefaults": "d056d13cb25c5da1c674982b1ee3bdb9ca4886b996815e46935608a7af46cc82",
+        "actionPolicies": "da19722ec331ca5e7544d29dfa3337cb43f57cf26b790bca0fa49dd0a69e3a0f",
+        "rulerFaithTargets": "dda5358fce0941cc73c2a3d350ec1e16d6371db969a99f1cc50a2a7801bde4c6",
+        "federateServiceStarts": "6cd5b796d4185e64124baf66309d153f1eaf72abe2d3dc94f7230ae24fa04dae",
+        "federateMigrations": "e3e910c4a14228b0dd7b45702a204aa023d8018db70f9cc0249534b4c35f309f",
+        "rankPrestigeYearly": "a00600d7289d21a8b067bd5b262e3ba0126776c72e1d2cdff20444eca7ce0c47",
+        "historicalAmbitions": "dd49c9401aed5be36ee98f25b838c73ddfd1e5b41edfe99893d7504d6cf9b915",
+        "federateContractTerms": "5549be05a364b8d4443f7051f4d74a89c8baee2d945c4ea5d45317ad031d005b",
+        "tenureArchetypes": "d46b581b0ff08dda005bf9f6da855676eb3315329ce0f4618b92300422ea83b1",
+        "tenureDuties": "a8e14b4399ffd2973f7085907c42b580287ec4583776180cec84e77542b61b91",
+        "tenureRights": "47c3ce86d193a5d7053e935a473bffaec984abc048c2ba2995d28475cb305a09",
+        "freedomBargaining": "4ea2920a7128f0d4d7c729077fdd9102a1e71221d4a9eaa541943d39a5136e52",
+        "freedomTerms": "12583a67bf7a7414c41ddffe2e8867b74e70a4e46da75100d0ee84aa5d012ce1",
+        "storyInstances": "f14391a505eec79178b1900bdfabd713baa1559dc0ada92e7137c6b8c9af131b",
+        "focusRoutines": "b14ec9d5f9cbd79fa32661cbecd6b896cd7481faf77582a1364fe1315a58e38b",
+        "deedRoutines": "0c331de0c9946ab9b64d3046653c8e2ade303356336df058dee9b89a67da6396",
+        "deedEvents": "c6838f55da3b0dc57f8432a15e2ba2d4a91f19e2a2c965fd319cb6a9d5fbf95f",
+        "eventChances": "46b9634beec1d8b02564b1147e867c692adc73ce49f8ad6c40954efc8471f1c5",
+        "eventSubscriptions": "ceaab6853f09e22b876034ef70b8b2cd0103e9f578fcad0252997565f0658d60",
+        "tournamentRules": "3ea9a1638282459930bb42f0f3243a3c968d47aa7d0a34812fad184c7e24a7b5",
+        "councilSeatRoles": "93b452374c95af22f94e28973f8ca94508a6b39587d277edf22c829a08c9bf2a",
+        "enterpriseMechanics": "19645e0f505f8f5282c8d45f3f15f1c7d077455b4930752939e131303ef18828",
+        "specializationMarketEffects": "3b883c88dbef3278970eafd0f2e91c9b31cf3b592f7fe64d9aa997e128548bfa",
+        "householdStandardDemand": "9ddcb4cc11d0dc36d20067a1e9acc7182a2e94c41f390d160e7aad5862447df1",
+        "abbeys": "c521afb04d0e3729f631f3b825da0732ffcba6b281593e9e1dc388dfa35d3ce3",
+        "householdServiceRoles": "a25e8af1faeb5c05d0714aaefcf983912f8a361e1e254450f0466205556be85a",
+        "religiousOfficeRanks": "1efb2a8826476084d68c7a1ab0ba093a6c960eb3abf364262084b180858d4d4f",
+        "papacyRules": "57bf5886faad51a2f82036e4d7e7a1b9ab1846636b8e839cbe00ebf03a16f293",
+        "travelRules": "de794a3190b245e90f3a685212f3b2d09916560daae9b669e2a7d1274e6875e4",
+        "travelDefaults": "04e34a22b05af1d916a181d196ab5c303405717cf1a10e2b232ffa1aac664923",
+        "parliamentAgendas": "40fca869c1bc742e7b873246da1ac4e292a42bcaf54bda4ca60d567cf7b52235",
+        "agencyRules": "22be7f5ccd5cf26cc1e31f034f48815ba0b8bec2b34a971090c622a6cce762be",
+        "quickStarts": "19ed4c9e0a8acfab710c9b976b2080a9cd61950ac98f6c72176fc53e16a68f01",
+        "traitMechanics": "b9475a6f5c0da5ad4c0f04442de1f15108e90ef8e148f495d2ce4125a9dc22a4",
+        "authorityOffices": "0da454af90518096c318f9791b80970434c9eacbf17c06b6109bfb44377d93f4",
+        "legitimacySources": "dfb246becb0c263d162a26d7a9f521e530b549803716e2f1e7f09f36b6561962",
+        "customaryBases": "9cfd545edf0600b390470181bd5424fa2cdf01b48ada2a6aea2d324562340647",
+        "aiDecisionPolicies": "04eaff3ee79338f5ed6f95c1f8b4a1f52b8da8fc239fcf7cf7b0b873144f516f"
+      }
+    });
     // Shared physical declarations are inputs, independent of whether the
     // earlier world that first used them passes its own validation.
     Object.keys(layouts).forEach(function (county) {

@@ -1604,7 +1604,7 @@ window.FB = window.FB || {};
     var startingProvince = start.fixedProvinceId && provinces[start.fixedProvinceId];
     var locations = definition.startLocations && definition.startLocations[id];
     if (startingProvince && !(Array.isArray(locations) && !locations.length) &&
-        !FB.startProvinceAllowed(start, definition, startingProvince.id))
+        !FB.startProvinceAllowed(start, definition, startingProvince.id, stories))
       fault(owner, 'fixed birthplace is unavailable under this bookmark\u2019s start rules.');
     if (startingProvince && !start.rulerRealmId && !start.existingPerson && !start.originalPrincipal && !(Array.isArray(startingProvince.communities) ? startingProvince.communities : [startingProvince]).some(function (community) {
           return community && community.culture === start.startCulture && community.religion === start.startReligion;
@@ -1637,7 +1637,7 @@ window.FB = window.FB || {};
         // An explicit empty birthplace list disables the entire start,
         // including its tracks, but cannot hide an invalid county reference.
         if (!provinces[pid] || provinces[pid].wasteland ||
-            (!(Array.isArray(locations) && !locations.length) && !FB.startProvinceAllowed(start, definition, pid)))
+            (!(Array.isArray(locations) && !locations.length) && !FB.startProvinceAllowed(start, definition, pid, stories)))
           fault(owner, 'track ' + track + ' location ' + pid + ' is not an available beginning.');
       });
     });

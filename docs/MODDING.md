@@ -1606,7 +1606,7 @@ limit this exception, not ordinary import eligibility.
 `FB.mods.saveCompatibility(envelope)` returns detached transient
 `{compatible,path,transition}` diagnostics. Exact current signatures take the
 ordinary path. A mismatched standard `effective-1` signature requires one
-unambiguous matching declaration. The proof starts with the pristine complete
+unambiguous matching declaration. A saved campaign on another unchanged date may use the same unique transition because effective-1 covers the complete catalogue. Its saved revision must exist identically in both reconstructed and current catalogues. A declaration for the saved date retains its explicit retainedRevision restriction. Multiple unrelated candidate declarations remain ambiguous and reject; this interface does not chain transitions. The proof starts with the pristine complete
 mod baseline, substitutes the declared predecessor, and replays the unchanged
 stored JSON strings and enabled bundled payloads through ordinary detached
 canonical validation in their original application order. Authored-only roots

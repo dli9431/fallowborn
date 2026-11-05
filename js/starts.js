@@ -357,11 +357,11 @@
     });
     return places;
   };
-  FB.startProvinceAllowed = function (scenario, bookmark, provinceId) {
+  FB.startProvinceAllowed = function (scenario, bookmark, provinceId, stories) {
     if (!scenario || !bookmark || scenario.fixedProvinceId && scenario.fixedProvinceId !== provinceId) return false;
     var province = (bookmark.provinces || []).find(function (p) { return p.id === provinceId; });
     if (!province || province.wasteland) return false;
-    if (scenario.originalPrincipal !== undefined && !FB.originalPrincipalStartProfile(scenario, bookmark)) return false;
+    if (scenario.originalPrincipal !== undefined && !FB.originalPrincipalStartProfile(scenario, bookmark, stories)) return false;
     if (scenario.rulerRealmId && !FB.governments.problems(scenario.governmentForm).length &&
         FB.governments.resolve(scenario.governmentForm).use.succession.commandLeadership) {
       var commandRealm = (bookmark.realms || []).find(function (r) { return r.id === scenario.rulerRealmId; });

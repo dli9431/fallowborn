@@ -379,3 +379,7 @@ Optional effective bookmark/revision localPassagePolicies composes typed accept/
 Bounded corridor receipt authoring
 
 The optional corridor_access program adapter composes independently consented county requests with the existing command and route declarations. Independent complete ordinary JSON imports in danube-corridor.spec.js vary following size, price, capacity and finite term on a full generated world; corridor-court-continuity.json supplies a separate managed-court configuration. All use detached raw/effective validation, pure whole-batch review, canonical offers and outside replies, actual treasury transfer and strict retained saves. Authors provide every intended physical county, including separate origins; the runtime rejects missing paths before the first offer and never silently expands the binding. The separate 64-county/four-envelope bound does not raise the existing twelve top-level slots or sixteen-county local_access cap. Fixed empty positions and ended original decisions cannot be reused. Exact fields are in docs/MODDING.md.
+
+Additive catalogue proofs for unchanged dates
+
+Native retained-catalogue proofs also cover a saved campaign on another unchanged date when one unambiguous transition reconstructs its exact effective-1 signature and preserves its resolved revision. Shared roots, raw JSON and enabled bundled payloads remain exact. Do not register dummy transitions for unaffected dates or rewrite old save signatures. See docs/MODDING.md for the retained-revision, ambiguity and finite-work limits.

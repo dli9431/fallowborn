@@ -1,0 +1,309 @@
+{
+  "sourceCommit": "51c5f5751e8e29a1136aa1518e1e7c2f858728ea",
+  "publicDefinitions": [
+    {
+      "root": "techImpactReviews",
+      "group": "features",
+      "id": "aristocratic_royal_recognition",
+      "before": {
+        "mode": "none",
+        "rationale": "Royal descent, live recognition and minority stewardship are political relationships, not discoveries."
+      },
+      "after": {
+        "mode": "none",
+        "rationale": "Royal descent, live recognition, declared opening stewardship and continuing public authority during minority are political relationships, not discoveries. Existing material and military gates remain."
+      }
+    }
+  ],
+  "provinces": [
+    {
+      "id": "agen",
+      "before": {
+        "realm": "francia_634"
+      },
+      "after": {
+        "realm": "aquitaine_duchy_634"
+      }
+    },
+    {
+      "id": "perigueux",
+      "before": {
+        "realm": "francia_634"
+      },
+      "after": {
+        "realm": "aquitaine_duchy_634"
+      }
+    },
+    {
+      "id": "toulouse",
+      "before": {
+        "realm": "austrasia_634"
+      },
+      "after": {
+        "realm": "aquitaine_duchy_634"
+      }
+    },
+    {
+      "id": "cahors",
+      "before": {
+        "realm": "austrasia_634"
+      },
+      "after": {
+        "realm": "aquitaine_duchy_634"
+      }
+    },
+    {
+      "id": "padova",
+      "before": {
+        "realm": "byzantium_634"
+      },
+      "after": {
+        "realm": "lombards_634"
+      }
+    },
+    {
+      "id": "aquileia",
+      "before": {
+        "realm": "byzantium_634"
+      },
+      "after": {
+        "realm": "lombards_634"
+      }
+    },
+    {
+      "id": "veligrad",
+      "before": {
+        "culture": "elbegermanic_476",
+        "religion": "germanic_pagan",
+        "communities": [
+          {
+            "culture": "elbegermanic_476",
+            "religion": "germanic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      },
+      "after": {
+        "culture": "slavic",
+        "religion": "slavic_pagan",
+        "communities": [
+          {
+            "culture": "slavic",
+            "religion": "slavic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      }
+    },
+    {
+      "id": "olomouc",
+      "before": {
+        "culture": "elbegermanic_476",
+        "religion": "germanic_pagan",
+        "communities": [
+          {
+            "culture": "elbegermanic_476",
+            "religion": "germanic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      },
+      "after": {
+        "culture": "slavic",
+        "religion": "slavic_pagan",
+        "communities": [
+          {
+            "culture": "slavic",
+            "religion": "slavic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      }
+    },
+    {
+      "id": "brno",
+      "before": {
+        "culture": "elbegermanic_476",
+        "religion": "germanic_pagan",
+        "communities": [
+          {
+            "culture": "elbegermanic_476",
+            "religion": "germanic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      },
+      "after": {
+        "culture": "slavic",
+        "religion": "slavic_pagan",
+        "communities": [
+          {
+            "culture": "slavic",
+            "religion": "slavic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      }
+    },
+    {
+      "id": "praha",
+      "before": {
+        "culture": "elbegermanic_476",
+        "religion": "germanic_pagan",
+        "communities": [
+          {
+            "culture": "elbegermanic_476",
+            "religion": "germanic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      },
+      "after": {
+        "culture": "slavic",
+        "religion": "slavic_pagan",
+        "communities": [
+          {
+            "culture": "slavic",
+            "religion": "slavic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      }
+    },
+    {
+      "id": "plzen",
+      "before": {
+        "culture": "elbegermanic_476",
+        "religion": "germanic_pagan",
+        "communities": [
+          {
+            "culture": "elbegermanic_476",
+            "religion": "germanic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      },
+      "after": {
+        "culture": "slavic",
+        "religion": "slavic_pagan",
+        "communities": [
+          {
+            "culture": "slavic",
+            "religion": "slavic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      }
+    },
+    {
+      "id": "budejovice",
+      "before": {
+        "culture": "elbegermanic_476",
+        "religion": "germanic_pagan",
+        "communities": [
+          {
+            "culture": "elbegermanic_476",
+            "religion": "germanic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      },
+      "after": {
+        "culture": "slavic",
+        "religion": "slavic_pagan",
+        "communities": [
+          {
+            "culture": "slavic",
+            "religion": "slavic_pagan",
+            "populationShare0": 10000
+          }
+        ]
+      }
+    },
+    {
+      "id": "sirmium",
+      "before": {
+        "realm": "byzantium_634"
+      },
+      "after": {
+        "realm": "avars_634"
+      }
+    }
+  ],
+  "realms": [
+    {
+      "id": "austrasia_634",
+      "before": {
+        "ruler": {
+          "sex": "m",
+          "culture": "frankish",
+          "born": 630,
+          "mar": 7,
+          "trait": "patient",
+          "name": "Sigebert III"
+        }
+      },
+      "after": {
+        "ruler": {
+          "sex": "m",
+          "culture": "frankish",
+          "born": 631,
+          "mar": 7,
+          "trait": "patient",
+          "name": "Sigebert III"
+        }
+      }
+    },
+    {
+      "id": "kent_634",
+      "before": {
+        "religion": "germanic_pagan"
+      },
+      "after": {
+        "religion": "nicene"
+      }
+    },
+    {
+      "id": "makuria_634",
+      "before": {
+        "religion": "nile_traditional_476"
+      },
+      "after": {
+        "religion": "chalcedonian"
+      }
+    },
+    {
+      "id": "alodia_634",
+      "before": {
+        "religion": "nile_traditional_476"
+      },
+      "after": {
+        "religion": "miaphysite"
+      }
+    }
+  ],
+  "addedRealms": [
+    {
+      "after": "armorica_634",
+      "definition": {
+        "id": "aquitaine_duchy_634",
+        "name": "Aquitanian Duchy",
+        "color": "#7c8792",
+        "capital": "toulouse",
+        "government": "regnum",
+        "rank": 2,
+        "aggression": 0,
+        "religion": "nicene",
+        "ruler": {
+          "generated": true,
+          "sex": "m",
+          "culture": "frankish",
+          "born": 599,
+          "mar": 7,
+          "trait": "patient"
+        },
+        "liege": "francia_634"
+      }
+    }
+  ]
+}

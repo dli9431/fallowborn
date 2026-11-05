@@ -426,14 +426,27 @@ window.FBMODS = window.FBMODS || [];
     if (!start || typeof start.id !== 'string' || start.revision !== undefined && (typeof start.revision !== 'string' || !start.revision)) return result(false,'state.start');
     var declarations = FB.bookmarkSources.retainedCatalogueTransitions();
     if (declarations.length > 8) return result(false,'declaration.limits');
-    var rows = declarations.filter(function (row) {
-      return row && row.bookmarkId === start.id && row.retainedRevision === (start.revision === undefined ? 'baseline' : start.revision);
-    });
+    var revision = start.revision === undefined ? 'baseline' : start.revision;
+    // The signature covers every date. An additive transition also changes
+    // signatures of campaigns in untouched worlds, which need the same proof.
+    var ownRows = declarations.filter(function (row) { return row && row.bookmarkId === start.id; });
+    var rows = ownRows.length ? ownRows.filter(function (row) { return row.retainedRevision === revision; }) : declarations;
     if (rows.length !== 1) return result(false,rows.length ? 'transition.ambiguous' : 'transition.missing');
     var row = rows[0];
     try {
       validateTransition(row);
-      if (!sameDefinition(baseCatalogues.bookmarks[start.id],row.current)) transitionFault('declaration.current');
+      if (!sameDefinition(baseCatalogues.bookmarks[row.bookmarkId],row.current)) transitionFault('declaration.current');
+      function savedWorld(catalogue) {
+        var raw = catalogue.bookmarks && catalogue.bookmarks[start.id];
+        if (!raw) transitionFault('state.start.id');
+        var world = FB.bookmarkRevisions(start.id,raw).find(function (candidate) {
+          return (candidate.revision || 'baseline') === revision;
+        });
+        if (!world) transitionFault('state.start.revision');
+        // Older unlayered worlds omit the equivalent baseline stamp.
+        return Object.assign({},world,{revision:revision});
+      }
+      savedWorld(installedCatalogues || {});
       var baselineRoots = M.retainedCatalogueRoots();
       authoringRoots.forEach(function (key) {
         if (baselineRoots[key] !== row.predecessorRoots[key]) transitionFault('catalogue.predecessorRoots.' + key);
@@ -449,7 +462,8 @@ window.FBMODS = window.FBMODS || [];
       if (!installedCatalogues || !sameDefinition(projectedBalance(installedCatalogues,stored,bundles),FBDATA.balance))
         transitionFault('catalogue.live.balance');
       var declarationKey = JSON.stringify(row), enabledOrder = enabled.slice().sort(), cached = compatibilityProof;
-      if (cached && cached.saved === saved && cached.current === effectiveFingerprint && cached.base === baseCatalogues && cached.declaration === declarationKey) {
+      if (cached && cached.saved === saved && cached.bookmarkId === start.id && cached.revision === revision &&
+          cached.current === effectiveFingerprint && cached.base === baseCatalogues && cached.declaration === declarationKey) {
         if (!sameStrings(cached.stored,stored) || !sameStrings(cached.enabled,enabledOrder)) transitionFault('configuration.changed');
         if (cached.observed() && cached.tech === normalizedTechFingerprint(FBDATA.tech)) return result(true,null,row.id);
       }
@@ -467,12 +481,13 @@ window.FBMODS = window.FBMODS || [];
         if (activationAliases.indexOf(key) < 0 && !equal) transitionFault('catalogue.live.' + key);
       });
       var predecessor = Object.assign({},baseCatalogues,{bookmarks:Object.assign({},baseCatalogues.bookmarks)});
-      predecessor.bookmarks[start.id] = row.predecessor;
+      predecessor.bookmarks[row.bookmarkId] = row.predecessor;
       predecessor = replayCatalogue(predecessor,stored,bundles);
-      transitionWorlds(predecessor.all.bookmarks[start.id],current.bookmarks[start.id],row);
+      transitionWorlds(predecessor.all.bookmarks[row.bookmarkId],current.bookmarks[row.bookmarkId],row);
+      if (!sameDefinition(savedWorld(predecessor.all),savedWorld(current))) transitionFault('bookmark.savedRevision');
       var oldRoots = Object.assign({},predecessor.all,{bookmarks:Object.assign({},predecessor.all.bookmarks)});
       var newRoots = Object.assign({},current,{bookmarks:Object.assign({},current.bookmarks)});
-      delete oldRoots.bookmarks[start.id]; delete newRoots.bookmarks[start.id];
+      delete oldRoots.bookmarks[row.bookmarkId]; delete newRoots.bookmarks[row.bookmarkId];
       var rootKeys = Object.keys(oldRoots);
       Object.keys(newRoots).forEach(function (key) { if (rootKeys.indexOf(key) < 0) rootKeys.push(key); });
       rootKeys.forEach(function (key) {
@@ -480,7 +495,7 @@ window.FBMODS = window.FBMODS || [];
       });
       var exact = 'effective-1-' + M.fingerprint({stored:stored,bundled:enabledOrder,catalogue:M.fingerprint(predecessor.effective)});
       if (saved !== exact) transitionFault('signature.predecessor');
-      compatibilityProof = {saved:saved,current:effectiveFingerprint,base:baseCatalogues,declaration:declarationKey,
+      compatibilityProof = {saved:saved,bookmarkId:start.id,revision:revision,current:effectiveFingerprint,base:baseCatalogues,declaration:declarationKey,
         stored:stored.slice(),enabled:enabledOrder,observed:observeDefinitions(),tech:normalizedTechFingerprint(FBDATA.tech)};
       return result(true,null,row.id);
     } catch (error) { return result(false,error.message); }
@@ -1002,7 +1017,7 @@ window.FBMODS = window.FBMODS || [];
       var all = FB.bookmarkRevisions(id, rules.bookmarks[id]);
       var offered = all.filter(function (bm) {
         return Array.isArray(bm.starts) ? bm.starts.indexOf(scenario.id) >= 0
-          : FB.startProvinceAllowed(scenario, bm, scenario.fixedProvinceId);
+          : FB.startProvinceAllowed(scenario, bm, scenario.fixedProvinceId, stories);
       });
       return offered.length ? offered : [freshBookmark(id)];
     }
@@ -1116,7 +1131,7 @@ window.FBMODS = window.FBMODS || [];
         })[0];
         const locations = bookmark.startLocations && bookmark.startLocations[scenario.id];
         if (!county || !(Array.isArray(locations) && !locations.length) &&
-            !FB.startProvinceAllowed(scenario, bookmark, county.id)) {
+            !FB.startProvinceAllowed(scenario, bookmark, county.id, stories)) {
           fail(path + '.fixedProvinceId', 'is not a settled county of bookmark ' +
             bookmark.id + '.');
         }
@@ -1192,7 +1207,7 @@ window.FBMODS = window.FBMODS || [];
               const province = bookmark && Array.isArray(bookmark.provinces) &&
                 bookmark.provinces.find(function (p) { return p.id === provinceId; });
               if (!province || province.wasteland ||
-                  (!(Array.isArray(locations) && !locations.length) && !FB.startProvinceAllowed(scenario, bookmark, provinceId))) {
+                  (!(Array.isArray(locations) && !locations.length) && !FB.startProvinceAllowed(scenario, bookmark, provinceId, stories))) {
                 fail(placePath, provinceId + ' is not an available beginning of bookmark ' + bookmarkId + '.');
               }
             }

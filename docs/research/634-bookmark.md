@@ -2,7 +2,7 @@ Autumn 634 opening
 
 Scope
 
-The selectable autumn 634 bookmark, The Early Conquests, composes all four date-owned regional sources. Its 33 blocks cover 527 physical anchors, with 506 inhabited county or district presentations, 21 scenery cells and 122 unique courts. The opening is year 634, season 2, day 1 on europe_regional_2, using revision baseline and settlement layout 634_opening. The seasonal date is a game convention after Umar's accession, not an exact calendar conversion. The date is available in the ordinary picker, start codes and Observe for development review. This visibility does not establish release or runtime acceptance.
+The selectable autumn 634 bookmark, The Early Conquests, composes all four date-owned regional sources. Its 33 blocks cover 527 physical anchors, with 506 inhabited county or district presentations, 21 scenery cells and 122 unique courts. The opening is year 634, season 2, day 1 on europe_regional_2, using fresh revision scenery_protected_v1, retained revision baseline and settlement layout 634_opening. The seasonal date is a game convention after Umar's accession, not an exact calendar conversion. The date is available in the ordinary picker, start codes and Observe for development review. This visibility does not establish release or runtime acceptance.
 
 Implemented beginnings
 
@@ -164,3 +164,20 @@ The fictional Damascus craft household uses the existing positive Syriac/Chalced
 Quadrant d retained limits
 
 North African and Caucasian ownership seams and generated local courts remain provisional. Syrian, Egyptian and Iraqi campaign evidence does not force adjacent county transfers. Arabian consolidation, the child Yazdegerd chronology and the Iranian local courts retain their working representations. Central Asian principals and the separate Kath and Gurganj district courts retain their neutral anchors without a named Afrighid or a forced merger. Nile resident conversion proportions, Nobadian absorption, and named Horn rulers remain unresolved. Sindh, oasis, Sahel, steppe and northern districts retain their existing anchors; w_ural, w_taiga, w_north and w_lapland remain ownerless physical scenery. No additional named court, settlement, route, institution or resident conversion follows from these court-faith corrections. Fresh worlds consume the corrected declarations through existing composition; saved campaigns keep their actual court identities and faiths. No capability, technology eligibility or saved schema changes.
+
+
+Protected scenic revision
+
+The fresh scenery_protected_v1 world treats the existing 21 broad scenic cells as protected from county conversion. This is a map-scale representation boundary, not evidence that a landscape lacked inhabitants, movement, pastoral use or claims. The 506 inhabited anchors, their ordered sites, ordinary routes, dated institutions, existing starts and all disclosed scaffold holds retain their original declarations. No historical person, institution, conquest or campaign is added.
+
+The opt-ins belong to data/bookmark_634.js. Each id corresponds to the unchanged province row in the following regional source block:
+
+data/bookmark_634_scaffold_a.js, scenery_a: w_sahara_w, w_sahara_c, w_sahara_e, w_sahel, w_nubia, w_arabia
+
+data/bookmark_634_scaffold_b.js, scenery_b: w_nefud, w_syrian, w_kavir, w_lut, w_registan, w_hindukush
+
+data/bookmark_634_scaffold_c.js, scenery_c: w_sulaiman, w_thar, w_karakum, w_kyzylkum, w_steppe_e
+
+data/bookmark_634_scaffold_d.js, scenery_d: w_ural, w_taiga, w_north, w_lapland
+
+ Baseline keeps the effective 634 bookmark source from public commit 51c5f5751e8e29a1136aa1518e1e7c2f858728ea. The compatibility evidence describes complete publication with the shared candidate-story repair, immediately before scenic activation. Its raw bookmark fingerprint is bcade8143ade9c8439cff5150e2987673c342ca764217f7cec0bbd62a82ddb0e. Native compatibility metadata pins that transition and the complete predecessor's shared defaults. Matching old saves retain their actual conversions, spent resources and identities, including conversions inferred by the existing legacy reader. They receive no migration, refund, deletion, new key or replayed benefit. Changed JSON content still rejects, and this declaration certifies no unrelated historical catalogue change. Protected saves containing conversion evidence reject before adoption. The existing scenic_settlement_protection technology decision is none; ordinary material and travel requirements retain their own gates. Runtime and device acceptance remain separate from the authored revision and regression coverage.

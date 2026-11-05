@@ -148,7 +148,7 @@ test('634 Observe enters the selected opening through the ordinary picker',async
     FB.game.setPaused(true);
     return {observe:FB.game.observe,id:FB.state.start.id,revision:FB.activeBookmark.revision,
       geography:FB.activeBookmark.geography,date:FB.state.date};
-  })).toEqual({observe:true,id:'634',revision:'baseline',geography:'europe_regional_2',
+  })).toEqual({observe:true,id:'634',revision:'scenery_protected_v1',geography:'europe_regional_2',
     date:{year:634,season:2,day:1}});
 });
 
@@ -270,7 +270,7 @@ for (const crazy of [false,true]) {
           pure:data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
       },{order:order});
       expect(result).toEqual({metadata:['634','The Early Conquests',{year:634,season:2,day:1},'late_antique',
-        'europe_regional_2','634_opening','baseline','baseline'],hidden:false,available:true,listed:true,
+        'europe_regional_2','634_opening','scenery_protected_v1','baseline'],hidden:false,available:true,listed:true,
         count:527,inhabited:506,complete:true,ordered:true,courts:122,
         named:['Dagobert I','Heraclius','Oswald','Sigebert III','Umar','Yazdegerd III'],
         climates:['northern_temperate','arid'],layouts:506,crossings:22,disabled:disabled,
@@ -375,6 +375,20 @@ test('634 missing, duplicate and unresolved regional inputs reject in detached s
       FB.bookmarkSources.stage = function (spec,fn) { assemble = fn; };
       (0,eval)(code);
     } finally { FB.bookmarkSources.stage = stage; }
+    const transitions = JSON.stringify(FB.bookmarkSources.retainedCatalogueTransitions());
+    function assembleDraft(candidate) {
+      // The native manifest is already sealed. This detached assembler probe
+      // captures its metadata locally, without attempting live registration.
+      const retain = FB.bookmarkSources.retainCatalogueTransition;
+      try {
+        FB.bookmarkSources.retainCatalogueTransition = function (declaration) {
+          candidate.retainedTransition = copy(declaration);
+        };
+        assemble(candidate);
+      } finally { FB.bookmarkSources.retainCatalogueTransition = retain; }
+      if (transitions !== JSON.stringify(FB.bookmarkSources.retainedCatalogueTransitions()))
+        throw new Error('Detached assembly changed trusted compatibility declarations');
+    }
     function draft() {
       return Object.assign({},FBDATA,{bookmarkRegions634:copy(original),
         startScenarios_634_ordinary:copy(originalStarts),bookmarkCompositionSources:{},bookmarkCandidates:{}});
@@ -383,7 +397,7 @@ test('634 missing, duplicate and unresolved regional inputs reject in detached s
     // published starts so a changed definition still exercises conflict checks.
     const base = Object.assign({},FBDATA,{bookmarks:Object.assign({},FBDATA.bookmarks)});
     delete base.bookmarks['634'];
-    const valid = draft(); assemble(valid);
+    const valid = draft(); assembleDraft(valid);
     valid.bookmarkCompositionSources.autumn_634.input.id = 'e2e_634_valid';
     const control = FB.bookmarkCompositions.prepareSource(valid.bookmarkCompositionSources.autumn_634.input,base).report();
     ['missing','missing_county','duplicate_county','duplicate_court','unknown_court','unknown_liege','wrong_capital',
@@ -406,7 +420,7 @@ test('634 missing, duplicate and unresolved regional inputs reject in detached s
       if (kind === 'missing_starts') delete candidate.startScenarios_634_ordinary;
       if (kind === 'duplicate_start') candidate.startScenarios_634_ordinary.push(copy(originalStarts[0]));
       if (kind === 'conflicting_start') candidate.startScenarios_634_ordinary[0].gold += 1;
-      assemble(candidate);
+      assembleDraft(candidate);
       const source = candidate.bookmarkCompositionSources.autumn_634;
       let report, rejected = !!(source.faults && source.faults.length);
       if (!rejected) {
@@ -532,7 +546,7 @@ for (const scenario of ['farmer_634','craftsman_634']) {
           },[]),
           childAge:s.date.year - s.realms.sasanian_634.ruler.born,
           errors:FBTEST.checkInvariants(),valid:FB.save.v4.validatePlatform(s)};
-      },disabled)).toEqual({scenario:scenario,revision:'baseline',date:{year:634,season:2,day:1},provinces:527,
+      },disabled)).toEqual({scenario:scenario,revision:'scenery_protected_v1',date:{year:634,season:2,day:1},provinces:527,
         opening:'baseline',actors:[],local:[],heads:[],disabled:true,
         courts:['Heraclius','Umar','Yazdegerd III'],oldCourts:false,namedFamilies:[],childAge:10,errors:[],valid:true});
       await page.evaluate(function () { FB.state.player.gold -= 3; });

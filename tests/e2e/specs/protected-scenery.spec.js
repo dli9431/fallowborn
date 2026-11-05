@@ -125,6 +125,7 @@ test('detached full-map protection preserves 506 inhabited declarations and prot
 
 test('full-map retained ordinary quotes become stale before any settlement mutation', async function ({page}, info) {
   await openGame(page, info);
+  await page.evaluate(function () { FBDATA.bookmarks['634'].revision = 'baseline'; });
   await beginBookmarkFromTitle(page, '634', 'farmer_634');
   await installProbe(page);
   const result = await page.evaluate(function () {

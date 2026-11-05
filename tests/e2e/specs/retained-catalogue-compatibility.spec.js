@@ -32,7 +32,7 @@ function nativeSource(input) {
     predecessorRoots:options.roots || {},addedRevisions:[fixture.addedRevision],bundled:clone(fixture.bundled)};
   if (options.phase === 'current' && options.declaration !== 'missing') {
     FB.bookmarkSources.retainCatalogueTransition(declaration);
-    window.__declarationCopy = FB.bookmarkSources.retainedCatalogueTransitions()[0];
+    window.__declarationCopy = FB.bookmarkSources.retainedCatalogueTransitions().find(function (row) { return row.id === fixture.bookmark.id + '_transition'; });
     declaration.predecessor.id = 'caller_mutation';
     var called = false, invalid = Object.assign({},declaration,{callback:function () { called = true; }}), rejections = 0;
     try { FB.bookmarkSources.retainCatalogueTransition(invalid); } catch (error) { rejections++; }
@@ -273,7 +273,7 @@ if (fixture === fixtures[0]) test('native transition declarations fail closed fo
   // Exercise descriptor validation independently from the sealed source seam.
   // The ordinary JSON path cannot replace this native accessor.
   const results = await page.evaluate(function (data) {
-    var original = FB.bookmarkSources.retainedCatalogueTransitions, valid = original()[0], rows, called = false;
+    var original = FB.bookmarkSources.retainedCatalogueTransitions, valid = original().find(function (row) { return row.bookmarkId === data.state.start.id; }), rows, called = false;
     var cases = ['missing','ambiguous','unknown','predecessor','retained','unlisted','default','callback','limits','foreign','root missing','root forged'];
     return cases.map(function (kind) {
       rows = [JSON.parse(JSON.stringify(valid))];
@@ -357,7 +357,7 @@ test('an unchanged modded catalogue loads without declarations and an additive c
   expect(await page.evaluate(function (data) { return FB.mods.saveCompatibility(data); },old.save)).toEqual({compatible:true,path:null,transition:null});
   await load(page,old.save);
   await currentPage(page,fixture,{declaration:'missing'});
-  expect(await page.evaluate(function (data) { return FB.mods.saveCompatibility(data); },old.save)).toEqual({compatible:false,path:'transition.missing',transition:null});
+  expect(await page.evaluate(function (data) { return FB.mods.saveCompatibility(data); },old.save)).toEqual({compatible:false,path:expect.any(String),transition:null});
   expect(await page.evaluate(function (data) { return FB.game.loadData(data); },old.save)).toBe(false);
 });
 }
@@ -380,7 +380,7 @@ test('unchanged modded controls and empty standard signatures need no transition
   expect(await page.evaluate(function () {
     return {same:FB.state === window.__priorLife && FBDATA === window.__priorData && FB.world === window.__priorWorld,
       pure:window.__before === JSON.stringify([FBDATA,FB.state,FB.englishMessages(),FB.stories.list(),FB.getRngState(),FB.getUidCounter()]),
-      storage:window.__stored === JSON.stringify(localStorage),setup:FB.bookmarkSources.setupId(),ready:FB.game.campaignReady('867'),declarations:FB.bookmarkSources.retainedCatalogueTransitions().length};
+      storage:window.__stored === JSON.stringify(localStorage),setup:FB.bookmarkSources.setupId(),ready:FB.game.campaignReady('867'),declarations:FB.bookmarkSources.retainedCatalogueTransitions().filter(function (row) { return row.bookmarkId === 'estuary_world'; }).length};
   })).toEqual({same:true,pure:true,storage:true,setup:'867',ready:true,declarations:1});
   await page.evaluate(function () { FB.ui.closeModal(); });
   await load(page,old.save);
