@@ -283,7 +283,9 @@ test('saved links are required and strictly pinned while restore preserves unrec
 });
 
 test('the landed home start replays exactly and presents its finite separate command in the shared sheet',async function ({page},info) {
-  await importWorld(page,info,'harbor');await beginHome(page);
+  await importWorld(page,info,'harbor');
+  const uiPreferences=await page.evaluate(function () {return localStorage.getItem('fb_ui');});
+  await beginHome(page);
   async function facts() {return page.evaluate(function () {
     const s=FB.state;return JSON.stringify([s.chars,s.player,s.owner,s.holder,s.bookmarkSetup,s.authority,s.armies,s.stories,
       FB.getRngState()>>>0,FB.getUidCounter()]);
@@ -293,6 +295,12 @@ test('the landed home start replays exactly and presents its finite separate com
   await expect(page.locator('#genmodal')).toContainText('Home office');
   await expect(page.locator('#genmodal')).toContainText('90 days remaining');
   await expect(page.locator('#genmodal')).toContainText('Public treasury');
-  await page.evaluate(function () {FB.ui.closeModal();FB.ui.showScreen('title');});
+  await page.evaluate(function (preferences) {
+    FB.ui.closeModal();
+    if (preferences===null) localStorage.removeItem('fb_ui');
+    else localStorage.setItem('fb_ui',preferences);
+  },uiPreferences);
+  await page.reload({waitUntil:'domcontentloaded'});
+  await prepareGameContent(page);
   await beginHome(page);expect(await facts()).toBe(first);
 });
