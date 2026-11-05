@@ -2342,6 +2342,42 @@ The expansion changes no 800 opening actors or story definitions. Existing bundl
 
 Retained catalogue rules
 
+Exact additive compatibility exception
+
+FB.mods.saveCompatibility owns the common transient decision used by
+save.otherWorld, detached v4 preflight and game.loadData. A native declaration
+may certify exactly one complete predecessor/current bookmark transition with
+an explicitly supported retained revision, added revision ids, a changed fresh
+revision pointer and unchanged supported bundled payloads. docs/MODDING.md gives
+the strict fields and finite limits. Registration remains native source metadata
+across complete publication and selected-source switches; JSON mods cannot
+provide or modify it. Missing, ambiguous or malformed declarations fail closed.
+
+The proof reconstructs the predecessor from its explicit trusted definition and
+the complete pristine mod baseline, replaying the unchanged raw JSON stack and
+ordered enabled bundled payloads through canonical detached validation. It uses
+the existing authored-root rules and exact effective-1 hash, then compares the
+saved signature to that result. Native predecessorRoots pin every authored-only
+baseline root, including ordered declaration text and absent roots, so an
+omitted default cannot silently change outside the saved fingerprint. It also checks installed-current definitions,
+all older effective revisions and unrelated public roots. Runtime world aliases
+and layered balance are activation projections, not alternate authored roots.
+An edited definition, different JSON bytes/order, changed bundle payload/order,
+foreign edition or unsupported bookmark/revision cannot inherit the exception.
+
+One transient proof rechecks exact declaration/configuration, bundled payloads,
+live property structure and normalized technology definitions on every request.
+Mod changes invalidate it; source replacement requires a fresh proof. It never
+publishes a reconstructed catalogue and mutates no
+envelope, mod payload, campaign fact, storage, story registry, RNG or uid. Normal
+revision, geography and saved-record validation still run before adoption;
+existing content checkpoints retain failed selected-source switch rollback.
+Converted ordinary scenery and spent resources retain their original owners.
+No migration, repair, refund, reseeding, new authority or save-schema increment
+is introduced. Normal re-saving stamps the installed current signature, and the
+same retained revision must load again on a fresh page. Standard unmodded empty
+signatures and CrazyGames edition signatures keep their existing meanings.
+
 Every restored world revision must agree with its saved geography, including a bookmark with only the implicit baseline. A known but different geography is rejected before activation or state adoption. Retained form ids, default government stamps, generated-faith parents and optional institution records remain authoritative; this contract adds no automatic government transformation or restore-time initialization.
 
 The released-catalogue fixture records resolved baseline worlds and their settlement layouts, geography bases, effective faith profiles and defaults, government definitions and era government defaults. The initial protected bookmarks are 867 and 1066. New content uses additive ids and revisions; each new baseline is frozen when first shipped. Compatibility review must accompany any change to a retained hash. The fixture is a catalogue boundary, not an engine-code freeze.

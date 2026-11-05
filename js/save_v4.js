@@ -537,8 +537,9 @@
     if ((FB.platform.isCrazyGames || /^crazygames-content-/.test(data.mods || '')) &&
         data.mods !== currentMods)
       throw new Error(FB.T('This save belongs to a different edition of the game.'));
-    if (data.mods !== undefined ? data.mods !== currentMods : !!currentMods)
-      throw new Error(FB.T('This save uses a different mod set and cannot be migrated.'));
+    var compatibility = FB.mods.saveCompatibility(data);
+    if (!compatibility.compatible)
+      throw new Error(FB.T('This save uses a different mod set or incompatible content at {path}.', {path:compatibility.path}));
     var bookmarkId = data.state.start ? data.state.start.id : '867';
     var bookmark = own(FBDATA.bookmarks, bookmarkId) && FB.bookmark(bookmarkId,
       data.state.start && data.state.start.revision !== undefined ? data.state.start.revision : 'baseline');

@@ -54,6 +54,32 @@ Native contributors use bookmarkSources.stage with explicit source, affected boo
 
 Data authoring contract
 
+Trusted retained catalogue compatibility
+
+Native source authors may call bookmarkSources.retainCatalogueTransition before
+manifest sealing with the exact schema-1 record documented in docs/MODDING.md.
+Keep complete predecessor/current definitions, pinned predecessorRoots from
+the complete trusted predecessor baseline, the explicitly supported retained
+revision, enumerated added revisions and exact supported bundled payloads. Only
+add revisions and change the fresh revision pointer; preserve authored root
+fields, every older raw/effective revision and all shared definitions. Capture
+the trusted predecessor directly; never infer history from unknown revisions or
+from a saved signature. Ordinary JSON remains ordinary content and cannot
+authorize compatibility, provide signature allowlists or install callbacks.
+
+The shared mods owner reconstructs the old effective catalogue using unchanged
+JSON bytes and ordered bundled payloads through detached canonical import
+validation. Both installed-current and exact predecessor fingerprints must pass,
+including authored-only roots. Pinned ordered root digests also protect defaults
+omitted from the saved fingerprint; never derive those expectations from the
+current catalogue. One bounded transient proof rechecks exact configuration and
+live structure on every use and is invalidated by mod changes. Save
+adoption still validates the retained revision and existing campaign records;
+there is no replay, migration, content repair, technology capability or save
+schema change. Independent estuary and upland native fixtures use different
+retained/fresh revisions, political worlds and defaults, plus genuine ordinary
+JSON file imports and bundled overlays. See docs/TESTS.md for bounded coverage.
+
 A JSON mod defines content by stable id and composes registered mechanics. A trusted engine module implements algorithms, pure definition validators and canonical transactions. JSON cannot provide executable code, arbitrary function calls, expressions, unrestricted state paths or direct saved-state writes.
 
 Province settlement protection uses optional settlementPolicy:ordinary or

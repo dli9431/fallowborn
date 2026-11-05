@@ -1450,9 +1450,9 @@ window.FB = window.FB || {};
   };
 
   /* was this save made under a different mod set than the one now stored?
-     Standard editions accept pre-stamp saves; restricted editions require their profile. */
+     Standard unmodded campaigns accept pre-stamp saves; restricted editions require their profile. */
   S.otherWorld = function (d) {
-    return !!d && (d.mods !== undefined || FB.platform.isCrazyGames) && d.mods !== FB.mods.sig();
+    return !!d && !FB.mods.saveCompatibility(d).compatible;
   };
 
   /* Saves from before parents were recorded know the first generation's
