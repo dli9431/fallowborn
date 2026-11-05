@@ -95,16 +95,24 @@ test('a home start with '+(explicit ? 'explicit' : 'ordinary')+' infrastructure 
       characterId:me.id,recipientRealmId:rid,amount:1});
     const saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
     const t=FB.state;
+    const appointmentId=t.bookmarkSetup.appointments.harbor_civil_service.id;
+    const appointments=t.authority.appointments.filter(function (row) {return row.id===appointmentId;});
+    const declared=FB.campaignBookmark(t).opening.appointments.harbor_civil_service;
     return {same:M.leader(t,rid).id===me.id && FB.bookmarkActor(t,'harbor_home_ruler').id===me.id,
       home:FB.realmIdForRulerCharacter(t,me.id),stable:!!t.realms[rid] && !t.realms.harbor_upland,
       land:t.player.provs.length>0 && FB.realmTerritory(t,rid).length===0,
       generation:M.landedLink(t,rid).homeGeneration===FB.realmRulerGeneration(t,'player'),
       originalRef:M.row(t,rid).openingBindings[1].person.realmId==='harbor_upland',funded:funded,duplicate:duplicate,
       privateMoney:t.player.gold===gold-1,publicMoney:FB.treasuryAvailable(t,rid)===publicGold+1,
-      tier:t.player.tier===tier,noFalsePublic:!falsePublic.allowed,valid:M.validate(t)};
+      tier:t.player.tier===tier,noFalsePublic:!falsePublic.allowed,valid:M.validate(t),
+      appointment:appointments.length===1 && appointments[0].institutionId==='player' &&
+        appointments[0].scope.kind==='realm' && appointments[0].scope.id==='player' &&
+        appointments[0].holder.id===FB.bookmarkActor(t,'harbor_civil_officer').id,
+      declaration:declared.realmId==='harbor_upland' && declared.scope.id==='harbor_upland'};
   });
   expect(result).toEqual({same:true,home:'player',stable:true,land:true,generation:true,originalRef:true,
-    funded:true,duplicate:false,privateMoney:true,publicMoney:true,tier:true,noFalsePublic:true,valid:true});
+    funded:true,duplicate:false,privateMoney:true,publicMoney:true,tier:true,noFalsePublic:true,valid:true,
+    appointment:true,declaration:true});
 });
 }
 
