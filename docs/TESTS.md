@@ -834,3 +834,13 @@ story-placement.spec.js covers story cards placed inside their Deeds sections. I
 Scenery integration repair coverage
 
 634-scenery-revisions.spec.js also creates real persisted-JSON predecessor campaigns in 476 and 867, retains spent resources through the unrelated 634 addition, reloads ordinary re-saves, and rejects missing revisions or changed unrelated definitions after a successful cached proof. bookmark-composition-native.spec.js preserves the frozen source fixtures and checks original-principal publication against candidate stories while the live registry lacks them. Its withheld-476 case verifies native tenure references, strict explicit/detached validation, unknown-id rejection and purity. protected-scenery.spec.js explicitly selects the ordinary retained baseline for its stale-quote transaction scenario. 634-rulers.spec.js keeps ruler starts hidden while recognizing the already selectable date. retained-catalogue-compatibility.spec.js identifies its own declarations by owner instead of assuming no native transitions exist.
+
+Regional literal extraction
+
+`tools/test_i18n_regional_literals.py` reads inert source fixtures for two
+independent regional configurations. It checks revision and global display keys,
+English aliases, proper-name exclusion, missing identities, unsupported tables,
+computed declarations and source collisions. It also checks the existing 634
+faith, start, household, agenda and goal owners. These Python tests execute no
+game scripts and generate no catalogs; execution remains owner-controlled.
+
