@@ -1556,6 +1556,81 @@ to all three maps.
   the same rule. `role` is absent on saves written before consorts existed and reads as
   `null`.
 
+### Trusted retained catalogue transitions
+
+Native sources can declare one exact additive catalogue transition with
+`FB.bookmarkSources.retainCatalogueTransition(record)` before the native manifest
+is sealed. This metadata is private to source preparation, survives selected-date
+switches and complete publication, and never becomes a public data root or save
+field. Ordinary JSON cannot provide compatibility declarations, signature
+allowlists or callbacks, including through bookmark metadata.
+
+The record has exactly `schema:1`, `id`, `bookmarkId`, `retainedRevision`,
+`predecessor`, `current`, `predecessorRoots`, `addedRevisions` and `bundled`. Declaration,
+bookmark and revision ids are 1-100 letters,
+digits or underscores. `predecessor` and `current` are complete exact authored
+bookmark definitions with the same declared id. Preserve the predecessor from
+its trusted native definition, before adding revisions; do not derive it by
+removing unknown revisions from a current catalogue. `addedRevisions` lists 1-8
+distinct new revision ids. Only those revisions and the root `revision` fresh
+default pointer may change. All other root fields and every existing raw
+revision stay exact. An implicit predecessor baseline may become explicit `{}`.
+The current default must select one of the added revisions. Every predecessor
+effective world, including the explicitly supported `retainedRevision`, must
+remain identical. This interface does not permit changes to shared catalogues,
+existing revision meanings or the raw root's other fresh defaults.
+
+`predecessorRoots` pins the complete pristine predecessor defaults for every
+authored-only root, including omitted roots. Copy the exact map returned by
+`FB.mods.retainedCatalogueRoots()` after complete predecessor publication and
+before the transition. Author that map as literal native evidence; never obtain
+it from the current catalogue to guess a predecessor. Entries are 64-character
+SHA-256 fingerprints of each root's JSON text (including declaration order), or
+null for an absent root. Missing, extra or changed entries reject. These are
+structural default expectations, not saved-signature allowlists. They prove
+unchanged tables that effective-1 intentionally omits until a mod authors them.
+The effective predecessor/current comparison checks all public definition roots;
+the reconstructed save signature still uses the original authored-root filter.
+
+`bundled` is an ordered list of at most 16 exact `{id,data}` native bundled mod
+payloads supported by the transition. Enabled bundles must match this list's
+filtered payloads and application order exactly, even for inert payload changes.
+Unlisted enabled bundles reject the exception. Disabled bundles need no proof.
+At most eight transition records may be registered; declarations contain only
+plain JSON data, at most 250,000 values, 64 levels and 4,194,304 string/key UTF-16
+code units each. A transition supports at most 32 predecessor revisions and 40
+current revisions. Compatibility supports at most 32 stored JSON strings totalling
+4,194,304 UTF-16 code units. These bounds
+limit this exception, not ordinary import eligibility.
+
+`FB.mods.saveCompatibility(envelope)` returns detached transient
+`{compatible,path,transition}` diagnostics. Exact current signatures take the
+ordinary path. A mismatched standard `effective-1` signature requires one
+unambiguous matching declaration. The proof starts with the pristine complete
+mod baseline, substitutes the declared predecessor, and replays the unchanged
+stored JSON strings and enabled bundled payloads through ordinary detached
+canonical validation in their original application order. Authored-only roots
+and effective-1 hashing retain their existing rules. The saved signature must
+equal this reconstructed signature exactly. Current effective definitions,
+unrelated public roots, and all retained worlds must also pass the exact proof.
+Different raw JSON, edits under the same mod name, altered bundles, missing
+revisions, foreign identities and changed retained definitions still reject.
+
+Continue, slots, imported saves and direct detached v4 preflight use this same
+decision before ordinary revision and saved-record validation. Proof never
+publishes the predecessor, initializes gameplay, repairs content, rewrites a
+signature or mutates a save, storage, world, registry, RNG or uid. One transient
+proof can serve nested preflights. Every request checks the exact native
+declaration, raw configuration, bundled payloads and a bounded structural
+observation of at most 8,000,000 live properties; technology defaults use their
+canonical normalizer and active balance must match its ordinary layer projection.
+An edit or source replacement requires a fresh proof. Import,
+removal, bundled toggles and application invalidate it. No proof is serialized.
+Normal next-save
+serialization stamps the installed current signature, allowing a fresh-page
+reload of the retained campaign. Empty standard signatures, edition separation,
+save versions and all normal validation remain unchanged.
+
 ### Complete start bookmarks
 
 ```json

@@ -27,6 +27,21 @@ selects ordinary_expansion explicitly; the focused spec covers the strategic def
 These staged boundaries establish no full-suite, long-run balance, performance or device
 acceptance claim.
 
+retained-catalogue-compatibility.spec.js authors two independent native estuary and
+upland transitions with different retained/fresh revisions, worlds and defaults.
+Both import actual ordinary JSON overlays through Mods and enable bundled
+overlays, create predecessor envelopes with their actual signatures, spend
+resources and convert an ordinary scenic region. Cases cover pure direct
+preflight, Continue, slot and file import, retained facts and normal re-save on a
+fresh page. Exact-proof rejection covers changed raw strings/order, same-name
+edits, changed bundled payloads/order, missing/ambiguous/invalid declarations,
+unlisted revisions, altered retained/shared definitions, changed native defaults
+omitted from the fingerprint, forged/missing predecessor root expectations, foreign save identities,
+missing retained layers and forged JSON compatibility metadata. Unchanged
+modded/no-transition and standard empty-signature controls, source-switch
+rollback and repeat proof after changed configuration retain their own checks.
+These focused checks do not establish runtime/device or release acceptance.
+
 bookmark-save-roundtrip.spec.js creates and saves one campaign for each of the eleven native dates, including the hidden authoring dates, then resumes through cold-title Continue and the selected-date content gate. It compares the original world, opening indexes, governments, migrations, armies and RNG/uid state. deferred-menu.spec.js additionally covers cold Henry and Koten starts and Continue in 1241. guarded-following-opening.spec.js, guarded-principal-starts.spec.js and expedition-command.spec.js check compact identity omissions, detached validation purity, missing and conflicting identities, forged actor bindings and preserved guard or command provenance.
 
 deferred-menu.spec.js samples visible loading labels on animation frames in standard and CrazyGames journeys, checks that each dated review starts with its matching label already painted, and retains completed-fraction ordering. settlement-start.spec.js checks the Creating campaign status alongside the locked character form before construction. Existing failure coverage checks that rejected preparation releases the loading screen.

@@ -23,6 +23,10 @@ window.FBMODS = window.FBMODS || [];
   const authoredRoots = Object.create(null);
   authoringRoots.push('aiDecisionPolicies');
   let baseCatalogues = null;
+  let baseRootFingerprints = null;
+  let installedCatalogues = null;
+  let compatibilityProof = null;
+  let applyingStored = false;
   var timingAllowed = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[?::1\]?)$/.test(location.hostname);
   var timingEnabled = timingAllowed && /(?:^|[?&])modTiming=1(?:&|$)/.test(location.search);
   var timingRows = [];
@@ -155,6 +159,7 @@ window.FBMODS = window.FBMODS || [];
       if (FB.ui) FB.ui.toast('Could not store mod setting: {message}', { message: e.message });
       return;
     }
+    _sig = null; compatibilityProof = null;
     location.reload();
   };
 
@@ -214,6 +219,273 @@ window.FBMODS = window.FBMODS || [];
     return 'effective-1-' + M.fingerprint({stored:all, bundled:on, catalogue:effectiveFingerprint});
   }
 
+  function catalogueDefinitions(data, roots) {
+    var effective = {};
+    Object.keys(PUBLIC_KEYS).concat(['faithDefaults','defaultGeography']).forEach(function (key) {
+      if (roots && authoringRoots.indexOf(key) >= 0 && !roots[key]) return;
+      if (own(data, key)) effective[key] = data[key];
+    });
+    return effective;
+  }
+  // Native authoring evidence for roots deliberately omitted from effective-1
+  // until authored by a mod. Pin the predecessor's complete baseline, including
+  // declaration order, rather than silently borrowing today's default tables.
+  M.retainedCatalogueRoots = function () {
+    if (!baseCatalogues) throw new Error('Retained catalogue evidence requires complete publication.');
+    if (!baseRootFingerprints) {
+      baseRootFingerprints = {};
+      authoringRoots.forEach(function (key) {
+        baseRootFingerprints[key] = own(baseCatalogues,key) ? M.fingerprint(JSON.stringify(baseCatalogues[key])) : null;
+      });
+    }
+    return Object.assign({},baseRootFingerprints);
+  };
+  function sameDefinition(a, b) {
+    if (a === undefined || b === undefined) return a === b;
+    function equal(left,right) {
+      if (left === right) return true;
+      if (!left || !right || typeof left !== 'object' || typeof right !== 'object' || Array.isArray(left) !== Array.isArray(right)) return false;
+      var keys = Object.keys(left);
+      return keys.length === Object.keys(right).length && keys.every(function (key) {
+        return own(right,key) && equal(left[key],right[key]);
+      });
+    }
+    // Match fingerprint JSON semantics without allocating SHA byte buffers for
+    // structural comparisons. Signature and native evidence hashing stay exact.
+    return equal(JSON.parse(JSON.stringify(a)),JSON.parse(JSON.stringify(b)));
+  }
+  function transitionFault(path) { throw new Error(path); }
+  function transitionData(value) {
+    var count = 0, units = 0, parents = [];
+    function visit(row, depth) {
+      if (++count > 250000 || depth > 64) transitionFault('declaration.limits');
+      if (typeof row === 'string') units += row.length;
+      if (units > 4194304) transitionFault('declaration.limits');
+      if (row === null || typeof row === 'string' || typeof row === 'boolean' ||
+          typeof row === 'number' && isFinite(row)) return;
+      if (!row || typeof row !== 'object' ||
+          !Array.isArray(row) && Object.getPrototypeOf(row) !== Object.prototype && Object.getPrototypeOf(row) !== null ||
+          parents.indexOf(row) >= 0) transitionFault('declaration.JSON');
+      if (Object.getOwnPropertySymbols && Object.getOwnPropertySymbols(row).length) transitionFault('declaration.JSON');
+      parents.push(row);
+      Object.getOwnPropertyNames(row).forEach(function (key) {
+        if (Array.isArray(row) && key === 'length') return;
+        var field = Object.getOwnPropertyDescriptor(row,key);
+        if (key === '__proto__' || !field.enumerable || !own(field,'value')) transitionFault('declaration.JSON');
+        units += key.length; visit(field.value,depth + 1);
+      });
+      if (Array.isArray(row) && (Object.keys(row).length !== row.length || Object.keys(row).some(function (key) {
+        return !/^(0|[1-9][0-9]*)$/.test(key) || Number(key) >= row.length;
+      }))) transitionFault('declaration.JSON');
+      parents.pop();
+    }
+    visit(value,0);
+  }
+  function transitionFields(value, keys, path) {
+    if (!plainObject(value) || Object.keys(value).some(function (key) { return keys.indexOf(key) < 0; }) ||
+        keys.some(function (key) { return !own(value,key); })) transitionFault(path);
+  }
+  // Only a default revision pointer and an enumerated set of new revisions may
+  // differ. In particular, no arbitrary paths or inferred historical removals
+  // participate in the proof. Existing raw layers remain exact as authored.
+  function transitionWorlds(before, after, declaration) {
+    if (!plainObject(before) || !plainObject(after)) transitionFault('bookmarks.' + declaration.bookmarkId);
+    var a = Object.assign({},before), b = Object.assign({},after);
+    delete a.revision; delete a.revisions; delete b.revision; delete b.revisions;
+    if (!sameDefinition(a,b)) transitionFault('bookmark.authoredRoot');
+    var previous = before.revisions || {baseline:{}}, current = after.revisions;
+    if (!plainObject(previous) || !plainObject(current)) transitionFault('bookmark.revisions');
+    if (Object.keys(previous).length > 32 || Object.keys(current).length > 40) transitionFault('bookmark.revisions.limits');
+    var added = Object.keys(current).filter(function (id) { return !own(previous,id); });
+    if (!sameDefinition(added.slice().sort(),declaration.addedRevisions.slice().sort())) transitionFault('bookmark.addedRevisions');
+    Object.keys(previous).forEach(function (id) {
+      if (!own(current,id) || !sameDefinition(previous[id],current[id])) transitionFault('bookmark.revisions.' + id);
+    });
+    if (declaration.addedRevisions.indexOf(after.revision) < 0 ||
+        !own(previous,before.revision || 'baseline') || !own(previous,declaration.retainedRevision))
+      transitionFault('bookmark.defaultRevision');
+    var oldWorlds = FB.bookmarkRevisions(declaration.bookmarkId,before);
+    var newWorlds = FB.bookmarkRevisions(declaration.bookmarkId,after);
+    oldWorlds.forEach(function (world) {
+      var revision = world.revision || 'baseline';
+      var next = newWorlds.filter(function (row) { return (row.revision || 'baseline') === revision; })[0];
+      if (!next || !sameDefinition(Object.assign({},world,{revision:revision}),next)) transitionFault('bookmark.effective.' + revision);
+    });
+  }
+  function validateTransition(row) {
+    transitionData(row);
+    transitionFields(row,['schema','id','bookmarkId','retainedRevision','predecessor','current','predecessorRoots','addedRevisions','bundled'],'declaration.fields');
+    transitionFields(row.predecessorRoots,authoringRoots,'declaration.predecessorRoots');
+    authoringRoots.forEach(function (key) {
+      if (row.predecessorRoots[key] !== null && (typeof row.predecessorRoots[key] !== 'string' || !/^[a-f0-9]{64}$/.test(row.predecessorRoots[key])))
+        transitionFault('declaration.predecessorRoots.' + key);
+    });
+    if (row.schema !== 1 || ['id','bookmarkId','retainedRevision'].some(function (key) {
+      return typeof row[key] !== 'string' || !/^[a-z0-9_]{1,100}$/i.test(row[key]);
+    })) transitionFault('declaration.identity');
+    if (!Array.isArray(row.addedRevisions) || !row.addedRevisions.length || row.addedRevisions.length > 8 ||
+        row.addedRevisions.some(function (id,i) { return typeof id !== 'string' || !/^[a-z0-9_]{1,100}$/i.test(id) || row.addedRevisions.indexOf(id) !== i; }))
+      transitionFault('declaration.addedRevisions');
+    if (!Array.isArray(row.bundled) || row.bundled.length > 16) transitionFault('declaration.bundled');
+    row.bundled.forEach(function (bundle,i) {
+      transitionFields(bundle,['id','data'],'declaration.bundled');
+      if (typeof bundle.id !== 'string' || !bundle.id || bundle.id.length > 100 || !plainObject(bundle.data) ||
+          row.bundled.some(function (other,j) { return j < i && other.id === bundle.id; })) transitionFault('declaration.bundled');
+    });
+    if (!plainObject(row.predecessor) || !plainObject(row.current) || row.predecessor.id !== row.bookmarkId || row.current.id !== row.bookmarkId)
+      transitionFault('declaration.bookmarkId');
+    transitionWorlds(row.predecessor,row.current,row);
+  }
+  function replayCatalogue(base, stored, bundles) {
+    var live = FBDATA, roots = Object.create(null);
+    try {
+      // Validators may normalize detached technology records. Never share
+      // mutable predecessor data with the installer baseline or live world.
+      var definitions = {};
+      Object.keys(PUBLIC_KEYS).concat(['faithDefaults','defaultGeography']).forEach(function (key) {
+        if (own(base,key)) definitions[key] = base[key];
+      });
+      window.FBDATA = Object.assign({},base,JSON.parse(JSON.stringify(definitions)));
+      prepareRequirements({});
+      bundles.map(function (row) { return row.data; }).concat(stored.map(function (text) { return JSON.parse(text); })).forEach(function (mod) {
+        var prepared = prepareRequirements(mod), normalized = FB.titleIds.normalizeMod(mod);
+        window.FBDATA = sameDefinition(mod,normalized) ? prepared.data : prepareRequirements(normalized).data;
+        mod = normalized;
+        authoringRoots.forEach(function (key) { if (own(mod,key)) roots[key] = true; });
+      });
+      return {all:catalogueDefinitions(FBDATA,null),effective:catalogueDefinitions(FBDATA,roots)};
+    } finally {
+      window.FBDATA = live;
+      FB.invalidateCultureData(); FB.invalidateReligionData(); FB.lexicon.reset();
+    }
+  }
+  var activationAliases = ['provinces','realms','duchies','kingdoms','empires','straits','crossingClasses','scripted','balance'];
+  function normalizedTechFingerprint(table) {
+    var copy = JSON.parse(JSON.stringify(table));
+    Object.keys(copy).forEach(function (id) { FB.normalizeTechDefinition(id,copy[id]); });
+    return M.fingerprint(copy);
+  }
+  function sameStrings(a,b) {
+    return a.length === b.length && a.every(function (text,i) { return text === b[i]; });
+  }
+  function projectedBalance(catalogue,stored,bundles) {
+    var balance = Object.assign({},catalogue.balance), era = catalogue.eras[FB.activeEra];
+    Object.assign(balance,era && era.balance,FB.activeBookmark && FB.activeBookmark.balance);
+    bundles.map(function (row) { return row.data; }).concat(stored.map(function (text) { return JSON.parse(text); })).forEach(function (mod) {
+      Object.keys(mod.balance || {}).forEach(function (key) {
+        var value = mod.balance[key];
+        balance[key] = key === 'countyCommunityProjectPolicies' && plainObject(value)
+          ? Object.assign({},balance[key],value) : value;
+      });
+    });
+    return balance;
+  }
+  // Observe plain property values without repeatedly hashing the complete
+  // catalogue. Any replacement, insertion, deletion, edit or accessor requires
+  // a fresh proof. Activation's aliases and canonical tech defaults are separate.
+  function observeDefinitions() {
+    var roots = {}, observations = [], seen = new WeakSet(), count = 0;
+    function capture(value) {
+      if (!value || typeof value !== 'object' || seen.has(value)) return;
+      seen.add(value);
+      var keys = Object.keys(value), values = [];
+      if ((count += keys.length) > 8000000) transitionFault('catalogue.limits');
+      keys.forEach(function (key) {
+        var field = Object.getOwnPropertyDescriptor(value,key);
+        if (!field || !own(field,'value')) transitionFault('catalogue.accessor');
+        values.push(field.value); capture(field.value);
+      });
+      observations.push({value:value,keys:keys,values:values});
+    }
+    Object.keys(PUBLIC_KEYS).concat(['faithDefaults','defaultGeography']).forEach(function (key) {
+      if (activationAliases.indexOf(key) >= 0 || key === 'tech') return;
+      roots[key] = {present:own(FBDATA,key),value:FBDATA[key]}; capture(FBDATA[key]);
+    });
+    return function () {
+      return Object.keys(roots).every(function (key) {
+        return own(FBDATA,key) === roots[key].present && FBDATA[key] === roots[key].value;
+      }) && observations.every(function (row) {
+        var keys = Object.keys(row.value);
+        return sameStrings(keys,row.keys) && keys.every(function (key,i) {
+          var field = Object.getOwnPropertyDescriptor(row.value,key);
+          return field && own(field,'value') && field.value === row.values[i];
+        });
+      });
+    };
+  }
+  // One transient proof can serve nested load preflights. Recheck exact native
+  // evidence, JSON bytes, bundles and observed definitions on every request.
+  M.saveCompatibility = function (data) {
+    var signature = M.sig(), saved = data && data.mods;
+    function result(ok, path, id) { return {compatible:ok,path:path || null,transition:id || null}; }
+    if (saved === signature || saved === undefined && !signature && !FB.platform.isCrazyGames) return result(true);
+    if (FB.platform.isCrazyGames || /^crazygames-content-/.test(saved || '')) return result(false,'edition');
+    if (typeof saved !== 'string' || !/^effective-1-[a-f0-9]{64}$/.test(saved) || !baseCatalogues)
+      return result(false,'signature');
+    var start = data && data.state && data.state.start;
+    if (!start || typeof start.id !== 'string' || start.revision !== undefined && (typeof start.revision !== 'string' || !start.revision)) return result(false,'state.start');
+    var declarations = FB.bookmarkSources.retainedCatalogueTransitions();
+    if (declarations.length > 8) return result(false,'declaration.limits');
+    var rows = declarations.filter(function (row) {
+      return row && row.bookmarkId === start.id && row.retainedRevision === (start.revision === undefined ? 'baseline' : start.revision);
+    });
+    if (rows.length !== 1) return result(false,rows.length ? 'transition.ambiguous' : 'transition.missing');
+    var row = rows[0];
+    try {
+      validateTransition(row);
+      if (!sameDefinition(baseCatalogues.bookmarks[start.id],row.current)) transitionFault('declaration.current');
+      var baselineRoots = M.retainedCatalogueRoots();
+      authoringRoots.forEach(function (key) {
+        if (baselineRoots[key] !== row.predecessorRoots[key]) transitionFault('catalogue.predecessorRoots.' + key);
+      });
+      var stored = readAll(), enabled = readEnabled(), bundles = M.bundled().filter(function (bundle) { return enabled.indexOf(bundle.id) >= 0; });
+      M.assertReady();
+      if (stored.length > 32 || enabled.length > 16 || stored.reduce(function (total,text) { return total + text.length; },0) > 4194304) transitionFault('configuration.limits');
+      var expected = row.bundled.filter(function (bundle) { return enabled.indexOf(bundle.id) >= 0; });
+      var payloads = bundles.map(function (bundle) { return {id:bundle.id,data:bundle.data}; });
+      try { transitionData(payloads); } catch (payloadError) { transitionFault('bundled.JSON'); }
+      if (JSON.stringify(payloads) !== JSON.stringify(expected) || bundles.length !== enabled.length)
+        transitionFault('bundled.payloadsAndOrder');
+      if (!installedCatalogues || !sameDefinition(projectedBalance(installedCatalogues,stored,bundles),FBDATA.balance))
+        transitionFault('catalogue.live.balance');
+      var declarationKey = JSON.stringify(row), enabledOrder = enabled.slice().sort(), cached = compatibilityProof;
+      if (cached && cached.saved === saved && cached.current === effectiveFingerprint && cached.base === baseCatalogues && cached.declaration === declarationKey) {
+        if (!sameStrings(cached.stored,stored) || !sameStrings(cached.enabled,enabledOrder)) transitionFault('configuration.changed');
+        if (cached.observed() && cached.tech === normalizedTechFingerprint(FBDATA.tech)) return result(true,null,row.id);
+      }
+      var current = installedCatalogues;
+      if (!current) transitionFault('catalogue.current');
+      // Activation projects only these legacy aliases and layered balance.
+      // Every definition root used to resolve a retained campaign stays exact.
+      Object.keys(current).forEach(function (key) {
+        var expectedRoot = current[key], liveRoot = FBDATA[key];
+        if (key === 'tech') {
+          expectedRoot = normalizedTechFingerprint(expectedRoot); liveRoot = normalizedTechFingerprint(liveRoot);
+        }
+        var equal = authoringRoots.indexOf(key) >= 0
+          ? JSON.stringify(expectedRoot) === JSON.stringify(liveRoot) : sameDefinition(expectedRoot,liveRoot);
+        if (activationAliases.indexOf(key) < 0 && !equal) transitionFault('catalogue.live.' + key);
+      });
+      var predecessor = Object.assign({},baseCatalogues,{bookmarks:Object.assign({},baseCatalogues.bookmarks)});
+      predecessor.bookmarks[start.id] = row.predecessor;
+      predecessor = replayCatalogue(predecessor,stored,bundles);
+      transitionWorlds(predecessor.all.bookmarks[start.id],current.bookmarks[start.id],row);
+      var oldRoots = Object.assign({},predecessor.all,{bookmarks:Object.assign({},predecessor.all.bookmarks)});
+      var newRoots = Object.assign({},current,{bookmarks:Object.assign({},current.bookmarks)});
+      delete oldRoots.bookmarks[start.id]; delete newRoots.bookmarks[start.id];
+      var rootKeys = Object.keys(oldRoots);
+      Object.keys(newRoots).forEach(function (key) { if (rootKeys.indexOf(key) < 0) rootKeys.push(key); });
+      rootKeys.forEach(function (key) {
+        if (!sameDefinition(oldRoots[key],newRoots[key])) transitionFault('catalogue.retainedDefinitions.' + key);
+      });
+      var exact = 'effective-1-' + M.fingerprint({stored:stored,bundled:enabledOrder,catalogue:M.fingerprint(predecessor.effective)});
+      if (saved !== exact) transitionFault('signature.predecessor');
+      compatibilityProof = {saved:saved,current:effectiveFingerprint,base:baseCatalogues,declaration:declarationKey,
+        stored:stored.slice(),enabled:enabledOrder,observed:observeDefinitions(),tech:normalizedTechFingerprint(FBDATA.tech)};
+      return result(true,null,row.id);
+    } catch (error) { return result(false,error.message); }
+  };
+
   M.store = function (jsonText) {
     if (FB.platform.isCrazyGames) return false;
     let mod;
@@ -248,6 +520,7 @@ window.FBMODS = window.FBMODS || [];
       if (FB.ui) FB.ui.toast('Could not store mod: {message}', { message: e.message });
       return;
     }
+    _sig = null; compatibilityProof = null;
     location.reload();
   };
 
@@ -257,12 +530,14 @@ window.FBMODS = window.FBMODS || [];
     all.splice(i, 1);
     if (all.length) localStorage.setItem(KEY, JSON.stringify(all));
     else localStorage.removeItem(KEY);
+    _sig = null; compatibilityProof = null;
     location.reload();
   };
 
   M.clear = function () {
     localStorage.removeItem(KEY);
     localStorage.removeItem(BKEY);
+    _sig = null; compatibilityProof = null;
     location.reload();
   };
 
@@ -2372,6 +2647,12 @@ window.FBMODS = window.FBMODS || [];
      validator. Never run story init, install actions, or consume RNG here. */
   function prepareRequirements(mod, composition) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
+    var worlds = Array.isArray(mod.bookmarks) ? mod.bookmarks : Object.keys(mod.bookmarks || {}).map(function (id) { return mod.bookmarks[id]; });
+    worlds.forEach(function (world) {
+      ['retainedCatalogueTransitions','retainCatalogueTransition','allowedSignatures','saveCompatibility'].forEach(function (key) {
+        if (own(world,key)) fail('bookmarks.' + key,'is trusted native metadata, not JSON mod data.');
+      });
+    });
     var live = FBDATA, staged = Object.assign({}, live), prepared;
     ['positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','federateServiceStarts','federateMigrations','rankPrestigeYearly','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','eras','wardrobes','settlementLayouts','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','traitMechanics','authorityOffices','legitimacySources','customaryBases'].forEach(function (key) {
       if (own(mod, key) && !plainObject(mod[key])) fail(key, 'must be an object keyed by id.');
@@ -3063,16 +3344,14 @@ window.FBMODS = window.FBMODS || [];
     // exposing an existing engine table would invalidate unchanged older mods.
     // Bind to the definitions actually installed, including inherited defaults
     // and bundled payloads. Snapshot before activation swaps the legacy tables.
-    var effective = {};
-    Object.keys(PUBLIC_KEYS).concat(['faithDefaults','defaultGeography']).forEach(function (key) {
-      if (authoringRoots.indexOf(key) >= 0 && !authoredRoots[key]) return;
-      if (own(FBDATA, key)) effective[key] = FBDATA[key];
-    });
-    effectiveFingerprint = M.fingerprint(effective);
+    effectiveFingerprint = M.fingerprint(catalogueDefinitions(FBDATA,authoredRoots));
+    if (!applyingStored) captureInstalledCatalogues();
+    compatibilityProof = null;
     _sig = null;
   };
 
   M.applyStored = function () {
+    compatibilityProof = null; installedCatalogues = null;
     captureBaseCatalogues();
     currencySupplied = false;
     currencyInvalid = false;
@@ -3083,6 +3362,8 @@ window.FBMODS = window.FBMODS || [];
       if (!M.bundled().some(function (mod) { return mod.id === id; }))
         modFailure = 'Missing enabled mod: ' + id;
     });
+    applyingStored = true;
+    try {
     for (const mod of M.bundled()) {
       if (modFailure) break;
       if (on.indexOf(mod.id) === -1) continue;
@@ -3095,8 +3376,14 @@ window.FBMODS = window.FBMODS || [];
       try { M.apply(JSON.parse(text)); }
       catch (e) { modFailure = 'Invalid stored mod: ' + e.message; }
     }
+    } finally { applyingStored = false; }
+    if (!modFailure) captureInstalledCatalogues();
     finishConfiguration();
   };
+  function captureInstalledCatalogues() {
+    installedCatalogues = effectiveFingerprint && FB.bookmarkSources.hasRetainedCatalogueTransitions()
+      ? JSON.parse(JSON.stringify(catalogueDefinitions(FBDATA,null))) : null;
+  }
   // A bundled campaign needs the shared runtime configuration, but has no
   // installed mod stack or global authoring snapshot to fingerprint. Keep the
   // pristine baseline capture in applyStored, after complete publication.

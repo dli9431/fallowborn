@@ -9,6 +9,42 @@
   var ownership = Object.create(null), orders = null, declared = [];
   var usedGraphs = Object.create(null), catalogUses = Object.create(null);
   var publishing = false, setup = null, setupFaults = Object.create(null);
+  var retainedTransitions = [];
+  function copyTransition(value) {
+    var count = 0, units = 0, parents = [];
+    function clone(row,depth) {
+      if (++count > 250000 || depth > 64) throw new Error('Retained catalogue declaration exceeds its data limits.');
+      if (typeof row === 'string') units += row.length;
+      if (units > 4194304) throw new Error('Retained catalogue declaration exceeds its text limit.');
+      if (row === null || typeof row === 'string' || typeof row === 'boolean' || typeof row === 'number' && isFinite(row)) return row;
+      if (!row || typeof row !== 'object' ||
+          !Array.isArray(row) && Object.getPrototypeOf(row) !== Object.prototype && Object.getPrototypeOf(row) !== null ||
+          parents.indexOf(row) >= 0 || Object.getOwnPropertySymbols && Object.getOwnPropertySymbols(row).length)
+        throw new Error('Retained catalogue declarations require plain JSON data.');
+      parents.push(row);
+      var result = Array.isArray(row) ? [] : {};
+      Object.getOwnPropertyNames(row).forEach(function (key) {
+        if (Array.isArray(row) && key === 'length') return;
+        var field = Object.getOwnPropertyDescriptor(row,key);
+        if (key === '__proto__' || !field.enumerable || !own(field,'value')) throw new Error('Retained catalogue declarations require plain JSON data.');
+        units += key.length; result[key] = clone(field.value,depth + 1);
+      });
+      if (Array.isArray(row) && (Object.keys(row).length !== row.length || Object.keys(row).some(function (key) {
+        return !/^(0|[1-9][0-9]*)$/.test(key) || Number(key) >= row.length;
+      }))) throw new Error('Retained catalogue declarations require dense arrays.');
+      parents.pop(); return result;
+    }
+    return clone(value,0);
+  }
+  // Native source metadata survives selected-date publication, but is never a
+  // public data root, mod input, campaign record or executable restore hook.
+  C.retainCatalogueTransition = function (definition) {
+    if (frozen) throw new Error('Retained catalogue declarations are sealed.');
+    if (retainedTransitions.length >= 8) throw new Error('Too many retained catalogue declarations.');
+    retainedTransitions.push(copyTransition(definition));
+  };
+  C.retainedCatalogueTransitions = function () { return retainedTransitions.map(copyTransition); };
+  C.hasRetainedCatalogueTransitions = function () { return retainedTransitions.length > 0; };
   var catalogs = ['geographies','cultures','cultureDoctrineDefaults','religions','governmentForms',
     'settlementSites','settlementLayouts','administrationProfiles','aristocraticProfiles',
     'civicProfiles','constituencyProfiles','ecclesiasticalProfiles','mobileProfiles',

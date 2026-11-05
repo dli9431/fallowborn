@@ -15,6 +15,23 @@ Independent inhabited routes, ownership and communities keep their own rules.
 
 Detached trusted composition
 
+Native sources may retain one explicit predecessor/current transition through
+bookmarkSources.retainCatalogueTransition before the manifest seals. Declarations
+stay outside FBDATA and composition payloads, so complete publication and
+selected-date switching preserve their trusted identity without affecting mod
+fingerprints. The mods owner validates finite plain data and exact authored
+expectations; source staging performs no engine-dependent proof.
+Pinned predecessorRoots additionally retain exact shared defaults omitted from
+the ordinary authored-only fingerprint. Capture them from complete predecessor
+publication, then retain their literal native evidence across source switches.
+Only explicitly listed added revisions and the fresh revision pointer may differ. Every existing
+raw layer, resolved retained world and shared definition keeps its meaning.
+Withheld or interveningly changed source definitions cannot borrow a declaration
+whose expected current publication no longer matches. Ordinary JSON cannot
+declare compatibility. docs/MODDING.md owns the interface and bounds;
+state-and-saves.md owns adoption. No real bookmark transition is activated by
+this infrastructure, and no technology capability or save field is introduced.
+
 js/bookmark_composition.js owns FB.bookmarkCompositions.prepare: one detached complete world and its newly owned layouts, identities, government forms and stories, followed by independently validated start units. The scoped bridge in js/mods.js reuses canonical import validators and detached story compilation; final authoring checks include this unit's starts and explicit world references. Invalid world data publishes none of its dependent records. A bad start withholds its own binding and whole owned graph, plus explicitly dependent starts, while healthy siblings can publish with the world. Shared catalogue validators remain authoritative; this boundary does not repair unrelated invalid shared definitions.
 
 Immutable declaration reuse, supplied-field settlement-site compatibility, additive faith availability, source diagnostics, authored order, stale-review rejection and synchronous rollback are specified in docs/MODDING.md. The shorthand supports one owning bookmark, root locations and accepted starts on each explicit revision list. Optional explicit bindings additionally own exact root/revision offered states, predecessor placement, county lists and effective track replacements. All eleven bundled dates stage their complete contributor chains and independent start units. The title and date picker use display-only source summaries. With no active mods, a bookmark selection reviews and publishes only that date for setup and campaign entry. Complete source publication precedes the mod baseline/fingerprint snapshot when mods or authoring require it. Detached validation normalizes title identifiers while publication retains authored spellings. Explicit start and faith-edge insertion anchors preserve original array order across later data contributors. This is an internal authoring refactor with no new technology capability, saved record or runtime content-id dispatch.
