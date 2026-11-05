@@ -201,14 +201,19 @@ test('matching restore retains progress and cancellation without replaying movem
   const result=await page.evaluate(function () {
     const C=programCase,M=FB.mobile,s=FB.state,r=M.row(s,C.rid);
     r.expeditionProgram.steps[0].cursor=1;r.expeditionProgram.steps[1].status='cancelled';
-    const bytes=JSON.stringify([r.expeditionProgram,s.armies,s.chars,s.owner,s.holder,r.food]),rng=FB.getRngState(),uid=FB.getUidCounter();
+    function checkpoint(state) {
+      const x=FB.save.expandedSnapshot(state),row=M.row(x,C.rid);
+      return [row.expeditionProgram,x.armies,x.chars,x.owner,x.holder,row.food];
+    }
+    const before=checkpoint(s),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
     FB.save.restore(JSON.parse(FB.save.serialize()));
-    const restored=FB.state,rr=M.row(restored,C.rid);
-    return {same:bytes===JSON.stringify([rr.expeditionProgram,restored.armies,restored.chars,restored.owner,restored.holder,rr.food]),
-      rng:rng===FB.getRngState(),uid:uid===FB.getUidCounter(),valid:M.validate(restored),
-      closed:FB.expeditionPrograms.review(restored,C.rid,'refit').reason};
+    const restored=FB.state;
+    return {before:before,after:checkpoint(restored),
+      checks:{rng:rng===(FB.getRngState()>>>0),uid:uid===FB.getUidCounter(),valid:M.validate(restored),
+        closed:FB.expeditionPrograms.review(restored,C.rid,'refit').reason}};
   });
-  expect(result).toEqual({same:true,rng:true,uid:true,valid:true,closed:'closed'});
+  expect(result.after).toEqual(result.before);
+  expect(result.checks).toEqual({rng:true,uid:true,valid:true,closed:'closed'});
 });
 
 test('the single-host fallback supports program routes without requiring columns or inventing a carrier',async function ({page},info) {
