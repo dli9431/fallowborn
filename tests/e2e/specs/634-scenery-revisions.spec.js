@@ -471,7 +471,7 @@ for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json'
     });
     test.afterAll(async function () { if (context) await context.close(); });
 
-    for (const form of ['save','legacy']) test('actual predecessor ' + form + ' conversion retains spent resources through repeated restore',async function ({page},info) {
+    test('actual predecessor explicit and inferred conversions retain spent resources through repeated restore',async function ({page},info) {
       await seedConfiguration(page,old); await openEdition(page,info,!!config.crazy); await installProbe(page);
       const decision = await page.evaluate(function (data) {
         const before = scenicSnapshot(), text = JSON.stringify(data), result = FB.mods.saveCompatibility(data);
@@ -480,10 +480,12 @@ for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json'
       expect(decision).toMatchObject({result:{compatible:true,path:null,transition:config.file ? 'autumn_634_scenery_protected_v1' : null},pure:true,input:true});
       if (config.file) expect(decision.signature).not.toBe(old.save.mods);
       else expect(decision.signature).toBe(old.save.mods);
-      for (const envelope of [old[form],old[form]]) {
-        await load(page,envelope);
-        expect(await retainedFacts(page,old)).toMatchObject({same:true,rng:true,uid:true,revision:'baseline',current:'ordinary_settlement_v2',converted:true,omitted:true,sites:true});
-      }
+      for (const form of ['save','legacy']) await test.step(form + ' repeated restore',async function () {
+        for (const envelope of [old[form],old[form]]) {
+          await load(page,envelope);
+          expect(await retainedFacts(page,old)).toMatchObject({same:true,rng:true,uid:true,revision:'baseline',current:'ordinary_settlement_v2',converted:true,omitted:true,sites:true});
+        }
+      });
     });
 
     test('an actual predecessor conversion survives ordinary re-save and fresh-page reload',async function ({page},info) {
@@ -498,27 +500,27 @@ for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json'
       expect(await page.evaluate(function (data) { return FB.mods.saveCompatibility(data); },saved)).toEqual({compatible:true,path:null,transition:null});
     });
 
-    for (const form of ['save','legacy']) test('switching protected and retained ' + form + ' worlds preserves policies, conversions and identities',async function ({page},info) {
+    test('switching protected and both retained conversion forms preserves policies, conversions and identities',async function ({page},info) {
       await seedConfiguration(page,old); await openEdition(page,info,!!config.crazy); await begin634(page,'scenery_protected_v1');
       const fresh = await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
-      for (const envelope of [old[form]]) {
-        await load(page,envelope);
+      for (const form of ['save','legacy']) await test.step(form + ' round trip',async function () {
+        await load(page,old[form]);
         expect(await retainedFacts(page,old)).toMatchObject({same:true,revision:'baseline',converted:true,omitted:true});
         await load(page,fresh);
         expect(await page.evaluate(function (ids) {
           return {revision:FB.state.start.revision,conversions:FB.state.wastelandSettlements,
             protected:ids.every(function (id) { return FB.world.byId[id].wasteland && FB.world.byId[id].settlementPolicy === 'protected' && !FB.world.sitesByProv[id]; })};
         },scenicIds)).toEqual({revision:'scenery_protected_v1',conversions:{},protected:true});
-      }
+      });
     });
 
-    if (config.file) for (const kind of ['bytes','content','retained','bundle']) test('changed ' + kind + ' rejects exactly without changing the active campaign',async function ({page},info) {
+    if (config.file) for (const kinds of [['bytes'],['content','bundle'],['retained']]) test('changed ' + kinds.join(' and ') + ' rejects exactly without changing the active campaign',async function ({page},info) {
       await seedConfiguration(page,old); await openGame(page,info); await load(page,old.save); await installProbe(page);
       const result = await page.evaluate(function (input) {
         const data = input.save;
         const original = localStorage.getItem('fb_mods'), raw = JSON.parse(original);
         const checks = [];
-        [input.kind].forEach(function (kind) {
+        input.kinds.forEach(function (kind) {
           const province = FBDATA.bookmarks['634'].provinces[0], dev = province.dev;
           const bundled = localStorage.getItem('fb_mods_bundled');
           if (kind === 'bytes') localStorage.setItem('fb_mods',JSON.stringify([raw[0] + ' ']));
@@ -539,11 +541,12 @@ for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json'
           localStorage.setItem('fb_mods',original); province.dev = dev;
           if (kind === 'bundle') FBMODS.pop();
           if (bundled === null) localStorage.removeItem('fb_mods_bundled'); else localStorage.setItem('fb_mods_bundled',bundled);
+          checks[checks.length - 1].restored = FB.mods.saveCompatibility(data).compatible;
         });
         return {checks:checks,restored:FB.mods.saveCompatibility(data).compatible};
-      },{save:old.save,kind:kind});
-      expect(result).toEqual({checks:[kind].map(function (kind) {
-        return {kind:kind,compatible:false,rejected:true,loaded:false,pure:true,input:true};
+      },{save:old.save,kinds:kinds});
+      expect(result).toEqual({checks:kinds.map(function (kind) {
+        return {kind:kind,compatible:false,rejected:true,loaded:false,pure:true,input:true,restored:true};
       }),restored:true});
     });
   });

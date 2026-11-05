@@ -221,7 +221,7 @@ for (const fixture of fixtures) {
     expect(await page.evaluate(function (data) { return FB.game.loadData(data); },old.save)).toBe(false);
   });
 
-  for (const selection of [['raw bytes','JSON order','same name'],['bundled payload','bundled callback','removed bundle'],['retained province','faith definition'],['unrelated public root'],['live balance']]) {
+  for (const selection of [['raw bytes','JSON order','same name'],['bundled payload','bundled callback','removed bundle'],['retained province','faith definition'],['unrelated public root','live balance']]) {
   test('atomically rejects ' + selection.join(', '),async function ({page},info) {
     await currentPage(page,fixture,null,info,old);
     await load(page,old.save);
@@ -330,21 +330,23 @@ test('rejects foreign save ' + selection.join(', '),async function ({page},info)
   for (const result of results) expect(result,result.kind).toMatchObject({rejected:true,loaded:false,pure:true});
 });
 }
-for (const index of [0,1,2,3]) test('ordinary JSON rejects compatibility forgery ' + (index + 1),async function ({page},info) {
+test('ordinary JSON rejects every compatibility forgery without publication',async function ({page},info) {
   const old = getOld();
   await currentPage(page,fixture,null,info,old);
-  const forged = await page.evaluate(function (index) {
-    var before = JSON.stringify([FBDATA,localStorage,FB.getRngState(),FB.getUidCounter()]);
-    var attempts = [
-      {retainedCatalogueTransitions:FB.bookmarkSources.retainedCatalogueTransitions()},
-      {allowedSignatures:['forged']}, {saveCompatibility:{compatible:true}},
-      {bookmarks:{upland_world:Object.assign({},FBDATA.bookmarks.upland_world,{retainedCatalogueTransitions:[]})}}
-    ];
-    var mod = attempts[index];
-    return {rejected:FB.mods.validate(mod).length > 0 && FB.mods.store(JSON.stringify(mod)) === false,
-      pure:before === JSON.stringify([FBDATA,localStorage,FB.getRngState(),FB.getUidCounter()])};
-  },index);
-  expect(forged).toEqual({rejected:true,pure:true});
+  for (const index of [0,1,2,3]) await test.step('forgery ' + (index + 1),async function () {
+    const forged = await page.evaluate(function (index) {
+      var before = JSON.stringify([FBDATA,localStorage,FB.getRngState(),FB.getUidCounter()]);
+      var attempts = [
+        {retainedCatalogueTransitions:FB.bookmarkSources.retainedCatalogueTransitions()},
+        {allowedSignatures:['forged']}, {saveCompatibility:{compatible:true}},
+        {bookmarks:{upland_world:Object.assign({},FBDATA.bookmarks.upland_world,{retainedCatalogueTransitions:[]})}}
+      ];
+      var mod = attempts[index];
+      return {rejected:FB.mods.validate(mod).length > 0 && FB.mods.store(JSON.stringify(mod)) === false,
+        pure:before === JSON.stringify([FBDATA,localStorage,FB.getRngState(),FB.getUidCounter()])};
+    },index);
+    expect(forged).toEqual({rejected:true,pure:true});
+  });
 });
 }
 
