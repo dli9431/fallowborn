@@ -949,6 +949,22 @@ window.FB = window.FB || {};
           if (!headStrategies[rel.head.succession]) {
             fault(id, 'head.succession names an unregistered strategy.');
           }
+          if (rel.head.succession === 'political_incumbent') {
+            if (Object.keys(rel.head).some(function (key) {
+              return ['officeId','title','holderKind','holderSex','holderRole','minAge','realm','seat',
+                'succession','system','character','recovery','claim','absolution','greatHolyWar','local'].indexOf(key) < 0;
+            })) fault(id, 'political_incumbent contains an unsupported head field.');
+            if (rel.head.holderKind !== 'character' || typeof rel.head.realm !== 'string' ||
+                !rel.head.realm || !rel.head.seat) {
+              fault(id, 'political_incumbent requires a character holder, source realm and seat.');
+            }
+            if (['character','recovery','claim','absolution','greatHolyWar','local'].some(function (key) {
+              return rel.head[key] !== undefined && rel.head[key] !== null;
+            })) fault(id, 'political_incumbent has no independent appointment, recovery or religious powers.');
+            if (plainObject(rel.head.seat) && (Object.keys(rel.head.seat).length !== 1 ||
+                !own(rel.head.seat, 'province') && !own(rel.head.seat, 'site')))
+              fault(id, 'political_incumbent seat must name exactly one province or site.');
+          }
           if (rel.head.holderKind === 'character' &&
               ['papal_election','caliphal_claim'].indexOf(rel.head.succession) >= 0) {
             fault(id, 'this succession strategy requires a realm holder.');
@@ -1715,6 +1731,9 @@ window.FB = window.FB || {};
       return ordinaryHeadSuccession(state, religionId, options, false);
     }
   });
+  FB.religiousHeads.register('political_incumbent', {
+    succeed:function () { return false; }
+  });
   FB.religiousHeads.register('papal_election', {
     recover:'grant_seat',
     succeed:function (state, religionId, options) {
@@ -1761,6 +1780,10 @@ window.FB = window.FB || {};
     if (office && office.head.holderKind === 'character') {
       const c = state && state.chars && state.chars[realmId];
       return !!(c && !c.dead && (!requiredSex || c.sex === requiredSex) &&
+        (office.head.succession !== 'political_incumbent' ||
+          FB.governmentSelection && FB.governmentSelection.officeIncumbent(state, office.head.realm) === c &&
+          FB.faithOfficeId(FB.realmReligionId(state,
+            FB.governmentSelection.officeRealmId(state, office.head.realm)), state) === office.id) &&
         (!office.head.holderRole || c.role === office.head.holderRole ||
           c.career && c.career.profession === office.head.holderRole) &&
         (office.head.minAge === undefined || FB.ageOf(c, state.date.year) >= office.head.minAge) &&
@@ -1809,6 +1832,39 @@ window.FB = window.FB || {};
       ? rel.head.character || null : rel.head.realm || null) : null;
   }
 
+  /* Only fresh world seeding and committed political accession/adoption call
+     this writer. Consent recovery exposes an existing binding through reads. */
+  FB.bindPoliticalReligiousHeads = function (state, realmId, fresh) {
+    const offices = religiousOfficeDefinitions(state), S = FB.governmentSelection;
+    for (const id in offices) {
+      const office = offices[id], head = office.head;
+      if (head.succession !== 'political_incumbent' || !S ||
+          S.officeRealmId(state, head.realm) !== realmId) continue;
+      if (fresh && own(state.religiousHeads, id)) continue;
+      const c = S.officeIncumbent(state, head.realm);
+      if (fresh && (politicalOpeningVacant(state, office) ||
+          !c || !religiousHeadHolderEligible(state, office, c.id))) {
+        state.religiousHeads = state.religiousHeads || {};
+        state.religiousHeads[id] = null;
+        state.religiousHeadVacancies = state.religiousHeadVacancies || {};
+        state.religiousHeadVacancies[id] = { turn:state.turn || 0, formerHolder:null };
+        continue;
+      }
+      if (!c || !religiousHeadHolderEligible(state, office, c.id)) continue;
+      state.religiousHeads = state.religiousHeads || {};
+      state.religiousHeads[id] = c.id;
+      if (state.religiousHeadVacancies) delete state.religiousHeadVacancies[id];
+    }
+  };
+
+  function politicalOpeningVacant(state, office) {
+    const bookmark = state && state.start && FB.campaignBookmark(state) || FB.activeBookmark;
+    const mapping = bookmark && bookmark.religiousHeads || {};
+    return Object.keys(mapping).some(function (id) {
+      return mapping[id] === null && (id === office.id || FB.faithOfficeId(id, state) === office.id);
+    });
+  }
+
   FB.religiousHeadDefaultRealm = function (state, religionId) {
     return bookmarkReligiousHead(state, religionId);
   };
@@ -1831,6 +1887,9 @@ window.FB = window.FB || {};
     for (const officeId in offices) {
       if (!own(offices, officeId)) continue;
       const office = offices[officeId];
+      // Political bindings are facts, including absence and suspended holders.
+      // Restore, snapshots and ordinary office repair never fill or erase them.
+      if (office.head.succession === 'political_incumbent') continue;
       const religionId = office.religionId;
       const rel = FB.religionOf(religionId, state);
       if (!Object.prototype.hasOwnProperty.call(state.religiousHeads, officeId)) {
@@ -1878,10 +1937,11 @@ window.FB = window.FB || {};
   };
 
   FB.religiousHeadVacancy = function (state, religionId) {
-    FB.ensureReligiousHeads(state);
     const officeId = FB.faithOfficeId(religionId, state);
-    if (!state || !officeId || state.religiousHeads[officeId] !== null) return null;
-    return state.religiousHeadVacancies[officeId] || null;
+    const rel = FB.religionOf(religionId, state);
+    if (!(rel && rel.head && rel.head.succession === 'political_incumbent')) FB.ensureReligiousHeads(state);
+    if (!state || !officeId || !state.religiousHeads || state.religiousHeads[officeId] !== null) return null;
+    return state.religiousHeadVacancies && state.religiousHeadVacancies[officeId] || null;
   };
 
   FB.assignReligiousHead = function (state, religionId, realmId) {
@@ -1889,7 +1949,7 @@ window.FB = window.FB || {};
     const officeId = rel && rel.head && rel.head.officeId;
     const realm = state && state.realms && state.realms[realmId];
     const office = officeId && religiousOfficeDefinitions(state)[officeId];
-    if (!state || !rel || !officeId || !office ||
+    if (!state || !rel || !officeId || !office || office.head.succession === 'political_incumbent' ||
         (office.head.holderKind !== 'character' && (!realm || !realm.alive)) ||
         !religiousHeadHolderEligible(state, office, realmId)) return false;
     FB.ensureReligiousHeads(state);
@@ -1956,6 +2016,8 @@ window.FB = window.FB || {};
      assignment is vacant, missing, or points at a dead realm. */
   FB.religiousHeadOf = function (state, religionId) {
     const rel = FB.religionOf(religionId, state);
+    if (rel && rel.head && rel.head.succession === 'political_incumbent')
+      return religiousHeadSnapshot(state, religionId, null);
     const officeId = rel && rel.head && rel.head.officeId;
     if (!state || !officeId) return null;
     const heads = FB.ensureReligiousHeads(state);
@@ -1983,6 +2045,7 @@ window.FB = window.FB || {};
     const saved = !!(heads && typeof heads === 'object' &&
       !Array.isArray(heads) &&
       Object.prototype.hasOwnProperty.call(heads, officeId));
+    if (!saved && rel.head.succession === 'political_incumbent') return null;
     let rid = saved ? heads[officeId] :
       bookmarkReligiousHead(state, religionId);
     if (rid === null) return null;

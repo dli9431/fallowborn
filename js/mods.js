@@ -2476,6 +2476,16 @@ window.FBMODS = window.FBMODS || [];
       window.FBDATA = staged; reset();
       var stories = FB.stories.compile(staged.storyInstances || {});
       prepared = validateBeforeApply(mod, stories, composition);
+      Object.keys(mod.religions || {}).forEach(function (id) {
+        var head = FB.religionOf(id, null).head;
+        if (!head || head.succession !== 'political_incumbent') return;
+        var found = Object.keys(staged.bookmarks).some(function (bookmarkId) {
+          return FB.bookmarkRevisions(bookmarkId, staged.bookmarks[bookmarkId]).some(function (world) {
+            return (world.realms || []).some(function (r) { return r.id === head.realm; });
+          });
+        });
+        if (!found) fail('religions.' + id, 'political_incumbent references an unknown source realm.');
+      });
       prepared.stories = stories;
       var problems = FB.balanceLayers.problems(mod.balance);
       if (problems.length) fail('balance', problems.map(FB.balanceLayers.describe).join(' '));

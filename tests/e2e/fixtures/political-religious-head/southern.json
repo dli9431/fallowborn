@@ -1,0 +1,271 @@
+{
+  "name": "Southern political office example",
+  "religions": {
+    "early_office_demo": {
+      "name": "Consultation tradition",
+      "parent": "muslim",
+      "availability": {},
+      "properties": {
+        "head": {
+          "officeId": "southern_office_demo",
+          "title": "Community Head",
+          "realm": "southern_court_demo",
+          "holderKind": "character",
+          "holderSex": "m",
+          "minAge": 18,
+          "seat": "southern_seat_demo",
+          "succession": "political_incumbent"
+        },
+        "legalTradition": "customary",
+        "religiousPaths": null
+      }
+    }
+  },
+  "governmentForms": {
+    "southern_election_demo": {
+      "holders": "direct",
+      "succession": "crown_election",
+      "territory": "fixed",
+      "consent": "local_reserved",
+      "levy": "elective_service",
+      "revenue": "elective_receipts",
+      "council": "local_interests",
+      "diplomacy": "territorial_diplomacy",
+      "ai": "elective_selection",
+      "ladder": "local_standing",
+      "officeCatalogue": [],
+      "systems": {
+        "enable": [
+          "civic_institutions",
+          "roman_offices"
+        ],
+        "disable": [
+          "episcopal_sees",
+          "feudal_service",
+          "estates",
+          "royal_council",
+          "scutage",
+          "manorial_tenure",
+          "colonate"
+        ]
+      },
+      "selectionProfile": {
+        "eligibility": {
+          "minAge": 18,
+          "sex": "m",
+          "ancestry": false
+        },
+        "candidatePool": {
+          "gentle": false,
+          "cultures": [],
+          "religions": [
+            "early_office_demo"
+          ],
+          "excludedRoles": []
+        },
+        "procedure": {
+          "realmRecognition": true,
+          "designation": true,
+          "interimRevenue": true,
+          "defensiveLevy": false,
+          "livingNomination": true
+        },
+        "tieBreak": "identity",
+        "consensus": 1,
+        "quorum": 1,
+        "negotiationCost": 4,
+        "terms": {
+          "levy": 0.4,
+          "revenue": 0.3
+        },
+        "reserved": [
+          "war",
+          "grant"
+        ],
+        "members": [
+          {
+            "id": "community",
+            "name": "Capital consultation",
+            "principal": "capital_community",
+            "scope": "capital",
+            "basis": "community_assent",
+            "weight": 1,
+            "continuity": "institution",
+            "minimumSupport": -100,
+            "minimumMartial": 0,
+            "maximumLevy": 1,
+            "maximumRevenue": 1
+          }
+        ]
+      }
+    }
+  },
+  "geographies": {
+    "southern_land_demo": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 4
+      },
+      "land": [
+        [
+          0.2,
+          0.2,
+          5.8,
+          0.2,
+          5.8,
+          3.8,
+          0.2,
+          3.8
+        ]
+      ],
+      "seas": [],
+      "rivers": [],
+      "gridWidth": 160,
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "southern_seat_demo",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "southern_border_demo",
+          "x": 4.5,
+          "y": 2,
+          "terrain": "hills"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "southern_household_demo",
+      "name": "Consultation household",
+      "desc": "A fictional household beside the meeting place.",
+      "intro": "The household continues its ordinary work.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 51,
+      "prestige": 100,
+      "piety": 0,
+      "startCulture": "arabic",
+      "startReligion": "early_office_demo",
+      "bookmarkIds": [
+        "southern_office_world"
+      ],
+      "eras": [
+        "late_antique"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Free household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "southern_office_world": {
+      "id": "southern_office_world",
+      "name": "Consultation Court",
+      "desc": "A fictional consultation procedure.",
+      "date": {
+        "year": 600,
+        "season": 0,
+        "day": 1
+      },
+      "era": "late_antique",
+      "geography": "southern_land_demo",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "greatHolyWars": false,
+      "starts": [
+        "southern_household_demo"
+      ],
+      "stories": [],
+      "startLocations": {
+        "southern_household_demo": [
+          "southern_seat_demo"
+        ]
+      },
+      "provinces": [
+        {
+          "id": "southern_seat_demo",
+          "name": "Meeting Place",
+          "realm": "southern_court_demo",
+          "culture": "arabic",
+          "religion": "early_office_demo",
+          "dev": 4
+        },
+        {
+          "id": "southern_border_demo",
+          "name": "Other Court",
+          "realm": "border_court",
+          "culture": "roman",
+          "religion": "catholic",
+          "dev": 3
+        }
+      ],
+      "realms": [
+        {
+          "id": "southern_court_demo",
+          "name": "Consultation Court",
+          "color": "#447755",
+          "capital": "southern_seat_demo",
+          "rank": 3,
+          "religion": "early_office_demo",
+          "government": "southern_election_demo",
+          "ruler": {
+            "name": "Salim",
+            "sex": "m",
+            "culture": "arabic",
+            "born": 550,
+            "mar": 9,
+            "trait": "patient"
+          },
+          "royalCourt": {
+            "dynasty": "Meeting House",
+            "spouseId": null,
+            "members": [
+              {
+                "id": "relative",
+                "name": "Karim",
+                "sex": "m",
+                "born": 575,
+                "culture": "arabic",
+                "religion": "early_office_demo",
+                "fatherId": "ruler",
+                "spouseId": null
+              }
+            ]
+          }
+        },
+        {
+          "id": "border_court",
+          "name": "Border Court",
+          "color": "#775544",
+          "capital": "southern_border_demo",
+          "rank": 3,
+          "religion": "catholic"
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "straits": [],
+      "scripted": [],
+      "systems": {
+        "enable": [
+          "civic_institutions",
+          "roman_offices"
+        ]
+      }
+    }
+  }
+}

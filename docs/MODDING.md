@@ -5495,6 +5495,45 @@ Action eligibility may declare station, the name of a supported station permissi
 
 Religious head office schema
 
+The additional political_incumbent strategy requires holderKind:"character",
+head.realm naming the exact source polity, and an inhabited seat in each consuming
+world. Only a government whose succession strategy is crown_election is supported;
+kin_acclamation and other recognition families are rejected. The seat is a province
+string, {"province":"county_id"}, or {"site":"site_id"} in that world's layout.
+It identifies the office's seat, never its holder. The source's declared opening
+ruler must have an eligible birth year, sex and faith, unless an explicit null
+opening vacancy is authored. minAge and optional holderSex/holderRole retain their
+ordinary personal eligibility meaning; an opening ruler has no appointed personal
+role, so a role-qualified office requires an explicit opening vacancy. The holder's faith and source court's faith
+must recognize the same office. Unsupported head fields and independent character,
+recovery, claim, absolution or greatHolyWar behavior reject; null removes inherited
+rules. There is no JSON recognition path, callback or alternate source selector.
+
+For example, {"head":{"officeId":"community_head","title":"Community Head",
+"holderKind":"character","realm":"consultative_court","seat":"meeting_place",
+"minAge":18,"holderSex":"m","succession":"political_incumbent"}} follows the
+existing recognized incumbent of consultative_court. The complete southern.json
+and estuary.json examples under tests/e2e/fixtures/political-religious-head use
+different ages, personal filters, polities, constituencies and seats. The latter
+imports estuary_tradition_demo with minimum age 21, no sex filter and an independent
+woman incumbent through the ordinary Mods file picker.
+
+Fresh creation binds an existing eligible recognized person after political
+initialization. A bookmark religiousHeads entry may name this exact source realm
+or null. Explicit null is an intentional vacancy. Only committed political
+accession or adoption/rekey can subsequently bind an eligible incumbent; nomination,
+designation, consent recovery, appointment, hereditary succession, delayed religious
+recovery and reads do not fill an absent or null pointer. Local institutions and
+story opening heads cannot assign this strategy. Lost recognition, vacancy, changed
+form/faith, death or a mismatched person deny effective office authority. A suspended
+saved binding remains intact; recovered consent exposes that same authorized person.
+The selection ledger's originRealmId preserves the source polity across canonical
+player adoption and release. A capital, residence, territorial owner or inherited
+title is not a substitute for that identity. Existing strategies retain their rules.
+Legacy political stories whose parameters require an independently managed
+spiritual office cannot consume this strategy. Shared opening mappings for one
+office must agree, including explicit vacancies.
+
 Declare a head under a faith's properties. A realm appointment example is { "head": { "officeId": "high_council", "title": "High Elder", "holderKind": "realm", "realm": "my_realm", "succession": "appointment", "seat": { "site": "paris" } } }. A character succession example is { "head": { "officeId": "keepers", "title": "Keeper", "holderKind": "character", "succession": "hereditary" } }. Characters must be living followers of a faith recognizing that office, with holderSex satisfied when supplied. Assign a character through FB.assignReligiousHead(state, faithId, characterId), or call FB.succeedReligiousHead(state, faithId, { holderId:characterId }). Missing heirs leave a vacancy; appointment without holderId chooses the oldest eligible living follower. Realm holders follow their ordinary realm ruler succession.
 
 seat may be a province id string, { "province": "london" }, or { "site": "paris" }. A site resolves to its province in the current settlement layout. holderKind accepts realm or character; succession accepts the registered papal_election, caliphal_claim, appointment and hereditary strategies. Papal and caliphal strategies require realm holders. Missing legacy holderKind defaults to realm; legacy systems.papacy implies papal_election, recovery claim implies caliphal_claim, and other heads imply hereditary. A Papal head enables systems.papacy when that capability is unspecified, respects explicit false, and replacing it with another strategy disables inherited Papacy mechanics. head:null removes the office.

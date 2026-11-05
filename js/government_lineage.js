@@ -148,6 +148,7 @@
     remapStories(s, rid, 'player');
     if (FB.mobile) FB.mobile.remapAgreementPartners(s,rid,'player');
     FB.rebuildRulerIndex(s); G.invalidate();
+    if (FB.bindPoliticalReligiousHeads) FB.bindPoliticalReligiousHeads(s, 'player');
     if (FB.invalidateSettlementLordships) FB.invalidateSettlementLordships(s);
     return true;
   };
@@ -192,6 +193,7 @@
     if (m && !livingAbdication) { m.alive = false; m.died = s.date.year; }
     delete r.succession.playerDynasty;
     FB.rebuildRulerIndex(s); FB.invalidateRealmCache(); G.invalidate();
+    if (FB.bindPoliticalReligiousHeads) FB.bindPoliticalReligiousHeads(s, rid);
     if (FB.invalidateSettlementLordships) FB.invalidateSettlementLordships(s);
     FB.advanceRealmSuccession(s, rid, { cause:livingAbdication ? 'abdication' : 'death' });
     return rid;

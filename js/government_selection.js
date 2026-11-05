@@ -18,6 +18,28 @@
     var row = record(s, rid), form = row && FBDATA.governmentForms[row.formId];
     return form && form.selectionProfile || null;
   };
+  /* A religious office may follow this one reviewed recognition family.
+     originRealmId belongs to the canonical selection ledger and survives
+     adoption/release; ownership, residence and a title never identify it. */
+  S.officeRealmId = function (s, sourceId) {
+    function matches(rid) {
+      var data = S.state(s, rid), r = realm(s, rid), row = record(s, rid);
+      var ids = row && FB.governments.strategyIds(row.formId);
+      return r && r.alive && data && data.originRealmId === sourceId &&
+        ids && ids.succession === 'crown_election';
+    }
+    if (matches(sourceId)) return sourceId;
+    return sourceId !== 'player' && matches('player') ? 'player' : null;
+  };
+  S.officeIncumbent = function (s, sourceId) {
+    var rid = S.officeRealmId(s, sourceId), t = rid && tree(s, rid);
+    var m = t && t.members && t.members[t.rulerMemberId], c = m && memberCharacter(s, m);
+    // These recognition facts use living interests, support and terms only.
+    // Religious-office legitimacy cannot supply the incumbent's own consent.
+    if (!rid || !c || c.dead || rid === 'player' && c.id !== s.player.charId ||
+        S.candidates(s, rid, true).indexOf(t.rulerMemberId) < 0 || !S.recognized(s, rid)) return null;
+    return c;
+  };
   S.localRealm = function (s) {
     if (!s || !s.player) return null;
     var rid = FB.station.rulesRealm(s.player, s) ? 'player' :
@@ -384,6 +406,7 @@
       v.status = 'resolved'; v.accessionId = heir.id;
       var target = realm(s, rid).alive ? rid : S.state(s, 'player') === data ? 'player' : rid;
       data.recognition = recognition(s, target, heir.id, v.support, offer);
+      if (FB.bindPoliticalReligiousHeads) FB.bindPoliticalReligiousHeads(s, target);
       FB.news(s, FB.msg('news.government.local_accession', '👑 {ruler} receives local recognition in {realm}.',
         { ruler:heir.name, realm:FB.realmNameParam(s, realm(s, target)) }));
     } else if (request.action === 'transform') {

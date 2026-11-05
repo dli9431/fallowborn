@@ -298,6 +298,38 @@ traditional faith under the existing pagan root.
 
 Religious head strategies
 
+political_incumbent binds a character-held central office to one exact polity's
+existing, living and personally eligible recognized crown_election incumbent.
+head.realm names that source; seat remains presentation geography. The canonical
+selection ledger and ruler-member character establish identity, including its
+originRealmId across player adoption/release. Other recognition families reject.
+The selection owner's living interests, support and terms establish consent
+without consulting the religious office's own legitimacy. This avoids circular
+self-recognition. Court and holder faith must both recognize the office.
+
+Fresh seeding follows complete political initialization. Later binding writers
+are committed accession and canonical adoption/rekey. Pure office/head/authority
+reads never create people or repair bindings. Ordinary assignment, religious
+succession, consent recovery and timed recovery cannot bind this strategy.
+An authored null remains vacant until a canonical political change. Suspended
+recognition or changed form/faith hides effective authority while preserving the
+saved pointer; consent recovery re-exposes the same authorized person. Death
+records the existing explicit vacancy and political succession can bind the
+existing successor, with no second religious election, grant or allowance.
+Dynastic restore leaves these source courts intact, including pending support
+after an incumbent's death; only a subsequent canonical resolve installs a winner.
+There are no claim, absolution or greatHolyWar rules. Detached world validation
+checks the source family, inhabited seat, opening birth/sex/role/faith and explicit
+vacancy; local and story opening writers cannot assign the office. Legacy political
+stories requiring an independently managed spiritual office cannot consume this
+strategy. Shared opening mappings must agree.
+
+Technology impact religious_head_political_incumbent is none: identity and
+political consent are social relationships. Existing material capability gates
+remain authoritative. The independent southern.json native configuration and
+estuary.json file import under tests/e2e/fixtures/political-religious-head
+demonstrate minimum ages 18/21, male/unrestricted holders and separate scopes.
+
 A central office is effective faith data. properties.head declares officeId, localized title, holderKind (realm or character), succession, optional holderSex, and optional seat. A string seat names a province; an object names province or site, with sites resolved against the active bookmark's settlements. Realm offices use head.realm as their initial holder; character offices may name head.character or begin vacant. Descendants sharing an officeId share its assignment and institutional state. The faith supplying officeId owns the office definition; give a changed institution a new officeId instead of redefining a shared office through a descendant.
 
 FB.religiousHeads registers succession strategies in the same style as government strategies. FB.succeedReligiousHead dispatches using the effective faith. papal_election retains the existing college, laws, ballots, sanctions and schism model, scoped to that office. caliphal_claim retains the existing territorial qualifications, vacant-office claim and capital-siege succession war. Neither strategy requires a named faith. Both require realm holders. A papal_election head supplies systems.papacy when unspecified; explicit false remains respected. Removing the head or choosing another succession strategy disables an inherited Papacy capability.

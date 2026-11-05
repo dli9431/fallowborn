@@ -948,6 +948,21 @@ marker. See
 [doctrines.md](doctrines.md).
 
 Religious-head state is additive and keeps save version 3.
+For political_incumbent, the same religiousHeads office key stores the authorized
+character id or explicit null; an absent key stays absent on restore. No new saved
+field or envelope migration is introduced. Detached validation checks present
+non-null pointers against existing characters, without requiring currently
+effective recognition or replacing a suspended holder. Ordinary office repair
+skips these bindings. Death and committed political succession retain their
+canonical vacancy/accession boundaries. Dynastic restore also skips these source
+courts, including a dead incumbent with pending political support, so loading
+cannot finish an election through ordinary ruler repair. Repeated restore never elects, materializes,
+grants, pays or rebinds an incumbent. The existing selection originRealmId retains
+the polity across canonical player adoption/release, and issuerGeneration remains
+the original character id. Effective office authority is recomputed from current
+political recognition. Exact mod fingerprints include the authored head policy;
+changing it under the same mod name continues to reject incompatible saves.
+
 `state.religiousHeads` maps a stable `head.officeId` to a realm id or to `null` for an
 explicit vacancy. The built-in office ids equal the old Catholic and Sunni religion ids,
 so old saves need no key migration. New games seed missing entries from optional
