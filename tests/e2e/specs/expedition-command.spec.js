@@ -290,9 +290,9 @@ test('the landed home start replays exactly and presents its finite separate com
   });}
   const first=await facts();
   await page.evaluate(function () {FB.ui.showMobileConfederation('harbor_following');});
-  await expect(page.locator('#modal')).toContainText('Home office');
-  await expect(page.locator('#modal')).toContainText('90 days remaining');
-  await expect(page.locator('#modal')).toContainText('Public treasury');
+  await expect(page.locator('#genmodal')).toContainText('Home office');
+  await expect(page.locator('#genmodal')).toContainText('90 days remaining');
+  await expect(page.locator('#genmodal')).toContainText('Public treasury');
   await page.evaluate(function () {FB.ui.closeModal();FB.ui.showScreen('title');});
   await beginHome(page);expect(await facts()).toBe(first);
 });
