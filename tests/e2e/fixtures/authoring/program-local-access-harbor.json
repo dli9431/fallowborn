@@ -246,41 +246,37 @@
     }
   },
   "storyInstances": {
-    "harbor_offices": {
-      "id": "harbor_offices",
-      "type": "government_contest",
-      "name": "The quay election",
-      "desc": "Seek the vacant gate office, serve a term, and return to your household.",
-      "realmId": "harbor_commune"
-    },
-    "harbor_candidacy": {
-      "id": "harbor_candidacy",
-      "type": "civic_candidacy",
-      "requires": [
-        "harbor_offices"
-      ],
-      "requirements": {
-        "realms": [
-          "harbor_commune"
-        ],
-        "provinces": [
-          "harbor_quay"
-        ]
-      },
-      "realmId": "harbor_commune",
-      "officeId": "quay_magistrate",
-      "name": "A place on the quay",
-      "desc": "Choose public service or keep your household outside the office.",
-      "choices": {
-        "stand": {
-          "id": "harbor_stand",
-          "label": "Stand for office",
-          "detail": "Pay the declared nomination fee and seek the public mandate."
+    "harbor_private_household": {
+      "id": "harbor_private_household",
+      "type": "household_track",
+      "title": "A family at home",
+      "intro": "Choose ordinary household life.",
+      "homeProvinceId": "harbor_quay",
+      "continuity": "household",
+      "initialStage": "review",
+      "stages": {
+        "review": {
+          "name": "Review the household",
+          "text": "Consider your own household.",
+          "choices": [
+            {
+              "id": "stay",
+              "label": "Remain at home",
+              "detail": "Keep your own household without a reward.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
         },
-        "decline": {
-          "id": "harbor_decline",
-          "label": "Remain a private household",
-          "detail": "End this invitation without paying a nomination fee or receiving public rights."
+        "done": {
+          "name": "Review complete",
+          "text": "Your ordinary life continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
         }
       }
     }
@@ -306,7 +302,7 @@
       ],
       "fixedProvinceId": "harbor_quay",
       "tracks": [
-        "harbor_candidacy"
+        "harbor_private_household"
       ],
       "alwaysUnlocked": true,
       "startAge": 24,
@@ -317,7 +313,7 @@
         }
       },
       "trackLocations": {
-        "harbor_candidacy": [
+        "harbor_private_household": [
           "harbor_quay"
         ]
       }
@@ -337,9 +333,7 @@
       "geography": "harbor_lands",
       "settlementLayout": null,
       "religiousHeads": {},
-      "stories": [
-        "harbor_offices"
-      ],
+      "stories": [],
       "provinces": [
         {
           "id": "harbor_quay",

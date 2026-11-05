@@ -17,6 +17,9 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 
 async function start(page,info,prefix,outside,legacy) {
   await openGame(page,info);
+  const source=legacy ? require('../fixtures/authoring/expedition-dispatch-'+prefix+'.json') : examples[prefix];
+  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},source),
+    prefix+' ordinary import validation').toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+
     (legacy ? 'expedition-dispatch-' : 'program-local-access-')+prefix+'.json'));
@@ -111,12 +114,17 @@ for (const prefix of ['harbor','dune']) {
     const r=await page.evaluate(function () {
       const C=localAccessCase,M=FB.mobile,E=FB.expeditionPrograms;
       function roundtrip() {
-        const s=FB.state,row=M.row(s,C.rid),before=JSON.stringify([row,s.armies,s.owner,s.holder,s.treasury,s.market,s.population]),
-          rng=FB.getRngState(),uid=FB.getUidCounter();
+        function checkpoint(state) {
+          const s=FB.save.expandedSnapshot(state);
+          return JSON.stringify([M.row(s,C.rid),s.armies,s.owner,s.holder,s.treasury,s.market,s.population],function (key,value) {
+            if (!value || typeof value!=='object' || Array.isArray(value)) return value;
+            return Object.keys(value).sort().reduce(function (out,k) {out[k]=value[k];return out;},{});
+          });
+        }
+        const before=checkpoint(FB.state),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
         for (let i=0;i<2;i++) FB.save.restore(JSON.parse(FB.save.serialize()));
         const now=FB.state;
-        return before===JSON.stringify([M.row(now,C.rid),now.armies,now.owner,now.holder,now.treasury,now.market,now.population]) &&
-          rng===FB.getRngState() && uid===FB.getUidCounter() && M.validate(now);
+        return before===checkpoint(now) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter() && M.validate(now);
       }
       const pending=roundtrip();E.day(FB.state);const offered=roundtrip();FB.state.turn++;
       E.day(FB.state);const accepted=roundtrip();FB.state.turn++;
