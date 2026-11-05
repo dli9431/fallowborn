@@ -148,7 +148,7 @@ test('634 Observe enters the selected opening through the ordinary picker',async
     FB.game.setPaused(true);
     return {observe:FB.game.observe,id:FB.state.start.id,revision:FB.activeBookmark.revision,
       geography:FB.activeBookmark.geography,date:FB.state.date};
-  })).toEqual({observe:true,id:'634',revision:'scenery_protected_v1',geography:'europe_regional_2',
+  })).toEqual({observe:true,id:'634',revision:'ordinary_settlement_v2',geography:'europe_regional_2',
     date:{year:634,season:2,day:1}});
 });
 
@@ -270,7 +270,7 @@ for (const crazy of [false,true]) {
           pure:data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
       },{order:order});
       expect(result).toEqual({metadata:['634','The Early Conquests',{year:634,season:2,day:1},'late_antique',
-        'europe_regional_2','634_opening','scenery_protected_v1','baseline'],hidden:false,available:true,listed:true,
+        'europe_regional_2','634_opening','ordinary_settlement_v2','baseline'],hidden:false,available:true,listed:true,
         count:527,inhabited:506,complete:true,ordered:true,courts:122,
         named:['Dagobert I','Heraclius','Oswald','Sigebert III','Umar','Yazdegerd III'],
         climates:['northern_temperate','arid'],layouts:506,crossings:22,disabled:disabled,
@@ -546,7 +546,7 @@ for (const scenario of ['farmer_634','craftsman_634']) {
           },[]),
           childAge:s.date.year - s.realms.sasanian_634.ruler.born,
           errors:FBTEST.checkInvariants(),valid:FB.save.v4.validatePlatform(s)};
-      },disabled)).toEqual({scenario:scenario,revision:'scenery_protected_v1',date:{year:634,season:2,day:1},provinces:527,
+      },disabled)).toEqual({scenario:scenario,revision:'ordinary_settlement_v2',date:{year:634,season:2,day:1},provinces:527,
         opening:'baseline',actors:[],local:[],heads:[],disabled:true,
         courts:['Heraclius','Umar','Yazdegerd III'],oldCourts:false,namedFamilies:[],childAge:10,errors:[],valid:true});
       await page.evaluate(function () { FB.state.player.gold -= 3; });

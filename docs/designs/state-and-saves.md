@@ -2347,11 +2347,11 @@ Exact additive compatibility exception
 FB.mods.saveCompatibility owns the common transient decision used by
 save.otherWorld, detached v4 preflight and game.loadData. A native declaration
 may certify exactly one complete predecessor/current bookmark transition with
-an explicitly supported retained revision, added revision ids, a changed fresh
+an explicitly supported retained revision or finite list of retained revisions, added revision ids, a changed fresh
 revision pointer and unchanged supported bundled payloads. docs/MODDING.md gives
 the strict fields and finite limits. Registration remains native source metadata
 across complete publication and selected-source switches; JSON mods cannot
-provide or modify it. Missing, ambiguous or malformed declarations fail closed.
+provide or modify it. At most eight explicit predecessors may be considered. Exactly one full reconstructed-signature and saved-world proof must succeed; missing, duplicate matching or malformed declarations fail closed. A warm cache does not bypass ambiguity checks, and declaration order does not select a winner. Each predecessor proves a direct transition to the installed catalogue without chaining.
 
 The proof reconstructs the predecessor from its explicit trusted definition and
 the complete pristine mod baseline, replaying the unchanged raw JSON stack and
@@ -2364,6 +2364,8 @@ all older effective revisions and unrelated public roots. Runtime world aliases
 and layered balance are activation projections, not alternate authored roots.
 An edited definition, different JSON bytes/order, changed bundle payload/order,
 foreign edition or unsupported bookmark/revision cannot inherit the exception.
+
+The transient cache also binds the entire eligible declaration set after proving a unique match. An identical set may reuse the selected proof only after the same saved identity, current catalogue, raw configuration, bundled payload, live-definition observation and technology checks succeed. This avoids reconstructing known nonmatching predecessors during nested load checks. Added, removed, reordered, duplicated or edited declarations invalidate that selection and require the full uniqueness scan again. Revalidation that creates a new proof cannot reuse the old uniqueness result.
 
 One transient proof rechecks exact declaration/configuration, bundled payloads,
 live property structure and normalized technology definitions on every request.

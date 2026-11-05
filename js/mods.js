@@ -301,8 +301,9 @@ window.FBMODS = window.FBMODS || [];
     Object.keys(previous).forEach(function (id) {
       if (!own(current,id) || !sameDefinition(previous[id],current[id])) transitionFault('bookmark.revisions.' + id);
     });
+    var retained = Array.isArray(declaration.retainedRevision) ? declaration.retainedRevision : [declaration.retainedRevision];
     if (declaration.addedRevisions.indexOf(after.revision) < 0 ||
-        !own(previous,before.revision || 'baseline') || !own(previous,declaration.retainedRevision))
+        !own(previous,before.revision || 'baseline') || retained.some(function (id) { return !own(previous,id); }))
       transitionFault('bookmark.defaultRevision');
     var oldWorlds = FB.bookmarkRevisions(declaration.bookmarkId,before);
     var newWorlds = FB.bookmarkRevisions(declaration.bookmarkId,after);
@@ -320,9 +321,13 @@ window.FBMODS = window.FBMODS || [];
       if (row.predecessorRoots[key] !== null && (typeof row.predecessorRoots[key] !== 'string' || !/^[a-f0-9]{64}$/.test(row.predecessorRoots[key])))
         transitionFault('declaration.predecessorRoots.' + key);
     });
-    if (row.schema !== 1 || ['id','bookmarkId','retainedRevision'].some(function (key) {
+    if (row.schema !== 1 || ['id','bookmarkId'].some(function (key) {
       return typeof row[key] !== 'string' || !/^[a-z0-9_]{1,100}$/i.test(row[key]);
     })) transitionFault('declaration.identity');
+    var retained = Array.isArray(row.retainedRevision) ? row.retainedRevision : [row.retainedRevision];
+    if (!retained.length || retained.length > 32 || retained.some(function (id,i) {
+      return typeof id !== 'string' || !/^[a-z0-9_]{1,100}$/i.test(id) || retained.indexOf(id) !== i;
+    })) transitionFault('declaration.retainedRevision');
     if (!Array.isArray(row.addedRevisions) || !row.addedRevisions.length || row.addedRevisions.length > 8 ||
         row.addedRevisions.some(function (id,i) { return typeof id !== 'string' || !/^[a-z0-9_]{1,100}$/i.test(id) || row.addedRevisions.indexOf(id) !== i; }))
       transitionFault('declaration.addedRevisions');
@@ -430,75 +435,113 @@ window.FBMODS = window.FBMODS || [];
     // The signature covers every date. An additive transition also changes
     // signatures of campaigns in untouched worlds, which need the same proof.
     var ownRows = declarations.filter(function (row) { return row && row.bookmarkId === start.id; });
-    var rows = ownRows.length ? ownRows.filter(function (row) { return row.retainedRevision === revision; }) : declarations;
-    if (rows.length !== 1) return result(false,rows.length ? 'transition.ambiguous' : 'transition.missing');
-    var row = rows[0];
-    try {
-      validateTransition(row);
-      if (!sameDefinition(baseCatalogues.bookmarks[row.bookmarkId],row.current)) transitionFault('declaration.current');
-      function savedWorld(catalogue) {
-        var raw = catalogue.bookmarks && catalogue.bookmarks[start.id];
-        if (!raw) transitionFault('state.start.id');
-        var world = FB.bookmarkRevisions(start.id,raw).find(function (candidate) {
-          return (candidate.revision || 'baseline') === revision;
-        });
-        if (!world) transitionFault('state.start.revision');
-        // Older unlayered worlds omit the equivalent baseline stamp.
-        return Object.assign({},world,{revision:revision});
-      }
-      savedWorld(installedCatalogues || {});
-      var baselineRoots = M.retainedCatalogueRoots();
-      authoringRoots.forEach(function (key) {
-        if (baselineRoots[key] !== row.predecessorRoots[key]) transitionFault('catalogue.predecessorRoots.' + key);
-      });
-      var stored = readAll(), enabled = readEnabled(), bundles = M.bundled().filter(function (bundle) { return enabled.indexOf(bundle.id) >= 0; });
-      M.assertReady();
-      if (stored.length > 32 || enabled.length > 16 || stored.reduce(function (total,text) { return total + text.length; },0) > 4194304) transitionFault('configuration.limits');
-      var expected = row.bundled.filter(function (bundle) { return enabled.indexOf(bundle.id) >= 0; });
-      var payloads = bundles.map(function (bundle) { return {id:bundle.id,data:bundle.data}; });
-      try { transitionData(payloads); } catch (payloadError) { transitionFault('bundled.JSON'); }
-      if (JSON.stringify(payloads) !== JSON.stringify(expected) || bundles.length !== enabled.length)
-        transitionFault('bundled.payloadsAndOrder');
-      if (!installedCatalogues || !sameDefinition(projectedBalance(installedCatalogues,stored,bundles),FBDATA.balance))
-        transitionFault('catalogue.live.balance');
-      var declarationKey = JSON.stringify(row), enabledOrder = enabled.slice().sort(), cached = compatibilityProof;
-      if (cached && cached.saved === saved && cached.bookmarkId === start.id && cached.revision === revision &&
-          cached.current === effectiveFingerprint && cached.base === baseCatalogues && cached.declaration === declarationKey) {
-        if (!sameStrings(cached.stored,stored) || !sameStrings(cached.enabled,enabledOrder)) transitionFault('configuration.changed');
-        if (cached.observed() && cached.tech === normalizedTechFingerprint(FBDATA.tech)) return result(true,null,row.id);
-      }
-      var current = installedCatalogues;
-      if (!current) transitionFault('catalogue.current');
-      // Activation projects only these legacy aliases and layered balance.
-      // Every definition root used to resolve a retained campaign stays exact.
-      Object.keys(current).forEach(function (key) {
-        var expectedRoot = current[key], liveRoot = FBDATA[key];
-        if (key === 'tech') {
-          expectedRoot = normalizedTechFingerprint(expectedRoot); liveRoot = normalizedTechFingerprint(liveRoot);
+    var rows = ownRows.length ? ownRows.filter(function (row) {
+      return Array.isArray(row.retainedRevision) ? row.retainedRevision.indexOf(revision) >= 0 : row.retainedRevision === revision;
+    }) : declarations;
+    if (!rows.length) return result(false,'transition.missing');
+    // Each declaration proves every predecessor revision unchanged. Select by
+    // the actual reconstructed signature, never by date alone or list order.
+    // Duplicate successful proofs remain ambiguous; transitions never chain.
+    try { rows.forEach(validateTransition); }
+    catch (error) { return result(false,error.message); }
+    var candidateProof = null, selectionKey = JSON.stringify(rows);
+    function prove(row) {
+      try {
+        if (!sameDefinition(baseCatalogues.bookmarks[row.bookmarkId],row.current)) transitionFault('declaration.current');
+        function savedWorld(catalogue) {
+          var raw = catalogue.bookmarks && catalogue.bookmarks[start.id];
+          if (!raw) transitionFault('state.start.id');
+          var world = FB.bookmarkRevisions(start.id,raw).find(function (candidate) {
+            return (candidate.revision || 'baseline') === revision;
+          });
+          if (!world) transitionFault('state.start.revision');
+          // Older unlayered worlds omit the equivalent baseline stamp.
+          return Object.assign({},world,{revision:revision});
         }
-        var equal = authoringRoots.indexOf(key) >= 0
-          ? JSON.stringify(expectedRoot) === JSON.stringify(liveRoot) : sameDefinition(expectedRoot,liveRoot);
-        if (activationAliases.indexOf(key) < 0 && !equal) transitionFault('catalogue.live.' + key);
-      });
-      var predecessor = Object.assign({},baseCatalogues,{bookmarks:Object.assign({},baseCatalogues.bookmarks)});
-      predecessor.bookmarks[row.bookmarkId] = row.predecessor;
-      predecessor = replayCatalogue(predecessor,stored,bundles);
-      transitionWorlds(predecessor.all.bookmarks[row.bookmarkId],current.bookmarks[row.bookmarkId],row);
-      if (!sameDefinition(savedWorld(predecessor.all),savedWorld(current))) transitionFault('bookmark.savedRevision');
-      var oldRoots = Object.assign({},predecessor.all,{bookmarks:Object.assign({},predecessor.all.bookmarks)});
-      var newRoots = Object.assign({},current,{bookmarks:Object.assign({},current.bookmarks)});
-      delete oldRoots.bookmarks[row.bookmarkId]; delete newRoots.bookmarks[row.bookmarkId];
-      var rootKeys = Object.keys(oldRoots);
-      Object.keys(newRoots).forEach(function (key) { if (rootKeys.indexOf(key) < 0) rootKeys.push(key); });
-      rootKeys.forEach(function (key) {
-        if (!sameDefinition(oldRoots[key],newRoots[key])) transitionFault('catalogue.retainedDefinitions.' + key);
-      });
-      var exact = 'effective-1-' + M.fingerprint({stored:stored,bundled:enabledOrder,catalogue:M.fingerprint(predecessor.effective)});
-      if (saved !== exact) transitionFault('signature.predecessor');
-      compatibilityProof = {saved:saved,bookmarkId:start.id,revision:revision,current:effectiveFingerprint,base:baseCatalogues,declaration:declarationKey,
-        stored:stored.slice(),enabled:enabledOrder,observed:observeDefinitions(),tech:normalizedTechFingerprint(FBDATA.tech)};
-      return result(true,null,row.id);
-    } catch (error) { return result(false,error.message); }
+        savedWorld(installedCatalogues || {});
+        var baselineRoots = M.retainedCatalogueRoots();
+        authoringRoots.forEach(function (key) {
+          if (baselineRoots[key] !== row.predecessorRoots[key]) transitionFault('catalogue.predecessorRoots.' + key);
+        });
+        var stored = readAll(), enabled = readEnabled(), bundles = M.bundled().filter(function (bundle) { return enabled.indexOf(bundle.id) >= 0; });
+        M.assertReady();
+        if (stored.length > 32 || enabled.length > 16 || stored.reduce(function (total,text) { return total + text.length; },0) > 4194304) transitionFault('configuration.limits');
+        var expected = row.bundled.filter(function (bundle) { return enabled.indexOf(bundle.id) >= 0; });
+        var payloads = bundles.map(function (bundle) { return {id:bundle.id,data:bundle.data}; });
+        try { transitionData(payloads); } catch (payloadError) { transitionFault('bundled.JSON'); }
+        if (JSON.stringify(payloads) !== JSON.stringify(expected) || bundles.length !== enabled.length)
+          transitionFault('bundled.payloadsAndOrder');
+        if (!installedCatalogues || !sameDefinition(projectedBalance(installedCatalogues,stored,bundles),FBDATA.balance))
+          transitionFault('catalogue.live.balance');
+        var declarationKey = JSON.stringify(row), enabledOrder = enabled.slice().sort(), cached = compatibilityProof;
+        if (cached && cached.saved === saved && cached.bookmarkId === start.id && cached.revision === revision &&
+            cached.current === effectiveFingerprint && cached.base === baseCatalogues && cached.declaration === declarationKey) {
+          if (!sameStrings(cached.stored,stored) || !sameStrings(cached.enabled,enabledOrder)) transitionFault('configuration.changed');
+          if (cached.observed() && cached.tech === normalizedTechFingerprint(FBDATA.tech)) {
+            candidateProof = cached;
+            return result(true,null,row.id);
+          }
+        }
+        var current = installedCatalogues;
+        if (!current) transitionFault('catalogue.current');
+        // Activation projects only these legacy aliases and layered balance.
+        // Every definition root used to resolve a retained campaign stays exact.
+        Object.keys(current).forEach(function (key) {
+          var expectedRoot = current[key], liveRoot = FBDATA[key];
+          if (key === 'tech') {
+            expectedRoot = normalizedTechFingerprint(expectedRoot); liveRoot = normalizedTechFingerprint(liveRoot);
+          }
+          var equal = authoringRoots.indexOf(key) >= 0
+            ? JSON.stringify(expectedRoot) === JSON.stringify(liveRoot) : sameDefinition(expectedRoot,liveRoot);
+          if (activationAliases.indexOf(key) < 0 && !equal) transitionFault('catalogue.live.' + key);
+        });
+        var predecessor = Object.assign({},baseCatalogues,{bookmarks:Object.assign({},baseCatalogues.bookmarks)});
+        predecessor.bookmarks[row.bookmarkId] = row.predecessor;
+        predecessor = replayCatalogue(predecessor,stored,bundles);
+        transitionWorlds(predecessor.all.bookmarks[row.bookmarkId],current.bookmarks[row.bookmarkId],row);
+        if (!sameDefinition(savedWorld(predecessor.all),savedWorld(current))) transitionFault('bookmark.savedRevision');
+        var oldRoots = Object.assign({},predecessor.all,{bookmarks:Object.assign({},predecessor.all.bookmarks)});
+        var newRoots = Object.assign({},current,{bookmarks:Object.assign({},current.bookmarks)});
+        delete oldRoots.bookmarks[row.bookmarkId]; delete newRoots.bookmarks[row.bookmarkId];
+        var rootKeys = Object.keys(oldRoots);
+        Object.keys(newRoots).forEach(function (key) { if (rootKeys.indexOf(key) < 0) rootKeys.push(key); });
+        rootKeys.forEach(function (key) {
+          if (!sameDefinition(oldRoots[key],newRoots[key])) transitionFault('catalogue.retainedDefinitions.' + key);
+        });
+        var exact = 'effective-1-' + M.fingerprint({stored:stored,bundled:enabledOrder,catalogue:M.fingerprint(predecessor.effective)});
+        if (saved !== exact) transitionFault('signature.predecessor');
+        candidateProof = {saved:saved,bookmarkId:start.id,revision:revision,current:effectiveFingerprint,base:baseCatalogues,declaration:declarationKey,
+          stored:stored.slice(),enabled:enabledOrder,observed:observeDefinitions(),tech:normalizedTechFingerprint(FBDATA.tech)};
+        return result(true,null,row.id);
+      } catch (error) { return result(false,error.message); }
+    }
+    // A successful selection proves the complete candidate set unambiguous.
+    // Reuse it only when the set is byte-identical and the existing live-data,
+    // JSON, bundle and saved-world guards still reuse that same proof object.
+    // This avoids replaying known nonmatches at every nested load boundary.
+    var selected = compatibilityProof;
+    if (selected && selected.selection === selectionKey && selected.saved === saved &&
+        selected.bookmarkId === start.id && selected.revision === revision &&
+        selected.current === effectiveFingerprint && selected.base === baseCatalogues) {
+      var selectedRow = rows.find(function (row) { return JSON.stringify(row) === selected.declaration; });
+      if (selectedRow) {
+        var reused = prove(selectedRow);
+        if (reused.compatible && candidateProof === selected) return reused;
+      }
+    }
+    var match = null, matchedProof = null, failure = result(false,'signature.predecessor');
+    for (var i = 0; i < rows.length; i++) {
+      var checked = prove(rows[i]);
+      if (!checked.compatible) { failure = checked; continue; }
+      if (match) { compatibilityProof = null; return result(false,'transition.ambiguous'); }
+      match = checked;
+      matchedProof = candidateProof;
+    }
+    if (match) {
+      matchedProof.selection = selectionKey;
+      compatibilityProof = matchedProof;
+    }
+    return match || failure;
   };
 
   M.store = function (jsonText) {

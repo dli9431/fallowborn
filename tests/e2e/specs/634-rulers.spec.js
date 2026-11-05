@@ -72,7 +72,7 @@ test('634 keeps the complete Umar graph hidden and validation pure',async functi
       stages:FB.stories.get('umar_agenda_634').declaration.stages.map(function (st) { return [st.id,st.year,st.season]; }),
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
   })).toEqual({hidden:[undefined,true],available:true,faults:[],tracks:['umar_agenda_634'],locations:['medina'],
-    revision:'scenery_protected_v1',layout:'634_opening',isolated:true,held:true,
+    revision:'ordinary_settlement_v2',layout:'634_opening',isolated:true,held:true,
     stages:[['accession_review_634',634,2],['syrian_review_634',634,2],['iraqi_review_634',634,2],['mandate_conclusion_634',634,2]],pure:true});
 });
 
@@ -262,7 +262,7 @@ test('634 keeps the complete Heraclius graph hidden and validation pure',async f
       stages:FB.stories.get('heraclius_agenda_634').declaration.stages.map(function (st) { return [st.id,st.year,st.season]; }),
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
   })).toEqual({hidden:[undefined,true],available:true,faults:[],tracks:['heraclius_agenda_634'],locations:['constantinople'],
-    revision:'scenery_protected_v1',layout:'634_opening',isolated:true,held:true,
+    revision:'ordinary_settlement_v2',layout:'634_opening',isolated:true,held:true,
     stages:[['imperial_court_review_634',634,2],['eastern_holdings_review_634',634,2],['defense_diplomacy_review_634',634,2],['imperial_conclusion_634',634,2]],pure:true});
 });
 

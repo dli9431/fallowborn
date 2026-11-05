@@ -1558,7 +1558,7 @@ to all three maps.
 
 ### Trusted retained catalogue transitions
 
-Native sources can declare one exact additive catalogue transition with
+Native sources can declare bounded exact additive catalogue transitions with
 `FB.bookmarkSources.retainCatalogueTransition(record)` before the native manifest
 is sealed. This metadata is private to source preparation, survives selected-date
 switches and complete publication, and never becomes a public data root or save
@@ -1568,7 +1568,7 @@ allowlists or callbacks, including through bookmark metadata.
 The record has exactly `schema:1`, `id`, `bookmarkId`, `retainedRevision`,
 `predecessor`, `current`, `predecessorRoots`, `addedRevisions` and `bundled`. Declaration,
 bookmark and revision ids are 1-100 letters,
-digits or underscores. `predecessor` and `current` are complete exact authored
+digits or underscores. retainedRevision accepts either one such id or 1-32 distinct ids. `predecessor` and `current` are complete exact authored
 bookmark definitions with the same declared id. Preserve the predecessor from
 its trusted native definition, before adding revisions; do not derive it by
 removing unknown revisions from a current catalogue. `addedRevisions` lists 1-8
@@ -1606,7 +1606,7 @@ limit this exception, not ordinary import eligibility.
 `FB.mods.saveCompatibility(envelope)` returns detached transient
 `{compatible,path,transition}` diagnostics. Exact current signatures take the
 ordinary path. A mismatched standard `effective-1` signature requires one
-unambiguous matching declaration. A saved campaign on another unchanged date may use the same unique transition because effective-1 covers the complete catalogue. Its saved revision must exist identically in both reconstructed and current catalogues. A declaration for the saved date retains its explicit retainedRevision restriction. Multiple unrelated candidate declarations remain ambiguous and reject; this interface does not chain transitions. The proof starts with the pristine complete
+unambiguous matching declaration. A saved campaign on another unchanged date may use the same unique transition because effective-1 covers the complete catalogue. Its saved revision must exist identically in both reconstructed and current catalogues. Each declaration proves all of its predecessor revisions unchanged. retainedRevision explicitly limits matching saves of its own date: it accepts one revision id or a list of 1-32 distinct revision ids present in the predecessor. Existing single-id declarations retain their restriction. With several explicit predecessors, the saved signature and complete world proof must match exactly one declaration. Zero matches reject, and two successful proofs, including duplicates, reject as ambiguous even after a cached success. Selection is independent of declaration order. Each proof compares directly with the installed catalogue; this interface does not chain transitions. The proof starts with the pristine complete
 mod baseline, substitutes the declared predecessor, and replays the unchanged
 stored JSON strings and enabled bundled payloads through ordinary detached
 canonical validation in their original application order. Authored-only roots

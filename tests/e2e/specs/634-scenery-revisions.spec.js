@@ -10,6 +10,7 @@ const {mockCrazyGames} = require('../support/crazygames');
 const {installPageGuards} = require('../support/page-contract');
 const fixtureRoot = path.resolve(__dirname,'../fixtures/634-scenery-revisions');
 const predecessorSource = fs.readFileSync(path.join(fixtureRoot,'bookmark_634.predecessor.js'),'utf8');
+const protectedPredecessorSource = fs.readFileSync(path.join(fixtureRoot,'bookmark_634.protected-predecessor.js'),'utf8');
 const pinned = require('../fixtures/634-scenery-revisions/predecessor.json');
 const modSource = fs.readFileSync(path.resolve(__dirname,'../../../js/mods.js'),'utf8');
 const publicRoots = Array.from(modSource.match(/const PUBLIC_KEYS = \{([\s\S]*?)\n  \};/)[1]
@@ -67,9 +68,10 @@ test('the complete supported predecessor projection differs only by the authoriz
       roots.forEach(function (key) { if (Object.prototype.hasOwnProperty.call(FBDATA,key)) data[key] = FBDATA[key]; });
       data.bookmarks = Object.assign({},FBDATA.bookmarks);
       const raw = FBDATA.bookmarks['634'];
-      if (raw.revision === 'scenery_protected_v1') {
+      if (raw.revision === 'ordinary_settlement_v2') {
         const revisions = Object.assign({},raw.revisions);
         delete revisions.scenery_protected_v1;
+        delete revisions.ordinary_settlement_v2;
         data.bookmarks['634'] = Object.assign({},raw,{revision:'baseline',revisions:revisions});
       }
       return {fingerprint:FB.mods.fingerprint(data),starts:FBDATA.startScenarios.map(function (row) { return row.id; }),
@@ -93,11 +95,19 @@ async function openEdition(page,info,crazy) {
   } else await openGame(page,info);
 }
 
-async function begin634(page) {
+async function begin634(page,revision) {
+  const original = await page.evaluate(function (revision) {
+    const raw = FBDATA.bookmarks['634'], original = raw.revision;
+    if (revision) raw.revision = revision;
+    return original;
+  },revision);
   await beginBookmarkFromTitle(page,'634','farmer_634');
   // The leaf journey temporarily adds a review visibility field. Return the
   // native catalogue to its exact authored shape before compatibility proofs.
-  await page.evaluate(function () { delete FBDATA.bookmarks['634'].hidden; });
+  await page.evaluate(function (original) {
+    delete FBDATA.bookmarks['634'].hidden;
+    FBDATA.bookmarks['634'].revision = original;
+  },original);
 }
 
 async function load(page,save) {
@@ -126,10 +136,10 @@ async function installProbe(page) {
 }
 
 for (const crazy of [false,true]) {
-  test('fresh protected 634 preserves every retained declaration and start on ' + (crazy ? 'CrazyGames' : 'standard'),async function ({page},info) {
+  test('retained protected 634 preserves every retained declaration and start on ' + (crazy ? 'CrazyGames' : 'standard'),async function ({page},info) {
     await openEdition(page,info,crazy);
     const result = await page.evaluate(function (input) {
-      const raw = FBDATA.bookmarks['634'], baseline = FB.bookmark('634','baseline'), fresh = FB.bookmark('634');
+      const raw = FBDATA.bookmarks['634'], baseline = FB.bookmark('634','baseline'), fresh = FB.bookmark('634','scenery_protected_v1');
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const retained = Object.assign({},baseline), projection = Object.assign({},fresh);
       delete retained.revision; delete projection.revision; delete retained.provinces; delete projection.provinces;
@@ -155,12 +165,12 @@ for (const crazy of [false,true]) {
         }),faults:[FB.validateBookmark(baseline),FB.validateBookmark(fresh)],
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     },{scenic:scenic});
-    expect(result).toEqual({revision:'scenery_protected_v1',revisions:['baseline','scenery_protected_v1'],baseline:{},
+    expect(result).toEqual({revision:'scenery_protected_v1',revisions:['baseline','scenery_protected_v1','ordinary_settlement_v2'],baseline:{},
       baselineFingerprint:pinned.world,predecessorFingerprint:pinned.world,current:true,roots:pinned.roots,bundled:[],
       otherFields:true,fields:['provinces'],sourceIds:Object.values(scenic),pristineSources:true,protected:scenicIds,
       inhabited:506,exactRows:true,starts:pinned.locations.map(function (id) { return {id:id,valid:true,applicable:true,locations:true}; }),
       faults:[[],[]],pure:true});
-    await begin634(page);
+    await begin634(page,'scenery_protected_v1');
     await installProbe(page);
     const routes = await page.evaluate(function (ids) {
       const s = FB.state;
@@ -194,7 +204,7 @@ for (const crazy of [false,true]) {
 }
 
 test('protected conversion rejection is atomic for explicit and legacy inferred evidence',async function ({page},info) {
-  await openGame(page,info); await begin634(page); await installProbe(page);
+  await openGame(page,info); await begin634(page,'scenery_protected_v1'); await installProbe(page);
   const results = await page.evaluate(function (ids) {
     const valid = JSON.parse(FB.save.serialize());
     return ['record','legacy','explicit-empty'].map(function (kind,index) {
@@ -228,7 +238,7 @@ async function importOverlay(page,name) {
 async function convertBaseline(page,mode) {
   return page.evaluate(function (mode) {
     const s = FB.state;
-    if (s.start.revision !== 'baseline') throw new Error('The predecessor must select baseline');
+    if (s.start.revision !== 'baseline' && s.start.revision !== 'ordinary_settlement_v2') throw new Error('Expected an ordinary settlement revision');
     s.player.gold = 5000; s.player.prestige = 500;
     const choice = FB.travelDestinations(s,'frontier')[0];
     if (!choice) throw new Error('The predecessor needs an ordinary frontier');
@@ -281,6 +291,109 @@ async function seedConfiguration(page,old) {
   },old.configuration);
 }
 
+for (const crazy of [false,true]) for (const mode of ['commoner','noble']) {
+  test('fresh ordinary 634 supports ' + mode + ' settlement on ' + (crazy ? 'CrazyGames' : 'standard'),async function ({page},info) {
+    await openEdition(page,info,crazy);
+    expect(await page.evaluate(function () {
+      const fresh = FB.bookmark('634'), baseline = FB.bookmark('634','baseline');
+      return {revision:fresh.revision,rows:JSON.stringify(fresh.provinces) === JSON.stringify(baseline.provinces),
+        protected:fresh.provinces.filter(function (row) { return row.settlementPolicy === 'protected'; }).length,
+        scenery:fresh.provinces.filter(function (row) { return row.wasteland; }).length};
+    })).toEqual({revision:'ordinary_settlement_v2',rows:true,protected:0,scenery:21});
+    await begin634(page);
+    const settled = await convertBaseline(page,mode);
+    expect(settled.spent[0]).toBeGreaterThan(0);
+    expect(settled.spent[1]).toBeGreaterThan(0);
+    await load(page,settled.save);
+    expect(await retainedFacts(page,settled)).toMatchObject({same:true,rng:true,uid:true,
+      revision:'ordinary_settlement_v2',current:'ordinary_settlement_v2',converted:true,omitted:true,sites:true});
+  });
+}
+
+for (const entry of [
+  {id:'634',revision:'baseline',file:'household.json'},
+  {id:'634',revision:'scenery_protected_v1',file:'court.json'},
+  {id:'476',file:'household.json'},
+  {id:'867',file:'court.json'}
+]) {
+  test.describe('protected predecessor ' + entry.id + ' ' + (entry.revision || 'fresh'),function () {
+    let old;
+    test.beforeAll(async function ({browser},info) {
+      test.skip(!info.project.name.endsWith('-served'),'Pinned source interception needs a served origin.');
+      const context = await browser.newContext(), source = await context.newPage(), guard = installPageGuards(source);
+      try {
+        await source.route('**/data/bookmark_634.js',function (route) {
+          return route.fulfill({contentType:'application/javascript',body:protectedPredecessorSource});
+        });
+        await openGame(source,info); await importOverlay(source,entry.file);
+        if (entry.id === '634') await begin634(source,entry.revision);
+        else {
+          const hidden = await source.evaluate(function (id) { return FBDATA.bookmarks[id].hidden; },entry.id);
+          await beginBookmarkFromTitle(source,entry.id);
+          await source.evaluate(function (input) {
+            if (input.hidden === undefined) delete FBDATA.bookmarks[input.id].hidden;
+            else FBDATA.bookmarks[input.id].hidden = input.hidden;
+          },{id:entry.id,hidden:hidden});
+        }
+        old = await source.evaluate(function () {
+          FB.state.player.gold -= 3;
+          return {save:JSON.parse(FB.save.serialize()),configuration:[localStorage.getItem('fb_mods'),localStorage.getItem('fb_mods_bundled')]};
+        });
+        await load(source,old.save);
+        old.save = await source.evaluate(function () { return JSON.parse(FB.save.serialize()); });
+      } finally { try { expect(guard.faults).toEqual([]); } finally { await context.close(); } }
+    });
+    test('restores the original modded world and reloads without changing saved facts',async function ({page},info) {
+      await seedConfiguration(page,old); await openGame(page,info); await installProbe(page);
+      expect(await page.evaluate(function (saved) {
+        const before = scenicSnapshot(), decision = FB.mods.saveCompatibility(saved);
+        return {decision:decision,pure:scenicSame(before),changed:FB.mods.sig() !== saved.mods};
+      },old.save)).toEqual({decision:{compatible:true,path:null,transition:'autumn_634_ordinary_settlement_v2'},pure:true,changed:true});
+      await load(page,old.save);
+      const saved = await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
+      expect(saved.state).toEqual(old.save.state);
+      expect(saved.rng).toBe(old.save.rng); expect(saved.uid).toBe(old.save.uid);
+      if (entry.id === '634') expect(await page.evaluate(function () {
+        return {revision:FB.activeBookmark.revision,protected:FB.world.provs.filter(function (row) { return row.settlementPolicy === 'protected'; }).length};
+      })).toEqual({revision:entry.revision,protected:entry.revision === 'baseline' ? 0 : 21});
+      await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page); await load(page,saved);
+      expect(await page.evaluate(function () { return JSON.parse(FB.save.serialize()).state; })).toEqual(old.save.state);
+    });
+    test('reuses a unique predecessor proof and rejects changed candidate sets',async function ({page},info) {
+      await seedConfiguration(page,old); await openGame(page,info);
+      const calls = await page.evaluate(function (saved) {
+        const normalize = FB.titleIds.normalizeMod;
+        let replays = 0, first, second, cold, warm;
+        FB.titleIds.normalizeMod = function () { replays++; return normalize.apply(this,arguments); };
+        try {
+          first = FB.mods.saveCompatibility(saved); cold = replays;
+          replays = 0;
+          second = FB.mods.saveCompatibility(saved); warm = replays;
+        } finally { FB.titleIds.normalizeMod = normalize; }
+        return {first:first,second:second,cold:cold,warm:warm};
+      },old.save);
+      expect(calls.first).toEqual({compatible:true,path:null,transition:'autumn_634_ordinary_settlement_v2'});
+      expect(calls.second).toEqual(calls.first);
+      expect(calls.cold).toBeGreaterThan(0);
+      expect(calls.warm).toBe(0);
+      // A warm proof must still reject duplicate matching predecessors and must
+      // select the same unique proof when the declaration order changes.
+      expect(await page.evaluate(function (saved) {
+        const original = FB.bookmarkSources.retainedCatalogueTransitions, rows = original();
+        let duplicate, reversed;
+        try {
+          FB.bookmarkSources.retainedCatalogueTransitions = function () { return rows.concat(rows.filter(function (row) { return row.id === 'autumn_634_ordinary_settlement_v2'; })); };
+          duplicate = FB.mods.saveCompatibility(saved);
+          FB.bookmarkSources.retainedCatalogueTransitions = function () { return rows.slice().reverse(); };
+          reversed = FB.mods.saveCompatibility(saved);
+        } finally { FB.bookmarkSources.retainedCatalogueTransitions = original; }
+        return {duplicate:duplicate,reversed:reversed};
+      },old.save)).toEqual({duplicate:{compatible:false,path:'transition.ambiguous',transition:null},
+        reversed:{compatible:true,path:null,transition:'autumn_634_ordinary_settlement_v2'}});
+    });
+  });
+}
+
 for (const id of ['476','867']) {
   test.describe('unchanged modded ' + id + ' across the 634 addition',function () {
   let old;
@@ -316,6 +429,9 @@ for (const id of ['476','867']) {
     expect(saved.mods).not.toBe(old.save.mods);
     await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page); await load(page,saved);
     expect(await page.evaluate(function () { return JSON.parse(FB.save.serialize()).state; })).toEqual(old.save.state);
+  });
+  test('rejects a foreign revision and an edited unrelated world without mutating the campaign',async function ({page},info) {
+    await seedConfiguration(page,old); await openGame(page,info); await load(page,old.save);
     await installProbe(page);
     // A successful proof is not reusable for an absent revision or altered
     // unrelated world. Neither failure can change the active campaign.
@@ -355,7 +471,7 @@ for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json'
     });
     test.afterAll(async function () { if (context) await context.close(); });
 
-    test('actual predecessor explicit and inferred conversions retain spent resources across installation and fresh-page reload',async function ({page},info) {
+    for (const form of ['save','legacy']) test('actual predecessor ' + form + ' conversion retains spent resources through repeated restore',async function ({page},info) {
       await seedConfiguration(page,old); await openEdition(page,info,!!config.crazy); await installProbe(page);
       const decision = await page.evaluate(function (data) {
         const before = scenicSnapshot(), text = JSON.stringify(data), result = FB.mods.saveCompatibility(data);
@@ -364,22 +480,28 @@ for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json'
       expect(decision).toMatchObject({result:{compatible:true,path:null,transition:config.file ? 'autumn_634_scenery_protected_v1' : null},pure:true,input:true});
       if (config.file) expect(decision.signature).not.toBe(old.save.mods);
       else expect(decision.signature).toBe(old.save.mods);
-      for (const envelope of [old.save,old.legacy,old.save]) {
+      for (const envelope of [old[form],old[form]]) {
         await load(page,envelope);
-        expect(await retainedFacts(page,old)).toMatchObject({same:true,rng:true,uid:true,revision:'baseline',current:'scenery_protected_v1',converted:true,omitted:true,sites:true});
+        expect(await retainedFacts(page,old)).toMatchObject({same:true,rng:true,uid:true,revision:'baseline',current:'ordinary_settlement_v2',converted:true,omitted:true,sites:true});
       }
+    });
+
+    test('an actual predecessor conversion survives ordinary re-save and fresh-page reload',async function ({page},info) {
+      await seedConfiguration(page,old); await openEdition(page,info,!!config.crazy);
+      await load(page,old.save);
+      const signature = await page.evaluate(function () { return FB.mods.sig(); });
       const saved = await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
-      expect(saved.mods).toBe(decision.signature);
+      expect(saved.mods).toBe(signature);
       await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page);
       await load(page,saved);
       expect(await retainedFacts(page,old)).toMatchObject({same:true,rng:true,uid:true,revision:'baseline',converted:true,sites:true});
       expect(await page.evaluate(function (data) { return FB.mods.saveCompatibility(data); },saved)).toEqual({compatible:true,path:null,transition:null});
     });
 
-    test('switching protected and retained worlds preserves policies, conversions and original identities',async function ({page},info) {
-      await seedConfiguration(page,old); await openEdition(page,info,!!config.crazy); await begin634(page);
+    for (const form of ['save','legacy']) test('switching protected and retained ' + form + ' worlds preserves policies, conversions and identities',async function ({page},info) {
+      await seedConfiguration(page,old); await openEdition(page,info,!!config.crazy); await begin634(page,'scenery_protected_v1');
       const fresh = await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
-      for (const envelope of [old.save,old.legacy]) {
+      for (const envelope of [old[form]]) {
         await load(page,envelope);
         expect(await retainedFacts(page,old)).toMatchObject({same:true,revision:'baseline',converted:true,omitted:true});
         await load(page,fresh);
@@ -390,12 +512,13 @@ for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json'
       }
     });
 
-    if (config.file) test('changed JSON bytes, same-name content, retained definitions and unlisted bundles reject exactly',async function ({page},info) {
+    if (config.file) for (const kind of ['bytes','content','retained','bundle']) test('changed ' + kind + ' rejects exactly without changing the active campaign',async function ({page},info) {
       await seedConfiguration(page,old); await openGame(page,info); await load(page,old.save); await installProbe(page);
-      const result = await page.evaluate(function (data) {
+      const result = await page.evaluate(function (input) {
+        const data = input.save;
         const original = localStorage.getItem('fb_mods'), raw = JSON.parse(original);
         const checks = [];
-        ['bytes','content','retained','bundle'].forEach(function (kind) {
+        [input.kind].forEach(function (kind) {
           const province = FBDATA.bookmarks['634'].provinces[0], dev = province.dev;
           const bundled = localStorage.getItem('fb_mods_bundled');
           if (kind === 'bytes') localStorage.setItem('fb_mods',JSON.stringify([raw[0] + ' ']));
@@ -418,8 +541,8 @@ for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json'
           if (bundled === null) localStorage.removeItem('fb_mods_bundled'); else localStorage.setItem('fb_mods_bundled',bundled);
         });
         return {checks:checks,restored:FB.mods.saveCompatibility(data).compatible};
-      },old.save);
-      expect(result).toEqual({checks:['bytes','content','retained','bundle'].map(function (kind) {
+      },{save:old.save,kind:kind});
+      expect(result).toEqual({checks:[kind].map(function (kind) {
         return {kind:kind,compatible:false,rejected:true,loaded:false,pure:true,input:true};
       }),restored:true});
     });

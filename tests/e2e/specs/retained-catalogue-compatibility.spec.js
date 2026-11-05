@@ -274,7 +274,8 @@ if (fixture === fixtures[0]) test('native transition declarations fail closed fo
   // The ordinary JSON path cannot replace this native accessor.
   const results = await page.evaluate(function (data) {
     var original = FB.bookmarkSources.retainedCatalogueTransitions, valid = original().find(function (row) { return row.bookmarkId === data.state.start.id; }), rows, called = false;
-    var cases = ['missing','ambiguous','unknown','predecessor','retained','unlisted','default','callback','limits','foreign','root missing','root forged'];
+    var cases = ['missing','ambiguous','unknown','predecessor','retained','unlisted','default','callback','limits','foreign','root missing','root forged',
+      'retained list duplicate','retained list foreign','retained list malformed','retained list limit'];
     return cases.map(function (kind) {
       rows = [JSON.parse(JSON.stringify(valid))];
       if (kind === 'missing') rows = [];
@@ -289,6 +290,10 @@ if (fixture === fixtures[0]) test('native transition declarations fail closed fo
       if (kind === 'foreign') rows[0].bookmarkId = 'foreign';
       if (kind === 'root missing') delete rows[0].predecessorRoots.authoringDefaults;
       if (kind === 'root forged') rows[0].predecessorRoots.authoringDefaults = Array(65).join('0');
+      if (kind === 'retained list duplicate') rows[0].retainedRevision = [valid.retainedRevision,valid.retainedRevision];
+      if (kind === 'retained list foreign') rows[0].retainedRevision = [valid.retainedRevision,'missing_revision'];
+      if (kind === 'retained list malformed') rows[0].retainedRevision = [valid.retainedRevision,{}];
+      if (kind === 'retained list limit') rows[0].retainedRevision = [valid.retainedRevision].concat(Array.from({length:32},function (_,i) { return 'other_' + i; }));
       FB.bookmarkSources.retainedCatalogueTransitions = function () { return rows; };
       var before = JSON.stringify([FBDATA,localStorage,FB.getRngState(),FB.getUidCounter(),FB.stories.list()]), result;
       try { result = FB.mods.saveCompatibility(data); }
