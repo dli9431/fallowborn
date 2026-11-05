@@ -109,6 +109,19 @@ cannot silently return an appointment belonging to a different actor.
 
 ## Read contract
 
+Political religious offices retain their authorized religiousHeads pointer during
+recognition suspension. validIssuer, issuer generation and officeRecognitionMandates
+consult effective office validity for political_incumbent. Lost consent, political
+vacancy, changed source form/faith or a mismatched holder therefore supplies no
+religious mandate or effective recognition, including from an already recorded
+recognition. A fresh authority quote denies and applying an earlier quote rejects
+before spending or writing. Consent recovery restores effectiveness for the same
+person and issuer generation without a new binding or grant. After political
+replacement, reaffirming a record remains subject to its existing source rule.
+Unknown office issuers fail closed. Other head strategies keep their prior issuer
+and generation behavior. The supported crown selection owner derives consent from
+independent constituency facts, never from this office's own religious mandate.
+
 Reads do not initialize, repair, appoint, materialize a court, synchronize a
 ruler's display fields, move land, pay, queue events, consume RNG, or change saved
 records. Transient derived index population is allowed. Repeated reads have the

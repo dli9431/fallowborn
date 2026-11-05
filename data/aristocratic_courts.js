@@ -88,7 +88,7 @@ FBDATA.governmentForms.aristocratic_monarchy = {
 FBDATA.stationLadders.aristocratic_careers = JSON.parse(JSON.stringify(FBDATA.stationLadders.administrative_monarchy));
 FBDATA.stationLadders.aristocratic_careers.bands[2].succession = 'personal';
 Object.assign(FBDATA.techImpactReviews.features, {
-  aristocratic_royal_recognition:{ mode:'none', rationale:'Royal descent, live recognition and minority stewardship are political relationships, not discoveries.' },
+  aristocratic_royal_recognition:{ mode:'none', rationale:'Royal descent, live recognition, declared opening stewardship and continuing public authority during minority are political relationships, not discoveries. Existing material and military gates remain.' },
   aristocratic_hereditary_jurisdiction:{ mode:'none', rationale:'A surviving family may inherit declared local customary jurisdiction without acquiring a throne or a governor commission.' },
   aristocratic_provincial_bargains:{ mode:'none', rationale:'Baseline revenue and military obligations, concessions, refusal and enforcement depend on legitimate scope, consent and actual funds.' },
   aristocratic_government_conversion:{ mode:'none', rationale:'An explicit change of political rules requires a current adult court and assent from surviving hereditary interests, not a discovery.' }

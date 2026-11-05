@@ -1,6 +1,6 @@
 AI decision authoring
 
-aiDecisionPolicies composes live supported preferences through complete whole-record definitions and the ordinary Mods file path. The independent ai-decisions-conservative.json and ai-decisions-expansion.json examples vary war/frontier, investment, research and government-scoped tactics together. Exact schema is in docs/MODDING.md; docs/research/ai-decision-acceptance.md records every live field owner, unsupported algorithm boundaries, matching-save compatibility, neutral RNG requirements and owner acceptance commands. JSON never supplies authority, resources, executable strategies or a new scheduler.
+aiDecisionPolicies composes live supported preferences through complete whole-record definitions and the ordinary Mods file path. The independent ai-decisions-conservative.json and ai-decisions-expansion.json examples select all nine families: war/frontier, investment, research, intrigue, diplomacy, religion and government-scoped tactics/government willingness. They include investment trait/aim coefficients, tactical dispositions and aim-specific frontier orders. Exact schema is in docs/MODDING.md; docs/research/ai-decision-acceptance.md records every live field owner, unsupported algorithm boundaries, matching-save compatibility, neutral RNG requirements and owner acceptance commands. JSON never supplies authority, resources, executable strategies or a new scheduler.
 
 Use traitMechanics.rulerAims for the existing aim-selection weights and agencyRules.aims for that aim's existing responses. Use policy adjustments for the selected family's declared parameters and investment-only role/benefit coefficients. These surfaces compose deliberately: a trait selector and the aim it favors both apply when both are declared, so an author must avoid repeating a motive unintentionally. The built-in ordinary_war policy assigns chance/aggressionAppetite to traits and minimumStrengthRatio to aims, without reusing trait aim weights in the war projection. The default strategic_expansion separately ranks targets through order and optional aimOrders; ruler_investment applies trait role affinities and current-aim measurable benefits, with ordinary_investment retaining the neutral baseline. ordinary_tactics declares the brave/craven margins described below; the remaining families retain neutral preferences. Current-character traits override compact summaries; saved same-generation aims remain durable. Legacy ordinary-war personality is a separate retained compatibility path, not a generated trait or another authoring catalogue. Its bellicose parameters require explicit multipliers of their own. The independent ai-war-cautious.json and ai-war-bold.json fixtures demonstrate complete replacements through the ordinary JSON importer; exact default multipliers and compatibility are in docs/designs/ai-decisions.md.
 
@@ -9,6 +9,8 @@ Expansion policies vary prospective target order or weighted sampling within the
 Investment authoring uses optional policy-level benefitWeights and optional investment-adjustment buildingRoleWeights/benefitWeights. Coefficients add once per matching selector and clamp after composition; omitted channels contribute zero. Trait role affinity and aim benefit weights are separate declared motives, without reapplying rulerAims selection weights. Keep aiBuildOrder as the neutral ordering and canonical gates as the eligibility owner. The independent ai-investment-learned.json and ai-investment-guarded.json fixtures import complete policies, identical affordable civic alternatives and contrasting research/defense coefficients through the ordinary Mods dialog. Profile definitions supply the actual benefits; preferences create neither physical inputs nor institutional authority. Fort ranking uses actual incremental defenses and finite works, while ordinary construction keeps treasury invoices and reserves. Matching saves retain assets, paid work and current-generation aims without replay. Exact supported channels and bounds are in docs/MODDING.md.
 
 Tactical authoring uses the existing tactics parameters and trait/aim adjustments, with no new schema field. ordinary_tactics supplies brave/craven engagement-margin multipliers; leave adjustments empty for an explicitly neutral policy. The default generated-ruler pool excludes those dispositions; replace rulerTraits explicitly to opt them into ordinary generation. Do not treat wrathful, patient or a legacy personality as bravery. ai-tactics-bold.json and ai-tactics-guarded.json under tests/e2e/fixtures/authoring are independent ordinary file imports with contrasting margins, ordering and generation participation. report exposes pure tactics reason codes and the base margin; supply/fiscal recovery retains that base while voluntary engagements use the adjusted margin. Existing power, siege, access, command, funding and save owners remain authoritative. Exact bounds and default values are in docs/designs/ai-decisions.md and docs/MODDING.md.
+
+Choose the identity channel deliberately. Policy adjustments, intrigue and conversion resistance use the full current character. Research domain trait weights, investiture resistance and holy-war participant/vow preferences retain the synchronized compact summary's first trait; secondary traits are not additional multipliers there. Use research policy domainWeights for a general domain preference and traitMechanics.researchWeights for that existing summary-trait preference. A valid saved ruler aim survives trait changes until its generation changes. No example imports a second personality record or changes existing vows, routes, payments or research commitments. The integrated examples intentionally vary prospective preferences only; no new technology eligibility or ledger entry is required.
 
 Adopted public-account authoring
 
@@ -52,9 +54,77 @@ Native contributors use bookmarkSources.stage with explicit source, affected boo
 
 Data authoring contract
 
+Trusted retained catalogue compatibility
+
+Native source authors may call bookmarkSources.retainCatalogueTransition before
+manifest sealing with the exact schema-1 record documented in docs/MODDING.md.
+Keep complete predecessor/current definitions, pinned predecessorRoots from
+the complete trusted predecessor baseline, the explicitly supported retained
+revision, enumerated added revisions and exact supported bundled payloads. Only
+add revisions and change the fresh revision pointer; preserve authored root
+fields, every older raw/effective revision and all shared definitions. Capture
+the trusted predecessor directly; never infer history from unknown revisions or
+from a saved signature. Ordinary JSON remains ordinary content and cannot
+authorize compatibility, provide signature allowlists or install callbacks.
+
+The shared mods owner reconstructs the old effective catalogue using unchanged
+JSON bytes and ordered bundled payloads through detached canonical import
+validation. Both installed-current and exact predecessor fingerprints must pass,
+including authored-only roots. Pinned ordered root digests also protect defaults
+omitted from the saved fingerprint; never derive those expectations from the
+current catalogue. One bounded transient proof rechecks exact configuration and
+live structure on every use and is invalidated by mod changes. Save
+adoption still validates the retained revision and existing campaign records;
+there is no replay, migration, content repair, technology capability or save
+schema change. Independent estuary and upland native fixtures use different
+retained/fresh revisions, political worlds and defaults, plus genuine ordinary
+JSON file imports and bundled overlays. See docs/TESTS.md for bounded coverage.
+
 A JSON mod defines content by stable id and composes registered mechanics. A trusted engine module implements algorithms, pure definition validators and canonical transactions. JSON cannot provide executable code, arbitrary function calls, expressions, unrestricted state paths or direct saved-state writes.
 
+Province settlement protection uses optional settlementPolicy:ordinary or
+settlementPolicy:protected in complete bookmark/revision province arrays. Only
+initial wasteland can be protected. Omission keeps ordinary conversion and
+identity; protection consumes the same canonical eligibility, mutation and
+detached restore checks for every caller. It describes the simulation's scenic
+representation, not historical vacancy or authority. Retain an earlier released
+ordinary revision rather than migrating its conversions into a protected world.
+The independent valley.json example under tests/e2e/fixtures/protected-scenery
+imports one protected anchor, one ordinary convertible anchor and an inhabited
+road through the ordinary Mods file path. A detached full-map configuration
+protects the 21 scenic remnants while preserving all 506 inhabited declarations.
+Technology impact scenic_settlement_protection is none; ordinary material,
+travel and household gates remain with their existing owners.
+
 Authoring checklist
+
+Political religious heads declare succession:political_incumbent, holderKind:character,
+an exact head.realm and an inhabited seat. Only crown_election recognition is
+supported. Author the polity's eligible opening ruler and complete selection form
+with the faith, or explicitly seed a null vacancy. No religious claim, absolution,
+greatHolyWar, recovery or independent appointment accompanies the binding. Native
+southern.json and imported estuary.json under tests/e2e/fixtures/political-religious-head
+exercise different ages, sex rules, polities and seats. Recognition suspension
+preserves authorized saved identities; consent recovery is not a binding writer.
+Matching restore does not replay accession or invent an absent binding. This
+identity/consent capability has technology impact none; actual material gates stay
+with their existing owners. See docs/MODDING.md for reference and writer constraints.
+
+Aristocratic openingStewardActorId names an existing direct adult interest
+principal; it never creates an extra actor. Declare the royal court, matching
+age/recognition profiles, dynasty and owned county together. Fresh minority
+setup binds the existing regency once, while adult and omitted-field openings
+retain their prior meaning. Shared public-authority readiness governs court
+decisions and personal commissions without suppressing independent household or
+magnate activity. The complete young-charter.json and river-minority.json
+examples under tests/e2e/fixtures/opening-minority-stewardship use ordinary JSON
+imports with different ages, weights, burdens and declared steward choices.
+Matching saves retain the same regency and exact imported-content signature;
+restoration performs no setup, payment or accession. The existing
+aristocratic_royal_recognition technology decision remains none: opening and
+continuing minority stewardship express the same political capability.
+
+Electoral admission uses optional selectionProfile.procedure.livingNomination, a strict boolean defaulting false. It admits an existing qualified local person before a vacancy through the common selection owner, without designation, recognition, accession, payment or kinship. The unchanged candidate identity and selection schema support matching restoration without replay; do not add a saved nominee or normalize omitted procedure fields. The complete consultation.json and river-consultation.json examples under tests/e2e/fixtures/living-nomination exercise different ages, personal filters, interest weights, assent and designation policies through ordinary JSON import. The existing elective_crown_nomination technology review remains none: admission timing is a social procedure, while material capabilities retain their gates.
 
 Identify the owning catalogue and its actual gameplay, AI, UI and restore consumers. A public key alone is not proof that a newly added id has behavior. Use the complete per-system schema in docs/MODDING.md and retain its merge or replacement semantics.
 

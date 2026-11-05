@@ -209,6 +209,10 @@
     if (issuer.kind === 'county')
       return !!scope(s, issuer);
     if (issuer.kind === 'religious-office') {
+      var office = FB.religiousOffices(s)[issuer.id];
+      if (!office) return false;
+      if (office && office.head.succession === 'political_incumbent')
+        return !!FB.religiousOfficeSnapshot(s, issuer.id);
       var holder = s.religiousHeads && s.religiousHeads[issuer.id];
       var headId = typeof holder === 'string' ? holder : holder && holder.id;
       return !!(headId && (s.chars && s.chars[headId]
@@ -226,6 +230,12 @@
       return rid ? rid + ':' + FB.realmRulerGeneration(s, rid) : null;
     }
     if (issuer.kind === 'religious-office') {
+      var office = FB.religiousOffices(s)[issuer.id];
+      if (!office) return null;
+      if (office && office.head.succession === 'political_incumbent') {
+        var effective = FB.religiousOfficeSnapshot(s, issuer.id);
+        return effective ? effective.id : null;
+      }
       var head = s.religiousHeads && s.religiousHeads[issuer.id];
       var headId = typeof head === 'string' ? head : head && head.id;
       if (headId && s.chars && s.chars[headId]) return headId;
@@ -1146,8 +1156,14 @@
     for (var pid of counties.filter(function (id, i, all) { return all.indexOf(id) === i; }))
       if (Q.power(s, a, 'consent', { provinceId:pid }).allowed)
         addMandates('community', { kind:'county', id:pid });
+    var religiousOffices = FB.religiousOffices(s);
     for (var id in s.religiousHeads || {}) {
       var head = s.religiousHeads[id], headId = typeof head === 'string' ? head : head && head.id;
+      var office = religiousOffices[id];
+      if (office && office.head.succession === 'political_incumbent') {
+        var effective = FB.religiousOfficeSnapshot(s, id);
+        headId = effective && effective.id;
+      }
       if (headId === a.id) addMandates('religious_head', { kind:'religious-office', id:id });
     }
     return out;

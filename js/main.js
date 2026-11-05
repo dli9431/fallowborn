@@ -7276,13 +7276,14 @@ FB.CHANGELOG = [
     }
     G.lastLoadError = null;
     // a life cannot wake up in the wrong world: the map ids would not fit
-    if (FB.save.otherWorld(data)) {
+    const compatibility = FB.mods.saveCompatibility(data);
+    if (!compatibility.compatible) {
       const message = data.mods ?
         '🧩 That life was lived in a modded world. Enable the same mod(s) (Mods menu) to continue it.' :
         '🧩 That life was lived in the unmodded world. Remove all mods (Mods menu) to continue it.';
-      G.lastLoadError = new Error(FB.T(message));
+      G.lastLoadError = new Error(FB.T('{message} Incompatible content at {path}.', {message:FB.T(message),path:compatibility.path}));
       G.lastLoadStage = 'save preflight';
-      FB.ui.toast(message);
+      FB.ui.toast('{message} Incompatible content at {path}.', {message:FB.T(message),path:compatibility.path});
       loadTiming.finish('rejected',G.lastLoadError);
       return false;
     }

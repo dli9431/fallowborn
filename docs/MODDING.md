@@ -1417,6 +1417,18 @@ province objects; mods merge full objects as before:
   initialize fresh games only; an existing save's `state.dev` values remain
   authoritative.
 - `wasteland: true` — impassable scenery, no realm/culture needed.
+- `settlementPolicy` — optional `ordinary` or `protected`. Omission preserves
+  ordinary settlement. `protected` is valid only on an initially wasteland
+  province and prevents both noble and commoner conversion into a county.
+  This is a boundary on a broad scenic representation, not a claim of historical
+  vacancy, ownership or a prohibition on independent inhabited travel routes.
+  Other values reject detached world and JSON mod validation. Complete revision
+  province arrays retain the field and exact effective mod fingerprints include
+  it; no default field is inserted into omitted-field declarations. Preserve a
+  released ordinary world under its own revision when introducing protection.
+  Protected-revision saves with conversion records or positive development and
+  ownership/holding evidence reject before adoption, including legacy saves.
+  Ordinary worlds keep their existing restore semantics and conversion ledger.
 - `communities` — optional ordered culture-and-faith records for a settled county, e.g.
   `"communities": [{ "culture": "gaelic", "religion": "catholic",
   "populationShare0": 8000 }, { "culture": "norse",
@@ -1543,6 +1555,81 @@ to all three maps.
   consort's `parentId` is legitimately `null`. Code that walks a succession must apply
   the same rule. `role` is absent on saves written before consorts existed and reads as
   `null`.
+
+### Trusted retained catalogue transitions
+
+Native sources can declare one exact additive catalogue transition with
+`FB.bookmarkSources.retainCatalogueTransition(record)` before the native manifest
+is sealed. This metadata is private to source preparation, survives selected-date
+switches and complete publication, and never becomes a public data root or save
+field. Ordinary JSON cannot provide compatibility declarations, signature
+allowlists or callbacks, including through bookmark metadata.
+
+The record has exactly `schema:1`, `id`, `bookmarkId`, `retainedRevision`,
+`predecessor`, `current`, `predecessorRoots`, `addedRevisions` and `bundled`. Declaration,
+bookmark and revision ids are 1-100 letters,
+digits or underscores. `predecessor` and `current` are complete exact authored
+bookmark definitions with the same declared id. Preserve the predecessor from
+its trusted native definition, before adding revisions; do not derive it by
+removing unknown revisions from a current catalogue. `addedRevisions` lists 1-8
+distinct new revision ids. Only those revisions and the root `revision` fresh
+default pointer may change. All other root fields and every existing raw
+revision stay exact. An implicit predecessor baseline may become explicit `{}`.
+The current default must select one of the added revisions. Every predecessor
+effective world, including the explicitly supported `retainedRevision`, must
+remain identical. This interface does not permit changes to shared catalogues,
+existing revision meanings or the raw root's other fresh defaults.
+
+`predecessorRoots` pins the complete pristine predecessor defaults for every
+authored-only root, including omitted roots. Copy the exact map returned by
+`FB.mods.retainedCatalogueRoots()` after complete predecessor publication and
+before the transition. Author that map as literal native evidence; never obtain
+it from the current catalogue to guess a predecessor. Entries are 64-character
+SHA-256 fingerprints of each root's JSON text (including declaration order), or
+null for an absent root. Missing, extra or changed entries reject. These are
+structural default expectations, not saved-signature allowlists. They prove
+unchanged tables that effective-1 intentionally omits until a mod authors them.
+The effective predecessor/current comparison checks all public definition roots;
+the reconstructed save signature still uses the original authored-root filter.
+
+`bundled` is an ordered list of at most 16 exact `{id,data}` native bundled mod
+payloads supported by the transition. Enabled bundles must match this list's
+filtered payloads and application order exactly, even for inert payload changes.
+Unlisted enabled bundles reject the exception. Disabled bundles need no proof.
+At most eight transition records may be registered; declarations contain only
+plain JSON data, at most 250,000 values, 64 levels and 4,194,304 string/key UTF-16
+code units each. A transition supports at most 32 predecessor revisions and 40
+current revisions. Compatibility supports at most 32 stored JSON strings totalling
+4,194,304 UTF-16 code units. These bounds
+limit this exception, not ordinary import eligibility.
+
+`FB.mods.saveCompatibility(envelope)` returns detached transient
+`{compatible,path,transition}` diagnostics. Exact current signatures take the
+ordinary path. A mismatched standard `effective-1` signature requires one
+unambiguous matching declaration. The proof starts with the pristine complete
+mod baseline, substitutes the declared predecessor, and replays the unchanged
+stored JSON strings and enabled bundled payloads through ordinary detached
+canonical validation in their original application order. Authored-only roots
+and effective-1 hashing retain their existing rules. The saved signature must
+equal this reconstructed signature exactly. Current effective definitions,
+unrelated public roots, and all retained worlds must also pass the exact proof.
+Different raw JSON, edits under the same mod name, altered bundles, missing
+revisions, foreign identities and changed retained definitions still reject.
+
+Continue, slots, imported saves and direct detached v4 preflight use this same
+decision before ordinary revision and saved-record validation. Proof never
+publishes the predecessor, initializes gameplay, repairs content, rewrites a
+signature or mutates a save, storage, world, registry, RNG or uid. One transient
+proof can serve nested preflights. Every request checks the exact native
+declaration, raw configuration, bundled payloads and a bounded structural
+observation of at most 8,000,000 live properties; technology defaults use their
+canonical normalizer and active balance must match its ordinary layer projection.
+An edit or source replacement requires a fresh proof. Import,
+removal, bundled toggles and application invalidate it. No proof is serialized.
+Normal next-save
+serialization stamps the installed current signature, allowing a fresh-page
+reload of the retained campaign. Empty standard signatures, edition separation,
+save versions and all normal validation remain unchanged.
 
 ### Complete start bookmarks
 
@@ -3633,6 +3720,10 @@ by key, and site objects replace by their required stable `id`.
   helper — the same physical conversion the `settle_waste` deed uses — then
   relocates the household through the ordinary settlement cleanup and grants
   `balance.frontierSettlementPlots` starter land plots at the county head.
+  `FB.wastelandSettlementEligible(province)` is the shared pure conversion fact
+  used by both settlement candidate paths, stale attempts and the materializer.
+  Protected scenery is excluded from frontier destinations; direct rejected
+  conversion calls grant nothing and consume no resources, RNG or identities.
   `frontier_leave_ready` (option `require`) and `frontier_go_home` back the
   persist-or-turn-back story.
 - The core `trade` purpose retains its embedded `cost`/`stake` only for direct
@@ -5479,6 +5570,45 @@ Action eligibility may declare station, the name of a supported station permissi
 
 Religious head office schema
 
+The additional political_incumbent strategy requires holderKind:"character",
+head.realm naming the exact source polity, and an inhabited seat in each consuming
+world. Only a government whose succession strategy is crown_election is supported;
+kin_acclamation and other recognition families are rejected. The seat is a province
+string, {"province":"county_id"}, or {"site":"site_id"} in that world's layout.
+It identifies the office's seat, never its holder. The source's declared opening
+ruler must have an eligible birth year, sex and faith, unless an explicit null
+opening vacancy is authored. minAge and optional holderSex/holderRole retain their
+ordinary personal eligibility meaning; an opening ruler has no appointed personal
+role, so a role-qualified office requires an explicit opening vacancy. The holder's faith and source court's faith
+must recognize the same office. Unsupported head fields and independent character,
+recovery, claim, absolution or greatHolyWar behavior reject; null removes inherited
+rules. There is no JSON recognition path, callback or alternate source selector.
+
+For example, {"head":{"officeId":"community_head","title":"Community Head",
+"holderKind":"character","realm":"consultative_court","seat":"meeting_place",
+"minAge":18,"holderSex":"m","succession":"political_incumbent"}} follows the
+existing recognized incumbent of consultative_court. The complete southern.json
+and estuary.json examples under tests/e2e/fixtures/political-religious-head use
+different ages, personal filters, polities, constituencies and seats. The latter
+imports estuary_tradition_demo with minimum age 21, no sex filter and an independent
+woman incumbent through the ordinary Mods file picker.
+
+Fresh creation binds an existing eligible recognized person after political
+initialization. A bookmark religiousHeads entry may name this exact source realm
+or null. Explicit null is an intentional vacancy. Only committed political
+accession or adoption/rekey can subsequently bind an eligible incumbent; nomination,
+designation, consent recovery, appointment, hereditary succession, delayed religious
+recovery and reads do not fill an absent or null pointer. Local institutions and
+story opening heads cannot assign this strategy. Lost recognition, vacancy, changed
+form/faith, death or a mismatched person deny effective office authority. A suspended
+saved binding remains intact; recovered consent exposes that same authorized person.
+The selection ledger's originRealmId preserves the source polity across canonical
+player adoption and release. A capital, residence, territorial owner or inherited
+title is not a substitute for that identity. Existing strategies retain their rules.
+Legacy political stories whose parameters require an independently managed
+spiritual office cannot consume this strategy. Shared opening mappings for one
+office must agree, including explicit vacancies.
+
 Declare a head under a faith's properties. A realm appointment example is { "head": { "officeId": "high_council", "title": "High Elder", "holderKind": "realm", "realm": "my_realm", "succession": "appointment", "seat": { "site": "paris" } } }. A character succession example is { "head": { "officeId": "keepers", "title": "Keeper", "holderKind": "character", "succession": "hereditary" } }. Characters must be living followers of a faith recognizing that office, with holderSex satisfied when supplied. Assign a character through FB.assignReligiousHead(state, faithId, characterId), or call FB.succeedReligiousHead(state, faithId, { holderId:characterId }). Missing heirs leave a vacancy; appointment without holderId chooses the oldest eligible living follower. Realm holders follow their ordinary realm ruler succession.
 
 seat may be a province id string, { "province": "london" }, or { "site": "paris" }. A site resolves to its province in the current settlement layout. holderKind accepts realm or character; succession accepts the registered papal_election, caliphal_claim, appointment and hereditary strategies. Papal and caliphal strategies require realm holders. Missing legacy holderKind defaults to realm; legacy systems.papacy implies papal_election, recovery claim implies caliphal_claim, and other heads imply hereditary. A Papal head enables systems.papacy when that capability is unspecified, respects explicit false, and replacing it with another strategy disables inherited Papacy mechanics. head:null removes the office.
@@ -5909,6 +6039,36 @@ Each interest declares a unique lowercase id other than court, name, dynasty, ac
 
 The aristocratic government uses only actual founder descent for sovereign eligibility, independently of wealth and personal office. Public commissions, perpetual local assignments, inherited customary rights and private estate deeds retain separate canonical records. Saved facts are not a mod initialization API; older forms/openings remain unchanged on restore. Optional record schemas, pure provincial/probate/stewardship/conversion reviews and preservation rules are in docs/designs/aristocratic-monarchy.md.
 
+Optional openingStewardActorId is a nonempty opening-actor slug matching an
+interest's actorId. The effective bookmark must declare that direct actor, of
+the interest's dynasty and at least minimumAge, and own the interest's county.
+Missing people, reference-only actors, wrong constituencies/dynasties, minority,
+captivity and missing jurisdiction reject before publication. A minor fresh
+court binds that already initialized active principal into the existing schema-1
+regency, with the current ruler generation and turn. The declared principal
+wins independently of interest weight. This creates no person, accession,
+sovereign, payment or private property. Adult openings bind no regency; omission
+retains earlier opening behavior. Repeated setup and restoration never seed it.
+
+The shared public-authority readiness projection distinguishes adulthood,
+capable current-generation stewardship and a minor without capable stewardship.
+Opted-in minorities and existing succession-created regencies fail closed for
+levy/war/treaty/grant/extraordinary-tax consent, public appointment/replacement
+and commission exercise, court-originated recognition and provincial
+enforcement/negotiation. Independent magnate assent/withdrawal, customary rights,
+private estates and debt repayment retain their owners. Existing lawful steward
+replacement and the profile's adulthood boundary restore readiness without
+granting the steward sovereign powers. Legacy no-opt-in minorities without a
+regency retain their earlier authority behavior. Matching saves preserve even
+an impaired historical steward until ordinary play reviews replacement.
+
+Independent complete ordinary JSON examples are
+tests/e2e/fixtures/opening-minority-stewardship/young-charter.json (age ten,
+minimumAge 16, two unequal interests, explicit first principal) and
+river-minority.json (age thirteen, minimumAge 18, threshold 0.7, three interests,
+explicit third principal despite a stronger alternative). These are fictional
+configurations, including isolated ruler-review scenarios.
+
 Mobile confederation declarations
 
 Optional mobileProfiles entries may include supplyPolicy with exactly schema:1, targetDays (integer 1-30), carryDays (integer 1-30), cashReserve (finite nonnegative public money up to 1000000000000) and optional replacement. replacement contains exactly targetMen (integer 0-100000000), maxPerReview (integer 1-10000) and unitIds (1-8 unique effective non-hired unit ids, including same-import additions). These are intrinsic ceilings, not new grants or higher population/host limits. Actual pledged pools, existing rosters and ordinary era/culture/technology gates still bound recruitment. Omission preserves the existing seasonal quotes and thirty-day carriage.
@@ -5931,6 +6091,10 @@ FB.mobile.review(state, {realmId, action, actor, terms}) and FB.mobile.commit(st
 Elective selection profiles
 
 selectionProfile.candidatePool requires gentle (boolean), cultures and religions (unique existing catalogue ids, with an empty list permitting all), and excludedRoles (unique role strings). It requires eligibility.ancestry:false and a procedure. procedure requires realmRecognition, designation, interimRevenue and defensiveLevy booleans. capital_elite and capital_clergy principal selectors resolve an existing capital council or congregation into a typed institution reference. The initial campaign alone seeds the optional selection record; ordinary save restoration never does.
+
+procedure.livingNomination is an optional boolean, default false. When true, an active interest may admit an otherwise qualified existing local person while the incumbent lives and vacancy is absent or resolved. Omission and false retain vacancy-only nomination. Unknown procedure fields and nonboolean values reject before publication; omitted defaults are never inserted into JSON, so exact mod signatures retain their existing meaning. Admission uses the existing 64-candidate bound, local residence, legal status, age, captivity, foreign ruler/court exclusion, principal and stale-review checks. It binds only electoral_candidate and royalLine references to the same person; those legacy storage names create no kinship. Admission costs nothing and grants no designation, recognition, office, land or private/public funds. Designation, where enabled, remains a separate incumbent decision; support and resolve still require a lawful vacancy.
+
+At the ordinary seasonal cadence AI may admit one qualified local alternative through the same quote/apply path if no eligible electoral_candidate alternative exists. It does not accumulate qualified alternatives each season or designate automatically. Vacancy AI retains its existing nomination and resolution policy. A resolved vacancy's candidate list and votes are historical and are not rewritten by later living admission. Matching restoration validates the same schema-1 selection and candidate identities without admission replay, including when no vacancy has ever opened. Independent complete JSON examples are tests/e2e/fixtures/living-nomination/consultation.json (age 18, male, a declared faith, community interest and separate designation) and river-consultation.json (age 21, unrestricted sex/culture/faith, weights 2 and 1, quorum 1, consensus 0.75, no designation). Both are fictional configurations rather than historical opening declarations.
 
 An optional boolean freshOnly on a localInstitutions definition restricts creation of its representative to explicit fresh campaign initialization. Restore and ordinary repair retain existing saved rows but do not create an added freshOnly institution. Elective capital selectors require realm scope and institutional continuity; a capital institution outside that court's current sovereign territory cannot supply assent.
 
@@ -7010,13 +7174,28 @@ Select ids using aiWarPolicy, aiExpansionPolicy, aiTacticsPolicy, aiInvestmentPo
 
 FB.aiDecisions.resolve(state,realmId,family) selects a detached frozen compiled policy. FB.aiDecisions.compile(id,catalogues) can prepare a policy from effective detached catalogues. FB.aiDecisions.catalogFaults(catalogues,optionalBalance) validates all definitions and declared selections without publication. report(policy,candidates,inputs) is pure; candidates have a unique string id up to 128 characters, explicit eligible boolean and supported finite numeric facts in [-1000000000,1000000000], with at most 2048 candidates. Required metrics must be present for eligible candidates. Inputs accepts only traits (up to 128 snake_case ids, default empty) and aim (snake_case id or null). pick(report,roll) returns an id or null and never draws RNG. Weighted choices with positive total require an explicit roll in [0,1); consumers obtain that roll from FB.rng at their established decision boundary. Reports are advisory and cannot authorize stale transactions. Replacing a definition or explicit invalidate() discards compilation; in-place developer edits require invalidate(). No policies or compiled caches are serialized.
 
-docs/examples/ai-decisions-conservative.json and docs/examples/ai-decisions-expansion.json are independent ordinary Mods imports. They affect live prospective frontier choices and war willingness, including explicitly declared trait/aim adjustments, and compose contrasting investment and research policies with complete cautious_court or expansive_court government forms. Each form selects its own tactical and government policy; those selector keys are deliberately absent from top-level balance so the form override can apply. Importing a form does not install it in a realm. Existing canonical government selection remains required. Other families expose their exact current parameters through protocol() and the built-in data records; import a complete replacement record for the chosen family. ai-live-decisions.spec.js authors contrasting ordinary JSON file imports for every converted family. Existing saved wars, routes, budgets, offers, cooldowns and depleted resources keep their ordinary owners. This authoring refactor creates no new gameplay eligibility or technology gate.
+docs/examples/ai-decisions-conservative.json and docs/examples/ai-decisions-expansion.json are independent ordinary Mods imports selecting all nine families. Alongside their war/frontier and research differences, they declare investment trait/aim coefficients, aimOrders, contrasting intrigue rates/scheme orders, diplomatic cultivation/alliance preferences and religious target/conversion weights. Complete cautious_court or expansive_court forms select their own tactical and government policies; those selector keys are deliberately absent from top-level balance so the form override can apply. Each tactical policy applies brave/craven multipliers relative to its own baseline. Importing a form does not install it in a realm. Existing canonical government selection remains required. Other parameters and their bounds are available through protocol() and the built-in data records; import a complete replacement record for the chosen family. ai-live-decisions.spec.js authors contrasting ordinary JSON file imports for every converted family. Existing saved wars, routes, budgets, offers, cooldowns and depleted resources keep their ordinary owners. This authoring refactor creates no new gameplay eligibility or technology gate.
 
 Simulation-only parameters/inputs adapters project the current existing ruler/aim owners without materializing people. choose and orderCandidates use FB.rng only for authored weighted choice. Weighted retry ordering excludes zero-weight entries and returns an empty list without an RNG draw for zero total. willing consumes no draw for zero/one and one seeded chance for intermediate probabilities; it applies only to prospective AI actions. The choose, orderCandidates and willing simulation adapters must not be called from UI eligibility or previews. Parameter/input snapshots and report/pick remain pure. Neutral first policies retain each consumer's legacy ordering, including uniform private-baron/alliance choices and stable candidate order. Research retains its legacy weighted sampler and saturates extreme scores at the numeric fact bound. Existing government zero-war strategies and canonical legality, consent, costs, resources, supply, vacancies and saved commitments cannot be overridden by a preference. aiRaidTargetDevelopmentWeight is a realm-scoped finite balance knob in [0,100], default zero; explicit zero raid/building limits now work.
 
 Tactical policies retain engagementMargin in [0.5,4] and objectiveFirst as integer zero/one. ordinary_tactics declares brave x0.9 and craven x1.2 against the neutral 1.1 margin, yielding 0.99 and 1.32 respectively; other dispositions and aims are neutral. The existing multiplication, duplicate suppression, declaration order and final clamp rules apply. report adds tactics.neutralMargin and tactics.reason (risk_accepting, risk_guarded or risk_neutral relative to that base). These diagnostic codes never issue orders or write news. Voluntary non-player pursuit, objective advances and co-located coordination use the adjusted margin. Regrouping, autoResupply, supplyRetreat, recent routs and treasury recovery use the selected policy's unadjusted margin, preserving physical retreat, supply and fiscal gates. Player stance margins and manual/delegated/expedition order ownership remain canonical. Default rulerTraits excludes brave/craven; an ordinary complete rulerTraits import can opt them into generation without aliasing another trait. The independent tests/e2e/fixtures/authoring/ai-tactics-bold.json and ai-tactics-guarded.json demonstrate distinct imports, generation choices and tactical behavior. No save field or technology eligibility changes.
 
 AI decision acceptance
+
+The supported weight inventory has separate owners; similarly named settings do not imply an additional multiplier:
+
+| Surface | Active meaning |
+| --- | --- |
+| Policy parameters, order/weights/bias and adjustments | Only the family's protocol parameters/facts; complete records and bounded composition |
+| investment buildingRoleWeights/benefitWeights | Actual role/benefit preference, including additive matching adjustment coefficients |
+| research domainWeights and traitMechanics.researchWeights | Policy domain multiplier times the compact summary trait's domain multiplier; no all-trait research product |
+| intrigue schemeOrder and traitMechanics.schemeOrder | Policy order takes precedence; otherwise the highest-priority trait order, then canonical hostile order |
+| diplomacy aimOrder and expansion aimOrders | Aim-selection tie order versus current-aim frontier ranking; neither creates an aim |
+| traitMechanics.rulerAims and agencyRules.aims | Maximum trait aim-selection weight versus the selected aim's existing response values |
+| traitMechanics religious/loyalty channels | Existing participant/vow, papal, conversion and court readers; canonical gates still apply |
+| Existing balance and strategyParameters | Raid/build limits, reserves and explicit government warChance retain their own owners |
+
+Retired controls: aiWarChance has no reader and is no longer declared. Use war chance/bellicoseChance or the existing explicit government warChance. War candidate ranking, expansion/tactics score and intrigue schemePriority are unsupported, rejected policy surfaces. aiExpansionPriority/aiExpansionTarget remain compatibility queries, and aiExpansionProvince retains missing-objective/legacy settlement behavior; they do not compete with the live prospective frontier selector. Research, investiture and holy-war summary-trait channels retain their single-trait semantics; full-character policy inputs do not silently broaden them.
 
 A partial diplomacy aimOrder is an ordering prefix, not an eligibility list: omitted registered aims retain their original relative order after the prefix, and greater trait weights still win. Expansion contacts count adjacency to the deciding realm's territory, including vassal subtrees. A zero-total weighted investment choice declines private-baron construction without spending or drawing a choice.
 

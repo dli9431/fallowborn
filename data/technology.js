@@ -178,6 +178,7 @@ window.FBDATA = window.FBDATA || {};
       episcopal_institution_mediation:{ mode:'none', rationale:'Mediation between existing congregations depends on a living bishop and guaranteed worship, not a researched technique. Regional eastern sees use the same protected-worship and scoped-recognition transaction.' },
       content_period_membership:{ mode:'none', rationale:'Content belongs to authored historical periods and dates. Period membership is not an invention; eligible events, careers, activities, fresh equipment and new unit recruitment retain their existing technology requirements. Owned equipment and materialized offers remain usable, and existing unit compositions remain intact.' },
       religious_head_appointment:{ mode:'none', rationale:'Religious office appointment is an institutional relationship, independent of research.' },
+      religious_head_political_incumbent:{ mode:'none', rationale:'Binding an office to an existing recognized political incumbent is an identity and consent relationship, independent of research. Material capabilities retain their existing gates.' },
       religious_head_hereditary:{ mode:'none', rationale:'Hereditary religious office succession follows kinship and eligibility, independent of research.' },
       east_syriac_religious_progression:{ mode:'none', rationale:'East Syriac households use the existing lay, monastic and clerical standing paths. Faith eligibility and personal service require no discovery; ordinary career education requirements remain in force.' },
       optional_system_availability:{ mode:'none', rationale:'Institution membership follows authored campaign, government and faith rules. Availability is not a discovery; enabled institutions retain their existing technology requirements.' },
@@ -205,7 +206,7 @@ window.FBDATA = window.FBDATA || {};
       period_476_city_settlement:{ mode:'none', rationale:'Civic agreement, church mediation and a reviewed Classis allotment use live authority and existing settlement grant rules. The people and site are already present, so no invention is needed.' },
       authority_appointments:{ mode:'none', rationale:'Ordinary political officeholding and removal depend on an appointer, a holder and a live scope, not research. A contested honor grants no power until confirmed.' },
       local_kin_recognition:{ mode:'none', rationale:'Recognized kin membership and local political assent are baseline relationships. Wealth and research do not purchase eligibility.' },
-      elective_crown_nomination:{ mode:'none', rationale:'A free qualified person may be nominated by a living political interest. Candidacy and designation depend on legal status and relationships, not discovery.' },
+      elective_crown_nomination:{ mode:'none', rationale:'A free qualified person may be nominated by a living political interest, including before a vacancy when the procedure permits it. Admission and separate designation depend on legal status and relationships, not discovery; ordinary military and material gates remain.' },
       elective_crown_accession:{ mode:'none', rationale:'A declared constituency selects a living qualified sovereign after a lawful vacancy. Political assent and public continuity need no invention.' },
       elective_crown_obligations:{ mode:'none', rationale:'Negotiated service, revenue and reserved decisions depend on assent and actual funds. Payment cannot purchase eligibility or force recognition.' },
       elective_crown_property:{ mode:'none', rationale:'Private inheritance and the continuity of the public treasury are legal ownership boundaries, independent of research.' },
@@ -694,6 +695,10 @@ window.FBDATA = window.FBDATA || {};
       commoner_frontier_settlement:{
         mode:'none',
         rationale:'Withdrawing into an empty wasteland and proving a homestead is a core recovery and life-path choice for freeholders and gentry; it rides ordinary travel, holdings, and the shared wasteland materialization, and no innovation credibly unlocks walking onto empty land.'
+      },
+      scenic_settlement_protection:{
+        mode:'none',
+        rationale:'Protecting a broad scenic representation from county conversion is a world-authoring boundary, independent of discoveries. Ordinary settlement, travel and holdings retain their existing gates.'
       },
       gentry_freehold_expansion:{
         mode:'none',

@@ -86,6 +86,7 @@
   FB.publicAppointmentEffective = function (s, row) {
     var terms = row && row.publicTerms, profile = row && FB.administrationProfile(s, row.institutionId);
     var hereditary = FB.aristocracy && FB.aristocracy.assignment(s, row);
+    if (row && !hereditary && !G.publicAuthorityReadiness(s,row.institutionId).allowed) return false;
     if (!terms || !profile || row.status !== 'active' || row.endTurn !== null && row.endTurn <= s.turn ||
         !s.chars[row.holder.id] || s.chars[row.holder.id].dead || s.chars[row.holder.id].unfree ||
         FB.justiceCustodyOf(s, row.holder.id) || !hereditary && profile.offices.indexOf(row.officeId) < 0 ||
@@ -164,6 +165,7 @@
     var scopeValid = at && def && def.scopes.indexOf(at.kind) >= 0 && (at.kind === 'county' ? at.id === pid :
       (s.armies || []).some(function (army) { return army.id === at.id && army.realm === rid && army.men > 0; }));
     var patron = courtActor(s, actor, rid);
+    var readiness = G.publicAuthorityReadiness(s,rid);
     var petition = actor && actor.kind === 'character' && actor.id === input.holderId && actor.id === s.player.charId &&
       FB.realmTerritory(s, rid).indexOf(s.player.provinceId) >= 0 && !s.player.travel;
     var q = { operation:'appoint', actor:copy(actor || null), input:copy(input), allowed:false,
@@ -172,6 +174,7 @@
     var qualification = c && def && def.appointment && FB.skillSnapshot(s, c, def.appointment.skill);
     q.reason = !profile || !def || profile.offices.indexOf(input.officeId) < 0 || !county || !scopeValid
       ? FB.T('A public court, listed office and productive source within its direct jurisdiction are required.') :
+      !readiness.allowed ? FB.T('A minor court requires a capable adult hereditary steward for public decisions.') :
       !patron && !petition ? FB.T('Only the appointing court or a resident applicant can propose this appointment.') :
       !c || c.dead || c.unfree || FB.ageOf(c, s.date.year) < 16 || FB.justiceCustodyOf(s, c.id) ||
         c.id === s.player.charId && !FB.station.isFree(s.player, s) ? FB.T('A public officer must be a free, living adult.') :
@@ -186,7 +189,7 @@
       !FB.treasuryCounterparty(s,rid) || funds < q.cost ? FB.T('The court needs {money:cost} in an active treasury for appointment.', { cost:q.cost }) : null;
     q.allowed = !q.reason;
     q.stamp = JSON.stringify([q.generation, profile, c && [c.id,c.dead,c.born,c.unfree,qualification,FB.characterResidence(s,c)],
-      existing, funds, scopeValid, county, c && FB.justiceCustodyOf(s,c.id), s.player.prestige,
+      existing, funds, scopeValid, county, readiness, c && FB.justiceCustodyOf(s,c.id), s.player.prestige,
       s.player.travel, s.player.provinceId, FB.publicCountyIncome(s, rid, pid),
       s.player.charId, ruler(s, rid) && ruler(s, rid).id]);
     return q;
@@ -242,10 +245,12 @@
     // A perpetual family assignment continues through its own probate review.
     // Dismissing a personal governor cannot revoke surviving customary rights.
     if (FB.aristocracy && FB.aristocracy.assignment(s,row) && ['remove','confirm'].indexOf(action) >= 0) allowed = false;
+    var readiness = G.publicAuthorityReadiness(s,row.institutionId);
+    if (action !== 'repay' && !readiness.allowed) allowed = false;
     var q = { operation:'office', actor:copy(actor || null), id:id, action:action, value:value === undefined ? null : value,
       allowed:!!allowed, cost:action === 'repay' ? row.publicTerms.arrears : 0,
       reason:allowed ? null : FB.T('The holder, appointing authority, funding or office terms no longer permit this decision.') };
-    q.stamp = JSON.stringify([row, current, live, controlled, FB.realmRulerGeneration(s,row.institutionId),
+    q.stamp = JSON.stringify([row, current, live, controlled, readiness, FB.realmRulerGeneration(s,row.institutionId),
       c && [c.gold,c.dead,c.unfree,FB.justiceCustodyOf(s,c.id),
         FB.treasuryCharacterRealm(s,c.id) && FB.treasuryAvailable(s,FB.treasuryCharacterRealm(s,c.id))],
       s.player.gold, ruler(s,row.institutionId) && ruler(s,row.institutionId).id]);

@@ -592,6 +592,7 @@
     s.politics = null;
     if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
     FB.rebuildRulerIndex(s); FB.invalidateRealmCache();
+    if (FB.bindPoliticalReligiousHeads) FB.bindPoliticalReligiousHeads(s, 'player');
     if (FB.invalidateSettlementLordships) FB.invalidateSettlementLordships(s);
     if (!options.deferSetup && FB.ensureAgency) FB.ensureAgency(s);
     if (!options.deferSetup && FB.ensurePolitics) FB.ensurePolitics(s);

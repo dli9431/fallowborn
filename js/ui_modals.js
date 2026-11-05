@@ -79,7 +79,9 @@ window.FB = window.FB || {};
       decisions[key] = q;
       return reviewActionCardHtml({ data:{ lineageReview:key }, label:label, disabled:!q.allowed,
         detailsId:'lineage-action-' + key, warn:!q.allowed,
-        note:q.reason || FB.T('Payment on acceptance: {money:cost}', { cost:q.cost }),
+        note:q.reason || (request.action === 'nominate' ?
+          FB.T('No payment. Admission grants candidature only; designation and accession require separate decisions.') :
+          FB.T('Payment on acceptance: {money:cost}', { cost:q.cost })),
         details:'<p>' + esc(FB.T('Review current candidates, living principals, support and obligations. Confirmation rechecks every fact before payment or accession.')) + '</p>' });
     }
     let h = '<div data-lineage-list data-modal-scroll>';
@@ -97,6 +99,9 @@ window.FB = window.FB || {};
         kv('Quorum', esc(FB.T('{amount}% of declared political weight', { amount:Math.round(p.quorum * 100) }))) +
         kv('Tie outcome', esc(FB.T('Divided assent leaves a contested vacancy'))) +
         kv('Designation', esc(p.procedure.designation ? FB.T('A preference requiring the same assent') : FB.T('Unavailable in this profile'))) +
+        kv('Nomination', esc(p.procedure.livingNomination ?
+          FB.T('A living interest may admit a candidate before a vacancy; designation and accession remain separate.') :
+          FB.T('A lawful vacancy is required'))) +
         kv('Vacancy administration', esc(p.procedure.interimRevenue ? FB.T('Local receipts and courts continue') : FB.T('Public receipts await accession'))) +
         kv('Vacancy defense', esc(p.procedure.defensiveLevy ? FB.T('May defend against an actual attack') : FB.T('Public levy awaits accession'))) +
         kv('Public treasury', esc(FB.T('{money:amount}', { amount:FB.treasuryAvailable(s, rid) }))) +
@@ -109,15 +114,23 @@ window.FB = window.FB || {};
         kv('Faiths', esc(pool.religions.length ? pool.religions.map(function (key) { return FB.L(FBDATA.religions[key].name); }).join(', ') : FB.T('Any'))) +
         kv('Religious service', esc(pool.excludedRoles.length ? FB.T('Declared religious roles are excluded') : FB.T('Religious roles may stand'))) +
         '<p>' + esc(FB.T('Existing rulers and royal members of other courts keep their current roles. Local qualified people can be nominated without transferring any private property.')) + '</p>');
-      if (data.vacancy && data.vacancy.status !== 'resolved') {
+      const openVacancy = data.vacancy && data.vacancy.status !== 'resolved';
+      if (openVacancy || p.procedure.livingNomination) {
         const nominees = S.nominees(s, rid);
-        h += reviewFactsCard(FB.T('Nominate another house'), nominees.length ? nominees.map(function (cid) {
+        const nominations = nominees.map(function (cid) {
           const c = s.chars[cid];
-          return reviewPeopleHtml(reviewPersonHtml(c, FB.T('Qualified local candidate'), null)) + S.constituency(s, rid).map(function (m) {
+          const interests = S.constituency(s, rid).filter(function (m) {
+            return openVacancy || S.quote(s, rid, { action:'nominate', memberId:m.id, characterId:cid,
+              actor:{ kind:'character', id:me.id } }).allowed;
+          });
+          if (!interests.length) return '';
+          return reviewPeopleHtml(reviewPersonHtml(c, FB.T('Qualified local candidate'), null)) + interests.map(function (m) {
             return action('nominate-' + m.id + '-' + cid, FB.T('Review nomination by {interest}', { interest:interestName(m.id) }),
               { action:'nominate', memberId:m.id, characterId:cid });
           }).join('');
-        }).join('') : '<p>' + esc(FB.T('No additional qualified local people are available.')) + '</p>');
+        }).join('');
+        if (nominations || openVacancy) h += reviewFactsCard(FB.T('Nominate another house'), nominations ||
+          '<p>' + esc(FB.T('No additional qualified local people are available.')) + '</p>');
       }
     }
     h += reviewFactsCard(FB.T('Local interests'), S.constituency(s, rid).map(function (m) {
@@ -183,7 +196,10 @@ window.FB = window.FB || {};
     });
     $('gm-body').scrollTop = view.bodyScroll || 0;
     if (view.fieldFocus && $(view.fieldFocus)) $(view.fieldFocus).focus({ preventScroll:true });
-    if (view.focus) { const node = list.querySelector('[data-lineage-review="' + view.focus + '"]'); if (node) node.focus({ preventScroll:true }); }
+    if (view.focus) {
+      const node = list.querySelector('[data-lineage-review="' + view.focus + '"]') || $('lineage-candidate');
+      node.focus({ preventScroll:true });
+    }
     ['lineage-candidate','lineage-terms'].forEach(function (key) { $(key).onchange = function () { UI.showLocalKingship(position()); }; });
     list.querySelectorAll('[data-lineage-review]').forEach(function (button) {
       button.onclick = function () {
@@ -191,7 +207,9 @@ window.FB = window.FB || {};
         const pos = position(), q = decisions[button.dataset.lineageReview];
         pos.focus = button.dataset.lineageReview;
         function back() { UI.showLocalKingship(pos); }
-        let facts = kv('Payment on acceptance', esc(FB.T('{money:cost}', { cost:q.cost }))) +
+        const nominationPeople = q.request.action === 'nominate' ? reviewPeopleHtml(
+          reviewPersonHtml(s.chars[q.request.characterId], FB.T('Qualified local candidate'), null)) : '';
+        let facts = nominationPeople + kv('Payment on acceptance', esc(FB.T('{money:cost}', { cost:q.cost }))) +
           kv('Candidate', esc(q.request.characterId ? s.chars[q.request.characterId].name : candidateName(q.request.candidateId || q.winnerId || t.rulerMemberId)));
         if (q.request.terms) facts += kv('Levy obligation', esc(FB.T('{amount}%', { amount:Math.round(q.request.terms.levy * 100) }))) +
           kv('Revenue obligation', esc(FB.T('{amount}%', { amount:Math.round(q.request.terms.revenue * 100) })));
@@ -212,7 +230,7 @@ window.FB = window.FB || {};
         $('lineage-confirm').onclick = function () {
           const result = s === FB.state && S.apply(s, q);
           markActionsDirty();
-          UI.openModal(result ? FB.T('Decision recorded') : FB.T('Terms changed'), '<p>' +
+          UI.openModal(result ? FB.T('Decision recorded') : FB.T('Terms changed'), nominationPeople + '<p>' +
             esc(result ? FB.T('The decision is recorded. Local recognition and property retain their separate rules.') :
               FB.T('Review the current terms again. Nothing was spent.')) + '</p><button type="button" class="actionbtn" id="lineage-continue">' +
             esc(FB.T('Continue')) + '</button>', { replaceView:true });
@@ -2779,7 +2797,9 @@ window.FB = window.FB || {};
     const s = FB.state;
     const choices = opts.choices || [];
     if (!choices.length) {
-      UI.toast(FB.T('No qualifying destination can be reached.'));
+      UI.toast(FB.travelPurposeKind(opts.purpose) === 'frontier' && FB.world.provs.some(function (pr) { return pr.settlementPolicy === 'protected'; })
+        ? FB.T('No convertible frontier destination can be reached. Protected scenic regions cannot become counties; this does not imply that they are uninhabited.')
+        : FB.T('No qualifying destination can be reached.'));
       return;
     }
     const wasPaused = FB.game.paused;
@@ -2832,6 +2852,8 @@ window.FB = window.FB || {};
     FB.map.request();
     $('travel-picker-summary').textContent = opts.kind === 'trade_venture'
       ? FB.T('Choose a developed market on the map or from the list. The stake and route overhead are charged separately.')
+      : FB.travelPurposeKind(opts.purpose) === 'frontier' && FB.world.provs.some(function (pr) { return pr.settlementPolicy === 'protected'; })
+      ? FB.T('Choose a frontier destination. Protected scenic regions cannot become counties; this does not imply that they are uninhabited. Routes through inhabited counties remain available.')
       : FB.T('Tap a marked county or choose it from the list. Routes use settled counties and authored straits.');
     $('travel-picker-continue').disabled = true;
     $('travel-picker-back').disabled = !opts.cancelAction;
@@ -12182,7 +12204,11 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     let h = '<p class="hint">' + esc(FB.T(
       '{money:gold} and {prestige} prestige to plant a settlement on empty land. The new county answers to you — and belongs to no de jure {term:duchy}.',
-      { gold: B.settleGold, prestige: B.settlePrestige })) + '</p><div class="gm-list">';
+      { gold: B.settleGold, prestige: B.settlePrestige })) + '</p>';
+    if (FB.world.provs.some(function (pr) { return pr.settlementPolicy === 'protected'; })) {
+      h += '<p class="hint">' + esc(FB.T('Protected scenic regions cannot become counties. This does not imply that they are uninhabited.')) + '</p>';
+    }
+    h += '<div class="gm-list">';
     const candidates = FB.wastelandCandidates(s);
     for (const pid of candidates) {
       const pr = FB.world.byId[pid];

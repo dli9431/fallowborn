@@ -515,6 +515,19 @@ Bookmark activation and new politics clear cached conversions; each loaded save
 then applies only its own table. Ownership and population remain authoritative
 in their existing saved records, including after conquest or succession.
 
+The effective saved world revision also owns optional province settlementPolicy.
+Detached preflight rejects any conversion record on a protected scenic anchor,
+or positive saved development together with holding/ownership evidence there,
+including legacy inferred conversions. It reads the saved definition rather
+than the currently active map and runs before campaign adoption. Rejection
+preserves the active campaign, catalogue, RNG, UID and stored copy. Direct
+physical repair preflights the whole batch before touching the world or ledger.
+Matching protected saves retain ordinary conversions on unprotected anchors;
+no-field worlds retain their previous restoration rules. Every cached-world
+binding resets policy from the active declaration, deleting omitted flags, so
+repeated switching cannot leak policy or conversions. There is no second ledger,
+save-format increment, conversion replay, refund or automatic migration.
+
 War-event supply refills use the host's existing saved `supply`. Optional war effect
 records add `target:'provisions'`, `provisionsDelta`, and `hostId`; existing effect
 records retain their meanings. Resupply may retain an optional `supplyRetreat` county
@@ -935,6 +948,21 @@ marker. See
 [doctrines.md](doctrines.md).
 
 Religious-head state is additive and keeps save version 3.
+For political_incumbent, the same religiousHeads office key stores the authorized
+character id or explicit null; an absent key stays absent on restore. No new saved
+field or envelope migration is introduced. Detached validation checks present
+non-null pointers against existing characters, without requiring currently
+effective recognition or replacing a suspended holder. Ordinary office repair
+skips these bindings. Death and committed political succession retain their
+canonical vacancy/accession boundaries. Dynastic restore also skips these source
+courts, including a dead incumbent with pending political support, so loading
+cannot finish an election through ordinary ruler repair. Repeated restore never elects, materializes,
+grants, pays or rebinds an incumbent. The existing selection originRealmId retains
+the polity across canonical player adoption/release, and issuerGeneration remains
+the original character id. Effective office authority is recomputed from current
+political recognition. Exact mod fingerprints include the authored head policy;
+changing it under the same mod name continues to reject incompatible saves.
+
 `state.religiousHeads` maps a stable `head.officeId` to a realm id or to `null` for an
 explicit vacancy. The built-in office ids equal the old Catholic and Sunni religion ids,
 so old saves need no key migration. New games seed missing entries from optional
@@ -2264,6 +2292,18 @@ Public courts are restored without materializing or repairing their succession. 
 
 Aristocratic courts retain their original compact royal tree alongside linked actual characters, including for a player ruler. Optional government.aristocracy schema 1 references the declared founder, original/current realm, permanent interests and minority steward. Perpetual appointment rows have provincialTerms schema 1 for levy and assent, and recognition votes carry exact revenue/levy terms or explicit withdrawal. Detached validation rejects missing active constituencies, forged roots, unknown profiles, mismatched principals, duplicate scopes/rights and invalid commitments before adoption. Dormant rights under another form survive, and old regnum saves remain unseeded. An incumbentRef may retain a foreign political incumbent's birth court without fabricating royal ancestry. See docs/designs/aristocratic-monarchy.md.
 
+Optional aristocratic openingStewardActorId reuses that regency record without a
+new schema or migration. Fresh opted-in minorities bind the declared existing
+actor once with the current generation and turn. Detached restore requires a
+current-generation regency for an opted-in minor, retaining the actual saved
+steward rather than resolving the opening declaration again. Dead, captive or
+dispossessed stewards remain historical references; public authority stays
+blocked until normal play performs lawful replacement or the ruler reaches the
+profile's adulthood boundary. Steward references survive court compaction.
+Adult and omitted-field openings acquire no new regency. Repeat restore never
+seeds people, rights, commissions, payments, recognition or accession, and exact
+imported-content fingerprints still reject changed stewardship declarations.
+
 Mobile coalition records
 
 The existing v4 envelope and authority schema are unchanged. Optional authority.governments[realmId].mobile schema 1 stores bounded member principals and civilian/resting-fighter cohorts, one leader/vacancy, one pending member decision, agreements, food and conservation counters. authority.migrations remains the sole court position. Ordinary hosts carry mobileFollowing, mobileCourt, mobileRoster, mobileFood and optional mobileProvisionTurn. Optional mobilePastures schema 1 retains only the current period and harvested capacity per county, preventing repeated concession harvests. Strict detached validation rejects invalid references, duplicate partitions, negative values, incompatible forms and broken people conservation. Restore creates no followings, pays no agreements, harvests no pasture and never rebuilds a lost host. Earlier openings remain absent rather than receiving fresh records.
@@ -2301,6 +2341,42 @@ The 800 date retains independently resolvable baseline, governments_v2, inhabite
 The expansion changes no 800 opening actors or story definitions. Existing bundled Carolingian record migration still splits saved opportunities into the reusable types without replaying grants, diplomacy or completed outcomes. A saved frontier settlement remains attached to its original world rather than being replaced by newly authored districts. Regression coverage switches retained, expanded and other-date worlds in both directions and checks population, holders, sites, RNG, story records and personal state.
 
 Retained catalogue rules
+
+Exact additive compatibility exception
+
+FB.mods.saveCompatibility owns the common transient decision used by
+save.otherWorld, detached v4 preflight and game.loadData. A native declaration
+may certify exactly one complete predecessor/current bookmark transition with
+an explicitly supported retained revision, added revision ids, a changed fresh
+revision pointer and unchanged supported bundled payloads. docs/MODDING.md gives
+the strict fields and finite limits. Registration remains native source metadata
+across complete publication and selected-source switches; JSON mods cannot
+provide or modify it. Missing, ambiguous or malformed declarations fail closed.
+
+The proof reconstructs the predecessor from its explicit trusted definition and
+the complete pristine mod baseline, replaying the unchanged raw JSON stack and
+ordered enabled bundled payloads through canonical detached validation. It uses
+the existing authored-root rules and exact effective-1 hash, then compares the
+saved signature to that result. Native predecessorRoots pin every authored-only
+baseline root, including ordered declaration text and absent roots, so an
+omitted default cannot silently change outside the saved fingerprint. It also checks installed-current definitions,
+all older effective revisions and unrelated public roots. Runtime world aliases
+and layered balance are activation projections, not alternate authored roots.
+An edited definition, different JSON bytes/order, changed bundle payload/order,
+foreign edition or unsupported bookmark/revision cannot inherit the exception.
+
+One transient proof rechecks exact declaration/configuration, bundled payloads,
+live property structure and normalized technology definitions on every request.
+Mod changes invalidate it; source replacement requires a fresh proof. It never
+publishes a reconstructed catalogue and mutates no
+envelope, mod payload, campaign fact, storage, story registry, RNG or uid. Normal
+revision, geography and saved-record validation still run before adoption;
+existing content checkpoints retain failed selected-source switch rollback.
+Converted ordinary scenery and spent resources retain their original owners.
+No migration, repair, refund, reseeding, new authority or save-schema increment
+is introduced. Normal re-saving stamps the installed current signature, and the
+same retained revision must load again on a fresh page. Standard unmodded empty
+signatures and CrazyGames edition signatures keep their existing meanings.
 
 Every restored world revision must agree with its saved geography, including a bookmark with only the implicit baseline. A known but different geography is rejected before activation or state adoption. Retained form ids, default government stamps, generated-faith parents and optional institution records remain authoritative; this contract adds no automatic government transformation or restore-time initialization.
 

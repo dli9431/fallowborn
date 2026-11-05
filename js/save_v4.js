@@ -107,6 +107,7 @@
     // A leftover legacy record must fail even when there are no stories.
     if (state.situation476 !== undefined) field('state.situation476');
     if (state.start !== undefined && !plain(state.start)) field('state.start');
+    if (FB.validateWastelandSettlements) FB.validateWastelandSettlements(state);
     if (FB.stories) FB.stories.validateAttachments(state);
     if (FB.validateOpeningInfrastructureState) FB.validateOpeningInfrastructureState(state);
     if (FB.buildingProfiles) FB.buildingProfiles.validate(state);
@@ -118,6 +119,16 @@
     if (FB.buildingSeasons) FB.buildingSeasons.validate(state);
     if (FB.validateBuildingInstitutionState) FB.validateBuildingInstitutionState(state);
     validateRoyalCourts(state);
+    // A political office saves only its authorized person pointer. Temporary
+    // loss of consent, faith or eligibility suspends it, without normalization.
+    var offices = FB.religiousOffices(state);
+    Object.keys(offices).forEach(function (id) {
+      if (offices[id].head.succession !== 'political_incumbent' || state.religiousHeads === undefined) return;
+      if (!plain(state.religiousHeads)) field('state.religiousHeads');
+      if (!own(state.religiousHeads, id) || state.religiousHeads[id] === null) return;
+      var holder = state.religiousHeads[id];
+      if (typeof holder !== 'string' || !own(state.chars, holder)) field('state.religiousHeads.' + id);
+    });
     if (FB.validateStartingRealm) FB.validateStartingRealm(state);
     if (FB.validateStartingPerson) FB.validateStartingPerson(state);
     if (FB.validateStartingPrincipal) FB.validateStartingPrincipal(state);
@@ -526,8 +537,9 @@
     if ((FB.platform.isCrazyGames || /^crazygames-content-/.test(data.mods || '')) &&
         data.mods !== currentMods)
       throw new Error(FB.T('This save belongs to a different edition of the game.'));
-    if (data.mods !== undefined ? data.mods !== currentMods : !!currentMods)
-      throw new Error(FB.T('This save uses a different mod set and cannot be migrated.'));
+    var compatibility = FB.mods.saveCompatibility(data);
+    if (!compatibility.compatible)
+      throw new Error(FB.T('This save uses a different mod set or incompatible content at {path}.', {path:compatibility.path}));
     var bookmarkId = data.state.start ? data.state.start.id : '867';
     var bookmark = own(FBDATA.bookmarks, bookmarkId) && FB.bookmark(bookmarkId,
       data.state.start && data.state.start.revision !== undefined ? data.state.start.revision : 'baseline');

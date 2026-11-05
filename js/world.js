@@ -1222,7 +1222,7 @@ window.FB = window.FB || {};
           var localHead = localFaith && (localFaith.head || localFaith.properties && localFaith.properties.head);
           // A faith's episcopal head can also be its campaign's local see.
           // Both declarations then seed the same character-held office ledger.
-          if (def.profileId || !isChurch || head.holderKind !== 'character' || head.system !== 'episcopal_sees' ||
+          if (def.profileId || !isChurch || head.holderKind !== 'character' || head.succession === 'political_incumbent' || head.system !== 'episcopal_sees' ||
               !localHead || localHead.officeId !== def.officeId)
             fault('officeId collides with an incompatible central faith office.');
         });
@@ -2066,6 +2066,10 @@ window.FB = window.FB || {};
           var headRealmId = religiousHeads[religionId];
           if (!religion || !religion.head) {
             fault('religiousHeads has invalid faith or office ' + religionId + '.');
+          } else if (headRealmId === null) {
+            // Authored vacancies remain vacant until their canonical owner acts.
+          } else if (religion.head.succession === 'political_incumbent' && headRealmId !== religion.head.realm) {
+            fault('religiousHeads.' + religionId + ' must name the political source realm or null.');
           } else if (typeof headRealmId !== 'string' || !headRealmId ||
               !realms[headRealmId]) {
             fault('religiousHeads.' + religionId + ' has invalid realm ' +
@@ -2075,9 +2079,64 @@ window.FB = window.FB || {};
       }
     }
 
+    /* Validate against this detached, layout-prepared world, including forms
+       and faiths supplied together by an ordinary JSON import. */
+    var politicalOffices = {};
+    FB.religionIds(null, false).forEach(function (faithId) {
+      var faith = FB.religionOf(faithId, null), head = faith && faith.head;
+      if (!head || head.succession !== 'political_incumbent' || politicalOffices[head.officeId]) return;
+      politicalOffices[head.officeId] = true;
+      var source = realms[head.realm], mapping = definition.religiousHeads || {};
+      var mapped = Object.keys(mapping).filter(function (id) {
+        return id === head.officeId || FB.faithOfficeId(id, null) === head.officeId;
+      });
+      var used = source || mapped.length || definition.realms.concat(definition.provinces).some(function (row) {
+        return FB.faithOfficeId(row.religion, null) === head.officeId;
+      });
+      if (!used) return;
+      function officeFault(detail) { fault('political head ' + head.officeId + ': ' + detail); }
+      if (mapped.some(function (id) { return mapping[id] !== mapping[mapped[0]]; }))
+        officeFault('shared opening mappings must agree.');
+      if (!source) { officeFault('unknown source realm ' + head.realm + '.'); return; }
+      var ids = FB.governments.strategyIds(platform.governments[head.realm]);
+      if (!ids || ids.succession !== 'crown_election') officeFault('source requires crown_election recognition.');
+      var seat = head.seat, seatId = typeof seat === 'string' ? seat : seat && seat.province;
+      if (!seatId && seat && seat.site) {
+        var seatCounty = definition.provinces.filter(function (p) {
+          return (p.settlements || []).some(function (entry) { return entry.site === seat.site; });
+        })[0];
+        seatId = seatCounty && seatCounty.id;
+      }
+      var seatDef = provinceIds[seatId];
+      if (!seatDef || seatDef.wasteland) officeFault('seat must resolve to an inhabited county in this world.');
+      if (mapped.some(function (id) { return mapping[id] === null; })) return;
+      var ruler = source.ruler || {}, born = ruler.born;
+      if (!Number.isInteger(born) || date.year - born < (head.minAge || 0) ||
+          head.holderRole ||
+          head.holderSex && ruler.sex !== head.holderSex ||
+          FB.faithOfficeId(source.religion, null) !== head.officeId) {
+        officeFault('opening ruler must have an eligible declared birth, sex, role and faith.');
+      }
+    });
+    (definition.stories || []).forEach(function (id) {
+      var story = stories && stories.get(id), d = story && story.declaration;
+      var heads = d && d.opening && d.opening.heads;
+      (Array.isArray(heads) ? heads : []).forEach(function (row) {
+        if (row && politicalOffices[row.officeId]) fault('story ' + id + ' cannot assign a political religious head.');
+      });
+      var p = d && d.parameters;
+      if (p && (politicalOffices[p.religiousOfficeId] || politicalOffices[p.minorityOfficeId]))
+        fault('story ' + id + ' requires an independently managed spiritual office.');
+    });
+
     for (var pvi = 0; pvi < provinces.length; pvi++) {
       var pr = provinces[pvi];
       if (!pr || !pr.id) continue;
+      if (ownKey(pr, 'settlementPolicy') &&
+          (['ordinary','protected'].indexOf(pr.settlementPolicy) < 0 ||
+           pr.settlementPolicy === 'protected' && !pr.wasteland)) {
+        fault('province ' + pr.id + ' has invalid settlementPolicy: use ordinary, or protected on initial wasteland.');
+      }
       if (pr.customaryRights !== undefined) {
         if (pr.wasteland || !Array.isArray(pr.customaryRights))
           fault('province ' + pr.id + ' has invalid customary rights.');
@@ -2543,6 +2602,7 @@ window.FB = window.FB || {};
     const provs = FBDATA.provinces.map(function (p, i) {
       return {
         idx: i, id: p.id, name: p.name, wasteland: !!p.wasteland,
+        settlementPolicy: p.settlementPolicy,
         terrain: p.terrain || 'farmland', culture: p.culture, religion: p.religion,
         realm0: p.realm || null, dev0: p.dev || 1, duchy: p.duchy || null,
         settlements: p.settlements || null,
@@ -3604,6 +3664,16 @@ window.FB = window.FB || {};
       FB.authoritySeedCommunities(state, FBDATA.realms, FBDATA.provinces);
     if (FB.seedRealmTechnologies) FB.seedRealmTechnologies(state);
     if (FB.governmentSelection) FB.governmentSelection.seed(state);
+    if (FB.bindPoliticalReligiousHeads) {
+      const sources = {}, offices = FB.religiousOffices(state);
+      Object.keys(offices).forEach(function (id) {
+        const head = offices[id].head;
+        const rid = head.succession === 'political_incumbent' &&
+          FB.governmentSelection.officeRealmId(state, head.realm);
+        if (rid) sources[rid] = true;
+      });
+      Object.keys(sources).forEach(function (rid) { FB.bindPoliticalReligiousHeads(state, rid, true); });
+    }
   };
 
   /* Group a realm's counties by duchy and hand out titles:
@@ -4980,10 +5050,20 @@ window.FB = window.FB || {};
     opts = opts || {};
     state.alliances = state.alliances || [];
     const papalTerritorialIds = FB.religiousHeadRealmIds(state, 'papal_election');
+    const politicalSources = {};
+    if (opts.restore && FB.governmentSelection) FB.religionIds(state, false).forEach(function (id) {
+      const head = FB.religionOf(id, state).head;
+      const rid = head && head.succession === 'political_incumbent' &&
+        FB.governmentSelection.officeRealmId(state, head.realm);
+      if (rid) politicalSources[rid] = true;
+    });
     let made = false;
     for (const rid in state.realms) {
       const r = state.realms[rid];
       if (!r || !r.alive) continue;
+      // Matching political courts resume their exact saved vacancy and people.
+      // Loading must not run the ordinary dead-ruler repair election.
+      if (politicalSources[rid]) continue;
       if (FB.governments.successionForRealm(state, rid).delegatedLeadership ||
           FB.governments.successionForRealm(state, rid).mobileLeadership) continue;
       if (opts.restore && FB.administrationProfile && FB.administrationProfile(state,rid)) continue;
@@ -8188,19 +8268,50 @@ window.FB = window.FB || {};
      commoner frontier journey passes the gateway county's holder and grants
      only household property. Returns the province, or null when the land is
      not convertible. */
+  /* A broad scenic representation may be protected from county conversion.
+     This pure fact says nothing about historical inhabitants or travel on
+     independently represented inhabited counties. */
+  FB.wastelandSettlementEligible = function (province) {
+    return !!(province && province.wasteland &&
+      (province.settlementPolicy === undefined || province.settlementPolicy === 'ordinary'));
+  };
+
+  /* Check the saved revision's declarations, never the currently bound map.
+     Ownership/development also exposes conversions in pre-ledger saves. */
+  FB.validateWastelandSettlements = function (state, definition) {
+    if (!state) return true;
+    definition = definition || FB.campaignBookmark(state);
+    if (!definition) return true;
+    const records = state.wastelandSettlements || {};
+    for (const province of definition.provinces || []) {
+      if (province.settlementPolicy !== 'protected') continue;
+      const pid = province.id;
+      if (ownKey(records, pid) || state.dev && state.dev[pid] > 0 &&
+          (state.holder && state.holder[pid] || state.owner && state.owner[pid])) {
+        throw new Error(FB.T('This save converts the protected scenic region {province} into a county.',
+          {province:province.name}));
+      }
+    }
+    return true;
+  };
+
   /* Rebuild only the physical conversion; never replay settlement costs,
      ownership grants, development, population creation, promotions or news.
      Cached bookmark worlds must also forget conversions from a different life. */
   FB.restoreWastelandSettlements = function (state) {
     const world = FB.world;
     if (!world) return;
+    // Direct repair calls share detached adoption's all-or-nothing preflight.
+    FB.validateWastelandSettlements(state, {provinces:FBDATA.provinces});
     const legacy = state && !state.wastelandSettlements;
     const records = state ? (state.wastelandSettlements || {}) : {};
     const waste = {};
     for (const baseline of FBDATA.provinces) {
-      if (!baseline.wasteland) continue;
       const pid = baseline.id, pr = world.byId[pid];
       if (!pr) continue;
+      if (ownKey(baseline, 'settlementPolicy')) pr.settlementPolicy = baseline.settlementPolicy;
+      else delete pr.settlementPolicy;
+      if (!baseline.wasteland) continue;
       waste[pid] = true;
       if (legacy && state.dev && state.dev[pid] > 0 &&
           ((state.holder && state.holder[pid]) || (state.owner && state.owner[pid]))) {
@@ -8220,7 +8331,7 @@ window.FB = window.FB || {};
     world.sitesRender = world.sites.slice().sort(siteRenderCompare);
     for (const pid in records) {
       const record = records[pid], pr = world.byId[pid];
-      if (!waste[pid] || !record || typeof record.culture !== 'string' ||
+      if (!waste[pid] || !FB.wastelandSettlementEligible(pr) || !record || typeof record.culture !== 'string' ||
           typeof record.religion !== 'string' || !record.culture || !record.religion) continue;
       pr.wasteland = false;
       pr.culture = record.culture;
@@ -8235,7 +8346,7 @@ window.FB = window.FB || {};
   FB.materializeWasteland = function (state, pid, opts) {
     opts = opts || {};
     const pr = FB.world && FB.world.byId ? FB.world.byId[pid] : null;
-    if (!pr || !pr.wasteland) return null;
+    if (!FB.wastelandSettlementEligible(pr)) return null;
     const me = state.chars && state.player
       ? state.chars[state.player.charId] : null;
     const culture = opts.culture || (me && me.culture) || null;
@@ -8277,7 +8388,7 @@ window.FB = window.FB || {};
      politics and the cost. */
   FB.settleWaste = function (state, pid) {
     const p = state.player, pr = FB.world.byId[pid];
-    if (!pr || !pr.wasteland) return;
+    if (!FB.wastelandSettlementEligible(pr)) return;
     const me = state.chars[p.charId];
     const done = FB.materializeWasteland(state, pid, {
       culture: me.culture,

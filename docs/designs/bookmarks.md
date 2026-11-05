@@ -1,4 +1,36 @@
+Scenic settlement policy
+
+Bookmark province rows optionally declare settlementPolicy as ordinary or
+protected. Omission retains ordinary behavior and unchanged declaration identity.
+Protection is valid only on initial wasteland and survives effective geography,
+whole-field revisions and ordinary JSON composition. Canonical detached world
+validation rejects unknown values and protection on an inhabited declaration.
+The runtime copies the selected policy onto physical provinces and resets it
+at every cached-world binding, removing flags omitted by the next definition.
+The policy participates in exact effective mod fingerprints. Revisions retain
+their own conversion rules; a new protected definition does not reinterpret
+saved ordinary conversions. Technology impact scenic_settlement_protection is
+none because a scenic-representation boundary has no discovery prerequisite.
+Independent inhabited routes, ownership and communities keep their own rules.
+
 Detached trusted composition
+
+Native sources may retain one explicit predecessor/current transition through
+bookmarkSources.retainCatalogueTransition before the manifest seals. Declarations
+stay outside FBDATA and composition payloads, so complete publication and
+selected-date switching preserve their trusted identity without affecting mod
+fingerprints. The mods owner validates finite plain data and exact authored
+expectations; source staging performs no engine-dependent proof.
+Pinned predecessorRoots additionally retain exact shared defaults omitted from
+the ordinary authored-only fingerprint. Capture them from complete predecessor
+publication, then retain their literal native evidence across source switches.
+Only explicitly listed added revisions and the fresh revision pointer may differ. Every existing
+raw layer, resolved retained world and shared definition keeps its meaning.
+Withheld or interveningly changed source definitions cannot borrow a declaration
+whose expected current publication no longer matches. Ordinary JSON cannot
+declare compatibility. docs/MODDING.md owns the interface and bounds;
+state-and-saves.md owns adoption. No real bookmark transition is activated by
+this infrastructure, and no technology capability or save field is introduced.
 
 js/bookmark_composition.js owns FB.bookmarkCompositions.prepare: one detached complete world and its newly owned layouts, identities, government forms and stories, followed by independently validated start units. The scoped bridge in js/mods.js reuses canonical import validators and detached story compilation; final authoring checks include this unit's starts and explicit world references. Invalid world data publishes none of its dependent records. A bad start withholds its own binding and whole owned graph, plus explicitly dependent starts, while healthy siblings can publish with the world. Shared catalogue validators remain authoritative; this boundary does not repair unrelated invalid shared definitions.
 

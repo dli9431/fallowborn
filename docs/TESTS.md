@@ -1,5 +1,18 @@
 Deferred title and content readiness
 
+political-religious-head.spec.js covers native and ordinary JSON political office
+configurations with distinct age/sex, constituency, polity and seat rules. It checks
+fresh identity binding, pure reads, refused generic writers, independent offices,
+recognition suspension/recovery, effective issuers and original generations, fresh
+and stale authority quotes, explicit null/missing controls, wrong people/polities,
+changed faith/form, death and reviewed/AI political succession, canonical player
+adoption/absorption/release, detached invalid-import purity, repeat restoration and
+exact policy signatures. religious-head-strategies.spec.js retains legacy journeys
+and adds an omitted-strategy authority-issuer control. Boundaries are staged rather
+than advanced through years of daily simulation.
+The political-office restore case additionally retains a dead incumbent's pending
+support through repeated loads, then resolves it once through the same transaction.
+
 ai-tactical-risk.spec.js covers bounded brave/craven margins, neutral ordering and generated-pool participation, authoritative current-character inputs, duplicate suppression, state isolation and pure reports. Matched pursuit/objective and combined-host choices use real battle power; disconnected routes, hostile forts, siege force, hostile gathering paths and overwhelming enemies still block. Supply, fiscal regrouping, legal retreat and daily manual/delegated/expedition order ownership retain their boundaries. Two independent ordinary JSON imports exercise distinct margins and generation policies with malformed nonpublication. Matching saves retain routes, resources and exact mod signatures, and actual succession replaces predecessor preferences without a long simulation. These focused cases do not establish long-run balance or device acceptance.
 
 ai-expansion-ranking.spec.js stages multiple real frontier targets for sovereigns and
@@ -13,6 +26,21 @@ save restoration and real ruler succession. The neutral case in ai-decision-inte
 selects ordinary_expansion explicitly; the focused spec covers the strategic default.
 These staged boundaries establish no full-suite, long-run balance, performance or device
 acceptance claim.
+
+retained-catalogue-compatibility.spec.js authors two independent native estuary and
+upland transitions with different retained/fresh revisions, worlds and defaults.
+Both import actual ordinary JSON overlays through Mods and enable bundled
+overlays, create predecessor envelopes with their actual signatures, spend
+resources and convert an ordinary scenic region. Cases cover pure direct
+preflight, Continue, slot and file import, retained facts and normal re-save on a
+fresh page. Exact-proof rejection covers changed raw strings/order, same-name
+edits, changed bundled payloads/order, missing/ambiguous/invalid declarations,
+unlisted revisions, altered retained/shared definitions, changed native defaults
+omitted from the fingerprint, forged/missing predecessor root expectations, foreign save identities,
+missing retained layers and forged JSON compatibility metadata. Unchanged
+modded/no-transition and standard empty-signature controls, source-switch
+rollback and repeat proof after changed configuration retain their own checks.
+These focused checks do not establish runtime/device or release acceptance.
 
 bookmark-save-roundtrip.spec.js creates and saves one campaign for each of the eleven native dates, including the hidden authoring dates, then resumes through cold-title Continue and the selected-date content gate. It compares the original world, opening indexes, governments, migrations, armies and RNG/uid state. deferred-menu.spec.js additionally covers cold Henry and Koten starts and Continue in 1241. guarded-following-opening.spec.js, guarded-principal-starts.spec.js and expedition-command.spec.js check compact identity omissions, detached validation purity, missing and conflicting identities, forged actor bindings and preserved guard or command provenance.
 
@@ -47,6 +75,8 @@ support/game/navigation.js exposes openTitle for the actual lightweight title an
 AI decision integration coverage
 
 ai-decision-integration.spec.js exercises complete multi-family ordinary JSON imports with government overrides, spent-resource restore, a single seeded research boundary, current traits/aims and real ruler succession, state isolation, exact changed-content rejection, unsafe declarations, empty weighted retry lists, and neutral standard/CrazyGames behavior. It uses the real entrypoint and staged boundary hooks without long simulations. File, served Chromium, Firefox and WebKit select this suite. ai-decision-policies.spec.js covers the pure protocol/import/layer lifecycle and ai-live-decisions.spec.js covers individual live consumers. Exact commands and runtime, device, package and performance evidence requirements are in docs/research/ai-decision-acceptance.md.
+
+The integration spec also compares ambitious/brave and zealous/patient/craven combinations across built-in war, tactics, investment, real research scoring, intrigue consideration and conversion resistance. Both ordinary examples select all nine families with current traits, retained aims and government scope. Matching restore preserves the retained revision, RNG and uid without replay; canonical death removes predecessor preferences. Independent content edits across intrigue, diplomacy, religion, investment, expansion and government parameters change exact save fingerprints, while reapplying the exact original restores matching eligibility. Mixed malformed declarations preserve data, messages, storage, state and counters. Disabled papal/holy-war/conversion hooks remain inert and explicit government zero-war preference wins even with legacy bellicose personality. All added boundaries are staged, with no daily simulation or elapsed-time performance threshold.
 
 ai-ruler-inputs.spec.js covers generated and historical character identity, player changes, authoritative empty trait lists, compact ruler materialization, structural and saved aim precedence, unique multi-trait composition, both ordinary JSON examples, malformed-import nonpublication, explicit government zero-war preferences, and current/legacy save restoration through canonical succession. All boundaries are staged; input reads check state, RNG and uid purity.
 
@@ -89,6 +119,19 @@ Dated government rollout coverage is in tests/e2e/specs/government-rollout.spec.
 476-ladder-careers.spec.js stages a live appointment for the Roman civic route, reviews a free resident's own local Standing independently of player reputation, and verifies underage and insufficient-treasury blockers before the funded annual AI promotion. civic-church-actors.spec.js checks the expanded 89 civic and 108 church institutions while retaining its pure-read, distinct-office and medieval-isolation assertions. court-story-types.spec.js checks that household choices and ruler restoration award no territory, then preserves the ownership and holder facts saved after its explicit conquest and recovery staging.
 
 # Testing Fallowborn
+
+protected-scenery.spec.js covers a detached full-map configuration with 21
+protected scenic remnants and 506 unchanged inhabited declarations, and an
+independent valley.json import through the ordinary Mods file picker. It checks
+noble/commoner candidates, stale departures and arrived confirmations, direct
+materialization with player and NPC holders, unchanged resources/state/RNG/UID,
+inhabited routes, localized protection explanations, malformed-import purity,
+ordinary conversions, matching repeat restore, impossible explicit and legacy
+saved conversions, omitted-field revisions, cross-world cache resets and exact
+policy fingerprints. Residence boundaries are staged without daily simulation.
+frontier-settlement.spec.js and wasteland-save.spec.js retain their existing
+journeys and add omitted-policy eligibility and detached restore controls.
+These focused cases do not establish owner runtime, save or device acceptance.
 
 The remaining bookmark/save regression repairs cover scenario-local CrazyGames SDK initialization in 476-world-stories.spec.js, 493-bookmark.spec.js, 711-bookmark.spec.js, 711-polity-foundation.spec.js and 800-settlements.spec.js. The title helper continues to require its callers to provide the SDK double. mods.spec.js checks transactional rejection of malformed technology caps and uses registered counties for appended crossings. bookmark-platform.spec.js distinguishes an empty local institution catalogue from inherited faith-head offices.
 
@@ -711,11 +754,24 @@ Budgets are uncompressed UTF-8 JSON bytes: 4 MiB opening, 6 MiB years one and tw
 
 Administrative monarchy coverage
 
+tests/e2e/specs/opening-minority-stewardship.spec.js imports two complete fictional
+minority courts through the Mods picker. It covers declaration-driven first/third
+principal selection despite unequal weights, ages ten/thirteen and adulthood at
+16/18, threshold and burden variation, once-only fresh/player binding, adult and
+omitted-field controls, pure invalid imports, all public readiness seams, stale
+reviews, incapacity and removal, independent magnate decisions, lawful replacement,
+AI recognition, staged adulthood, detached saved-regency rejection, matching
+impaired/repeated restore and exact changed-content signatures. Existing
+aristocratic-monarchy.spec.js retains adult, legacy and succession-into-minority
+coverage. These staged checks do not establish longer-campaign or device acceptance.
+
 tests/e2e/specs/administrative-monarchy.spec.js covers distinct 800 historical profiles and data-only fictional reuse, direct holders, pure reviews, stale rejection, source-backed remuneration, remittance/audit/repayment, funded military capacity, continuity, officer candidature without ancestry, divided recognition, minority and religious binding, real vacancy, AI treasury, malformed saves, old forms, seasonal replay and mobile retained review in both distributions. government-dispatch.spec.js and 800-bookmark.spec.js register the new inputs. Existing bookmark parity and longer fiscal/succession, appearance, touch and iframe acceptance remain owner-controlled.
 
 The administrative monarchy specification also covers player absorption of a recognized public crown, commission confirmation after that transition, and recognized household succession without a second royal tree.
 
 Elective monarchy coverage
+
+tests/e2e/specs/living-nomination.spec.js imports two complete fictional configurations through the Mods file picker. It covers living admission without office, payment, property or kinship changes; separate designation and lawful vacancy/support; age, personal-filter and weighted-interest differences; omitted/false JSON controls; stale principals, candidates and reviews; the 64-candidate cap and optional office qualification; bounded seasonal AI without accumulation; strict malformed-import and detached-save purity; repeated matching restoration without admission replay; exact changed-content signatures; and retained phone/desktop nomination reviews, portraits and post-admission focus. These staged checks establish no historical, longer-campaign or device acceptance.
 
 tests/e2e/specs/elective-monarchy.spec.js covers the 711 and fictional river procedures, cross-house nomination and accession, exact public-account continuity, private household and settlement receipts, accrued military expense, split assent, minority and vacancy, defensive interim powers, designation, stale reviews, malformed and old saves, technology decisions, pure reads, AI budgets and retained narrow/wide reviews. 711-bookmark.spec.js updates the fresh rollout and runs its standard/CrazyGames household and natural-season coverage. government-dispatch.spec.js includes the new explicit form, and tools/test_i18n_catalog.py covers constituency and contested-story display owners. Historical procedure, appearance, mobile touch, packaging and longer natural succession remain owner acceptance tasks.
 

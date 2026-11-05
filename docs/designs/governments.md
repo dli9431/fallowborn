@@ -84,6 +84,14 @@ The administrative_monarchy form installs public appointment, source-backed fisc
 
 Aristocratic monarchy extension
 
+The pure FB.governments.publicAuthorityReadiness projection delegates minority
+readiness to the aristocratic owner and preserves other governments' existing
+rules. Consent, common public appointment/office transactions and court-originated
+recognition consume the same fact. Provincial negotiations and enforcement use
+it without changing independent magnate assent or private household authority.
+Profiles may opt into declaration-driven fresh stewardship through
+openingStewardActorId; no strategy or historical-id dispatch is added.
+
 government_aristocracy.js composes mixed_provincial holders, royal_recognition succession, fixed territory, provincial_assent consent, provincial_obligations levy, provincial_receipts revenue, magnate_council, territorial_diplomacy, aristocratic_court AI and aristocratic_careers. The common recognition module accepts a declared policy provider for permanent seats, ancestry, commitments, costs and stewardship while retaining its transaction and vacancy owner. The lineage adapter excludes these policy-managed courts from kin-selection interception. Numerical policy, provincial roles and historical names belong to profiles in data/aristocratic_courts.js. See docs/designs/aristocratic-monarchy.md.
 
 Mobile coalition dispatch
@@ -94,6 +102,8 @@ mobile_confederation composes coalition_holders, coalition_leadership, coalition
 Elective crown extension
 
 elective_monarchy composes crown_election and the common governmentSelection owner. candidatePool admits qualified local nominations outside the reigning genealogy; procedure owns designation, realm-wide recognition and interim powers. The existing canonical public treasury survives accession and protagonist adoption separately from household gold. See docs/designs/elective-monarchy.md for policy, conversion, technology decisions and dated rollout.
+
+Optional procedure.livingNomination defaults false. An enabled profile lets an active interest bind an existing qualified local person as an electoral_candidate while its incumbent lives and vacancy is absent or resolved. This costless admission grants no designation, recognition, accession, kinship or property. Player and seasonal AI use the common review boundary; AI retains one qualified admitted alternative without automatic designation or seasonal accumulation. Existing vacancy nomination, historical resolved results, schema-1 storage and exact imported signatures retain their owners. The elective_crown_nomination technology review remains none; see elective-monarchy.md for the complete contract and independent JSON examples.
 
 Civic government extension
 
