@@ -145,14 +145,15 @@ for (const prefix of ['harbor','dune']) {
       E.day(s);FBDATA.bookmarks[prefix+'_world'].revision='passage_policy';
       const origin=JSON.stringify(M.row(s,C.rid).agreements[0].accessOrigin),absent=s.localPassagePolicies===undefined;
       let save=JSON.parse(FB.save.serialize());delete save.state.start.revision;
+      const modernRejected=!FB.save.isSupported(save);save.platformSchema=1;
       for (let i=0;i<2;i++) {FB.save.restore(save);save=JSON.parse(FB.save.serialize());}
       const n=FB.state;
-      return {absent:absent && n.localPassagePolicies===undefined,
+      return {modernRejected:modernRejected,absent:absent && n.localPassagePolicies===undefined,
         original:origin===JSON.stringify(M.row(n,C.rid).agreements[0].accessOrigin),schema:M.row(n,C.rid).agreements[0].accessOrigin.schema,
         savedPolicy:FB.campaignBookmark(n).localPassagePolicies===undefined,
         freshPolicy:!!FB.bookmark(prefix+'_world').localPassagePolicies,valid:M.validate(n)};
     },prefix);
-    expect(r).toEqual({absent:true,original:true,schema:1,savedPolicy:true,freshPolicy:true,valid:true});
+    expect(r).toEqual({modernRejected:true,absent:true,original:true,schema:1,savedPolicy:true,freshPolicy:true,valid:true});
   });
 
   for (const response of ['absent','decline']) {
