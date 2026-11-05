@@ -844,3 +844,5 @@ Passage-policy legacy coverage first rejects an unstamped current platform envel
 Passage-policy setup reuses the already imported and prepared title through beginBookmarkFromTitle. Its baseline selector must survive until construction; a new navigation would silently reset it to the fresh revision. Baseline cases assert their saved revision before exercising legacy restore.
 
 The passage-policy restore checkpoints compare the exact unsigned RNG bit pattern, matching setRngState normalization. State bytes, UID and strict mobile validation remain unchanged assertions at every checkpoint.
+
+The passage-policy stale-authority case changes the authoritative ruler generation and the corresponding succession record together, so the pending review observes the intended changed incumbent generation.

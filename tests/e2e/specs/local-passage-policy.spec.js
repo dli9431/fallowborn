@@ -241,7 +241,8 @@ test('stale policy form authority occupation capacity money and manual facts rej
     const C=passageCase,E=FB.expeditionPrograms,M=FB.mobile,base=JSON.parse(JSON.stringify(FB.state));E.day(base);base.turn++;
     const changes=[function (s,a) {s.authority.governments[a.partnerId].formId='territorial';},
       function (s,a) {s.holder[a.countyIds[0]]='harbor_commune';},
-      function (s,a) {s.realms[a.partnerId].succession.rulerGeneration++;},
+      function (s,a) {const next=FB.realmRulerGeneration(s,a.partnerId)+1;
+        s.realms[a.partnerId].ruler.generation=next;s.realms[a.partnerId].succession.rulerGeneration=next;},
       function (s,a) {s.chars[a.accessOrigin.chain[0].personId].captive=true;},
       function (s,a) {s.population.counties[a.countyIds[0]].count=1;},
       function (s) {FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid));},
