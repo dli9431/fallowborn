@@ -1,5 +1,18 @@
 Deferred title and content readiness
 
+political-religious-head.spec.js covers native and ordinary JSON political office
+configurations with distinct age/sex, constituency, polity and seat rules. It checks
+fresh identity binding, pure reads, refused generic writers, independent offices,
+recognition suspension/recovery, effective issuers and original generations, fresh
+and stale authority quotes, explicit null/missing controls, wrong people/polities,
+changed faith/form, death and reviewed/AI political succession, canonical player
+adoption/absorption/release, detached invalid-import purity, repeat restoration and
+exact policy signatures. religious-head-strategies.spec.js retains legacy journeys
+and adds an omitted-strategy authority-issuer control. Boundaries are staged rather
+than advanced through years of daily simulation.
+The political-office restore case additionally retains a dead incumbent's pending
+support through repeated loads, then resolves it once through the same transaction.
+
 ai-tactical-risk.spec.js covers bounded brave/craven margins, neutral ordering and generated-pool participation, authoritative current-character inputs, duplicate suppression, state isolation and pure reports. Matched pursuit/objective and combined-host choices use real battle power; disconnected routes, hostile forts, siege force, hostile gathering paths and overwhelming enemies still block. Supply, fiscal regrouping, legal retreat and daily manual/delegated/expedition order ownership retain their boundaries. Two independent ordinary JSON imports exercise distinct margins and generation policies with malformed nonpublication. Matching saves retain routes, resources and exact mod signatures, and actual succession replaces predecessor preferences without a long simulation. These focused cases do not establish long-run balance or device acceptance.
 
 ai-expansion-ranking.spec.js stages multiple real frontier targets for sovereigns and

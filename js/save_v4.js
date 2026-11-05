@@ -119,6 +119,16 @@
     if (FB.buildingSeasons) FB.buildingSeasons.validate(state);
     if (FB.validateBuildingInstitutionState) FB.validateBuildingInstitutionState(state);
     validateRoyalCourts(state);
+    // A political office saves only its authorized person pointer. Temporary
+    // loss of consent, faith or eligibility suspends it, without normalization.
+    var offices = FB.religiousOffices(state);
+    Object.keys(offices).forEach(function (id) {
+      if (offices[id].head.succession !== 'political_incumbent' || state.religiousHeads === undefined) return;
+      if (!plain(state.religiousHeads)) field('state.religiousHeads');
+      if (!own(state.religiousHeads, id) || state.religiousHeads[id] === null) return;
+      var holder = state.religiousHeads[id];
+      if (typeof holder !== 'string' || !own(state.chars, holder)) field('state.religiousHeads.' + id);
+    });
     if (FB.validateStartingRealm) FB.validateStartingRealm(state);
     if (FB.validateStartingPerson) FB.validateStartingPerson(state);
     if (FB.validateStartingPrincipal) FB.validateStartingPrincipal(state);

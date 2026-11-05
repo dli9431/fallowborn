@@ -72,6 +72,18 @@ travel and household gates remain with their existing owners.
 
 Authoring checklist
 
+Political religious heads declare succession:political_incumbent, holderKind:character,
+an exact head.realm and an inhabited seat. Only crown_election recognition is
+supported. Author the polity's eligible opening ruler and complete selection form
+with the faith, or explicitly seed a null vacancy. No religious claim, absolution,
+greatHolyWar, recovery or independent appointment accompanies the binding. Native
+southern.json and imported estuary.json under tests/e2e/fixtures/political-religious-head
+exercise different ages, sex rules, polities and seats. Recognition suspension
+preserves authorized saved identities; consent recovery is not a binding writer.
+Matching restore does not replay accession or invent an absent binding. This
+identity/consent capability has technology impact none; actual material gates stay
+with their existing owners. See docs/MODDING.md for reference and writer constraints.
+
 Aristocratic openingStewardActorId names an existing direct adult interest
 principal; it never creates an extra actor. Declare the royal court, matching
 age/recognition profiles, dynasty and owned county together. Fresh minority

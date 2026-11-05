@@ -1222,7 +1222,7 @@ window.FB = window.FB || {};
           var localHead = localFaith && (localFaith.head || localFaith.properties && localFaith.properties.head);
           // A faith's episcopal head can also be its campaign's local see.
           // Both declarations then seed the same character-held office ledger.
-          if (def.profileId || !isChurch || head.holderKind !== 'character' || head.system !== 'episcopal_sees' ||
+          if (def.profileId || !isChurch || head.holderKind !== 'character' || head.succession === 'political_incumbent' || head.system !== 'episcopal_sees' ||
               !localHead || localHead.officeId !== def.officeId)
             fault('officeId collides with an incompatible central faith office.');
         });
@@ -2066,6 +2066,10 @@ window.FB = window.FB || {};
           var headRealmId = religiousHeads[religionId];
           if (!religion || !religion.head) {
             fault('religiousHeads has invalid faith or office ' + religionId + '.');
+          } else if (headRealmId === null) {
+            // Authored vacancies remain vacant until their canonical owner acts.
+          } else if (religion.head.succession === 'political_incumbent' && headRealmId !== religion.head.realm) {
+            fault('religiousHeads.' + religionId + ' must name the political source realm or null.');
           } else if (typeof headRealmId !== 'string' || !headRealmId ||
               !realms[headRealmId]) {
             fault('religiousHeads.' + religionId + ' has invalid realm ' +
@@ -2074,6 +2078,56 @@ window.FB = window.FB || {};
         }
       }
     }
+
+    /* Validate against this detached, layout-prepared world, including forms
+       and faiths supplied together by an ordinary JSON import. */
+    var politicalOffices = {};
+    FB.religionIds(null, false).forEach(function (faithId) {
+      var faith = FB.religionOf(faithId, null), head = faith && faith.head;
+      if (!head || head.succession !== 'political_incumbent' || politicalOffices[head.officeId]) return;
+      politicalOffices[head.officeId] = true;
+      var source = realms[head.realm], mapping = definition.religiousHeads || {};
+      var mapped = Object.keys(mapping).filter(function (id) {
+        return id === head.officeId || FB.faithOfficeId(id, null) === head.officeId;
+      });
+      var used = source || mapped.length || definition.realms.concat(definition.provinces).some(function (row) {
+        return FB.faithOfficeId(row.religion, null) === head.officeId;
+      });
+      if (!used) return;
+      function officeFault(detail) { fault('political head ' + head.officeId + ': ' + detail); }
+      if (mapped.some(function (id) { return mapping[id] !== mapping[mapped[0]]; }))
+        officeFault('shared opening mappings must agree.');
+      if (!source) { officeFault('unknown source realm ' + head.realm + '.'); return; }
+      var ids = FB.governments.strategyIds(platform.governments[head.realm]);
+      if (!ids || ids.succession !== 'crown_election') officeFault('source requires crown_election recognition.');
+      var seat = head.seat, seatId = typeof seat === 'string' ? seat : seat && seat.province;
+      if (!seatId && seat && seat.site) {
+        var seatCounty = definition.provinces.filter(function (p) {
+          return (p.settlements || []).some(function (entry) { return entry.site === seat.site; });
+        })[0];
+        seatId = seatCounty && seatCounty.id;
+      }
+      var seatDef = provinceIds[seatId];
+      if (!seatDef || seatDef.wasteland) officeFault('seat must resolve to an inhabited county in this world.');
+      if (mapped.some(function (id) { return mapping[id] === null; })) return;
+      var ruler = source.ruler || {}, born = ruler.born;
+      if (!Number.isInteger(born) || date.year - born < (head.minAge || 0) ||
+          head.holderRole ||
+          head.holderSex && ruler.sex !== head.holderSex ||
+          FB.faithOfficeId(source.religion, null) !== head.officeId) {
+        officeFault('opening ruler must have an eligible declared birth, sex, role and faith.');
+      }
+    });
+    (definition.stories || []).forEach(function (id) {
+      var story = stories && stories.get(id), d = story && story.declaration;
+      var heads = d && d.opening && d.opening.heads;
+      (Array.isArray(heads) ? heads : []).forEach(function (row) {
+        if (row && politicalOffices[row.officeId]) fault('story ' + id + ' cannot assign a political religious head.');
+      });
+      var p = d && d.parameters;
+      if (p && (politicalOffices[p.religiousOfficeId] || politicalOffices[p.minorityOfficeId]))
+        fault('story ' + id + ' requires an independently managed spiritual office.');
+    });
 
     for (var pvi = 0; pvi < provinces.length; pvi++) {
       var pr = provinces[pvi];
@@ -3610,6 +3664,16 @@ window.FB = window.FB || {};
       FB.authoritySeedCommunities(state, FBDATA.realms, FBDATA.provinces);
     if (FB.seedRealmTechnologies) FB.seedRealmTechnologies(state);
     if (FB.governmentSelection) FB.governmentSelection.seed(state);
+    if (FB.bindPoliticalReligiousHeads) {
+      const sources = {}, offices = FB.religiousOffices(state);
+      Object.keys(offices).forEach(function (id) {
+        const head = offices[id].head;
+        const rid = head.succession === 'political_incumbent' &&
+          FB.governmentSelection.officeRealmId(state, head.realm);
+        if (rid) sources[rid] = true;
+      });
+      Object.keys(sources).forEach(function (rid) { FB.bindPoliticalReligiousHeads(state, rid, true); });
+    }
   };
 
   /* Group a realm's counties by duchy and hand out titles:
@@ -4986,10 +5050,20 @@ window.FB = window.FB || {};
     opts = opts || {};
     state.alliances = state.alliances || [];
     const papalTerritorialIds = FB.religiousHeadRealmIds(state, 'papal_election');
+    const politicalSources = {};
+    if (opts.restore && FB.governmentSelection) FB.religionIds(state, false).forEach(function (id) {
+      const head = FB.religionOf(id, state).head;
+      const rid = head && head.succession === 'political_incumbent' &&
+        FB.governmentSelection.officeRealmId(state, head.realm);
+      if (rid) politicalSources[rid] = true;
+    });
     let made = false;
     for (const rid in state.realms) {
       const r = state.realms[rid];
       if (!r || !r.alive) continue;
+      // Matching political courts resume their exact saved vacancy and people.
+      // Loading must not run the ordinary dead-ruler repair election.
+      if (politicalSources[rid]) continue;
       if (FB.governments.successionForRealm(state, rid).delegatedLeadership ||
           FB.governments.successionForRealm(state, rid).mobileLeadership) continue;
       if (opts.restore && FB.administrationProfile && FB.administrationProfile(state,rid)) continue;

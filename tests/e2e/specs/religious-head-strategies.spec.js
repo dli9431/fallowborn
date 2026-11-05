@@ -4,6 +4,7 @@ const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/government_selection.js', 'js/government_lineage.js', 'js/authority.js',
   'data/ecclesiastical_profiles.js', 'js/government_ecclesiastical.js', 'js/ecclesiastical_strategies.js',
   'js/ecclesiastical_validation.js', 'js/local_office_appointments.js', 'js/ui_ecclesiastical.js',
   'data/cultures.js', 'data/technology.js', 'data/papacy.js', 'data/settlements.js', 'data/map_data.js',
@@ -17,6 +18,19 @@ dependsOnRuntime(__filename, [
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
+});
+
+test('omitted political binding retains legacy office issuers and assignments', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s=FB.state, before=JSON.stringify(s.religiousHeads), me={kind:'character',id:s.player.charId};
+    const issuer={kind:'religious-office',id:'catholic'};
+    const proof=FB.authorityRecognize(s,{source:'church_support',issuer:issuer,subject:me});
+    return {none:Object.values(FB.religiousOffices(s)).every(function (office) { return office.head.succession !== 'political_incumbent'; }),
+      same:before === JSON.stringify(s.religiousHeads),source:FB.legitimacySourceFor(s,'religious_head',issuer),
+      effective:!!proof && FB.political.legitimacy(s,me).some(function (row) { return row.id === proof.id; }),
+      strategy:FB.religionOf('catholic',s).head.succession};
+  });
+  expect(result).toEqual({none:true,same:true,source:'church_support',effective:true,strategy:'papal_election'});
 });
 
 test('seeded offices retain assignment keys, claim prices and Papal election law', async function ({ page }) {

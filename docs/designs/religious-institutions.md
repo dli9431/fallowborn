@@ -10,6 +10,12 @@ Religious institutions and affiliation
 
 Optional declarations
 
+Central political_incumbent offices cannot be reused as local institution offices.
+Their canonical political owner alone binds the recognized incumbent; local
+membership, representatives, patron appointments and institutional selection
+cannot create or repair that binding. Local office consumers continue to use
+effective snapshots and existing authority issuer validation.
+
 data/religious_institutions.js declares optional religiousAffiliations and religiousInstitutionProfiles catalogues. Complete bookmark localInstitutions tables place each institution. Profiles declare their own faith ids, date bounds, qualifications, household restrictions, allowed actions, fees, selection and recognition. None of these declarations changes a person's primary faith, community composition, doctrinal relations or government form.
 
 arabian_local_congregation_711 declares voluntary lay participation for the retained sunni identity in 711, with no office, career grant, legal-school affiliation, marriage vow or recognition power. Its fresh Medina and Sanaa declarations use the existing town sites in the terrain revision and its government composition. They open without members or representatives and hold no property. Age 16 and free admission are simulation choices for lay participation, independent of imam qualification or sanctuary custody. They do not supply a county majority, court profession, temple footprint or later continuity. arabian_local_congregations_711 has technology impact none, because voluntary local membership depends on presence and consent rather than discovery.
