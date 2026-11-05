@@ -19,6 +19,8 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 async function start(page,info,prefix,options) {
   options=options || {};
   await openGame(page,info);
+  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},options.mod || examples[prefix]),
+    prefix+' ordinary import validation').toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(options.mod ? {name:'passage-policy.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(options.mod))} : path.resolve(__dirname,'../fixtures/authoring/passage-policy-'+prefix+'.json'));
