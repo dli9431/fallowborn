@@ -16,6 +16,9 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 
 async function importWorld(page,info,which,modified) {
   await openGame(page,info);
+  const source=modified || require('../fixtures/authoring/landed-expedition-'+which+'.json');
+  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},source),
+    which+' ordinary import validation').toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(modified ? {name:'landed-command.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(modified))} : path.resolve(__dirname,'../fixtures/authoring/landed-expedition-'+which+'.json'));
