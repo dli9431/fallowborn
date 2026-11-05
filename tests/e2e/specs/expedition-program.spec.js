@@ -18,6 +18,8 @@ dependsOnRuntime(__filename,[
 
 async function start(page,info,prefix,input) {
   await openGame(page,info);
+  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},input || examples[prefix]),
+    prefix+' ordinary import validation').toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   if (input) await page.locator('#modfile').setInputFiles({name:'program.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))});
   else await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/expedition-program-'+prefix+'.json'));
