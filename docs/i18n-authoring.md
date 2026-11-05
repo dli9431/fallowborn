@@ -101,6 +101,12 @@ though the game still *runs*.
 
 Revision-owned bookmark labels
 
+The [regional literal convention](regional-literal-authoring.md) defines flat
+`bookmark_<date>_region_bnn.js` sources, revision-owned dated names, global court
+profile owners and the companion faith/start/story table routes. Flat declarations
+require explicit literal owners; malformed or missing owners fail static extraction.
+Existing scaffold and supplemental table keys remain unchanged.
+
 data/starts_1241.js uses the literal startScenarios_1241 array for ordinary scenario.<id> display owners. data/story_households_1241.js uses literal householdTracks_1241 and openingProfiles_1241 tables for householdStory.<id> and openingProfile.<id> owners. Keep stage and choice display text literal, with numeric costs expressed through money placeholders where applicable. The dated travel purpose and arrival event use the ordinary travelPurpose and event owners in data/travel.js and data/events_travel.js. No generated catalogue change is needed for source authoring; new English retains normal fallback.
 
 data/bookmark_1241.js declares its literal name and description in FBDATA.bookmarkCandidates['1241']; the generic candidate extractor assigns bookmark.1241 owners without executing composition. Regional labels keep their scaffold owners, and the published faith keeps its religion.sahel_local_practice_1241 owners. Publication copies display fields without rewriting their sources. Proper personal names and stable ids remain untranslated; integration catalogue generation is separately authorized.
