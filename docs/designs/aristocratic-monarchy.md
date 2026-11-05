@@ -22,6 +22,30 @@ The profile requires more than its declared recognition threshold. A principal c
 
 Accession requires death, voluntary abdication or current judicial displacement. Divided or absent recognition leaves an explicit public vacancy under the continuing administration. A supported minor requires a living adult provincial principal as steward. The steward must remain an active hereditary principal; loss of life, freedom or jurisdiction blocks reserved court decisions until a reviewed replacement is confirmed. Stewardship ends at adulthood without replacing the king or moving property. The strongest available interest and lexical tie break are simulation policies, not historical offices or a formal constitutional ballot.
 
+A profile may declare openingStewardActorId, naming one already declared direct
+adult interest principal. Detached declaration checks require the matching
+dynasty, constituency and owned county; fresh setup rechecks age, freedom and
+active jurisdiction. A minor opening binds that exact actor to schema-1 regency
+with the current generation and turn after hereditary appointments and rights
+exist and before any opening governor commission. Weight does not override the
+declaration. No actor, accession, sovereign, allowance or private asset is added.
+An adult opening creates no regency, and repeated setup is inert. Omitted-field
+openings retain their prior initialization and authority behavior.
+
+FB.governments.publicAuthorityReadiness is the common pure fact for consent,
+public appointments and replacements, personal commission effectiveness and
+office decisions, court-originated recognition and provincial enforcement or
+negotiation. It distinguishes adult government, capable current-generation
+stewardship and a minor without a capable steward. Opted-in minorities and
+succession-created regencies fail closed when stewardship is absent, dead,
+captive, unfree, exiled, underage, removed or missing jurisdiction. The old
+no-opt-in, no-regency minority remains an explicit legacy exception. Independent
+magnate assent and withdrawal, inherited local rights, household production and
+private repayment remain separate. A reviewed strongest-capable replacement
+restores readiness; the steward does not become the sovereign or gain personal
+royal powers. At the profile's adulthood boundary readiness returns immediately,
+and normal regency maintenance clears the saved record without payment.
+
 Player crown absorption, an existing-ruler start and separation of a public court from an unrecognized household heir preserve one original royal tree and rekey public institution references. A political incumbent from another court retains its birth reference without becoming a new royal root. A recognized household heir continues the public crown once; an unrecognized private heir keeps household inheritance while the public court remains separate. Dormant aristocratic ancestry and rights survive an explicit change to ordinary dynastic government.
 
 Provincial economy and consent
@@ -44,7 +68,20 @@ Detached save-v4 validation checks the exact founder, original/current court, de
 
 The technology-impact ledger has independent none decisions for royal recognition, hereditary jurisdiction, provincial bargains and government conversion. These capabilities depend on ancestry, law, assent and real resources. Baseline political authority has no credible research prerequisite. Existing equipment and fiscal improvements keep their established technology effects; this profile grants no later military division or fiscal reform.
 
+Declared opening stewardship and continuing minority public authority extend
+the existing aristocratic_royal_recognition none decision. They use the same
+recognition, regency and replacement owners and add no material capability.
+
 Acceptance coverage
+
+opening-minority-stewardship.spec.js imports two complete fictional courts:
+young-charter.json has a ten-year-old ruler and two unequal interests;
+river-minority.json has a thirteen-year-old ruler, adulthood at 18, threshold
+0.7 and three interests with the third declared as steward despite a stronger
+alternative. Focused cases cover fresh and player setup, repeat hooks, pure
+reads/import rejection, every public readiness seam, stale reviews, independent
+assent, replacement, staged adulthood, exact matching restore and changed-mod
+rejection. These fixtures activate no historical beginning.
 
 The legacy test opening uses a detached retained baseline with regnum, omits later Sasanian ruler starts and aristocratic and administration profiles, and restores the current catalogue before loading the old save. The annual frontier fixture runs two direct yearly hooks, checks that restoration preserves aristocratic interests and provincial grants, and adopts the staged world before comparing its two daily continuations. Direct yearly staging skips ordinary seasonal accounting and court refreshes, so its unadopted state is not an uninterrupted daily-play baseline.
 

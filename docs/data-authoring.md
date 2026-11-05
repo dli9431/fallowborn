@@ -72,6 +72,20 @@ travel and household gates remain with their existing owners.
 
 Authoring checklist
 
+Aristocratic openingStewardActorId names an existing direct adult interest
+principal; it never creates an extra actor. Declare the royal court, matching
+age/recognition profiles, dynasty and owned county together. Fresh minority
+setup binds the existing regency once, while adult and omitted-field openings
+retain their prior meaning. Shared public-authority readiness governs court
+decisions and personal commissions without suppressing independent household or
+magnate activity. The complete young-charter.json and river-minority.json
+examples under tests/e2e/fixtures/opening-minority-stewardship use ordinary JSON
+imports with different ages, weights, burdens and declared steward choices.
+Matching saves retain the same regency and exact imported-content signature;
+restoration performs no setup, payment or accession. The existing
+aristocratic_royal_recognition technology decision remains none: opening and
+continuing minority stewardship express the same political capability.
+
 Electoral admission uses optional selectionProfile.procedure.livingNomination, a strict boolean defaulting false. It admits an existing qualified local person before a vacancy through the common selection owner, without designation, recognition, accession, payment or kinship. The unchanged candidate identity and selection schema support matching restoration without replay; do not add a saved nominee or normalize omitted procedure fields. The complete consultation.json and river-consultation.json examples under tests/e2e/fixtures/living-nomination exercise different ages, personal filters, interest weights, assent and designation policies through ordinary JSON import. The existing elective_crown_nomination technology review remains none: admission timing is a social procedure, while material capabilities retain their gates.
 
 Identify the owning catalogue and its actual gameplay, AI, UI and restore consumers. A public key alone is not proof that a newly added id has behavior. Use the complete per-system schema in docs/MODDING.md and retain its merge or replacement semantics.

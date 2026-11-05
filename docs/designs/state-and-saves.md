@@ -2277,6 +2277,18 @@ Public courts are restored without materializing or repairing their succession. 
 
 Aristocratic courts retain their original compact royal tree alongside linked actual characters, including for a player ruler. Optional government.aristocracy schema 1 references the declared founder, original/current realm, permanent interests and minority steward. Perpetual appointment rows have provincialTerms schema 1 for levy and assent, and recognition votes carry exact revenue/levy terms or explicit withdrawal. Detached validation rejects missing active constituencies, forged roots, unknown profiles, mismatched principals, duplicate scopes/rights and invalid commitments before adoption. Dormant rights under another form survive, and old regnum saves remain unseeded. An incumbentRef may retain a foreign political incumbent's birth court without fabricating royal ancestry. See docs/designs/aristocratic-monarchy.md.
 
+Optional aristocratic openingStewardActorId reuses that regency record without a
+new schema or migration. Fresh opted-in minorities bind the declared existing
+actor once with the current generation and turn. Detached restore requires a
+current-generation regency for an opted-in minor, retaining the actual saved
+steward rather than resolving the opening declaration again. Dead, captive or
+dispossessed stewards remain historical references; public authority stays
+blocked until normal play performs lawful replacement or the ruler reaches the
+profile's adulthood boundary. Steward references survive court compaction.
+Adult and omitted-field openings acquire no new regency. Repeat restore never
+seeds people, rights, commissions, payments, recognition or accession, and exact
+imported-content fingerprints still reject changed stewardship declarations.
+
 Mobile coalition records
 
 The existing v4 envelope and authority schema are unchanged. Optional authority.governments[realmId].mobile schema 1 stores bounded member principals and civilian/resting-fighter cohorts, one leader/vacancy, one pending member decision, agreements, food and conservation counters. authority.migrations remains the sole court position. Ordinary hosts carry mobileFollowing, mobileCourt, mobileRoster, mobileFood and optional mobileProvisionTurn. Optional mobilePastures schema 1 retains only the current period and harvested capacity per county, preventing repeated concession harvests. Strict detached validation rejects invalid references, duplicate partitions, negative values, incompatible forms and broken people conservation. Restore creates no followings, pays no agreements, harvests no pasture and never rebuilds a lost host. Earlier openings remain absent rather than receiving fresh records.

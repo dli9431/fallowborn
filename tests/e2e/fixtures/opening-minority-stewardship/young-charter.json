@@ -1,0 +1,443 @@
+{
+  "name": "Young chartered court",
+  "governmentForms": {
+    "alder_monarchy": {
+      "holders": "mixed_provincial",
+      "succession": "royal_recognition",
+      "territory": "fixed",
+      "consent": "provincial_assent",
+      "levy": "provincial_obligations",
+      "revenue": "provincial_receipts",
+      "council": "magnate_council",
+      "diplomacy": "territorial_diplomacy",
+      "ai": "aristocratic_court",
+      "ladder": "aristocratic_careers",
+      "aristocraticProfileId": "alder_stewardship",
+      "administrationProfileId": "alder_service",
+      "officeCatalogue": [
+        "provincial_governor",
+        "provincial_receiver",
+        "provincial_commander"
+      ],
+      "systems": {
+        "enable": [
+          "public_offices"
+        ],
+        "disable": [
+          "roman_offices",
+          "feudal_service",
+          "scutage",
+          "estates",
+          "crown_bloc",
+          "royal_council"
+        ]
+      }
+    }
+  },
+  "administrationProfiles": {
+    "alder_service": {
+      "name": "Chartered service",
+      "offices": [
+        "provincial_governor",
+        "provincial_receiver",
+        "provincial_commander"
+      ],
+      "governor": "provincial_governor",
+      "fiscal": "provincial_receiver",
+      "commander": "provincial_commander",
+      "appointmentCost": 4,
+      "termDays": 720,
+      "confirmation": "continues",
+      "finance": {
+        "kind": "revenue_service",
+        "share": 0.1,
+        "salary": 0,
+        "serviceShare": 0,
+        "remittance": 1
+      },
+      "accession": {
+        "mode": "recognition",
+        "minimumAge": 16,
+        "allowMinor": true,
+        "officeCandidates": false,
+        "threshold": 0.6,
+        "interests": []
+      }
+    }
+  },
+  "aristocraticProfiles": {
+    "alder_stewardship": {
+      "name": "Young chartered court",
+      "administrationProfileId": "alder_service",
+      "openingStewardActorId": "alder_principal",
+      "minimumAge": 16,
+      "allowMinor": true,
+      "threshold": 0.6,
+      "negotiationCost": 6,
+      "defaultTerms": {
+        "revenue": 0.75,
+        "levy": 0.7
+      },
+      "minimumRevenue": 0.55,
+      "minimumLevy": 0.4,
+      "refusalSupport": -20,
+      "enforcementSupportCost": 8,
+      "interests": [
+        {
+          "id": "alder",
+          "name": "Alder household",
+          "dynasty": "alder",
+          "actorId": "alder_principal",
+          "provinceId": "alder_alder_county",
+          "officeId": "hereditary_interest",
+          "weight": 2,
+          "minimumMartial": 0,
+          "maximumRevenue": 0.85,
+          "maximumLevy": 0.85
+        },
+        {
+          "id": "reed",
+          "name": "Reed household",
+          "dynasty": "reed",
+          "actorId": "reed_principal",
+          "provinceId": "alder_reed_county",
+          "officeId": "hereditary_interest",
+          "weight": 5,
+          "minimumMartial": 0,
+          "maximumRevenue": 0.85,
+          "maximumLevy": 0.85
+        }
+      ]
+    }
+  },
+  "geographies": {
+    "alder_minority_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 4
+      },
+      "land": [
+        [
+          0.2,
+          0.2,
+          5.8,
+          0.2,
+          5.8,
+          3.8,
+          0.2,
+          3.8
+        ]
+      ],
+      "seas": [],
+      "rivers": [],
+      "gridWidth": 160,
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "alder_alder_county",
+          "x": 1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "alder_reed_county",
+          "x": 3,
+          "y": 2,
+          "terrain": "farmland"
+        }
+      ]
+    }
+  },
+  "settlementSites": {
+    "alder_alder_county_site": {
+      "x": 1,
+      "y": 2
+    },
+    "alder_reed_county_site": {
+      "x": 3,
+      "y": 2
+    }
+  },
+  "settlementLayouts": {
+    "alder_minority_layout": {
+      "alder_alder_county": [
+        {
+          "site": "alder_alder_county_site",
+          "name": "Alder Village",
+          "kind": "village"
+        }
+      ],
+      "alder_reed_county": [
+        {
+          "site": "alder_reed_county_site",
+          "name": "Reed Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "alder_minority_household",
+      "name": "Courtland household",
+      "desc": "A fictional household beside a young royal court.",
+      "intro": "The household works its land.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 63,
+      "prestige": 100,
+      "piety": 0,
+      "startCulture": "brittonic",
+      "startReligion": "nicene",
+      "bookmarkIds": [
+        "alder_minority_world"
+      ],
+      "eras": [
+        "late_antique"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Free household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "alder_court_ruler",
+      "name": "Young court ruler",
+      "desc": "A fictional ruler with declared minority stewardship.",
+      "intro": "The hereditary steward maintains the public court.",
+      "tier": 6,
+      "profession": "noble",
+      "gold": 0,
+      "prestige": 150,
+      "piety": 0,
+      "startCulture": "brittonic",
+      "startReligion": "nicene",
+      "bookmarkIds": [
+        "alder_minority_world"
+      ],
+      "eras": [
+        "late_antique"
+      ],
+      "hidden": true,
+      "alwaysUnlocked": true,
+      "rulerRealmId": "alder_court",
+      "governmentForm": "alder_monarchy",
+      "fixedProvinceId": "alder_alder_county",
+      "characterName": "Briar",
+      "sex": "m",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court family",
+          "diff": "age 10; existing court family"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "alder_minority_world": {
+      "id": "alder_minority_world",
+      "name": "Young Chartered Court",
+      "desc": "A fictional minority stewardship configuration.",
+      "date": {
+        "year": 634,
+        "season": 2,
+        "day": 1
+      },
+      "era": "late_antique",
+      "geography": "alder_minority_land",
+      "settlementLayout": "alder_minority_layout",
+      "religiousHeads": {},
+      "greatHolyWars": false,
+      "starts": [
+        "alder_minority_household",
+        "alder_court_ruler"
+      ],
+      "stories": [],
+      "startLocations": {
+        "alder_minority_household": [
+          "alder_alder_county"
+        ],
+        "alder_court_ruler": [
+          "alder_alder_county"
+        ]
+      },
+      "provinces": [
+        {
+          "id": "alder_alder_county",
+          "name": "Alder Village",
+          "realm": "alder_court",
+          "culture": "brittonic",
+          "religion": "nicene",
+          "dev": 4
+        },
+        {
+          "id": "alder_reed_county",
+          "name": "Reed Village",
+          "realm": "alder_court",
+          "culture": "brittonic",
+          "religion": "nicene",
+          "dev": 4
+        }
+      ],
+      "realms": [
+        {
+          "id": "alder_court",
+          "name": "Chartered Court",
+          "color": "#446688",
+          "capital": "alder_alder_county",
+          "rank": 3,
+          "religion": "nicene",
+          "government": "alder_monarchy",
+          "ruler": {
+            "name": "Briar",
+            "sex": "m",
+            "culture": "brittonic",
+            "born": 624,
+            "mar": 5,
+            "trait": "patient"
+          },
+          "royalCourt": {
+            "dynasty": "Ash",
+            "founderId": "founder",
+            "rulerFatherId": "founder",
+            "spouseId": null,
+            "members": [
+              {
+                "id": "founder",
+                "name": "Rowan",
+                "sex": "m",
+                "born": 570,
+                "alive": false,
+                "died": 630,
+                "culture": "brittonic",
+                "religion": "nicene"
+              },
+              {
+                "id": "royal_relative",
+                "name": "Aster",
+                "sex": "f",
+                "born": 608,
+                "fatherId": "founder",
+                "culture": "brittonic",
+                "religion": "nicene",
+                "homeProvinceId": "alder_alder_county",
+                "spouseId": null
+              }
+            ]
+          }
+        }
+      ],
+      "opening": {
+        "actors": {
+          "alder_principal": {
+            "sex": "m",
+            "culture": "brittonic",
+            "religion": "nicene",
+            "born": 599,
+            "station": 3,
+            "role": "notable",
+            "dyn": "alder",
+            "home": "alder_alder_county",
+            "skills": {
+              "ste": 10,
+              "mar": 8
+            }
+          },
+          "alder_heir": {
+            "sex": "m",
+            "culture": "brittonic",
+            "religion": "nicene",
+            "born": 614,
+            "station": 2,
+            "role": "notable",
+            "dyn": "alder",
+            "home": "alder_alder_county",
+            "skills": {
+              "ste": 9,
+              "mar": 7
+            },
+            "father": "alder_principal"
+          },
+          "reed_principal": {
+            "sex": "f",
+            "culture": "brittonic",
+            "religion": "nicene",
+            "born": 595,
+            "station": 3,
+            "role": "notable",
+            "dyn": "reed",
+            "home": "alder_reed_county",
+            "skills": {
+              "ste": 10,
+              "mar": 8
+            }
+          },
+          "reed_heir": {
+            "sex": "f",
+            "culture": "brittonic",
+            "religion": "nicene",
+            "born": 614,
+            "station": 2,
+            "role": "notable",
+            "dyn": "reed",
+            "home": "alder_reed_county",
+            "skills": {
+              "ste": 9,
+              "mar": 7
+            },
+            "mother": "reed_principal"
+          },
+          "public_applicant": {
+            "name": "Vale",
+            "sex": "f",
+            "culture": "brittonic",
+            "religion": "nicene",
+            "born": 605,
+            "station": 2,
+            "role": "notable",
+            "dyn": "Vale",
+            "home": "alder_alder_county",
+            "skills": {
+              "ste": 12,
+              "mar": 10
+            }
+          }
+        },
+        "appointments": {},
+        "estates": [
+          {
+            "id": "alder_estate",
+            "actorId": "alder_principal",
+            "provinceId": "alder_alder_county",
+            "share0": 1000,
+            "basis": "tenure",
+            "evidence": "alder_tenure"
+          },
+          {
+            "id": "reed_estate",
+            "actorId": "reed_principal",
+            "provinceId": "alder_reed_county",
+            "share0": 1000,
+            "basis": "tenure",
+            "evidence": "reed_tenure"
+          }
+        ],
+        "claims": [],
+        "migrations": []
+      },
+      "localInstitutions": {},
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "straits": [],
+      "scripted": []
+    }
+  }
+}

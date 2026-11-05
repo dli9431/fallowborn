@@ -1,0 +1,517 @@
+{
+  "name": "River minority court",
+  "governmentForms": {
+    "river_monarchy": {
+      "holders": "mixed_provincial",
+      "succession": "royal_recognition",
+      "territory": "fixed",
+      "consent": "provincial_assent",
+      "levy": "provincial_obligations",
+      "revenue": "provincial_receipts",
+      "council": "magnate_council",
+      "diplomacy": "territorial_diplomacy",
+      "ai": "aristocratic_court",
+      "ladder": "aristocratic_careers",
+      "aristocraticProfileId": "river_stewardship",
+      "administrationProfileId": "river_service",
+      "officeCatalogue": [
+        "provincial_governor",
+        "provincial_receiver",
+        "provincial_commander"
+      ],
+      "systems": {
+        "enable": [
+          "public_offices"
+        ],
+        "disable": [
+          "roman_offices",
+          "feudal_service",
+          "scutage",
+          "estates",
+          "crown_bloc",
+          "royal_council"
+        ]
+      }
+    }
+  },
+  "administrationProfiles": {
+    "river_service": {
+      "name": "River service",
+      "offices": [
+        "provincial_governor",
+        "provincial_receiver",
+        "provincial_commander"
+      ],
+      "governor": "provincial_governor",
+      "fiscal": "provincial_receiver",
+      "commander": "provincial_commander",
+      "appointmentCost": 7,
+      "termDays": 360,
+      "confirmation": "continues",
+      "finance": {
+        "kind": "revenue_service",
+        "share": 0.15,
+        "salary": 0,
+        "serviceShare": 0,
+        "remittance": 1
+      },
+      "accession": {
+        "mode": "recognition",
+        "minimumAge": 18,
+        "allowMinor": true,
+        "officeCandidates": false,
+        "threshold": 0.7,
+        "interests": []
+      }
+    }
+  },
+  "aristocraticProfiles": {
+    "river_stewardship": {
+      "name": "River hereditary court",
+      "administrationProfileId": "river_service",
+      "openingStewardActorId": "hazel_principal",
+      "minimumAge": 18,
+      "allowMinor": true,
+      "threshold": 0.7,
+      "negotiationCost": 9,
+      "defaultTerms": {
+        "revenue": 0.65,
+        "levy": 0.55
+      },
+      "minimumRevenue": 0.55,
+      "minimumLevy": 0.4,
+      "refusalSupport": -20,
+      "enforcementSupportCost": 5,
+      "interests": [
+        {
+          "id": "cedar",
+          "name": "Cedar household",
+          "dynasty": "cedar",
+          "actorId": "cedar_principal",
+          "provinceId": "river_cedar_county",
+          "officeId": "hereditary_interest",
+          "weight": 6,
+          "minimumMartial": 0,
+          "maximumRevenue": 0.85,
+          "maximumLevy": 0.85
+        },
+        {
+          "id": "willow",
+          "name": "Willow household",
+          "dynasty": "willow",
+          "actorId": "willow_principal",
+          "provinceId": "river_willow_county",
+          "officeId": "hereditary_interest",
+          "weight": 3,
+          "minimumMartial": 0,
+          "maximumRevenue": 0.85,
+          "maximumLevy": 0.85
+        },
+        {
+          "id": "hazel",
+          "name": "Hazel household",
+          "dynasty": "hazel",
+          "actorId": "hazel_principal",
+          "provinceId": "river_hazel_county",
+          "officeId": "hereditary_interest",
+          "weight": 1,
+          "minimumMartial": 0,
+          "maximumRevenue": 0.85,
+          "maximumLevy": 0.85
+        }
+      ]
+    }
+  },
+  "geographies": {
+    "river_minority_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 4
+      },
+      "land": [
+        [
+          0.2,
+          0.2,
+          5.8,
+          0.2,
+          5.8,
+          3.8,
+          0.2,
+          3.8
+        ]
+      ],
+      "seas": [],
+      "rivers": [],
+      "gridWidth": 160,
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "river_cedar_county",
+          "x": 1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_willow_county",
+          "x": 3,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_hazel_county",
+          "x": 5,
+          "y": 2,
+          "terrain": "farmland"
+        }
+      ]
+    }
+  },
+  "settlementSites": {
+    "river_cedar_county_site": {
+      "x": 1,
+      "y": 2
+    },
+    "river_willow_county_site": {
+      "x": 3,
+      "y": 2
+    },
+    "river_hazel_county_site": {
+      "x": 5,
+      "y": 2
+    }
+  },
+  "settlementLayouts": {
+    "river_minority_layout": {
+      "river_cedar_county": [
+        {
+          "site": "river_cedar_county_site",
+          "name": "Cedar Village",
+          "kind": "village"
+        }
+      ],
+      "river_willow_county": [
+        {
+          "site": "river_willow_county_site",
+          "name": "Willow Village",
+          "kind": "village"
+        }
+      ],
+      "river_hazel_county": [
+        {
+          "site": "river_hazel_county_site",
+          "name": "Hazel Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "river_minority_household",
+      "name": "Courtland household",
+      "desc": "A fictional household beside a young royal court.",
+      "intro": "The household works its land.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 63,
+      "prestige": 100,
+      "piety": 0,
+      "startCulture": "norse",
+      "startReligion": "norse_pagan",
+      "bookmarkIds": [
+        "river_minority_world"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Free household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "river_court_ruler",
+      "name": "Young court ruler",
+      "desc": "A fictional ruler with declared minority stewardship.",
+      "intro": "The hereditary steward maintains the public court.",
+      "tier": 6,
+      "profession": "noble",
+      "gold": 0,
+      "prestige": 150,
+      "piety": 0,
+      "startCulture": "norse",
+      "startReligion": "norse_pagan",
+      "bookmarkIds": [
+        "river_minority_world"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "hidden": true,
+      "alwaysUnlocked": true,
+      "rulerRealmId": "river_court",
+      "governmentForm": "river_monarchy",
+      "fixedProvinceId": "river_cedar_county",
+      "characterName": "Fern",
+      "sex": "f",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court family",
+          "diff": "age 13; existing court family"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "river_minority_world": {
+      "id": "river_minority_world",
+      "name": "River Minority",
+      "desc": "A fictional minority stewardship configuration.",
+      "date": {
+        "year": 900,
+        "season": 2,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "river_minority_land",
+      "settlementLayout": "river_minority_layout",
+      "religiousHeads": {},
+      "greatHolyWars": false,
+      "starts": [
+        "river_minority_household",
+        "river_court_ruler"
+      ],
+      "stories": [],
+      "startLocations": {
+        "river_minority_household": [
+          "river_cedar_county"
+        ],
+        "river_court_ruler": [
+          "river_cedar_county"
+        ]
+      },
+      "provinces": [
+        {
+          "id": "river_cedar_county",
+          "name": "Cedar Village",
+          "realm": "river_court",
+          "culture": "norse",
+          "religion": "norse_pagan",
+          "dev": 4
+        },
+        {
+          "id": "river_willow_county",
+          "name": "Willow Village",
+          "realm": "river_court",
+          "culture": "norse",
+          "religion": "norse_pagan",
+          "dev": 4
+        },
+        {
+          "id": "river_hazel_county",
+          "name": "Hazel Village",
+          "realm": "river_court",
+          "culture": "norse",
+          "religion": "norse_pagan",
+          "dev": 4
+        }
+      ],
+      "realms": [
+        {
+          "id": "river_court",
+          "name": "River Court",
+          "color": "#446688",
+          "capital": "river_cedar_county",
+          "rank": 3,
+          "religion": "norse_pagan",
+          "government": "river_monarchy",
+          "ruler": {
+            "name": "Fern",
+            "sex": "f",
+            "culture": "norse",
+            "born": 887,
+            "mar": 5,
+            "trait": "patient"
+          },
+          "royalCourt": {
+            "dynasty": "Ash",
+            "founderId": "founder",
+            "rulerFatherId": "founder",
+            "spouseId": null,
+            "members": [
+              {
+                "id": "founder",
+                "name": "Rowan",
+                "sex": "m",
+                "born": 836,
+                "alive": false,
+                "died": 896,
+                "culture": "norse",
+                "religion": "norse_pagan"
+              },
+              {
+                "id": "royal_relative",
+                "name": "Aster",
+                "sex": "f",
+                "born": 874,
+                "fatherId": "founder",
+                "culture": "norse",
+                "religion": "norse_pagan",
+                "homeProvinceId": "river_cedar_county",
+                "spouseId": null
+              }
+            ]
+          }
+        }
+      ],
+      "opening": {
+        "actors": {
+          "cedar_principal": {
+            "sex": "m",
+            "culture": "norse",
+            "religion": "norse_pagan",
+            "born": 865,
+            "station": 3,
+            "role": "notable",
+            "dyn": "cedar",
+            "home": "river_cedar_county",
+            "skills": {
+              "ste": 10,
+              "mar": 8
+            }
+          },
+          "cedar_heir": {
+            "sex": "m",
+            "culture": "norse",
+            "religion": "norse_pagan",
+            "born": 880,
+            "station": 2,
+            "role": "notable",
+            "dyn": "cedar",
+            "home": "river_cedar_county",
+            "skills": {
+              "ste": 9,
+              "mar": 7
+            },
+            "father": "cedar_principal"
+          },
+          "willow_principal": {
+            "sex": "f",
+            "culture": "norse",
+            "religion": "norse_pagan",
+            "born": 861,
+            "station": 3,
+            "role": "notable",
+            "dyn": "willow",
+            "home": "river_willow_county",
+            "skills": {
+              "ste": 10,
+              "mar": 8
+            }
+          },
+          "willow_heir": {
+            "sex": "f",
+            "culture": "norse",
+            "religion": "norse_pagan",
+            "born": 880,
+            "station": 2,
+            "role": "notable",
+            "dyn": "willow",
+            "home": "river_willow_county",
+            "skills": {
+              "ste": 9,
+              "mar": 7
+            },
+            "mother": "willow_principal"
+          },
+          "hazel_principal": {
+            "sex": "m",
+            "culture": "norse",
+            "religion": "norse_pagan",
+            "born": 857,
+            "station": 3,
+            "role": "notable",
+            "dyn": "hazel",
+            "home": "river_hazel_county",
+            "skills": {
+              "ste": 10,
+              "mar": 8
+            }
+          },
+          "hazel_heir": {
+            "sex": "m",
+            "culture": "norse",
+            "religion": "norse_pagan",
+            "born": 880,
+            "station": 2,
+            "role": "notable",
+            "dyn": "hazel",
+            "home": "river_hazel_county",
+            "skills": {
+              "ste": 9,
+              "mar": 7
+            },
+            "father": "hazel_principal"
+          },
+          "public_applicant": {
+            "name": "Vale",
+            "sex": "f",
+            "culture": "norse",
+            "religion": "norse_pagan",
+            "born": 871,
+            "station": 2,
+            "role": "notable",
+            "dyn": "Vale",
+            "home": "river_cedar_county",
+            "skills": {
+              "ste": 12,
+              "mar": 10
+            }
+          }
+        },
+        "appointments": {},
+        "estates": [
+          {
+            "id": "cedar_estate",
+            "actorId": "cedar_principal",
+            "provinceId": "river_cedar_county",
+            "share0": 1000,
+            "basis": "tenure",
+            "evidence": "cedar_tenure"
+          },
+          {
+            "id": "willow_estate",
+            "actorId": "willow_principal",
+            "provinceId": "river_willow_county",
+            "share0": 1000,
+            "basis": "tenure",
+            "evidence": "willow_tenure"
+          },
+          {
+            "id": "hazel_estate",
+            "actorId": "hazel_principal",
+            "provinceId": "river_hazel_county",
+            "share0": 1000,
+            "basis": "tenure",
+            "evidence": "hazel_tenure"
+          }
+        ],
+        "claims": [],
+        "migrations": []
+      },
+      "localInstitutions": {},
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "straits": [],
+      "scripted": []
+    }
+  }
+}

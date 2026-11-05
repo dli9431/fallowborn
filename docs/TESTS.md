@@ -726,6 +726,17 @@ Budgets are uncompressed UTF-8 JSON bytes: 4 MiB opening, 6 MiB years one and tw
 
 Administrative monarchy coverage
 
+tests/e2e/specs/opening-minority-stewardship.spec.js imports two complete fictional
+minority courts through the Mods picker. It covers declaration-driven first/third
+principal selection despite unequal weights, ages ten/thirteen and adulthood at
+16/18, threshold and burden variation, once-only fresh/player binding, adult and
+omitted-field controls, pure invalid imports, all public readiness seams, stale
+reviews, incapacity and removal, independent magnate decisions, lawful replacement,
+AI recognition, staged adulthood, detached saved-regency rejection, matching
+impaired/repeated restore and exact changed-content signatures. Existing
+aristocratic-monarchy.spec.js retains adult, legacy and succession-into-minority
+coverage. These staged checks do not establish longer-campaign or device acceptance.
+
 tests/e2e/specs/administrative-monarchy.spec.js covers distinct 800 historical profiles and data-only fictional reuse, direct holders, pure reviews, stale rejection, source-backed remuneration, remittance/audit/repayment, funded military capacity, continuity, officer candidature without ancestry, divided recognition, minority and religious binding, real vacancy, AI treasury, malformed saves, old forms, seasonal replay and mobile retained review in both distributions. government-dispatch.spec.js and 800-bookmark.spec.js register the new inputs. Existing bookmark parity and longer fiscal/succession, appearance, touch and iframe acceptance remain owner-controlled.
 
 The administrative monarchy specification also covers player absorption of a recognized public crown, commission confirmation after that transition, and recognized household succession without a second royal tree.

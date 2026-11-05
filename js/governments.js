@@ -13,6 +13,10 @@ window.FB = window.FB || {};
     var form = G.forRealm(state,realmId);
     return !!(form && (form.use.succession.institutionalProperty || form.use.succession.publicCrown));
   };
+  G.publicAuthorityReadiness = function (s,rid) {
+    return FB.aristocracy && FB.aristocracy.profile(s,rid) ? FB.aristocracy.readiness(s,rid) :
+      {kind:'ordinary',allowed:true};
+  };
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
 
   /* Required slots remain explicit. Optional omissions in existing JSON mods

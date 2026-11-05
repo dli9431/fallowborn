@@ -84,6 +84,14 @@ The administrative_monarchy form installs public appointment, source-backed fisc
 
 Aristocratic monarchy extension
 
+The pure FB.governments.publicAuthorityReadiness projection delegates minority
+readiness to the aristocratic owner and preserves other governments' existing
+rules. Consent, common public appointment/office transactions and court-originated
+recognition consume the same fact. Provincial negotiations and enforcement use
+it without changing independent magnate assent or private household authority.
+Profiles may opt into declaration-driven fresh stewardship through
+openingStewardActorId; no strategy or historical-id dispatch is added.
+
 government_aristocracy.js composes mixed_provincial holders, royal_recognition succession, fixed territory, provincial_assent consent, provincial_obligations levy, provincial_receipts revenue, magnate_council, territorial_diplomacy, aristocratic_court AI and aristocratic_careers. The common recognition module accepts a declared policy provider for permanent seats, ancestry, commitments, costs and stewardship while retaining its transaction and vacancy owner. The lineage adapter excludes these policy-managed courts from kin-selection interception. Numerical policy, provincial roles and historical names belong to profiles in data/aristocratic_courts.js. See docs/designs/aristocratic-monarchy.md.
 
 Mobile coalition dispatch
