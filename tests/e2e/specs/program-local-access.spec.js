@@ -203,7 +203,8 @@ test('stale control authority capacity funds and original-person facts reject at
       function (s,a) {s.realms[a.partnerId].liege='harbor_commune';},
       function (s,a) {s.chars[a.accessOrigin.chain[0].personId].dead=true;},
       function (s,a) {s.chars[a.accessOrigin.chain[1].personId].captive=true;},
-      function (s,a) {s.realms[a.partnerId].succession.rulerGeneration++;},
+      function (s,a) {const next=FB.realmRulerGeneration(s,a.partnerId)+1;
+        s.realms[a.partnerId].ruler.generation=next;s.realms[a.partnerId].succession.rulerGeneration=next;},
       function (s,a) {s.population.counties[a.countyIds[0]].count=1;},
       function (s) {FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid));},
       function (s) {M.host(s,C.rid).holdManual=1;},function (s) {s.turn++;}];
