@@ -838,3 +838,5 @@ Scenery integration repair coverage
 Local-access import fixtures retain a valid fixed-place household track on the harbor formation court and an outside ruler rank matching the dune start. Their pre-import checks expose rejected declarations. Repeated restore checkpoints compare codec-expanded values and array order with sorted object keys and unsigned RNG bits, preserving all tested identities, balances and populations.
 
 The local-access stale-generation case changes both the live ruler generation and its succession record, matching the canonical generation reader. Changing only succession metadata does not represent a changed incumbent generation.
+
+The local-access outside-decline journey expands the ordinary Rank and Realm deeds section before selecting its action and matches the action title with its cost note. The unopted legacy dispatch fixture uses the existing levy unit class in its supply replacement list.
