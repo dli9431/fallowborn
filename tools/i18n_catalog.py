@@ -929,7 +929,7 @@ def revision_literal_tables(source: Path) -> list[tuple[str, Node]]:
                 raise ValueError(f"{source.name}: invalid literal revision owner {owner}")
             allowed = {"bookmarkId", "revision", "provinces", "realms", "duchies",
                        "kingdoms", "empires", "cultures", "layouts", "governmentForms",
-                       "administrationProfiles", "aristocraticProfiles", "climate", "climates"}
+                       "administrationProfiles", "aristocraticProfiles", "legalTraditions", "climate", "climates"}
             if content.keys() - allowed:
                 raise ValueError(f"{source.name}: unsupported regional tables: "
                                  + ", ".join(sorted(content.keys() - allowed)))
@@ -952,7 +952,7 @@ def revision_literal_tables(source: Path) -> list[tuple[str, Node]]:
                 for slot in node_array(slots) or []:
                     display(node_object(slot) or {})
             for table in ("duchies", "kingdoms", "empires", "cultures",
-                          "administrationProfiles", "aristocraticProfiles"):
+                          "administrationProfiles", "aristocraticProfiles", "legalTraditions"):
                 for row in (node_object(content.get(table)) or {}).values():
                     if node_object(row) is None:
                         raise ValueError(f"{source.name}: {table} requires literal records")
@@ -1032,6 +1032,8 @@ def extract_bookmark_revision_content(inv: Inventory) -> None:
                             inv.add(f"governmentSelection.{form_id}.member.{member_id}.name.default",
                                     record, f"{rel}:{line}", "Government selection presentation.",
                                     TOKEN_RE.findall(record["text"]))
+            for identity, record in (node_object(content.get("legalTraditions")) or {}).items():
+                label("legalTradition", identity, (node_object(record) or {}).get("name"))
             for table, namespace in (("administrationProfiles", "administrationProfile"),
                                      ("aristocraticProfiles", "aristocraticProfile")):
                 for profile_id, profile_node in (node_object(content.get(table)) or {}).items():

@@ -1,5 +1,17 @@
 # Ruler justice
 
+Native legal publication
+
+Native date-owned legalTraditions now use the trusted detached catalogue boundary.
+Faith, government selector and governing-identity consumers retain the existing
+justiceTradition precedence and the same legal validator used by ordinary JSON.
+Jurisdiction dependencies include personal, mixed and assessor law definitions
+and their culture keys. Retained revisions participate in dependency collection.
+No sentence, procedure, player/AI eligibility or distribution filter changes.
+Technology impact: internal authoring fix; no independently gateable gameplay
+capability and no new technology review entry. Existing saved legal identities
+and imposed judgments remain unchanged.
+
 Iberian late antique personal law
 
 New 476 Visigothic courts use euric_code_476, displayed as Code of Euric, from the gaul_iberia regional declaration. Roman, Hispano-Roman and Gallo-Roman parties retain late_roman personal law; Gothic parties use the written Gothic identity, and mixed Roman-Gothic cases use that identity with a Roman assessor. Basque parties use basque_custom_476, an unwritten local-law abstraction, in the Visigothic and autonomous Basque courts. Suevic courts retain their existing personal-law mapping and mixed-party assessor.

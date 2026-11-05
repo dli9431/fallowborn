@@ -8,7 +8,7 @@ window.FB = window.FB || {};
   var startStream = {ids:[],known:Object.create(null),groups:Object.create(null)};
   var storyStream = {ids:[],known:Object.create(null),groups:Object.create(null)};
   var faithOrders = Object.create(null), faithCaptures = Object.create(null);
-  var catalogs = ['geographies','cultures','cultureDoctrineDefaults','religions','governmentForms',
+  var catalogs = ['geographies','cultures','cultureDoctrineDefaults','religions','governmentForms','legalTraditions',
     'settlementSites','settlementLayouts','administrationProfiles','aristocraticProfiles',
     'civicProfiles','constituencyProfiles','ecclesiasticalProfiles','mobileProfiles','storyInstances',
     'religiousInstitutionProfiles','religiousActivities','religiousPatronage'];

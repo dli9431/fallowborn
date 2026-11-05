@@ -1,8 +1,35 @@
+Native legal catalogue ownership
+
+Trusted composition catalogs and source stage catalogs accept legalTraditions as
+complete existing-schema records. They do not accept justiceSentences or arbitrary
+catalogue roots. Native records reuse FB.validateLegalTraditions through detached
+ordinary import validation after the engine is available. Identical declarations
+reuse their stable id; conflicting staged legal records reject the contributor
+and retain the prior declaration. Conflicting composition records reject the unit.
+
+Selected-date collection follows faith properties.legalTradition (including
+inherited faiths), governmentForms.legalTradition strings and default/cultures/realms
+selectors, and realm.governingIdentity.legalIdentityId in fresh and retained layers.
+Referenced jurisdictions recursively collect cultures map keys and law values,
+mixed and optional assessor laws. Shared legal definitions, government selectors,
+faith defaults and intrigue-law defaults keep their required identities available.
+Missing law or culture definitions still reject through canonical validators;
+collecting a reference never creates it. A government string/default of faith
+continues to delegate to faith, rather than naming a law.
+
+Legal records remain private until their complete source unit passes review.
+Failed worlds publish none of their newly owned legal records. Valid unused
+records receive the existing detached full-catalogue review. Source switches
+restore the pristine baseline before collecting the next date. Full preparation
+precedes mod baseline capture; ordinary JSON retains complete-record replacement,
+whole-import validation and exact fingerprints. No saved identity, migration or
+historical legal activation is introduced.
+
 Trusted bookmark composition
 
 FB.bookmarkCompositions.prepare(input) in js/bookmark_composition.js is an internal trusted-script owner. The module initializes after data/starts.js, before the dated sources. Only metadata capture runs during data loading; validation and publication wait for the complete engine validators and story factories. Bootstrap publishes staged sources before FB.stories.load and FB.mods.applyStored capture the effective bundled catalogue. All eleven bundled dates use this boundary. This API is not a JSON mod root, does not store or enable mods, and does not initialize campaigns. Ordinary JSON validate/apply/storage remains exhaustive and atomic.
 
-The envelope accepts exactly id, optional source, bookmark, optional catalogs, optional availability, optional starts and optional startAfter. id is a lowercase owner slug; source is an optional nonempty label of at most 240 characters. bookmark is one complete ordinary bookmark, including any supplied revisions. catalogs contains keyed declarations from geographies, cultures, cultureDoctrineDefaults, religions, governmentForms, settlementSites, settlementLayouts, administrationProfiles, aristocraticProfiles, civicProfiles, constituencyProfiles, ecclesiasticalProfiles, mobileProfiles, religiousInstitutionProfiles, religiousActivities, religiousPatronage and storyInstances. Canonical import, world, identity, government and story validators own their record schemas and same-candidate references. Inputs are plain finite JSON data, bounded to 250000 nodes and 64 nested levels; executable values, accessors, cycles, reserved prototype fields and sparse lists reject.
+The envelope accepts exactly id, optional source, bookmark, optional catalogs, optional availability, optional starts and optional startAfter. id is a lowercase owner slug; source is an optional nonempty label of at most 240 characters. bookmark is one complete ordinary bookmark, including any supplied revisions. catalogs contains keyed declarations from geographies, cultures, cultureDoctrineDefaults, religions, governmentForms, legalTraditions, settlementSites, settlementLayouts, administrationProfiles, aristocraticProfiles, civicProfiles, constituencyProfiles, ecclesiasticalProfiles, mobileProfiles, religiousInstitutionProfiles, religiousActivities, religiousPatronage and storyInstances. Canonical import, world, identity, government and story validators own their record schemas and same-candidate references. Inputs are plain finite JSON data, bounded to 250000 nodes and 64 nested levels; executable values, accessors, cycles, reserved prototype fields and sparse lists reject.
 
 Validation normalizes title identifiers in detached candidates; bundled publication retains authored identifiers and record values. The legacy startAfter optionally names exactly one existing unowned scenario. Newly accepted starts are inserted after that anchor in authored order; omission uses each unit's after placement or appends. Invalid or missing singular anchors reject before publication. Sources with staged predecessors or interleaved groups use the capture methods and per-unit prefixes below. Source order preserves picker order, seeded dispatch and the ordered start array in exact mod fingerprints when publication moves to boot. Authored revision ids and saved platform identities are unchanged.
 

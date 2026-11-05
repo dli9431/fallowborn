@@ -1,3 +1,16 @@
+Native legal dependencies
+
+legalTraditions is an explicitly supported private source/composition catalogue.
+Its publication uses the ordinary detached legal validator after engine loading.
+Dependency collection follows faith law, government law selectors and governing
+identities through every retained world, then recursively follows jurisdiction
+culture mappings, mixed law and assessor law. Shared legal and government tables
+keep their typed dependencies. A missing reference cannot be synthesized by the
+collector. Conflicting staged legal writes retain the original record and fault
+the contributor; compatible reuse keeps existing identity. Selected-date switches,
+full mod preparation and failed publication retain the existing atomic boundary.
+This is an internal authoring fix without a save or technology change.
+
 Scenic settlement policy
 
 Bookmark province rows optionally declare settlementPolicy as ordinary or

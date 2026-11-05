@@ -8,6 +8,32 @@ import i18n_catalog
 
 
 class RegionalLiteralTests(unittest.TestCase):
+    def test_legal_literals_use_existing_owners_without_executing_sources(self):
+        sources = {}
+        for date, identity, name in [('777', 'river_law', 'River procedure'),
+                                     ('888', 'hill_law', 'Hill procedure')]:
+            sources['bookmark_' + date + '_region_b01.js'] = (
+                'FBDATA.bookmarkRevisionContent_law_' + date + ' = ' + json.dumps({
+                    'bookmarkId': date, 'revision': 'baseline',
+                    'legalTraditions': {identity: {'name': name,
+                        'jurisdiction': {'mixed': 'untranslated_identity'}}},
+                }) + '; throw new Error("Never execute");')
+        inventory = self.extract_sources(sources)
+        for identity, name in [('river_law', 'River procedure'), ('hill_law', 'Hill procedure')]:
+            self.assertEqual(inventory.entries['legalTradition.' + identity + '.name.default']['text'], name)
+            self.assertIn(i18n_catalog.source_key(name), inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('untranslated_identity'), inventory.entries)
+        for value in [[], {'broken': 4}, {'broken': {'name': 4}}]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self.extract_sources({'bookmark_777_region_b01.js':
+                    'FBDATA.bookmarkRevisionContent_bad = ' + json.dumps({
+                        'bookmarkId': '777', 'revision': 'baseline', 'legalTraditions': value}) + ';'})
+        collision = dict(sources)
+        collision['bookmark_888_region_b02.js'] = sources['bookmark_888_region_b01.js'].replace(
+            'hill_law', 'river_law')
+        with self.assertRaisesRegex(ValueError, 'colliding source key'):
+            self.extract_sources(collision)
+
     def extract_sources(self, sources):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

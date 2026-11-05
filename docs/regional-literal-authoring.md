@@ -18,7 +18,7 @@ existing declarations rather than making a second copy of the same content.
 
 Supported top-level fields are `bookmarkId`, `revision`, `provinces`, `realms`,
 `duchies`, `kingdoms`, `empires`, `cultures`, `layouts`, `governmentForms`,
-`administrationProfiles`, `aristocraticProfiles`, `climate` and `climates`.
+`administrationProfiles`, `aristocraticProfiles`, `legalTraditions`, `climate` and `climates`.
 Province and realm tables are arrays with explicit string `id` fields. Other
 tables are keyed objects. Layout values are arrays with explicit string `site`
 fields. Government selection members and aristocratic interests are arrays with
@@ -45,6 +45,7 @@ branch map. Preserve ids, branch names and dated-name array ordering.
 | provinces/realms row `names[index].name` | `province/realm.<date>.<revision>.<id>.name.dated.<index>.<branch>` |
 | duchies/kingdoms/empires entry `name` | `duchy/kingdom/empire.<date>.<revision>.<id>.name.<branch>` |
 | layouts slot `name` | `settlement.<date>.<revision>.<site>.name.<branch>` |
+| legalTraditions entry `name` | `legalTradition.<id>.name.<branch>` |
 | cultures entry `name` | `culture.<id>.name.<branch>` |
 | administrationProfiles entry `name`, `desc` | `administrationProfile.<id>.<field>.<branch>` |
 | aristocraticProfiles entry `name` | `aristocraticProfile.<id>.name.<branch>` |

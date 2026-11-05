@@ -45,7 +45,7 @@
   };
   C.retainedCatalogueTransitions = function () { return retainedTransitions.map(copyTransition); };
   C.hasRetainedCatalogueTransitions = function () { return retainedTransitions.length > 0; };
-  var catalogs = ['geographies','cultures','cultureDoctrineDefaults','religions','governmentForms',
+  var catalogs = ['geographies','cultures','cultureDoctrineDefaults','religions','governmentForms','legalTraditions',
     'settlementSites','settlementLayouts','administrationProfiles','aristocraticProfiles',
     'civicProfiles','constituencyProfiles','ecclesiasticalProfiles','mobileProfiles',
     'religiousInstitutionProfiles','religiousActivities','religiousPatronage'];
@@ -234,6 +234,12 @@
     Object.keys(view.bookmarks).forEach(function (id) { if (!origins[id]) origins[id] = oldWorlds.indexOf(id) < 0 ? spec.source : 'data/bookmarks.js'; });
     roots.forEach(function (root) {
       ownership[root] = ownership[root] || Object.create(null);
+      if (root === 'legalTraditions') Object.keys(before[root]).forEach(function (id) {
+        if (canonical(JSON.parse(before[root][id])) === canonical(view[root] && view[root][id])) return;
+        error(spec.source,spec.bookmarks,'Conflicting trusted shared declaration: ' + root + '.' + id);
+        view[root] = view[root] || {};
+        view[root][id] = JSON.parse(before[root][id]);
+      });
       Object.keys(view[root] || {}).forEach(function (id) {
         if (before[root][id] === JSON.stringify(view[root][id])) return;
         var owners = (spec.shared || []).indexOf(root) >= 0 ? [] : spec.bookmarks;
@@ -406,10 +412,32 @@
       walk(value,root);
       if (root === 'cultures') {
         need(root,value && value.parent); need('cultureDoctrineDefaults',key);
-      } else if (root === 'religions') need(root,value && value.parent);
+      } else if (root === 'religions') {
+        need(root,value && value.parent);
+        need('legalTraditions',value && value.properties && value.properties.legalTradition);
+      }
+      else if (root === 'governmentForms') law(value && value.legalTradition,true);
       else if (root === 'geographies') need(root,value && value.extends);
+      else if (root === 'legalTraditions' && value && value.jurisdiction) {
+        var jurisdiction = value.jurisdiction;
+        need(root,jurisdiction.mixed); need(root,jurisdiction.assessor);
+        Object.keys(jurisdiction.cultures || {}).forEach(function (culture) {
+          need('cultures',culture); need(root,jurisdiction.cultures[culture]);
+        });
+      }
     }
     function names(root,value) { list(value).forEach(function (key) { need(root,key); }); }
+    function law(value,delegate) {
+      if (typeof value === 'string') { if (!delegate || value !== 'faith') need('legalTraditions',value); return; }
+      if (!value || typeof value !== 'object') return;
+      law(value.default,delegate);
+      ['cultures','realms'].forEach(function (selector) {
+        Object.keys(value[selector] || {}).forEach(function (key) {
+          if (selector === 'cultures') need('cultures',key);
+          need('legalTraditions',value[selector][key]);
+        });
+      });
+    }
     function walk(value,kind) {
       if (!value || typeof value !== 'object') return;
       if (Array.isArray(value)) { value.forEach(function (row) { walk(row,kind); }); return; }
@@ -424,6 +452,10 @@
         else if (key === 'settlementLayout' || key === 'defaultLayout') need('settlementLayouts',item);
         else if (key === 'site' || key === 'siteId') need('settlementSites',item);
         else if (key === 'government' || key === 'governmentForm' || key === 'settlementForm') need('governmentForms',item);
+        else if (key === 'governingIdentity' && item) {
+          need('legalTraditions',item.legalIdentityId);
+          need('cultures',item.eliteCultureId); need('religions',item.eliteFaithId);
+        }
         else if (key === 'constituency') need('constituencyProfiles',item);
         else if (key === 'homeAuthorityPolicies' && item) Object.keys(item).forEach(function (form) { need('governmentForms',form); });
         else if (key === 'profileId' || key === 'profile' || /ProfileId$/.test(key)) profiles.forEach(function (root) { need(root,item); });
@@ -444,10 +476,12 @@
       walk(FBDATA[root]);
     });
     names('religions',FBDATA.rulerFaithTargets);
-    Object.keys(FBDATA.legalTraditions || {}).forEach(function (key) {
-      var jurisdiction = FBDATA.legalTraditions[key].jurisdiction;
-      Object.keys(jurisdiction && jurisdiction.cultures || {}).forEach(function (culture) { need('cultures',culture); });
+    Object.keys(FBDATA.legalTraditions || {}).forEach(function (key) { need('legalTraditions',key); });
+    Object.keys(FBDATA.governmentForms || {}).forEach(function (key) {
+      law(FBDATA.governmentForms[key] && FBDATA.governmentForms[key].legalTradition,true);
     });
+    law(FBDATA.faithDefaults && FBDATA.faithDefaults.legalTradition);
+    law(FBDATA.authoringDefaults && FBDATA.authoringDefaults.intrigueLaw);
     walk(spec.bookmark);
     spec.starts.forEach(function (unit) { walk(unit.definition); walk(unit.bindings); walk(unit.storyInstances); });
     walk(result.storyInstances);
