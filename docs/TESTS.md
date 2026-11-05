@@ -840,3 +840,5 @@ Local passage fixtures validate their ordinary imports before applying. The harb
 The fixed harbor household uses an ordinary costless household track at its declared birthplace, preserving the fixed-place start contract without inventing a civic office on the formation court.
 
 Passage-policy legacy coverage first rejects an unstamped current platform envelope, then selects the actual platform-schema-one envelope for legacy baseline restore. It retains original access provenance and proves that fresh policy is not adopted.
+
+Passage-policy setup reuses the already imported and prepared title through beginBookmarkFromTitle. Its baseline selector must survive until construction; a new navigation would silently reset it to the fresh revision. Baseline cases assert their saved revision before exercising legacy restore.

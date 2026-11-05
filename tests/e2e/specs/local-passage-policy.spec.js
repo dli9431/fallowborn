@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/passage-policy-harbor.json'),
   dune:require('../fixtures/authoring/passage-policy-dune.json')};
@@ -40,7 +40,8 @@ async function start(page,info,prefix,options) {
     await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
     await page.getByRole('button',{name:'Begin',exact:true}).click();
     await page.evaluate(function () {FB.game.setPaused(true);});
-  } else await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  } else await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  if (options.baseline) expect(await page.evaluate(function () {return FB.state.start.revision;})).toBe('baseline');
   await page.evaluate(function () {
     const d=FB.campaignBookmark(FB.state).realms.find(function (d) {return d.mobile;});
     window.passageCase={rid:d.id,
