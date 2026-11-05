@@ -387,7 +387,9 @@
     var list = SH.$('mobile-list');
     (view.details || []).forEach(function (id) {var node=list.querySelector('[aria-controls="'+id+'"]');if(node) node.click();});
     list.scrollTop = view.scroll || 0; SH.$('gm-body').scrollTop=view.bodyScroll || 0;
-    if(view.focus && SH.$(view.focus)) SH.$(view.focus).focus({preventScroll:true});
+    var focus=view.focus && SH.$(view.focus);
+    if (focus && focus.disabled) focus=focus.closest('.review-action-card[tabindex]');
+    if (focus) focus.focus({preventScroll:true});
     ['mobile-count','mobile-county','mobile-price','mobile-days','mobile-column','mobile-other-column','mobile-unit','mobile-commander','mobile-funding','mobile-public-source','mobile-camp'].forEach(function (id) {
       if (SH.$(id)) SH.$(id).onchange=function () {var v=position();v.replace=true;UI.showMobileConfederation(rid,v);};
     });
