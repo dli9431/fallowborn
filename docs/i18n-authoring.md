@@ -1,3 +1,13 @@
+Native legal literal presentation
+
+Literal bookmarkRevisionContent_<suffix>.legalTraditions records use the existing
+legalTradition.<id>.name.<branch> owner and exact-English aliases. Flat regional
+files require literal maps, records and display strings under the existing
+regional-literal-authoring.md rules. Structural law ids, sentence ids, selectors
+and jurisdiction maps are not translated. Source extraction executes no composer;
+ordinary JSON uses normal English fallback. No catalogue generation accompanies
+this publication support.
+
 Adopted public treasuries
 
 The optional ordinary dynastic public-account setting contains only typed accounting metadata and original realm ids, with no translated or saved prose. Its declaration/save diagnostics and the shared Coin and Credit explanation use literal FB.T sources. Existing public treasury labels and money formatting remain shared. Imported display fields keep the ordinary mod fallback and exact fingerprints. No catalogue regeneration is required on a feature branch; missing translations fall back to English until an owner-requested integration update.

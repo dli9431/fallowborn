@@ -1,3 +1,20 @@
+Native legal catalogue coverage
+
+native-legal-catalogue.spec.js uses independent harbor and dune JSON fixtures under
+fixtures/native-legal-catalogue. Served source interception stages both through
+the normal native manifest before engine validation. Assertions cover private
+staging, selected-date publication, source switching, retained-world dependencies,
+full preparation, explicit CrazyGames signature isolation, canonical justice consumer parity with real JSON storage/import,
+and matching save restoration. Invalid faith, governing identity and jurisdiction
+references, every government law selector, foreign cultures, malformed procedures and missing dependencies must
+leave detached data, messages, story registry, RNG and uid unchanged. Repeated
+publication, legal declaration collisions and an injected publication failure
+exercise ownership and rollback. Missing/conflicting native sources withhold their
+own records while the independent source remains available. Existing composition
+and old-save specifications remain unchanged. Source-only legal display coverage
+is added to tools/test_i18n_regional_literals.py. Runtime/device acceptance remains
+owner-controlled.
+
 Deferred title and content readiness
 
 The scenery revision compatibility journeys separate predecessor setup, save/reload, repeat restoration and cross-revision switching. Explicit and inferred forms share one fresh context within each bounded restore or switching test; every form still restores twice or makes its own round trip. Fast content and bundle rejections share setup, while raw-byte and retained-definition changes remain separate. The generic compatibility suite groups pure JSON-forgery probes and the public-root/balance rejections to avoid repeated complete-catalogue boot. Each test still has a fresh browser context, the default timeout and exact state/resource/purity assertions. A bounded canonical-mod-normalization counter proves that a repeated identical compatibility decision performs no predecessor replay, while duplicate and reordered declaration probes preserve fail-closed selection coverage.

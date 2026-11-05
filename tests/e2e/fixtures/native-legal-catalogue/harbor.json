@@ -1,0 +1,567 @@
+{
+  "cultures": {
+    "harbor_folk": {
+      "name": "Reedfolk",
+      "tradition": "other",
+      "dyn": "plain",
+      "male": [
+        "Orin",
+        "Sen",
+        "Lio"
+      ],
+      "female": [
+        "Mira",
+        "Iria",
+        "Nell"
+      ],
+      "family": [
+        "Reed",
+        "Vale",
+        "Lark"
+      ]
+    }
+  },
+  "cultureDoctrineDefaults": {
+    "harbor_folk": {
+      "learning": "latin"
+    }
+  },
+  "religions": {
+    "harbor_belief": {
+      "name": "The Lantern Covenant",
+      "parent": "catholic",
+      "availability": {},
+      "properties": {
+        "head": null,
+        "legalTradition": "harbor_faith_law"
+      }
+    }
+  },
+  "geographies": {
+    "harbor_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "harbor_quay",
+          "x": 1.5,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "harbor_gardens",
+          "x": 3.1,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "harbor_ridge",
+          "x": 4.7,
+          "y": 2.5,
+          "terrain": "farmland"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {
+        "harbor_meeting_hall": {
+          "x": 1.5,
+          "y": 2.5
+        }
+      },
+      "defaultLayout": null
+    }
+  },
+  "name": "Synthetic harbor legal catalogue",
+  "startScenarios": [
+    {
+      "id": "harbor_ordinary_household",
+      "name": "Ordinary household",
+      "desc": "One existing person and their named family.",
+      "intro": "Your household keeps its own home.",
+      "bookmarkIds": [
+        "harbor_world"
+      ],
+      "fixedProvinceId": "harbor_gardens",
+      "alwaysUnlocked": true,
+      "startCulture": "harbor_folk",
+      "startReligion": "harbor_belief",
+      "startAge": 24,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 13,
+      "prestige": 7,
+      "piety": 3,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing named family",
+          "desc": "Keep the original family and its separate homes."
+        }
+      },
+      "tracks": [
+        "harbor_existing_track"
+      ]
+    }
+  ],
+  "bookmarks": {
+    "harbor_world": {
+      "id": "harbor_world",
+      "name": "Lark Harbor",
+      "desc": "A fictional three-county authoring world.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "harbor_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "stories": [],
+      "provinces": [
+        {
+          "id": "harbor_quay",
+          "name": "Lark Quay",
+          "realm": "harbor_house",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "dev": 6,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_belief",
+              "populationShare0": 10000
+            }
+          ],
+          "settlements": [
+            {
+              "site": "harbor_meeting_hall",
+              "name": "Quay Hall",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "harbor_gardens",
+          "name": "Reed Gardens",
+          "realm": "harbor_house",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "dev": 3,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_belief",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "harbor_ridge",
+          "name": "High Lantern",
+          "realm": "harbor_house",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "dev": 3,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_belief",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "harbor_house",
+          "name": "The Reed House",
+          "capital": "harbor_quay",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "religion": "harbor_belief",
+          "culture": "harbor_folk",
+          "ruler": {
+            "name": "Aren Reed",
+            "culture": "harbor_folk",
+            "born": 860,
+            "sex": "m",
+            "mar": 6,
+            "trait": "patient"
+          },
+          "governingIdentity": {
+            "eliteCultureId": "harbor_folk",
+            "eliteFaithId": "harbor_belief",
+            "legalIdentityId": "harbor_law",
+            "tolerance": "tolerant",
+            "taxation": "equal",
+            "justicePolicy": "personal"
+          }
+        }
+      ],
+      "duchies": {
+        "harbor_district": {
+          "name": "Lantern Coast",
+          "kingdom": "harbor_country"
+        }
+      },
+      "kingdoms": {
+        "harbor_country": {
+          "name": "Reed Country",
+          "empire": "harbor_horizon"
+        }
+      },
+      "empires": {
+        "harbor_horizon": {
+          "name": "The Wide Horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "localInstitutions": {},
+      "starts": [
+        "harbor_ordinary_household"
+      ],
+      "hidden": false,
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": []
+      },
+      "revision": "current",
+      "revisions": {
+        "current": {},
+        "retained": {
+          "realms": [
+            {
+              "id": "harbor_house",
+              "name": "The Reed House",
+              "capital": "harbor_quay",
+              "color": "#aa7944",
+              "aggression": 0,
+              "rank": 2,
+              "government": "regnum",
+              "religion": "harbor_belief",
+              "culture": "harbor_folk",
+              "ruler": {
+                "name": "Aren Reed",
+                "culture": "harbor_folk",
+                "born": 860,
+                "sex": "m",
+                "mar": 6,
+                "trait": "patient"
+              },
+              "governingIdentity": {
+                "eliteCultureId": "harbor_folk",
+                "eliteFaithId": "harbor_belief",
+                "legalIdentityId": "harbor_retained",
+                "tolerance": "tolerant",
+                "taxation": "equal",
+                "justicePolicy": "personal"
+              }
+            }
+          ]
+        },
+        "baseline": {}
+      }
+    }
+  },
+  "legalTraditions": {
+    "harbor_law": {
+      "name": "Harbor law",
+      "sentences": [
+        "release",
+        "fine",
+        "imprisonment"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": false,
+        "compensationMaxSeverity": 1,
+        "penanceMaxSeverity": 0
+      },
+      "justification": {
+        "evidence": [
+          "material"
+        ]
+      },
+      "ai": {
+        "minor": [
+          "fine"
+        ],
+        "serious": [
+          "imprisonment"
+        ],
+        "severe": [
+          "imprisonment"
+        ],
+        "arbitrary": [
+          "imprisonment"
+        ],
+        "excessive": [
+          "imprisonment"
+        ]
+      },
+      "jurisdiction": {
+        "cultures": {
+          "harbor_folk": "harbor_personal"
+        },
+        "mixed": "harbor_mixed",
+        "assessor": "harbor_assessor"
+      }
+    },
+    "harbor_faith_law": {
+      "name": "Harbor religious procedure",
+      "sentences": [
+        "release",
+        "fine",
+        "imprisonment"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": false,
+        "compensationMaxSeverity": 0,
+        "penanceMaxSeverity": 0
+      },
+      "justification": {
+        "evidence": [
+          "material"
+        ]
+      },
+      "ai": {
+        "minor": [
+          "fine"
+        ],
+        "serious": [
+          "imprisonment"
+        ],
+        "severe": [
+          "imprisonment"
+        ],
+        "arbitrary": [
+          "imprisonment"
+        ],
+        "excessive": [
+          "imprisonment"
+        ]
+      }
+    },
+    "harbor_personal": {
+      "name": "Harbor personal procedure",
+      "sentences": [
+        "release",
+        "fine",
+        "imprisonment"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": false,
+        "compensationMaxSeverity": 2,
+        "penanceMaxSeverity": 0
+      },
+      "justification": {
+        "evidence": [
+          "material"
+        ]
+      },
+      "ai": {
+        "minor": [
+          "fine"
+        ],
+        "serious": [
+          "imprisonment"
+        ],
+        "severe": [
+          "imprisonment"
+        ],
+        "arbitrary": [
+          "imprisonment"
+        ],
+        "excessive": [
+          "imprisonment"
+        ]
+      }
+    },
+    "harbor_mixed": {
+      "name": "Harbor mixed procedure",
+      "sentences": [
+        "release",
+        "fine",
+        "imprisonment"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": false,
+        "compensationMaxSeverity": 2,
+        "penanceMaxSeverity": 0
+      },
+      "justification": {
+        "evidence": [
+          "material"
+        ]
+      },
+      "ai": {
+        "minor": [
+          "fine"
+        ],
+        "serious": [
+          "imprisonment"
+        ],
+        "severe": [
+          "imprisonment"
+        ],
+        "arbitrary": [
+          "imprisonment"
+        ],
+        "excessive": [
+          "imprisonment"
+        ]
+      }
+    },
+    "harbor_assessor": {
+      "name": "Harbor assessor procedure",
+      "sentences": [
+        "release",
+        "fine",
+        "imprisonment"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": false,
+        "compensationMaxSeverity": 2,
+        "penanceMaxSeverity": 0
+      },
+      "justification": {
+        "evidence": [
+          "material"
+        ]
+      },
+      "ai": {
+        "minor": [
+          "fine"
+        ],
+        "serious": [
+          "imprisonment"
+        ],
+        "severe": [
+          "imprisonment"
+        ],
+        "arbitrary": [
+          "imprisonment"
+        ],
+        "excessive": [
+          "imprisonment"
+        ]
+      }
+    },
+    "harbor_retained": {
+      "name": "Harbor retained procedure",
+      "sentences": [
+        "release",
+        "fine",
+        "imprisonment"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": false,
+        "compensationMaxSeverity": 2,
+        "penanceMaxSeverity": 0
+      },
+      "justification": {
+        "evidence": [
+          "material"
+        ]
+      },
+      "ai": {
+        "minor": [
+          "fine"
+        ],
+        "serious": [
+          "imprisonment"
+        ],
+        "severe": [
+          "imprisonment"
+        ],
+        "arbitrary": [
+          "imprisonment"
+        ],
+        "excessive": [
+          "imprisonment"
+        ]
+      }
+    }
+  },
+  "storyInstances": {
+    "harbor_existing_track": {
+      "id": "harbor_existing_track",
+      "type": "household_track",
+      "title": "A family at home",
+      "intro": "Choose ordinary household life.",
+      "homeProvinceId": "harbor_gardens",
+      "continuity": "household",
+      "initialStage": "review",
+      "stages": {
+        "review": {
+          "name": "Review the household",
+          "text": "Consider your own household.",
+          "choices": [
+            {
+              "id": "stay",
+              "label": "Remain at home",
+              "detail": "Keep your own household without a reward.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "done": {
+          "name": "Review complete",
+          "text": "Your ordinary life continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,15 @@
 # Mods
 
+Native legal catalogue parity
+
+Trusted composition accepts legalTraditions through the existing ordinary JSON
+candidate bridge and FB.validateLegalTraditions. It adds no mod root or alternate
+policy schema. Native immutable-id reuse differs only in ownership from ordinary
+JSON complete-record replacement. Full source preparation still occurs before
+baseline capture; exact effective fingerprints and retained save identities keep
+their existing owners. Failed candidate review and publication do not install
+partial laws, worlds or story registries.
+
 Deferred installation
 
 The initial title reads stored mod names and display declarations without applying them. FB.mods.menuDeclarations supplies a preview only; it neither accepts data nor establishes a save fingerprint. When mods are active, the first campaign selection or opening the Mods view prepares the complete bundled baseline before applyStored runs. Unmodded campaigns review one date and call prepareUnmodded for shared AI-policy validation and currency configuration without capturing that baseline. This path requires an empty mod stack and preserves the empty standard signature or existing CrazyGames edition signature. Complete publication restores the untouched authoring data before applyStored captures the installer snapshot when Mods or authoring require it. Existing whole-candidate validation, failure diagnostics, ordering and exact mod signatures remain authoritative. Previewed choices are resolved again against installed content before play.
