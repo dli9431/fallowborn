@@ -842,3 +842,5 @@ The fixed harbor household uses an ordinary costless household track at its decl
 Passage-policy legacy coverage first rejects an unstamped current platform envelope, then selects the actual platform-schema-one envelope for legacy baseline restore. It retains original access provenance and proves that fresh policy is not adopted.
 
 Passage-policy setup reuses the already imported and prepared title through beginBookmarkFromTitle. Its baseline selector must survive until construction; a new navigation would silently reset it to the fresh revision. Baseline cases assert their saved revision before exercising legacy restore.
+
+The passage-policy restore checkpoints compare the exact unsigned RNG bit pattern, matching setRngState normalization. State bytes, UID and strict mobile validation remain unchanged assertions at every checkpoint.

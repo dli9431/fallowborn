@@ -121,11 +121,11 @@ for (const prefix of ['harbor','dune']) {
       const C=passageCase,M=FB.mobile,E=FB.expeditionPrograms;
       function roundtrip() {
         const s=FB.state,bytes=JSON.stringify([s.localPassagePolicies,M.row(s,C.rid),s.armies,s.owner,s.holder,s.market,s.population,s.treasury]),
-          rng=FB.getRngState(),uid=FB.getUidCounter();
+          rng=FB.getRngState() >>> 0,uid=FB.getUidCounter();
         for (let i=0;i<2;i++) FB.save.restore(JSON.parse(FB.save.serialize()));
         const n=FB.state;
         return bytes===JSON.stringify([n.localPassagePolicies,M.row(n,C.rid),n.armies,n.owner,n.holder,n.market,n.population,n.treasury]) &&
-          rng===FB.getRngState() && uid===FB.getUidCounter() && M.validate(n);
+          rng===(FB.getRngState() >>> 0) && uid===FB.getUidCounter() && M.validate(n);
       }
       const pending=roundtrip();E.day(FB.state);const offered=roundtrip();FB.state.turn++;
       E.day(FB.state);const accepted=roundtrip();FB.state.turn++;
