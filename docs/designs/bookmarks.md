@@ -1,3 +1,18 @@
+Autumn 634 core identities
+
+Autumn 634 now selects core_identities_v3. Its complete province and realm arrays
+change only two existing Syriac resident-pair faiths and the Sasanian court's
+civil governing identity. Baseline, scenery_protected_v1 and
+ordinary_settlement_v2 remain exact. Scenic cells retain ordinary behavior in the
+new revision. The two fixed household starts project their local faith only in
+the new revision; their default fields retain the older faiths.
+
+Explicit shared-definition evidence certifies the two added local faiths, the
+added civil law and both complete predecessor/current fixed starts. Three native
+transitions directly retain the supported baseline, protected and ordinary
+catalogues; they do not chain or migrate saves. Shared-root evidence, exact raw
+JSON and complete current definitions remain mandatory.
+
 Revision-specific fixed-start faiths
 
 The canonical startIdentity projection selects only startReligion from a finite
@@ -37,11 +52,11 @@ saved ordinary conversions. Technology impact scenic_settlement_protection is
 none because a scenic-representation boundary has no discovery prerequisite.
 Independent inhabited routes, ownership and communities keep their own rules.
 
-Autumn 634 selects ordinary_settlement_v2 for fresh campaigns. Its empty revision inherits the original ordinary settlement rules for all 21 scenic cells, matching the other ordinary bookmarks. Noble settlement and commoner frontier homesteading retain their existing eligibility, costs and transactions. This is the existing map-scale simulation of settlement, not a claim that a whole region lacked residents or existing rights. The 506 inhabited declarations, geography, start bindings and routes are unchanged. Technology impact remains the existing settlement rules; no new unlock or independently gateable capability is introduced.
+The retained ordinary_settlement_v2 world was the preceding fresh selection. Its empty revision inherits the original ordinary settlement rules for all 21 scenic cells, matching the other ordinary bookmarks. Noble settlement and commoner frontier homesteading retain their existing eligibility, costs and transactions. This is the existing map-scale simulation of settlement, not a claim that a whole region lacked residents or existing rights. The 506 inhabited declarations, geography, start bindings and routes are unchanged. Technology impact remains the existing settlement rules; no new unlock or independently gateable capability is introduced.
 
 Baseline retains its original ordinary world, and scenery_protected_v1 retains its exact protected province array for existing campaigns. Loading either revision preserves its saved conversions, resources, identities and policy. Fresh selection never migrates a saved campaign.
 
-Two explicit native transitions certify the supported pre-protection catalogue and the protected catalogue at 9315b53ae09c486a8cdc5c6e022323eb1e8b7bd2 directly against the current catalogue. The former pins the source at 51c5f5751e8e29a1136aa1518e1e7c2f858728ea with repaired candidate-story publication; its baseline hash remains bcade8143ade9c8439cff5150e2987673c342ca764217f7cec0bbd62a82ddb0e. Shared-root digests and original start/story bindings stay exact. The current catalogue adds ordinary_settlement_v2 without editing either retained world. A mismatched modded save requires exactly one complete proof matching its original signature. There is no transition chaining, migration, inferred predecessor or signature allowlist. Changed JSON bytes and unsupported historical catalogues still reject.
+Two of the explicit native transitions certify the supported pre-protection catalogue and the protected catalogue at 9315b53ae09c486a8cdc5c6e022323eb1e8b7bd2 directly against the current catalogue. The former pins the source at 51c5f5751e8e29a1136aa1518e1e7c2f858728ea with repaired candidate-story publication; its baseline hash remains bcade8143ade9c8439cff5150e2987673c342ca764217f7cec0bbd62a82ddb0e. Shared-root digests and original start/story bindings stay exact. The ordinary-settlement expansion added ordinary_settlement_v2 without editing either retained world; the later core identity revision also preserves that world. A mismatched modded save requires exactly one complete proof matching its original signature. There is no transition chaining, migration, inferred predecessor or signature allowlist. Changed JSON bytes and unsupported historical catalogues still reject.
 
 Detached trusted composition
 

@@ -11,9 +11,11 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,['index.html','data/bookmark_634_identities.js','data/bookmark_634.js','data/starts_634_ordinary.js',
   'data/bookmark_568_identities.js','data/bookmark_476_wider_identities.js',
   'data/cultures.js','data/bookmarks.js','data/eras.js','js/model.js',
+  'data/starts_634_damascus.js','data/starts_634_ctesiphon.js','data/bookmark_634_scaffold_d.js',
+  'js/justice.js','js/intrigue.js','js/authority.js','js/starts.js','js/save.js','js/save_v4.js','js/bookmark_sources.js',
   'js/mods.js','js/world.js','js/bookmark_composition.js','js/main.js','js/ui_misc.js','js/ui_modals.js','js/crazygames.js']);
 
-const FAITHS = ['early_islam_634','zoroastrian_sasanian_634','west_syriac_lay_634'];
+const FAITHS = ['early_islam_634','zoroastrian_sasanian_634','chalcedonian_local_634','east_syriac_local_634','west_syriac_lay_634'];
 const SOURCE_FAITHS = ['insular_traditional_476','finnic_traditional_476','woodland_traditional_476',
   'steppe_traditional_476','caucasian_traditional_476','nile_traditional_476','horn_traditional_476',
   'arabian_traditional_476','iranian_traditional_476','sogdian_traditional_476',
@@ -43,7 +45,7 @@ for (const crazy of [false,true]) {
           }),hidden:FBDATA.bookmarks['634'].hidden,
           unchanged:before.data === JSON.stringify(FBDATA) && before.state === JSON.stringify(FB.state) &&
             before.rng === FB.getRngState() && before.uid === FB.getUidCounter()};
-      },before)).toEqual({ids:FAITHS,sources:SOURCE_FAITHS,published:true,hidden:true,unchanged:true});
+      },before)).toEqual({ids:FAITHS,sources:SOURCE_FAITHS,published:true,hidden:undefined,unchanged:true});
     });
 }
 
@@ -74,7 +76,7 @@ test('same-import date and faiths validate purely and publish through the ordina
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({name:'634-identity-world.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(mod),'utf8')});
-  await page.locator('#mod-apply').click();
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && FB.mods.count() === 1 && FBDATA.bookmarks['634'];
@@ -92,11 +94,13 @@ test('same-import date and faiths validate purely and publish through the ordina
       }),
       scopes:ids.map(function (id) {
         const rel = FB.religionOf(id,null);
+        const permitted = ['chalcedonian_local_634','east_syriac_local_634'].indexOf(id) >= 0
+          ? ['community','character','start','story','conversion','project'] : consumers;
         return {parent:rel.parent,relation:rel.relationToParent,law:rel.legalTradition,
           head:rel.head,paths:rel.religiousPaths,war:rel.holyWarTradition,raid:rel.raidingTradition,
           spouses:rel.marriage.spouseLimit,rite:rel.marriage.kinship.siblingRite,
-          current:consumers.every(function (consumer) { return FB.faithHistoricalAvailable(id,world,consumer); }),
-          retained:consumers.every(function (consumer) {
+          current:permitted.every(function (consumer) { return FB.faithHistoricalAvailable(id,world,consumer); }),
+          retained:permitted.every(function (consumer) {
             return FB.faithHistoricalAvailable(id,Object.assign({},world,{date:{year:700,season:0,day:1}}),consumer);
           }),otherDates:Object.keys(FBDATA.bookmarks).filter(function (date) { return date !== '634'; }).every(function (date) {
             return consumers.every(function (consumer) { return !FB.faithHistoricalAvailable(id,FB.bookmark(date),consumer); });
@@ -113,6 +117,8 @@ test('same-import date and faiths validate purely and publish through the ordina
   },prior)).toEqual({errors:[],faithErrors:[],earlierUnchanged:true,scopes:[
     {parent:'muslim',relation:'in_fold',law:'muslim',spouses:{m:4,f:1}},
     {parent:'zoroastrian',relation:'in_fold',law:'sasanian_custom_476',spouses:{m:1,f:1}},
+    {parent:'chalcedonian',relation:'in_fold',law:'byzantine',spouses:{m:1,f:1}},
+    {parent:'east_syriac',relation:'in_fold',law:'sasanian_custom_476',spouses:{m:1,f:1}},
     {parent:'miaphysite',relation:'in_fold',law:'customary',spouses:{m:1,f:1}}
   ].map(function (row) { return Object.assign(row,{head:null,paths:null,war:null,raid:false,
     rite:null,current:true,retained:true,otherDates:true}); }),
@@ -173,4 +179,179 @@ test('source selector union preserves doctrine, all earlier dates and narrower r
       FBDATA.religions = original; FBDATA.bookmarks = bookmarks; FB.invalidateReligionData();
     }
   })).toEqual({parity:true,doctrine:true,eligible:true,exact:true,yearBlocked:true,restricted:true,valid:[],pure:true});
+});
+
+
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
+const coreFixture = path.join(__dirname,'../fixtures/634-core-identities');
+
+async function coreStart(page,scenario,revision) {
+  const original = await page.evaluate(function (revision) {
+    const raw = FBDATA.bookmarks['634'], original = raw.revision;
+    if (revision) raw.revision = revision;
+    return original;
+  },revision);
+  // This scenario-local journey resolves the revision identity before spelling
+  // the optional resident suffix; the shared helper reads the raw start fields.
+  const code = await page.evaluate(function (id) {
+    const world = FB.bookmark('634');
+    const start = FB.startIdentity(FBDATA.startScenarios.find(function (row) { return row.id === id; }),world);
+    return 'COREIDENTITY-634-' + id + '-' + start.fixedProvinceId + '-m-Review-established-0-' +
+      start.startCulture + '.' + start.startReligion;
+  },scenario);
+  const full = page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill(code);
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+  await page.evaluate(function () { FB.game.setPaused(true); FB.game.uiPrefs.hideTips = true; });
+  await page.evaluate(function (original) {
+    delete FBDATA.bookmarks['634'].hidden;
+    FBDATA.bookmarks['634'].revision = original;
+  },original);
+}
+
+for (const entry of [
+  ['baseline','damascus_household_634','chalcedonian'],
+  ['scenery_protected_v1','ctesiphon_household_634','east_syriac'],
+  ['ordinary_settlement_v2','damascus_household_634','chalcedonian'],
+  ['baseline','damascus_household_634','chalcedonian','bookmark_634.predecessor.js'],
+  ['scenery_protected_v1','ctesiphon_household_634','east_syriac','bookmark_634.protected-predecessor.js']
+]) {
+  test.describe('634 retained ' + entry[0] + (entry[3] ? ' earlier catalogue' : ''),function () {
+    let previous;
+    test.beforeEach(async function ({page},info) {
+      for (const file of ['bookmark_634.js','bookmark_634_identities.js','starts_634_damascus.js','starts_634_ctesiphon.js']) {
+        await page.route('**/data/' + file,function (route) {
+          return route.fulfill({path:file === 'bookmark_634.js' && entry[3]
+            ? path.join(__dirname,'../fixtures/634-scenery-revisions',entry[3]) : path.join(coreFixture,file),contentType:'application/javascript'});
+        });
+      }
+      await openGame(page,info);
+      await page.evaluate(function () { FB.ui.showMods(); });
+      await page.locator('#modfile').setInputFiles(path.join(coreFixture,'household-overlay.json'));
+      await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+      await prepareGameContent(page);
+      await coreStart(page,entry[1],entry[0]);
+      previous = await page.evaluate(function () {
+        FB.state.player.gold -= 3;
+        return {text:FB.save.serialize(),roots:FB.mods.retainedCatalogueRoots(),
+          worlds:FB.bookmarkRevisions('634'),stored:localStorage.getItem('fb_mods')};
+      });
+      await info.attach('retained-core-catalogue',{body:JSON.stringify(previous.roots),contentType:'application/json'});
+      for (const file of ['bookmark_634.js','bookmark_634_identities.js','starts_634_damascus.js','starts_634_ctesiphon.js'])
+        await page.unroute('**/data/' + file);
+      await page.reload({waitUntil:'domcontentloaded'});
+      await prepareGameContent(page);
+    });
+    test('exact imported save keeps people, resident pairs, starts and world meaning',async function ({page}) {
+      expect(await page.evaluate(function (previous) {
+        const worlds = FB.bookmarkRevisions('634');
+        return {same:previous.worlds.every(function (world) {
+          return JSON.stringify(world) === JSON.stringify(worlds.find(function (row) { return row.revision === world.revision; }));
+        }),fresh:FB.bookmark('634').revision,stored:localStorage.getItem('fb_mods') === previous.stored,
+          roots:FB.mods.retainedCatalogueRoots()};
+      },previous)).toMatchObject({same:true,fresh:'core_identities_v3',stored:true,roots:previous.roots});
+      expect(await page.evaluate(function (text) {
+        const saved = JSON.parse(text), original = JSON.stringify(saved), before = JSON.stringify(FB.state);
+        const rng = FB.getRngState(), uid = FB.getUidCounter();
+        const valid = FB.mods.saveCompatibility(saved);
+        const wrong = JSON.parse(text); wrong.mods += 'changed';
+        const rejected = FB.mods.saveCompatibility(wrong);
+        return {accepted:valid.compatible,rejected:!rejected.compatible,
+          pure:original === JSON.stringify(saved) && before === JSON.stringify(FB.state) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+      },previous.text)).toEqual({accepted:true,rejected:true,pure:true});
+      await restoreBookmark(page,previous.text);
+      expect(await page.evaluate(function (input) {
+        const old = JSON.parse(input.text), next = JSON.parse(FB.save.serialize());
+        const keys = ['start','chars','player','population','stories','bookmarkSetup','authority','localInstitutions'];
+        return {same:keys.every(function (key) { return JSON.stringify(old.state[key]) === JSON.stringify(next.state[key]); }),
+          faith:FB.campaignStart(FB.state).startReligion,
+          rng:(old.rng >>> 0) === (next.rng >>> 0),uid:old.uid === next.uid,mods:next.mods === FB.mods.sig() && next.mods !== old.mods};
+      },previous)).toEqual({same:true,faith:entry[2],rng:true,uid:true,mods:true});
+      const current = await page.evaluate(function () { return FB.save.serialize(); });
+      await restoreBookmark(page,current);
+      expect(await page.evaluate(function () { return FB.campaignStart(FB.state).startReligion; })).toBe(entry[2]);
+    });
+  });
+}
+
+test('634 fresh local adapters preserve weights and withhold institutional and ruler admission',async function ({page},info) {
+  await openGame(page,info);
+  expect(await page.evaluate(function () {
+    const world = FB.bookmark('634');
+    if (!world) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
+    const baseline = FB.bookmarkRevisions('634').find(function (row) { return row.revision === 'baseline'; });
+    const pairs = [['damascus','chalcedonian','chalcedonian_local_634'],['baghdad','east_syriac','east_syriac_local_634']];
+    const unchanged = world.provinces.every(function (row) {
+      const expected = JSON.parse(JSON.stringify(baseline.provinces.find(function (old) { return old.id === row.id; })));
+      const pair = pairs.find(function (p) { return p[0] === row.id; });
+      if (pair) expected.communities.find(function (c) { return c.culture === 'syriac' && c.religion === pair[1]; }).religion = pair[2];
+      return JSON.stringify(expected) === JSON.stringify(row);
+    });
+    return {unchanged:unchanged,errors:FB.validateBookmark(world),institutions:world.localInstitutions,
+      faiths:pairs.map(function (pair) {
+        const id = pair[2], rel = FB.religionOf(id,null);
+        return {parent:rel.parent,head:rel.head,paths:rel.religiousPaths,divorce:rel.marriage.divorce.enabled,
+          allowed:['community','character','start','story','conversion','project'].every(function (consumer) { return FB.faithHistoricalAvailable(id,world,consumer); }),
+          denied:['ruler','institution'].every(function (consumer) { return !FB.faithHistoricalAvailable(id,world,consumer); })};
+      })};
+  })).toEqual({unchanged:true,errors:[],institutions:{},faiths:[
+    {parent:'chalcedonian',head:null,paths:null,divorce:false,allowed:true,denied:true},
+    {parent:'east_syriac',head:null,paths:null,divorce:false,allowed:true,denied:true}
+  ]});
+  await coreStart(page,'damascus_household_634');
+  expect(await page.evaluate(function () { return FB.state.chars[FB.state.player.charId].religion; })).toBe('chalcedonian_local_634');
+  const saved = await page.evaluate(function () { return FB.save.serialize(); });
+  await restoreBookmark(page,saved);
+  expect(await page.evaluate(function () { return FB.campaignStart(FB.state).startReligion; })).toBe('chalcedonian_local_634');
+});
+
+for (const imported of [false,true]) test('634 ' + (imported ? 'imported' : 'native') + ' Sasanian civil law resolves public intrigue hearings without replacing religious law',async function ({page},info) {
+  await openGame(page,info);
+  if (imported) {
+    await page.evaluate(function () { FB.ui.showMods(); });
+    await page.locator('#modfile').setInputFiles(path.join(coreFixture,'civil-review.json'));
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  }
+  await coreStart(page,'ctesiphon_household_634');
+  expect(await page.evaluate(function () {
+    const s = FB.state, actor = FB.materializeRealmRuler(s,'sasanian_634');
+    const originalIdentity = FB.political.governingIdentity(s,'sasanian_634');
+    const secular = FB.justiceTradition(s,actor.id), religious = FB.justiceTradition(s,actor.id,'religious');
+    s.player.gold = 500; s.player.piety = 100; s.eventQueue = [];
+    const offense = FB.justiceExposeScheme(s,{id:'abduction',actorId:s.player.charId,
+      recordId:'civil-review',context:{characterId:actor.id}},'redhanded',false);
+    const custody = FB.captureIntrigue(s,actor.id,s.player.charId,'judicial','sasanian_634');
+    const queued = FB.justiceApplyPunishment(s,actor.id,s.player.charId,'imprisonment',offense.id);
+    if (!queued.ok) throw new Error(JSON.stringify(queued));
+    const ctx = {justiceId:s.justice.pending.id,studentId:actor.id}, ev = FB.eventById('justice_hearing');
+    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const pay = FB.fns.justice_can_pay(s,ctx), penance = FB.fns.justice_can_penance(s,ctx);
+    const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+    const applied = FB.resolveEventOption(s,ev,ev.options.find(function (o) { return o.effects.custom === 'justice_submit'; }),ctx);
+    const after = JSON.stringify(s), repeated = FB.resolveEventOption(s,ev,ev.options.find(function (o) { return o.effects.custom === 'justice_submit'; }),ctx);
+    const replayPure = after === JSON.stringify(s), sentence = s.justice.last.sentence;
+    const npc = FB.makeCharacter(s,{name:'Witness',sex:'m',culture:'syriac',religion:'east_syriac_local_634',born:s.date.year-30,station:0,traitsN:0});
+    npc.homeProvinceId = 'baghdad';
+    FB.intrigueAutoSentence(s,{id:'abduction',actorId:npc.id,recordId:'civil-ai',context:{characterId:actor.id}},'redhanded',false);
+    const uncaptured = !FB.justiceCustodyOf(s,npc.id);
+    FB.captureIntrigue(s,actor.id,npc.id,'judicial','sasanian_634');
+    delete s.justice.lastSeason; FB.justiceSeason(s);
+    return {faith:s.chars[s.player.charId].religion,identity:originalIdentity.legalIdentityId,
+      ai:s.justice.last.sentence,uncaptured:uncaptured,
+      secular:secular.id,religious:religious.id,source:secular.source,pay:pay,penance:penance,pure:pure,
+      applied:!!applied,closed:offense.closed,repeated:repeated,replayPure:replayPure,
+      sentence:sentence,term:custody.endTurn - custody.captureTurn};
+  })).toMatchObject({faith:'east_syriac_local_634',identity:'sasanian_civil_634',secular:'sasanian_civil_634',
+    religious:'sasanian_custom_476',source:'elite',pay:!imported,penance:false,pure:true,applied:true,closed:true,
+    repeated:false,replayPure:true,sentence:'imprisonment',ai:imported ? 'fine' : 'imprisonment',uncaptured:true});
+  const saved = await page.evaluate(function () { return FB.save.serialize(); });
+  await restoreBookmark(page,saved);
+  expect(await page.evaluate(function () { return FB.political.governingIdentity(FB.state,'sasanian_634').legalIdentityId; })).toBe('sasanian_civil_634');
 });

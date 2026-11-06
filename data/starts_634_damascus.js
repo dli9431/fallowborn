@@ -3,6 +3,7 @@ FB.bookmarkSources.stage({"source":"data/starts_634_damascus.js","bookmarks":["6
 FBDATA.startScenarios_634_damascus = [
   { id:'damascus_household_634', bookmarkIds:['634'], alwaysUnlocked:true,
     fixedProvinceId:'damascus', startCulture:'syriac', startReligion:'chalcedonian', startAge:24,
+    revisionIdentities:{'634':{core_identities_v3:{startReligion:'chalcedonian_local_634'}}},
     name:'Damascus craft household',
     desc:'An established Syriac household in the city of Damascus. Practice a craft, consult household records and decide whether to remain.',
     tier:1, profession:'craftsman', gold:20, prestige:5, piety:0,
