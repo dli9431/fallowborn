@@ -171,7 +171,7 @@ window.FB = window.FB || {};
     const scenarios = FBDATA.startScenarios;
     if (!id || !Array.isArray(scenarios)) return null;
     for (let i = 0; i < scenarios.length; i++) {
-      if (scenarios[i].id === id) return scenarios[i].tier;
+      if (scenarios[i].id === id) return FB.startIdentity(scenarios[i],FB.campaignBookmark(state)).tier;
     }
     return null;
   }

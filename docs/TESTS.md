@@ -1,3 +1,43 @@
+Retained shared definitions and fixed-start identities
+
+retained-shared-identities.spec.js uses two independent fictional native
+predecessor/current catalogues and actual JSON file imports. It creates genuine
+predecessor envelopes, retains spent resources and converted settlements, and
+checks saved people, communities, stories, start ids, faith/law resolution, RNG
+and UID through repeat restores, revision switches and fresh-page re-save loads.
+Typed evidence negatives cover both declaration sides, missing/foreign roots,
+foreign starts, duplicate ids, record limits, duplicate proofs and stale live
+definitions. The spec also retains raw JSON/order, bundle payload/order,
+non-authorized definition, ordinary JSON forgery, empty-signature and CrazyGames
+controls. Canonical normalization counts bound warm proof replay without raising
+timeouts. Multi-load journeys own fresh browser contexts and prepare their cold
+catalogue in a separate bounded hook before the restore/reload assertions.
+Atomic rejection batches share only their journey's prepared context; every
+batch checks rejection purity, restores its mutations and rechecks the valid
+proof before the next batch.
+Pure validation cases reuse the independent configuration's current proof page;
+their before/after snapshots enforce isolation, while cold restore, import and
+revision journeys retain separate fresh contexts.
+These focused checks do not establish full-suite or owner runtime
+acceptance.
+
+Native legal catalogue coverage
+
+native-legal-catalogue.spec.js uses independent harbor and dune JSON fixtures under
+fixtures/native-legal-catalogue. Served source interception stages both through
+the normal native manifest before engine validation. Assertions cover private
+staging, selected-date publication, source switching, retained-world dependencies,
+full preparation, explicit CrazyGames signature isolation, canonical justice consumer parity with real JSON storage/import,
+and matching save restoration. Invalid faith, governing identity and jurisdiction
+references, every government law selector, foreign cultures, malformed procedures and missing dependencies must
+leave detached data, messages, story registry, RNG and uid unchanged. Repeated
+publication, legal declaration collisions and an injected publication failure
+exercise ownership and rollback. Missing/conflicting native sources withhold their
+own records while the independent source remains available. Existing composition
+and old-save specifications remain unchanged. Source-only legal display coverage
+is added to tools/test_i18n_regional_literals.py. Runtime/device acceptance remains
+owner-controlled.
+
 Deferred title and content readiness
 
 expedition-command.spec.js validates both ordinary JSON fixtures before import so a rejected declaration reports its requirement failure directly. Their home-ruler court ranks match the tier-four start projection; the separate following ranks and private/public resource assertions remain unchanged.
@@ -842,6 +882,15 @@ story-placement.spec.js covers story cards placed inside their Deeds sections. I
 Scenery integration repair coverage
 
 634-scenery-revisions.spec.js also creates real persisted-JSON predecessor campaigns in 476 and 867, retains spent resources through the unrelated 634 addition, reloads ordinary re-saves, and rejects missing revisions or changed unrelated definitions after a successful cached proof. bookmark-composition-native.spec.js preserves the frozen source fixtures and checks original-principal publication against candidate stories while the live registry lacks them. Its withheld-476 case verifies native tenure references, strict explicit/detached validation, unknown-id rejection and purity. protected-scenery.spec.js explicitly selects the ordinary retained baseline for its stale-quote transaction scenario. 634-rulers.spec.js keeps ruler starts hidden while recognizing the already selectable date. retained-catalogue-compatibility.spec.js identifies its own declarations by owner instead of assuming no native transitions exist.
+
+Regional literal extraction
+
+`tools/test_i18n_regional_literals.py` reads inert source fixtures for two
+independent regional configurations. It checks revision and global display keys,
+English aliases, proper-name exclusion, missing identities, unsupported tables,
+computed declarations and source collisions. It also checks the existing 634
+faith, start, household, agenda and goal owners. These Python tests execute no
+game scripts and generate no catalogs; execution remains owner-controlled.
 
 The expedition command replay case reads the shared generic sheet at #genmodal for its home office, finite term and public treasury assertions.
 

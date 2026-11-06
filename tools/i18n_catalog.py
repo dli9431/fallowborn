@@ -878,13 +878,115 @@ def extract_geography_additions(inv: Inventory) -> None:
                         "Physical scenery label; habitation is declared separately.", ())
 
 
+def revision_literal_tables(source: Path) -> list[tuple[str, Node]]:
+    """Flat regional files require an explicit, entirely inert display owner."""
+    flat = re.fullmatch(r"bookmark_(\d+)_region_b\d{2}", source.stem)
+    tokens = lex_js(source.read_text(encoding="utf-8"))
+    declarations = []
+    seen = set()
+
+    def literal(node: Node) -> bool:
+        if node.kind == "object":
+            return all(literal(value) for value in node.value.values())
+        if node.kind == "array":
+            return all(literal(value) for value in node.value)
+        return node.kind in ("string", "number", "literal")
+
+    def require_rows(content: dict[str, Node], table: str, identity: str) -> None:
+        if table not in content:
+            return
+        rows = node_array(content[table])
+        if rows is None or any(not node_string((node_object(row) or {}).get(identity))
+                               for row in rows):
+            raise ValueError(f"{source.name}: {table} requires literal {identity} owners")
+
+    def display(record: dict[str, Node], fields: tuple[str, ...] = ("name",)) -> None:
+        for field in fields:
+            node = record.get(field)
+            if node is not None and (not branch_records(node) or
+                    node.kind == "object" and len(branch_records(node)) != len(node.value)):
+                raise ValueError(f"{source.name}: {field} requires literal display strings")
+
+    for i in range(len(tokens) - 3):
+        if (tokens[i].kind != "ident"
+                or [token.value for token in tokens[i:i + 2]] != ["FBDATA", "."]
+                or tokens[i + 2].kind != "ident"
+                or not re.fullmatch(r"bookmarkRevisionContent_[A-Za-z0-9_]+", tokens[i + 2].value)
+                or tokens[i + 3].value != "="):
+            continue
+        owner = tokens[i + 2].value
+        if not flat and owner in seen:
+            continue
+        parser = Parser(tokens, strict_objects=bool(flat))
+        parser.i = i + 4
+        declaration = parser.parse_value()
+        if flat:
+            content = node_object(declaration) or {}
+            if (owner in seen or declaration.kind != "object" or not literal(declaration)
+                    or parser.peek() is not None and parser.peek().value != ";"
+                    or node_string(content.get("bookmarkId")) != flat.group(1)
+                    or not node_string(content.get("revision"))):
+                raise ValueError(f"{source.name}: invalid literal revision owner {owner}")
+            allowed = {"bookmarkId", "revision", "provinces", "realms", "duchies",
+                       "kingdoms", "empires", "cultures", "layouts", "governmentForms",
+                       "administrationProfiles", "aristocraticProfiles", "legalTraditions", "climate", "climates"}
+            if content.keys() - allowed:
+                raise ValueError(f"{source.name}: unsupported regional tables: "
+                                 + ", ".join(sorted(content.keys() - allowed)))
+            for table in ("provinces", "realms"):
+                require_rows(content, table, "id")
+                for row in node_array(content.get(table)) or []:
+                    record = node_object(row) or {}
+                    display(record)
+                    if "names" in record and node_array(record["names"]) is None:
+                        raise ValueError(f"{source.name}: names requires a literal array")
+                    for dated in node_array(record.get("names")) or []:
+                        if node_object(dated) is None or "name" not in dated.value:
+                            raise ValueError(f"{source.name}: dated names require literal records")
+                        display(node_object(dated) or {})
+            for table in allowed - {"bookmarkId", "revision", "provinces", "realms"}:
+                if table in content and node_object(content[table]) is None:
+                    raise ValueError(f"{source.name}: {table} requires a literal map")
+            for slots in (node_object(content.get("layouts")) or {}).values():
+                require_rows({"slots": slots}, "slots", "site")
+                for slot in node_array(slots) or []:
+                    display(node_object(slot) or {})
+            for table in ("duchies", "kingdoms", "empires", "cultures",
+                          "administrationProfiles", "aristocraticProfiles", "legalTraditions"):
+                for row in (node_object(content.get(table)) or {}).values():
+                    if node_object(row) is None:
+                        raise ValueError(f"{source.name}: {table} requires literal records")
+                    display(row.value, ("name", "desc") if table == "administrationProfiles"
+                            else ("name",))
+            for profile in (node_object(content.get("aristocraticProfiles")) or {}).values():
+                require_rows(node_object(profile) or {}, "interests", "id")
+                for member in node_array(profile.value.get("interests")) or []:
+                    display(node_object(member) or {})
+            for form in (node_object(content.get("governmentForms")) or {}).values():
+                if node_object(form) is None:
+                    raise ValueError(f"{source.name}: governmentForms requires literal records")
+                profile = (node_object(form) or {}).get("selectionProfile")
+                if profile is not None and node_object(profile) is None:
+                    raise ValueError(f"{source.name}: selectionProfile requires a literal map")
+                require_rows(node_object(profile) or {}, "members", "id")
+                for member in node_array((node_object(profile) or {}).get("members")) or []:
+                    display(node_object(member) or {})
+                    name = member.value.get("name")
+                    if name is not None and name.kind != "string":
+                        raise ValueError(f"{source.name}: selection member name requires a string")
+        seen.add(owner)
+        declarations.append((owner, declaration))
+    if flat and not declarations:
+        raise ValueError(f"{source.name}: missing literal bookmarkRevisionContent owner")
+    return declarations
+
+
 def extract_bookmark_revision_content(inv: Inventory) -> None:
     """Read literal revision-owned presentation tables, never their composers."""
     for source in sorted(DATA.glob("bookmark_*.js")):
         rel = source.relative_to(ROOT).as_posix()
-        owners = re.findall(r"FBDATA\.(bookmarkRevisionContent_[A-Za-z0-9_]+)\s*=", source.read_text(encoding="utf-8"))
-        for owner in dict.fromkeys(owners):
-            content = node_object(find_assignment(source, "FBDATA", owner)) or {}
+        for owner, declaration in revision_literal_tables(source):
+            content = node_object(declaration) or {}
             bookmark = node_string(content.get("bookmarkId"))
             revision = node_string(content.get("revision"))
             if not bookmark or not revision:
@@ -902,6 +1004,11 @@ def extract_bookmark_revision_content(inv: Inventory) -> None:
                     identity = node_string(item.get("id"))
                     if identity:
                         label(kind, scope + "." + identity, item.get("name"))
+                        for index, dated_node in enumerate(node_array(item.get("names")) or []):
+                            dated = node_object(dated_node) or {}
+                            for branch, record, line in branch_records(dated.get("name")):
+                                inv.add(f"{kind}.{scope}.{identity}.name.dated.{index}.{branch}",
+                                        record, f"{rel}:{line}", "Revision-owned dated label.", ())
             for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"),
                                 ("empires", "empire"), ("cultures", "culture")):
                 for identity, item_node in (node_object(content.get(table)) or {}).items():
@@ -925,6 +1032,25 @@ def extract_bookmark_revision_content(inv: Inventory) -> None:
                             inv.add(f"governmentSelection.{form_id}.member.{member_id}.name.default",
                                     record, f"{rel}:{line}", "Government selection presentation.",
                                     TOKEN_RE.findall(record["text"]))
+            for identity, record in (node_object(content.get("legalTraditions")) or {}).items():
+                label("legalTradition", identity, (node_object(record) or {}).get("name"))
+            for table, namespace in (("administrationProfiles", "administrationProfile"),
+                                     ("aristocraticProfiles", "aristocraticProfile")):
+                for profile_id, profile_node in (node_object(content.get(table)) or {}).items():
+                    profile = node_object(profile_node) or {}
+                    label(namespace, profile_id, profile.get("name"))
+                    if table == "administrationProfiles":
+                        for branch, record, line in branch_records(profile.get("desc")):
+                            inv.add(f"{namespace}.{profile_id}.desc.{branch}", record,
+                                    f"{rel}:{line}", "Dated administration description.",
+                                    TOKEN_RE.findall(record["text"]))
+                    else:
+                        for member_node in node_array(profile.get("interests")) or []:
+                            member = node_object(member_node) or {}
+                            member_id = node_string(member.get("id"))
+                            if member_id:
+                                label("aristocraticInterest", profile_id + "." + member_id,
+                                      member.get("name"))
 
 
 def extract_revision_content(inv: Inventory) -> None:

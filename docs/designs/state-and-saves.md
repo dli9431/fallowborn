@@ -1,3 +1,14 @@
+Retained fixed-start identity
+
+Saved scenario ids continue to resolve through their saved bookmark revision.
+The canonical start owner projects the declared faith for that revision without
+changing state.start or any person, community, resource, story, RNG or UID fact.
+The optional native shared-definition proof certifies only additive faith/law
+ids and exact retained start projections; it cannot replace existing shared
+runtime definitions. Ordinary re-save keeps the installed current fingerprint,
+so a fresh page resolves the same retained start without replaying a compatibility
+exception. No wire field, format increment or identity migration is introduced.
+
 Loading from the lightweight title
 
 Continue, save slots and imported saves enter FB.game.loadData through the deferred campaign-content gate. The gate prepares the bundled baseline, effective mods, story registry and localized messages before exact mod-signature comparison, revision selection, migration or restoration. Returning true before content is ready means the load request was queued, as with asynchronous world activation. A preflight refusal after preparation displays its reason on the title. Stored saves remain unchanged. Save browsing can show stored metadata before content is ready; compatibility is checked when loading.

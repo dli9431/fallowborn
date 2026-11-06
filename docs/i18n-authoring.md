@@ -1,3 +1,13 @@
+Native legal literal presentation
+
+Literal bookmarkRevisionContent_<suffix>.legalTraditions records use the existing
+legalTradition.<id>.name.<branch> owner and exact-English aliases. Flat regional
+files require literal maps, records and display strings under the existing
+regional-literal-authoring.md rules. Structural law ids, sentence ids, selectors
+and jurisdiction maps are not translated. Source extraction executes no composer;
+ordinary JSON uses normal English fallback. No catalogue generation accompanies
+this publication support.
+
 Adopted public treasuries
 
 The optional ordinary dynastic public-account setting contains only typed accounting metadata and original realm ids, with no translated or saved prose. Its declaration/save diagnostics and the shared Coin and Credit explanation use literal FB.T sources. Existing public treasury labels and money formatting remain shared. Imported display fields keep the ordinary mod fallback and exact fingerprints. No catalogue regeneration is required on a feature branch; missing translations fall back to English until an owner-requested integration update.
@@ -100,6 +110,12 @@ lookup miss or stale source hash falls back to English), so an unrouted string i
 though the game still *runs*.
 
 Revision-owned bookmark labels
+
+The [regional literal convention](regional-literal-authoring.md) defines flat
+`bookmark_<date>_region_bnn.js` sources, revision-owned dated names, global court
+profile owners and the companion faith/start/story table routes. Flat declarations
+require explicit literal owners; malformed or missing owners fail static extraction.
+Existing scaffold and supplemental table keys remain unchanged.
 
 data/starts_1241.js uses the literal startScenarios_1241 array for ordinary scenario.<id> display owners. data/story_households_1241.js uses literal householdTracks_1241 and openingProfiles_1241 tables for householdStory.<id> and openingProfile.<id> owners. Keep stage and choice display text literal, with numeric costs expressed through money placeholders where applicable. The dated travel purpose and arrival event use the ordinary travelPurpose and event owners in data/travel.js and data/events_travel.js. No generated catalogue change is needed for source authoring; new English retains normal fallback.
 

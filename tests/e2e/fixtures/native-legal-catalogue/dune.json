@@ -1,0 +1,467 @@
+{
+  "cultures": {
+    "dune_folk": {
+      "name": "Glassroad clans",
+      "tradition": "other",
+      "dyn": "plain",
+      "male": [
+        "Kavi",
+        "Daro",
+        "Aran"
+      ],
+      "female": [
+        "Tamar",
+        "Sela",
+        "Nari"
+      ],
+      "family": [
+        "Selen",
+        "Vara",
+        "Ash"
+      ]
+    }
+  },
+  "cultureDoctrineDefaults": {
+    "dune_folk": {
+      "learning": "steppe"
+    }
+  },
+  "religions": {
+    "dune_belief": {
+      "name": "The Open Sky",
+      "parent": "tengri",
+      "availability": {},
+      "properties": {
+        "head": null,
+        "legalTradition": "dune_faith_law"
+      }
+    }
+  },
+  "geographies": {
+    "dune_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "dune_well",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "steppe"
+        },
+        {
+          "id": "dune_flats",
+          "x": 3.1,
+          "y": 2.1,
+          "terrain": "steppe"
+        },
+        {
+          "id": "dune_pass",
+          "x": 4.7,
+          "y": 2.7,
+          "terrain": "steppe"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {
+        "dune_meeting_hall": {
+          "x": 1.5,
+          "y": 1.5
+        }
+      },
+      "defaultLayout": null
+    }
+  },
+  "name": "Synthetic dune legal catalogue",
+  "startScenarios": [
+    {
+      "id": "dune_ordinary_household",
+      "name": "Ordinary household",
+      "desc": "One existing person and their named family.",
+      "intro": "Your household keeps its own home.",
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "fixedProvinceId": "dune_flats",
+      "alwaysUnlocked": true,
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "startAge": 24,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 29,
+      "prestige": 7,
+      "piety": 3,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing named family",
+          "desc": "Keep the original family and its separate homes."
+        }
+      },
+      "tracks": [
+        "dune_existing_track"
+      ]
+    }
+  ],
+  "bookmarks": {
+    "dune_world": {
+      "id": "dune_world",
+      "name": "The Glass Road",
+      "desc": "A fictional three-county authoring world.",
+      "date": {
+        "year": 900,
+        "season": 3,
+        "day": 87
+      },
+      "era": "early_medieval",
+      "geography": "dune_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "stories": [],
+      "provinces": [
+        {
+          "id": "dune_well",
+          "name": "Amber Well",
+          "realm": "dune_house",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 6,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ],
+          "settlements": [
+            {
+              "site": "dune_meeting_hall",
+              "name": "Well Court",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "dune_flats",
+          "name": "Glass Flats",
+          "realm": "dune_house",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 3,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "dune_pass",
+          "name": "Red Gate",
+          "realm": "dune_house",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 3,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "dune_house",
+          "name": "The Ash House",
+          "capital": "dune_well",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "dune_court",
+          "religion": "dune_belief",
+          "culture": "dune_folk",
+          "ruler": {
+            "name": "Maren Ash",
+            "culture": "dune_folk",
+            "born": 860,
+            "sex": "m",
+            "mar": 6,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {
+        "dune_district": {
+          "name": "The Glass Road",
+          "kingdom": "dune_country"
+        }
+      },
+      "kingdoms": {
+        "dune_country": {
+          "name": "Amber Country",
+          "empire": "dune_horizon"
+        }
+      },
+      "empires": {
+        "dune_horizon": {
+          "name": "The Wide Horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "localInstitutions": {},
+      "starts": [
+        "dune_ordinary_household"
+      ],
+      "hidden": false,
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": []
+      }
+    }
+  },
+  "legalTraditions": {
+    "dune_law": {
+      "name": "Dune law",
+      "sentences": [
+        "release",
+        "fine",
+        "imprisonment"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": false,
+        "compensationMaxSeverity": 3,
+        "penanceMaxSeverity": 0
+      },
+      "justification": {
+        "evidence": [
+          "testimony",
+          "redhanded"
+        ]
+      },
+      "ai": {
+        "minor": [
+          "fine"
+        ],
+        "serious": [
+          "imprisonment"
+        ],
+        "severe": [
+          "imprisonment"
+        ],
+        "arbitrary": [
+          "imprisonment"
+        ],
+        "excessive": [
+          "imprisonment"
+        ]
+      }
+    },
+    "dune_faith_law": {
+      "name": "Dune religious procedure",
+      "sentences": [
+        "release",
+        "fine",
+        "imprisonment"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": false,
+        "compensationMaxSeverity": 0,
+        "penanceMaxSeverity": 0
+      },
+      "justification": {
+        "evidence": [
+          "testimony",
+          "redhanded"
+        ]
+      },
+      "ai": {
+        "minor": [
+          "fine"
+        ],
+        "serious": [
+          "imprisonment"
+        ],
+        "severe": [
+          "imprisonment"
+        ],
+        "arbitrary": [
+          "imprisonment"
+        ],
+        "excessive": [
+          "imprisonment"
+        ]
+      }
+    },
+    "dune_culture": {
+      "name": "Dune culture procedure",
+      "sentences": [
+        "release",
+        "fine",
+        "imprisonment"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": false,
+        "compensationMaxSeverity": 1,
+        "penanceMaxSeverity": 0
+      },
+      "justification": {
+        "evidence": [
+          "testimony",
+          "redhanded"
+        ]
+      },
+      "ai": {
+        "minor": [
+          "fine"
+        ],
+        "serious": [
+          "imprisonment"
+        ],
+        "severe": [
+          "imprisonment"
+        ],
+        "arbitrary": [
+          "imprisonment"
+        ],
+        "excessive": [
+          "imprisonment"
+        ]
+      }
+    },
+    "dune_default": {
+      "name": "Dune default procedure",
+      "sentences": [
+        "release",
+        "fine",
+        "imprisonment"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": false,
+        "compensationMaxSeverity": 1,
+        "penanceMaxSeverity": 0
+      },
+      "justification": {
+        "evidence": [
+          "testimony",
+          "redhanded"
+        ]
+      },
+      "ai": {
+        "minor": [
+          "fine"
+        ],
+        "serious": [
+          "imprisonment"
+        ],
+        "severe": [
+          "imprisonment"
+        ],
+        "arbitrary": [
+          "imprisonment"
+        ],
+        "excessive": [
+          "imprisonment"
+        ]
+      }
+    }
+  },
+  "governmentForms": {
+    "dune_court": {
+      "legalTradition": {
+        "default": "dune_default",
+        "cultures": {
+          "dune_folk": "dune_culture"
+        },
+        "realms": {
+          "dune_house": "dune_law"
+        }
+      },
+      "levy": "feudal_levy",
+      "revenue": "demesne_revenue",
+      "council": "royal_council",
+      "diplomacy": "territorial_diplomacy",
+      "holders": "direct",
+      "succession": "dynastic",
+      "territory": "fixed",
+      "consent": "territorial",
+      "ladder": "inherited_ladder",
+      "ai": "roman_offices"
+    }
+  },
+  "storyInstances": {
+    "dune_existing_track": {
+      "id": "dune_existing_track",
+      "type": "household_track",
+      "title": "A family at home",
+      "intro": "Choose ordinary household life.",
+      "homeProvinceId": "dune_flats",
+      "continuity": "household",
+      "initialStage": "review",
+      "stages": {
+        "review": {
+          "name": "Review the household",
+          "text": "Consider your own household.",
+          "choices": [
+            {
+              "id": "stay",
+              "label": "Remain at home",
+              "detail": "Keep your own household without a reward.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "done": {
+          "name": "Review complete",
+          "text": "Your ordinary life continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    }
+  }
+}

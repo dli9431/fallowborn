@@ -1,3 +1,27 @@
+Revision-specific fixed-start faiths
+
+The canonical startIdentity projection selects only startReligion from a finite
+bookmark/revision map on a fixed start. campaignStart resolves saved scenario
+ids against campaignBookmark, including an unstamped baseline. Detached world
+and start validation, start codes, Quick Start, the picker and construction use
+the same projection. Existing-person and principal readers retain original
+bindings; no people or resources are reconstructed. The field is ordinary JSON
+data and carries no compatibility authority. This is an identity preservation
+repair, not a new gameplay capability or technology gate.
+
+Native legal dependencies
+
+legalTraditions is an explicitly supported private source/composition catalogue.
+Its publication uses the ordinary detached legal validator after engine loading.
+Dependency collection follows faith law, government law selectors and governing
+identities through every retained world, then recursively follows jurisdiction
+culture mappings, mixed law and assessor law. Shared legal and government tables
+keep their typed dependencies. A missing reference cannot be synthesized by the
+collector. Conflicting staged legal writes retain the original record and fault
+the contributor; compatible reuse keeps existing identity. Selected-date switches,
+full mod preparation and failed publication retain the existing atomic boundary.
+This is an internal authoring fix without a save or technology change.
+
 Scenic settlement policy
 
 Bookmark province rows optionally declare settlementPolicy as ordinary or
@@ -469,6 +493,8 @@ Autumn 634 Italian ownership and Kent court faith
 Quadrant b assigns Aquileia and Padua to the existing Lombard court owned by b09 at Pavia, retaining imperial Venice and the independent resident presentations. Kent's existing generated court uses Nicene faith while Canterbury and Rochester retain their traditional-faith principal communities and copied shares. Named historical people, other borders and scenery retain their disclosed holds in docs/research/634-bookmark.md. These are fresh-opening corrections through ordinary realm and community fields; the existing composer, ruler initialization and matching save restoration remain authoritative. No new capability, technology dependency or saved field is introduced.
 
 Autumn 634 composition
+
+data/bookmark_634_routes.js stages FBDATA.bookmarkRoutes634 after the four regional inputs. Its detached climate table preserves their exact assignments and northern_temperate fallback; its 22 straits and canonical crossingClasses retain the existing physical crossings. inheritedLandRoutes records the 33 unchanged europe_regional_2 edges and costs for reference checking only, not a bookmark override. The packet adds no county, start, story, capability or saved field and is not yet consumed by the complete composer. Future composition must copy only geography, climate, straits and crossingClasses once, preserving retained revisions and ordinary access/capacity rules. Physical connections assert no historical itinerary, market, garrison or guaranteed passage.
 
 data/bookmark_634.js registers The Early Conquests on europe_regional_2 at year 634, season 2, day 1, with scenery_protected_v1 fresh and baseline retained. It assembles numbered blocks then scenery, rejecting duplicate declarations, missing physical coverage, unresolved courts, invalid capitals and conflicting shared sites or forms before publication. The complete world and 634_opening layouts are detached from regional inputs. The explicit opening, local institution, religious head, story and scripted-history collections contain no inherited historical transaction. Bookmark-level system exclusions override faith and government enables for the reduced institutional opening. Its twenty-two physical sea crossings retain their explicit earlier endpoints and classes.
 
