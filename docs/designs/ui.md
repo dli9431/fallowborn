@@ -4142,3 +4142,7 @@ The optional localPassagePolicies declaration changes only the NPC's choice of c
 Grouped corridor decisions
 
 The existing mobile source sheet enumerates each county receipt and its original outside ruler, finite payment, capacity, duration and pending/active/ended status. Storage envelopes never appear as consenting courts or blanket permission. Accept and Decline confirmations resolve the exact canonical receipt id and display its complete county terms and original outside person. Existing program story reviews disclose the requested counties and separate per-county costs. One current response consumes the shared daily action budget. Actual outside players retain deliberate decisions and the existing keyboard, phone, Back, Escape, Close, disclosure, list-position and focus behavior. No additional navigation flow is introduced.
+
+Mobile command focus after refreshed reviews
+
+When a refreshed mobile command action becomes disabled after confirmation, returning to its list focuses that action’s existing focusable review card. Enabled actions retain button focus. Inputs, disclosures and scroll positions remain retained; the disabled control is never enabled merely to restore focus.

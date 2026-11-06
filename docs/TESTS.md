@@ -850,3 +850,5 @@ The landed command replay reloads the ordinary persisted mod in a fresh page and
 Expedition program import fixtures select the catalogue levy unit for ordinary infantry replacement. Their leaf start helper asserts detached mod validation before applying through the file picker, so malformed declarations report the validation fault instead of a navigation timeout.
 
 The expedition program restore checkpoint compares detached codec-expanded facts structurally, preserving every value and array position while ignoring object insertion order. It compares RNG as the same unsigned 32-bit pattern used by restore and reports differing facts directly.
+
+Expedition supply coverage checks the shared focusable review card after stale confirmation disables replenishment, while retaining the input and expanded Details. Escape from an unchanged review still returns focus to the enabled action button.
