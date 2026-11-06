@@ -1,0 +1,16 @@
+{
+  "name": "Pilgrim household: closed civilian admission",
+  "storyInstances": {
+    "pilgrim_walter_admission_1096": {
+      "id": "pilgrim_walter_admission_1096",
+      "type": "expedition_participation",
+      "title": "Walter: a closed invitation",
+      "intro": "The commander declines civilian requests. Work, home and independently priced solo journeys remain available.",
+      "host": {"kind": "realm_ruler", "realmId": "walter_following_1096"},
+      "termDays": 120,
+      "capacity": 4,
+      "acceptance": "closed",
+      "roles": [{"id": "civilian", "kind": "civilian"}]
+    }
+  }
+}
