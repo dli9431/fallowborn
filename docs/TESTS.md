@@ -866,3 +866,7 @@ The passage-policy restore checkpoints compare the exact unsigned RNG bit patter
 The passage-policy stale-authority case changes the authoritative ruler generation and the corresponding succession record together, so the pending review observes the intended changed incumbent generation.
 
 Mobile confederation coverage validates both the declared following and an independently created mobile court without expedition intent. Both reject an injected program marker while retaining ordinary people, treasury and host invariants.
+
+Hosted-opening imports validate their ordinary declarations before file selection. Both female commander starts use the eligible tier-one household profession, matching the independent command-start examples; their original people, command roles, hosted agreements and public resources remain unchanged.
+
+The hosted-opening overlap preflight reserves the county's actual access capacity. Population initialization can raise an authored baseline to the carrying-capacity floor, so a fixed smaller reservation does not establish exhausted capacity. The check still requires pure planning refusal and atomic initialization rejection.
