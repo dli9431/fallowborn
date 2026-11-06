@@ -1,0 +1,78 @@
+{
+  "name": "Upland civil hearings",
+  "legalTraditions": {
+    "upland_hearing": {
+      "name": "Upland law",
+      "sentences": [
+        "release",
+        "upland_term",
+        "upland_penance",
+        "upland_fine",
+        "execution"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": false,
+        "compensationMaxSeverity": 0,
+        "penanceMaxSeverity": 1
+      },
+      "justification": {
+        "evidence": [
+          "material",
+          "redhanded"
+        ],
+        "sentences": {
+          "upland_term": {
+            "level": 1
+          }
+        }
+      },
+      "ai": {
+        "minor": [
+          "upland_term"
+        ],
+        "serious": [
+          "upland_term"
+        ],
+        "severe": [
+          "upland_term"
+        ],
+        "arbitrary": [
+          "release"
+        ],
+        "excessive": [
+          "upland_term"
+        ]
+      }
+    }
+  },
+  "justiceSentences": {
+    "upland_fine": {
+      "name": "Upland compensation",
+      "desc": "Pay compensation.",
+      "kind": "fine",
+      "level": 1,
+      "penalty": 15
+    },
+    "upland_term": {
+      "name": "Upland detention",
+      "desc": "Serve detention.",
+      "kind": "custody",
+      "level": 2,
+      "penalty": 15,
+      "termDays": 75,
+      "extensionWindow": 15
+    },
+    "upland_penance": {
+      "name": "Upland penance",
+      "desc": "Make penance.",
+      "kind": "penance",
+      "level": 1,
+      "penalty": 15,
+      "pietyCost": 11,
+      "prestigeCost": 4
+    }
+  }
+}

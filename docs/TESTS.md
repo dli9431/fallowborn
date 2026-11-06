@@ -1,3 +1,15 @@
+Autumn 634 core identity coverage
+
+634-identities.spec.js covers scoped local faith availability, exact unchanged
+resident weights and unrelated communities, fresh fixed household starts and
+matching restoration. Pinned predecessor data under fixtures/634-core-identities
+captures the catalogue source at 888853ff545e674c2d917841f9ed7528c7dcbd1b.
+Real JSON imports and genuine saved campaigns cover all three retained revisions,
+including exact people, start identity, population, stories, authority, RNG and
+UID. Public Sasanian intrigue hearings use the declared civil policy while
+religious law remains the existing fallback. These bounded checks do not replace
+owner runtime, historical or device acceptance.
+
 Retained shared definitions and fixed-start identities
 
 retained-shared-identities.spec.js uses two independent fictional native

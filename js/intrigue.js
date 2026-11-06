@@ -335,8 +335,9 @@ window.FB = window.FB || {};
       hearing.context = hearing.context &&
         typeof hearing.context === 'object' && !Array.isArray(hearing.context)
         ? copy(hearing.context) : {};
-      hearing.targetId = hearing.targetId ||
-        hearing.context.characterId || null;
+      if (!Object.prototype.hasOwnProperty.call(hearing, 'targetId')) {
+        hearing.targetId = hearing.context.characterId || null;
+      }
       hearing.accompliceId = liveCharacterId(state, hearing.accompliceId)
         ? hearing.accompliceId : null;
       hearing.severity = FB.clamp(Math.floor(finite(hearing.severity, 1)),
@@ -345,7 +346,7 @@ window.FB = window.FB || {};
       if (!hearing.authority || (hearing.authority !== 'player' &&
           !(state.realms && state.realms[hearing.authority] &&
             state.realms[hearing.authority].alive))) {
-        hearing.authority = FB.playerRealmId(state) || 'player';
+        intrigue.hearing = null;
       }
     }
     if (intrigue.legalCustody &&
@@ -2225,11 +2226,9 @@ window.FB = window.FB || {};
   };
 
   function activeHearing(state, ctx) {
-    var hearing = FB.ensureIntrigue(state).hearing;
-    if (hearing && FB.justiceImportHearing) {
-      FB.justiceImportHearing(state, hearing);
-      return null;
-    }
+    // Legacy conversion belongs to restore, never to a validation/payment query.
+    var hearing = state.intrigue && state.intrigue.hearing;
+    if (FB.justiceImportHearing) return null;
     return hearing && hearing.id === ctx.hearingId &&
       hearing.accusedId === state.player.charId &&
       hearing.accusedGeneration === state.generation ? hearing : null;

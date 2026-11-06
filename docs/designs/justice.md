@@ -1,4 +1,62 @@
+Autumn 634 civil policy
+
+The fresh core_identities_v3 world assigns sasanian_civil_634 to the existing
+Sasanian court's governing identity with elite justice, tolerant treatment and
+equal taxation. Those are bounded simulation settings, not a claim of uniform
+historical practice. The literal policy supplies release, pardon, ransom, fine,
+imprisonment, exile, forfeiture and execution, with arrest/hearing/ransom/pardon
+procedures, compensation severity cap 3 and penance cap 0. Evidence categories
+are testimony, material and redhanded. AI selects fine for minor cases,
+imprisonment for serious or arbitrary cases, and execution for severe or
+excessive cases, subject to ordinary jurisdiction, custody and justification.
+
+Native composition publishes the law only with the complete date. The shared
+justice owner resolves it for public intrigue exposure and hearing responses;
+religious jurisdiction still follows the actor's unchanged faith law. There is
+no culture map claiming separate communal personal laws, new sentence, historical
+tariff or automatic punishment. Earlier world revisions and the existing
+Sasanian faith's sasanian_custom_476 fallback retain their exact meanings.
+Existing justice technology reviews remain applicable; no new capability is added.
+
 # Ruler justice
+
+Public intrigue hearing boundary
+
+Player exposure (`queuePlayerHearing`) and AI exposure (`intrigueAutoSentence`)
+record cases through `justiceExposeScheme`. Neither captures the accused.
+Seasonal justice obtains custody and uses the canonical sentence projection;
+player responses use the same application boundary. Secular hearings therefore
+resolve government and governing-identity law, including personal/mixed-party
+selection, while religious custody retains faith law. Private abduction does
+not grant its captor public authority. The old `intrigueSentenceProjection` is
+a fallback for an environment without the justice module; it is not the public
+sentencing consumer in the shipped classic-script composition.
+
+New pending responses retain a mechanical review of the resolved law, sentence
+definitions, original case, custody and authority scope. Changed terms reject
+before payment, RNG or event receipts, even when the sentence remains available.
+Compensation and penance recheck their procedure limits and resources at the real
+event resolver. Unstamped older pending responses retain their existing live
+validation; restoration never manufactures a review of an earlier proposal.
+Already imposed judgments and terms remain facts, not proposals to reapply.
+The ruler's Review judgment sheet also retains its exact mechanical review,
+including payment and sentence expiry. Confirmation passes that review to the
+canonical application boundary; changed terms return to the retained prisoner
+view without imposing a sentence. Immediate player/AI calls still project and
+apply synchronously through the same policy resolver.
+
+Legacy hearing validity and payment queries are read-only. Conversion occurs
+at restoration, retaining the saved court and explicit victim rather than
+selecting a new court from current residence. Missing or defunct authority
+cannot be replaced by the player's court. Conversion records a case once;
+only existing custody under that court can produce a response, and a closed
+case cannot produce another judgment. No conduct, punishment or payment is
+replayed by conversion. Format, catalogue fingerprints and technology gates
+are unchanged; this is a validation and restoration fix.
+
+`intrigue-legal-policy.spec.js` exercises independent Harbor and Upland ordinary
+JSON policies, real response resolution, seasonal AI, legacy conversion,
+matching saves, stale reviews, private custody and distribution restrictions.
 
 Native legal publication
 

@@ -1,0 +1,12 @@
+{
+  "name":"Bounded civil hearing review",
+  "legalTraditions":{
+    "sasanian_civil_634":{
+      "name":"Local civil review",
+      "sentences":["release","pardon","ransom","fine","imprisonment","exile","forfeiture","execution"],
+      "procedures":{"arrest":true,"hearing":true,"ransom":true,"pardon":true,"compensationMaxSeverity":1,"penanceMaxSeverity":0},
+      "justification":{"evidence":["testimony","material","redhanded"]},
+      "ai":{"minor":["fine"],"serious":["fine"],"severe":["imprisonment"],"arbitrary":["imprisonment"],"excessive":["execution"]}
+    }
+  }
+}

@@ -12463,11 +12463,15 @@ window.FB = window.FB || {};
     option = option || { label:'So it goes.', effects:{} };
     ctx = ctx || {};
     meta = meta || {};
+    if (ev && ev.contextValidator === 'justice_response_valid' &&
+        (!FB.justiceResponseReady || !FB.justiceResponseReady(state, ctx,
+          option.effects && option.effects.custom))) return false;
     if (FB.travelActivityCapstoneValid && !FB.travelActivityCapstoneValid(state, ev, ctx)) return false;
     if (meta.automated && option.manualOnly) return false;
     if (FB.eventOptionStatus) {
       const optionStatus = FB.eventOptionStatus(state, ev, option, ctx);
       if (optionStatus.systemLocked || optionStatus.techLocked || optionStatus.fiscalLocked ||
+          (ev && ['justice_response_valid', 'intrigue_hearing_valid'].indexOf(ev.contextValidator) >= 0 && !optionStatus.ready) ||
           (ev && ev.contextValidator === 'colonus_duty_valid' && !optionStatus.ready) ||
           (ev && ['commons_uprising_valid', 'commons_uprising_local_valid'].indexOf(ev.contextValidator) >= 0 && !optionStatus.ready) ||
           (option.effects &&
