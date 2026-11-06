@@ -506,6 +506,10 @@ Existing explicit tip preferences remain authoritative.
 Save format remains 3. Optional `state.justice` contains `offenses`, arrest
 `cooldowns`, arbitrary-action cooldowns, `exiles`, one stamped player `pending`
 response, a monotonic `nextId`, the last AI season, and one `last` receipt.
+New pending responses also retain `review`, a deterministic mechanical-policy,
+case, custody and authority snapshot. Restore retains that snapshot and discards
+a stale pending proposal rather than rebasing its terms. Older responses without
+the optional snapshot retain live validation; imposed judgments are never replayed.
 Records contain identifiers and numeric terms, never rendered prose. Restore
 repairs invalid/dead records without replaying penalties or rolling sentences.
 Judicial rows in `state.intrigue.captives` add `authority`, `endTurn`, `offenseId`,
@@ -513,7 +517,10 @@ Judicial rows in `state.intrigue.captives` add `authority`, `endTurn`, `offenseI
 abductions retain their existing generation cleanup. Old legal custody and
 campaign-stamped captivity are readable without inventing a captor for an
 ambiguous prison flag. Legacy hearings become cases and require custody before
-a new response event can lead to sentencing. See [justice](justice.md).
+a new response event can lead to sentencing. Conversion preserves the saved
+authority and explicit original victim, rejects a missing/defunct court, and
+does not replay conduct or reopen a closed case. Queries never perform this
+conversion. See [justice](justice.md).
 
 Converted wastelands persist in additive `state.wastelandSettlements`, keyed by
 county id with the founding `culture` and `religion`. Restore reapplies their

@@ -1,0 +1,75 @@
+{
+  "name": "Harbor civil hearings",
+  "legalTraditions": {
+    "harbor_hearing": {
+      "name": "Harbor law",
+      "sentences": [
+        "release",
+        "pardon",
+        "harbor_fine",
+        "harbor_term",
+        "harbor_penance",
+        "execution"
+      ],
+      "procedures": {
+        "arrest": true,
+        "hearing": true,
+        "ransom": false,
+        "pardon": true,
+        "compensationMaxSeverity": 3,
+        "penanceMaxSeverity": 2
+      },
+      "justification": {
+        "evidence": [
+          "testimony",
+          "material",
+          "redhanded"
+        ]
+      },
+      "ai": {
+        "minor": [
+          "harbor_fine"
+        ],
+        "serious": [
+          "harbor_term"
+        ],
+        "severe": [
+          "harbor_term"
+        ],
+        "arbitrary": [
+          "release"
+        ],
+        "excessive": [
+          "harbor_term"
+        ]
+      }
+    }
+  },
+  "justiceSentences": {
+    "harbor_fine": {
+      "name": "Harbor compensation",
+      "desc": "Pay compensation.",
+      "kind": "fine",
+      "level": 1,
+      "penalty": 10
+    },
+    "harbor_term": {
+      "name": "Harbor detention",
+      "desc": "Serve detention.",
+      "kind": "custody",
+      "level": 2,
+      "penalty": 20,
+      "termDays": 120,
+      "extensionWindow": 30
+    },
+    "harbor_penance": {
+      "name": "Harbor penance",
+      "desc": "Make penance.",
+      "kind": "penance",
+      "level": 1,
+      "penalty": 10,
+      "pietyCost": 7,
+      "prestigeCost": 3
+    }
+  }
+}

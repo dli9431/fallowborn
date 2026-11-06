@@ -235,6 +235,12 @@ punishment incurs county-support penalties. Judicial prisoners and cases pass
 to the lawful successor. See [ruler justice](justice.md) for jurisdiction, the
 severity ladder, regional sentences, prisoner expiry, and player response events.
 Legacy hearings no longer execute, depose, fine, or imprison uncaptured people.
+Their validity/payment queries do not convert saved records. Restore converts
+them using the saved authority and explicit original victim; it never selects
+a replacement court from a changed residence. Public player and AI exposure
+both delegate to canonical justice, whose pending responses recheck reviewed
+policy and authority before effects or choice receipts. The faith-only legacy
+sentence projection is not used by the shipped public hearing path.
 
 The regional presentation follows the historical institutions the ladder abstracts:
 [the National Archives on treason](https://www.nationalarchives.gov.uk/whats-on/exhibitions/treason-people-power-plot/)

@@ -295,10 +295,10 @@ for (const scenario of [
       const text = FB.eventText(s, target, ev, 'text', ctx);
       const semantic = FB.textParams(s, target, ev.text, ctx, true);
       const pure = before === JSON.stringify(s) && rng === FB.getRngState();
-      // A definition change after queueing must agree with the committing projection.
+      // Changed reviewed terms invalidate the pending response before commitment.
       FBDATA.justiceSentences[scenario.sentence].termDays = scenario.term + 30;
       const updated = FB.eventText(s, target, ev, 'text', ctx);
-      const applied = FB.fns.justice_submit(s, ctx);
+      const applied = FB.resolveEventOption(s, ev, ev.options.find(function (o) { return o.effects.custom === 'justice_submit'; }), ctx);
       return { queued:queued.pending, text:text, updated:updated, pure:pure,
         label:semantic.sentenceName, applied:applied,
         remaining:FB.justiceCustodyOf(s, target).endTurn - s.turn };
@@ -308,8 +308,8 @@ for (const scenario of [
     expect(result.text).toContain(scenario.existing ? 'add ' + scenario.term + ' days' : scenario.term + '-day prison term');
     expect(result.text).toContain('Release is due in ' + scenario.remaining + ' days.');
     expect(result.text).not.toContain('a year in prison');
-    expect(result.updated).toContain('Release is due in ' + (scenario.remaining + 30) + ' days.');
-    expect(result).toMatchObject({ pure:true, applied:true, remaining:scenario.remaining + 30,
+    expect(result.updated).not.toContain('Release is due in ' + (scenario.remaining + 30) + ' days.');
+    expect(result).toMatchObject({ pure:true, applied:false, remaining:scenario.existing || 90,
       label:{ $data:'justiceSentence', id:scenario.sentence, path:'name' } });
   });
 }
