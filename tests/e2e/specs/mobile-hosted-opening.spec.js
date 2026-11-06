@@ -84,9 +84,9 @@ test('fresh preflight rejects unavailable parties, foreign possession, exhausted
       if(kind==='capacity')s.population.counties[pid].count=100;
       if(kind==='dead'||kind==='captive')FB.bookmarkActor(s,'harbor_host_ruler')[kind]=true;
       if(kind==='late')s.turn=1;
-      // Another saved concession has consumed the remaining local capacity.
+      // Reserve actual capacity; population initialization may raise the authored baseline.
       if(kind==='overlap')s.authority.governments.harbor_upland.mobile={agreements:[{id:'prior_access',kind:'access',
-        status:'active',endTurn:90,countyIds:[pid],capacity:1000}]};
+        status:'active',endTurn:90,countyIds:[pid],capacity:M.accessCapacity(s,pid).capacity}]};
       const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
       const planned=M.hostedAccessPlan(s,[d]);
       try {M.initialize(s,[d]);}catch(error){rejected=true;}
