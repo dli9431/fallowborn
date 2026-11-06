@@ -3,6 +3,7 @@ FB.bookmarkSources.stage({"source":"data/starts_634_rulers.js","bookmarks":["634
    dated agenda source before native source sealing. */
 FBDATA.startScenarios_634_rulers = [
   {id:'umar_634',bookmarkIds:['634'],hidden:true,alwaysUnlocked:true,
+    revisionIdentities:{'634':{core_courts_v4:{startReligion:'medinan_court_634',governmentForm:'medinan_selection_634'}}},
     rulerRealmId:'rashidun_634',governmentForm:'medinan_selection_pf_634',fixedProvinceId:'medina',
     characterName:'Umar',sex:'m',startCulture:'arabic',startReligion:'early_islam_634',
     name:'Umar at Medina',
@@ -13,6 +14,7 @@ FBDATA.startScenarios_634_rulers = [
     tracks:['umar_agenda_634'],trackLocations:{umar_agenda_634:['medina']},onboarding:'ruler',
     intro:'You are Umar at Medina after accession. Review the political mandate already in place and the resources you actually govern. Syrian and Iraqi affairs remain separate choices, with no required conquest.'},
   {id:'heraclius_634',bookmarkIds:['634'],hidden:true,alwaysUnlocked:true,
+    revisionIdentities:{'634':{core_courts_v4:{governmentForm:'administrative_monarchy'}}},
     rulerRealmId:'byzantium_634',governmentForm:'roman_civic',fixedProvinceId:'constantinople',
     characterName:'Heraclius',sex:'m',startCulture:'greek',startReligion:'chalcedonian',
     name:'Heraclius at Constantinople',
@@ -28,8 +30,12 @@ FBDATA.startScenarios_634_rulers = [
   'use strict';
   var source = FBDATA.bookmarkCompositionSources && FBDATA.bookmarkCompositionSources.autumn_634;
   if (!source || !source.input) return;
-  var positions = FB.bookmarkCompositions.captureStarts('autumn_634','rulers',FBDATA.startScenarios_634_rulers);
-  FBDATA.startScenarios_634_rulers.forEach(function (definition) {
+  /* The complete literal companions are unpublished. The current assembler
+     still offers only the exact predecessor starts and real revisions. */
+  var published = JSON.parse(JSON.stringify(FBDATA.startScenarios_634_rulers));
+  published.forEach(function (definition) { delete definition.revisionIdentities; });
+  var positions = FB.bookmarkCompositions.captureStarts('autumn_634','rulers',published);
+  published.forEach(function (definition) {
     source.input.starts.push({definition:JSON.parse(JSON.stringify(definition)),
       locations:[definition.fixedProvinceId],source:'data/starts_634_rulers.js',after:positions[definition.id]});
   });
