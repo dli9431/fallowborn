@@ -852,3 +852,15 @@ Expedition program import fixtures select the catalogue levy unit for ordinary i
 The expedition program restore checkpoint compares detached codec-expanded facts structurally, preserving every value and array position while ignoring object insertion order. It compares RNG as the same unsigned 32-bit pattern used by restore and reports differing facts directly.
 
 Expedition supply coverage checks the shared focusable review card after stale confirmation disables replenishment, while retaining the input and expanded Details. Escape from an unchanged review still returns focus to the enabled action button.
+
+Local passage fixtures validate their ordinary imports before applying. The harbor formation court has no inherited civic-candidacy story or nonexistent civic office; the dune outside court matches its tier-four ruler start. These setup declarations retain both passage-policy revisions and the existing transaction assertions.
+
+The fixed harbor household uses an ordinary costless household track at its declared birthplace, preserving the fixed-place start contract without inventing a civic office on the formation court.
+
+Passage-policy legacy coverage first rejects an unstamped current platform envelope, then selects the actual platform-schema-one envelope for legacy baseline restore. It retains original access provenance and proves that fresh policy is not adopted.
+
+Passage-policy setup reuses the already imported and prepared title through beginBookmarkFromTitle. Its baseline selector must survive until construction; a new navigation would silently reset it to the fresh revision. Baseline cases assert their saved revision before exercising legacy restore.
+
+The passage-policy restore checkpoints compare the exact unsigned RNG bit pattern, matching setRngState normalization. State bytes, UID and strict mobile validation remain unchanged assertions at every checkpoint.
+
+The passage-policy stale-authority case changes the authoritative ruler generation and the corresponding succession record together, so the pending review observes the intended changed incumbent generation.
