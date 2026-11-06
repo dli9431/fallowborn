@@ -864,3 +864,5 @@ Passage-policy setup reuses the already imported and prepared title through begi
 The passage-policy restore checkpoints compare the exact unsigned RNG bit pattern, matching setRngState normalization. State bytes, UID and strict mobile validation remain unchanged assertions at every checkpoint.
 
 The passage-policy stale-authority case changes the authoritative ruler generation and the corresponding succession record together, so the pending review observes the intended changed incumbent generation.
+
+Mobile confederation coverage validates both the declared following and an independently created mobile court without expedition intent. Both reject an injected program marker while retaining ordinary people, treasury and host invariants.
