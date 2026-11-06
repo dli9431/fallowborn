@@ -1,5 +1,47 @@
 Autumn 634 opening
 
+Unpublished core court source
+
+data/bookmark_634_courts.js contains complete Medinan, Eastern Roman and Sasanian
+court declarations for core_courts_v4. This source does not register or offer
+that revision. Its separate bookmarkOpeningActors634 map supplies two generated
+adult principals at Qazvin and Isfahan, with fictional distinct dynasties. The
+Sasanian profile gives them weights 3/2, court-retained revenue 0.75 and levy
+0.7, and explicitly chooses the first as steward of the minor incumbent.
+These are simulation settings, not historical houses, tax rates or a named
+regency. No private estate, standing host or opening governor is supplied.
+
+All three named courts suppress generated spouses and children. The Sasanian
+tree has only the incumbent as its declared founder; no collateral genealogy
+is inferred. The Eastern Roman profile uses ordinary public commissions with
+reaffirmation, salary 4 bounded by a 0.1 source share, no reserved levy share,
+and recognition by the court and actual fiscal/military officeholders. Fees,
+720-day terms and recognition weights are simulation choices. This supplies
+neither mature themes nor a claim about Heraclius's precise itinerary.
+
+The additive medinan_court_634 faith adapter recognizes the caliphal political
+incumbent of rashidun_634 at Medina, subject to adult male eligibility and the
+existing crown_election owner. early_islam_634 retains head:null, and resident
+communities retain their existing faiths. Admission of an eligible non-relative
+does not confer accession, religious office or conversion. No new religious
+powers, named household members or institutions follow from the adapter.
+
+The extracted faith literal is detached into bookmarkCourtReligions634 before
+the existing assembler receives its faith input. The extracted ruler starts
+retain their core_courts_v4 revisionIdentities; the current source pipeline
+receives exact predecessor copies without those unpublished projections.
+Complete assembly consumes the court, direct actors, faith and start records
+together, with a real revision and native retained-catalogue evidence.
+tests/e2e/specs/634-core-courts.spec.js exercises these exact companions through
+ordinary JSON candidate validation and import, canonical initialization,
+adoption and matching restoration in isolated complete review worlds.
+It also covers headless retained openings, source-funded public appointments,
+rejection through the legacy office path and an independent fictional JSON
+minority with a weaker third principal selected as steward. Medinan adoption
+retains its separate public account; Eastern Roman adoption follows the
+existing administrative household-account rule, transferring the original
+cash balance once without creating another treasury.
+
 Scope
 
 The selectable autumn 634 bookmark, The Early Conquests, composes all four date-owned regional sources. Its 33 blocks cover 527 physical anchors, with 506 inhabited county or district presentations, 21 scenery cells and 122 unique courts. The opening is year 634, season 2, day 1 on europe_regional_2, using fresh revision core_identities_v3, retained revisions baseline, scenery_protected_v1 and ordinary_settlement_v2, and settlement layout 634_opening. The seasonal date is a game convention after Umar's accession, not an exact calendar conversion. The date is available in the ordinary picker, start codes and Observe for development review. This visibility does not establish release or runtime acceptance.
