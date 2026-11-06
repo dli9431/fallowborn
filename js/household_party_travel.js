@@ -27,7 +27,7 @@
     }) || Object.keys(s.stories || {}).some(function(sid){
       var r=s.stories[sid],m=FB.stories.get(sid);
       return m && m.declaration && m.declaration.type==='expedition_participation' && r.actorId===id &&
-        (r.locationHeld || ['pending','active','suspended'].indexOf(r.status)>=0);
+        (r.locationHeld || r.roleId && ['pending','active','suspended'].indexOf(r.status)>=0);
     });
   }
   function travel(s,t) {
