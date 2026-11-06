@@ -26,6 +26,28 @@ FBDATA.bookmarkReligions634 = {
       words:{cleric:'Community keeper',landed:'Ruler'},
       roles:{monasticM:'Learner',monasticF:'Learner',priestM:'Community keeper',priestF:'Community keeper'}}
   },
+  chalcedonian_local_634:{
+    name:'Local Chalcedonian community', parent:'chalcedonian', relationToParent:'in_fold',
+    availability:{yearMin:634,bookmarkIds:['634'],
+      consumers:['community','character','start','story','conversion','project']},
+    properties:{head:null,religiousPaths:null,holyWarTradition:null,
+      tournamentTradition:null,raidingTradition:false,legalTradition:'byzantine',
+      marriage:{spouseLimit:{m:1,f:1},divorce:{enabled:false},
+        acceptedRelations:['same','in_fold'],kinship:{siblingRite:null}},
+      words:{cleric:'Community participant',landed:'Ruler'},
+      roles:{monasticM:'Learner',monasticF:'Learner',priestM:'Community participant',priestF:'Community participant'}}
+  },
+  east_syriac_local_634:{
+    name:'Local East Syriac community', parent:'east_syriac', relationToParent:'in_fold',
+    availability:{yearMin:634,bookmarkIds:['634'],
+      consumers:['community','character','start','story','conversion','project']},
+    properties:{head:null,religiousPaths:null,holyWarTradition:null,
+      tournamentTradition:null,raidingTradition:false,legalTradition:'sasanian_custom_476',
+      marriage:{spouseLimit:{m:1,f:1},divorce:{enabled:false},
+        acceptedRelations:['same','in_fold'],kinship:{siblingRite:null}},
+      words:{cleric:'Community participant',landed:'Ruler'},
+      roles:{monasticM:'Learner',monasticF:'Learner',priestM:'Community participant',priestF:'Community participant'}}
+  },
   west_syriac_lay_634:{
     name:'West Syriac lay community', parent:'miaphysite', relationToParent:'in_fold',
     availability:{yearMin:634,bookmarkIds:['634'],
@@ -36,6 +58,21 @@ FBDATA.bookmarkReligions634 = {
       raidingTradition:false,legalTradition:'customary',
       marriage:{spouseLimit:{m:1,f:1},divorce:{enabled:false},
         acceptedRelations:['same','in_fold'],kinship:{siblingRite:null}}}
+  }
+};
+
+/* A limited public-dispute policy, not a recovered code or communal family law.
+   Existing faith law remains unchanged for saved and religious consumers. */
+FBDATA.bookmarkRevisionContent_634_identities = {
+  bookmarkId:'634',revision:'core_identities_v3',
+  legalTraditions:{
+    sasanian_civil_634:{name:'Sasanian civil practice',
+      sentences:['release','pardon','ransom','fine','imprisonment','exile','forfeiture','execution'],
+      procedures:{arrest:true,hearing:true,ransom:true,pardon:true,
+        compensationMaxSeverity:3,penanceMaxSeverity:0},
+      justification:{evidence:['testimony','material','redhanded']},
+      ai:{minor:['fine'],serious:['imprisonment'],severe:['execution'],
+        arbitrary:['imprisonment'],excessive:['execution']}}
   }
 };
 

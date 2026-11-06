@@ -1,3 +1,23 @@
+Autumn 634 civil policy
+
+The fresh core_identities_v3 world assigns sasanian_civil_634 to the existing
+Sasanian court's governing identity with elite justice, tolerant treatment and
+equal taxation. Those are bounded simulation settings, not a claim of uniform
+historical practice. The literal policy supplies release, pardon, ransom, fine,
+imprisonment, exile, forfeiture and execution, with arrest/hearing/ransom/pardon
+procedures, compensation severity cap 3 and penance cap 0. Evidence categories
+are testimony, material and redhanded. AI selects fine for minor cases,
+imprisonment for serious or arbitrary cases, and execution for severe or
+excessive cases, subject to ordinary jurisdiction, custody and justification.
+
+Native composition publishes the law only with the complete date. The shared
+justice owner resolves it for public intrigue exposure and hearing responses;
+religious jurisdiction still follows the actor's unchanged faith law. There is
+no culture map claiming separate communal personal laws, new sentence, historical
+tariff or automatic punishment. Earlier world revisions and the existing
+Sasanian faith's sasanian_custom_476 fallback retain their exact meanings.
+Existing justice technology reviews remain applicable; no new capability is added.
+
 # Ruler justice
 
 Public intrigue hearing boundary

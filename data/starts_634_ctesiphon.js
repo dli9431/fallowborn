@@ -3,6 +3,7 @@ FB.bookmarkSources.stage({"source":"data/starts_634_ctesiphon.js","bookmarks":["
 FBDATA.startScenarios_634_ctesiphon = [
   { id:'ctesiphon_household_634', bookmarkIds:['634'], alwaysUnlocked:true,
     fixedProvinceId:'baghdad', startCulture:'syriac', startReligion:'east_syriac', startAge:24,
+    revisionIdentities:{'634':{core_identities_v3:{startReligion:'east_syriac_local_634'}}},
     name:'Ctesiphon Farming Household',
     desc:'An established Syriac household in the agricultural district around Ctesiphon. Tend a livelihood, consult household records and decide whether to remain.',
     tier:1, profession:'farmer', gold:20, prestige:5, piety:0,

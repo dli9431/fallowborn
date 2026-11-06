@@ -138,9 +138,64 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
     protectedPredecessor.revision = 'scenery_protected_v1';
     current.revisions.ordinary_settlement_v2 = {};
     current.revision = b.revision;
+    var ordinaryPredecessor = copy(current);
+    // Whole-field revision copies preserve all three earlier worlds exactly.
+    var identityRows = copy(b.provinces), identityCourts = copy(b.realms);
+    [['damascus','chalcedonian','chalcedonian_local_634'],
+      ['baghdad','east_syriac','east_syriac_local_634']].forEach(function (binding) {
+      var county = identityRows.find(function (row) { return row.id === binding[0]; });
+      var pair = county && county.communities.find(function (row) {
+        return row.culture === 'syriac' && row.religion === binding[1] && row.populationShare0 > 0;
+      });
+      if (!pair) throw new Error('Missing 634 household resident pair: ' + binding[0]);
+      pair.religion = binding[2];
+    });
+    var sasanianCourt = identityCourts.find(function (row) { return row.id === 'sasanian_634'; });
+    if (!sasanianCourt) throw new Error('Missing 634 Sasanian court');
+    sasanianCourt.governingIdentity = {eliteCultureId:'persian',eliteFaithId:'zoroastrian_sasanian_634',
+      legalIdentityId:'sasanian_civil_634',tolerance:'tolerant',taxation:'equal',justicePolicy:'elite'};
+    b.revisions.core_identities_v3 = {provinces:identityRows,realms:identityCourts};
+    b.revision = 'core_identities_v3';
+    current.revisions.core_identities_v3 = copy(b.revisions.core_identities_v3);
+    current.revision = b.revision;
+    // Complete fixed-start evidence from 888853ff545e674c2d917841f9ed7528c7dcbd1b.
+    // These records certify history only; the later start files still own
+    // publication, ordering and all playable definitions.
+    var historicalStarts = [
+  { id:'ctesiphon_household_634', bookmarkIds:['634'], alwaysUnlocked:true,
+    fixedProvinceId:'baghdad', startCulture:'syriac', startReligion:'east_syriac', startAge:24,
+    name:'Ctesiphon Farming Household',
+    desc:'An established Syriac household in the agricultural district around Ctesiphon. Tend a livelihood, consult household records and decide whether to remain.',
+    tier:1, profession:'farmer', gold:20, prestige:5, piety:0,
+    familyPresets:{ established:{} }, startEffects:{ landPlots:1 },
+    tracks:['ctesiphon_household_track_634','opening_ctesiphon_634'],
+    trackLocations:{ ctesiphon_household_track_634:['baghdad'], opening_ctesiphon_634:['baghdad'] },
+    intro:'You are {name}, a farmer in the Ctesiphon district. Your household belongs to the local Syriac Christian community. Fields, household stores and ordinary obligations shape your days. Open your household story in Deeds to consider the next step.' },
+  { id:'damascus_household_634', bookmarkIds:['634'], alwaysUnlocked:true,
+    fixedProvinceId:'damascus', startCulture:'syriac', startReligion:'chalcedonian', startAge:24,
+    name:'Damascus craft household',
+    desc:'An established Syriac household in the city of Damascus. Practice a craft, consult household records and decide whether to remain.',
+    tier:1, profession:'craftsman', gold:20, prestige:5, piety:0,
+    familyPresets:{ established:{} },
+    tracks:['damascus_household_track_634','opening_damascus_634'],
+    trackLocations:{ damascus_household_track_634:['damascus'], opening_damascus_634:['damascus'] },
+    intro:'You are {name}, a craft worker in Damascus. Your household belongs to the local Syriac Christian community. Craft work, household stores and ordinary obligations shape your days. Open your household story in Deeds to consider the next step.' }
+    ];
+    var sharedDefinitions = {religions:[],legalTraditions:[],startScenarios:[]};
+    ['chalcedonian_local_634','east_syriac_local_634'].forEach(function (id) {
+      sharedDefinitions.religions.push({id:id,predecessor:null,current:copy(FBDATA.bookmarkReligions634[id])});
+    });
+    sharedDefinitions.legalTraditions.push({id:'sasanian_civil_634',predecessor:null,
+      current:copy(FBDATA.bookmarkRevisionContent_634_identities.legalTraditions.sasanian_civil_634)});
+    historicalStarts.forEach(function (definition) {
+      var currentStart = copy(definition);
+      currentStart.revisionIdentities = {'634':{core_identities_v3:{startReligion:
+        definition.id === 'ctesiphon_household_634' ? 'east_syriac_local_634' : 'chalcedonian_local_634'}}};
+      sharedDefinitions.startScenarios.push({id:definition.id,predecessor:copy(definition),current:currentStart});
+    });
     var transition = {
       schema:1,id:'autumn_634_scenery_protected_v1',bookmarkId:'634',retainedRevision:'baseline',
-      predecessor:predecessor,current:current,addedRevisions:['scenery_protected_v1','ordinary_settlement_v2'],bundled:[],
+      sharedDefinitions:sharedDefinitions,predecessor:predecessor,current:current,addedRevisions:['scenery_protected_v1','ordinary_settlement_v2','core_identities_v3'],bundled:[],
       predecessorRoots:{
         "storyPlacements": "efaf53fb34356efd2bee79f73ee412913980b9e4f5a8ba77c1c4f38c2608d043",
         "fortProfiles": "f28c8f17fd196cbf03a4388fe0c759a0d319163f043e30aa6459221cd475eece",
@@ -196,8 +251,14 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
     protectedTransition.id = 'autumn_634_ordinary_settlement_v2';
     protectedTransition.predecessor = protectedPredecessor;
     protectedTransition.retainedRevision = ['baseline','scenery_protected_v1'];
-    protectedTransition.addedRevisions = ['ordinary_settlement_v2'];
+    protectedTransition.addedRevisions = ['ordinary_settlement_v2','core_identities_v3'];
     FB.bookmarkSources.retainCatalogueTransition(protectedTransition);
+    var identityTransition = copy(transition);
+    identityTransition.id = 'autumn_634_core_identities_v3';
+    identityTransition.predecessor = ordinaryPredecessor;
+    identityTransition.retainedRevision = ['baseline','scenery_protected_v1','ordinary_settlement_v2'];
+    identityTransition.addedRevisions = ['core_identities_v3'];
+    FB.bookmarkSources.retainCatalogueTransition(identityTransition);
     // Shared physical declarations are inputs, independent of whether the
     // earlier world that first used them passes its own validation.
     Object.keys(layouts).forEach(function (county) {
@@ -214,7 +275,8 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
     });
     source.input = {id:'autumn_634',source:source.source,bookmark:copy(b),
       catalogs:{settlementLayouts:{'634_opening':layouts},settlementSites:sites,
-        governmentForms:forms,religions:copy(FBDATA.bookmarkReligions634),cultures:copy(FBDATA.bookmarkCultures568)},
+        governmentForms:forms,religions:copy(FBDATA.bookmarkReligions634),cultures:copy(FBDATA.bookmarkCultures568),
+        legalTraditions:copy(FBDATA.bookmarkRevisionContent_634_identities.legalTraditions)},
       availability:availability,
       starts:stagedStarts.map(function (definition) {
         return {definition:copy(definition),locations:inhabited.slice(),source:'data/starts_634_ordinary.js',after:startOrder[definition.id]};

@@ -1,3 +1,29 @@
+Autumn 634 local household identities
+
+The fresh core_identities_v3 world uses chalcedonian_local_634 for the existing
+Syriac Chalcedonian resident pair and craft household in Damascus, and
+east_syriac_local_634 for the existing Syriac East Syriac pair and farming
+household in the Ctesiphon district. Their weights stay 500 and 1000 respectively;
+these are simulation allocations, not a religious census. Other communities and
+the three retained worlds keep their identities. Fixed starts use the ordinary
+revisionIdentities projection without changing scenario ids or saved people.
+
+Both adapters inherit their named parent with in_fold relations, permit only
+634 community, character, start, story, conversion and project consumers from
+year 634 onward, and grant no ruler or institution admission. Heads, specialist
+paths, holy-war and tournament traditions are null; raiding is false. Monogamous
+capacity and disabled optional divorce are bounded household compatibility
+settings. Learner and participant words confer no ordination. The Chalcedonian
+adapter retains byzantine law and the East Syriac adapter sasanian_custom_476 as
+existing game defaults, not reconstructed seventh-century communal codes.
+
+The earlier early_islam_634, zoroastrian_sasanian_634 and west_syriac_lay_634
+definitions remain exact, including their null heads and law defaults. No
+institution, incumbent, religious office or broader community relabeling follows.
+The Sasanian fresh court's separate civil policy is described in justice.md.
+This is bounded dated content using existing capabilities; it adds no technology
+gate or new independently gateable gameplay operation.
+
 # Religions and faith fracture
 
 Staged autumn 634 identities
