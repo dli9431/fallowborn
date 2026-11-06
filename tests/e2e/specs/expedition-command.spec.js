@@ -16,6 +16,9 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 
 async function importWorld(page,info,which,modified) {
   await openGame(page,info);
+  const source=modified || require('../fixtures/authoring/landed-expedition-'+which+'.json');
+  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},source),
+    which+' ordinary import validation').toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(modified ? {name:'landed-command.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(modified))} : path.resolve(__dirname,'../fixtures/authoring/landed-expedition-'+which+'.json'));
@@ -92,16 +95,24 @@ test('a home start with '+(explicit ? 'explicit' : 'ordinary')+' infrastructure 
       characterId:me.id,recipientRealmId:rid,amount:1});
     const saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
     const t=FB.state;
+    const appointmentId=t.bookmarkSetup.appointments.harbor_civil_service.id;
+    const appointments=t.authority.appointments.filter(function (row) {return row.id===appointmentId;});
+    const declared=FB.campaignBookmark(t).opening.appointments.harbor_civil_service;
     return {same:M.leader(t,rid).id===me.id && FB.bookmarkActor(t,'harbor_home_ruler').id===me.id,
       home:FB.realmIdForRulerCharacter(t,me.id),stable:!!t.realms[rid] && !t.realms.harbor_upland,
       land:t.player.provs.length>0 && FB.realmTerritory(t,rid).length===0,
       generation:M.landedLink(t,rid).homeGeneration===FB.realmRulerGeneration(t,'player'),
       originalRef:M.row(t,rid).openingBindings[1].person.realmId==='harbor_upland',funded:funded,duplicate:duplicate,
       privateMoney:t.player.gold===gold-1,publicMoney:FB.treasuryAvailable(t,rid)===publicGold+1,
-      tier:t.player.tier===tier,noFalsePublic:!falsePublic.allowed,valid:M.validate(t)};
+      tier:t.player.tier===tier,noFalsePublic:!falsePublic.allowed,valid:M.validate(t),
+      appointment:appointments.length===1 && appointments[0].institutionId==='player' &&
+        appointments[0].scope.kind==='realm' && appointments[0].scope.id==='player' &&
+        appointments[0].holder.id===FB.bookmarkActor(t,'harbor_civil_officer').id,
+      declaration:declared.realmId==='harbor_upland' && declared.scope.id==='harbor_upland'};
   });
   expect(result).toEqual({same:true,home:'player',stable:true,land:true,generation:true,originalRef:true,
-    funded:true,duplicate:false,privateMoney:true,publicMoney:true,tier:true,noFalsePublic:true,valid:true});
+    funded:true,duplicate:false,privateMoney:true,publicMoney:true,tier:true,noFalsePublic:true,valid:true,
+    appointment:true,declaration:true});
 });
 }
 
@@ -272,16 +283,24 @@ test('saved links are required and strictly pinned while restore preserves unrec
 });
 
 test('the landed home start replays exactly and presents its finite separate command in the shared sheet',async function ({page},info) {
-  await importWorld(page,info,'harbor');await beginHome(page);
+  await importWorld(page,info,'harbor');
+  const uiPreferences=await page.evaluate(function () {return localStorage.getItem('fb_ui');});
+  await beginHome(page);
   async function facts() {return page.evaluate(function () {
     const s=FB.state;return JSON.stringify([s.chars,s.player,s.owner,s.holder,s.bookmarkSetup,s.authority,s.armies,s.stories,
       FB.getRngState()>>>0,FB.getUidCounter()]);
   });}
   const first=await facts();
   await page.evaluate(function () {FB.ui.showMobileConfederation('harbor_following');});
-  await expect(page.locator('#modal')).toContainText('Home office');
-  await expect(page.locator('#modal')).toContainText('90 days remaining');
-  await expect(page.locator('#modal')).toContainText('Public treasury');
-  await page.evaluate(function () {FB.ui.closeModal();FB.ui.showScreen('title');});
+  await expect(page.locator('#genmodal')).toContainText('Home office');
+  await expect(page.locator('#genmodal')).toContainText('90 days remaining');
+  await expect(page.locator('#genmodal')).toContainText('Public treasury');
+  await page.evaluate(function (preferences) {
+    FB.ui.closeModal();
+    if (preferences===null) localStorage.removeItem('fb_ui');
+    else localStorage.setItem('fb_ui',preferences);
+  },uiPreferences);
+  await page.reload({waitUntil:'domcontentloaded'});
+  await prepareGameContent(page);
   await beginHome(page);expect(await facts()).toBe(first);
 });

@@ -190,6 +190,8 @@ At creation the registry attaches the bookmark's world stories in registration o
 
 Declarative opening actors initialize before world-story attachment. Remaining declared appointments submit after the attachment call, when a story has created any deferred host scope. An appointment already submitted by a story is retained by its saved declaration id. This shared boundary lets a bookmark without western_court_476 declare offices through ordinary authority transactions. Restore never invokes opening initialization or repeats an appointment.
 
+Opening appointment submission resolves the existing starting-realm mapping for both general and home-authority calls. If explicit infrastructure has already adopted the home court, the live institution and realm scope use the player alias while the authored appointment keeps its original realm references. Saved validation uses the same mapping; repeated initialization retains the original appointment id.
+
 Saved state
 
 Each attached story keeps one record at state.stories[id]. Records hold semantic ids, statuses and turn stamps, never rendered text. Save validation first checks every id, record shape and required story dependency before invoking a story's validate hook. Missing dependencies name both ids, and malformed legacy situation476 records fail even if state.stories is absent. Valid legacy records migrate through the owning hook; conflicts remain rejected. See state-and-saves.md.

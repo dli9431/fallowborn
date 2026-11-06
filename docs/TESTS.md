@@ -1,5 +1,9 @@
 Deferred title and content readiness
 
+expedition-command.spec.js validates both ordinary JSON fixtures before import so a rejected declaration reports its requirement failure directly. Their home-ruler court ranks match the tier-four start projection; the separate following ranks and private/public resource assertions remain unchanged.
+
+Ordinary and explicit-infrastructure home starts also retain exactly one civil appointment through save/restore, with its live institution and realm scope mapped to the adopted player court and its authored declaration unchanged.
+
 The scenery revision compatibility journeys separate predecessor setup, save/reload, repeat restoration and cross-revision switching. Explicit and inferred forms share one fresh context within each bounded restore or switching test; every form still restores twice or makes its own round trip. Fast content and bundle rejections share setup, while raw-byte and retained-definition changes remain separate. The generic compatibility suite groups pure JSON-forgery probes and the public-root/balance rejections to avoid repeated complete-catalogue boot. Each test still has a fresh browser context, the default timeout and exact state/resource/purity assertions. A bounded canonical-mod-normalization counter proves that a repeated identical compatibility decision performs no predecessor replay, while duplicate and reordered declaration probes preserve fail-closed selection coverage.
 
 634-scenery-revisions.spec.js also pins the protected source at 9315b53a. New scenarios exercise actual commoner and noble settlement in fresh ordinary 634 on standard and CrazyGames, spent-resource restoration, both older 634 revisions and unchanged 476/867 modded campaigns. Two real JSON imports exercise unique predecessor selection, declaration-order independence, duplicate-match rejection after a warm proof, exact state/RNG/UID retention and fresh-page reload. Protected candidate/apply/rejection cases explicitly select the retained protected revision.
@@ -836,3 +840,7 @@ story-placement.spec.js covers story cards placed inside their Deeds sections. I
 Scenery integration repair coverage
 
 634-scenery-revisions.spec.js also creates real persisted-JSON predecessor campaigns in 476 and 867, retains spent resources through the unrelated 634 addition, reloads ordinary re-saves, and rejects missing revisions or changed unrelated definitions after a successful cached proof. bookmark-composition-native.spec.js preserves the frozen source fixtures and checks original-principal publication against candidate stories while the live registry lacks them. Its withheld-476 case verifies native tenure references, strict explicit/detached validation, unknown-id rejection and purity. protected-scenery.spec.js explicitly selects the ordinary retained baseline for its stale-quote transaction scenario. 634-rulers.spec.js keeps ruler starts hidden while recognizing the already selectable date. retained-catalogue-compatibility.spec.js identifies its own declarations by owner instead of assuming no native transitions exist.
+
+The expedition command replay case reads the shared generic sheet at #genmodal for its home office, finite term and public treasury assertions.
+
+The landed command replay reloads the ordinary persisted mod in a fresh page and restores the original UI preference input before repeating its start code. It retains exact generated IDs and the tutorial marker in its comparison instead of comparing different session counters or guidance preferences.
