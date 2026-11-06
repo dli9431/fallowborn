@@ -846,3 +846,7 @@ Scenery integration repair coverage
 The expedition command replay case reads the shared generic sheet at #genmodal for its home office, finite term and public treasury assertions.
 
 The landed command replay reloads the ordinary persisted mod in a fresh page and restores the original UI preference input before repeating its start code. It retains exact generated IDs and the tutorial marker in its comparison instead of comparing different session counters or guidance preferences.
+
+Expedition program import fixtures select the catalogue levy unit for ordinary infantry replacement. Their leaf start helper asserts detached mod validation before applying through the file picker, so malformed declarations report the validation fault instead of a navigation timeout.
+
+The expedition program restore checkpoint compares detached codec-expanded facts structurally, preserving every value and array position while ignoring object insertion order. It compares RNG as the same unsigned 32-bit pattern used by restore and reports differing facts directly.
