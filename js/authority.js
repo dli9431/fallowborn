@@ -927,6 +927,10 @@
   };
   function officeCatalogue(s, rid) {
     var government = Q.government(s, { kind:'realm', id:rid });
+    // Profile-owned commissions use publicAppointmentQuote/publicAppoint,
+    // including their dated catalogue, source, remuneration and continuity.
+    // The legacy petition path cannot grant a commission without those terms.
+    if (FB.administrationProfile && FB.administrationProfile(s, rid)) return [];
     return government && FB.systemEnabled(s, 'roman_offices', { realm:rid })
       ? government.rules.officeCatalogue || [] : [];
   }
@@ -1068,7 +1072,7 @@
       issuer.kind === 'character' && issuer.id === s.player.charId &&
       FB.realmTerritory(s, row.institutionId).indexOf(s.player.provinceId) >= 0 &&
       !(s.player.flags && s.player.flags.in_prison);
-    if (!row || !issuer || !courtActor(s, issuer, row.institutionId) && !petition ||
+    if (!row || row.publicTerms || !issuer || !courtActor(s, issuer, row.institutionId) && !petition ||
         !FB.systemEnabled(s, 'roman_offices', { realm:row.institutionId })) return null;
     var status = officeStatus(s, row), proof = row.recognitionId && recognition(s, row.recognitionId);
     var holderCharacter = row.holder.kind === 'character' && s.chars[row.holder.id];

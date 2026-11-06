@@ -1564,6 +1564,22 @@ window.FB = window.FB || {};
     return id;
   };
 
+  // The source polity may also exist in an earlier world without this office.
+  // Applicability comes from the selected opening's faiths or explicit mapping,
+  // never merely from the shared catalogue or a matching realm id. Keep using
+  // the opening after conversion so a suspended saved binding remains a fact.
+  FB.politicalReligiousOfficeApplies = function (definition, officeId, state) {
+    if (!definition) return false;
+    const mapping = definition.religiousHeads || {};
+    function faithUses(id) {
+      return FB.faithExists(id, state) && FB.faithOfficeId(id, state) === officeId;
+    }
+    return own(mapping, officeId) || Object.keys(mapping).some(faithUses) ||
+      (definition.realms || []).concat(definition.provinces || []).some(function (row) {
+        return faithUses(row.religion);
+      });
+  };
+
   let officeGraph = null, officeDefinitions = null;
   function religiousOfficeDefinitions(state) {
     const graph = compiledFaiths(requestedFaithState(state));
@@ -1589,6 +1605,11 @@ window.FB = window.FB || {};
   function withLocalReligiousOffices(state, definitions) {
     const out = Object.assign({}, definitions), local = FB.localInstitutionDefinitions(state);
     for (const officeId in out) {
+      if (state && out[officeId].head.succession === 'political_incumbent' &&
+          !FB.politicalReligiousOfficeApplies(FB.campaignBookmark(state), officeId, state)) {
+        delete out[officeId];
+        continue;
+      }
       if (out[officeId].head.system && (!FB.systemEnabled || !FB.systemEnabled(state, out[officeId].head.system,
           { faith:out[officeId].religionId,realm:null }))) delete out[officeId];
     }

@@ -8,6 +8,10 @@ Continue, save slots and imported saves enter FB.game.loadData through the defer
 
 Compact validation snapshots
 
+The compact realm codec omits alive:true. Before platform and public-treasury provenance checks, a shallow detached realm view supplies true only when that property is absent. Explicit false remains false, other explicit types reject, and the compact caller remains unchanged. Active preserved treasuries still require an actually live realm and their original unique account, balance and fiscal clocks. This uses the existing wire default without changing the save format.
+
+Ordinary existing-ruler adoption initializes the same minimal household succession record that matching restore expects, while selection-managed, settlement-genealogy and administrative courts retain their own contracts. Fresh opening setup also initializes canonical local-government and feudal-vassal records after adoption and story attachment. Loading a newly created campaign therefore does not become its first household or vassal setup, and does not replay an opening, grant, election or payment.
+
 Platform validation supplies an omitted character id from its existing chars dictionary key in a shallow detached view before running story and named-party validators. Explicit mismatches, null ids, missing people, forged associations and invalid carrier or consent facts still reject. Empty and consented associations and requested, active and ended camp records pass through the same strict validators without replaying initialization, AI decisions, payment, acceptance or travel. The compact input and live state stay unchanged during validation; neither the wire representation nor the save schema changes.
 
 Guarded parties, guarded personal starts and landed expedition links validate original identities from the saved opening actor and character indexes. They accept the codec's omitted character id while rejecting explicit mismatches and missing people. Guard semantic checks use only a shallow view with the omitted id supplied, leaving compact input and live state untouched. No save-version bump, guard release, command formation or resource repair is involved.

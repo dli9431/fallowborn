@@ -1,7 +1,7 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { startParityGame } = require('../support/game/parity');
+const { beginRuler1096 } = require('../support/game/rulers-1096');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
@@ -32,7 +32,7 @@ const openings = [
 ];
 
 async function start(page, info, row) {
-  await startParityGame(page, info, { bookmark:'1096', scenario:row.scenario, declaredOpening:true });
+  await beginRuler1096(page, info, row.scenario);
 }
 
 test('western rulers use ordinary birthplace, Story and start-code gates', async function ({ page }, info) {

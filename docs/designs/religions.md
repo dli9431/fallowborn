@@ -324,6 +324,8 @@ traditional faith under the existing pagan root.
 
 Religious head strategies
 
+An additive political office applies only when the selected bookmark revision declares its faith on a realm or province, or explicitly maps that office or a sharing faith in religiousHeads. The presence of its source polity alone does not opt in another revision. Validation and runtime office resolution use this same opening boundary. Later conversion suspends the original binding rather than changing applicability. Earlier headless revisions gain no pointer or vacancy on initialization, adoption, accession or restore, and their ordinary dynastic repair remains available.
+
 political_incumbent binds a character-held central office to one exact polity's
 existing, living and personally eligible recognized crown_election incumbent.
 head.realm names that source; seat remains presentation geography. The canonical

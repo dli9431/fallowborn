@@ -66,7 +66,7 @@
           !Number.isFinite(row.retirement.gold) || !Number.isFinite(row.retirement.accrued) || row.retirement.accrued < 0)) invalid();
       return true;
     }
-    if (!realm || !realm.alive || !row || holders.length !== 1 || row.version !== 1 ||
+    if (!realm || realm.alive !== true || !row || holders.length !== 1 || row.version !== 1 ||
         row.publicOwnerId !== p.originalRealmId || row.retired !== false || own(row,'retirement') ||
         !Number.isFinite(row.gold) || Math.abs(row.gold) > Number.MAX_SAFE_INTEGER ||
         !Number.isFinite(row.militaryAccrued) || row.militaryAccrued < 0 || row.militaryAccrued > Number.MAX_SAFE_INTEGER ||

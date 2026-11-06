@@ -97,6 +97,18 @@
       chars[id] = Object.assign({}, c, {id:id});
     });
     if (chars) state = Object.assign({}, state, {chars:chars});
+    // A live realm's true flag is omitted by the same wire codec. Supply
+    // only that default before treasury and platform provenance checks;
+    // explicit invalid flags and the caller's compact records stay untouched.
+    var realms = null;
+    Object.keys(state.realms || {}).forEach(function (id) {
+      var r = state.realms[id];
+      if (!plain(r) || own(r, 'alive') && typeof r.alive !== 'boolean') field('state.realms.' + id + '.alive');
+      if (own(r, 'alive')) return;
+      if (!realms) realms = Object.assign({}, state.realms);
+      realms[id] = Object.assign({}, r, {alive:true});
+    });
+    if (realms) state = Object.assign({}, state, {realms:realms});
     // The wire codec omits settlement zero on physical building records.
     // All building validators must see that default, without expanding other
     // saved identities or mutating the caller's compact input.

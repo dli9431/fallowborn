@@ -1,5 +1,7 @@
 Adopted dynastic public treasuries
 
+Compact preflight supplies an omitted realm alive:true only on a detached validation view. An explicit false or malformed live flag cannot satisfy an active treasury's provenance. Both compact and expanded snapshots preserve the original account and private cash through matching restoration, with no wire-version change or opening reserve replay.
+
 An ordinary nonmobile dynastic realm may declare publicTreasury with exactly schema:1. This opts its existing-ruler starting adoption into separate public cash without changing its government, legal property, liege, incumbent, private station or ordinary office eligibility. Omission retains the unified dynastic purse. Elective and delegated institutions retain their existing contracts and cannot declare this option. The effective bookmark revision's complete realm declaration is the owner; ordinary JSON imports use the same pure validator.
 
 The public opening balance is the original realm's existing treasury object, moved once to realms.player.treasury. Explicit-inventory worlds adopt first and initialize that same account once from the final fiscal inventory using the ordinary opening reserve formula. The private opening balance is scenario.gold. No sum is credited twice, no opening cash amount is added to the schema, and an empty public account never falls back to private cash.

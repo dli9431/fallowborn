@@ -2092,10 +2092,7 @@ window.FB = window.FB || {};
       var mapped = Object.keys(mapping).filter(function (id) {
         return id === head.officeId || FB.faithOfficeId(id, null) === head.officeId;
       });
-      var used = source || mapped.length || definition.realms.concat(definition.provinces).some(function (row) {
-        return FB.faithOfficeId(row.religion, null) === head.officeId;
-      });
-      if (!used) return;
+      if (!FB.politicalReligiousOfficeApplies(definition, head.officeId, null)) return;
       function officeFault(detail) { fault('political head ' + head.officeId + ': ' + detail); }
       if (mapped.some(function (id) { return mapping[id] !== mapping[mapped[0]]; }))
         officeFault('shared opening mappings must agree.');
@@ -5053,12 +5050,15 @@ window.FB = window.FB || {};
     state.alliances = state.alliances || [];
     const papalTerritorialIds = FB.religiousHeadRealmIds(state, 'papal_election');
     const politicalSources = {};
-    if (opts.restore && FB.governmentSelection) FB.religionIds(state, false).forEach(function (id) {
-      const head = FB.religionOf(id, state).head;
-      const rid = head && head.succession === 'political_incumbent' &&
-        FB.governmentSelection.officeRealmId(state, head.realm);
-      if (rid) politicalSources[rid] = true;
-    });
+    if (opts.restore && FB.governmentSelection) {
+      const offices = FB.religiousOffices(state);
+      Object.keys(offices).forEach(function (id) {
+        const head = offices[id].head;
+        const rid = head.succession === 'political_incumbent' &&
+          FB.governmentSelection.officeRealmId(state, head.realm);
+        if (rid) politicalSources[rid] = true;
+      });
+    }
     let made = false;
     for (const rid in state.realms) {
       const r = state.realms[rid];

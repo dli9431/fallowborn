@@ -2,7 +2,7 @@
 const path = require('path');
 const {test, expect} = require('../support/fixture');
 const {openGame, prepareGameContent} = require('../support/game/navigation');
-const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle, restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const southern = require('../fixtures/political-religious-head/southern.json');
 const estuary = require('../fixtures/political-religious-head/estuary.json');
@@ -15,12 +15,43 @@ dependsOnRuntime(__filename, ['data/technology.js','data/political_institutions.
   'js/governments.js','js/authority.js','js/politics.js','js/institutions.js',
   'js/mods.js','js/save.js','js/save_v4.js','js/justice.js','js/events.js']);
 
-async function start(page, info, kind, vacancy) {
+function revisionedOffices(mod, world, revision) {
+  const b = mod.bookmarks[world], earlier = {}, faiths = {};
+  Object.keys(mod.religions).forEach(function (id) {
+    const faith = mod.religions[id];
+    if (!faith.properties.head || faith.properties.head.succession !== 'political_incumbent') return;
+    const old = id + '_headless';
+    faiths[id] = old;
+    mod.religions[old] = JSON.parse(JSON.stringify(faith));
+    mod.religions[old].properties.head = null;
+  });
+  earlier.realms = JSON.parse(JSON.stringify(b.realms));
+  earlier.provinces = JSON.parse(JSON.stringify(b.provinces));
+  earlier.religiousHeads = {};
+  function retain(value) {
+    if (!value || typeof value !== 'object') return;
+    if (faiths[value.religion]) value.religion = faiths[value.religion];
+    Object.keys(value).forEach(function (key) { retain(value[key]); });
+  }
+  retain(earlier);
+  earlier.realms.forEach(function (r) {
+    if (mod.governmentForms[r.government]) r.government = 'regnum';
+  });
+  b.revisions = {baseline:earlier, current:{realms:b.realms, provinces:b.provinces, religiousHeads:b.religiousHeads}};
+  b.revision = revision;
+  mod.startScenarios.forEach(function (sc) {
+    sc.revisionIdentities = {};
+    sc.revisionIdentities[world] = {baseline:{startReligion:faiths[sc.startReligion]}};
+  });
+}
+
+async function start(page, info, kind, vacancy, revision) {
   await openGame(page, info);
   await prepareGameContent(page);
   const mod = JSON.parse(JSON.stringify(kind === 'native' ? southern : estuary));
   const world = kind === 'native' ? 'southern_office_world' : 'paired_office_world';
   if (vacancy) mod.bookmarks[world].religiousHeads.southern_office_demo = null;
+  if (revision) revisionedOffices(mod, world, revision);
   if (kind === 'native') {
     await prepareGameContent(page);
     await page.evaluate(function (mod) {
@@ -33,7 +64,7 @@ async function start(page, info, kind, vacancy) {
   } else {
     expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },mod)).toEqual([]);
     await page.evaluate(function () { FB.ui.showMods(); });
-    await page.locator('#modfile').setInputFiles(vacancy ?
+    await page.locator('#modfile').setInputFiles(vacancy || revision ?
       {name:'vacant-offices.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))} :
       path.resolve(__dirname,'../fixtures/political-religious-head/estuary.json'));
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
@@ -100,6 +131,92 @@ async function start(page, info, kind, vacancy) {
         return result;
       }
     };
+  });
+}
+
+for (const kind of ['native','import']) {
+  test(kind+' additive offices leave the same polity headless in retained worlds and repeated restores', async function ({page},info) {
+    await start(page,info,kind,false,'baseline');
+    const source = await page.evaluate(function () {
+      const s=FB.state, b=FB.campaignBookmark(s), before=JSON.stringify([s,FBDATA]),
+        rng=FB.getRngState(), uid=FB.getUidCounter();
+      const ids=FB.religionIds(null,false).filter(function (id) {
+        const h=FB.religionOf(id,null).head;
+        return h && h.succession==='political_incumbent' &&
+          b.realms.some(function (r) { return r.id===h.realm; });
+      });
+      if (!ids.length) throw new Error('The retained control lost its shared political source');
+      const invalid=FB.bookmarkRevisions(b.id).reduce(function (errors,revision) {
+        return errors.concat(FB.validateBookmark(revision));
+      },[]);
+      if (invalid.length) throw new Error(invalid.join('\n'));
+      ids.forEach(function (id) {
+        const head=FB.religionOf(id,null).head;
+        if (FB.religiousOffices(s)[head.officeId] ||
+            Object.prototype.hasOwnProperty.call(s.religiousHeads,head.officeId) ||
+            Object.prototype.hasOwnProperty.call(s.religiousHeadVacancies,head.officeId))
+          throw new Error('An additive office leaked into the retained opening');
+        FB.bindPoliticalReligiousHeads(s,head.realm,true);
+        FB.bindPoliticalReligiousHeads(s,head.realm);
+        if (FB.religiousHeadOf(s,id) || FB.religiousOfficeHolderEligible(s,head.officeId,s.player.charId))
+          throw new Error('A retained court acquired an unrelated office');
+      });
+      if (before!==JSON.stringify([s,FBDATA]) || rng!==FB.getRngState() || uid!==FB.getUidCounter())
+        throw new Error('Office isolation changed retained state or random identity');
+      const visited=[],original=FB.ensureRealmSuccession;
+      FB.ensureRealmSuccession=function (state,rid) { visited.push(rid);return original(state,rid); };
+      try { FB.ensureDynasticState(s,{restore:true}); } finally { FB.ensureRealmSuccession=original; }
+      if (ids.some(function (id) { return visited.indexOf(FB.religionOf(id,null).head.realm)<0; }))
+        throw new Error('An unrelated political office suppressed ordinary court restore');
+      return FB.save.serialize();
+    });
+    // Warm the other revision without changing the saved campaign's identity.
+    await page.evaluate(function () {
+      return new Promise(function (resolve,reject) {
+        FB.activateBookmark(FB.state.start.id,null,function (error) {
+          if (error) reject(error);else resolve();
+        },{revision:'current'});
+      });
+    });
+    for (let round=0;round<2;round++) {
+      await restoreBookmark(page,source);
+      const after=await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
+      const before=JSON.parse(source);
+      for (const key of ['religiousHeads','religiousHeadVacancies','chars','authority','realms','start'])
+        expect(after.state[key],key).toEqual(before.state[key]);
+      expect(after.rng >>> 0).toBe(before.rng >>> 0);
+      expect(after.uid).toBe(before.uid);
+      expect(after.mods).toBe(before.mods);
+    }
+  });
+
+  test(kind+' opted-in revision still binds its incumbent and rejects invalid political sources purely', async function ({page},info) {
+    await start(page,info,kind,false,'current');
+    expect(await page.evaluate(function () {
+      const s=FB.state, b=FB.campaignBookmark(s), holder=officeTest.ruler('southern_court_demo');
+      const bound=officeTest.head('early_office_demo')===holder.id;
+      const rejected=['source','family','seat','faith','explicitVacancy'].map(function (change) {
+        const candidate=JSON.parse(JSON.stringify(b));
+        const r=candidate.realms.find(function (r) { return r.id==='southern_court_demo'; });
+        if (change==='source') {candidate.realms=candidate.realms.filter(function (row) {return row!==r;});}
+        if (change==='family') r.government='regnum';
+        if (change==='seat') candidate.provinces.find(function (p) {return p.id==='southern_seat_demo';}).wasteland=true;
+        if (change==='faith' || change==='explicitVacancy') {
+          r.religion='early_office_demo_headless';
+          candidate.provinces.forEach(function (p) {
+            if(p.religion==='early_office_demo') p.religion='early_office_demo_headless';
+          });
+          candidate.religiousHeads.southern_office_demo=change==='explicitVacancy' ? null : 'southern_court_demo';
+          r.government='regnum';
+        }
+        const before=JSON.stringify([s,FBDATA,candidate]),rng=FB.getRngState(),uid=FB.getUidCounter();
+        return FB.validateBookmark(candidate).length>0 && before===JSON.stringify([s,FBDATA,candidate]) &&
+          rng===FB.getRngState() && uid===FB.getUidCounter();
+      });
+      return {bound:bound,rejected:rejected};
+    })).toEqual({bound:true,rejected:[true,true,true,true,true]});
+    for(let i=0;i<2;i++)
+      expect(await page.evaluate(function () {return officeTest.roundTrip();})).toEqual({ledger:true,rng:true,uid:true,signature:true});
   });
 }
 

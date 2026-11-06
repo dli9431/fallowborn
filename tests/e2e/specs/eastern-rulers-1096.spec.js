@@ -1,7 +1,7 @@
 'use strict';
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {startParityGame} = require('../support/game/parity');
+const {beginRuler1096} = require('../support/game/rulers-1096');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -33,7 +33,7 @@ async function begin(page,info,def) {
   await page.addInitScript(function () {
     document.addEventListener('DOMContentLoaded',function () {
       const adopt = FB.adoptStartingRealm;
-      FB.adoptStartingRealm = function (s,sc) {
+      FB.adoptStartingRealm = function (s,sc,options) {
         try {
           const c = s.chars[s.player.charId], r = s.realms[sc.rulerRealmId];
           window.__easternBeforeAdoption = JSON.parse(JSON.stringify({
@@ -42,12 +42,12 @@ async function begin(page,info,def) {
             owned:Object.keys(s.owner).filter(function (id) {return s.owner[id] === sc.rulerRealmId;}).sort(),
             held:Object.keys(s.holder).filter(function (id) {return s.holder[id] === sc.rulerRealmId;}).sort()
           }));
-          return adopt(s,sc);
+          return adopt(s,sc,options);
         } finally { FB.adoptStartingRealm = adopt; }
       };
     },{once:true});
   });
-  await startParityGame(page,info,{bookmark:'1096',scenario:def.scenario,declaredOpening:true});
+  await beginRuler1096(page,info,def.scenario);
 }
 
 test('eastern starts validate against the actual dated courts and reject mismatched identity purely',async function ({page},info) {
@@ -60,7 +60,7 @@ test('eastern starts validate against the actual dated courts and reject mismatc
     const rejected = FB.mods.validate({name:'Wrong court identity',startScenarios:[invalid]});
     const byz = bm.realms.find(function (r) {return r.id === 'byzantium_1096';});
     const rum = bm.realms.find(function (r) {return r.id === 'rum_1096';});
-    return {errors:FB.validateBookmark(bm),accepted:accepted.errors,rejected:rejected.errors.length > 0,
+    return {errors:FB.validateBookmark(bm),accepted:accepted,rejected:rejected.length > 0,
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter(),
       administration:byz.administrationProfileId,
       family:byz.royalCourt.members.map(function (m) {return [m.id,m.born,m.homeProvinceId];}),
@@ -93,14 +93,19 @@ test('the historical picker offers the two fixed eastern identities and one exis
 for (const def of openings) {
   test(def.scenario + ' adopts one incumbent with the same household, public resources and holdings',async function ({page},info) {
     await begin(page,info,def);
-    const result = await page.evaluate(function (d) {
+    const result = await page.evaluate(async function (d) {
       const s = FB.state, me = s.chars[s.player.charId], before = window.__easternBeforeAdoption;
       const family = (me.childrenIds || []).map(function (id) {const c=s.chars[id];return [c.name,c.born,c.fatherId,c.motherId];});
       const profile = s.stories[d.profile], people = FB.stories.get(d.profile).people(s,profile);
       const contacts = people.map(function (p) {return s.chars[p.characterId].name;});
       const snapshot = JSON.stringify([s.start,s.player,s.owner,s.holder,s.chars,s.stories]);
       const saved = JSON.parse(FB.save.serialize());
-      FB.activateBookmark('867'); FB.save.restore(saved);
+      await new Promise(function (resolve,reject) {
+        FB.activateBookmark('867',null,function (error) {if(error) reject(error);else resolve();});
+      });
+      await new Promise(function (resolve,reject) {
+        if(FB.game.loadData(saved,resolve)===false) reject(new Error('Ruler restore rejected'));
+      });
       const restored = FB.state;
       return {identity:me.id === before.id && me.name === before.name && me.born === before.born,
         household:JSON.stringify([me.spouseId || null,me.childrenIds || []]) === JSON.stringify([before.spouse,before.children]),

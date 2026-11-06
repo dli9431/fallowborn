@@ -1,5 +1,7 @@
 Authored royal courts and succession
 
+Starting adoption of an ordinary crown replaces its compact royal tree with the existing minimal player-household succession record immediately. It preserves the current ruler generation and leaves household heir selection to its canonical owner. Selection-managed courts, retained settlement genealogies and administrative courts keep their distinct records. Fresh opening completion establishes local-government and vassal contracts against the final adopted court, using the same idempotent setup as restore. This adds no succession policy, generated relative, saved field or payment.
+
 An explicitly authored family graph cannot acquire invented children through vacant-line repair. With an empty eligible frontier, the existing fallback creates a fictional parentless court successor, leaving the ruler's declared children and spouse links intact. Later recorded births still join the ordinary genealogy and succession frontier. This corrects fallback family links without adding a policy, saved field, technology gate or historical heir.
 
 Spring 568 first-pass courts

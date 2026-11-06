@@ -10,6 +10,8 @@ const callId='eastern_undertaking_1096', observerId='eastern_undertaking_househo
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1096.js','data/bookmark_1096_campaigns.js',
+  'data/bookmark_1096_mainz.js','data/bookmark_1096_western_expeditions.js','data/bookmark_1096_pilgrim.js',
+  'data/story_western_rulers_1096.js','data/story_pilgrim_1096.js',
   'data/story_household_effects_1096.js','data/story_world_1096.js','data/expeditions_1096.js',
   'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js',
   'data/bookmark_1096_scaffold_c.js','data/bookmark_1096_scaffold_d.js',
@@ -44,7 +46,7 @@ async function historical(page,info) {
   },[callId,observerId]);
 }
 
-test('1096 attaches one current call with no historical expedition, duplicate news or involuntary vow',async function ({page},info) {
+test('1096 attaches one current call beside independent followings without duplicate news or an involuntary vow',async function ({page},info) {
   await historical(page,info);
   const result=await page.evaluate(function () {
     const s=FB.state,C=worldCase,r=s.stories[C.id],c=s.greatHolyWar,b=FB.campaignBookmark(s);
@@ -58,14 +60,21 @@ test('1096 attaches one current call with no historical expedition, duplicate ne
       seeded:r.seededIds,archive:s.greatHolyWarHistory.campaigns,attached:attached,
       repeat:before===JSON.stringify([s.stories,s.greatHolyWar,s.greatHolyWarHistory,s.armies,s.owner,s.chars]),
       second:FB.callGreatHolyWar(s,'catholic','syria','papacy_1096'),
-      historicalHosts:b.realms.filter(function (r) {return !!r.mobile;}).length,
+      historicalHosts:b.realms.filter(function (r) {return !!r.mobile;}).map(function (r) {return r.id;}),
+      retained:{stories:FB.bookmark('1096','baseline').stories,
+        hosts:FB.bookmark('1096','baseline').realms.filter(function (r) {return !!r.mobile;}).length},
       personal:s.player.greatHolyWar || null,local:FB.stories.status(s,C.observer),
       news:FBDATA.storyInstances[C.id].news || null,
       dates:[FBDATA.storyInstances[C.id].firstDate,FBDATA.storyInstances[C.id].lastDate]};
   });
-  expect(result).toEqual({valid:[],stories:[callId,observerId],calls:[callId],linked:true,target:'syria',
+  expect(result).toEqual({valid:[],stories:[callId,observerId,'mainz_refuge_1096',
+    'godfrey_preparation_1096','godfrey_program_1096','raymond_preparation_1096','raymond_program_1096',
+    'bohemond_preparation_1096','bohemond_program_1096','raymond_assurance_1096',
+    'peter_preparation_1096','peter_program_1096','walter_preparation_1096','walter_program_1096'],
+    calls:[callId],linked:true,target:'syria',
     phase:'preparation',sequence:1,seeded:[],archive:[],attached:[],repeat:true,second:false,
-    historicalHosts:0,personal:null,local:null,news:null,
+    historicalHosts:['godfrey_host_1096','raymond_host_1096','bohemond_host_1096','peter_following_1096','walter_following_1096'],
+    retained:{stories:[callId,observerId],hosts:0},personal:null,local:null,news:null,
     dates:[{year:1096,season:0,day:1},{year:1096,season:0,day:90}]});
 });
 
