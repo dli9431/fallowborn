@@ -1,0 +1,48 @@
+{
+  "name": "estuary fixed faith projections",
+  "startScenarios": [
+    {
+      "id": "estuary_farmer",
+      "name": "River farmer",
+      "desc": "A household near the river.",
+      "intro": "The household tends the river fields.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 600,
+      "prestige": 80,
+      "piety": 0,
+      "startCulture": "norse",
+      "startReligion": "estuary_reformed",
+      "bookmarkIds": [
+        "estuary_world"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 26,
+      "familyPresets": {
+        "standard": {
+          "name": "River household",
+          "diff": "age 26"
+        }
+      },
+      "fixedProvinceId": "estuary_home",
+      "tracks": [
+        "estuary_household"
+      ],
+      "trackLocations": {
+        "estuary_household": [
+          "estuary_home"
+        ]
+      },
+      "revisionIdentities": {
+        "estuary_world": {
+          "baseline": {
+            "startReligion": "estuary_custom"
+          }
+        }
+      }
+    }
+  ]
+}

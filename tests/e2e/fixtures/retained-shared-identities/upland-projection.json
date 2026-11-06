@@ -1,0 +1,57 @@
+{
+  "name": "upland fixed faith projections",
+  "startScenarios": [
+    {
+      "id": "upland_craftsman",
+      "name": "Hill craftsman",
+      "desc": "A household at the market.",
+      "intro": "The workshop opens beside the hill road.",
+      "tier": 1,
+      "profession": "craftsman",
+      "gold": 850,
+      "prestige": 120,
+      "piety": 4,
+      "startCulture": "english",
+      "startReligion": "upland_reformed",
+      "bookmarkIds": [
+        "upland_world"
+      ],
+      "eras": [
+        "high_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 34,
+      "familyPresets": {
+        "standard": {
+          "name": "Market household",
+          "diff": "age 34"
+        }
+      },
+      "fixedProvinceId": "upland_market",
+      "tracks": [
+        "upland_household"
+      ],
+      "trackLocations": {
+        "upland_household": [
+          "upland_market"
+        ]
+      },
+      "revisionIdentities": {
+        "upland_world": {
+          "baseline": {
+            "startReligion": "upland_custom"
+          },
+          "charters_v1": {
+            "startReligion": "upland_custom"
+          },
+          "protected_v1": {
+            "startReligion": "upland_custom"
+          },
+          "ordinary_v2": {
+            "startReligion": "upland_custom"
+          }
+        }
+      }
+    }
+  ]
+}

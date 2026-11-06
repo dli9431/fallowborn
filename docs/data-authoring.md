@@ -1,3 +1,13 @@
+Retained shared identity authoring
+
+Use revisionIdentities only for the fixed start's faith in explicitly named
+bookmark revisions. Keep other start fields stable. Trusted transitions may
+supply bounded sharedDefinitions evidence for new faith/law ids and the complete
+old/current start definitions. Existing shared ids cannot change meaning. Keep
+genuine predecessor evidence; never infer old records from the current table.
+Ordinary JSON supports start projection but grants no compatibility authority.
+See docs/MODDING.md for the exact fields and limits.
+
 AI decision authoring
 
 aiDecisionPolicies composes live supported preferences through complete whole-record definitions and the ordinary Mods file path. The independent ai-decisions-conservative.json and ai-decisions-expansion.json examples select all nine families: war/frontier, investment, research, intrigue, diplomacy, religion and government-scoped tactics/government willingness. They include investment trait/aim coefficients, tactical dispositions and aim-specific frontier orders. Exact schema is in docs/MODDING.md; docs/research/ai-decision-acceptance.md records every live field owner, unsupported algorithm boundaries, matching-save compatibility, neutral RNG requirements and owner acceptance commands. JSON never supplies authority, resources, executable strategies or a new scheduler.
@@ -62,7 +72,8 @@ Keep complete predecessor/current definitions, pinned predecessorRoots from
 the complete trusted predecessor baseline, the explicitly supported retained
 revision, enumerated added revisions and exact supported bundled payloads. Only
 add revisions and change the fresh revision pointer; preserve authored root
-fields, every older raw/effective revision and all shared definitions. Capture
+fields and every older raw/effective revision. Shared differences require the
+explicit bounded sharedDefinitions evidence documented above. Capture
 the trusted predecessor directly; never infer history from unknown revisions or
 from a saved signature. Ordinary JSON remains ordinary content and cannot
 authorize compatibility, provide signature allowlists or install callbacks.

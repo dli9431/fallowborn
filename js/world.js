@@ -1574,6 +1574,7 @@ window.FB = window.FB || {};
   }
 
   function startRequirements(start, context, siblings) {
+    start = FB.startIdentity(start, context.definition);
     var definition = context.definition, platform = context.platform, stories = context.stories;
     var provinces = context.provinces, realms = context.realms, forms = context.forms;
     var errors = context.errors, fault = context.fault, list = context.list;
@@ -1649,6 +1650,7 @@ window.FB = window.FB || {};
      exhaustive gate below still aggregates all starts, in its prior order.
      Callers must separately validate the world and imported record schema. */
   function startRequirementReport(start, definition, platform, storyContext, runtimeOnly, shared) {
+    start = FB.startIdentity(start, definition);
     var report = {bookmarkId:definition && definition.id || null, revision:null,
       startId:start && start.id || null, matches:false, applicable:false, valid:false,
       selectorFaults:[], policyFaults:[], policyShapeFaults:[], faults:[]};

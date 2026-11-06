@@ -1,0 +1,350 @@
+{
+  "retainedRevision": "baseline",
+  "bookmark": {
+    "id": "estuary_world",
+    "name": "The Estuary",
+    "desc": "A fictional river mouth.",
+    "hidden": false,
+    "date": {
+      "year": 912,
+      "season": 1,
+      "day": 1
+    },
+    "era": "early_medieval",
+    "geography": "estuary_land",
+    "settlementLayout": null,
+    "religiousHeads": {},
+    "greatHolyWars": false,
+    "starts": [
+      "estuary_farmer"
+    ],
+    "stories": [],
+    "startLocations": {
+      "estuary_farmer": [
+        "estuary_home"
+      ]
+    },
+    "provinces": [
+      {
+        "id": "estuary_home",
+        "name": "River Fields",
+        "realm": "estuary_court",
+        "culture": "norse",
+        "religion": "estuary_custom",
+        "dev": 4
+      },
+      {
+        "id": "estuary_port",
+        "name": "Reed Landing",
+        "realm": "estuary_court",
+        "culture": "norse",
+        "religion": "estuary_custom",
+        "dev": 6
+      },
+      {
+        "id": "estuary_marsh",
+        "name": "Outer Marsh",
+        "wasteland": true
+      },
+      {
+        "id": "estuary_dunes",
+        "name": "Sand Hills",
+        "wasteland": true
+      }
+    ],
+    "realms": [
+      {
+        "id": "estuary_court",
+        "name": "River Court",
+        "color": "#667744",
+        "capital": "estuary_home",
+        "rank": 3,
+        "religion": "estuary_custom"
+      }
+    ],
+    "duchies": {},
+    "kingdoms": {},
+    "empires": {},
+    "straits": [],
+    "scripted": []
+  },
+  "catalogs": {
+    "religions": {
+      "estuary_custom": {
+        "name": "River custom",
+        "parent": "norse_pagan",
+        "availability": {},
+        "properties": {
+          "head": null,
+          "legalTradition": "customary"
+        }
+      }
+    },
+    "geographies": {
+      "estuary_land": {
+        "bounds": {
+          "lonMin": 0,
+          "lonMax": 6,
+          "latMin": 0,
+          "latMax": 6
+        },
+        "land": [
+          [
+            0.1,
+            0.1,
+            5.9,
+            0.1,
+            5.9,
+            5.9,
+            0.1,
+            5.9
+          ]
+        ],
+        "seas": [],
+        "rivers": [],
+        "gridWidth": 160,
+        "defaultLayout": null,
+        "provinces": [
+          {
+            "id": "estuary_home",
+            "x": 1.5,
+            "y": 1.5,
+            "terrain": "farmland"
+          },
+          {
+            "id": "estuary_port",
+            "x": 4.5,
+            "y": 1.5,
+            "terrain": "farmland"
+          },
+          {
+            "id": "estuary_marsh",
+            "x": 1.5,
+            "y": 4.5,
+            "terrain": "marsh"
+          },
+          {
+            "id": "estuary_dunes",
+            "x": 4.5,
+            "y": 4.5,
+            "terrain": "hills"
+          }
+        ]
+      }
+    }
+  },
+  "start": {
+    "id": "estuary_farmer",
+    "name": "River farmer",
+    "desc": "A household near the river.",
+    "intro": "The household tends the river fields.",
+    "tier": 1,
+    "profession": "farmer",
+    "gold": 600,
+    "prestige": 80,
+    "piety": 0,
+    "startCulture": "norse",
+    "startReligion": "estuary_custom",
+    "bookmarkIds": [
+      "estuary_world"
+    ],
+    "eras": [
+      "early_medieval"
+    ],
+    "alwaysUnlocked": true,
+    "startAge": 26,
+    "familyPresets": {
+      "standard": {
+        "name": "River household",
+        "diff": "age 26"
+      }
+    },
+    "fixedProvinceId": "estuary_home",
+    "tracks": [
+      "estuary_household"
+    ],
+    "trackLocations": {
+      "estuary_household": [
+        "estuary_home"
+      ]
+    }
+  },
+  "addedRevision": "tidal_v2",
+  "fresh": {
+    "balance": {
+      "levyPerDev": 62
+    },
+    "provinces": [
+      {
+        "id": "estuary_home",
+        "name": "River Fields",
+        "realm": "estuary_court",
+        "culture": "norse",
+        "religion": "estuary_reformed",
+        "dev": 4
+      },
+      {
+        "id": "estuary_port",
+        "name": "Reed Landing",
+        "realm": "estuary_court",
+        "culture": "norse",
+        "religion": "estuary_custom",
+        "dev": 6
+      },
+      {
+        "id": "estuary_marsh",
+        "name": "Outer Marsh",
+        "wasteland": true,
+        "settlementPolicy": "protected"
+      },
+      {
+        "id": "estuary_dunes",
+        "name": "Sand Hills",
+        "wasteland": true,
+        "settlementPolicy": "protected"
+      }
+    ]
+  },
+  "bundled": [
+    {
+      "id": "estuary_bundle",
+      "data": {
+        "balance": {
+          "levyPerDev": 71
+        }
+      }
+    },
+    {
+      "id": "estuary_second",
+      "data": {
+        "balance": {
+          "levyPerDev": 73
+        }
+      }
+    }
+  ],
+  "story": {
+    "id": "estuary_household",
+    "type": "household_track",
+    "title": "Household plans",
+    "intro": "A household keeps its own plans.",
+    "homeProvinceId": "estuary_home",
+    "continuity": "household",
+    "initialStage": "home",
+    "stages": {
+      "home": {
+        "name": "At home",
+        "text": "The household continues its work.",
+        "terminal": true,
+        "choices": [],
+        "transitions": []
+      }
+    }
+  },
+  "currentCatalogs": {
+    "religions": {
+      "estuary_reformed": {
+        "name": "River observance",
+        "parent": "estuary_custom",
+        "availability": {},
+        "properties": {
+          "head": null,
+          "legalTradition": "estuary_civil"
+        }
+      }
+    },
+    "legalTraditions": {
+      "estuary_civil": {
+        "name": "River law",
+        "sentences": [
+          "release",
+          "pardon",
+          "ransom",
+          "fine",
+          "imprisonment",
+          "exile",
+          "forfeiture",
+          "execution"
+        ],
+        "procedures": {
+          "arrest": true,
+          "hearing": true,
+          "ransom": true,
+          "pardon": true,
+          "compensationMaxSeverity": 2,
+          "penanceMaxSeverity": 0
+        },
+        "justification": {
+          "evidence": [
+            "testimony",
+            "material",
+            "redhanded"
+          ]
+        },
+        "ai": {
+          "minor": [
+            "fine"
+          ],
+          "serious": [
+            "imprisonment"
+          ],
+          "severe": [
+            "execution"
+          ],
+          "arbitrary": [
+            "imprisonment"
+          ],
+          "excessive": [
+            "execution"
+          ]
+        }
+      }
+    }
+  },
+  "currentStart": {
+    "id": "estuary_farmer",
+    "name": "River farmer",
+    "desc": "A household near the river.",
+    "intro": "The household tends the river fields.",
+    "tier": 1,
+    "profession": "farmer",
+    "gold": 600,
+    "prestige": 80,
+    "piety": 0,
+    "startCulture": "norse",
+    "startReligion": "estuary_reformed",
+    "bookmarkIds": [
+      "estuary_world"
+    ],
+    "eras": [
+      "early_medieval"
+    ],
+    "alwaysUnlocked": true,
+    "startAge": 26,
+    "familyPresets": {
+      "standard": {
+        "name": "River household",
+        "diff": "age 26"
+      }
+    },
+    "fixedProvinceId": "estuary_home",
+    "tracks": [
+      "estuary_household"
+    ],
+    "trackLocations": {
+      "estuary_household": [
+        "estuary_home"
+      ]
+    },
+    "revisionIdentities": {
+      "estuary_world": {
+        "baseline": {
+          "startReligion": "estuary_custom"
+        }
+      }
+    }
+  },
+  "supportedRevisions": [
+    "baseline"
+  ]
+}

@@ -1,3 +1,14 @@
+Revision-specific fixed-start faiths
+
+The canonical startIdentity projection selects only startReligion from a finite
+bookmark/revision map on a fixed start. campaignStart resolves saved scenario
+ids against campaignBookmark, including an unstamped baseline. Detached world
+and start validation, start codes, Quick Start, the picker and construction use
+the same projection. Existing-person and principal readers retain original
+bindings; no people or resources are reconstructed. The field is ordinary JSON
+data and carries no compatibility authority. This is an identity preservation
+repair, not a new gameplay capability or technology gate.
+
 Native legal dependencies
 
 legalTraditions is an explicitly supported private source/composition catalogue.

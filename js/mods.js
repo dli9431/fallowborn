@@ -315,7 +315,9 @@ window.FBMODS = window.FBMODS || [];
   }
   function validateTransition(row) {
     transitionData(row);
-    transitionFields(row,['schema','id','bookmarkId','retainedRevision','predecessor','current','predecessorRoots','addedRevisions','bundled'],'declaration.fields');
+    var fields = ['schema','id','bookmarkId','retainedRevision','predecessor','current','predecessorRoots','addedRevisions','bundled'];
+    if (own(row,'sharedDefinitions')) fields.push('sharedDefinitions');
+    transitionFields(row,fields,'declaration.fields');
     transitionFields(row.predecessorRoots,authoringRoots,'declaration.predecessorRoots');
     authoringRoots.forEach(function (key) {
       if (row.predecessorRoots[key] !== null && (typeof row.predecessorRoots[key] !== 'string' || !/^[a-f0-9]{64}$/.test(row.predecessorRoots[key])))
@@ -340,6 +342,52 @@ window.FBMODS = window.FBMODS || [];
     if (!plainObject(row.predecessor) || !plainObject(row.current) || row.predecessor.id !== row.bookmarkId || row.current.id !== row.bookmarkId)
       transitionFault('declaration.bookmarkId');
     transitionWorlds(row.predecessor,row.current,row);
+    if (own(row,'sharedDefinitions')) {
+      transitionFields(row.sharedDefinitions,['religions','legalTraditions','startScenarios'],'declaration.sharedDefinitions');
+      var count = 0;
+      Object.keys(row.sharedDefinitions).forEach(function (root) {
+        var records = row.sharedDefinitions[root];
+        if (!Array.isArray(records) || records.length > 32) transitionFault('declaration.sharedDefinitions.limits');
+        records.forEach(function (record,i) {
+          if (++count > 64) transitionFault('declaration.sharedDefinitions.limits');
+          transitionFields(record,['id','predecessor','current'],'declaration.sharedDefinitions.' + root);
+          if (typeof record.id !== 'string' || !/^[a-z][a-z0-9_]{0,99}$/.test(record.id) ||
+              records.some(function (other,j) { return j < i && other.id === record.id; }) ||
+              !plainObject(record.current)) transitionFault('declaration.sharedDefinitions.' + root);
+          // Shared definitions used by saved actors cannot be replaced. New
+          // identities are explicit additions, with absence as old evidence.
+          if (root !== 'startScenarios') {
+            if (record.predecessor !== null) transitionFault('declaration.sharedDefinitions.addition');
+          } else {
+            if (!plainObject(record.predecessor) || record.predecessor.id !== record.id || record.current.id !== record.id ||
+                !record.predecessor.fixedProvinceId || !record.current.fixedProvinceId ||
+                !sameDefinition(record.predecessor.bookmarkIds,[row.bookmarkId]) ||
+                !sameDefinition(record.current.bookmarkIds,[row.bookmarkId])) transitionFault('declaration.sharedDefinitions.start');
+            FB.bookmarkRevisions(row.bookmarkId,row.predecessor).forEach(function (world) {
+              if (!sameDefinition(FB.startIdentity(record.predecessor,world),FB.startIdentity(record.current,world)))
+                transitionFault('declaration.sharedDefinitions.startIdentity');
+            });
+          }
+        });
+      });
+    }
+  }
+  function historicalDefinitions(catalogue,row,checkCurrent) {
+    var result = Object.assign({},catalogue);
+    Object.keys(row.sharedDefinitions || {}).forEach(function (root) {
+      var records = row.sharedDefinitions[root];
+      result[root] = root === 'startScenarios' ? catalogue[root].slice() : Object.assign({},catalogue[root]);
+      records.forEach(function (record) {
+        var index = root === 'startScenarios' ? result[root].findIndex(function (start) { return start.id === record.id; }) : -1;
+        var actual = root === 'startScenarios' ? result[root][index] : result[root][record.id];
+        if (checkCurrent && !sameDefinition(actual,record.current)) transitionFault('declaration.sharedDefinitions.current.' + root + '.' + record.id);
+        if (root === 'startScenarios') {
+          if (index < 0) transitionFault('declaration.sharedDefinitions.start');
+          result[root][index] = record.predecessor;
+        } else delete result[root][record.id];
+      });
+    });
+    return result;
   }
   function replayCatalogue(base, stored, bundles) {
     var live = FBDATA, roots = Object.create(null);
@@ -495,13 +543,33 @@ window.FBMODS = window.FBMODS || [];
             ? JSON.stringify(expectedRoot) === JSON.stringify(liveRoot) : sameDefinition(expectedRoot,liveRoot);
           if (activationAliases.indexOf(key) < 0 && !equal) transitionFault('catalogue.live.' + key);
         });
-        var predecessor = Object.assign({},baseCatalogues,{bookmarks:Object.assign({},baseCatalogues.bookmarks)});
+        var predecessor = historicalDefinitions(baseCatalogues,row,true);
+        predecessor.bookmarks = Object.assign({},baseCatalogues.bookmarks);
         predecessor.bookmarks[row.bookmarkId] = row.predecessor;
         predecessor = replayCatalogue(predecessor,stored,bundles);
+        // The installed current side already includes the same ordered replay.
+        // A mod may replace a start, but may not erase its retained meaning.
+        var historicalCurrent = historicalDefinitions(current,row,false);
+        Object.keys(row.sharedDefinitions || {}).forEach(function (root) {
+          row.sharedDefinitions[root].forEach(function (record) {
+            if (root !== 'startScenarios') {
+              if (own(predecessor.all[root],record.id)) transitionFault('catalogue.sharedDefinitions.predecessor.' + root);
+              return;
+            }
+            var oldStart = predecessor.all.startScenarios.find(function (start) { return start.id === record.id; });
+            var newStart = current.startScenarios.find(function (start) { return start.id === record.id; });
+            FB.bookmarkRevisions(row.bookmarkId,predecessor.all.bookmarks[row.bookmarkId]).forEach(function (world) {
+              if (!sameDefinition(FB.startIdentity(oldStart,world),FB.startIdentity(newStart,world)))
+                transitionFault('catalogue.sharedDefinitions.startIdentity');
+            });
+            var index = historicalCurrent.startScenarios.findIndex(function (start) { return start.id === record.id; });
+            historicalCurrent.startScenarios[index] = oldStart;
+          });
+        });
         transitionWorlds(predecessor.all.bookmarks[row.bookmarkId],current.bookmarks[row.bookmarkId],row);
         if (!sameDefinition(savedWorld(predecessor.all),savedWorld(current))) transitionFault('bookmark.savedRevision');
         var oldRoots = Object.assign({},predecessor.all,{bookmarks:Object.assign({},predecessor.all.bookmarks)});
-        var newRoots = Object.assign({},current,{bookmarks:Object.assign({},current.bookmarks)});
+        var newRoots = Object.assign({},historicalCurrent,{bookmarks:Object.assign({},current.bookmarks)});
         delete oldRoots.bookmarks[row.bookmarkId]; delete newRoots.bookmarks[row.bookmarkId];
         var rootKeys = Object.keys(oldRoots);
         Object.keys(newRoots).forEach(function (key) { if (rootKeys.indexOf(key) < 0) rootKeys.push(key); });
@@ -1045,6 +1113,42 @@ window.FBMODS = window.FBMODS || [];
      offered, its fixed birthplace and identity, its family shapes and its
      player-track stories. */
   function validateStartRules(scenario, rules, path, stories, runtimeWorld) {
+    if (own(scenario,'revisionIdentities')) {
+      const identities = scenario.revisionIdentities;
+      if (!scenario.fixedProvinceId || typeof scenario.startReligion !== 'string' || !own(rules.religions,scenario.startReligion) ||
+          !Array.isArray(scenario.bookmarkIds) || !plainObject(identities) ||
+          !Object.keys(identities).length || Object.keys(identities).length > 16)
+        fail(path + '.revisionIdentities','needs a fixed start and a bounded bookmark map.');
+      let count = 0;
+      Object.keys(identities).forEach(function (id) {
+        const rows = identities[id], raw = rules.bookmarks[id];
+        if (scenario.bookmarkIds.indexOf(id) < 0 || !raw || !plainObject(rows) || !Object.keys(rows).length)
+          fail(path + '.revisionIdentities','names an unknown or foreign bookmark.');
+        const worlds = FB.bookmarkRevisions(id,raw);
+        Object.keys(rows).forEach(function (revision) {
+          if (++count > 32 || !worlds.some(function (world) { return (world.revision || 'baseline') === revision; }))
+            fail(path + '.revisionIdentities','names an unknown revision or exceeds 32 records.');
+          onlyFields(rows[revision],{startReligion:true},path + '.revisionIdentities.' + id + '.' + revision);
+          if (!own(rows[revision],'startReligion') || typeof rows[revision].startReligion !== 'string' ||
+              !own(rules.religions,rows[revision].startReligion))
+            fail(path + '.revisionIdentities','needs a known startReligion.');
+        });
+      });
+      scenario.bookmarkIds.forEach(function (id) {
+        if (!rules.bookmarks[id]) fail(path + '.bookmarkIds','names an unknown bookmark.');
+        const all = runtimeWorld ? (runtimeWorld.id === id ? [runtimeWorld] : []) : FB.bookmarkRevisions(id,rules.bookmarks[id]);
+        const worlds = all.filter(function (world) { return !Array.isArray(world.starts) || world.starts.indexOf(scenario.id) >= 0; });
+        // Withheld starts still need the same fresh-world schema check as
+        // ordinary starts; exclusion cannot hide malformed identity rules.
+        if (!worlds.length && all.length) worlds.push(all.find(function (world) {
+          return (world.revision || 'baseline') === (rules.bookmarks[id].revision || 'baseline');
+        }) || all[0]);
+        worlds.forEach(function (world) {
+          validateStartRules(FB.startIdentity(scenario,world),rules,path,stories,world);
+        });
+      });
+      return;
+    }
     function freshBookmark(id) {
       if (runtimeWorld && runtimeWorld.id === id) return runtimeWorld;
       var raw = rules.bookmarks[id];
@@ -1307,7 +1411,7 @@ window.FBMODS = window.FBMODS || [];
         intro:true, intro_f:true, intro_muslim:true, intro_other:true,
         startEffects:true, bookmarkIds:true, eras:true, alwaysUnlocked:true,
         fixedProvinceId:true, startAge:true, startCulture:true,
-        startReligion:true, familyPresets:true, tracks:true, trackLocations:true, hidden:true,
+        startReligion:true, revisionIdentities:true, familyPresets:true, tracks:true, trackLocations:true, hidden:true,
         rulerRealmId:true, existingPerson:true, originalPrincipal:true, governmentForm:true, characterName:true, onboarding:true, requirements:true,
         system:true, systems:true, birthplaces:true
       }, path);
@@ -2468,7 +2572,7 @@ window.FBMODS = window.FBMODS || [];
       if (row.distributionDefault !== undefined && typeof row.distributionDefault !== 'boolean') fail(path + '.distributionDefault', 'must be boolean.');
       if (row.firstDeedTip !== undefined) requiredText(row.firstDeedTip, path + '.firstDeedTip');
       if (row.portraitProfile !== undefined && !own(FBDATA.portraitProfiles, row.portraitProfile)) fail(path + '.portraitProfile', 'is unknown.');
-      const bm = FB.bookmark(row.bookmarkId), scenario = scenarios[row.scenarioId];
+      const bm = FB.bookmark(row.bookmarkId), scenario = FB.startIdentity(scenarios[row.scenarioId],bm);
       if (!bm || !FB.startProvinceAllowed(scenario, bm, row.provinceId) ||
           scenario.bookmarkIds && scenario.bookmarkIds.indexOf(row.bookmarkId) < 0 ||
           scenario.eras && scenario.eras.indexOf(FB.bookmarkEra(bm)) < 0 ||
@@ -2712,7 +2816,7 @@ window.FBMODS = window.FBMODS || [];
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     var worlds = Array.isArray(mod.bookmarks) ? mod.bookmarks : Object.keys(mod.bookmarks || {}).map(function (id) { return mod.bookmarks[id]; });
     worlds.forEach(function (world) {
-      ['retainedCatalogueTransitions','retainCatalogueTransition','allowedSignatures','saveCompatibility'].forEach(function (key) {
+      ['retainedCatalogueTransitions','retainCatalogueTransition','allowedSignatures','saveCompatibility','sharedDefinitions'].forEach(function (key) {
         if (own(world,key)) fail('bookmarks.' + key,'is trusted native metadata, not JSON mod data.');
       });
     });
