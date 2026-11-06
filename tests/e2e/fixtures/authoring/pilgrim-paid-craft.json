@@ -1,0 +1,6 @@
+{
+  "name": "Pilgrim household: fixed craft income",
+  "focusRoutines": {
+    "craft_work": [{"kind": "resource", "resource": "gold", "base": 90}]
+  }
+}
