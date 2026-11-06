@@ -1,19 +1,14 @@
 Retained fixed-start identity
 
-Saved scenario ids continue to resolve through their saved bookmark revision.
-The canonical start owner projects the declared faith for that revision without
-changing state.start or any person, community, resource, story, RNG or UID fact.
-The optional native shared-definition proof certifies only additive faith/law
-ids and exact retained start projections; it cannot replace existing shared
-runtime definitions. Ordinary re-save keeps the installed current fingerprint,
-so a fresh page resolves the same retained start without replaying a compatibility
-exception. No wire field, format increment or identity migration is introduced.
+Saved scenario ids continue to resolve through their saved bookmark revision. The canonical start owner projects the declared faith and existing-ruler government for that revision without changing state.start or any person, community, resource, story, RNG or UID fact. The optional native shared-definition proof certifies only additive faith/law ids and exact retained start projections; it cannot replace existing shared runtime definitions. Ordinary re-save keeps the installed current fingerprint, so a fresh page resolves the same retained start without replaying a compatibility exception. No wire field, format increment or identity migration is introduced.
 
 Loading from the lightweight title
 
 Continue, save slots and imported saves enter FB.game.loadData through the deferred campaign-content gate. The gate prepares the bundled baseline, effective mods, story registry and localized messages before exact mod-signature comparison, revision selection, migration or restoration. Returning true before content is ready means the load request was queued, as with asynchronous world activation. A preflight refusal after preparation displays its reason on the title. Stored saves remain unchanged. Save browsing can show stored metadata before content is ready; compatibility is checked when loading.
 
 Compact validation snapshots
+
+Platform validation supplies an omitted character id from its existing chars dictionary key in a shallow detached view before running story and named-party validators. Explicit mismatches, null ids, missing people, forged associations and invalid carrier or consent facts still reject. Empty and consented associations and requested, active and ended camp records pass through the same strict validators without replaying initialization, AI decisions, payment, acceptance or travel. The compact input and live state stay unchanged during validation; neither the wire representation nor the save schema changes.
 
 Guarded parties, guarded personal starts and landed expedition links validate original identities from the saved opening actor and character indexes. They accept the codec's omitted character id while rejecting explicit mismatches and missing people. Guard semantic checks use only a shallow view with the omitted id supplied, leaving compact input and live state untouched. No save-version bump, guard release, command formation or resource repair is involved.
 

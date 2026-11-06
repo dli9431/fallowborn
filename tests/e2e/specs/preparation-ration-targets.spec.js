@@ -14,10 +14,11 @@ dependsOnRuntime(__filename,['index.html','data/technology.js','data/units.js','
   'js/world.js','js/mods.js','js/starts.js','js/stories.js','js/model.js','js/government_selection.js',
   'js/justice.js','js/intrigue.js','js/main.js','js/save.js','js/save_v4.js']);
 
-async function begin(page,info,label,fixed) {
+async function begin(page,info,label,fixed,source) {
   await openGame(page,info);
   await page.evaluate(function(){FB.ui.showMods();});
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+
+  await page.locator('#modfile').setInputFiles(source ? {name:'exact-preparation-'+label+'.json',mimeType:'application/json',
+    buffer:Buffer.from(JSON.stringify(source))} : path.resolve(__dirname,'../fixtures/authoring/'+
     (fixed ? 'mobile-preparation-' : 'ration-preparation-')+label+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   const prefix=label==='harbor' ? 'harbor' : 'dune';
@@ -275,3 +276,39 @@ test('the phone review discloses the camp field and total purchase and restores 
   await choice.click();await page.keyboard.press('Escape');
   await expect(choice).toBeFocused();
 });
+
+for(const label of ['harbor','upland']) {
+  test(label+' exactly funded fractional preparation forms once with one conserved purchase',async function({page},info){
+    const source=JSON.parse(JSON.stringify(require('../fixtures/authoring/mobile-preparation-'+label+'.json'))),
+      id=label+'_preparation',rid=label==='harbor'?'harbor_following':'dune_coalition',
+      realm=Object.values(source.bookmarks)[0].realms.find(function(r){return r.id===rid;});
+    source.mobileProfiles[realm.mobile.profileId].recruitCost=0.03;
+    source.storyInstances[id].provisions.food=40;
+    source.storyInstances[id].provisions.maxUnitPrice=1;
+    await begin(page,info,label,true,source);
+    const result=await page.evaluate(function(){
+      const C=rationCase,s=FB.state,P=FB.expeditionPreparation,t=C.record(s),
+        index=s.market.goods.indexOf('provisions');
+      s.market.counties[C.origin][1][index]=2.05;
+      s.market.counties[C.origin][0][index]=100;
+      s.realms[C.rid].treasury.gold=0;s.realms[C.rid].treasury.militaryAccrued=0;
+      if(!C.authorize(s))throw new Error('Original provider consent missing');
+      const grant=P.review(s,C.id,'grant',t.provider.characterId),funded=P.commit(s,grant),
+        q=P.review(s,C.id,'form',C.leader(s)),seller=FB.treasuryPublicAccountSnapshot(s,t.provider.realmId).gold,
+        available=FB.treasuryAvailable(s,C.rid),before=JSON.stringify(s),
+        short=JSON.parse(before);
+      short.realms[C.rid].treasury.gold-=Number.EPSILON*16;
+      const shortBytes=JSON.stringify(short),poor=P.review(short,C.id,'form',C.leader(short)),
+        refused=!poor.allowed&&!P.commit(short,poor)&&shortBytes===JSON.stringify(short),
+        formed=P.commit(s,q),repeat=!P.commit(s,q),
+        paid=formed&&FB.treasuryAvailable(s,C.rid)===0&&
+          FB.treasuryPublicAccountSnapshot(s,t.provider.realmId).gold===seller+q.foodCost,
+        finite=formed&&FB.marketProvisionSnapshot(s,C.origin).stock===100-q.food&&t.formed.food===40&&
+          t.formed.trainingCost===q.trainingCost&&t.formed.foodCost===q.foodCost,
+        saved=formed&&C.restore();
+      return {funded:funded,quoted:q.allowed,exact:available===q.cost&&grant.cost===q.cost,
+        regression:available-q.trainingCost<q.foodCost,refused:refused,formed:formed,repeat:repeat,paid:paid,finite:finite,saved:saved};
+    });
+    expect(result).toEqual({funded:true,quoted:true,exact:true,regression:true,refused:true,formed:true,repeat:true,paid:true,finite:true,saved:true});
+  });
+}

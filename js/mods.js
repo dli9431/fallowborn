@@ -1128,10 +1128,16 @@ window.FBMODS = window.FBMODS || [];
         Object.keys(rows).forEach(function (revision) {
           if (++count > 32 || !worlds.some(function (world) { return (world.revision || 'baseline') === revision; }))
             fail(path + '.revisionIdentities','names an unknown revision or exceeds 32 records.');
-          onlyFields(rows[revision],{startReligion:true},path + '.revisionIdentities.' + id + '.' + revision);
-          if (!own(rows[revision],'startReligion') || typeof rows[revision].startReligion !== 'string' ||
-              !own(rules.religions,rows[revision].startReligion))
+          const identity = rows[revision];
+          onlyFields(identity,{startReligion:true,governmentForm:true},path + '.revisionIdentities.' + id + '.' + revision);
+          if (!own(identity,'startReligion') && !own(identity,'governmentForm'))
+            fail(path + '.revisionIdentities','needs a faith or government identity.');
+          if (own(identity,'startReligion') && (typeof identity.startReligion !== 'string' ||
+              !own(rules.religions,identity.startReligion)))
             fail(path + '.revisionIdentities','needs a known startReligion.');
+          if (own(identity,'governmentForm') && (!scenario.rulerRealmId ||
+              typeof identity.governmentForm !== 'string' || !own(rules.governmentForms,identity.governmentForm)))
+            fail(path + '.revisionIdentities','needs an existing ruler and a known governmentForm.');
         });
       });
       scenario.bookmarkIds.forEach(function (id) {
@@ -1386,6 +1392,7 @@ window.FBMODS = window.FBMODS || [];
       bookmarks:combinedBookmarks(mod),
       cultures:combinedTable(FBDATA.cultures, mod.cultures, 'cultures'),
       religions:combinedTable(FBDATA.religions, mod.religions, 'religions'),
+      governmentForms:combinedTable(FBDATA.governmentForms, mod.governmentForms, 'governmentForms'),
       familyPresets:{}
     };
     if (own(mod, 'familyPresets')) {

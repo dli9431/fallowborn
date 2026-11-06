@@ -493,6 +493,21 @@
     row.gold -= amount;
     return true;
   };
+  // One reviewed public purchase can include a sink cost and a real seller.
+  // Debit their quoted sum once so an exactly funded purchase cannot fail on
+  // rounding between two independently checked subtractions. No overdraft.
+  FB.treasuryPurchase = function (state, payer, recipient, spent, payment) {
+    const from = FB.treasuryPublicAccountSnapshot(state, payer),
+      to = FB.treasuryPublicAccountSnapshot(state, recipient), total = spent + payment;
+    if (payer === recipient || !from || !to || !Number.isFinite(spent) || spent < 0 ||
+        !Number.isFinite(payment) || payment < 0 || !Number.isFinite(total) ||
+        total > from.available || !Number.isFinite(to.gold + payment) ||
+        to.gold + payment > Number.MAX_SAFE_INTEGER) return false;
+    account(state, payer).gold -= total;
+    account(state, recipient).gold += payment;
+    count('counterparty transfers');
+    return true;
+  };
   FB.treasuryRetrenching = function (state, rid) {
     const row = active(state, rid);
     return !!(row && row.recoverUntil > state.turn);

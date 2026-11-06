@@ -1,12 +1,8 @@
 Retained shared identity authoring
 
-Use revisionIdentities only for the fixed start's faith in explicitly named
-bookmark revisions. Keep other start fields stable. Trusted transitions may
-supply bounded sharedDefinitions evidence for new faith/law ids and the complete
-old/current start definitions. Existing shared ids cannot change meaning. Keep
-genuine predecessor evidence; never infer old records from the current table.
-Ordinary JSON supports start projection but grants no compatibility authority.
-See docs/MODDING.md for the exact fields and limits.
+Use revisionIdentities for the fixed start's faith and, for an existing ruler start, its governmentForm in explicitly named bookmark revisions. Each record supplies one or both fields; omitted fields keep the start default. Keep every other start field stable. The two independent ordinary imports revision-ruler-government-estuary.json and revision-ruler-government-uplands.json retain their older constitutions and select different current forms, with a combined faith/form projection in the uplands. Pure validation, codes, picker, ordinary adoption and matching retained saves share the same projection. This preserves existing ruler identity under the existing existing_ruler_starts technology decision of none; it adds no political action, discovery or eligibility exception.
+
+Trusted transitions may supply bounded sharedDefinitions evidence for new faith/law ids and the complete old/current start definitions. Existing shared ids cannot change meaning. Keep genuine predecessor evidence; never infer old records from the current table. Ordinary JSON supports start projection but grants no compatibility authority. See docs/MODDING.md for the exact fields and limits.
 
 AI decision authoring
 
