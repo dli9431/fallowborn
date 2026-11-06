@@ -40,6 +40,10 @@ owner-controlled.
 
 Deferred title and content readiness
 
+expedition-command.spec.js validates both ordinary JSON fixtures before import so a rejected declaration reports its requirement failure directly. Their home-ruler court ranks match the tier-four start projection; the separate following ranks and private/public resource assertions remain unchanged.
+
+Ordinary and explicit-infrastructure home starts also retain exactly one civil appointment through save/restore, with its live institution and realm scope mapped to the adopted player court and its authored declaration unchanged.
+
 The scenery revision compatibility journeys separate predecessor setup, save/reload, repeat restoration and cross-revision switching. Explicit and inferred forms share one fresh context within each bounded restore or switching test; every form still restores twice or makes its own round trip. Fast content and bundle rejections share setup, while raw-byte and retained-definition changes remain separate. The generic compatibility suite groups pure JSON-forgery probes and the public-root/balance rejections to avoid repeated complete-catalogue boot. Each test still has a fresh browser context, the default timeout and exact state/resource/purity assertions. A bounded canonical-mod-normalization counter proves that a repeated identical compatibility decision performs no predecessor replay, while duplicate and reordered declaration probes preserve fail-closed selection coverage.
 
 634-scenery-revisions.spec.js also pins the protected source at 9315b53a. New scenarios exercise actual commoner and noble settlement in fresh ordinary 634 on standard and CrazyGames, spent-resource restoration, both older 634 revisions and unchanged 476/867 modded campaigns. Two real JSON imports exercise unique predecessor selection, declaration-order independence, duplicate-match rejection after a warm proof, exact state/RNG/UID retention and fresh-page reload. Protected candidate/apply/rejection cases explicitly select the retained protected revision.
@@ -135,6 +139,8 @@ Trait-aware investment coverage
 ai-investment-preferences.spec.js imports the independent ai-investment-learned.json and ai-investment-guarded.json configurations through Mods. It covers the same affordable role candidates under contrasting traits/aims, neutral fallback and pure deterministic projections; actual profile purchase, treasury reserves and the separate fort work invoice; insolvency, knowledge, physical suitability, contest, annual limits and player exclusions; malformed detached nonpublication; matching paid-project restore without replay; real ruler succession; and ordered, weighted and zero-total fort choices with exact work charges and RNG draw counts. Daily or multi-year simulation is unnecessary for these annual boundary contracts.
 
 Complete Danube corridor acceptance
+
+Persisted Danube fixtures are built after openGame has completed deferred content preparation, then loaded through an ordinary page reload. DOMContentLoaded alone does not establish catalogue readiness. Dedicated file-picker cases retain their ordinary JSON import coverage, and the route and retained-state assertions are unchanged.
 
 tests/e2e/specs/danube-corridor.spec.js uses the existing 1096 geography, counties, generated direct holders and public courts through two ordinary JSON Mods imports per complete acceptance case. The test-only route declarations in tests/e2e/fixtures/authoring/danube-corridor-cases.json contrast 240 fighters with 360 civilians and 160 fighters with 160 civilians, different prices, capacity and finite terms, with fourteen-day supply targets. Cologne, Regensburg, Wien, Sirmium, Serdica, Philippopolis, Adrianople and Constantinople are coarse simulation endpoints. They assert no exact historical road or itinerary. Anonymous review commands and their finite opening resources belong only to the imported fixtures.
 
@@ -639,6 +645,8 @@ Bookmark-id lint. bookmark-id-lint.spec.js reads js/*.js as text with comments r
 
 Content-id ratchet. content-id-ratchet.spec.js loads the page and collects ids from FBDATA record tables. Every remaining exact quoted engine reference requires an explicit reason and per-file count ceiling in tests/e2e/fixtures/engine-ids/content-id-allowlist.json, including reviewed schema-token collisions. New files and counts above their ceiling fail. Tuning/generated/display namespaces keep explicit ignored-table reasons. The closed content-id-counts.json baseline has total zero and no residual ids; unallowlisted references fail. The automatic baseline-update route has been removed. Review new deliberate hooks individually and lower obsolete ceilings when removing uses; do not create an unreviewed residual allowance.
 
+The current file-count review covers deferred content and exact retained-catalogue checks, shared religious identity and government readiness, household control observers, story placement, AI decision channels and existing transaction/UI protocol fields. The affairs/types placement keys and fever/flux childhood message selectors have explicit owning-file reasons. Removed references lower or remove their allowances. No residual baseline, ignored-table exemption or test assertion changes.
+
 Reviewed structural collisions include retained baseline revisions, paid-exchange receipt and inventory kinds, household carrier/recovery fields, expedition carrier-loss reasons and the mobile-column split action. Their exact file counts remain separate from the content records sharing those spellings. Saved-policy and birthplace-selector field reviews cover only their schema consumers. DOM and primitive-type checks retain exact counts, and protocolFiles names only registered reusable type files; ordinary bookmark and building modules keep their bounded uses without a reusable-type designation.
 
 ## Profiling a reported save
@@ -884,3 +892,36 @@ computed declarations and source collisions. It also checks the existing 634
 faith, start, household, agenda and goal owners. These Python tests execute no
 game scripts and generate no catalogs; execution remains owner-controlled.
 
+The expedition command replay case reads the shared generic sheet at #genmodal for its home office, finite term and public treasury assertions.
+
+The landed command replay reloads the ordinary persisted mod in a fresh page and restores the original UI preference input before repeating its start code. It retains exact generated IDs and the tutorial marker in its comparison instead of comparing different session counters or guidance preferences.
+
+Expedition program import fixtures select the catalogue levy unit for ordinary infantry replacement. Their leaf start helper asserts detached mod validation before applying through the file picker, so malformed declarations report the validation fault instead of a navigation timeout.
+
+The expedition program restore checkpoint compares detached codec-expanded facts structurally, preserving every value and array position while ignoring object insertion order. It compares RNG as the same unsigned 32-bit pattern used by restore and reports differing facts directly.
+
+Expedition supply coverage checks the shared focusable review card after stale confirmation disables replenishment, while retaining the input and expanded Details. Escape from an unchanged review still returns focus to the enabled action button.
+
+Local passage fixtures validate their ordinary imports before applying. The harbor formation court has no inherited civic-candidacy story or nonexistent civic office; the dune outside court matches its tier-four ruler start. These setup declarations retain both passage-policy revisions and the existing transaction assertions.
+
+The fixed harbor household uses an ordinary costless household track at its declared birthplace, preserving the fixed-place start contract without inventing a civic office on the formation court.
+
+Passage-policy legacy coverage first rejects an unstamped current platform envelope, then selects the actual platform-schema-one envelope for legacy baseline restore. It retains original access provenance and proves that fresh policy is not adopted.
+
+Passage-policy setup reuses the already imported and prepared title through beginBookmarkFromTitle. Its baseline selector must survive until construction; a new navigation would silently reset it to the fresh revision. Baseline cases assert their saved revision before exercising legacy restore.
+
+The passage-policy restore checkpoints compare the exact unsigned RNG bit pattern, matching setRngState normalization. State bytes, UID and strict mobile validation remain unchanged assertions at every checkpoint.
+
+The passage-policy stale-authority case changes the authoritative ruler generation and the corresponding succession record together, so the pending review observes the intended changed incumbent generation.
+
+Mobile confederation coverage validates both the declared following and an independently created mobile court without expedition intent. Both reject an injected program marker while retaining ordinary people, treasury and host invariants.
+
+Hosted-opening imports validate their ordinary declarations before file selection. Both female commander starts use the eligible tier-one household profession, matching the independent command-start examples; their original people, command roles, hosted agreements and public resources remain unchanged.
+
+The hosted-opening overlap preflight reserves the county's actual access capacity. Population initialization can raise an authored baseline to the carrying-capacity floor, so a fixed smaller reservation does not establish exhausted capacity. The check still requires pure planning refusal and atomic initialization rejection.
+
+Local-access import fixtures retain a valid fixed-place household track on the harbor formation court and an outside ruler rank matching the dune start. Their pre-import checks expose rejected declarations. Repeated restore checkpoints compare codec-expanded values and array order with sorted object keys and unsigned RNG bits, preserving all tested identities, balances and populations.
+
+The local-access stale-generation case changes both the live ruler generation and its succession record, matching the canonical generation reader. Changing only succession metadata does not represent a changed incumbent generation.
+
+The local-access outside-decline journey expands the ordinary Rank and Realm deeds section before selecting its action and matches the action title with its cost note. The unopted legacy dispatch fixture uses the existing levy unit class in its supply replacement list.

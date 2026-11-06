@@ -259,5 +259,9 @@ test('supply review retains mobile inputs, disclosure and focus through Escape a
   const before=await page.evaluate(function () {FB.mobile.row(FB.state,'harbor_following').food=10000;return JSON.stringify(FB.state);});
   await page.locator('#mobile-confirm').click();await expect(page.getByRole('heading',{name:'Terms changed',exact:true})).toBeVisible();
   expect(await page.evaluate(function () {return JSON.stringify(FB.state);})).toBe(before);
-  await page.locator('#mobile-continue').click();await expect(button).toBeFocused();await expect(page.locator('#mobile-count')).toHaveValue('37');
+  await page.locator('#mobile-continue').click();
+  await expect(button).toBeDisabled();
+  await expect(page.locator('.review-action-card').filter({has:button})).toBeFocused();
+  await expect(page.locator('[aria-controls="'+id+'-details"]')).toHaveAttribute('aria-expanded','true');
+  await expect(page.locator('#mobile-count')).toHaveValue('37');
 });

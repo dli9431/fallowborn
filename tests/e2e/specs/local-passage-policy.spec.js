@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/passage-policy-harbor.json'),
   dune:require('../fixtures/authoring/passage-policy-dune.json')};
@@ -19,6 +19,8 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 async function start(page,info,prefix,options) {
   options=options || {};
   await openGame(page,info);
+  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},options.mod || examples[prefix]),
+    prefix+' ordinary import validation').toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(options.mod ? {name:'passage-policy.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(options.mod))} : path.resolve(__dirname,'../fixtures/authoring/passage-policy-'+prefix+'.json'));
@@ -38,7 +40,8 @@ async function start(page,info,prefix,options) {
     await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
     await page.getByRole('button',{name:'Begin',exact:true}).click();
     await page.evaluate(function () {FB.game.setPaused(true);});
-  } else await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  } else await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  if (options.baseline) expect(await page.evaluate(function () {return FB.state.start.revision;})).toBe('baseline');
   await page.evaluate(function () {
     const d=FB.campaignBookmark(FB.state).realms.find(function (d) {return d.mobile;});
     window.passageCase={rid:d.id,
@@ -118,11 +121,11 @@ for (const prefix of ['harbor','dune']) {
       const C=passageCase,M=FB.mobile,E=FB.expeditionPrograms;
       function roundtrip() {
         const s=FB.state,bytes=JSON.stringify([s.localPassagePolicies,M.row(s,C.rid),s.armies,s.owner,s.holder,s.market,s.population,s.treasury]),
-          rng=FB.getRngState(),uid=FB.getUidCounter();
+          rng=FB.getRngState() >>> 0,uid=FB.getUidCounter();
         for (let i=0;i<2;i++) FB.save.restore(JSON.parse(FB.save.serialize()));
         const n=FB.state;
         return bytes===JSON.stringify([n.localPassagePolicies,M.row(n,C.rid),n.armies,n.owner,n.holder,n.market,n.population,n.treasury]) &&
-          rng===FB.getRngState() && uid===FB.getUidCounter() && M.validate(n);
+          rng===(FB.getRngState() >>> 0) && uid===FB.getUidCounter() && M.validate(n);
       }
       const pending=roundtrip();E.day(FB.state);const offered=roundtrip();FB.state.turn++;
       E.day(FB.state);const accepted=roundtrip();FB.state.turn++;
@@ -143,14 +146,15 @@ for (const prefix of ['harbor','dune']) {
       E.day(s);FBDATA.bookmarks[prefix+'_world'].revision='passage_policy';
       const origin=JSON.stringify(M.row(s,C.rid).agreements[0].accessOrigin),absent=s.localPassagePolicies===undefined;
       let save=JSON.parse(FB.save.serialize());delete save.state.start.revision;
+      const modernRejected=!FB.save.isSupported(save);save.platformSchema=1;
       for (let i=0;i<2;i++) {FB.save.restore(save);save=JSON.parse(FB.save.serialize());}
       const n=FB.state;
-      return {absent:absent && n.localPassagePolicies===undefined,
+      return {modernRejected:modernRejected,absent:absent && n.localPassagePolicies===undefined,
         original:origin===JSON.stringify(M.row(n,C.rid).agreements[0].accessOrigin),schema:M.row(n,C.rid).agreements[0].accessOrigin.schema,
         savedPolicy:FB.campaignBookmark(n).localPassagePolicies===undefined,
         freshPolicy:!!FB.bookmark(prefix+'_world').localPassagePolicies,valid:M.validate(n)};
     },prefix);
-    expect(r).toEqual({absent:true,original:true,schema:1,savedPolicy:true,freshPolicy:true,valid:true});
+    expect(r).toEqual({modernRejected:true,absent:true,original:true,schema:1,savedPolicy:true,freshPolicy:true,valid:true});
   });
 
   for (const response of ['absent','decline']) {
@@ -237,7 +241,8 @@ test('stale policy form authority occupation capacity money and manual facts rej
     const C=passageCase,E=FB.expeditionPrograms,M=FB.mobile,base=JSON.parse(JSON.stringify(FB.state));E.day(base);base.turn++;
     const changes=[function (s,a) {s.authority.governments[a.partnerId].formId='territorial';},
       function (s,a) {s.holder[a.countyIds[0]]='harbor_commune';},
-      function (s,a) {s.realms[a.partnerId].succession.rulerGeneration++;},
+      function (s,a) {const next=FB.realmRulerGeneration(s,a.partnerId)+1;
+        s.realms[a.partnerId].ruler.generation=next;s.realms[a.partnerId].succession.rulerGeneration=next;},
       function (s,a) {s.chars[a.accessOrigin.chain[0].personId].captive=true;},
       function (s,a) {s.population.counties[a.countyIds[0]].count=1;},
       function (s) {FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid));},

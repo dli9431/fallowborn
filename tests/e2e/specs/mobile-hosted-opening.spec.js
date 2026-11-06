@@ -7,7 +7,7 @@ const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-hosted-harbor.json'),
   dune:require('../fixtures/authoring/mobile-hosted-dune.json')};
-dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/technology.js','data/units.js',
+dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/technology.js','data/units.js','data/economy.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js','js/governments.js','js/government_selection.js',
   'js/government_civic.js','js/government_support.js','js/bookmark_setup.js','js/story_ruler_agenda.js',
   'js/stories.js','js/world.js','js/starts.js','js/model.js','js/station.js','js/population.js',
@@ -17,6 +17,8 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 
 async function imported(page,info,prefix) {
   await openGame(page,info);
+  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},examples[prefix]),
+    prefix+' ordinary import validation').toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/mobile-hosted-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
@@ -82,9 +84,9 @@ test('fresh preflight rejects unavailable parties, foreign possession, exhausted
       if(kind==='capacity')s.population.counties[pid].count=100;
       if(kind==='dead'||kind==='captive')FB.bookmarkActor(s,'harbor_host_ruler')[kind]=true;
       if(kind==='late')s.turn=1;
-      // Another saved concession has consumed the remaining local capacity.
+      // Reserve actual capacity; population initialization may raise the authored baseline.
       if(kind==='overlap')s.authority.governments.harbor_upland.mobile={agreements:[{id:'prior_access',kind:'access',
-        status:'active',endTurn:90,countyIds:[pid],capacity:1000}]};
+        status:'active',endTurn:90,countyIds:[pid],capacity:M.accessCapacity(s,pid).capacity}]};
       const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
       const planned=M.hostedAccessPlan(s,[d]);
       try {M.initialize(s,[d]);}catch(error){rejected=true;}

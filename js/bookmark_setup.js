@@ -266,11 +266,10 @@
     resolveActorReferences(s, d);
     Object.keys(d.appointments).forEach(function (id) {
       if (own(store.appointments, id)) return;
-      var a = d.appointments[id], c = actor(s, a.actorId), proof = null;
+      var a = FB.startRealmDefinition(s, d.appointments[id]), c = actor(s, a.actorId), proof = null;
       /* A preparation binds civil authority before story initialization ends.
          Host offices still wait for their canonical host as before. */
       if (homeAuthority) {
-        a = FB.startRealmDefinition(s, a);
         var office = FBDATA.authorityOffices[a.officeId];
         if (a.realmId !== homeAuthority.realmId || !office ||
             (office.homePowers || []).indexOf('levy') < 0 ||

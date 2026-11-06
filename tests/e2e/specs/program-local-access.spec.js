@@ -10,13 +10,16 @@ const examples={harbor:require('../fixtures/authoring/program-local-access-harbo
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/political_institutions.js','data/technology.js',
   'js/expedition_programs.js','js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js',
   'js/story_expedition_program.js','js/story_expedition_preparation.js','js/home_authority.js','js/ui_mobile.js',
-  'js/ui_misc.js','js/ui_modals.js','js/world.js','js/model.js','js/authority.js','js/governments.js',
+  'js/ui_misc.js','js/ui_panels.js','js/ui_modals.js','data/actions.js','js/actions.js','js/world.js','js/model.js','js/authority.js','js/governments.js',
   'js/government_selection.js','js/government_civic.js','js/government_lineage.js','js/bookmark_setup.js',
   'js/starts.js','js/main.js','js/stories.js','js/armies.js','js/federates.js','js/population.js',
   'js/market.js','js/treasury.js','js/logistics.js','js/save.js','js/save_v4.js','js/mods.js']);
 
 async function start(page,info,prefix,outside,legacy) {
   await openGame(page,info);
+  const source=legacy ? require('../fixtures/authoring/expedition-dispatch-'+prefix+'.json') : examples[prefix];
+  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},source),
+    prefix+' ordinary import validation').toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+
     (legacy ? 'expedition-dispatch-' : 'program-local-access-')+prefix+'.json'));
@@ -111,12 +114,17 @@ for (const prefix of ['harbor','dune']) {
     const r=await page.evaluate(function () {
       const C=localAccessCase,M=FB.mobile,E=FB.expeditionPrograms;
       function roundtrip() {
-        const s=FB.state,row=M.row(s,C.rid),before=JSON.stringify([row,s.armies,s.owner,s.holder,s.treasury,s.market,s.population]),
-          rng=FB.getRngState(),uid=FB.getUidCounter();
+        function checkpoint(state) {
+          const s=FB.save.expandedSnapshot(state);
+          return JSON.stringify([M.row(s,C.rid),s.armies,s.owner,s.holder,s.treasury,s.market,s.population],function (key,value) {
+            if (!value || typeof value!=='object' || Array.isArray(value)) return value;
+            return Object.keys(value).sort().reduce(function (out,k) {out[k]=value[k];return out;},{});
+          });
+        }
+        const before=checkpoint(FB.state),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
         for (let i=0;i<2;i++) FB.save.restore(JSON.parse(FB.save.serialize()));
         const now=FB.state;
-        return before===JSON.stringify([M.row(now,C.rid),now.armies,now.owner,now.holder,now.treasury,now.market,now.population]) &&
-          rng===FB.getRngState() && uid===FB.getUidCounter() && M.validate(now);
+        return before===checkpoint(now) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter() && M.validate(now);
       }
       const pending=roundtrip();E.day(FB.state);const offered=roundtrip();FB.state.turn++;
       E.day(FB.state);const accepted=roundtrip();FB.state.turn++;
@@ -195,7 +203,8 @@ test('stale control authority capacity funds and original-person facts reject at
       function (s,a) {s.realms[a.partnerId].liege='harbor_commune';},
       function (s,a) {s.chars[a.accessOrigin.chain[0].personId].dead=true;},
       function (s,a) {s.chars[a.accessOrigin.chain[1].personId].captive=true;},
-      function (s,a) {s.realms[a.partnerId].succession.rulerGeneration++;},
+      function (s,a) {const next=FB.realmRulerGeneration(s,a.partnerId)+1;
+        s.realms[a.partnerId].ruler.generation=next;s.realms[a.partnerId].succession.rulerGeneration=next;},
       function (s,a) {s.population.counties[a.countyIds[0]].count=1;},
       function (s) {FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid));},
       function (s) {M.host(s,C.rid).holdManual=1;},function (s) {s.turn++;}];
@@ -322,8 +331,10 @@ test('the actual outside ruler can decline through the ordinary deed and stale c
     const m=FB.mobile.migration(s,C.rid),a=FB.mobile.host(s,C.rid);m.at=s.player.provinceId;a.at=m.at;a.from=m.at;
     FB.ui._shared.markActionsDirty();FB.ui._shared.renderActions();
   });
+  const realmSection=page.locator('[data-action-section="realm"]');
+  if (await realmSection.getAttribute('aria-expanded')!=='true') await realmSection.click();
   await page.locator('[data-action-id="mobile_coalition"]').click();
-  await page.locator('#mobile-list').getByRole('button',{name:'Decline as the outside court',exact:true}).click();
+  await page.locator('#mobile-list').getByRole('button',{name:/^Decline as the outside court/}).click();
   await page.evaluate(function () {FB.mobile.row(FB.state,localAccessCase.rid).agreements[0].price++;});
   const before=await page.evaluate(function () {return JSON.stringify(FB.state);});
   await page.locator('#mobile-confirm').click();
@@ -331,7 +342,7 @@ test('the actual outside ruler can decline through the ordinary deed and stale c
   expect(await page.evaluate(function () {return JSON.stringify(FB.state);})).toBe(before);
   await page.evaluate(function () {FB.mobile.row(FB.state,localAccessCase.rid).agreements[0].price--;});
   await page.locator('#mobile-continue').click();
-  await page.locator('#mobile-list').getByRole('button',{name:'Decline as the outside court',exact:true}).click();
+  await page.locator('#mobile-list').getByRole('button',{name:/^Decline as the outside court/}).click();
   await page.locator('#mobile-confirm').click();
   expect(await page.evaluate(function () {return FB.mobile.row(FB.state,localAccessCase.rid).agreements[0].status;})).toBe('ended');
 });
