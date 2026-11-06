@@ -53,13 +53,16 @@ async function importAndBegin(page,info,configuration,countyIds) {
 }
 
 async function start(page,info,configuration,countyIds) {
-  // Build persisted JSON after the real scripts load, before main's boot
-  // listener applies stored mods. Each test keeps its own browser context.
+  // Build persisted JSON only after the deferred catalogue is ready, then
+  // reload through ordinary stored-mod boot in this test's browser context.
   // Dedicated import coverage still uses the ordinary Mods file picker.
-  await page.addInitScript({content:'document.addEventListener("DOMContentLoaded",function () {'+
-    'const mod=('+buildCorridorMod.toString()+')('+JSON.stringify({configuration:configuration,countyIds:countyIds})+');'+
-    'localStorage.setItem("fb_mods",JSON.stringify([JSON.stringify(mod)]));},{once:true});'});
   await openGame(page,info);
+  const mod=await page.evaluate(buildCorridorMod,{configuration:configuration,countyIds:countyIds});
+  await page.evaluate(function (mod) {
+    localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(mod)]));
+  },mod);
+  await page.reload({waitUntil:'domcontentloaded'});
+  await prepareGameContent(page);
   await page.evaluate(function () {FB.mods.assertReady();});
   await beginBookmarkFromTitle(page,'1096','pilgrim_household_1096');
   await page.evaluate(installCorridorCase,configuration);
