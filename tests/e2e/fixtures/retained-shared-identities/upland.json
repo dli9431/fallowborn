@@ -1,0 +1,438 @@
+{
+  "retainedRevision": "charters_v1",
+  "bookmark": {
+    "id": "upland_world",
+    "name": "The Upland",
+    "desc": "Two fictional hill courts.",
+    "hidden": false,
+    "date": {
+      "year": 1137,
+      "season": 3,
+      "day": 7
+    },
+    "era": "high_medieval",
+    "geography": "upland_land",
+    "settlementLayout": null,
+    "religiousHeads": {},
+    "greatHolyWars": false,
+    "starts": [
+      "upland_craftsman"
+    ],
+    "stories": [],
+    "startLocations": {
+      "upland_craftsman": [
+        "upland_market"
+      ]
+    },
+    "provinces": [
+      {
+        "id": "upland_market",
+        "name": "Hill Market",
+        "realm": "upland_council",
+        "culture": "english",
+        "religion": "upland_custom",
+        "dev": 7
+      },
+      {
+        "id": "upland_farms",
+        "name": "South Fields",
+        "realm": "south_court",
+        "culture": "english",
+        "religion": "upland_custom",
+        "dev": 3
+      },
+      {
+        "id": "upland_pass",
+        "name": "High Pass",
+        "wasteland": true
+      },
+      {
+        "id": "upland_woods",
+        "name": "North Woods",
+        "wasteland": true
+      }
+    ],
+    "realms": [
+      {
+        "id": "upland_council",
+        "name": "Hill Council",
+        "color": "#775577",
+        "capital": "upland_market",
+        "rank": 2,
+        "religion": "upland_custom"
+      },
+      {
+        "id": "south_court",
+        "name": "South Court",
+        "color": "#557777",
+        "capital": "upland_farms",
+        "rank": 2,
+        "religion": "upland_custom"
+      }
+    ],
+    "duchies": {},
+    "kingdoms": {},
+    "empires": {},
+    "straits": [],
+    "scripted": [],
+    "revision": "charters_v1",
+    "revisions": {
+      "baseline": {},
+      "charters_v1": {
+        "balance": {
+          "levyPerDev": 48
+        }
+      },
+      "protected_v1": {
+        "balance": {
+          "levyPerDev": 46
+        },
+        "provinces": [
+          {
+            "id": "upland_market",
+            "name": "Hill Market",
+            "realm": "upland_council",
+            "culture": "english",
+            "religion": "upland_custom",
+            "dev": 7
+          },
+          {
+            "id": "upland_farms",
+            "name": "South Fields",
+            "realm": "south_court",
+            "culture": "english",
+            "religion": "upland_custom",
+            "dev": 3
+          },
+          {
+            "id": "upland_pass",
+            "name": "High Pass",
+            "wasteland": true,
+            "settlementPolicy": "protected"
+          },
+          {
+            "id": "upland_woods",
+            "name": "North Woods",
+            "wasteland": true,
+            "settlementPolicy": "protected"
+          }
+        ]
+      },
+      "ordinary_v2": {
+        "balance": {
+          "levyPerDev": 44
+        },
+        "provinces": [
+          {
+            "id": "upland_market",
+            "name": "Hill Market",
+            "realm": "upland_council",
+            "culture": "english",
+            "religion": "upland_custom",
+            "dev": 7
+          },
+          {
+            "id": "upland_farms",
+            "name": "South Fields",
+            "realm": "south_court",
+            "culture": "english",
+            "religion": "upland_custom",
+            "dev": 3
+          },
+          {
+            "id": "upland_pass",
+            "name": "High Pass",
+            "wasteland": true
+          },
+          {
+            "id": "upland_woods",
+            "name": "North Woods",
+            "wasteland": true
+          }
+        ]
+      }
+    }
+  },
+  "catalogs": {
+    "religions": {
+      "upland_custom": {
+        "name": "Hill observance",
+        "parent": "catholic",
+        "availability": {},
+        "properties": {
+          "head": null,
+          "legalTradition": "customary"
+        }
+      }
+    },
+    "geographies": {
+      "upland_land": {
+        "bounds": {
+          "lonMin": 0,
+          "lonMax": 8,
+          "latMin": 0,
+          "latMax": 6
+        },
+        "land": [
+          [
+            0.2,
+            0.2,
+            7.8,
+            0.2,
+            7.8,
+            5.8,
+            0.2,
+            5.8
+          ]
+        ],
+        "seas": [],
+        "rivers": [],
+        "gridWidth": 180,
+        "defaultLayout": null,
+        "provinces": [
+          {
+            "id": "upland_market",
+            "x": 2,
+            "y": 1.5,
+            "terrain": "hills"
+          },
+          {
+            "id": "upland_farms",
+            "x": 6,
+            "y": 1.5,
+            "terrain": "farmland"
+          },
+          {
+            "id": "upland_pass",
+            "x": 2,
+            "y": 4.5,
+            "terrain": "mountains"
+          },
+          {
+            "id": "upland_woods",
+            "x": 6,
+            "y": 4.5,
+            "terrain": "forest"
+          }
+        ]
+      }
+    }
+  },
+  "start": {
+    "id": "upland_craftsman",
+    "name": "Hill craftsman",
+    "desc": "A household at the market.",
+    "intro": "The workshop opens beside the hill road.",
+    "tier": 1,
+    "profession": "craftsman",
+    "gold": 850,
+    "prestige": 120,
+    "piety": 4,
+    "startCulture": "english",
+    "startReligion": "upland_custom",
+    "bookmarkIds": [
+      "upland_world"
+    ],
+    "eras": [
+      "high_medieval"
+    ],
+    "alwaysUnlocked": true,
+    "startAge": 34,
+    "familyPresets": {
+      "standard": {
+        "name": "Market household",
+        "diff": "age 34"
+      }
+    },
+    "fixedProvinceId": "upland_market",
+    "tracks": [
+      "upland_household"
+    ],
+    "trackLocations": {
+      "upland_household": [
+        "upland_market"
+      ]
+    }
+  },
+  "addedRevision": "terraces_v3",
+  "fresh": {
+    "balance": {
+      "levyPerDev": 39
+    },
+    "provinces": [
+      {
+        "id": "upland_market",
+        "name": "Hill Market",
+        "realm": "upland_council",
+        "culture": "english",
+        "religion": "upland_reformed",
+        "dev": 7
+      },
+      {
+        "id": "upland_farms",
+        "name": "South Fields",
+        "realm": "south_court",
+        "culture": "english",
+        "religion": "upland_custom",
+        "dev": 3
+      },
+      {
+        "id": "upland_pass",
+        "name": "High Pass",
+        "wasteland": true,
+        "settlementPolicy": "protected"
+      },
+      {
+        "id": "upland_woods",
+        "name": "North Woods",
+        "wasteland": true
+      }
+    ]
+  },
+  "bundled": [
+    {
+      "id": "upland_bundle",
+      "data": {
+        "balance": {
+          "taxPerDev": 1.8
+        }
+      }
+    }
+  ],
+  "story": {
+    "id": "upland_household",
+    "type": "household_track",
+    "title": "Household plans",
+    "intro": "A household keeps its own plans.",
+    "homeProvinceId": "upland_market",
+    "continuity": "household",
+    "initialStage": "home",
+    "stages": {
+      "home": {
+        "name": "At home",
+        "text": "The household continues its work.",
+        "terminal": true,
+        "choices": [],
+        "transitions": []
+      }
+    }
+  },
+  "currentCatalogs": {
+    "religions": {
+      "upland_reformed": {
+        "name": "Hill fellowship",
+        "parent": "upland_custom",
+        "availability": {},
+        "properties": {
+          "head": null,
+          "legalTradition": "upland_civil"
+        }
+      }
+    },
+    "legalTraditions": {
+      "upland_civil": {
+        "name": "Hill law",
+        "sentences": [
+          "release",
+          "pardon",
+          "ransom",
+          "fine",
+          "imprisonment",
+          "exile",
+          "forfeiture",
+          "execution"
+        ],
+        "procedures": {
+          "arrest": true,
+          "hearing": true,
+          "ransom": true,
+          "pardon": true,
+          "compensationMaxSeverity": 1,
+          "penanceMaxSeverity": 0
+        },
+        "justification": {
+          "evidence": [
+            "testimony",
+            "material",
+            "redhanded"
+          ]
+        },
+        "ai": {
+          "minor": [
+            "fine"
+          ],
+          "serious": [
+            "imprisonment"
+          ],
+          "severe": [
+            "execution"
+          ],
+          "arbitrary": [
+            "imprisonment"
+          ],
+          "excessive": [
+            "execution"
+          ]
+        }
+      }
+    }
+  },
+  "currentStart": {
+    "id": "upland_craftsman",
+    "name": "Hill craftsman",
+    "desc": "A household at the market.",
+    "intro": "The workshop opens beside the hill road.",
+    "tier": 1,
+    "profession": "craftsman",
+    "gold": 850,
+    "prestige": 120,
+    "piety": 4,
+    "startCulture": "english",
+    "startReligion": "upland_reformed",
+    "bookmarkIds": [
+      "upland_world"
+    ],
+    "eras": [
+      "high_medieval"
+    ],
+    "alwaysUnlocked": true,
+    "startAge": 34,
+    "familyPresets": {
+      "standard": {
+        "name": "Market household",
+        "diff": "age 34"
+      }
+    },
+    "fixedProvinceId": "upland_market",
+    "tracks": [
+      "upland_household"
+    ],
+    "trackLocations": {
+      "upland_household": [
+        "upland_market"
+      ]
+    },
+    "revisionIdentities": {
+      "upland_world": {
+        "baseline": {
+          "startReligion": "upland_custom"
+        },
+        "charters_v1": {
+          "startReligion": "upland_custom"
+        },
+        "protected_v1": {
+          "startReligion": "upland_custom"
+        },
+        "ordinary_v2": {
+          "startReligion": "upland_custom"
+        }
+      }
+    }
+  },
+  "supportedRevisions": [
+    "baseline",
+    "charters_v1",
+    "protected_v1",
+    "ordinary_v2"
+  ]
+}

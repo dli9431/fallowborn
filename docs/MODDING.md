@@ -1583,6 +1583,46 @@ to all three maps.
   the same rule. `role` is absent on saves written before consorts existed and reads as
   `null`.
 
+### Revision-specific fixed-start faiths
+
+A fixed start may declare `revisionIdentities:{bookmarkId:{revision:{startReligion}}}`.
+The map contains 1-16 declared bookmark ids and at most 32 revision records.
+Each record has exactly one known faith id, `startReligion`. Bookmark ids must
+belong to the start, and revisions must exist in that bookmark's candidate
+catalogue; the implicit revision is named `baseline`. No other identity,
+resource, binding or display field can be patched. The normal start fields are
+the default for revisions without a record. Every offered revision validates
+its projected identity against its own residents, ruler or original person.
+Ordinary JSON can author this field but cannot authorize an older signature.
+The canonical start owner resolves it for validation, creation and saved-start
+readers without mutating the catalogue or the saved scenario id.
+
+### Explicit retained shared-definition evidence
+
+A trusted schema-1 transition may additionally declare `sharedDefinitions`,
+with exactly `religions`, `legalTraditions` and `startScenarios` arrays. Each has
+at most 32 records, with at most 64 records total, under the declaration's
+existing depth, node and payload limits. Each record has exactly `id`,
+`predecessor` and `current`. Ids are unique within their root. Current evidence
+must equal the complete pristine current definition.
+
+Faith and law records certify additions only: `predecessor:null` means absent.
+An existing shared definition cannot be replaced under this contract. This
+preserves the meaning of saved faith ancestry and legal ids without a runtime
+catalogue swap or a saved historical-catalogue selector. A start record supplies
+both complete definitions with the same fixed start id and exactly the owning
+bookmark in `bookmarkIds`. Its current projection must equal its predecessor
+projection for every predecessor world, including revisions not selected by the
+predecessor's fresh pointer. The same equality is required after replaying mods.
+
+Reconstruction removes only explicitly evidenced additions and restores the
+explicit predecessor start records at their original list positions. All other
+shared definitions and their list order remain equal. The genuine predecessor
+signature, unchanged raw JSON stack, ordered bundled payloads, retained worlds,
+unique-proof selection and cache invalidation checks remain mandatory. A JSON
+mod that introduces an allegedly absent predecessor identity cannot borrow that
+proof. Neither declaration metadata nor historical definitions enter saves.
+
 ### Trusted retained catalogue transitions
 
 Native sources can declare bounded exact additive catalogue transitions with
@@ -1593,7 +1633,8 @@ field. Ordinary JSON cannot provide compatibility declarations, signature
 allowlists or callbacks, including through bookmark metadata.
 
 The record has exactly `schema:1`, `id`, `bookmarkId`, `retainedRevision`,
-`predecessor`, `current`, `predecessorRoots`, `addedRevisions` and `bundled`. Declaration,
+`predecessor`, `current`, `predecessorRoots`, `addedRevisions` and `bundled`, plus
+optional `sharedDefinitions` as specified above. Declaration,
 bookmark and revision ids are 1-100 letters,
 digits or underscores. retainedRevision accepts either one such id or 1-32 distinct ids. `predecessor` and `current` are complete exact authored
 bookmark definitions with the same declared id. Preserve the predecessor from
@@ -1604,8 +1645,8 @@ default pointer may change. All other root fields and every existing raw
 revision stay exact. An implicit predecessor baseline may become explicit `{}`.
 The current default must select one of the added revisions. Every predecessor
 effective world, including the explicitly supported `retainedRevision`, must
-remain identical. This interface does not permit changes to shared catalogues,
-existing revision meanings or the raw root's other fresh defaults.
+remain identical. Without explicit sharedDefinitions evidence, shared catalogues must remain equal.
+Existing revision meanings and the raw root's other fresh defaults remain exact.
 
 `predecessorRoots` pins the complete pristine predecessor defaults for every
 authored-only root, including omitted roots. Copy the exact map returned by

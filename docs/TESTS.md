@@ -1,3 +1,26 @@
+Retained shared definitions and fixed-start identities
+
+retained-shared-identities.spec.js uses two independent fictional native
+predecessor/current catalogues and actual JSON file imports. It creates genuine
+predecessor envelopes, retains spent resources and converted settlements, and
+checks saved people, communities, stories, start ids, faith/law resolution, RNG
+and UID through repeat restores, revision switches and fresh-page re-save loads.
+Typed evidence negatives cover both declaration sides, missing/foreign roots,
+foreign starts, duplicate ids, record limits, duplicate proofs and stale live
+definitions. The spec also retains raw JSON/order, bundle payload/order,
+non-authorized definition, ordinary JSON forgery, empty-signature and CrazyGames
+controls. Canonical normalization counts bound warm proof replay without raising
+timeouts. Multi-load journeys own fresh browser contexts and prepare their cold
+catalogue in a separate bounded hook before the restore/reload assertions.
+Atomic rejection batches share only their journey's prepared context; every
+batch checks rejection purity, restores its mutations and rechecks the valid
+proof before the next batch.
+Pure validation cases reuse the independent configuration's current proof page;
+their before/after snapshots enforce isolation, while cold restore, import and
+revision journeys retain separate fresh contexts.
+These focused checks do not establish full-suite or owner runtime
+acceptance.
+
 Native legal catalogue coverage
 
 native-legal-catalogue.spec.js uses independent harbor and dune JSON fixtures under

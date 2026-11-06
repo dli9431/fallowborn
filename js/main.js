@@ -2306,7 +2306,7 @@ FB.CHANGELOG = [
       const provincePart = legacy ? 2 : 3;
       const sexPart = legacy ? 3 : 4;
       const namePart = legacy ? 4 : 5;
-      const scen = FBDATA.startScenarios.filter(function (s) {
+      const scen = FBDATA.startScenarios.map(function (row) { return FB.startIdentity(row,bookmark); }).filter(function (s) {
         return s && s.id === parts[scenarioPart].toLowerCase() &&
           scenarioOffered(s, bookmarkId) &&
           (!s.fixedProvinceId || s.fixedProvinceId === parts[provincePart].toLowerCase());
@@ -3217,7 +3217,7 @@ FB.CHANGELOG = [
     const worldFaults = FB.validateBookmarkWorld(bookmark);
     FB.recordBookmarkRuntimeFaults('world_definition', bookmark, null, worldFaults);
     if (worldFaults.length) return null;
-    const scenario = FBDATA.startScenarios.find(function (row) { return row && row.id === definition.scenarioId; });
+    const scenario = FB.startIdentity(FBDATA.startScenarios.find(function (row) { return row && row.id === definition.scenarioId; }),bookmark);
     const preset = familyPresetById(definition.familyPreset);
     if (!bookmark || !scenario || !preset || !scenarioUnlocked(scenario, definition.bookmarkId) ||
         !FB.startProvinceAllowed(scenario, bookmark, definition.provinceId) ||
@@ -3292,7 +3292,7 @@ FB.CHANGELOG = [
       });
       return;
     }
-    const scenario = FBDATA.startScenarios.filter(function (candidate) {
+    const scenario = FBDATA.startScenarios.map(function (row) { return FB.startIdentity(row,FB.bookmark(definition.bookmarkId)); }).filter(function (candidate) {
       return candidate && candidate.id === definition.scenarioId;
     })[0];
     if (!scenario || !scenarioUnlocked(scenario, definition.bookmarkId)) { loadTiming.finish('rejected'); return; }
@@ -3442,7 +3442,7 @@ FB.CHANGELOG = [
        every other role is an open start chosen on the map. Validation
        rejects fixed households without a storyline at home. Headings appear
        only when a date offers more than one kind. */
-    const offered = FBDATA.startScenarios.filter(function (sc) {
+    const offered = FBDATA.startScenarios.map(function (row) { return FB.startIdentity(row,bookmark); }).filter(function (sc) {
       return scenarioOffered(sc, bookmark.id);
     });
     const historical = offered.filter(function (sc) { return !!sc.rulerRealmId; });
@@ -3992,10 +3992,11 @@ FB.CHANGELOG = [
     if (!runtimeWorldReady()) return false;
     const previousState = FB.state, previousRng = FB.getRngState(), previousUid = FB.getUidCounter();
     const pendingScenario = G.pending && G.pending.scenario;
-    const sc = pendingScenario && FBDATA.startScenarios.find(function (row) {
+    const authoredScenario = pendingScenario && FBDATA.startScenarios.find(function (row) {
       return row && row.id === pendingScenario.id;
     });
-    if (!FB.startRuntimeReport(sc, FB.activeBookmark).available || !scenarioUnlocked(sc) ||
+    const sc = FB.startIdentity(authoredScenario,FB.activeBookmark);
+    if (!FB.startRuntimeReport(authoredScenario, FB.activeBookmark).available || !scenarioUnlocked(sc) ||
         !FB.startProvinceAllowed(sc, FB.activeBookmark, G.pending.provinceId) ||
         sc.existingPerson && (!FB.existingPersonStartProfile(sc, FB.activeBookmark) ||
           (G.pending.settlementIdx || 0) !== 0) ||

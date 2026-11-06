@@ -1,3 +1,16 @@
+Explicit retained shared definitions
+
+Optional trusted sharedDefinitions evidence extends the existing direct
+predecessor proof to finite faith/law additions and revision-compatible fixed
+starts. Existing faith and law definitions cannot be replaced: saved actors
+continue to resolve the same ids and inheritance. Exact current evidence is
+checked against the pristine baseline, then the predecessor is reconstructed
+from explicit absence or complete old start records. The unchanged mod stack
+is replayed through canonical validation. All unlisted definitions stay equal,
+and start projections stay equal on every retained revision after replay.
+Duplicate successful declarations and stale cached observations still reject.
+The strict schema and bounds are in docs/MODDING.md.
+
 # Mods
 
 Native legal catalogue parity
