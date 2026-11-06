@@ -390,6 +390,7 @@
     j.pending = { id:'justice-response-' + j.nextId++, kind:kind, actorId:actor,
       targetId:target, offenseId:offenseId || null, sentence:sentence || null,
       generation:s.generation, courtKind:courtKind };
+    j.pending.review = responseReview(s, j.pending);
     FB.queueLifecycleEvents(s, kind === 'arrest' ? 'justice_arrest' : 'justice_hearing', {
       justiceId:j.pending.id, studentId:actor, sentence:sentence || null
     });
@@ -671,11 +672,18 @@
     }
     if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(s, c.id);
   }
-  FB.justiceApplyPunishment = function (s, actor, target, sentence, offenseId, responseId, courtKind) {
+  FB.justiceApplyPunishment = function (s, actor, target, sentence, offenseId, responseId, courtKind, review) {
+    if (responseId) {
+      var reviewed = pendingFor(s, { justiceId:responseId });
+      if (!reviewed || reviewed.kind !== 'sentence' || reviewed.actorId !== actor ||
+          reviewed.targetId !== target || (reviewed.offenseId || null) !== (offenseId || null) ||
+          (courtKind || reviewed.courtKind || 'secular') !== (reviewed.courtKind || 'secular')) return { ok:false, blocker:'response' };
+    }
     courtKind = courtKind || (held(s, actor, target) || {}).courtKind || 'secular';
     sentence = distributionSentence(s, actor, target, sentence, offenseId, courtKind);
     var p = FB.justicePunishmentProjection(s, actor, target, sentence, offenseId, courtKind);
     if (!p.ready) return { ok:false, blocker:p.blocker };
+    if (review && review !== FB.justiceSentenceReview(s, p)) return { ok:false, blocker:'review' };
     var j = ensure(s), pending = j.pending;
     if (target === s.player.charId && !(FB.game && FB.game.observe) &&
         (!pending || pending.id !== responseId || pending.kind !== 'sentence' ||
@@ -800,7 +808,8 @@
       return live(s, o.accusedId) && (!o.closed || o.turn + 1440 > s.turn);
     });
     if (j.pending && (!FB.justiceRulerEligible(s, j.pending.actorId) || !live(s, j.pending.targetId) ||
-        j.pending.generation !== s.generation || j.pending.kind === 'sentence' &&
+        j.pending.generation !== s.generation ||
+        j.pending.review && j.pending.review !== responseReview(s, j.pending) || j.pending.kind === 'sentence' &&
         !FB.justicePunishmentProjection(s, j.pending.actorId, j.pending.targetId, j.pending.sentence,
           j.pending.offenseId, j.pending.courtKind).ready)) j.pending = null;
   };
@@ -831,14 +840,22 @@
   };
   FB.justiceImportHearing = function (s, hearing) {
     s.intrigue.hearing = null;
-    var o = FB.justiceExposeScheme(s, { id:hearing.plotId, actorId:hearing.accusedId,
-      context:hearing.context || {}, recordId:hearing.id, repair:true }, hearing.evidence, hearing.successful);
+    // Retain the saved court and explicit victim. Residence is not historical authority.
+    if (hearing.accusedId !== s.player.charId || hearing.accusedGeneration !== s.generation ||
+        !hearing.authority || hearing.authority !== 'player' &&
+        (!s.realms[hearing.authority] || !s.realms[hearing.authority].alive)) return;
+    var actor = ruler(s, hearing.authority);
+    if (!actor || !FB.justiceRulerEligible(s, actor.id)) return;
+    var victim = Object.prototype.hasOwnProperty.call(hearing, 'targetId') ? hearing.targetId :
+      (hearing.context || {}).characterId || null;
+    var o = FB.justiceRecordOffense(s, actor.id, hearing.accusedId, hearing.plotId,
+      hearing.evidence, hearing.successful, victim, hearing.id);
     var row = FB.justiceCustodyOf(s, hearing.accusedId);
-    if (!row || !FB.justiceRulerEligible(s, row.captorId) || !o ||
+    if (!row || !FB.justiceRulerEligible(s, row.captorId) || !o || o.closed ||
         !authorityMatches(s, row.captorId, o.authority)) return;
     // Repair is deterministic: retain the severity, without making an AI cruelty roll.
     var sentence = preferredSentence(s, row.captorId, hearing.accusedId, o);
-    if (sentence) queue(s, row.captorId, hearing.accusedId, 'sentence', o.id, sentence);
+    if (sentence) queue(s, row.captorId, hearing.accusedId, 'sentence', o.id, sentence, row.courtKind);
   };
   function preferredSentence(s, actor, target, offense, excessive) {
     var courtKind = (held(s, actor, target) || {}).courtKind;
@@ -912,13 +929,63 @@
       return false;
     });
   };
+  // Mechanical review only: display text never enters saved judgments.
+  function reviewValue(value) {
+    if (!value || typeof value !== 'object') return value;
+    if (Array.isArray(value)) return value.map(reviewValue);
+    var out = {};
+    Object.keys(value).sort().forEach(function (key) {
+      out[key] = reviewValue(value[key]);
+    });
+    return out;
+  }
+  function reviewDefinition(definition) {
+    if (!definition) return null;
+    var out = {};
+    Object.keys(definition).forEach(function (key) {
+      if (key !== 'name' && key !== 'desc') out[key] = definition[key];
+    });
+    return out;
+  }
+  function responseReview(s, p) {
+    var parties = courtParties(s, p.actorId, p.targetId, p.offenseId, p.courtKind);
+    var law = FB.justiceTradition(s, p.actorId, p.courtKind, parties);
+    var actor = person(s, p.actorId), target = person(s, p.targetId);
+    var rid = realmOf(s, p.actorId), identity = rid && FB.political.governingIdentity(s, rid);
+    var offense = caseFor(s, p.actorId, p.targetId, p.offenseId, p.courtKind);
+    var row = held(s, p.actorId, p.targetId);
+    var definitions = (law.definition && law.definition.sentences || []).map(function (id) {
+      return [id, reviewDefinition(FBDATA.justiceSentences[id])];
+    });
+    return JSON.stringify(reviewValue({ law:{ id:law.id, source:law.source,
+      assessorId:law.assessorId, definition:reviewDefinition(law.definition) }, definitions:definitions,
+      authority:authorityKey(s, p.actorId), counties:FB.justiceCounties(s, p.actorId),
+      supportCounties:FB.justiceSupportCounties(s, p.actorId),
+      actorId:p.actorId, targetId:p.targetId, courtKind:p.courtKind || 'secular',
+      government:identity && { formId:identity.formId, legalIdentityId:identity.legalIdentityId,
+        justicePolicy:identity.justicePolicy, sinceTurn:identity.sinceTurn },
+      actorCulture:actor && actor.culture, actorFaith:actor && actor.religion,
+      targetCulture:target && target.culture, targetFaith:target && target.religion,
+      station:target && (p.targetId === s.player.charId ? FB.playerStation(s) : FB.stationOf(target)),
+      offense:offense, custody:row && { captorId:row.captorId, authority:row.authority,
+        captorGeneration:row.captorGeneration, source:row.source, captureTurn:row.captureTurn,
+        courtKind:row.courtKind || 'secular', sentenced:!!row.sentenced, endTurn:row.endTurn,
+        sentenceIds:row.sentenceIds || [] }, crazyGames:!!FB.platform.isCrazyGames }));
+  }
   function pendingFor(s, ctx) {
     var p = records(s).pending;
     return p && ctx && p.id === ctx.justiceId && p.generation === s.generation &&
       p.targetId === s.player.charId && FB.justiceRulerEligible(s, p.actorId) &&
+      (!p.review || p.review === responseReview(s, p)) &&
       (p.kind === 'arrest' ? FB.justiceArrestProjection(s, p.actorId, p.targetId, p.offenseId, p.courtKind).ready :
         FB.justicePunishmentProjection(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.courtKind).ready) ? p : null;
   }
+  FB.justiceSentenceReview = function (s, projection) {
+    return JSON.stringify({ policy:responseReview(s, projection), generation:s.generation,
+      sentence:projection.sentence, amount:projection.amount, fine:projection.fine,
+      endTurn:projection.endTurn, destination:projection.destination,
+      support:projection.support, justified:projection.justified, title:projection.titleRealmId });
+  };
   // Display parameters stay live across queued hearings and restored saves.
   FB.justiceHearingParams = function (s, ctx) {
     var p = pendingFor(s, ctx);
@@ -937,6 +1004,15 @@
     };
   };
   FB.fns.justice_response_valid = function (s, ctx) { return !!pendingFor(s, ctx); };
+  FB.justiceResponseReady = function (s, ctx, action) {
+    var p = pendingFor(s, ctx);
+    if (!p) return false;
+    if (action === 'justice_pay') return FB.fns.justice_can_pay(s, ctx);
+    if (action === 'justice_penance') return FB.fns.justice_can_penance(s, ctx);
+    if (action === 'justice_resist') return p.kind === 'arrest';
+    return action === 'justice_submit' || p.kind === 'sentence' &&
+      ['justice_plead','justice_challenge'].indexOf(action) >= 0;
+  };
   FB.fns.justice_submit = function (s, ctx) {
     var p = pendingFor(s, ctx);
     if (!p) return false;

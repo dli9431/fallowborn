@@ -27428,6 +27428,7 @@ window.FB = window.FB || {};
       authority:FB.T('Outside your arrest authority'), cooldown:FB.T('The target recently evaded this ruler’s arrest.'),
       truce:FB.T('A truce with the crown forbids this arrest'),
       case:FB.T('Case no longer available'), custody:FB.T('Requires your custody'),
+      review:FB.T('The judgment terms changed. Review them again.'),
       procedure:FB.T('This legal tradition does not permit this procedure'),
       regional:FB.T('Unavailable in this legal tradition'), title:FB.T('No local titles to forfeit'),
       destination:FB.T('No exile destination'), already_sentenced:FB.T('Sentence already imposed'),
@@ -27782,6 +27783,7 @@ window.FB = window.FB || {};
     const s = FB.state, c = s.chars[target];
     if (!c || c.dead) { UI.showJustice(view.roster); return; }
     const p = FB.justicePunishmentProjection(s, s.player.charId, target, action);
+    const review = FB.justiceSentenceReview(s, p);
     const back = function () { UI.showJusticeCharacter(target, origin, view); };
     let h = UI.charCardHtml(s, c, false) +
       justiceCard('justice-review-details', justiceSentenceText(action, 'name'),
@@ -27795,15 +27797,15 @@ window.FB = window.FB || {};
       modalClass:'intrigue-modal justice-modal', titleDetailsHtml:justiceRulesHtml() });
     FB.paintFaces($('gm-body'), s);
     $('justice-cancel').onclick = function () { modalHistoryBack(back); };
-    $('justice-confirm').onclick = function () { applyJusticeAction(target, action, view); };
+    $('justice-confirm').onclick = function () { applyJusticeAction(target, action, view, review); };
   }
-  function applyJusticeAction(target, action, view) {
+  function applyJusticeAction(target, action, view, review) {
     if (eventInputGuarded()) return;
     const s = FB.state, actor = s.player.charId;
     const p = action === 'arrest' ? FB.justiceArrestProjection(s, actor, target) :
       FB.justicePunishmentProjection(s, actor, target, action);
     const result = action === 'arrest' ? FB.justiceAttemptArrest(s, actor, target, p.offenseId) :
-      FB.justiceApplyPunishment(s, actor, target, action, p.offenseId);
+      FB.justiceApplyPunishment(s, actor, target, action, p.offenseId, null, p.courtKind, review);
     if (!result.ok) {
       UI.toast(justiceBlocker(result.blocker));
       UI.showJusticeCharacter(target, undefined, view);

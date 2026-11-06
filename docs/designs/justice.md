@@ -1,5 +1,43 @@
 # Ruler justice
 
+Public intrigue hearing boundary
+
+Player exposure (`queuePlayerHearing`) and AI exposure (`intrigueAutoSentence`)
+record cases through `justiceExposeScheme`. Neither captures the accused.
+Seasonal justice obtains custody and uses the canonical sentence projection;
+player responses use the same application boundary. Secular hearings therefore
+resolve government and governing-identity law, including personal/mixed-party
+selection, while religious custody retains faith law. Private abduction does
+not grant its captor public authority. The old `intrigueSentenceProjection` is
+a fallback for an environment without the justice module; it is not the public
+sentencing consumer in the shipped classic-script composition.
+
+New pending responses retain a mechanical review of the resolved law, sentence
+definitions, original case, custody and authority scope. Changed terms reject
+before payment, RNG or event receipts, even when the sentence remains available.
+Compensation and penance recheck their procedure limits and resources at the real
+event resolver. Unstamped older pending responses retain their existing live
+validation; restoration never manufactures a review of an earlier proposal.
+Already imposed judgments and terms remain facts, not proposals to reapply.
+The ruler's Review judgment sheet also retains its exact mechanical review,
+including payment and sentence expiry. Confirmation passes that review to the
+canonical application boundary; changed terms return to the retained prisoner
+view without imposing a sentence. Immediate player/AI calls still project and
+apply synchronously through the same policy resolver.
+
+Legacy hearing validity and payment queries are read-only. Conversion occurs
+at restoration, retaining the saved court and explicit victim rather than
+selecting a new court from current residence. Missing or defunct authority
+cannot be replaced by the player's court. Conversion records a case once;
+only existing custody under that court can produce a response, and a closed
+case cannot produce another judgment. No conduct, punishment or payment is
+replayed by conversion. Format, catalogue fingerprints and technology gates
+are unchanged; this is a validation and restoration fix.
+
+`intrigue-legal-policy.spec.js` exercises independent Harbor and Upland ordinary
+JSON policies, real response resolution, seasonal AI, legacy conversion,
+matching saves, stale reviews, private custody and distribution restrictions.
+
 Native legal publication
 
 Native date-owned legalTraditions now use the trusted detached catalogue boundary.
