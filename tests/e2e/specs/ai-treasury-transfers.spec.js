@@ -7,6 +7,35 @@ dependsOnRuntime(__filename, ['index.html', 'js/main.js', 'js/treasury.js', 'js/
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 
+test('split public purchases debit the quoted total once and reject every real shortfall atomically',async function({page},info){
+  const ids=await startWarSafety(page,info);
+  const result=await page.evaluate(function(ids){
+    const s=FB.state;FB.treasuryInitialize(s);
+    const a=s.realms[ids.enemy].treasury,b=s.realms[ids.other].treasury,
+      spent=4.8,payment=9.225,total=spent+payment;
+    a.gold=total;a.militaryAccrued=0;b.gold=0;b.militaryAccrued=0;
+    const rounding=a.gold-spent<payment,
+      paid=FB.treasuryPurchase(s,ids.enemy,ids.other,spent,payment),
+      exact=a.gold===0&&b.gold===payment;
+    const base=JSON.stringify(s),cases=['short','reserved','same','missing','negative','nan','overflow'];
+    const rejected=cases.map(function(kind){
+      const copy=JSON.parse(base),from=copy.realms[ids.enemy].treasury,to=copy.realms[ids.other].treasury;
+      from.gold=total;from.militaryAccrued=0;to.gold=0;
+      if(kind==='short')from.gold-=Number.EPSILON*16;
+      if(kind==='reserved')from.militaryAccrued=1;
+      if(kind==='overflow')to.gold=Number.MAX_SAFE_INTEGER;
+      const before=JSON.stringify(copy),ok=FB.treasuryPurchase(copy,ids.enemy,
+        kind==='same'?ids.enemy:kind==='missing'?'absent_public_account':ids.other,
+        kind==='negative'?-1:kind==='nan'?NaN:spent,payment);
+      return !ok&&before===JSON.stringify(copy);
+    });
+    a.gold=payment-Number.EPSILON*8;
+    const before=JSON.stringify(s),strict=!FB.treasuryTransfer(s,ids.enemy,ids.other,payment)&&before===JSON.stringify(s);
+    return {rounding:rounding,paid:paid,exact:exact,rejected:rejected,strict:strict};
+  },ids);
+  expect(result).toEqual({rounding:true,paid:true,exact:true,rejected:Array(7).fill(true),strict:true});
+});
+
 test('news shares owned messages but isolates caller data and receipt snapshots', async function ({ page }, testInfo) {
   await startWarSafety(page, testInfo);
   const result = await page.evaluate(function () {

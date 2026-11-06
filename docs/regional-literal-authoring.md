@@ -1,3 +1,11 @@
+Court literal display owners
+
+data/bookmark_<date>_courts.js and data/bookmark_<date>_courts_<letters>.js use the same strict inert FBDATA.bookmarkRevisionContent_<suffix> literal convention, with a matching bookmarkId and an explicit revision. Supported court tables are realms, governmentForms, administrationProfiles and aristocraticProfiles. Missing or computed declarations, duplicate owners or row ids, malformed display fields and unsupported tables reject without executing source.
+
+Court realms retain the original scaffold owners realm.<date>.<id>.name.<branch> and realm.<date>.<id>.name.dated.<index>.<branch>, including when the declared world revision differs. Profile and selection-member labels retain their existing global owners. An identical scaffold label and replacement label may coexist during staging; conflicting text under one owner rejects. A new court file does not activate or register a world, and removing its old scaffold source does not remove or rename its localization keys. Other regional revision literals keep their existing revision-qualified keys.
+
+tools/test_i18n_regional_literals.py covers two independent court configurations, scaffold/replacement coexistence and removal, branch and dated labels, exact-English aliases, strict invalid declarations and the committed court shards.
+
 # Regional literal presentation
 
 Regional files are inert inputs to the existing trusted bookmark composer. They

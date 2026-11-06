@@ -1,5 +1,7 @@
 Household associations
 
+Compact save validation supplies omitted character ids through the platform's detached dictionary-key view before checking the original actor, exact consenting relatives and current camp leader. Explicit conflicting ids and absent actors remain invalid. Matching restoration of empty associations, accepted and waiting consent, requested camp places, active carriage and ended records changes no story decisions or carrier facts and runs no initialization. The existing association and journey versions remain unchanged.
+
 Camp carriage and personal survivor recovery
 
 Technology impact household_party_camp_carriage is none: baseline named civilian carriage requires actual separate personal admission, exact consenting companions, finite host capacity, current commander acceptance and the real migration owner. Technology impact household_party_survivor_recovery is none: an already present stranded named survivor may explicitly consent to a new priced road after succession. Ordinary road, transport, custody, dependent care, affordability and settlement gates remain authoritative. Neither capability needs a discovery.

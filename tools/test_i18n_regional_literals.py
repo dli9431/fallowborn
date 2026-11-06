@@ -44,7 +44,71 @@ class RegionalLiteralTests(unittest.TestCase):
             inventory = i18n_catalog.Inventory()
             with patch.object(i18n_catalog, 'ROOT', root), patch.object(i18n_catalog, 'DATA', data):
                 i18n_catalog.extract_bookmark_revision_content(inventory)
+                i18n_catalog.extract_scaffold_regions(inventory)
             return inventory
+
+    def test_court_shards_preserve_scaffold_owners_before_and_after_replacement(self):
+        for date, revision, suffix in [('777', 'baseline', 'a'), ('888', 'new_courts', 'e')]:
+            with self.subTest(date=date):
+                realm = {'id': 'river_court', 'name': {'default': 'River court', 'muslim': 'River council'},
+                         'names': [{'from': 600, 'name': 'Old river court'}],
+                         'ruler': {'name': 'Proper Person'}}
+                court = 'bookmark_' + date + '_courts_' + suffix + '.js'
+                shard = 'FBDATA.bookmarkRevisionContent_court = ' + json.dumps({
+                    'bookmarkId': date, 'revision': revision, 'realms': [realm],
+                    'administrationProfiles': {'river_admin': {'name': 'River administration', 'desc': 'Public duties'}},
+                }) + '; throw new Error("Never execute");'
+                scaffold = 'bookmark_' + date + '_scaffold_a.js'
+                original = 'FBDATA.bookmarkRegions' + date + '.a = ' + json.dumps({'realms': [realm]}) + ';'
+                before = self.extract_sources({scaffold: original})
+                together = self.extract_sources({scaffold: original, court: shard})
+                after = self.extract_sources({court: shard})
+                for key in ['realm.' + date + '.river_court.name.default',
+                            'realm.' + date + '.river_court.name.muslim',
+                            'realm.' + date + '.river_court.name.dated.0.default']:
+                    self.assertEqual(before.entries[key], after.entries[key])
+                    self.assertEqual(before.entries[key], together.entries[key])
+                    self.assertIn(i18n_catalog.source_key(after.entries[key]['text']), after.entries)
+                self.assertIn('administrationProfile.river_admin.name.default', after.entries)
+                self.assertFalse(any(key.startswith('realm.' + date + '.' + revision + '.') for key in after.entries))
+                self.assertNotIn(i18n_catalog.source_key('Proper Person'), after.entries)
+                with self.assertRaisesRegex(ValueError, 'colliding source key'):
+                    self.extract_sources({scaffold: original, court: shard.replace('River court', 'Changed court')})
+
+    def test_court_files_require_strict_complete_literal_owners(self):
+        invalid = [
+            '// FBDATA.bookmarkRevisionContent_fake = {};',
+            "FBDATA.bookmarkRevisionContent_x = makeCourt();",
+            "FBDATA.bookmarkRevisionContent_x = {bookmarkId:'777',revision:'baseline',realms:[]};",
+            "FBDATA.bookmarkRevisionContent_x = {bookmarkId:'634',realms:[]};",
+            "FBDATA.bookmarkRevisionContent_x = {bookmarkId:'634',revision:'baseline',realms:makeRows()};",
+            "FBDATA.bookmarkRevisionContent_x = {bookmarkId:'634',revision:'baseline',realms:[{name:'No id'}]};",
+            "FBDATA.bookmarkRevisionContent_x = {bookmarkId:'634',revision:'baseline',realms:[{id:'a',name:'A'},{id:'a',name:'A'}]};",
+            "FBDATA.bookmarkRevisionContent_x = {bookmarkId:'634',revision:'baseline',revision:'changed'};",
+            "FBDATA.bookmarkRevisionContent_x = {bookmarkId:'634',revision:'baseline',provinces:[]};",
+        ]
+        for filename in ['bookmark_634_courts.js', 'bookmark_634_courts_t.js']:
+            for source in invalid:
+                with self.subTest(filename=filename, source=source), self.assertRaises(ValueError):
+                    self.extract_sources({filename: source})
+
+    def test_committed_court_shards_use_original_realm_keys(self):
+        sources = {path.name: path.read_text(encoding='utf-8')
+                   for path in i18n_catalog.DATA.glob('bookmark_634_courts_*.js')}
+        self.assertIn('bookmark_634_courts_d.js', sources)
+        self.assertIn('bookmark_634_courts_e.js', sources)
+        inventory = self.extract_sources(sources)
+        for filename in sources:
+            path = i18n_catalog.DATA / filename
+            for _, node in i18n_catalog.revision_literal_tables(path):
+                content = node.value
+                revision = i18n_catalog.node_string(content['revision'])
+                for row in content['realms'].value:
+                    identity = i18n_catalog.node_string(row.value['id'])
+                    for branch, record, _ in i18n_catalog.branch_records(row.value['name']):
+                        key = 'realm.634.' + identity + '.name.' + branch
+                        self.assertEqual(inventory.entries[key], record)
+                        self.assertNotIn('realm.634.' + revision + '.' + identity + '.name.' + branch, inventory.entries)
 
     def test_independent_flat_tables_keep_revision_and_global_owners(self):
         sources = {

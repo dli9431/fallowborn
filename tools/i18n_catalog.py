@@ -880,7 +880,8 @@ def extract_geography_additions(inv: Inventory) -> None:
 
 def revision_literal_tables(source: Path) -> list[tuple[str, Node]]:
     """Flat regional files require an explicit, entirely inert display owner."""
-    flat = re.fullmatch(r"bookmark_(\d+)_region_b\d{2}", source.stem)
+    flat = re.fullmatch(r"bookmark_(\d+)_(?:region_b\d{2}|courts(?:_[a-z]+)?)", source.stem)
+    court = re.fullmatch(r"bookmark_(\d+)_courts(?:_[a-z]+)?", source.stem)
     tokens = lex_js(source.read_text(encoding="utf-8"))
     declarations = []
     seen = set()
@@ -899,6 +900,9 @@ def revision_literal_tables(source: Path) -> list[tuple[str, Node]]:
         if rows is None or any(not node_string((node_object(row) or {}).get(identity))
                                for row in rows):
             raise ValueError(f"{source.name}: {table} requires literal {identity} owners")
+        ids = [node_string(row.value[identity]) for row in rows]
+        if len(set(ids)) != len(ids):
+            raise ValueError(f"{source.name}: duplicate {table} {identity}")
 
     def display(record: dict[str, Node], fields: tuple[str, ...] = ("name",)) -> None:
         for field in fields:
@@ -933,6 +937,9 @@ def revision_literal_tables(source: Path) -> list[tuple[str, Node]]:
             if content.keys() - allowed:
                 raise ValueError(f"{source.name}: unsupported regional tables: "
                                  + ", ".join(sorted(content.keys() - allowed)))
+            if court and content.keys() - {"bookmarkId", "revision", "realms", "governmentForms",
+                                          "administrationProfiles", "aristocraticProfiles"}:
+                raise ValueError(f"{source.name}: unsupported court tables")
             for table in ("provinces", "realms"):
                 require_rows(content, table, "id")
                 for row in node_array(content.get(table)) or []:
@@ -991,7 +998,10 @@ def extract_bookmark_revision_content(inv: Inventory) -> None:
             revision = node_string(content.get("revision"))
             if not bookmark or not revision:
                 continue
-            scope = bookmark + "." + revision
+            # Court shards replace scaffold declarations. Their file and world
+            # revision may change, but the existing realm display owner does not.
+            court = re.fullmatch(r"bookmark_(\d+)_courts(?:_[a-z]+)?", source.stem)
+            scope = bookmark if court else bookmark + "." + revision
 
             def label(namespace, identity, node):
                 for branch, record, line in branch_records(node):

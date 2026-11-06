@@ -390,8 +390,7 @@
     try {
       var withdrawn=[];
       if (q.transfer && !FB.populationPoolApply(staged,withdrawn,q.transfer)) return false;
-      if (!FB.treasurySpend(staged,d.id,q.trainingCost) ||
-          !FB.treasuryTransfer(staged,d.id,se.t.provider.realmId,q.foodCost) ||
+      if (!FB.treasuryPurchase(staged,d.id,se.t.provider.realmId,q.trainingCost,q.foodCost) ||
           !FB.marketWithdrawProvisions(staged,d.mobile.origin,q.food)) return false;
       var r=M.formFollowing(staged,d,q.facts.current.plan,pool,q.food,q.provisions.target ? q.provisions.fieldFood : undefined),
         migration=M.migration(staged,d.id), host=M.host(staged,d.id);

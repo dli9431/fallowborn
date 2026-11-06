@@ -85,6 +85,18 @@
   /* Optional platform fields (state-and-saves.md, Save v4 platform schema).
      Absent fields stay valid; present ids must resolve. */
   P.validatePlatform = function (state) {
+    // Character ids are derived from their dictionary keys by the wire codec.
+    // Supply only omitted ids on a detached view before strict story validators
+    // inspect parties and carriers. An explicit conflicting id is never repaired.
+    var chars = null;
+    Object.keys(state.chars || {}).forEach(function (id) {
+      var c = state.chars[id];
+      if (!plain(c) || own(c, 'id') && c.id !== id) field('state.chars.' + id + '.id');
+      if (own(c, 'id')) return;
+      if (!chars) chars = Object.assign({}, state.chars);
+      chars[id] = Object.assign({}, c, {id:id});
+    });
+    if (chars) state = Object.assign({}, state, {chars:chars});
     // The wire codec omits settlement zero on physical building records.
     // All building validators must see that default, without expanding other
     // saved identities or mutating the caller's compact input.

@@ -1583,19 +1583,9 @@ to all three maps.
   the same rule. `role` is absent on saves written before consorts existed and reads as
   `null`.
 
-### Revision-specific fixed-start faiths
+Revision-specific fixed-start identities
 
-A fixed start may declare `revisionIdentities:{bookmarkId:{revision:{startReligion}}}`.
-The map contains 1-16 declared bookmark ids and at most 32 revision records.
-Each record has exactly one known faith id, `startReligion`. Bookmark ids must
-belong to the start, and revisions must exist in that bookmark's candidate
-catalogue; the implicit revision is named `baseline`. No other identity,
-resource, binding or display field can be patched. The normal start fields are
-the default for revisions without a record. Every offered revision validates
-its projected identity against its own residents, ruler or original person.
-Ordinary JSON can author this field but cannot authorize an older signature.
-The canonical start owner resolves it for validation, creation and saved-start
-readers without mutating the catalogue or the saved scenario id.
+A fixed start may declare revisionIdentities:{bookmarkId:{revision:{startReligion,governmentForm}}}. The map contains 1-16 declared bookmark ids and at most 32 revision records. Each record has a known startReligion, a known governmentForm, or both. A governmentForm projection requires an existing rulerRealmId start. Bookmark ids must belong to the start, and revisions must exist in that bookmark's candidate catalogue; the implicit revision is named baseline. No other identity, resource, binding or display field can be patched. The normal start fields are the default for revisions without a record. Every offered revision validates its projected identity against its own residents, ruler or original person. The projected government must match that revision's actual ruler realm and rank, including for hidden starts; it grants no adoption exception. A government-only record preserves the default faith, and a faith-only record preserves the default government. Picker, start-code creation, direct ruler adoption and saved-start resolution use the same pure projection. Retained shared-definition proofs compare the complete projected start, including its government, for every predecessor revision. Changing the map in ordinary JSON still changes its exact mod fingerprint and supplies no authority to accept an older signature. Ordinary JSON can author this field but cannot authorize an older signature. The canonical start owner resolves it for validation, creation and saved-start readers without mutating the catalogue or the saved scenario id.
 
 ### Explicit retained shared-definition evidence
 

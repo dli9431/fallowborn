@@ -13,16 +13,11 @@ transitions directly retain the supported baseline, protected and ordinary
 catalogues; they do not chain or migrate saves. Shared-root evidence, exact raw
 JSON and complete current definitions remain mandatory.
 
-Revision-specific fixed-start faiths
+Revision-specific fixed-start identities
 
-The canonical startIdentity projection selects only startReligion from a finite
-bookmark/revision map on a fixed start. campaignStart resolves saved scenario
-ids against campaignBookmark, including an unstamped baseline. Detached world
-and start validation, start codes, Quick Start, the picker and construction use
-the same projection. Existing-person and principal readers retain original
-bindings; no people or resources are reconstructed. The field is ordinary JSON
-data and carries no compatibility authority. This is an identity preservation
-repair, not a new gameplay capability or technology gate.
+The canonical startIdentity projection selects startReligion and an existing ruler start's governmentForm from a finite bookmark/revision map on a fixed start. campaignStart resolves saved scenario ids against campaignBookmark, including an unstamped baseline. Detached world and start validation, start codes, Quick Start, the picker and construction use the same projection. Existing-person and principal readers retain original bindings; no people or resources are reconstructed. The field is ordinary JSON data and carries no compatibility authority. This is an identity preservation repair, not a new gameplay capability or technology gate.
+
+A projection record may name either field or both. The declared government must still match the actual realm and rank in each offered or withheld revision; direct adoption reprojects through the saved campaign definition and retains its strict government check. Other start fields and ordinary mod signatures stay exact. revision-ruler-government.spec.js covers independent estuary and upland JSON configurations, baseline/current picker and code routes, pure rejection and repeat retained restoration. Technology impact remains none under existing_ruler_starts because only the already authored initial identity is selected.
 
 Native legal dependencies
 

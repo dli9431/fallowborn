@@ -641,3 +641,7 @@ An opted-in command accepts a reviewed public grant or private household contrib
 Finite supplier payments
 
 Optional production exchange uses current canonical market prices and the existing treasury, household or barony account. Exact real buyer cash and ordinary reserves fund the original supplier account atomically with the material transfer; no anonymous supplier turnover or new purse is generated. Declared demand and budget are finite purchase permission, not a cash source. Owned transfers have no payment. Production receipts hold original payer/recipient identity and exact price arithmetic, while actual cash remains solely with its canonical account owner. Actual enterprise diversion suppresses the corresponding ordinary household and military producer proceeds once. The finite_production_exchange review is none; it grants no mint, issue or monetary authority. See docs/designs/production.md.
+
+Split public purchases
+
+FB.treasuryPurchase(state,payer,recipient,spent,payment) validates two distinct existing public accounts, finite nonnegative costs, the complete available-funds requirement and the seller's finite balance. It debits spent+payment from the payer once and credits payment to the seller. Accrued military bills remain unavailable. No tolerance permits a real shortfall, and rejected purchases change neither account. This is the atomic accounting owner for expedition training plus finite food purchases; existing ordinary transfers retain their strict affordability checks.

@@ -5,7 +5,8 @@
   function own(o, key) { return !!o && Object.prototype.hasOwnProperty.call(o, key); }
   function plain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
   // A fixed beginning keeps its id while a retained world selects its authored
-  // faith. This is ordinary data, not authority to accept an older fingerprint.
+  // faith and constitution. This is ordinary data, not authority to accept an
+  // older fingerprint.
   FB.startIdentity = function (scenario, bookmark) {
     if (!scenario || scenario.revisionIdentities === undefined) return scenario;
     var result = Object.assign({},scenario), rows = scenario.revisionIdentities;
@@ -13,6 +14,7 @@
     var row = bookmark && plain(rows) && rows[bookmark.id];
     row = plain(row) && row[bookmark.revision || 'baseline'];
     if (plain(row) && own(row,'startReligion')) result.startReligion = row.startReligion;
+    if (plain(row) && own(row,'governmentForm')) result.governmentForm = row.governmentForm;
     return result;
   };
   FB.campaignStart = function (state) {
@@ -509,6 +511,7 @@
   };
   FB.adoptStartingRealm = function (s, scenario, options) {
     options = options || {};
+    scenario = FB.startIdentity(scenario, FB.campaignBookmark(s));
     var id = scenario.rulerRealmId, realm = s.realms[id], p = s.player;
     if (!realm || !realm.alive || s.realms.player ||
         !FB.realmRulerCharacterSnapshot(s, id) ||

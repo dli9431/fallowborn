@@ -539,6 +539,69 @@ async function prepareCamp(page,info,label,modified,admit) {
 }
 
 for(const label of ['harbor','upland']) {
+  test(label+' empty and consented compact parties validate without initialization or forged identity repair',async function({page},info){
+    await start(page,info,label);
+    const result=await page.evaluate(function(label){
+      const P=FB.householdParties,id=label+'_party',checks=[];
+      function roundTrip(){
+        const s=FB.state,raw=JSON.parse(FB.save.serialize()),bytes=JSON.stringify(raw),
+          stories=JSON.stringify(s.stories),rng=FB.getRngState(),uid=FB.getUidCounter(),
+          omitted=raw.state.chars[s.player.charId].id===undefined;
+        FB.save.v4.validatePlatform(raw.state);
+        const migrated=FB.save.v4.migrate(raw),pure=bytes===JSON.stringify(raw)&&stories===JSON.stringify(migrated.state.stories);
+        FB.save.restore(raw);FB.save.restore(JSON.parse(JSON.stringify(raw)));
+        return omitted&&pure&&stories===JSON.stringify(FB.state.stories)&&bytes===JSON.stringify(raw)&&
+          rng===FB.getRngState()&&uid===FB.getUidCounter();
+      }
+      checks.push(roundTrip());
+      const s=FB.state,actor=s.player.charId,spouse=FB.spousesOf(s,s.chars[actor])[0];
+      if(!P.commit(s,P.review(s,id,'invite',actor,actor))||!P.commit(s,P.review(s,id,'accept',actor,actor))||
+          !P.commit(s,P.review(s,id,'invite',actor,spouse.id)))throw new Error('Separate party consent missing');
+      const raw=JSON.parse(FB.save.serialize());checks.push(roundTrip());
+      const invalid=['mismatch','null','absent person','consent actor','party actor','missing party'].map(function(kind){
+        const data=JSON.parse(JSON.stringify(raw)),t=data.state.stories[id],actor=data.state.player.charId;
+        if(kind==='mismatch')data.state.chars[actor].id='another_person';
+        if(kind==='null')data.state.chars[actor].id=null;
+        if(kind==='absent person')delete data.state.chars[actor];
+        if(kind==='consent actor')t.members[0].consentActorId=spouse.id;
+        if(kind==='party actor')t.actorId=spouse.id;
+        if(kind==='missing party')delete data.state.stories[id];
+        const bytes=JSON.stringify(data),before=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
+        let failed=false;try{FB.save.restore(data);}catch(error){failed=true;}
+        return failed&&bytes===JSON.stringify(data)&&before===JSON.stringify(FB.state)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+      });
+      return {checks:checks,waiting:FB.state.stories[id].members[1].status==='invited',invalid:invalid};
+    },label);
+    expect(result).toEqual({checks:[true,true],waiting:true,invalid:Array(6).fill(true)});
+  });
+
+  test(label+' requested active and ended compact camp parties preserve every carrier and consent',async function({page},info){
+    await prepareCamp(page,info,label,null,false);
+    const result=await page.evaluate(function(label){
+      const id=label+'_party',P=FB.householdParties,checks=[];
+      function roundTrip(){
+        const raw=JSON.parse(FB.save.serialize()),bytes=JSON.stringify(raw),facts=JSON.stringify(FB.state.stories),
+          rng=FB.getRngState(),uid=FB.getUidCounter(),leader=raw.state.stories[id].journey.carrier.leaderId;
+        const omitted=raw.state.chars[leader].id===undefined;
+        FB.save.v4.validatePlatform(raw.state);FB.save.restore(raw);FB.save.restore(JSON.parse(JSON.stringify(raw)));
+        return omitted&&bytes===JSON.stringify(raw)&&facts===JSON.stringify(FB.state.stories)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+      }
+      let s=FB.state;
+      if(!P.commit(s,P.review(s,id,'request_camp',s.player.charId)))throw new Error('Named camp request failed');
+      const requested=s.stories[id].journey.status==='requested';checks.push(roundTrip());
+      s=FB.state;FB.stories.get(id).day(s,s.stories[id]);
+      const active=s.stories[id].journey.status==='active';checks.push(roundTrip());
+      s=FB.state;
+      FB.expeditionParticipants.commit(s,FB.expeditionParticipants.review(s,label+'_participation','leave',s.player.charId));
+      FB.stories.get(id).day(s,s.stories[id]);
+      const ended=s.stories[id].journey.status==='interrupted';checks.push(roundTrip());
+      return {requested:requested,active:active,ended:ended,checks:checks};
+    },label);
+    expect(result).toEqual({requested:true,active:true,ended:true,checks:[true,true,true]});
+  });
+}
+
+for(const label of ['harbor','upland']) {
   test(label+' imports real civilian camp places separate from personal admission and family consent',async function({page},info) {
     await prepareCamp(page,info,label,null,false);
     const result=await page.evaluate(function(label) {
