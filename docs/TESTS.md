@@ -870,3 +870,9 @@ Mobile confederation coverage validates both the declared following and an indep
 Hosted-opening imports validate their ordinary declarations before file selection. Both female commander starts use the eligible tier-one household profession, matching the independent command-start examples; their original people, command roles, hosted agreements and public resources remain unchanged.
 
 The hosted-opening overlap preflight reserves the county's actual access capacity. Population initialization can raise an authored baseline to the carrying-capacity floor, so a fixed smaller reservation does not establish exhausted capacity. The check still requires pure planning refusal and atomic initialization rejection.
+
+Local-access import fixtures retain a valid fixed-place household track on the harbor formation court and an outside ruler rank matching the dune start. Their pre-import checks expose rejected declarations. Repeated restore checkpoints compare codec-expanded values and array order with sorted object keys and unsigned RNG bits, preserving all tested identities, balances and populations.
+
+The local-access stale-generation case changes both the live ruler generation and its succession record, matching the canonical generation reader. Changing only succession metadata does not represent a changed incumbent generation.
+
+The local-access outside-decline journey expands the ordinary Rank and Realm deeds section before selecting its action and matches the action title with its cost note. The unopted legacy dispatch fixture uses the existing levy unit class in its supply replacement list.
