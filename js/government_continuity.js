@@ -48,6 +48,14 @@
     var rule = G.strategy('consent', id), territorial = rule.territorialConsent;
     rule.local = function () { return territorial; };
     rule.decision = function (state, rid, c) {
+      if (c.operation === 'industry_law') {
+        var pid = c.scope && c.scope.provinceId;
+        var allowed = id === 'territorial' && c.actor && c.actor.kind === 'realm' && c.actor.id === rid &&
+          !!(state.realms[rid] && state.realms[rid].alive && (state.realms[rid].ruler || rid === 'player')) &&
+          !!pid && (state.holder[pid] || state.owner[pid]) === rid &&
+          G.publicAuthorityReadiness(state, rid).allowed;
+        return { allowed:!!allowed, reason:allowed ? null : 'outside_scope', required:[], approvals:{} };
+      }
       if (['levy','war','treaty','grant'].indexOf(c.operation) >= 0) {
         var actor = c.actor, valid = state && actor && (actor.kind === 'realm'
           ? actor.id === 'player' && !!state.player || !!(state.realms && state.realms[actor.id] && state.realms[actor.id].alive)

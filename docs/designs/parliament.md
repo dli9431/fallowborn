@@ -2,6 +2,17 @@
 
 Shared weighted ballots
 
+The Estates sheet also opens opted-in operating-law hearings through the shared
+industry-law transaction. Its electorate is the current direct political court,
+with capped existing noble influence, actual exposure and unexposed abstention.
+The county must be directly controlled by this court; membership is independent
+of local guild/council seats. Quorum, majority of cast weight and controlling-court
+assent replace bloc chance for these hearings. The annual industry hearing is
+reserved without payment; ordinary policy campaigns and industry hearings cannot
+overlap. Record access survives loss of office through Review operating-law
+hearings in Deeds. See industry-laws.md for native London scope and the qualified
+1204 great-council interpretation.
+
 Council elections, Estates blocs and civic/church institutions use FB.politicalBallot in js/politics.js. The Estates retain blocs sorted by id, explicit postures without RNG, one draw per undecided bloc and the existing influence forecast and result events. Local institutions own their electorate and consent records and require no royal or vassal station.
 
 Settlement barons pay their saved customary-service charter to the actual county

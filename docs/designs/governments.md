@@ -61,6 +61,14 @@ registerSource(id, adapter), reviewSource(state, id, request) and commitSource(s
 
 Technology review is none independently for kin recognition, succession, obligations, community enrollment, form transformation and commoner standing. Each depends on living relationships, control, qualification or available resources rather than discovery. See docs/research/476-lineage-kingship.md for the historical consumer and tests/e2e/fixtures/lineage-kingship.js for an independent data-only fixture.
 
+Industry-law consent
+
+The territorial consent strategy accepts `industry_law` only for a living
+realm's directly controlled county and current public-authority readiness.
+Delegated consent fails closed for this operation. This is a competence check
+for the industry-law assembly adapter; it grants no fiscal office, membership,
+new government form or generic reserved-operation bypass.
+
 Forms and defaults
 
 FBDATA.governmentForms composes ten behavior slots: holders, succession, territory, consent, levy, revenue, council, diplomacy, ai and ladder. Vocabulary is retired; government wording belongs only in the governments layer of FBDATA.lexicons. A form naming vocabulary fails validation with a migration message. The bundled forms name every slot explicitly. The optional slots of older JSON mods still resolve engine_default, a deprecated alias for a named implementation, never an empty object.

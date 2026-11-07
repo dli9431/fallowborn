@@ -185,6 +185,9 @@ window.FB = window.FB || {};
   }
 
   FB.parliamentMotionStatus = function (state, motionId) {
+    if (FB.industryLaws && state.industryLaws && (state.industryLaws.votes || []).some(function (v) {
+      return v.consumer === 'estates' && v.status === 'pending' && v.issuer.realmId === state.player.liege;
+    })) return {ready:false, reason:FB.T('Settle or withdraw the operating-law hearing before beginning another Estates campaign.')};
     if (!FB.parliamentActive(state)) {
       return {
         ready:false,

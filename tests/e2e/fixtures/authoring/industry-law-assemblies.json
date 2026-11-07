@@ -1,0 +1,46 @@
+{
+  "name": "River trading benches",
+  "localCouncilMotions": {
+    "river_market_hearing": {
+      "name": "River market hearing",
+      "icon": "⚖",
+      "desc": "A fictional London alternative: all market stalls pay {money:4} for 30 days. Civic notables have three influence and traders one; the entire electorate must participate.",
+      "fx": {}
+    },
+    "river_market_reserve": {
+      "name": "River market reserve hearing",
+      "icon": "⚖",
+      "desc": "A fictional restriction with permission for York households. Exemption changes trading interests without creating a seat.",
+      "fx": {}
+    }
+  },
+  "industryLaws": {
+    "river_market_hearing": {
+      "schema": 1, "motionId": "river_market_hearing", "bookmarkId": "1204",
+      "provinceId": "london", "enterpriseType": "market_stall_business",
+      "minYear": 1204, "maxYear": 1220, "mode": "license", "fee": 4,
+      "permitDays": 30, "durationDays": 90, "transitionDays": 7, "exemptions": [],
+      "voting": {
+        "town": {"quorum": 1, "threshold": 0.6, "days": 15, "members": [
+          {"id": "river_traders", "kind": "guild", "weight": 1},
+          {"id": "river_notables", "kind": "notable", "weight": 3}
+        ]},
+        "estates": {"quorum": 1, "threshold": 0.6, "days": 20}
+      }
+    },
+    "river_market_reserve": {
+      "schema": 1, "motionId": "river_market_reserve", "bookmarkId": "1204",
+      "provinceId": "london", "enterpriseType": "market_stall_business",
+      "minYear": 1204, "maxYear": 1220, "mode": "prohibition", "fee": 0,
+      "permitDays": 30, "durationDays": 90, "transitionDays": 7,
+      "exemptions": [{"kind": "home_province", "id": "york", "fee": 0, "permission": true}],
+      "voting": {
+        "town": {"quorum": 0.75, "threshold": 0.5, "days": 15, "members": [
+          {"id": "river_traders", "kind": "guild", "weight": 1},
+          {"id": "river_notables", "kind": "notable", "weight": 3}
+        ]},
+        "estates": {"quorum": 1, "threshold": 0.6, "days": 20}
+      }
+    }
+  }
+}

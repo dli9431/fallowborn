@@ -6,6 +6,12 @@ reviews do not pay fees or transfer property. These laws outlive the original
 councillor's seat and do not use the royal council or Estates authority.
 See [Targeted operating laws](industry-laws.md) for the shared approval contract.
 
+Opted-in operating-law hearings additionally use the existing local seat and civic
+consent, with distinct trading and notable benches, explicit ballots, abstention
+and quorum. They reserve the annual session before deliberation. The royal
+appointment council remains independent. See industry-laws.md for jurisdiction,
+bounded representation, interruption, record access and exact passage rules.
+
 Local civic and episcopal institutions
 
 The late antique civic_institutions and episcopal_sees systems use FBDATA.localInstitutions in data/political_institutions.js. Councils, senates, bishoprics and patriarchates have separate identities, representatives, counterparty Standing, demands, consent rights and bounded histories. A physical site anchors each on-map institution; the county remains the existing authority scope for that seat. An institution never becomes a territorial realm. Off-map offices have no invented county or settlement.

@@ -3604,17 +3604,26 @@ window.FB = window.FB || {};
       }
     } },
 
+  { id:'review_industry_hearings', opensChoices:true, noConsume:true,
+    desc:function () { return FB.T('Inspect saved operating-law hearings, change an eligible ballot or settle an interrupted hearing.'); },
+    show:function (s) { return !!(s.industryLaws && s.industryLaws.votes && s.industryLaws.votes.length); },
+    run:function () { if (FB.ui && FB.ui.showIndustryHearings) FB.ui.showIndustryHearings(); }
+  },
   { id: 'bring_council_motion', opensChoices:true, readinessAlert:true,
     noConsume:true,
     desc: function (s) {
+      if (s.industryLaws && (s.industryLaws.votes || []).some(function (v) { return v.consumer === 'town'; }))
+        return FB.T('Review local ordinances and operating-law hearings, ballots and decisions.');
       const status = FB.localCouncilMotionStatus(s);
       return status.ready
         ? FB.T('Put one local ordinance to a seeded vote. Current chance: {chance}%.', {
           chance:Math.round(status.chance * 100)
         }) : status.reason;
     },
-    show: function (s) { return !!FB.localCouncilOf(s); },
+    show: function (s) { return !!FB.localCouncilOf(s) || !!(s.industryLaws &&
+      (s.industryLaws.votes || []).some(function (v) { return v.consumer === 'town'; })); },
     can: function (s) {
+      if (s.industryLaws && (s.industryLaws.votes || []).some(function (v) { return v.consumer === 'town'; })) return true;
       const status = FB.localCouncilMotionStatus(s);
       return status.ready ? true : status.reason;
     },

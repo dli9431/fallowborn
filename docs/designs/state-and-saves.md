@@ -2682,6 +2682,18 @@ Programs using corridor_access retain initial schema 1 until their first mutatio
 
 AI policy declarations introduce no saved field or save version. Current v4 and supported v3 migration keep existing wars, offers, budgets, vows, depleted resources, research and command terms with their original owners. Matching restore recompiles transient preferences under the stamped revision and exact mod signature; it does not dispatch an AI boundary. Changed policy or government content retains ordinary exact-signature rejection. docs/research/ai-decision-acceptance.md describes the combined restore/replay evidence and remaining owner acceptance.
 
+Industry-law hearing persistence
+
+Industry-law hearings optionally retain a bounded `industryLaws.votes` array in
+the existing schema-1 law ledger. Principal-bound explicit ballots and completed
+member/tally snapshots are separate from enacted laws. Every deliberative law
+and repeal retains its passed approval. Matching current-content restore,
+re-save and reload preserve pending/completed decisions without proposals,
+payments, identity allocation or enactment replay. Removed approval records,
+invalid tallies and duplicate pending hearings reject on the detached candidate.
+Absent legacy ledgers/arrays remain absent. The save envelope and released v1
+law/ordinance support are unchanged. Exact fields are in MODDING.md.
+
 Unchanged dates across an additive catalogue transition
 
 An effective-1 signature includes every bookmark, so adding a revision changes signatures for campaigns on otherwise unchanged dates too. The exact native proof may serve such a campaign only when its saved bookmark and revision exist identically in the predecessor and installed catalogues. For this definition comparison, an omitted legacy revision stamp means baseline, matching the existing world-transition proof; the saved envelope is unchanged. Reconstruction replaces the declaration-owned bookmark, not the saved campaign’s bookmark. An explicitly declared saved date still requires its supported retained revision. Missing revisions, changed unrelated definitions and ambiguous unrelated declarations reject. The transient cache binds the saved bookmark and revision as well as the signature; a successful proof cannot authorize a different saved world. No transition chain or signature bypass is introduced.

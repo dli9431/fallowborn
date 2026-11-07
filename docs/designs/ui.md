@@ -3711,6 +3711,16 @@ The disabled action retains a focusable details wrapper. Other blockers stay inl
 
 ## Decision review layout
 
+Operating-law hearing sheets are shared by the town and Estates entry points.
+They disclose county, public payee, business, exemptions, transition, costs,
+hearing deadline, electorate, weights, positions, quorum and passage rule before
+proposal. Named current principals have portrait rows; unnamed county benches
+explicitly disclose bounded representation. Only the player's eligible bench
+offers support, oppose and abstain. Settlement retains the completed tally and
+decision without replay; withdrawal explains the spent annual hearing. Retained
+modal history refreshes the parent list while restoring scroll and focus through
+Back, Escape and mobile Back. The Deeds record entry remains after lost office.
+
 Episcopal rent reviews use the same fact cards, participant portraits and action
 disclosures through Visit the diocese, Hold ecclesiastical court and The Bishopric.
 They disclose the exact current holding, charter evidence, dispute, existing and
