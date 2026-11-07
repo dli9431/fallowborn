@@ -47,7 +47,7 @@ window.FB = window.FB || {};
 
   /* Whole-field world revisions preserve definitions, not just opening actors.
      Missing saved stamps select baseline, never the latest fresh campaign. */
-  var REVISION_FIELDS = ['geography','opening','openingRevision','provinces','realms','balance',
+  var REVISION_FIELDS = ['hidden','geography','opening','openingRevision','provinces','realms','balance',
     'duchies','kingdoms','empires','straits','crossingClasses','localInstitutions',
     'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted','homeAuthorityPolicies','localPassagePolicies',
     'openingRevisions','openingLegacyRevision','startLocations','startTrackOverrides','openingInfrastructure','siteResourceAssignments',

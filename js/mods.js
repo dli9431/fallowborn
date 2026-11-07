@@ -343,7 +343,13 @@ window.FBMODS = window.FBMODS || [];
       transitionFault('declaration.bookmarkId');
     transitionWorlds(row.predecessor,row.current,row);
     if (own(row,'sharedDefinitions')) {
-      transitionFields(row.sharedDefinitions,['religions','legalTraditions','startScenarios'],'declaration.sharedDefinitions');
+      // Older declarations retain their exact three-root shape. Government
+      // catalogue additions use the same absence/current-definition proof.
+      var sharedRoots = ['religions','legalTraditions','startScenarios'];
+      ['governmentForms','administrationProfiles','aristocraticProfiles'].forEach(function (root) {
+        if (plainObject(row.sharedDefinitions) && own(row.sharedDefinitions,root)) sharedRoots.push(root);
+      });
+      transitionFields(row.sharedDefinitions,sharedRoots,'declaration.sharedDefinitions');
       var count = 0;
       Object.keys(row.sharedDefinitions).forEach(function (root) {
         var records = row.sharedDefinitions[root];

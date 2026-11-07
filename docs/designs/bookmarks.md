@@ -13,6 +13,10 @@ transitions directly retain the supported baseline, protected and ordinary
 catalogues; they do not chain or migrate saves. Shared-root evidence, exact raw
 JSON and complete current definitions remain mandatory.
 
+Revision-specific visibility
+
+The existing boolean hidden field is also a whole-field revision override. An omitted layer inherits the root or baseline value; explicit false and true override it. A new hidden fresh revision can therefore preserve the exact visible root and older raw/effective revisions. Source menu summaries, Quick Start and normal fresh-entry gates use the selected effective visibility. Inspecting a retained world and loading its matching save remain permitted. Native compatibility evidence still requires the raw root and every older layer to stay exact; visibility supplies no signature exception. Ordinary JSON uses the same resolver and boolean validator. This is an extension of the existing visibility boundary with no new saved field or technology eligibility.
+
 Revision-specific fixed-start identities
 
 The canonical startIdentity projection selects startReligion and an existing ruler start's governmentForm from a finite bookmark/revision map on a fixed start. campaignStart resolves saved scenario ids against campaignBookmark, including an unstamped baseline. Detached world and start validation, start codes, Quick Start, the picker and construction use the same projection. Existing-person and principal readers retain original bindings; no people or resources are reconstructed. The field is ordinary JSON data and carries no compatibility authority. This is an identity preservation repair, not a new gameplay capability or technology gate.
@@ -66,6 +70,9 @@ the ordinary authored-only fingerprint. Capture them from complete predecessor
 publication, then retain their literal native evidence across source switches.
 Only explicitly listed added revisions and the fresh revision pointer may differ. Every existing
 raw layer, resolved retained world and shared definition keeps its meaning.
+
+Explicit sharedDefinitions evidence additionally permits absent-to-present governmentForms, administrationProfiles and aristocraticProfiles definitions under the same exact current-definition, predecessor-absence, detached replay and root-equality proof as added faiths and laws. Existing definitions cannot be replaced. The original three required evidence arrays and aggregate bounds remain unchanged; optional government arrays do not alter earlier declarations. The internal compatibility extension grants no government, appointment, resource or gameplay technology by itself.
+
 Withheld or interveningly changed source definitions cannot borrow a declaration
 whose expected current publication no longer matches. Ordinary JSON cannot
 declare compatibility. docs/MODDING.md owns the interface and bounds;

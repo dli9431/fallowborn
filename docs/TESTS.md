@@ -12,6 +12,10 @@ owner runtime, historical or device acceptance.
 
 Retained shared definitions and fixed-start identities
 
+Additional estuary-governments.json and upland-governments.json inputs cover additive government forms, administration profiles and aristocratic profiles through trusted native evidence and real ordinary JSON file imports. retained-shared-identities.spec.js checks missing evidence, attempted replacement, forged current rows and warmed stale-live definitions independently for each root, with pure rejection and exact subsequent proof. A hidden new revision preserves visible retained raw/effective worlds, menu visibility, spent resources, exact people, RNG and uid through repeated loads and cold re-saves. Boolean visibility overrides also validate through ordinary JSON; malformed values remain rejected. Existing three-root evidence, configuration, edition and forgery controls remain in place.
+
+western-rulers-1096.spec.js additionally requires Raymond's existing Elvira/Bertrand stepfamily link before the first save, preserves biological parentage and named ids, and checks idempotent normalization and exact people, RNG and uid through repeated restore.
+
 retained-shared-identities.spec.js uses two independent fictional native
 predecessor/current catalogues and actual JSON file imports. It creates genuine
 predecessor envelopes, retains spent resources and converted settlements, and

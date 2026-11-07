@@ -165,6 +165,26 @@ for (const row of openings) {
   });
 }
 
+test('Raymond starts with canonical stepfamily links and retains exact people through repeated restore',async function ({page},info) {
+  await start(page,info,openings.find(function (row) {return row.scenario==='raymond_1096';}));
+  expect(await page.evaluate(function () {
+    const s=FB.state, me=s.chars[s.player.charId], spouse=s.chars[me.spouseId];
+    const child=s.chars[me.childrenIds[0]], before=JSON.stringify(s.chars), rng=FB.getRngState(), uid=FB.getUidCounter();
+    const fresh=JSON.stringify(child.stepParentIds)===JSON.stringify([spouse.id]);
+    const blood=child.fatherId===me.id && child.motherId!==spouse.id;
+    FB.ensureStepRelations(s);FB.ensureStepRelations(s);
+    const unchanged=before===JSON.stringify(s.chars) && rng===FB.getRngState() && uid===FB.getUidCounter();
+    const saved=JSON.parse(FB.save.serialize());
+    FB.save.restore(saved);FB.save.restore(JSON.parse(JSON.stringify(saved)));
+    const restored=JSON.parse(FB.save.serialize());
+    return {fresh:fresh,blood:blood,unchanged:unchanged,
+      chars:JSON.stringify(restored.state.chars)===JSON.stringify(saved.state.chars),
+      rng:(restored.rng>>>0)===(saved.rng>>>0),uid:restored.uid===saved.uid,
+      relation:JSON.stringify(FB.state.chars[child.id].stepParentIds)===JSON.stringify([spouse.id]),
+      parents:FB.state.chars[child.id].fatherId===child.fatherId && FB.state.chars[child.id].motherId===child.motherId};
+  })).toEqual({fresh:true,blood:true,unchanged:true,chars:true,rng:true,uid:true,relation:true,parents:true});
+});
+
 test('foreign household members remain at their declared homes and no later infant is invented', async function ({ page }, info) {
   await start(page, info, openings[0]);
   expect(await page.evaluate(function () {

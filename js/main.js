@@ -4334,6 +4334,16 @@ FB.CHANGELOG = [
     // Adoption and opening stories establish the final vassal roster. Give
     // fresh campaigns the same canonical local records as matching restores.
     if (FB.ensureLocalGovernment) FB.ensureLocalGovernment(state, true);
+    // Adopted people and opening households must already have the same
+    // stepfamily links that restore derives, without advancing the RNG stream.
+    if (FB.ensureStepRelations) {
+      const stepfamilyRng = FB.getRngState();
+      try {
+        FB.ensureStepRelations(state);
+      } finally {
+        FB.setRngState(stepfamilyRng);
+      }
+    }
     if (FB.production) FB.production.initialize(state);
     if (FB.openingGoals) FB.openingGoals.start(state);
     // Restore ensures the games ledger; a new campaign starts in that same shape.

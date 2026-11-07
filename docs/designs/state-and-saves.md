@@ -1542,6 +1542,9 @@ current protagonist's existing spouse family. If that spouse belongs to a
 compact royal family, required direct children are materialized while the RNG
 state is snapshotted and restored, so compatibility repair cannot alter the
 future random sequence.
+
+Fresh construction performs the same canonical stepfamily normalization after final ruler adoption and opening stories, with the RNG stream snapshotted and restored. Existing spouse and child identities supply the additive links before the first save, so matching restoration does not introduce a new step-parent relation. Repeating normalization preserves biological parentage, existing character ids and counters. The retained-load repair remains available for older saves; this changes no save format or inheritance rule.
+
 New campaigns also record additive `player.houseFounderId` as the first playable
 character for the family-tree jump. CrazyGames also uses it alongside generation 1
 to restrict faster courtship and guaranteed eligible proposals to that character;
@@ -2362,6 +2365,8 @@ The expansion changes no 800 opening actors or story definitions. Existing bundl
 Retained catalogue rules
 
 Exact additive compatibility exception
+
+Trusted shared-definition evidence may certify added government forms, administration profiles and aristocratic profiles with null predecessor and exact pristine current definitions. Reconstructing the old catalogue removes only these explicitly proven additions. After unchanged mod replay, predecessor absence, all unrelated roots, retained worlds and the genuine preceding signature must still agree. Replacements, missing evidence, forged current definitions, stale live roots and ordinary JSON compatibility metadata remain rejected. A hidden newly added world revision keeps older visibility exact through its own boolean layer, rather than rewriting the authored root.
 
 FB.mods.saveCompatibility owns the common transient decision used by
 save.otherWorld, detached v4 preflight and game.loadData. A native declaration

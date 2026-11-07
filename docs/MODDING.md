@@ -1587,16 +1587,15 @@ Revision-specific fixed-start identities
 
 A fixed start may declare revisionIdentities:{bookmarkId:{revision:{startReligion,governmentForm}}}. The map contains 1-16 declared bookmark ids and at most 32 revision records. Each record has a known startReligion, a known governmentForm, or both. A governmentForm projection requires an existing rulerRealmId start. Bookmark ids must belong to the start, and revisions must exist in that bookmark's candidate catalogue; the implicit revision is named baseline. No other identity, resource, binding or display field can be patched. The normal start fields are the default for revisions without a record. Every offered revision validates its projected identity against its own residents, ruler or original person. The projected government must match that revision's actual ruler realm and rank, including for hidden starts; it grants no adoption exception. A government-only record preserves the default faith, and a faith-only record preserves the default government. Picker, start-code creation, direct ruler adoption and saved-start resolution use the same pure projection. Retained shared-definition proofs compare the complete projected start, including its government, for every predecessor revision. Changing the map in ordinary JSON still changes its exact mod fingerprint and supplies no authority to accept an older signature. Ordinary JSON can author this field but cannot authorize an older signature. The canonical start owner resolves it for validation, creation and saved-start readers without mutating the catalogue or the saved scenario id.
 
+World-revision visibility
+
+hidden is an optional boolean whole-field revision override. An omitted value inherits the authored root or baseline; true hides that selected revision from fresh setup, and false explicitly allows the ordinary visibility checks. A newly added hidden revision can leave every older visible layer exact. Menu summaries and campaign entry resolve the selected revision; matching retained saves remain loadable under the existing save gates. The authored root and existing layers cannot be rewritten by retained compatibility evidence. Ordinary JSON imports validate the same boolean field and carry their own exact mod signature.
+
 ### Explicit retained shared-definition evidence
 
-A trusted schema-1 transition may additionally declare `sharedDefinitions`,
-with exactly `religions`, `legalTraditions` and `startScenarios` arrays. Each has
-at most 32 records, with at most 64 records total, under the declaration's
-existing depth, node and payload limits. Each record has exactly `id`,
-`predecessor` and `current`. Ids are unique within their root. Current evidence
-must equal the complete pristine current definition.
+A trusted schema-1 transition may additionally declare sharedDefinitions, with required religions, legalTraditions and startScenarios arrays and optional governmentForms, administrationProfiles and aristocraticProfiles arrays. Earlier three-root declarations remain valid without adding empty optional arrays. No other root is supported. Each array has at most 32 records, with at most 64 records total across all roots, under the declaration's existing depth, node and payload limits. Each record has exactly id, predecessor and current. Ids are unique within their root. Current evidence must equal the complete pristine current definition.
 
-Faith and law records certify additions only: `predecessor:null` means absent.
+Faith, law, government-form and administration/aristocratic-profile records certify additions only: predecessor:null means absent.
 An existing shared definition cannot be replaced under this contract. This
 preserves the meaning of saved faith ancestry and legal ids without a runtime
 catalogue swap or a saved historical-catalogue selector. A start record supplies

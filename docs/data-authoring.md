@@ -74,6 +74,8 @@ the trusted predecessor directly; never infer history from unknown revisions or
 from a saved signature. Ordinary JSON remains ordinary content and cannot
 authorize compatibility, provide signature allowlists or install callbacks.
 
+The optional governmentForms, administrationProfiles and aristocraticProfiles evidence arrays certify additions only, using null predecessor and exact complete current records. They share the existing per-root and combined limits; religions, legalTraditions and startScenarios remain required when sharedDefinitions is supplied. Exact replay and predecessor absence remain mandatory. Declare hidden on a newly added revision to withhold that fresh world while preserving the root and all older visibility. Omission inherits existing visibility, while explicit true or false uses the ordinary boolean world validator. These internal compatibility and visibility repairs add no save format, gameplay strategy or technology unlock.
+
 The shared mods owner reconstructs the old effective catalogue using unchanged
 JSON bytes and ordered bundled payloads through detached canonical import
 validation. Both installed-current and exact predecessor fingerprints must pass,
