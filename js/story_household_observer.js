@@ -253,6 +253,7 @@
     function available(s, t, item) {
       var b = beat(item.beatId);
       return living(s) && s.player.provinceId === item.provinceId && present(s) === item.provinceId &&
+        def.provinceIds.indexOf(item.provinceId) >= 0 &&
         (!local || FB.householdStories.atLocality(s, item.event)) &&
         s.turn <= item.expiresTurn && JSON.stringify(currentControl(s, item.provinceId)) === JSON.stringify(item.control) &&
         events(s, t).some(function (e) { return e.code === b.trigger && e.token === item.sourceToken &&
@@ -283,6 +284,7 @@
         t.cursors[address] = { token:token, turn:e.turn };
         if (!living(s) || b.reach === 'none') return;
         var pid = s.player.provinceId;
+        if (def.provinceIds.indexOf(pid) < 0) return;
         if (present(s) !== pid || !FB.world.byId[pid]) return;
         var location = local ? scope(e.event) : pid;
         if (b.reach === 'previous' ? t.reached.indexOf(location) < 0 : e.places.indexOf(pid) < 0) return;
