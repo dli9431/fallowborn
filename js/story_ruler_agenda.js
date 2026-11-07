@@ -143,6 +143,7 @@
       var c = choice(t, id), cancel = id === 'agenda_stop_program', st = stage(t);
       var q = c && source(s, t, c), hasAction = c && ['agenda_priority','agenda_finish'].indexOf(c.operation) < 0;
       return { id:id, allowed:!!(current(s, t) && (cancel || ready(s, st) && c && (!hasAction || q && q.allowed))),
+        reason:c && c.operation === 'agenda_story_choice' && q && !q.allowed ? { storyId:c.storyId, reason:q.reason } : null,
         facts:{ definition:copy(def), record:copy(t), subject:subject(s), turn:s.turn, date:copy(s.date), source:q,
           publicFunds:FB.treasuryAvailable(s, realm(s)), privateFunds:s.player.gold } };
     }
@@ -193,6 +194,10 @@
           status:'agenda_open', openedTurn:s.turn, outcomeTurn:null, decisions:[] };
       },
       title:function () { return FB.T(def.title); }, intro:function () { return FB.T(def.intro); },
+      people:function (s, t) {
+        return [{ characterId:t.subjectId, label:FB.T('Original incumbent'),
+          detail:FB.T('This personal program belongs to this ruler and the original mandate.'), reason:'' }];
+      },
       status:function (s, t) {
         var st = stage(t), lines = [];
         if (t.status === 'agenda_interrupted') lines.push(FB.T('This personal program ended when its original incumbent lost the office, mandate or required jurisdiction.'));
@@ -200,6 +205,20 @@
         else if (t.status === 'agenda_complete') lines.push(FB.T('The program is complete. Its decisions create no additional reward.'));
         else {
           lines.push(FB.T(st.text));
+          var rid = realm(s), seen = Object.create(null);
+          lines.push(FB.treasurySeparated(s, rid) ?
+            FB.T('Available public funds: {money:funds}. Private purse: {money:privateFunds}.',
+              { funds:FB.treasuryAvailable(s, rid), privateFunds:s.player.gold }) :
+            FB.T('Available court funds: {money:funds}.', { funds:FB.treasuryAvailable(s, rid) }));
+          st.choices.forEach(function (c) {
+            if (!c.storyId || seen[c.storyId]) return;
+            seen[c.storyId] = true;
+            var story = context.get(c.storyId), rec = FB.stories.record(s, c.storyId);
+            var status = story && rec && story.status && story.status(s, rec);
+            if (!status) return;
+            lines.push(FB.T('{story}: {status}.', { story:story.title(s, rec), status:status.name }));
+            lines = lines.concat(status.lines || []);
+          });
           if (!ready(s, st)) lines.push(FB.T('The next review opens in year {year}, season {season}.', { year:st.year, season:st.season + 1 }));
         }
         return { phase:t.status, name:st && t.status === 'agenda_open' ? FB.T(st.name) : FB.T(def.title), lines:lines };
@@ -214,7 +233,11 @@
         rows.push({ id:'agenda_stop_program', label:FB.T('Set the program aside'), detail:FB.T('End this personal agenda without a payment, political commitment or restriction on ordinary play.') });
         return rows;
       }, quote:quote, apply:apply, day:day, season:day, year:day,
-      blocker:function () { return FB.T('The original incumbent, review date and current source decision or recorded public action must still permit this choice. Use its ordinary review or retain the present arrangements.'); },
+      blocker:function (s, t, reason) {
+        var story = reason && reason.storyId && context.get(reason.storyId);
+        if (story && story.blocker) return story.blocker(s, FB.stories.record(s, reason.storyId), reason.reason);
+        return FB.T('The original incumbent, review date and current source decision or recorded public action must still permit this choice. Use its ordinary review or retain the present arrangements.');
+      },
       review:function (s, t, id, reviewed) {
         var q = reviewed.facts.source, lines = [FB.T('Recording this agenda adds no reward. Any political effect uses the existing decision and its current consent.')];
         if (q && Number.isFinite(q.cost)) lines.push(FB.T('Public treasury cost: {money:cost}.', { cost:q.cost }));

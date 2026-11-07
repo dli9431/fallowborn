@@ -27002,6 +27002,7 @@ window.FB = window.FB || {};
       historyView:!!returnContext && !royalFamilyNavigation,
       replaceView:!!replaceView,
       historyBackRender:returnContext && (returnContext.view === 'marriage-finder' ||
+        returnContext.view === 'story' ||
         returnContext.view === 'abbeys' ||
         returnContext.view === 'family-office' ||
         returnContext.view === 'religious-office-result' ||

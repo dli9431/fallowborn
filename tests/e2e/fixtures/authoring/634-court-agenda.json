@@ -1,0 +1,37 @@
+{
+  "name": "Independent Medinan court reviews",
+  "storyInstances": {
+    "umar_court_agenda_634": {
+      "id": "umar_court_agenda_634",
+      "type": "ruler_agenda",
+      "subjectRealmId": "rashidun_634",
+      "requires": ["iraqi_front_634"],
+      "title": "Accounts before campaigning",
+      "intro": "A peaceful Iraqi decision followed by a later accounts review.",
+      "stages": [
+        {
+          "id": "import_iraqi_review",
+          "name": "The Iraqi opportunity",
+          "text": "Review the actual Iraqi source without making a Syrian decision.",
+          "year": 634,
+          "season": 2,
+          "choices": [
+            {"id": "import_decline_iraq", "label": "Use ordinary diplomacy", "detail": "Close this opportunity without payment or declaration.", "operation": "agenda_story_choice", "storyId": "iraqi_front_634", "choiceId": "leave_campaign"},
+            {"id": "import_keep_iraq", "label": "Retain present arrangements", "detail": "Make no public commitment.", "operation": "agenda_priority"}
+          ]
+        },
+        {
+          "id": "import_winter_accounts",
+          "name": "Winter accounts",
+          "text": "Consider only the resources then available.",
+          "year": 634,
+          "season": 3,
+          "choices": [
+            {"id": "import_finish_accounts", "label": "Conclude the reviews", "detail": "Close without payment or reward.", "operation": "agenda_finish"},
+            {"id": "import_keep_accounts", "label": "Retain present arrangements", "detail": "Complete without another commitment.", "operation": "agenda_priority"}
+          ]
+        }
+      ]
+    }
+  }
+}
