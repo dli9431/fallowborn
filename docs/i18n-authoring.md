@@ -42,6 +42,15 @@ Regional administrationProfiles and aristocraticProfiles maps may stage date-own
 
 Household story presentation
 
+The assembled Damascus program and its goal profile are complete literal entries
+in householdTracks_634_damascus and openingProfiles_634_damascus. Their full
+revision ids use the existing householdStory and openingProfile owners; shared
+English retains exact-source aliases. Composition adds only local operational
+transitions and revision bindings. It does not derive or replace display prose.
+634-catalogue-integration.spec.js checks literal display reachability and exact
+definition equivalence with the former composer. Generated catalogues remain an
+explicit integration action.
+
 data/story_ruler_agendas_1241.js declares literal rulerAgendas_1241 and openingProfiles_rulers_1241 tables. Their stage/choice and goal/contact text use the ordinary rulerAgenda and openingProfile owners and exact-source aliases. The generic dated-agenda extractor discovers rulerAgendas_<suffix> in story sources without executing composition. Scenario fields remain in literal startScenarios_1241 under scenario owners. Royal personal names, kin ids, dates and physical site ids stay untranslated. No catalogue generation accompanies feature authoring.
 
 Household presentation sources may also use data/story_<suffix>.js with literal FBDATA.householdTracks_<suffix> and FBDATA.openingProfiles_<suffix> tables. data/story_novgorod_1241.js uses this convention. The static extractor preserves the same householdStory and openingProfile display owners and exact-source aliases as story_households_<suffix>.js, without executing the source. Scenario text remains in data/starts_novgorod_1241.js under the ordinary scenario owners. No generated catalogues are changed by feature authoring.

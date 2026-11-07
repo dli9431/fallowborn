@@ -606,6 +606,9 @@
     ['realmTech','armyDown','armyDownSurvival','armyDetachmentDown','armyCohorts'].forEach(function (key) {
       rekey(s[key], id);
     });
+    // This court already owns its seeded knowledge. Restore must not treat
+    // adoption as the creation of a new player nation and seed it again.
+    if (s.realmTech && s.realmTech.player) s.realmTech.player.historicalSeeded = 1;
     Object.keys(s.localInstitutions || {}).forEach(function (key) {
       var institution = s.localInstitutions[key];
       ['standing','petitions'].forEach(function (field) {
