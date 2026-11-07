@@ -89,6 +89,50 @@ FBDATA.openingProfiles_634_damascus = {
         {when:{not:local},next:'remote'}
       ];
     });
+    // The assembled world selects a complete independent program. Earlier
+    // revisions keep their original graph and companion commitments.
+    var full = JSON.parse(JSON.stringify(def));
+    full.id = 'damascus_household_full_634';
+    full.intro = 'A Syriac Christian craft household considers work, actual local changes and a continuing livelihood in Damascus.';
+    delete full.stages.obligations;
+    delete full.stages.roads;
+    full.stages.household.text = 'Consult Kin for your actual family and Station & home for the private purse, property and recorded obligations. Your Syriac Christian household is one local community perspective, not a representative of every resident. Identity alone establishes no exact tax, exemption or service.';
+    full.stages.crafting.choices[1].next = 'local_life';
+    full.stages.working.afterWork.next = 'local_life';
+    full.stages.working.choices[0].next = 'local_life';
+    full.stages.local_life.text = 'Consult Land for current local authority. An observed change of sovereignty can be reviewed once; war alone proves no local damage or requisition. With no change, ordinary household plans continue.';
+    full.stages.local_life.choices = [
+      {id:'review_control',label:'Review changed local authority',detail:'Review an actual unacknowledged local change without paying or changing identity.',when:{kind:'control_changed',stageId:'authority'},operation:{kind:'record_decision'},next:'authority'},
+      {id:'continue_work',label:'Continue ordinary craft work',detail:'Select ordinary craft work. Only its usual daily transaction pays income.',operation:{kind:'set_focus',focusId:'craft_work'},next:'horizon'},
+      {id:'keep_plans',label:'Keep the present plans',detail:'Continue without changing focus, funds or obligations.',operation:{kind:'record_decision'},next:'horizon'}
+    ];
+    full.stages.authority = {
+      name:'The present local authority',
+      text:'Local sovereignty has actually changed since this household began observing it. Review Land and the recorded household obligations. This report supplies no protection, tax exemption, payment or conversion; your community identity remains your own.',
+      incident:{source:'control',provinceId:'damascus',milestone:'rule_changed'},afterIncident:'horizon',
+      choices:[{id:'acknowledge',label:'Continue under the current records',detail:'Acknowledge this occurrence once at no cost. Ordinary work and existing obligations retain their own rules.',operation:{kind:'record_decision'},next:'horizon'}],
+      transitions:JSON.parse(JSON.stringify(full.stages.local_life.transitions))
+    };
+    full.stages.horizon.name = 'A continuing home';
+    full.stages.horizon.text = 'Remaining in Damascus requires no journey or public grant. You can conclude the household plan here regardless of whether any court starts a war. Ordinary personal travel remains a separate decision; departure ends this local plan without moving relatives or claiming later settlement.';
+    full.stages.horizon.choices = [full.stages.horizon.choices[0]];
+    FBDATA.householdTracks_634_damascus[full.id] = full;
+    var goals = JSON.parse(JSON.stringify(FBDATA.openingProfiles_634_damascus.opening_damascus_634));
+    goals.id = 'opening_damascus_full_634';
+    goals.requires = [full.id];
+    goals.goals[2].criterion.storyId = full.id;
+    FBDATA.openingProfiles_634_damascus[goals.id] = goals;
+    var revision = source.input.bookmark.revisions.core_courts_v4;
+    if (!revision) throw new Error('Missing assembled Damascus world');
+    delete unit.locations;
+    unit.bindings = {root:{locations:['damascus']},revisions:{}};
+    if (Array.isArray(source.input.bookmark.starts)) unit.bindings.root.offered = true;
+    Object.keys(source.input.bookmark.revisions).forEach(function (id) {
+      unit.bindings.revisions[id] = Array.isArray(source.input.bookmark.revisions[id].starts) ? {offered:true} : {};
+    });
+    unit.bindings.revisions.core_courts_v4.trackOverride = {
+      tracks:[full.id,goals.id],trackLocations:{damascus_household_full_634:['damascus'],opening_damascus_full_634:['damascus']}
+    };
     var declarations = Object.assign({},FBDATA.householdTracks_634_damascus,FBDATA.openingProfiles_634_damascus);
     unit.storyAfter = FB.bookmarkCompositions.captureStories('autumn_634','damascus',declarations);
     unit.storyInstances = JSON.parse(JSON.stringify(declarations));
