@@ -516,6 +516,15 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+634-frontier-campaigns.spec.js covers the hidden assembled Syrian and Iraqi
+district opportunities, independent choices, finite offer and commitment
+boundaries, ordinary declaration permission, refused-start atomicity, political
+costs, current control, living courts, succession, adoption before and after story
+initialization, timeout and ordinary war endings. It imports independent JSON
+policies through Mods, checks detached malformed-input/save rejection and repeated
+matching restoration without another declaration, cost or historical event.
+Boundaries are staged; these checks establish no long campaign or device acceptance.
+
 household-control-predicate.spec.js imports two independent household graphs and covers unchanged baselines, actual sovereign changes before and after the track hook, choice and automatic branches, a different sovereign at fresh attachment, pure queries and detached rejection of malformed predicates. Save checks retain pending control facts, resolved and expired receipts, existing graph closure routes and missing records without reinitialization. These staged boundaries do not establish longer campaign or device acceptance.
 
 household-observer-local-control.spec.js imports ordinary local-control observers in a world without campaigns. It covers seeded unchanged baselines, actual transfers, separate county cursors, local presence, generation invalidation, personal priority, shared observer receipts, independent expiry/continuation terms, pure malformed-source rejection, pending/closed/unobserved restore, absent records and strict baseline/token/receipt validation. Retained campaign and exact-site source configurations also round trip with their existing receipt versions and behavior. All boundaries are staged without a long simulation.

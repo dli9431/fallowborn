@@ -1,5 +1,43 @@
 Autumn 634 opening
 
+Conditional frontier opportunities
+
+The hidden core_courts_v4 world attaches syrian_front_634 and iraqi_front_634 as
+independent ordinary campaign opportunities. The original Medinan court acts
+against the current Roman controller of damascus or Sasanian controller of kufa.
+Current living incumbents and legitimate precommitment successors participate;
+the actor's committed generation governs later interruption. The existing Damascus
+site and Hira district presentation remain unchanged. County control is a coarse
+simulation objective, distinct from an exact urban surrender or jurisdiction.
+
+The Hira district's retained Sasanian opening controller is a game-scale choice,
+not evidence of uncontested possession of the town in autumn 634. Retrospective
+accounts report earlier tribute agreements at Hira and continued frontier fighting;
+they do not determine the game's county polygon or a single continuous local
+authority. See [al-Baladhuri, Hitti translation, p. 391](https://en.wikisource.org/wiki/Page:Baladhuri-Hitti1916.djvu/407).
+Damascus's retrospective accounts likewise transmit differing conquest and document
+dates; they do not supply a day-exact simulation deadline. See
+[al-Baladhuri, Hitti translation, p. 189](https://en.wikisource.org/wiki/Page:Baladhuri-Hitti1916.djvu/205).
+
+Both offers run from the actual autumn opening until closure on 635/3/90, using
+the supported campaign cutoff. Commitments last 360 days for Syria and 180 for
+Iraq from successful ordinary declaration. These are finite gameplay intervals,
+not converted battle dates or siege durations. Lack of frontier contact, consent,
+public authority or ordinary permission can prevent either throughout the window.
+Busy shared courts may delay one while the other proceeds. Decline and no start
+are complete outcomes. No capital, corridor, host, levy, payment or fabricated
+territorial right is supplied to force eligibility.
+
+Ordinary war owns every control change. Actual actor control with its recorded war
+resolves success; lost authority interrupts, third-party control diverts, an ended
+war without the objective fails, and the finite commitment can time out while war
+continues. Neither declaration supplies named-battle news, casualties, property
+settlements, conversion, royal death or imperial destruction. Household work and
+conclusions remain independent. Matching saves resume current commitments without
+repeating history. Each frontier's technology-impact decision is none: political
+opportunity requires no discovery, while ordinary military gates remain binding.
+The selectable predecessor and full-world visibility remain unchanged.
+
 Hidden assembled courts and institutions
 
 data/bookmark_634_courts.js contains complete Medinan, Eastern Roman and Sasanian
