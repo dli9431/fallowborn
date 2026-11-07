@@ -5958,19 +5958,32 @@ window.FB = window.FB || {};
     };
   };
 
-  FB.proposeLocalCouncilMotion = function (state, motionId) {
+  FB.resolveLocalCouncilVote = function (state, onPass) {
+    const status = FB.localCouncilMotionStatus(state);
+    if (!status.ready) return false;
+    state.player.localCouncil.nextMotionTurn = state.turn + LOCAL_COUNCIL_DAYS;
+    const passed = FB.chance(status.chance);
+    if (passed) onPass();
+    return {passed:passed, chance:status.chance};
+  };
+
+  FB.proposeLocalCouncilMotion = function (state, motionId, review) {
+    if (FB.industryLaws && FB.industryLaws.forMotion(motionId)) {
+      return FB.industryLaws.propose(state, motionId, review);
+    }
     const status = FB.localCouncilMotionStatus(state);
     const def = FBDATA.localCouncilMotions[motionId];
     if (!status.ready || !def) return false;
     const seat = state.player.localCouncil;
-    seat.nextMotionTurn = state.turn + LOCAL_COUNCIL_DAYS;
-    const passed = FB.chance(status.chance);
-    if (passed) {
+    const result = FB.resolveLocalCouncilVote(state, function () {
       seat.ordinance = {
         id:motionId,
         passedTurn:state.turn,
         endTurn:state.turn + LOCAL_COUNCIL_DAYS
       };
+    });
+    const passed = result.passed;
+    if (passed) {
       FB.news(state, FB.msg('news.local_council.motion_passed',
         '⚖ The council of {province} adopts {motion} for one year.', {
           province:FB.world.byId[seat.provinceId].name,

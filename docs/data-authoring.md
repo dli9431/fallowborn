@@ -161,6 +161,15 @@ Keep per-tick work bounded. Resolve declaration graphs at import or activation; 
 
 Implemented extension surfaces
 
+`industryLaws` composes bounded license or prohibition terms with an existing
+local council motion, dated county jurisdiction and market-stall consumer. The
+native London declaration and independent industry-laws-river.json ordinary
+import differ in term, fee, transition and explicit residence beneficiaries.
+Both use the same pure validators, reviewed council approval, purchase, operating
+permission and conserved-account transactions. Display fields remain under
+localCouncilMotions; JSON cannot provide executable law or justice callbacks.
+See docs/designs/industry-laws.md and the Industry operating laws schema.
+
 buildingOperationProfiles and effective bookmark/revision buildingOperationAssignments bind conserved draw/store/deliver/use routes to exact ordinary assets and actual site demand. Shared detached compilation, quote/commit, construction and bounded annual AI protect finite water, paid work/upkeep and existing reserves. One actual use supplies one matching existing building field through every fiscal, population, migration, piety, research and UI projection. Unbound assets keep their defaults. The independent water-operations-river.json and water-operations-catchment.json imports contrast supplied conveyance with dry storage and shared demand competition. Strict optional version-1 asset/receipt records restore without allocation, payment, output or new property. The ordinary mod signature covers all imported terms. See docs/designs/building-operations.md and docs/MODDING.md for exact bounds and unsupported seasonal, named-worker and production extensions.
 
 siteResourceProfiles and effective bookmark/revision siteResourceAssignments compose bounded flow, empty storage and access capacity at actual physical sites. The independent site-resources-river.json and site-resources-upland.json ordinary imports vary periods, water/launching/grazing units, layouts, world revisions and exact existing-office permission. Detached compilation checks all same-import references, site uniqueness and connection cycles. Shared quotes and commits conserve reservations, consumption and connected storage transfers under current property/office authority, with no inferred goods, facility effects or automatic AI demand. The optional version-1 owner restores exact balances and historical reservation identities without renewal or replay. See docs/designs/site-resources.md and docs/MODDING.md for fields, limits and authoring boundaries.

@@ -255,6 +255,13 @@ The version-3 save envelope may carry optional meta.household with version 1, nu
 
 ## Save v4 platform schema
 
+Optional `state.industryLaws` schema 1 retains enacted operating terms, original
+issuers/payees, paid enterprise permissions and voluntary operation choices.
+`FB.industryLaws.validate` runs in detached platform validation and serialization.
+Absence is valid and is never filled during restore. It rejects changed effective
+terms, malformed identities/dates and overlapping paid windows without replaying
+approval, payment or acquisition. See [Targeted operating laws](industry-laws.md).
+
 This frozen contract fixes which bookmark-platform facts a campaign saves and which it derives, so every system that adds saved state writes against one schema and v4 keeps a single migration. FB.save.v4.validatePlatform accepts the optional fields described here; the registries that resolve their ids arrive with the systems that use them.
 
 Envelope. platformSchema:2 sits beside authoritySchema:4 and requires state.start.revision. Supported schema 1, unstamped early v4 and v3 records without a world revision migrate to baseline and gain schema 2 on serialization. Present unknown schema numbers are rejected. A revision-bearing record cannot masquerade as schema 1 or as an unstamped legacy record. The World-revision compatibility section defines resolution and older-reader rejection. Changing saved-field meaning requires another explicit contract review and migration.

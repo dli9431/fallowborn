@@ -494,6 +494,10 @@ FBDATA.localCouncilMotions = {
     name:'Watch and Ward', icon:'🛡',
     desc:'An organized town watch adds 30 men to the household retinue.',
     fx:{ retinue:30 }
+  },
+  london_stall_license: {
+    name:'London stall permissions', icon:'⚖', fx:{},
+    desc:'An optional reconstruction of chartered trading privileges: market stalls pay {money:2} for 90 days of operation, with 30 days to arrange existing businesses. Households resident in London are exempt. Residence represents civic privilege at game scale; this is not a historical fee schedule.'
   }
 };
 

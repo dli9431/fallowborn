@@ -554,6 +554,19 @@ and replaced grants, exact matching restore and atomic malformed save rejection.
 The three ordinary deed entries and mobile scroll/focus return are included.
 These bounded checks do not establish historical litigation or device acceptance.
 
+`industry-laws.spec.js` covers optional London council enactment and repeal,
+pure/cancelled reviews, seeded refusal, unauthorized and stale rejection,
+existing-business grace, actual exemptions, paid permissions and renewal,
+prohibited income/physical output/upgrade effects, retained pause/closure,
+remote acquisition and original-payee conservation. It imports the independent
+fictional river JSON through Mods and covers reduced fees and prohibition,
+malformed-import purity, issuer generation/control changes, repeated current
+save round trips, malformed receipts, exact mod mismatch and phone navigation.
+It also covers the actual household succession owner, atomic multi-recipient
+account preflight, suspended-law duplication, dead-head rejection and the
+auction's combined-price and stale-review gates before bidding advances.
+It does not establish device, appearance or owner play acceptance.
+
 634-local-notices.spec.js covers the hidden assembled revision's two five-beat campaign observers and enumerated sovereignty reports, ordinary farmer/craftsman delivery, quiet initial source snapshots, real campaign endings, scoped matching forces, actual residence/presence, personal control priority before dispatch and through expiry, shared victory/control receipts, costless acknowledgment, repeated current-content save/restore, absent observer preservation and atomic malformed-save rejection. The real 634-local-notices.json import varies source, reach and expiry, checks unsupported demands and pure rejection, retains exact mod content and rejects changed content. No historical siege, harm, population or payment is inferred by these reports.
 
 634-frontier-campaigns.spec.js covers the hidden assembled Syrian and Iraqi

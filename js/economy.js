@@ -3382,6 +3382,7 @@ window.FB = window.FB || {};
 
   FB.enterpriseFullyStaffed = function (state, enterprise) {
     if (!enterprise) return false;
+    if (FB.industryLaws && !FB.industryLaws.operation(state, enterprise).operational) return false;
     return FB.enterpriseStaffAssigned(state, enterprise) + 0.0001 >=
       FB.enterpriseStaffRequired(enterprise);
   };
@@ -4098,11 +4099,22 @@ window.FB = window.FB || {};
         code:'invalid_site', reason:FB.T('This settlement is not available.')
       });
     }
-    const cost = def
+    const baseCost = def
       ? (opts.price === undefined
         ? FB.enterpriseCost(state, type, provinceId)
         : Math.max(0, Number(opts.price) || 0))
       : 0;
+    const industryQuote = def && p && FB.industryLaws ? FB.industryLaws.quoteOperation(state,
+      {type:type, provinceId:provinceId, settlement:settlement}, 'acquire', baseCost) : null;
+    const cost = baseCost + (industryQuote ? industryQuote.amount : 0);
+    if (industryQuote && !industryQuote.status.permitted) blockers.push({code:'industry_law',
+      reason:FB.industryLaws.reason(industryQuote.status)});
+    if (industryQuote && industryQuote.status.permitted && industryQuote.status.charges.some(function (charge) {
+      return !FB.treasuryPublicAccountSnapshot(state, charge.payeeRealmId);
+    })) blockers.push({code:'industry_payee', reason:FB.T('The original law payee has no available public account.')});
+    if (industryQuote && !industryQuote.ready && p.gold >= cost && !blockers.length) {
+      blockers.push({code:'industry_permission', reason:industryQuote.reason});
+    }
     let occupied = false;
     if (def && p) {
       for (const enterprise of (p.enterprises || [])) {
@@ -4196,7 +4208,7 @@ window.FB = window.FB || {};
     }
     return {
       id:type, def:def || null, provinceId:provinceId, settlement:settlement,
-      site:site || null, cost:cost, funds:funds, shortfall:shortfall,
+      site:site || null, cost:cost, baseCost:baseCost, industryQuote:industryQuote, funds:funds, shortfall:shortfall,
       workers:workers, techLocked:!tech.ready, missingTech:tech.missing.slice(),
       occupied:occupied, blockers:blockers, warnings:warnings,
       primary:blockers[0] || null, ready:blockers.length === 0
@@ -4298,14 +4310,20 @@ window.FB = window.FB || {};
         ignoreTech:grandfatheredAuction,
         price:invoicePrice
       });
-    const price = status.cost;
     if (!status.ready) return false;
-    state.player.gold -= price;
+    if (opts.industryQuote && (!status.industryQuote ||
+        FB.mods.fingerprint(opts.industryQuote) !== FB.mods.fingerprint(status.industryQuote))) return false;
+    if (status.industryQuote && !status.industryQuote.ready) return false;
+    const payments = status.industryQuote ? status.industryQuote.status.charges.map(function (c) {
+      return {realmId:c.payeeRealmId, amount:c.amount};
+    }) : [];
+    if (!FB.treasuryHouseholdPurchase(state, payments, status.baseCost)) return false;
     const e = {
       uid:'enterprise_' + FB.uid(), type:type, provinceId:provinceId,
       settlement:settlement, workerId:null
     };
     FB.enterpriseList(state).push(e);
+    if (status.industryQuote) FB.industryLaws.chargeAcquisition(state, e, status.industryQuote);
     for (const worker of status.workers) {
       if (!workerBusy(state, worker.id)) {
         FB.assignEnterprise(state, e.uid, worker.id);
@@ -4321,8 +4339,8 @@ window.FB = window.FB || {};
     return e;
   };
 
-  FB.buyEnterprise = function (state, type, settlement) {
-    return FB.acquireEnterprise(state, type, state.player.provinceId, settlement);
+  FB.buyEnterprise = function (state, type, settlement, industryQuote) {
+    return FB.acquireEnterprise(state, type, state.player.provinceId, settlement, {industryQuote:industryQuote});
   };
 
   /* ---------- bounded market auctions ----------
@@ -4626,14 +4644,24 @@ window.FB = window.FB || {};
     return auction;
   };
 
+  function auctionEnterpriseBidStatus(state, auction, amount) {
+    const lot = auction && auction.lot;
+    return lot && lot.kind === 'enterprise' ? FB.enterprisePurchaseStatus(state, lot.type,
+      lot.provinceId, lot.settlement, {price:amount, ignoreTech:true}) : null;
+  }
+
   FB.auctionBidOptions = function (state) {
     const auction = FB.ensureAuction(state);
     if (!auction || auction.bidCount >= auctionMaxRounds()) return [];
     const out = [];
     for (let i = 1; i <= 3; i++) {
       const amount = auction.currentBid + auction.bidIncrement * i;
+      const purchase = auctionEnterpriseBidStatus(state, auction, amount);
       out.push({ increments:i, amount:amount,
-        affordable:state.player.gold + 0.000001 >= amount });
+        total:purchase ? purchase.cost : amount,
+        operatingFee:purchase && purchase.industryQuote ? purchase.industryQuote.amount : 0,
+        industryQuote:purchase ? purchase.industryQuote : null,
+        affordable:purchase ? purchase.ready : state.player.gold + 0.000001 >= amount });
     }
     return out;
   };
@@ -4688,13 +4716,22 @@ window.FB = window.FB || {};
       });
   }
 
-  FB.placeAuctionBid = function (state, increments) {
-    const auction = FB.ensureAuction(state);
+  FB.placeAuctionBid = function (state, increments, industryQuote) {
     increments = Math.floor(Number(increments) || 0);
+    if (industryQuote) {
+      const offered = state.player.auction;
+      const reviewed = offered && auctionEnterpriseBidStatus(state, offered,
+        offered.currentBid + offered.bidIncrement * increments);
+      if (!reviewed || !reviewed.ready || !reviewed.industryQuote ||
+          FB.mods.fingerprint(industryQuote) !== FB.mods.fingerprint(reviewed.industryQuote)) return false;
+    }
+    const auction = FB.ensureAuction(state);
     if (!auction || increments < 1 || increments > 3 ||
         auction.bidCount >= auctionMaxRounds()) return false;
     const amount = auction.currentBid + auction.bidIncrement * increments;
     if (state.player.gold + 0.000001 < amount) return false;
+    const purchase = auctionEnterpriseBidStatus(state, auction, amount);
+    if (purchase && !purchase.ready) return false;
     auction.bidCount++;
     auction.currentBid = amount;
     if (amount >= auction.rivalMaximum) {
@@ -4861,6 +4898,7 @@ window.FB = window.FB || {};
   // Local hires have random skills and traits. Preview a typical unmodified
   // skill (0..6 plus quality 1), without generating people or consuming RNG.
   FB.enterpriseLocalStaffYieldEstimate = function (state, e) {
+    if (FB.industryLaws && !FB.industryLaws.operation(state, e).operational) return 0;
     const def = FBDATA.enterprises[e.type];
     if (!def) return 0;
     const operational = FB.enterpriseOperationalWorkerIds(state, e);
@@ -4877,6 +4915,7 @@ window.FB = window.FB || {};
   // Physical output always uses baseline yield, never army-sale earnings.
   FB.enterprisePhysicalYield = function (state, e) { return FB.enterpriseYield(state, e); };
   function readEnterpriseYield(state, e, chainSeen) {
+    if (FB.industryLaws && !FB.industryLaws.operation(state, e).operational) return 0;
     const operational = FB.enterpriseOperationalWorkerIds(state, e);
     if (enterpriseStaffFromIds(state, operational) + 0.0001 <
         FB.enterpriseStaffRequired(e)) return 0;
@@ -5039,6 +5078,7 @@ window.FB = window.FB || {};
 
   function staffingCandidateYield(state, enterprise, workerId) {
     if (!workerId) return 0;
+    if (FB.industryLaws && !FB.industryLaws.operation(state, enterprise).operational) return 0;
     return Math.round(enterpriseWorkerYield(state, {
       type:enterprise.type,
       provinceId:enterprise.provinceId,
@@ -5051,6 +5091,7 @@ window.FB = window.FB || {};
     const ids = Array.isArray(workerIds) ? workerIds.filter(Boolean) : [];
     if (!ids.length) return 0;
     return Math.round(FB.enterpriseYield(state, {
+      uid:enterprise.uid,
       type:enterprise.type,
       provinceId:enterprise.provinceId,
       settlement:enterprise.settlement,
