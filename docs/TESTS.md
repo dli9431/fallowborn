@@ -516,6 +516,8 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+634-local-notices.spec.js covers the hidden assembled revision's two five-beat campaign observers and enumerated sovereignty reports, ordinary farmer/craftsman delivery, quiet initial source snapshots, real campaign endings, scoped matching forces, actual residence/presence, personal control priority before dispatch and through expiry, shared victory/control receipts, costless acknowledgment, repeated current-content save/restore, absent observer preservation and atomic malformed-save rejection. The real 634-local-notices.json import varies source, reach and expiry, checks unsupported demands and pure rejection, retains exact mod content and rejects changed content. No historical siege, harm, population or payment is inferred by these reports.
+
 634-frontier-campaigns.spec.js covers the hidden assembled Syrian and Iraqi
 district opportunities, independent choices, finite offer and commitment
 boundaries, ordinary declaration permission, refused-start atomicity, political
