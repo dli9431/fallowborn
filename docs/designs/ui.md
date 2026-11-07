@@ -3933,6 +3933,8 @@ Political world stories and date-window campaigns use the shared sheet as read-o
 
 Ruler opening onboarding
 
+Personal agendas show the original bound incumbent with the shared portrait and character-sheet return. The current review lists available court funds, with separate public/private amounts only for separated accounts, and each referenced source's live status once. Ordinary-declaration frontiers name the actual objective controller and initiating court; their result is not relabeled as the reader's victory. These reads spend nothing and acknowledge no source. Decisions continue through the shared story review, cost disclosure and retained modal navigation.
+
 Existing-ruler openings pin the authored name, sex and culture/faith pair in character creation, disable name reroll, and offer only the existing court household. Their intro explains the actual court, territory and host before play. The Ruling a court checklist in Deeds replaces commoner First steps: review a court story, review Rank & Realm, and let days advance. It then joins ordinary family guidance. Reviewing a sheet records only onboarding progress and never accepts an agreement.
 
 Ruler choices use the existing story card, quote, confirmation and outcome acknowledgment. Costs, term lengths, territorial prerequisites and the separation of office, service and land appear in the choice detail. A stale review cannot apply. Back, Escape, Close and acknowledgment use the shared scroll and focus return. A future campaign stays out of Deeds until its date window; a live player opportunity identifies that it awaits the player's decision.

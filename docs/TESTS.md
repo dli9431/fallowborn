@@ -1,5 +1,7 @@
 Autumn 634 core identity coverage
 
+634-ruler-agendas.spec.js covers the two assembled incumbent starts, unchanged earlier revision attachments and visibility, four-review peaceful completion, exact identity/rank/faith/treasury adoption, independent delegated frontier decisions, actual ordinary costs and blockers, stale confirmation, defender participation, truthful third-party diversion, public-appointment observation, original-person/generation/jurisdiction interruption, absent-track restoration and repeated current-content saves. A compact story sheet shows the original portrait and retains nonzero scroll and focus through character and decision returns. The independent 634-court-agenda.json enters through the ordinary Mods file picker and varies source, review order and earliest season; malformed source operations reject without data/RNG/UID mutation, and changed content under the same mod name rejects the saved campaign atomically. These bounded checks do not establish device, visual or longer campaign acceptance.
+
 634-identities.spec.js covers scoped local faith availability, exact unchanged
 resident weights and unrelated communities, fresh fixed household starts and
 matching restoration. Pinned predecessor data under fixtures/634-core-identities

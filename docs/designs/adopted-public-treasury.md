@@ -1,5 +1,7 @@
 Adopted dynastic public treasuries
 
+The assembled autumn 634 Eastern Roman court opts in through its realm declaration. Heraclius adopts that court's existing public account once, while the scenario purse remains private. Earlier 634 revisions retain their original unified-account behavior. This is a dated configuration of the existing capability and adds no technology or saved schema.
+
 Compact preflight supplies an omitted realm alive:true only on a detached validation view. An explicit false or malformed live flag cannot satisfy an active treasury's provenance. Both compact and expanded snapshots preserve the original account and private cash through matching restoration, with no wire-version change or opening reserve replay.
 
 An ordinary nonmobile dynastic realm may declare publicTreasury with exactly schema:1. This opts its existing-ruler starting adoption into separate public cash without changing its government, legal property, liege, incumbent, private station or ordinary office eligibility. Omission retains the unified dynastic purse. Elective and delegated institutions retain their existing contracts and cannot declare this option. The effective bookmark revision's complete realm declaration is the owner; ordinary JSON imports use the same pure validator.

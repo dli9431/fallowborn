@@ -1,5 +1,11 @@
 Autumn 634 opening
 
+Ruler review scope
+
+The assembled court revision gives Umar four immediate reviews of mandate/accounts, the independent Syrian and Iraqi opportunities, and continued rule from Medina. Heraclius receives four reviews of the actual administrative court, eastern holdings/accounts, the existing Syrian defense or diplomacy choice, and continued rule from Constantinople. Review order and immediate availability are gameplay choices, not a recovered council agenda or itinerary. The capital-based Heraclius start remains an explicit reconstruction. Earlier world revisions keep their original personal agendas; both ruler starts and the expanded world retain their hidden visibility.
+
+The priorities use the existing selection, administration, treasury, appointment and ordinary campaign systems. The assembled Eastern Roman realm uses the existing public-account preservation option at adoption; its private scenario purse is not the imperial treasury. This is an accounting configuration, not a researched amount of historical cash. Reviews create no historical officeholder, command, relative, payment or military result. Both frontier opportunities may be declined or left undecided; changed control is displayed and source conclusions are acknowledged without recasting an attacker's success as the defender's victory. The qualified county objectives and finite campaign intervals below remain simulation choices. Al-Baladhuri's retrospective [Damascus chronology](https://en.wikisource.org/wiki/Page:Baladhuri-Hitti1916.djvu/205) and [Hira agreements](https://en.wikisource.org/wiki/Page:Baladhuri-Hitti1916.djvu/407) are not evidence for exact county control or a mandatory sequence, so no historical conquest claim or timetable is added to these reviews.
+
 Conditional frontier opportunities
 
 The hidden core_courts_v4 world attaches syrian_front_634 and iraqi_front_634 as

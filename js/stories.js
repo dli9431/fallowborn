@@ -648,7 +648,7 @@
       people.forEach(function (person) {
         var c = person.characterId && s.chars[person.characterId];
         html += '<button type="button" class="actionbtn" data-story-person="' + esc(person.characterId || '') +
-          '" aria-disabled="' + (!c) + '"><b>' + esc(person.label) + (c ? ': ' + esc(FB.fullName(c)) : '') +
+          '" aria-disabled="' + (!c) + '">' + (c ? FB.faceTag(c, 34, 40) : '') + '<b>' + esc(person.label) + (c ? ': ' + esc(FB.fullName(c)) : '') +
           '</b><br><span class="hint">' + esc(person.detail) + ' ' + esc(person.reason) + '</span></button>';
       });
       for (var choice of FB.stories.choices(s, id)) {
@@ -663,6 +663,7 @@
         navigation.historyView = true; navigation.historyBack = true;
       }
       UI.openModal(story.title ? story.title(s, rec) : id, html, navigation);
+      if (people.length) FB.paintFaces(document.getElementById('gm-body'), s);
       document.querySelectorAll('[data-story-choice]').forEach(function (node) {
         node.addEventListener('click', function () {
           reviewChoice(id, node.getAttribute('data-story-choice'));

@@ -498,8 +498,16 @@
             ? FB.T('Awaiting your decision') : FB.T('Awaiting the courts'), negotiating:FB.T('Commission and service terms'),
           started:FB.T('Campaign underway'), won:FB.T('Objective secured'), failed:FB.T('Campaign ended'),
           diverted:FB.T('History took another course'), interrupted:FB.T('Political opportunity interrupted') };
-        return { phase:rec.phase, name:names[rec.result || rec.phase],
-          lines:[FB.T('Territory depends on the campaign’s armies and any agreed settlement.')] };
+        var lines = [FB.T('Territory depends on the campaign’s armies and any agreed settlement.')];
+        if (def.admission) {
+          var effective = FB.stories.definition(s, def), pid = effective.target.provinceId;
+          var owner = s.realms[s.owner[pid]], actor = s.realms[effective.actor.realmId];
+          lines.push(FB.T('Objective: {province}. Current controller: {realm}.',
+            { province:FB.world.byId[pid].name, realm:owner ? owner.name : FB.T('No current court') }));
+          lines.push(FB.T('Initiating court: {realm}. A secured objective describes that court’s campaign result.',
+            { realm:actor ? actor.name : FB.T('No current court') }));
+        }
+        return { phase:rec.phase, name:names[rec.result || rec.phase], lines:lines };
       } };
   }, 'js/story_campaign.js', validateDefinition);
 })();

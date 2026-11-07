@@ -11,6 +11,7 @@ FBDATA.bookmarkRevisionContent_634_courts = {
       royalCourt:{members:[],spouseId:null}},
     {id:'byzantium_634',name:'Eastern Roman Empire',capital:'constantinople',rank:4,
       aggression:0,color:'#a04fb0',religion:'chalcedonian',government:'administrative_monarchy',
+      publicTreasury:{schema:1},
       administrationProfileId:'byzantine_634',
       ruler:{name:'Heraclius',sex:'m',culture:'greek',born:575,mar:7,trait:'patient'},
       governingIdentity:{eliteCultureId:'greek',eliteFaithId:'chalcedonian',legalIdentityId:'late_roman',
