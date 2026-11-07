@@ -381,7 +381,7 @@ for (const front of ['syrian','iraqi']) test(front+' frontier remains independen
   await roundTrip(page);
 });
 
-test('ordinary JSON full-world content restores twice and changed definitions reject before mutation',async function ({page},info) {
+async function beginImportedCourt(page,info) {
   await load(page,info);
   const mod = await page.evaluate(function () {
     const b = JSON.parse(JSON.stringify(FBDATA.bookmarks['634']));
@@ -401,6 +401,11 @@ test('ordinary JSON full-world content restores twice and changed definitions re
     });
   });
   expect(await page.evaluate(function () { return FB.mods.sig(); })).toMatch(/^effective-1-[a-f0-9]{64}$/);
+  return mod;
+}
+
+test('ordinary JSON full-world content restores twice and malformed saves reject before mutation',async function ({page},info) {
+  await beginImportedCourt(page,info);
   await roundTrip(page);
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
   await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page); await restoreBookmark(page,saved);
@@ -417,6 +422,11 @@ test('ordinary JSON full-world content restores twice and changed definitions re
     reject(function (e) { e.state.stories.syrian_front_634.warId = 'absent_war'; });
     return cases;
   },saved)).toEqual([true,true,true,true]);
+});
+
+test('changed ordinary JSON full-world definitions reject saved content before mutation',async function ({page},info) {
+  const mod = await beginImportedCourt(page,info);
+  const saved = await page.evaluate(function () { return FB.save.serialize(); });
   mod.bookmarks['634'].revisions.core_courts_v4.localInstitutions.rome_see.representative.skills.dip = 8;
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({name:'autumn-courts.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod),'utf8')});
