@@ -3,6 +3,11 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634_identities.js","bookmarks"
    complete bookmark composer publishes detached copies after registering 634.
    No current faith, saved identity, institution or world is changed here. */
 FBDATA.bookmarkReligions634 = {
+  alexandria_imperial_chalcedonian_634:{
+    name:'Alexandrian imperial ecclesiastical claim',parent:'chalcedonian',relationToParent:'in_fold',
+    availability:{yearMin:634,bookmarkIds:['634'],consumers:['character','institution']},
+    properties:{head:null,holyWarTradition:null,tournamentTradition:null,raidingTradition:false}
+  },
   medinan_court_634:{
     name:'Medinan caliphal court',parent:'early_islam_634',relationToParent:'in_fold',
     availability:{yearMin:634,bookmarkIds:['634'],consumers:['character','ruler','start','conversion']},
@@ -68,9 +73,8 @@ FBDATA.bookmarkReligions634 = {
   }
 };
 
-/* Preserve the complete extracted literal, but keep the new court adapter out
-   of the current assembler's published faith set. Complete court assembly
-   consumes this detached companion together with its actual world and starts. */
+/* Preserve the extracted literal and its detached court companion. The complete
+   assembler publishes it together with the hidden world and exact starts. */
 FBDATA.bookmarkCourtReligions634 = {medinan_court_634:FBDATA.bookmarkReligions634.medinan_court_634};
 delete FBDATA.bookmarkReligions634.medinan_court_634;
 

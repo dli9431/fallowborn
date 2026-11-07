@@ -30,10 +30,8 @@ FBDATA.startScenarios_634_rulers = [
   'use strict';
   var source = FBDATA.bookmarkCompositionSources && FBDATA.bookmarkCompositionSources.autumn_634;
   if (!source || !source.input) return;
-  /* The complete literal companions are unpublished. The current assembler
-     still offers only the exact predecessor starts and real revisions. */
+  /* Publish the literal projections with their complete hidden world. */
   var published = JSON.parse(JSON.stringify(FBDATA.startScenarios_634_rulers));
-  published.forEach(function (definition) { delete definition.revisionIdentities; });
   var positions = FB.bookmarkCompositions.captureStarts('autumn_634','rulers',published);
   published.forEach(function (definition) {
     source.input.starts.push({definition:JSON.parse(JSON.stringify(definition)),
