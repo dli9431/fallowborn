@@ -1011,6 +1011,7 @@
     }
     market.shocks = remaining;
     market.lastTurn = state.turn;
+    if (FB.industryLaws) FB.industryLaws.recordSeason(state);
     reportState = state;
     reports = reportByPid;
     if (FB.armyProvisionSeason) FB.armyProvisionSeason(state);

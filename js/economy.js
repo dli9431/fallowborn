@@ -5550,6 +5550,7 @@ window.FB = window.FB || {};
       alms += line.doctrineAlms || 0;
     }
     state.player.gold += gold;
+    if (FB.industryLaws) FB.industryLaws.recordSeason(state);
     if (FB.armyProducerSettle) FB.armyProducerSettle(state);
     if (gold > 0 && FB.ui && FB.ui.maybeTip) {
       FB.ui.maybeTip('first-coin',

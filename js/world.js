@@ -5808,6 +5808,7 @@ window.FB = window.FB || {};
     if (FB.mobile && FB.mobile.referencesCharacter(state, c && c.id)) return true;
     if (FB.expeditionPreparation && FB.expeditionPreparation.referencesCharacter(state, c && c.id)) return true;
     if (!state || !c || !state.player) return false;
+    if (FB.industryLaws && FB.industryLaws.referencesCharacter(state, c.id)) return true;
     if (FB.productionEconomy && FB.productionEconomy.referencesCharacter(state,c.id)) return true;
     if (FB.siegeSupport && FB.siegeSupport.referencesCharacter(state,c.id)) return true;
     if (FB.maritimeWork && FB.maritimeWork.referencesCharacter(state,c.id)) return true;

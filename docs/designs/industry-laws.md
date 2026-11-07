@@ -46,7 +46,8 @@ can be enacted again; a change of controller cannot duplicate that saved term.
 and `commitOperation` review and apply payment, pause, closure and resumption.
 Existing staffed businesses have the declared lawful grace period. Afterward,
 an unpaid or prohibited business produces no income, physical output or upgrade
-benefits. Its assignments and property remain. Work & Enterprises → business
+benefits unless the owner explicitly authorizes deliberate violation under a law
+with supported offense terms. Its assignments and property remain. Work & Enterprises → business
 manager → **Review operating laws, payments and closure** discloses fees, payee,
 deadlines, exemption, payment receipts and the free pause/closure choices.
 Paid worker contracts continue until ordinary dismissal or their existing
@@ -68,7 +69,8 @@ insufficient funds or a stale permission review reject before advancing the bid.
 `FB.treasuryHouseholdPurchase` preflights every original public account, debits
 the combined private price once and credits each actual payee. Purchase fees and
 later renewals issue one saved paid permit per law and enterprise. There is no
-automatic renewal, unpaid debt creation, repayment, refund or review charge.
+automatic renewal, permission debt, refund or review charge. A judicial fine can
+leave a separate personal balance, described below.
 
 ## Lifecycle and saved identities
 
@@ -99,8 +101,8 @@ re-save and reload preserve paid resources, property, RNG and UID without replay
 
 Technology impact `targeted_industry_laws` is **none**: these are ordinary political
 and economic obligations. Purchase and expansion research requirements remain
-with the enterprise owner. Optional offense metadata describes only an offense
-id and bounded fine; it authorizes no evasion, arrest, seizure or execution.
+with the enterprise owner. Optional offense terms support a bounded fine and an
+explicit operation-closure remedy, subject to the canonical court boundary below.
 
 ## Affected-interest hearings
 
@@ -185,3 +187,94 @@ political consent and actual interests govern baseline deliberation. Existing
 enterprise technology requirements remain unchanged. The independent
 `industry-law-assemblies.json` example imports unequal benches, different quorum,
 fees, exemptions and hearing windows through the ordinary Mods file picker.
+
+## Compliance, petitions and enforcement
+
+The business manager's operating-law sheet offers payment, pause, closure,
+lawful resumption, temporary-exemption petitions and repeal petitions. A separate
+confirmation discloses deliberate unauthorized operation, fines, closure and
+continuing worker wages. Browsing and cancellation change nothing. Choosing
+violation supplies no output or offense by itself. Actual staffed output at the
+seasonal market or livelihood settlement records a material-evidence complaint.
+Unstaffed, paused, exempt, permitted and transition-protected businesses produce
+no offense. Only supported household enterprises participate; there is no NPC
+business inventory or world surveillance pass.
+
+`relief:{days,chance}` permits one seeded exemption request per business and law.
+Grant waives that operator's permission and fee until the earlier of the stated
+deadline or law expiry; refusal spends the request. The receipt follows its
+original character, not their successor. Simple council laws also allow a
+seeded repeal petition to the competent original court using this chance.
+Deliberative laws instead take an affected owner's repeal request to the existing
+town hearing, with its actual electorate, consent, quorum and passage rules.
+The petitioner needs affected property, not a council seat; petitioning adds no
+seat or ballot. A hearing request is available once per 360 days per proposer.
+Rejection and withdrawal retain that spent request. All review/apply pairs bind
+the current actor, terms, original jurisdiction, resources and court generation.
+
+London's ordinary permission declares a fine of 8, its deliberative levy 12,
+and the restriction 16 plus operation closure. Exemption requests have respective
+chances of 50%, 40% and 25%, lasting up to 90, 60 and 30 days. These values and
+temporary relief are simulation choices. The independent ordinary JSON example
+`industry-law-enforcement.json` varies fees, relief, exemption, fines and closure.
+Unrecognized sanctions and relief fields reject through detached mod validation.
+
+A bounded optional `violations` array retains at most 512 continuing violations,
+one per law, enterprise UID and original operator. Each names the law and
+jurisdiction, home at operation, actual output, fee, material evidence and turn.
+Once filed, its source points to exactly one ordinary `justice.offenses` case.
+Repeated market/livelihood detection, complaint review, restore and enforcement
+cannot duplicate that case, assess another fine or replay a payment. Original
+operation authorization ends at household succession. A finite record limit
+stops new unauthorized operation rather than discarding evidence.
+
+The current ruler of the original issuing realm needs actual county control,
+public readiness and Peace. The canonical justice owner records the complaint,
+projects arrest, obtains physical custody and queues the ordinary hearing.
+**Answer the complaint** in the business sheet requests that process; the demand
+appears as time advances. Submission, resistance, evidence challenge, clemency,
+compensation and judgment retain their existing justice owners. A successful
+challenge pardons through that owner without taking money or closing property.
+A vote, accusation or detection never captures, convicts or kills anyone.
+
+These offenses permit only release/pardon or a fine, intersected with current
+court law. They cannot justify imprisonment, exile, religious penance, forfeiture,
+corporal punishment or execution, including the restricted distribution's
+normalization path. The fine is the law's frozen amount, paid from the original
+operator's available personal funds to the original public account. Judgment
+collects what is available, releases the operator and retains any unpaid personal
+balance. The business sheet offers exact remaining payment; it requires the
+original operator's funds and cannot charge their successor. No extra criminal
+case is manufactured for that balance.
+
+When declared, judgment closes only the named enterprise's operation, preserving
+its ownership, workers and unrelated private property. It cannot reopen under
+any active judged law even after permission payment; repealing one overlapping
+law does not bypass another closure. Suspension permits lawful
+resumption; return of jurisdiction restores that closure. Repeal or expiry
+permits permanent lawful resumption. Repeal removes future restrictions but does
+not retrospectively erase actual prior operations or imposed personal balances.
+Issuer succession passes court competence with the realm while invalidating old
+pending reviews. Jurisdiction loss suspends enforcement rather than redirecting
+the case or payee. Records retain the original actor through all succession.
+
+The optional `petitions` array is capped at 512. Matching current-content saves
+retain petition results, original evidence, open cases, closure and paid balances
+without replay. Malformed evidence, case links, terms and payment totals reject
+before state adoption. Released saves without these optional arrays remain valid.
+Existing justice custody expiry and case pruning remain in charge; the bounded
+industry facts prevent a pruned case from being filed again.
+
+Historical qualification: the [Magna Carta Project, clause 20](https://magnacarta.cmp.uea.ac.uk/read/magna_carta_1215/Clause_20?com=!all)
+documents amercements in English courts around 1200 and proportionality protecting
+merchants' trading stock. This later evidence informs the modest financial remedy;
+it is not a 1204 licensing ordinance. Operational closure and temporary exemptions
+are explicit game abstractions. The selected evidence does not establish
+imprisonment, forfeiture or death for these stall offenses, so those penalties
+are unsupported here. No confiscation or recipient of private assets is declared.
+
+Technology impacts `industry_law_enforcement`, `industry_law_relief` and
+`industry_law_closure` are **none**: deliberate operation/evidence and fines,
+temporary exemptions/repeal petitions, and operational closure are distinct
+baseline political and judicial capabilities. Enterprise purchase/upgrade gates and canonical justice authority,
+custody, property, treasury and distribution restrictions remain authoritative.

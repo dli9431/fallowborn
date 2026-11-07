@@ -14066,6 +14066,9 @@ window.FB = window.FB || {};
         (row.grace ? kv('Transition ends in', esc(FB.T('{days} days', {days:row.transitionEndTurn - s.turn}))) : '') +
         (row.permitEndTurn !== null ? kv('Permission ends in', esc(FB.T('{days} days', {days:row.permitEndTurn - s.turn}))) : '') +
         (row.exempt ? '<p>' + esc(FB.T('Your household qualifies for a beneficiary exemption.')) + '</p>' : '') + '</section>';
+      if (d.offense) h += '<p>' + esc(FB.T('Unauthorized trading may bring a court fine of {money:amount}. {closure} Imprisonment, forfeiture and execution are unavailable for this offense.', {
+        amount:d.offense.amount, closure:d.offense.closure ? FB.T('A judgment also closes this business while the law is active; ownership is retained.') : FB.T('This law does not authorize court closure.')
+      })) + '</p>';
     }
     return h;
   }
@@ -14138,6 +14141,11 @@ window.FB = window.FB || {};
       if (!focus && view.definitionId) body.querySelectorAll('[data-industry-hearing]').forEach(function (b) {
         if (b.dataset.industryHearing === view.definitionId && b.dataset.industryVote === view.voteId && b.dataset.industryRepeal === view.repealId) focus = b;
       });
+      if (focus && focus.disabled) {
+        const card = focus.closest('.review-action-card');
+        if (card) { card.tabIndex = 0; focus = card; }
+        else focus = $('industry-operation-back');
+      }
       if (focus && body.contains(focus)) focus.focus({preventScroll:true});
       body.scrollTop = view.scrollTop;
     }
@@ -14187,7 +14195,7 @@ window.FB = window.FB || {};
     $('industry-hearings-back').addEventListener('click', function () { modalHistoryBack(UI.closeModal); });
     restoreIndustryHearingPosition(restorePosition);
   };
-  UI.showIndustryAssembly = function (definitionId, consumer, voteId, repealId, replaceView, returnPosition, restorePosition) {
+  UI.showIndustryAssembly = function (definitionId, consumer, voteId, repealId, replaceView, returnPosition, restorePosition, parentReturn) {
     const s = FB.state, L = FB.industryLaws, rows = s.industryLaws && s.industryLaws.votes || [];
     const v = rows.filter(function (r) { return r.id === voteId; })[0];
     const q = L.quoteAssembly(s, definitionId, consumer, v ? 'resolve' : 'begin', voteId, null, null, repealId);
@@ -14258,34 +14266,75 @@ window.FB = window.FB || {};
     openModal(dt(s,'localCouncilMotion',d.motionId,FBDATA.localCouncilMotions[d.motionId],'name'),h,
       {historyView:true,replaceView:!!replaceView,
         titleDetailsHtml:'<p>' + esc(dt(s,'localCouncilMotion',d.motionId,FBDATA.localCouncilMotions[d.motionId],'desc')) + '</p>',
-        historyBackRender:function () { UI.showIndustryAssemblyList(consumer,true,returnPosition); }});
+        historyBackRender:parentReturn || function () { UI.showIndustryAssemblyList(consumer,true,returnPosition); }});
     Object.keys(quotes).forEach(function (id) {
       $(id).addEventListener('click',function () {
         const position = industryHearingPosition($(id)), result = L.commitAssembly(s,quotes[id]);
         if (!result) { UI.toast('The assembly review changed. Review the current terms.'); return; }
-        UI.showIndustryAssembly(definitionId,consumer,result.id,q.repealId,true,returnPosition,position);
+        UI.showIndustryAssembly(definitionId,consumer,result.id,q.repealId,true,returnPosition,position,parentReturn);
         UI.refresh();
       });
     });
-    $('industry-hearing-back').addEventListener('click',function () { modalHistoryBack(function () { UI.showIndustryAssemblyList(consumer,true); }); });
+    $('industry-hearing-back').addEventListener('click',function () { modalHistoryBack(parentReturn || function () { UI.showIndustryAssemblyList(consumer,true); }); });
     restoreIndustryHearingPosition(restorePosition);
   };
 
-  UI.showIndustryOperation = function (uid, returnContext, replaceView) {
+  UI.showIndustryOperation = function (uid, returnContext, replaceView, restorePosition) {
     const s = FB.state, e = (s.player.enterprises || []).filter(function (r) { return r.uid === uid; })[0];
     if (!e) return;
+    const parentPosition = $('enterprise-operating-law') && industryHearingPosition($('enterprise-operating-law'));
+    function returnToManager() {
+      UI.showEnterpriseManage(uid, returnContext, true);
+      restoreIndustryHearingPosition(parentPosition);
+    }
     const status = FB.industryLaws.operation(s, e), quotes = {};
     let h = industryOperatingFacts(s, status) + kv('Your funds', esc(FB.money(s.player.gold))) + '<p>' + esc(FB.T(
       'Pausing or closing preserves property, paid permissions and obligations. Output and upgrade benefits stop. Existing worker wages continue until you dismiss those workers. Resuming requires lawful permission.')) + '</p>';
     const actions = [{id:'pay', label:FB.T('Pay operating permissions: {money:amount}', {amount:status.amount})},
       {id:'pause', label:FB.T('Pause operation')}, {id:'close', label:FB.T('Close operation; retain property')},
-      {id:'resume', label:FB.T('Resume lawful operation')}];
+      {id:'resume', label:FB.T('Resume lawful operation')}, {id:'violate', label:FB.T('Review deliberate unauthorized operation')}];
     for (const a of actions) {
       const q = quotes[a.id] = FB.industryLaws.quoteOperation(s, e, a.id, 0);
-      h += '<button type="button" class="actionbtn" data-industry-operation="' + a.id + '"' +
+      h += '<button type="button" class="actionbtn" id="industry-operation-' + a.id + '" data-industry-operation="' + a.id + '"' +
         (q.ready ? '' : ' disabled') + '>' + esc(a.label) +
-        (!q.ready && a.id === 'pay' && status.amount > 0 ? '<span class="adesc">' + esc(q.reason) + '</span>' : '') + '</button>';
+        (!q.ready && (a.id === 'resume' || a.id === 'pay' && status.amount > 0) ? '<span class="adesc">' + esc(q.reason) + '</span>' : '') + '</button>';
     }
+    const petitions = {}, complaints = {}, debts = {};
+    status.laws.forEach(function (row) {
+      ['exemption','repeal'].forEach(function (kind) {
+        const key = kind + '-' + row.lawId, q = petitions[key] = FB.industryLaws.quotePetition(s, uid, row.lawId, kind);
+        if (!q) return;
+        h += reviewActionCardHtml({id:'industry-petition-' + key, label:kind === 'exemption' ? FB.T('Petition for a temporary exemption') : FB.T('Petition for repeal'),
+          note:q.kind === 'industry_assembly' ? FB.T('Request an ordinary council hearing; no seat or ballot is granted. One petition hearing per year; no money cost.') :
+            kind === 'repeal' ? FB.T('{chance}% chance to end future restrictions. One request per business and law; no money cost. Refusal consumes the request.', {chance:Math.round(q.chance * 100)}) :
+              FB.T('{chance}% chance; exemption lasts at most {days} days. One request per business and law; no money cost. Refusal consumes the request.', {chance:Math.round(q.chance * 100), days:q.days}),
+          disabled:!q.ready, details:q.reason ? '<p>' + esc(q.reason) + '</p>' : ''});
+      });
+    });
+    (s.industryLaws && s.industryLaws.petitions || []).forEach(function (p) {
+      if (p.enterpriseUid === uid) h += '<p>' + esc(p.granted ? (p.kind === 'repeal' ? FB.T('Repeal petition granted on day {day}.', {day:p.turn}) :
+        FB.T('Petition granted on day {day}; relief ends on day {end}.', {day:p.turn,end:p.endTurn})) :
+        FB.T('Petition refused on day {day}.', {day:p.turn})) + '</p>';
+    });
+    (s.industryLaws && s.industryLaws.violations || []).forEach(function (v) {
+      if (v.enterpriseUid !== uid) return;
+      h += '<section class="governance-card">' + UI.charCardHtml(s, s.chars[v.actorId], false) +
+        kv('Recorded unauthorized trading', esc(FB.T('Day {day}; material proof of actual output. A complaint is not a conviction.', {day:v.turn})));
+      if (!v.resolved) {
+        const q = complaints[v.id] = FB.industryLaws.quoteComplaint(s, v.id);
+        h += reviewActionCardHtml({id:'industry-complaint-' + v.id, label:FB.T('Answer the complaint'),
+          note:FB.T('The competent court first sends an arrest demand. Submission creates provisional custody; evidence challenge and clemency remain available before judgment.'), disabled:!q || !q.ready});
+      } else h += kv('Decision', esc(dt(s, 'justiceSentence', v.resolved, FBDATA.justiceSentences[v.resolved], 'name')));
+      if (v.judgment) {
+        h += kv('Assessed fine', esc(FB.money(v.judgment.fine))) + kv('Paid', esc(FB.money(v.judgment.paid))) +
+          kv('Remaining personal liability', esc(FB.money(v.judgment.fine - v.judgment.paid))) +
+          kv('Court closure', esc(v.judgment.closure ? FB.T('Affected operation closed; ownership retained') : FB.T('None')));
+        const q = debts[v.id] = FB.industryLaws.quoteDebt(s, v.id);
+        if (q.amount > 0) h += reviewActionCardHtml({id:'industry-debt-' + v.id, label:FB.T('Pay remaining fine: {money:amount}', {amount:q.amount}),
+          disabled:!q.ready, note:q.ready ? '' : FB.T('The original operator must have enough personal funds. No new offense or payment is created by review.')});
+      }
+      h += '</section>';
+    });
     for (const p of (s.industryLaws ? s.industryLaws.permits : [])) if (p.enterpriseUid === uid) {
       h += '<p>' + esc(FB.T('Paid {money:amount} to {payee} on day {day}; permission ended or ends on day {end}.', {
         amount:p.amount, payee:s.realms[p.payeeRealmId].name, day:p.paidTurn, end:p.endTurn
@@ -14293,18 +14342,62 @@ window.FB = window.FB || {};
     }
     h += '<div class="gm-footer"><button type="button" class="btn" id="industry-operation-back">' + esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Lawful business operation'), h, {historyView:true, replaceView:!!replaceView,
-      historyBack:true, historyBackRender:function () { UI.showEnterpriseManage(uid, returnContext, true); }});
+      historyBack:true, historyBackRender:returnToManager});
     $('industry-operation-back').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showEnterpriseManage(uid, returnContext, true); });
+      modalHistoryBack(returnToManager);
     });
     document.querySelectorAll('[data-industry-operation]').forEach(function (button) {
       button.addEventListener('click', function () {
+        const position = industryHearingPosition(button);
+        if (button.dataset.industryOperation === 'violate') { UI.showIndustryViolation(uid, returnContext, quotes.violate, position); return; }
         if (!FB.industryLaws.commitOperation(s, quotes[button.dataset.industryOperation])) {
           UI.toast('Operating terms changed. Review the current terms.'); return;
         }
         UI.refresh();
-        UI.showIndustryOperation(uid, returnContext, true);
+        UI.showIndustryOperation(uid, returnContext, true, position);
       });
+    });
+    Object.keys(petitions).forEach(function (key) {
+      const b = $('industry-petition-' + key);
+      if (b) b.addEventListener('click', function () {
+        const q = petitions[key], position = industryHearingPosition(b), result = FB.industryLaws.commitPetition(s, q);
+        if (!result) { UI.toast('Operating terms changed. Review the current terms.'); return; }
+        if (q.kind === 'industry_assembly') UI.showIndustryAssembly(q.definitionId, 'town', result.id, null, false, null, null,
+          function () { UI.showIndustryOperation(uid, returnContext, true, position); });
+        else UI.showIndustryOperation(uid, returnContext, true, position);
+        UI.refresh();
+      });
+    });
+    Object.keys(complaints).forEach(function (id) {
+      $('industry-complaint-' + id).addEventListener('click', function () {
+        if (!FB.industryLaws.answerComplaint(s, complaints[id])) { UI.toast('Operating terms changed. Review the current terms.'); return; }
+        UI.closeModal(); UI.refresh();
+        UI.toast('The court demand will appear as time advances. You may then submit or resist and challenge the evidence before judgment.');
+      });
+    });
+    Object.keys(debts).forEach(function (id) {
+      const b = $('industry-debt-' + id);
+      if (b) b.addEventListener('click', function () {
+        const position = industryHearingPosition(b);
+        if (!FB.industryLaws.payDebt(s, debts[id])) { UI.toast('Operating terms changed. Review the current terms.'); return; }
+        UI.showIndustryOperation(uid, returnContext, true, position); UI.refresh();
+      });
+    });
+    restoreIndustryHearingPosition(restorePosition);
+  };
+
+  UI.showIndustryViolation = function (uid, returnContext, q, returnPosition) {
+    const s = FB.state;
+    let h = '<p>' + esc(FB.T('Authorize actual productive trading without permission. Merely choosing this creates no offense; actual output records the original operator and applicable law. The court may arrest you and hear a challenge before imposing the disclosed fine and closure. Other private property is unaffected.')) + '</p>' +
+      industryOperatingFacts(s, q.status) + '<p>' + esc(FB.T('This authority ends at household succession. Wages continue under existing contracts.')) + '</p>' +
+      '<button type="button" class="actionbtn" id="industry-violation-confirm">' + esc(FB.T('Deliberately operate without permission')) + '</button>' +
+      '<div class="gm-footer"><button type="button" class="btn" id="industry-violation-cancel">' + esc(FB.T('Cancel')) + '</button></div>';
+    openModal(FB.T('Review unauthorized operation'), h, {historyView:true,historyBack:true,
+      historyBackRender:function () { UI.showIndustryOperation(uid, returnContext, true, returnPosition); }});
+    $('industry-violation-cancel').addEventListener('click',function () { modalHistoryBack(function () { UI.showIndustryOperation(uid,returnContext,true,returnPosition); }); });
+    $('industry-violation-confirm').addEventListener('click',function () {
+      if (!FB.industryLaws.commitOperation(s,q)) { UI.toast('Operating terms changed. Review the current terms.'); return; }
+      modalHistoryBack(function () { UI.showIndustryOperation(uid,returnContext,true,returnPosition); }); UI.refresh();
     });
   };
 
@@ -27789,6 +27882,9 @@ window.FB = window.FB || {};
       piety:def.pietyCost === undefined ? 40 : def.pietyCost, prestige:def.prestigeCost === undefined ? 20 : def.prestigeCost })));
     else if (def.kind !== 'custody') h += kv('Consequence', esc(FB.T('Released')));
     if (['fine','ransom'].indexOf(def.kind) >= 0) h += kv('Collect', esc(FB.T('{money:amount}', { amount:p.amount })));
+    if (p.industry && def.kind === 'fine') h += kv('Remaining personal liability', esc(FB.money(p.fine - p.amount))) +
+      kv('Public payee', esc(s.realms[p.industry.payeeRealmId].name)) +
+      kv('Business closure', esc(p.industry.closure ? FB.T('Close the affected operation while its law is active; retain ownership') : FB.T('None')));
     if (p.endTurn) h += kv('Release due', esc(fortDateText(s, p.endTurn)));
     if (p.destination) h += kv('Exile to', esc(FB.world.byId[p.destination].name));
     if (!p.ready) h += kv('Unavailable', esc(justiceBlocker(p.blocker)));
@@ -27857,7 +27953,7 @@ window.FB = window.FB || {};
     }
     if (!offense) return '<p class="justice-evidence">' + esc(FB.T('No proven offense')) + '</p>';
     const evidence = { testimony:FB.T('Testimony'), material:FB.T('Material proof'), redhanded:FB.T('Caught red-handed') };
-    const kind = offense.kind === 'rebellion' ? FB.T('Rebellion') :
+    const kind = offense.kind === 'industry_violation' ? FB.T('Unauthorized business operation') : offense.kind === 'rebellion' ? FB.T('Rebellion') :
       FB.dataText(s, s.player.charId, 'plot', offense.kind, FBDATA.plots[offense.kind], 'name', {});
     return '<p>' + esc(FB.T(offense.closed ? 'Recorded offense: {offense}. Evidence: {evidence}.' : 'Offense: {offense}. Evidence: {evidence}.', {
       offense:kind, evidence:evidence[offense.evidence] || ''

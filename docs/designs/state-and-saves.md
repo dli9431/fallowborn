@@ -2697,3 +2697,17 @@ law/ordinance support are unchanged. Exact fields are in MODDING.md.
 Unchanged dates across an additive catalogue transition
 
 An effective-1 signature includes every bookmark, so adding a revision changes signatures for campaigns on otherwise unchanged dates too. The exact native proof may serve such a campaign only when its saved bookmark and revision exist identically in the predecessor and installed catalogues. For this definition comparison, an omitted legacy revision stamp means baseline, matching the existing world-transition proof; the saved envelope is unchanged. Reconstruction replaces the declaration-owned bookmark, not the saved campaign’s bookmark. An explicitly declared saved date still requires its supported retained revision. Missing revisions, changed unrelated definitions and ambiguous unrelated declarations reject. The transient cache binds the saved bookmark and revision as well as the signature; a successful proof cannot authorize a different saved world. No transition chain or signature bypass is introduced.
+
+## Operating-law enforcement facts
+
+The existing optional industry-law ledger retains bounded petition and actual
+operation-evidence arrays, original-party canonical justice links, judgments,
+closure references and paid fine totals. Current-content restoration validates
+these facts before adoption, retains personal liability with its original actor,
+and never replays a complaint, sentence, exemption roll or payment. Absent optional
+ledgers and arrays remain absent. Exact effective mod terms remain required.
+Original issuers, petitioners, named vote principals, operators and retained
+industry-case judges count as references for ordinary court compaction, so their
+bounded historical facts cannot lose their character identities at death.
+See [industry laws](industry-laws.md) for the supported lifecycle and limits.
+The save envelope and released v1 migration contract are unchanged.

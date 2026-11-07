@@ -3709,9 +3709,18 @@ No declaration enacts itself or changes a released opening's defaults.
   matches use the lowest fee and any permission grant. A prohibition exemption
   must grant permission to allow operation. Residence is a declared simulation
   criterion and does not establish historical citizenship.
-- Optional `offense:{id,penalty:"fine",amount}` reserves a snake-case offense
-  identity and amount from 0 through 10000. It creates no offense, sanction,
-  evasion choice, arrest or property transfer.
+- Optional `offense:{id,penalty:"fine",amount,closure?}` declares a snake-case
+  offense identity and amount from 0 through 10000. `closure` is an optional
+  boolean, default false. Only actual unauthorized productive operation creates
+  evidence. The canonical court may impose this fine and, when declared, close
+  the affected operation while the law is active. Closure retains ownership.
+  Stronger sanctions and private-asset transfers are unsupported and reject.
+- Optional `relief:{days,chance}` declares temporary-exemption petitions, with
+  integer `days` from 1 through durationDays and finite `chance` from 0 through 1.
+  A granted exemption waives the fee and prohibition for the original operator
+  and enterprise until its deadline. A refused or expired request cannot be
+  rerolled for the same business/law/kind. Simple laws also use this chance for
+  repeal petitions; deliberative repeal still requires its ordinary town vote.
 - Unrecognized fields, invalid references and contradictory terms reject the
   whole candidate before publication or RNG/UID changes.
 
@@ -3720,10 +3729,10 @@ No declaration enacts itself or changes a released opening's defaults.
 approval owner. A stale or unauthorized quote rejects before the seeded vote.
 `operation(state,enterprise)` exposes matching effective laws, fees, exemptions,
 transition, permit dates and permission. `quoteOperation`/`commitOperation` support
-`pay`, `pause`, `close` and `resume`; acquisition uses `enterprisePurchaseStatus`
+`pay`, `pause`, `close`, `resume` and explicit `violate`; acquisition uses `enterprisePurchaseStatus`
 and `acquireEnterprise`, including auction acquisitions. Shared staffing and
-yield consumers suppress all unlawful output. No separate NPC enterprise ledger
-or unreviewed illegal-operation route is supplied.
+yield consumers require lawful permission or the current original operator's
+deliberate-violation authorization. No NPC enterprise ledger is supplied.
 
 The optional schema-1 `state.industryLaws` stores `laws`, `permits` and `choices`.
 Law rows retain `id`, `definitionId`, exact `terms`, original `issuer` (kind
@@ -3733,7 +3742,8 @@ Repealed rows also retain their distinct `repealer`. Permit rows retain `id`,
 `lawId`, `enterpriseUid`, household `payer:"player"`, original `payeeRealmId`,
 actual `amount`, `paidTurn` and `endTurn`. They are paid obligations, not unpaid
 debt or automatically renewed subscriptions. Choice rows retain `enterpriseUid`,
-`status` (`open`, `pause`, `close`) and `turn`; closure retains ownership.
+`status` (`open`, `pause`, `close`, `violate`) and `turn`; violation also retains
+`actorId`. Optional `closedBy` points to the original judicial closure. Closure retains ownership.
 Limits are 256 laws, 4096 permits and 512 choices. Validation never creates a
 missing ledger or replays a transaction. Exact imported content remains covered
 by the ordinary mod fingerprint.
@@ -3746,6 +3756,44 @@ follow the stable enterprise UID within the household; another UID cannot reuse
 them. External business sale and NPC business ownership are unsupported. Original
 payment facts must remain with their payer if a later transfer consumer is added.
 See [Targeted operating laws](designs/industry-laws.md) for lifecycle and accounts.
+
+`quotePetition(state,enterpriseUid,lawId,kind)` / `commitPetition` support
+`exemption` and `repeal`. A deliberative repeal returns the existing assembly
+quote and opens its ordinary town hearing, with optional `petitionEnterpriseUid`
+on that vote. The affected current owner may request it without gaining a seat.
+Only one petition hearing per proposer per 360 days is available. Other hearing
+eligibility, ballots, deadlines and consent remain unchanged. The normal seeded
+simple-law petition uses an optional `petitions` array capped at 512, retaining
+id, kind, lawId, enterpriseUid, actorId, turn, granted and endTurn.
+
+Actual market/livelihood settlement calls `recordSeason`, iterating only the
+bounded committed enterprise choices. `violations` has at most 512 rows, unique
+by law, enterprise UID and original operator. Each retains id, lawId,
+enterpriseUid, actorId, provinceId, homeProvinceId, turn, positive actual output,
+fee, material evidence, nullable caseId, resolved and judgment. The canonical
+justice offense kind is `industry_violation`; its source is `industry:` plus the
+violation id, authority is the original issuing realm, and severity is 1.
+Arbitrary calls cannot record this kind without the actual operating evidence.
+`quoteComplaint` / `answerComplaint` use the original competent court's arrest
+projection and normal queued player response. Absence of physical custody blocks
+judgment. Repeated detection and filing cannot duplicate a source or payment.
+
+Only fine and mercy sentences are supported for these offenses, intersected with
+current court procedures and distribution rules. Fine definitions must close
+the case and cannot also forgive other cases, preventing repeated collection
+through a custom open-case fine.
+Historically overlapping paid permissions or granted exemptions invalidate a
+backdated saved accusation; same-day later compliance never erases prior output.
+The fine's amount is the frozen offense amount; it credits the original public
+account. `judgment` retains turn,
+fine, paid and closure. Insufficient funds leave a personal balance without a new
+case; `quoteDebt` / `payDebt` settle that balance once from the original operator.
+Household succession transfers neither authorization nor personal liability.
+Court succession retains the original case but invalidates a pending review.
+Lost jurisdiction suspends enforcement and operation closure. Repeal/expiry remove
+future restrictions while retaining evidence of actual prior operation and
+already imposed balances. No confiscation or unrelated property is supported.
+Matching restore validates these optional facts without replay or initialization.
 
 ## Family enterprises
 
