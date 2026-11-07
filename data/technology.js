@@ -111,6 +111,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      episcopal_rent_compositions:{ mode:'none', rationale:'Civil compositions of an existing institutional rent require actual property, living parties, competent temporal jurisdiction and conserved funds. Neither spiritual office nor a discovery supplies title or an unpaid debt.' },
       targeted_industry_laws:{ mode:'none', rationale:'Local operating permissions, civic exemptions and prohibitions are political and economic obligations, independent of discovery. Enterprises and their expansions retain their ordinary technology gates.' },
       expedition_local_passage_policy:{ mode:'none', rationale:'Outside willingness to review local passage is political policy, not a discovery. Actual government consent, original authority, finite capacity and payment remain binding; equipment, supply and physical movement retain their independent gates.' },
       adopted_dynastic_public_treasury:{ mode:'none', rationale:'Preserving an existing public account through ordinary ruler adoption is accounting and identity continuity. Household money stays private; government, military, market and construction gates retain their existing requirements.' },

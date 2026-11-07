@@ -303,7 +303,8 @@ window.FB = window.FB || {};
     const delegated = holder.kind === 'character' &&
       !actorHolds(state, { kind:'realm', id:FB.settlementCountyHolder(state, pid) }, holder);
     const charter = FB.feudalCharterDef(r && r.obligations && r.obligations.charterId || 'customary_service');
-    const dues = delegated ? FB.governments.call(state, governmentRealm, 'revenue', 'remittance', { amount:gross, share:charter.taxShare, kind:'settlement', provinceId:pid, settlement:slot }, government) : 0;
+    let dues = delegated ? FB.governments.call(state, governmentRealm, 'revenue', 'remittance', { amount:gross, share:charter.taxShare, kind:'settlement', provinceId:pid, settlement:slot }, government) : 0;
+    if (delegated && FB.episcopalClaims) dues = FB.episcopalClaims.dues(state,pid,slot,gross,dues);
     const rawLevy = FB.governments.call(state, governmentRealm, 'levy', 'settlementBase', {
       provinceId:pid, settlement:slot, share:shares[slot], population:input.population,
       modifier:input.levy, buildings:bonus('levy'), support:support

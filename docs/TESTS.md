@@ -545,6 +545,15 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+episcopal-claims.spec.js covers native Roman and ordinary imported fictional
+rent compositions over actual private grants: pure reads/validation, contested
+evidence, competent/refused enforcement, conserved private-to-institutional
+compensation, paired recurring remittances and once-only seasonal settlement,
+expiry, stale/poor acceptance, institutional and private succession, occupation
+and replaced grants, exact matching restore and atomic malformed save rejection.
+The three ordinary deed entries and mobile scroll/focus return are included.
+These bounded checks do not establish historical litigation or device acceptance.
+
 `industry-laws.spec.js` covers optional London council enactment and repeal,
 pure/cancelled reviews, seeded refusal, unauthorized and stale rejection,
 existing-business grace, actual exemptions, paid permissions and renewal,

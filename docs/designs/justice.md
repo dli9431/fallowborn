@@ -20,6 +20,13 @@ Existing justice technology reviews remain applicable; no new capability is adde
 
 # Ruler justice
 
+The bounded civil rent adapter justiceCivilRentJurisdiction checks the actual
+temporal ruler, ordinary county jurisdiction, public readiness and scoped Peace.
+It does not treat spiritual office as a court. An episcopal rent assertion or
+objection creates no criminal offense, evidence of religious guilt, custody or
+confiscation. The available civil remedy is a disclosed finite composition of
+an existing charter, or refusal of enforcement. See episcopal-claims.md.
+
 Public intrigue hearing boundary
 
 Player exposure (`queuePlayerHearing`) and AI exposure (`intrigueAutoSentence`)

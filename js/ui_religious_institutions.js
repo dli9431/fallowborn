@@ -175,4 +175,158 @@
       };
     });
   };
+  function rentReason(code) {
+    return { property:FB.T('An actual privately held settlement and its current rent charter are required.'),
+      jurisdiction:FB.T('The see or competent temporal court lacks current jurisdiction or recognition.'),
+      principal:FB.T('A living, available possessor distinct from the bishop is required.'),
+      actor:FB.T('This decision belongs to the other party or the competent temporal ruler.'),
+      closed:FB.T('This review is closed or already current.'),
+      stale:FB.T('The proposal, principals or charter changed. Request a fresh review.'),
+      funds:FB.T('The possessor’s private account cannot fund this compensation.')
+    }[code] || FB.T('Review the current terms again.');
+  }
+  function rentStatus(snap) {
+    var r = snap.record;
+    if (!r) return FB.T('Existing charter; no claim filed');
+    if (r.status === 'settled') {
+      var period = Math.floor(FB.state.turn / 90);
+      return period >= r.terms.endSeason ? FB.T('Composition expired; ordinary charter resumes') :
+        period < r.terms.startSeason ? FB.T('Agreed; begins next season') :
+        snap.effective ? FB.T('Composition in force') : FB.T('Composition suspended; original jurisdiction or holding changed');
+    }
+    if (snap.stale) return FB.T('Principals or charter changed; fresh review required');
+    return { demanded:FB.T('Claim asserted; charter remains in force'), contested:FB.T('Evidence contested; no judgment'),
+      proposed:FB.T('Agreement offered; awaiting the other party'), enforcement:FB.T('Temporal enforcement requested'),
+      abandoned:FB.T('Claim abandoned; ordinary charter retained'), declined:FB.T('Agreement declined; ordinary charter retained'),
+      rejected:FB.T('Enforcement refused; ordinary charter retained') }[r.status];
+  }
+  function rentPeople(s,snap) {
+    var seen = {}, html = '';
+    [[snap.bishopId,FB.T('Canonical bishop')],[snap.possessorId,FB.T('Current private possessor')],
+      [snap.courtId,FB.T('Competent temporal ruler')]].forEach(function (entry) {
+      var c = s.chars[entry[0]];
+      if (c && !seen[c.id]) { html += SH.reviewPersonHtml(c,entry[1],null); seen[c.id] = true; }
+    });
+    return SH.reviewPeopleHtml(html);
+  }
+  function rentFacts(s,snap) {
+    var p = FBDATA.episcopalClaims[snap.profileId], r = snap.record, t = r && r.terms;
+    var sites = FB.world.sitesByProv[snap.provinceId], site = sites && sites.list[snap.settlement];
+    var facts = rentPeople(s,snap) + kv(FB.T('Holding'),site ? site.name : FB.world.byId[snap.provinceId].name) +
+      kv(FB.T('Status'),rentStatus(snap)) + kv(FB.T('Evidence'),snap.source ?
+        FB.T('The recorded settlement grant and its current rent charter') : FB.T('No current charter')) +
+      kv(FB.T('Dispute'),r && r.adjudicated ? FB.T('The competent temporal court composed the recorded rent.') :
+        r && r.status === 'settled' && r.disputed ? FB.T('The parties composed the disputed rent by agreement.') :
+        r && r.disputed ? FB.T('The possessor contests the asserted evidence. A temporal hearing is required for an imposed composition.') : FB.T('No objection recorded')) +
+      kv(FB.T('Ordinary rent'),FB.T('{share}% of this holding’s ordinary tax and toll base each season', { share:snap.baselineShare * 100 })) +
+      kv(FB.T('Negotiated rent'),FB.T('{share}% each season for {seasons} seasons, beginning next season', {
+        share:snap.offeredShare * 100, seasons:p.termSeasons })) +
+      kv(FB.T('Alternative compensation'),FB.T('{money:amount} once, replacing rent for {seasons} seasons beginning next season', {
+        amount:p.compensation, seasons:p.termSeasons })) +
+      kv(FB.T('Payer'),FB.T('The current possessor’s private household or barony account')) +
+      kv(FB.T('Private funds available'),FB.money(snap.funds,s)) +
+      kv(FB.T('Payee'),s.realms[snap.realmId] ? s.realms[snap.realmId].name : FB.T('The institutional see')) +
+      kv(FB.T('Receiving account'),FB.T('The see’s public treasury; the bishop’s private purse receives nothing')) +
+      kv(FB.T('Review and court fees'),FB.T('No fee; no arrears are asserted'));
+    if (t) facts += kv(FB.T('Proposed immediate transfer'),FB.money(t.cost,s)) +
+      kv(FB.T('Proposed seasonal rent'),FB.T('{share}% of the same rent base', { share:t.share * 100 })) +
+      (r.status === 'proposed' ? kv(FB.T('Offer expires'),FB.T('In {days} days', { days:Math.max(0,t.offeredTurn + p.offerDays - s.turn) })) :
+        kv(FB.T('Term remaining'),FB.T('{seasons} seasons', { seasons:Math.max(0,t.endSeason - Math.max(t.startSeason,Math.floor(s.turn / 90))) })));
+    return SH.reviewFactsCard(FB.T('Exact rent and accounts'),facts);
+  }
+  UI.showEpiscopalClaims = function (view) {
+    var s = FB.state, C = FB.episcopalClaims, entries = [], snaps = C.list(s,s.player.charId);
+    view = view || {}; FB.game.setPaused(true);
+    var h = '<div data-episcopal-list data-modal-scroll>';
+    var labels = { demand:FB.T('Request a fresh rent review'), contest:FB.T('Contest the evidence'),
+      recurring:FB.T('Propose recurring rent'), compensation:FB.T('Propose compensation'),
+      accept:FB.T('Accept the offered agreement'), decline:FB.T('Decline the agreement'),
+      abandon:FB.T('Abandon this claim'), request_enforcement:FB.T('Seek temporal enforcement'),
+      adjudicate:FB.T('Adjudicate a rent composition'), reject_enforcement:FB.T('Refuse enforcement') };
+    var consequences = {
+      demand:FB.T('Record the existing charter for review. This asserts no arrears, awards no title and charges no money.'),
+      contest:FB.T('Record the possessor’s objection. The assertion is not a judgment; the ordinary charter remains in force.'),
+      recurring:FB.T('Offer the disclosed reduced seasonal rent. The other party may accept, contest or decline. Payment continues through the ordinary rent account, once per season.'),
+      compensation:FB.T('Offer the disclosed private payment for a finite rent-free term. The transfer occurs only on acceptance, to the institutional public treasury.'),
+      accept:FB.T('Bind only this holding’s future rent for the disclosed term. Existing land, buildings, military service and unrelated obligations remain with their owners.'),
+      decline:FB.T('Close this proposed agreement without payment. The existing charter remains in force.'),
+      abandon:FB.T('Withdraw this assertion without transferring property or forgiving an invented debt. The existing charter remains in force.'),
+      request_enforcement:FB.T('Ask the actual temporal ruler to review the recorded charter. The ruler can refuse. Spiritual rank supplies no temporal jurisdiction.'),
+      adjudicate:FB.T('As the competent temporal ruler, review the recorded grant and impose the disclosed finite rent composition. This resolves the civil rent only and creates no religious guilt, custody or confiscation.'),
+      reject_enforcement:FB.T('Refuse this enforcement request. No money or property is taken; the ordinary charter remains in force.')
+    };
+    snaps.forEach(function (snap) {
+      var p = FBDATA.episcopalClaims[snap.profileId], r = snap.record, actions = '';
+      h += '<section><h4>' + esc(FB.dataText(s,s.player.charId,'episcopalClaim',snap.profileId,p,'name',{})) + '</h4>' +
+        '<p>' + esc(FB.dataText(s,s.player.charId,'episcopalClaim',snap.profileId,p,'desc',{})) + '</p>' + rentFacts(s,snap);
+      var choices = !r || snap.stale ? ['demand'] :
+        ['demanded','contested','proposed'].indexOf(r.status) >= 0 ?
+          ['contest','recurring','compensation','accept','decline','abandon','request_enforcement'] :
+          r.status === 'enforcement' ? ['adjudicate','reject_enforcement','abandon'] : [];
+      choices.forEach(function (action) {
+        var q = C.quote(s,snap.profileId,snap.settlement,s.player.charId,action);
+        if (!q || q.reason === 'actor') return;
+        var index = entries.length; entries.push({ q:q, label:labels[action], details:consequences[action], snap:snap });
+        actions += SH.reviewActionCardHtml({ id:'rent-' + snap.profileId + '-' + snap.settlement + '-' + action,
+          label:labels[action],disabled:!q.allowed,warn:!q.allowed,
+          note:q.allowed ? action === 'compensation' || action === 'accept' && q.cost ?
+            FB.T('On acceptance: {money:amount} from the possessor to the see.', { amount:q.cost }) :
+            FB.T('No immediate payment; only the disclosed future rent can change.') : rentReason(q.reason),
+          details:'<p>' + esc(consequences[action]) + '</p>',data:{ rentReview:index } });
+      });
+      h += SH.reviewActionsHtml(actions) + '</section>';
+    });
+    if (!snaps.length) h += '<p>' + esc(FB.T('No supported rent claim concerns this household or office.')) + '</p>';
+    var pastoral = !!FB.bishopricSnapshot(s,s.chars[s.player.charId]);
+    if (pastoral) ['visit_diocese','ecclesiastical_court'].forEach(function (id) {
+      var status = FB.instantStatus(s,id,{ pastoralOnly:true });
+      h += SH.reviewActionCardHtml({ id:'rent-pastoral-' + id,label:id === 'visit_diocese' ?
+        FB.T('Make the ordinary pastoral circuit') : FB.T('Hear the ordinary ecclesiastical court'),
+        disabled:!status.can, warn:!status.can, note:status.can ? FB.T('1 day; ordinary cooldown and event choices apply.') : status.reason,
+        data:{ rentPastoral:id } });
+    });
+    h += '</div>';
+    UI.openModal(FB.T('Episcopal rent claims'),h,{ modalClass:'fullsheet-modal',historyView:!!view.parentHistory,historyBack:!!view.parentHistory,
+      titleDetailsHtml:'<p>' + esc(FB.T('This review concerns an existing temporal settlement rent, not every church building or a private estate claim.')) + '</p><p>' +
+        esc(FB.T('Agreements follow the exact holding through inheritance and remain institutional through episcopal succession. Changed jurisdiction suspends the concession; its fixed term continues to expire.')) + '</p>' });
+    var body = SH.$('gm-body'), list = body.querySelector('[data-episcopal-list]');
+    function restore() {
+      if (!document.body.contains(list)) return;
+      body.scrollTop = view.bodyScroll || 0; list.scrollTop = view.scroll || 0;
+      var focus = view.focus && SH.$(view.focus);
+      if (!focus && view.focusPrefix) Array.from(list.querySelectorAll('[data-rent-review]')).some(function (button) {
+        if (button.id.indexOf(view.focusPrefix) !== 0) return false;
+        focus = button; return true;
+      });
+      if (focus) focus.focus({ preventScroll:true });
+    }
+    (view.details || []).forEach(function (id) { var n = list.querySelector('[aria-controls="' + id + '"]'); if (n) n.click(); });
+    restore(); setTimeout(restore,0);
+    list.querySelectorAll('[data-rent-pastoral]').forEach(function (button) {
+      button.onclick = function () { UI.closeModal(); FB.runInstant(s,button.getAttribute('data-rent-pastoral'),{ pastoralOnly:true }); };
+    });
+    list.querySelectorAll('[data-rent-review]').forEach(function (button) {
+      button.onclick = function () {
+        var entry = entries[Number(button.getAttribute('data-rent-review'))], q = entry.q;
+        var pos = { scroll:list.scrollTop,bodyScroll:body.scrollTop,focus:button.id,
+          focusPrefix:'rent-' + q.profileId + '-' + q.settlement + '-',
+          details:Array.from(list.querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (n) { return n.getAttribute('aria-controls'); }) };
+        function back() { UI.showEpiscopalClaims(pos); }
+        UI.openModal(entry.label,rentFacts(s,entry.snap) + SH.reviewActionsHtml(SH.reviewActionCardHtml({
+          id:'rent-confirm',label:FB.T('Confirm decision'),disabled:!q.allowed,warn:!q.allowed,
+          note:entry.details })),{ modalClass:'fullsheet-modal',historyView:true,historyBack:true,historyBackRender:back });
+        SH.$('rent-confirm').onclick = function () {
+          var success = s === FB.state && C.apply(s,q);
+          if (success) C.respond(s,q.profileId,q.settlement);
+          var current = C.snapshot(s,q.profileId,q.settlement);
+          UI.openModal(success ? FB.T('Rent decision recorded') : FB.T('Terms changed'),rentFacts(s,current) +
+            SH.reviewFactsCard('',esc(success ? FB.T('The recorded result is shown above. No land or unrelated right changed hands.') :
+              FB.T('The review changed. Nothing was spent; review the current terms again.'))) +
+            '<button class="actionbtn" type="button" id="rent-continue">' + esc(FB.T('Continue')) + '</button>',{ replaceView:true });
+          SH.$('rent-continue').onclick = function () { SH.modalHistoryBack(back); };
+          if (SH.markActionsDirty) SH.markActionsDirty();
+        };
+      };
+    });
+  };
 })();

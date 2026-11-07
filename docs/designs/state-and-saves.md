@@ -1,5 +1,13 @@
 Retained fixed-start identity
 
+The optional authority.episcopalClaims ledger preserves exact grant sources,
+principals, effective-definition fingerprints, offers and finite rent terms.
+Compensation cross-references the existing unique authority receipt and actual
+institutional payee; restore cannot grant money or replay settlement. Duplicate
+sources, malformed terms, missing receipts and changed declarations reject on a
+detached state. An absent ledger remains absent. No save envelope or subsystem
+schema version changes. See episcopal-claims.md.
+
 Saved scenario ids continue to resolve through their saved bookmark revision. The canonical start owner projects the declared faith and existing-ruler government for that revision without changing state.start or any person, community, resource, story, RNG or UID fact. The optional native shared-definition proof certifies only additive faith/law ids and exact retained start projections; it cannot replace existing shared runtime definitions. Ordinary re-save keeps the installed current fingerprint, so a fresh page resolves the same retained start without replaying a compatibility exception. No wire field, format increment or identity migration is introduced.
 
 Loading from the lightweight title

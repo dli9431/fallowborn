@@ -79,6 +79,15 @@
     var rid = realmOf(s, id);
     return rid ? FB.realmHeldCounties(s, rid).slice().sort() : FB.justiceCounties(s, id);
   };
+  /* A civil rent review uses the actual temporal court, never clerical rank. */
+  FB.justiceCivilRentJurisdiction = function (s, actorId, realmId, provinceId) {
+    var c = realmId && FB.realmRulerCharacterSnapshot(s,realmId);
+    return !!c && c.id === actorId && live(s,actorId) &&
+      !c.captive && !c.exiled && !FB.justiceCustodyOf(s,actorId) &&
+      FB.governments.publicAuthorityReadiness(s,realmId).allowed &&
+      FB.realmTerritory(s,realmId).indexOf(provinceId) >= 0 &&
+      FB.political.power(s,{ kind:'realm',id:realmId },'peace',{ provinceId:provinceId }).allowed;
+  };
   // No repair here: a sheet must neither materialize rulers nor change saves.
   FB.justiceCustodyOf = function (s, id) {
     var rows = s.intrigue && s.intrigue.captives || [];

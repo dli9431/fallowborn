@@ -350,7 +350,7 @@
         !Number.isInteger(authority.lastCustomYear)) invalid('authority');
     var allowed = { schema:1, nextId:1, appointments:1, recognitions:1,
       contracts:1, rights:1, receipts:1, governments:1, lastCustomYear:1,
-      civicActors:1, migrations:1 };
+      civicActors:1, migrations:1, episcopalClaims:1 };
     for (var key in authority) if (own(authority, key) && !own(allowed, key))
       invalid('authority.' + key);
     var seen = Object.create(null);
@@ -508,6 +508,7 @@
         'Duplicate v4 authority receipt for obligation {id}.', { id:value.obligationId }));
       obligations[value.obligationId] = true;
     });
+    if (FB.episcopalClaims) FB.episcopalClaims.validateState(state);
     for (var rid in authority.governments) if (own(authority.governments, rid)) {
       var form = authority.governments[rid];
       if (FB.governmentSelection && plain(form)) FB.governmentSelection.validate(state, rid, form.selection);

@@ -3711,6 +3711,16 @@ The disabled action retains a focusable details wrapper. Other blockers stay inl
 
 ## Decision review layout
 
+Episcopal rent reviews use the same fact cards, participant portraits and action
+disclosures through Visit the diocese, Hold ecclesiastical court and The Bishopric.
+They disclose the exact current holding, charter evidence, dispute, existing and
+offered seasonal rates, next-season start, finite term, one-time compensation,
+private payer, institutional receiving account and zero review/court fees.
+Browsing spends no day. The counterparty can refuse; temporal enforcement has
+its own competence gate. Confirmation and outcome return with body/list scroll,
+action focus and disclosures retained. Closed or suspended agreements remain
+readable. Existing pastoral events retain their ordinary day and cooldown.
+
 Decision reviews use the shared review helpers in `ui_misc.js` instead of stacked
 paragraphs. A Governance-style fact card (`reviewFactsCard`) holds label/value
 rows for destination, cost, duration, commitment and consequences, plus a warning

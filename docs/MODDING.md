@@ -378,6 +378,34 @@ must call `FB.invalidateSettlementLordships(state, pid)`; prefer the mutation AP
 No construction, tax, levy, capacity-penalty, or founding gameplay is enabled by
 calling a projection. Those integrations are separate phases of the saved plan.
 
+## Episcopal civil rent claims
+
+`episcopalClaims` is an optional table of complete records merged by id, with at
+most 32 definitions. Each record requires `name`, `desc`, `bookmarkId`, `provinceId`,
+`realmId`, `yearMin`, `yearMax`, `recurringShare`, `compensation`, `termSeasons`,
+`offerDays`, `possessorPolicy` and `enforcementPolicy`. Ids use lowercase snake case;
+the bookmark, inhabited county and temporal ecclesiastical realm must already
+exist. Only one declaration per bookmark/county is allowed. A declaration grants
+no property or office and authors no arrears. Runtime eligibility also requires
+the actual ecclesiastical binding, recognized incumbent, controlled county and
+privately delegated settlement with a positive ordinary charter rent.
+
+Years are integers from -10000 to 10000 with ordered bounds. `recurringShare` is
+a fraction from zero to one, capped at the source charter's share on review.
+`compensation` is 1–1000 currency units; `termSeasons` is 1–8 and `offerDays` is
+1–90. `possessorPolicy` is `accept`, `contest` or `decline`; `enforcementPolicy` is
+`compose` or `reject`. The policies govern only actual NPC responses to a pending
+player interaction through the same quote/apply contract. The bishop's NPC
+response accepts a valid possessor offer, including the current private-funds
+check. An imported record cannot install callbacks, generate estates, declare
+unpaid debts or override court competence.
+
+Display fields render through `episcopalClaim.<id>.name/desc` with effective English
+fallback. The complete JSON consumer is
+`tests/e2e/fixtures/authoring/episcopal-river-rent.json`. The implemented workflow,
+account owners, future-term boundaries and public interfaces are described in
+[episcopal-claims.md](designs/episcopal-claims.md).
+
 ## Ruler justice
 
 FBDATA.justiceSentences defines stable ids with display name/desc, kind, level (0-3), and unjust support penalty. Kind is custody, fine, penance, corporal, exile, death, pardon, ransom or forfeiture. Kind supplies mechanics; renamed or new ids have the same behavior. Fine and ransom transfer available funds; custody defaults to a 360-day term and 90-day extension window, overridable by termDays and extensionWindow. Penance defaults to costs of 40 piety and 20 prestige, overridable by pietyCost and prestigeCost. Exile may declare careerRole:cloister. A pardon with forgive:true closes all court cases; closesCase:false preserves the cause for release or ransom. The shipped money/exile/forfeit/maim/kill flags remain compatibility metadata, not dispatch. Runtime justiceSentences additions replace complete records by id.

@@ -1,5 +1,11 @@
 Ecclesiastical temporal government
 
+An optional civil rent review composes only an existing private settlement's
+ordinary remittance to the institutional see. It uses the canonical incumbent,
+actual temporal scope, public treasury and existing justice court, with explicit
+possessor refusal and conserved settlement. Spiritual office supplies no civil
+title. See [episcopal-claims.md](episcopal-claims.md).
+
 Opening validation resolves the declared world revision. Initialization uses the actual campaign for canonical office discovery, including its generated faiths and already seeded local institutions. Pure bookmark authoring validation retains the supplied revision in its detached context. Institution review retains its list when opening the incumbent's character sheet; Back and Escape restore focus, scroll and disclosures through shared modal history.
 
 Detached office discovery also carries the declared bookmark date, so profile availability uses that opening year instead of the active campaign. Profile institutions can coexist with other temporal office bindings during mod validation without requiring a live world.
