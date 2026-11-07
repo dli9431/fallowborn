@@ -3733,7 +3733,7 @@ window.FB = window.FB || {};
     run: function (s) { if (FB.ui && FB.ui.showBuildings) FB.ui.showBuildings(); } },
   { id: 'bishopric', opensChoices:true, noConsume: true,
     show: function (s) {
-      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+      return !!(FB.episcopalClaims && FB.episcopalClaims.entry(s,'bishopric') || FB.hasBishopric && FB.hasBishopric(s, me(s)));
     },
     run: function () {
       if (FB.ui && FB.ui.showBishopric) FB.ui.showBishopric();
@@ -3741,13 +3741,13 @@ window.FB = window.FB || {};
   { id:'abbeys', opensChoices:true, noConsume:true,
     show:function (s) { return !!(FB.abbeyAccess && FB.abbeyAccess(s)); },
     run:function () { if (FB.ui && FB.ui.showAbbeys) FB.ui.showAbbeys(); } },
-  { id: 'visit_diocese',
+  { id: 'visit_diocese', opensChoices:true,
     show: function (s) {
-      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+      return !!(FB.episcopalClaims && FB.episcopalClaims.entry(s,'visit_diocese') || FB.hasBishopric && FB.hasBishopric(s, me(s)));
     } },
-  { id: 'ecclesiastical_court',
+  { id: 'ecclesiastical_court', opensChoices:true,
     show: function (s) {
-      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+      return !!(FB.episcopalClaims && FB.episcopalClaims.entry(s,'ecclesiastical_court') || FB.hasBishopric && FB.hasBishopric(s, me(s)));
     } },
   { id: 'convene_synod',
     show: function (s) {
@@ -12808,6 +12808,7 @@ window.FB = window.FB || {};
   }
 
   function instantStatusReadyTurnForAction(state, action) {
+    if (FB.episcopalClaims && FB.episcopalClaims.entry(state,action.id)) return null;
     let readyTurn = null;
     if (action.cd !== undefined) {
       const cooldowns = state.player.cooldowns || {};
@@ -12835,7 +12836,7 @@ window.FB = window.FB || {};
       can = false;
       reason = adultDeedReason();
     }
-    if (can && action.cd !== undefined) {
+    if (can && action.cd !== undefined && !(FB.episcopalClaims && !(options && options.pastoralOnly) && FB.episcopalClaims.entry(state,action.id))) {
       const cooldownDays = actionCooldownDays(state, action);
       const cooldowns = state.player.cooldowns || {};
       const last = cooldowns[action.id];
@@ -13053,8 +13054,13 @@ window.FB = window.FB || {};
     if (automaticDay && !FB.recurringDeeds(state, true).some(function (action) {
       return action.id === id;
     })) return false;
-    const status = FB.instantStatus(state, id);
+    if (options && options.pastoralOnly && !(FB.bishopricSnapshot && FB.bishopricSnapshot(state,me(state)))) return;
+    const status = FB.instantStatus(state, id, options);
     if (!status.shown || !status.can) return;
+    if (id !== 'bishopric' && FB.episcopalClaims && FB.episcopalClaims.entry(state,id) && !(options && options.pastoralOnly)) {
+      if (FB.ui && FB.ui.showEpiscopalClaims) FB.ui.showEpiscopalClaims();
+      return;
+    }
     if (id === 'seek_match' && !(options && options.localMatch) &&
         FB.ui && FB.ui.showMatchChoices) {
       FB.ui.showMatchChoices();

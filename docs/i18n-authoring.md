@@ -144,6 +144,12 @@ Literal FBDATA.bookmarkRevisionContent_<suffix> objects in data/bookmark_*.js ma
 
 ## Route new text by where it lives
 
+Episcopal claim display fields use `episcopalClaim.<id>.name/desc` through
+`FB.dataText`. The native declaration shares the exact English title and scope
+explanation used by the localized generic review, so existing source aliases
+also reach those fields without a separate catalogue root. Ordinary JSON text
+retains its effective English fallback and can use the same structured owners.
+
 - **UI chrome (built as HTML/DOM in `js/*.js`):** wrap with `FB.T('English text', params?)`
   (i18n.js), or `FB.TC('context', 'English text', params?)` when identical English needs different
   meanings. Prefer the builder chokepoints that already wrap `FB.T` — `kv(label, value)`,

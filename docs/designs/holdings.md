@@ -553,6 +553,13 @@ Civic membership, magistracy, public treasury and foreign rights are separate fr
 
 Institutional property boundary
 
+An episcopal civil rent composition changes only the existing tax remittance of
+its exact delegated settlement for a finite future term. It never transfers the
+private grant, buildings or military service. Accepted terms follow inheritance
+of that same grant; a replacement grant or charter cannot acquire them. One-time
+compensation leaves the actual possessor's household or barony account and enters
+the institutional see's public treasury. See episcopal-claims.md.
+
 A civic or ecclesiastical officeholder remains a private settlement actor distinct from the public realm. Personal settlement inheritance follows the existing heir; public counties and spiritual offices remain institutional. Current control and vacancy rules may limit public receipts without redirecting private property.
 
 Owned material and enterprise output

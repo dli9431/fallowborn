@@ -1,0 +1,20 @@
+{
+  "name": "Fictional river rent composition",
+  "episcopalClaims": {
+    "river_rent": {
+      "name": "The river holding’s rent review",
+      "desc": "A fictional composition of an actual delegated Spoleto holding’s existing charter. No estate, arrears or historic litigation is supplied.",
+      "bookmarkId": "1204",
+      "provinceId": "spoleto",
+      "realmId": "papacy_1204",
+      "yearMin": 1204,
+      "yearMax": 1220,
+      "recurringShare": 0.05,
+      "compensation": 7,
+      "termSeasons": 2,
+      "offerDays": 9,
+      "possessorPolicy": "accept",
+      "enforcementPolicy": "compose"
+    }
+  }
+}

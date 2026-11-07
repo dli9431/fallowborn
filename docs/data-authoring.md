@@ -60,6 +60,14 @@ Native contributors use bookmarkSources.stage with explicit source, affected boo
 
 Data authoring contract
 
+Optional episcopalClaims declarations compose only actual settlement-charter
+remittances. The native Roman consumer and ordinary episcopal-river-rent.json
+import vary rates, finite term, compensation, offer deadline and NPC responses
+through the same pure validator, reviews, justice gate and transactions. Existing
+people, grants, private accounts and institutional treasuries remain canonical.
+No declaration can manufacture property or debt. See docs/MODDING.md and
+docs/designs/episcopal-claims.md for exact identities and lifecycle rules.
+
 Trusted retained catalogue compatibility
 
 Native source authors may call bookmarkSources.retainCatalogueTransition before
