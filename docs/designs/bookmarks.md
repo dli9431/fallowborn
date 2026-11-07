@@ -4,14 +4,34 @@ Autumn 634 now selects core_identities_v3. Its complete province and realm array
 change only two existing Syriac resident-pair faiths and the Sasanian court's
 civil governing identity. Baseline, scenery_protected_v1 and
 ordinary_settlement_v2 remain exact. Scenic cells retain ordinary behavior in the
-new revision. The two fixed household starts project their local faith only in
-the new revision; their default fields retain the older faiths.
+identity revision. The two fixed household starts project their local faith in
+core_identities_v3 and core_courts_v4; their default fields retain the older faiths.
 
-Explicit shared-definition evidence certifies the two added local faiths, the
-added civil law and both complete predecessor/current fixed starts. Three native
-transitions directly retain the supported baseline, protected and ordinary
-catalogues; they do not chain or migrate saves. Shared-root evidence, exact raw
-JSON and complete current definitions remain mandatory.
+Hidden assembled autumn 634 revision
+
+core_courts_v4 is a complete hidden revision alongside the selectable
+core_identities_v3. The composer requires the core court source and all twenty
+regional court tables, rejects missing or duplicate owners, and replaces every
+one of the 122 scaffold courts exactly once in original world order. The
+province, title, climate, route and 634_opening layout inputs retain their dated
+dispositions. The six local institutions replace the global fallback completely.
+Their explicit local offices remain available while the broader institutional
+systems stay disabled. All six use seat-only mediation, empty opening communion
+lists and fresh-only named representatives; no secular office is granted.
+
+The same atomic ownership unit publishes the core government profiles, direct
+opening actors, court faith and ruler identity projections. Before source sealing,
+the two fixed household starts carry their existing local-faith projections into
+the assembled revision. Their complete graphs and default identities keep their
+original owners and order. Hidden status does not exempt any world, institution
+or offered start from validation. No new technology capability or save field is
+introduced; the existing institution and government gates remain authoritative.
+
+The older raw world layers remain selectable by revision within the current
+catalogue. Current-build matching saves preserve people, offices, resources and
+story commitments without replaying setup. No historical catalogue signature
+exception is declared for this date. Released-world compatibility machinery and
+ordinary exact imported-content validation are unchanged.
 
 Revision-specific visibility
 
@@ -125,11 +145,11 @@ bindings.root and bindings.revisions target authored layers directly. Explicit o
 
 634 bootstrap ownership
 
-data/bookmark_634_identities.js and the four regional scaffolds remain inert literals. data/starts_634_ordinary.js stages farmer_634 and craftsman_634. data/bookmark_634.js retains source uniqueness, physical coverage, literal metadata and ordered assembly, then stages autumn_634 in bookmarkCompositionSources. Canonical validators own capitals, nonterritorial anchors, lieges, faiths, forms, site compatibility and start schemas. The world owns its layout, newly declared sites/forms/faiths and additive availability edges; each ordinary start owns its complete inhabited-county location list. Source faults retain their original message and source label without publishing a partial world. A bad ordinary start withholds only that start and its locations while its valid sibling remains available when the date is reviewed. Baseline/opening identities, physical order and authored content are unchanged. The ruler and fixed-household sources contribute their starts and complete personal graphs before the native manifest closes; shared rollouts and later world builders operate on their explicit other-date owners. Existing spent-resource saves and effective fingerprints remain acceptance obligations, covered by the pinned pre-conversion source oracle.
+data/bookmark_634_identities.js and the four regional scaffolds remain inert literals. data/starts_634_ordinary.js stages farmer_634 and craftsman_634. data/bookmark_634.js retains source uniqueness, physical coverage, literal metadata and ordered assembly, then stages autumn_634 in bookmarkCompositionSources. Canonical validators own capitals, nonterritorial anchors, lieges, faiths, forms, site compatibility and start schemas. The world owns its layout, newly declared sites/forms/faiths and additive availability edges; each ordinary start owns its complete inhabited-county location list. Source faults retain their original message and source label without publishing a partial world. A bad ordinary start withholds only that start and its locations while its valid sibling remains available when the date is reviewed. Baseline/opening identities, physical order and authored content are unchanged. The ruler and fixed-household sources contribute their starts and complete personal graphs before the native manifest closes; shared rollouts and later world builders operate on their explicit other-date owners. Current-build spent-resource saves and exact imported-content fingerprints are covered by 634-assembled-opening.spec.js. The test also checks hidden-world restoration, source failure isolation and named-office initialization without global seeds.
 
 Autumn 634 setup
 
-The Early Conquests is selectable in development setup at year 634, season 2, day 1, using the existing baseline and europe_regional_2 geography. The current review switch offers Umar and Heraclius as Historical starts, the Ctesiphon, Damascus, Christian Arab frontier and Medinan households as Story starts, and farmer_634 and craftsman_634 as Open starts. The ruler declarations retain their hidden flags for released-rule review; turning off reviewOpenStarts withholds those two starts without hiding the date or its households. Yazdegerd remains unavailable. Picker, start codes, direct creation and Observe use the shared visibility gate, and matching saves remain restorable if the bookmark is later hidden. Source loading, retained identities, opening records and technology eligibility are unchanged; this is presentation of existing content, with no new capability, technology gate or save field. Reconstruction limits and the implemented start inventory are in docs/research/634-bookmark.md. Development visibility is separate from release and owner runtime acceptance.
+The Early Conquests is selectable in development setup at year 634, season 2, day 1, using core_identities_v3 and europe_regional_2 geography; core_courts_v4 remains hidden. The current review switch offers Umar and Heraclius as Historical starts, the Ctesiphon, Damascus, Christian Arab frontier and Medinan households as Story starts, and farmer_634 and craftsman_634 as Open starts. The ruler declarations retain their hidden flags for released-rule review; turning off reviewOpenStarts withholds those two starts without hiding the date or its households. Yazdegerd remains unavailable. Picker, start codes, direct creation and Observe use the shared visibility gate, and matching saves remain restorable if the bookmark is later hidden. Source loading, retained identities, opening records and technology eligibility are unchanged; this is presentation of existing content, with no new capability, technology gate or save field. Reconstruction limits and the implemented start inventory are in docs/research/634-bookmark.md. Development visibility is separate from release and owner runtime acceptance.
 
 Logical source order
 

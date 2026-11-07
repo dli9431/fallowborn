@@ -1,10 +1,11 @@
 Autumn 634 opening
 
-Unpublished core court source
+Hidden assembled courts and institutions
 
 data/bookmark_634_courts.js contains complete Medinan, Eastern Roman and Sasanian
-court declarations for core_courts_v4. This source does not register or offer
-that revision. Its separate bookmarkOpeningActors634 map supplies two generated
+court declarations for core_courts_v4. The assembler publishes this complete
+revision with hidden:true, alongside the selectable core_identities_v3. Its
+separate bookmarkOpeningActors634 map supplies two generated
 adult principals at Qazvin and Isfahan, with fictional distinct dynasties. The
 Sasanian profile gives them weights 3/2, court-retained revenue 0.75 and levy
 0.7, and explicitly chooses the first as steward of the minor incumbent.
@@ -26,21 +27,56 @@ communities retain their existing faiths. Admission of an eligible non-relative
 does not confer accession, religious office or conversion. No new religious
 powers, named household members or institutions follow from the adapter.
 
-The extracted faith literal is detached into bookmarkCourtReligions634 before
-the existing assembler receives its faith input. The extracted ruler starts
-retain their core_courts_v4 revisionIdentities; the current source pipeline
-receives exact predecessor copies without those unpublished projections.
-Complete assembly consumes the court, direct actors, faith and start records
-together, with a real revision and native retained-catalogue evidence.
-tests/e2e/specs/634-core-courts.spec.js exercises these exact companions through
-ordinary JSON candidate validation and import, canonical initialization,
-adoption and matching restoration in isolated complete review worlds.
-It also covers headless retained openings, source-funded public appointments,
-rejection through the legacy office path and an independent fictional JSON
-minority with a weaker third principal selected as steward. Medinan adoption
-retains its separate public account; Eastern Roman adoption follows the
-existing administrative household-account rule, transferring the original
-cash balance once without creating another treasury.
+The court source and twenty regional court tables replace all 122 scaffold
+owners once, preserving their order and existing regional boundaries. Faith,
+profile and ruler-start companions publish with the full world. The two fixed
+Syriac household starts retain their local faiths in both core_identities_v3 and
+core_courts_v4. The earlier selectable world retains its reduced constitutions,
+empty institution inventory and original start projections.
+
+Six distinct named ecclesiastical representatives use existing city anchors:
+
+| Representative | Seat | Opening birth-year setting |
+| --- | --- | --- |
+| Sergius I | Constantinople | 570 |
+| Sophronius | Jerusalem | 550 |
+| Honorius I | Rome | 575 |
+| Isho’yahb II | Seleucia-Ctesiphon district | 575 |
+| John of the Sedre | Antioch | 580 |
+| Cyrus | Alexandria | 580 |
+
+These numerical birth years are gameplay proxies, not recovered birthdays.
+Sophronius uses the approximate 550 estimate; the alternative approximate 560
+chronology remains uncertain. Each person's home is a disclosed city-level
+simulation choice, with ordinary residence, contact and access consequences.
+Antioch as John's title does not establish his exact historical residence.
+The Ctesiphon marker represents the broad city-region, not an identified Kokhe
+cathedral or royal residence. No new physical site or building is placed.
+Explicit skills and empty trait lists are simulation settings; no relatives,
+property, civil appointment or future historical death are supplied.
+
+Each office mediates only in its seat county under the existing protected-worship
+and living-holder rules. Empty opening communion lists grant no recognition.
+Rome and Constantinople retain their existing office lookup identities without
+territorial papacy or universal allegiance. John has a separate West Syriac local
+office. Cyrus has a separate local office and a narrowly available, null-headed
+Chalcedonian adapter; neither changes the resident communities. His ecclesiastical
+claim grants no Egyptian civil governorship, public revenue or military command.
+The global institution catalogue cannot supply an older incumbent.
+
+Benjamin's distinct living Alexandrian claim is not represented by an executable
+person or vacant office: his concealed residence remains unlocalized. This
+omission implies neither death nor acceptance of Cyrus. The imperial Antioch
+incumbent, unidentified Damascus bishop, proposed Damascus St. John site and
+Benjamin's refuge/congregation likewise have no executable placeholders. An
+omitted institution is not evidence of an absent historical community.
+
+Matching current-build saves retain the actual named people, generated magnates,
+offices, minority stewardship, money and story commitments through repeated
+restoration. Changes to imported JSON still require their exact fingerprint;
+restore does not replay opening grants. The hidden revision is available for
+isolated review and matching loads, not ordinary fresh selection. Runtime and
+historical acceptance remain separate from publication.
 
 Scope
 
@@ -71,11 +107,11 @@ The ordinary-start source remains staged until the complete composer succeeds. P
 
 data/bookmark_634.js copies b01 through b29 in their numbered order, followed by scenery_a through scenery_d. County, court, title, layout, local climate and government records are detached from their source blocks. Duplicate declarations, missing physical anchors, unresolved courts and invalid capital ownership reject composition before live publication. Each block containing a court's capital supplies that court once; all other blocks reference it. Both climate and climates source spellings are consumed. The twenty-two physical sea crossings retain the earlier opening's explicit endpoints and classes, without a new campaign route or shortened land journey.
 
-The composer publishes five dated faith records, unions fifteen source-faith bookmark selectors without removing their other restrictions, and publishes b24's medinan_selection_pf_634 form before engine compilation. Earlier worlds retain their identities and permissions. The 634 opening has explicit empty localInstitutions and religiousHeads maps, one independent Damascus local-authority observer, no scripted history, and empty actor, appointment, estate, claim and migration ledgers. Episcopal and civic institutions, papacy, excommunication, abbeys, feudal service, scutage, manorial tenure, crown blocs, tournaments and great holy wars are disabled. This reduced institutional model prevents older named officeholders from entering the opening; it does not claim that the historical offices or communities were absent.
+The composer publishes seven dated faith records, unions fifteen source-faith bookmark selectors without removing their other restrictions, and publishes b24's medinan_selection_pf_634 form before engine compilation. Earlier worlds retain their identities and permissions. The selectable core_identities_v3 opening has explicit empty localInstitutions and religiousHeads maps, one independent Damascus local-authority observer, no scripted history, and empty actor, appointment, estate, claim and migration ledgers. Episcopal and civic institutions, papacy, excommunication, abbeys, feudal service, scutage, manorial tenure, crown blocs, tournaments and great holy wars are disabled. This reduced institutional model prevents older named officeholders from entering the opening; it does not claim that the historical offices or communities were absent.
 
-data/starts_634_ordinary.js supplies two ordinary map-chosen roles, farmer_634 and craftsman_634, across the inhabited counties through the existing resident-community rules. Their free household, generated family, initial money and optional farming plot use ordinary role defaults as simulation choices. These roles create no named historical person, fixed story household, religious entitlement or public mandate. Named ruler and fixed household beginnings have separate declarations. Matching campaigns use their recorded baseline and opening identity on restore, preserving actual people, ownership and spent resources without repeating setup. The ordinary succession fallback may supply generated parentless successors where an empty court needs continuity. These are simulation people, not historical children, spouses or other relatives of the named incumbent. The composition adds no new gameplay capability, technology requirement or save field.
+data/starts_634_ordinary.js supplies two ordinary map-chosen roles, farmer_634 and craftsman_634, across the inhabited counties through the existing resident-community rules. Their free household, generated family, initial money and optional farming plot use ordinary role defaults as simulation choices. These roles create no named historical person, fixed story household, religious entitlement or public mandate. Named ruler and fixed household beginnings have separate declarations. Matching current-build campaigns use their recorded world revision and opening identity on restore, preserving actual people, ownership and spent resources without repeating setup. The ordinary succession fallback may supply generated parentless successors where an empty court needs continuity. These are simulation people, not historical children, spouses or other relatives of the named incumbent. The composition adds no new gameplay capability, technology requirement or save field.
 
-Identity decisions
+Selectable opening identity decisions
 
 Umar's hidden existing-ruler start adopts the Medinan incumbent, court and public account once, using the authored Arabic / Early Islam community and the existing limited selection form. Tier 7 and rank 4 are simulation scales. Four personal reviews examine the opening mandate, actual Syrian and Iraqi borders and available resources independently, then conclude from Medina. All choices are costless priorities or conclusion; public actions keep their ordinary reviews. Accession is not replayed, no living nominee or separate religious-head office is offered, and no campaign or historical outcome is required. The court's existing working birth and incomplete family roster are retained without adding named relatives. Unfinished reviews archive on death or incumbent replacement; matching saves retain decisions without replay. No Yazdegerd start or agenda is registered.
 
@@ -93,7 +129,7 @@ Fresh core household and civil-policy scope
 
 core_identities_v3 changes only the existing Syriac Chalcedonian resident pair in Damascus (500) and the Syriac East Syriac pair at the Ctesiphon district anchor (1000) to chalcedonian_local_634 and east_syriac_local_634. Their corresponding fixed starts use those identities through revisionIdentities. Population shares and unrelated residents remain unchanged. These two lay adapters have null heads and specialist paths, disabled optional divorce and no ruler/institution admission. Their inherited Byzantine and Sasanian customary legal defaults are simulation compatibility choices, not newly reconstructed communal codes.
 
-The same fresh world assigns sasanian_civil_634 to the existing Sasanian court's civil governing identity. Its bounded sentence vocabulary, compensation cap and evidence categories use the shared public justice and intrigue-hearing consumers. It makes no claim to a complete lawbook, separate communal personal laws, exact tariffs or historical punishment frequency. Religious jurisdiction and the original three faith records remain unchanged. No caliphal office, clerical qualification, institution or incumbent is introduced. All earlier world revisions and supported exact imported saves retain their prior meaning through explicit native catalogue evidence.
+The same fresh world assigns sasanian_civil_634 to the existing Sasanian court's civil governing identity. Its bounded sentence vocabulary, compensation cap and evidence categories use the shared public justice and intrigue-hearing consumers. It makes no claim to a complete lawbook, separate communal personal laws, exact tariffs or historical punishment frequency. Religious jurisdiction and the original three faith records remain unchanged. No caliphal office, clerical qualification, institution or incumbent is introduced. Earlier world definitions retain their prior meaning; matching current-build imported saves use the ordinary exact-content contract.
 
 Source-faith availability
 
