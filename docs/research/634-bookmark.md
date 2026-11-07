@@ -1,5 +1,41 @@
 Autumn 634 opening
 
+Implemented opening inventory
+
+The public fresh selection remains core_identities_v3; the complete
+core_courts_v4 revision is hidden. Both use the autumn season 2 day 1 calendar
+convention, late_antique era and europe_regional_2 physical map. The assembled
+revision consumes all 527 anchors and all 122 authored courts, including the
+living Sasanian court and its minority stewardship. Its six local institutions
+and the two independent campaign opportunities are declarations of that world,
+not proof that a campaign, public agreement or historical outcome has occurred.
+
+| Beginning | Residence and effective identity in the assembled revision | Personal program and optional profile |
+| --- | --- | --- |
+| Umar | Medina; Arabic, Medinan political-court faith | umar_court_agenda_634; opening_umar_court_634 |
+| Heraclius | Constantinople; Greek, Chalcedonian | heraclius_court_agenda_634; opening_heraclius_court_634 |
+| Damascus craft household | Damascus; Syriac, local Chalcedonian | damascus_household_full_634; opening_damascus_full_634 |
+| Ctesiphon farming household | Existing Baghdad district anchor; Syriac, local East Syriac | ctesiphon_household_track_634; opening_ctesiphon_634 |
+| Medinan farming household | Medina; Arabic, early Islamic | medina_household_track_634; opening_medina_634 |
+| Christian Arab frontier household | Damascus; Arabic, West Syriac lay community | frontier_household_track_634; opening_frontier_634 |
+| Free farming household | Any supported resident birthplace | Ordinary household play |
+| Artisan's apprentice | Any supported resident birthplace | Ordinary household play |
+
+The ruler beginnings adopt actual living court identities and existing public
+accounts. The four fixed households use the resident communities declared at
+their existing sites; generated kin remain fictional. Ordinary starts retain
+birthplace-based community selection. All six authored personal programs have a
+stationary or peaceful conclusion without an imposed conquest; ordinary starts
+need no authored opening outcome. The Christian Arab beginning remains civilian.
+Yazdegerd as a player beginning, Jabala/mobile-polity service, a paid-service
+extension and named battle sequences are omitted. The Sasanian world court is
+present independently of those omissions.
+
+The combined catalogue and restoration checks are described in docs/TESTS.md
+under autumn 634 coverage. These bounded checks do not establish historical,
+visual, device, performance or release acceptance, and do not activate the hidden
+revision.
+
 Optional ambitions and contact evidence
 
 Each accepted historical or story household start has three optional opening goals. Damascus and Ctesiphon retain their existing earnings, reserve and home-conclusion profiles. Medina and the settled Christian Arab household use the same ordinary observation system with their own work and terminal choices. The {money:5} earnings threshold and {money:25} reserve are small gameplay targets, not researched household accounts. Ruler goals observe committed reviews and canonical source acknowledgments; peaceful retention completes them without public operations or historical outcomes. Completion supplies no payment, prestige, piety or authority.

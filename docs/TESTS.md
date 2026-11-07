@@ -1,5 +1,32 @@
 Autumn 634 core identity coverage
 
+634-catalogue-integration.spec.js checks the complete standard-edition loader
+order, all 33 regional inputs, 527 anchors, 506 inhabited districts, 122 court
+replacements and six local institutions. It inventories every offered start and
+its exact world/personal attachment ledger, checks the real beginning picker,
+and follows quiet household or court decisions without requiring either war.
+All eight starts preserve current-content facts and spent resources through a
+different-date activation, hidden-revision restore, re-save and second restore.
+The incumbent starts inherit the original court's exact technology record with
+its existing historical-seed marker completed, preventing reseeding on restore.
+Personal death and succession checks use detached branches without advancing
+the daily loop. Independent Syrian and Iraqi cases cover no start, changed
+ownership, ordinary declaration, interruption, victory and saved commitment.
+An ordinary JSON import covers a changed institution configuration and a real
+household expense, reload, exact fingerprints and atomic malformed/changed
+content rejection. Missing personal content withholds its start while healthy
+siblings and an unrelated date remain available. Source checks also protect
+the public runtime asset boundary and type-owned engine dispatch. The focused
+runtime declaration lists the actual dated sources and their shared consumers;
+the spec exercises Chromium served content, not packaged, device or visual
+acceptance.
+
+The same spec checks that the assembled Damascus program and optional goals have
+complete literal display owners before composition. Its pinned public source
+fixture compares all four effective Damascus declarations exactly, including
+their ordering, against the former composer. The normal start cases cover quiet
+choices, local receipt priority, interruption and repeat restoration.
+
 634-ruler-agendas.spec.js covers the two assembled incumbent starts, unchanged earlier revision attachments and visibility, four-review peaceful completion, exact identity/rank/faith/treasury adoption, independent delegated frontier decisions, actual ordinary costs and blockers, stale confirmation, defender participation, truthful third-party diversion, public-appointment observation, original-person/generation/jurisdiction interruption, absent-track restoration and repeated current-content saves. A compact story sheet shows the original portrait and retains nonzero scroll and focus through character and decision returns. The independent 634-court-agenda.json enters through the ordinary Mods file picker and varies source, review order and earliest season; malformed source operations reject without data/RNG/UID mutation, and changed content under the same mod name rejects the saved campaign atomically. These bounded checks do not establish device, visual or longer campaign acceptance.
 
 634-identities.spec.js covers scoped local faith availability, exact unchanged

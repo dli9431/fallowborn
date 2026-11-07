@@ -35,6 +35,19 @@ and its story list retain their prior meanings. Native compilation and ordinary
 JSON mods use the same registered campaign type. See stories.md for admission,
 finite deadlines, adoption and the technology-impact decisions.
 
+The assembled world carries eight world-story declarations: the two frontier
+opportunities, the three fixed-household authority observers, the Syrian and
+Iraqi campaign notices, and the ordinary district-authority notice. Each of the
+six story or ruler starts adds one personal program and one optional goal
+profile; farmer and craftsman add neither. The native attachment ledger records
+these actual selections once, independently of whether either frontier starts.
+The assembled Damascus program and both expanded court agendas replace their
+predecessor tracks only through the assembled revision's startTrackOverrides.
+The selectable predecessor retains its own world list and personal programs.
+634-catalogue-integration.spec.js covers the combined catalogue, quiet choices,
+interruption and current-content persistence alongside the feature-specific
+specifications. It introduces no visibility, saved-schema or technology change.
+
 The older raw world layers remain selectable by revision within the current
 catalogue. Current-build matching saves preserve people, offices, resources and
 story commitments without replaying setup. No historical catalogue signature

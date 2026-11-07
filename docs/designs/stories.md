@@ -4,6 +4,13 @@ Title boot seals the registered story types. Unmodded bookmark setup compiles on
 
 Trusted source order
 
+The assembled Damascus household program and its optional goal profile are
+literal declarations beside their predecessor records. Composition applies the
+same local departure transitions and revision bindings without rewriting prose.
+This preserves effective definitions and saved identities while making every
+full-program display field reachable through the ordinary householdStory and
+openingProfile extraction owners. It adds no gameplay or technology capability.
+
 captureStories records the original declaration positions while dated sources load, without compiling or registering anything. Optional per-unit storyAfter prefixes order detached candidate compilation and publication consistently with surviving declarations. Existing registration anchors and dependency passes remain authoritative. The 568 personal agendas and Ravenna graph now use this path; rejection removes a whole start-owned graph without leaving a dangling anchor in another independent graph. Original optional assembly messages can be staged as unit faults. No placement metadata enters ordinary JSON declarations, definition fingerprints, compiled lifecycle records or saved campaigns. The pinned former data scripts compare declaration order and the complete compiled registry before fresh and retained save restore. Runtime imports retain normal append/replacement semantics and whole-import validation.
 
 Atomic declaration publication
