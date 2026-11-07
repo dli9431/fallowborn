@@ -1,5 +1,11 @@
 Autumn 634 opening
 
+Optional ambitions and contact evidence
+
+Each accepted historical or story household start has three optional opening goals. Damascus and Ctesiphon retain their existing earnings, reserve and home-conclusion profiles. Medina and the settled Christian Arab household use the same ordinary observation system with their own work and terminal choices. The {money:5} earnings threshold and {money:25} reserve are small gameplay targets, not researched household accounts. Ruler goals observe committed reviews and canonical source acknowledgments; peaceful retention completes them without public operations or historical outcomes. Completion supplies no payment, prestige, piety or authority.
+
+Contacts use only existing seeded people: Umar and Heraclius are reciprocal distant court targets, and the Medinan household may identify its opening political incumbent. These are directory references, not evidence of a personal meeting or friendship. Named local contacts for Damascus, Ctesiphon and the Christian Arab household remain on evidence hold and are omitted: the seed supplies no supported personal employer, historical official or relative for these fictional families. A local community, a regional connection or an ecclesiastical title does not establish that missing personal relationship. No named general, governor, customer, relative or Jabala service contact is manufactured. Ordinary generated family remains available through Kin. The ordinary farmer and craftsman starts retain their unrestricted resident-based play without a newly invented personal biography or named acquaintance.
+
 Ruler review scope
 
 The assembled court revision gives Umar four immediate reviews of mandate/accounts, the independent Syrian and Iraqi opportunities, and continued rule from Medina. Heraclius receives four reviews of the actual administrative court, eastern holdings/accounts, the existing Syrian defense or diplomacy choice, and continued rule from Constantinople. Review order and immediate availability are gameplay choices, not a recovered council agenda or itinerary. The capital-based Heraclius start remains an explicit reconstruction. Earlier world revisions keep their original personal agendas; both ruler starts and the expanded world retain their hidden visibility.
