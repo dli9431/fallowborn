@@ -755,6 +755,15 @@ contract automatically; regression coverage compares field styles across screens
 
 ## Required navigation and decision presentation
 
+Operating-law reviews use the local council motion list and the enterprise
+manager's retained modal history. Proposal sheets disclose the affected county
+and business, fee and term, beneficiaries, existing-business transition, seeded
+chance and session/day commitment. Business sheets disclose the original payee,
+payment and expiry, lawful status and free pause/closure choices. Cancellation
+spends nothing. Payment replaces the current review and Back refreshes the
+manager while restoring its retained scroll and focus. Existing worker wages
+remain explicitly disclosed when production pauses. See industry-laws.md.
+
 Whenever a UI references a specific character, show that character's portrait
 with their identity in the same visible surface. This applies to events, outcomes,
 cards, lists, dialogs, and tooltips, including deceased characters. A named person

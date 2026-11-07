@@ -22,6 +22,7 @@ window.FBMODS = window.FBMODS || [];
   const authoringRoots = ['fortProfiles','siegeSupportProfiles','buildingProfiles','positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','rulerFaithTargets','federateServiceStarts','federateMigrations','rankPrestigeYearly','historicalAmbitions','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','freedomTerms','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','quickStarts','traitMechanics','authorityOffices','legitimacySources','customaryBases','storyPlacements'];
   const authoredRoots = Object.create(null);
   authoringRoots.push('aiDecisionPolicies');
+  authoringRoots.push('industryLaws');
   let baseCatalogues = null;
   let baseRootFingerprints = null;
   let installedCatalogues = null;
@@ -712,7 +713,7 @@ window.FBMODS = window.FBMODS || [];
     capabilities:true,
     techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
     positionRules:true, policyGovernance:true, marketRaidYields:true, authoringDefaults:true,
-    positions:true, localCouncilMotions:true, feudalServiceCharters:true,
+    positions:true, localCouncilMotions:true, industryLaws:true, feudalServiceCharters:true,
     tenureArchetypes:true, tenureDuties:true, tenureRights:true, freedomTerms:true, freedomBargaining:true,
     schooling:true, abbeys:true, householdServiceRoles:true, enterprises:true, enterpriseMechanics:true, specializationMarketEffects:true, householdStandardDemand:true, auctionLotTypes:true,
     householdStandards:true, marketGoods:true, marketEndowmentTypes:true,
@@ -2738,6 +2739,8 @@ window.FBMODS = window.FBMODS || [];
     if (serviceFaults.length) fail('householdServiceRoles', serviceFaults.join(' '));
     const enterpriseFaults = FB.validateEnterpriseMechanics();
     if (enterpriseFaults.length) fail('enterpriseMechanics', enterpriseFaults.join(' '));
+    const industryFaults = FB.industryLaws.definitionFaults(FBDATA.industryLaws, FBDATA);
+    if (industryFaults.length) fail('industryLaws', industryFaults.join(' '));
     const tournamentFaults = FB.tournaments.validateData(FBDATA.tournaments, FBDATA.tournamentRules);
     if (tournamentFaults.length) fail('tournamentRules', tournamentFaults.join(' '));
     const lifecycleFaults = FB.validateEventLifecycle(FBDATA.eventSubscriptions, FBDATA.events);
@@ -2834,6 +2837,7 @@ window.FBMODS = window.FBMODS || [];
       });
     });
     var live = FBDATA, staged = Object.assign({}, live), prepared;
+    if (own(mod, 'industryLaws') && !plainObject(mod.industryLaws)) fail('industryLaws', 'must be an object keyed by id.');
     ['positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','federateServiceStarts','federateMigrations','rankPrestigeYearly','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','eras','wardrobes','settlementLayouts','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','traitMechanics','authorityOffices','legitimacySources','customaryBases','storyPlacements'].forEach(function (key) {
       if (own(mod, key) && !plainObject(mod[key])) fail(key, 'must be an object keyed by id.');
     });
@@ -3320,6 +3324,7 @@ window.FBMODS = window.FBMODS || [];
       if (mod[key]) mergeTable(FBDATA[key], mod[key]);
     });
     if (mod.enterprises) for (const k in mod.enterprises) FBDATA.enterprises[k] = mod.enterprises[k];
+    if (mod.industryLaws) mergeTable(FBDATA.industryLaws, mod.industryLaws);
     if (mod.auctionLotTypes) mergeTable(FBDATA.auctionLotTypes,
       mod.auctionLotTypes);
     if (mod.householdStandards) {

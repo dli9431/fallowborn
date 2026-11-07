@@ -624,6 +624,29 @@
     return true;
   };
 
+  // A household purchase can settle several original public payees. Preflight
+  // every account and debit the combined price once, including fractional fees.
+  FB.treasuryHouseholdPurchase = function (state, payments, price) {
+    if (!Array.isArray(payments) || !Number.isFinite(price) || price < 0) return false;
+    const credits = Object.create(null);
+    let total = price;
+    for (const payment of payments) {
+      if (!payment || typeof payment.realmId !== 'string' || !Number.isFinite(payment.amount) || payment.amount < 0 ||
+          !FB.treasuryPublicAccountSnapshot(state, payment.realmId)) return false;
+      credits[payment.realmId] = (credits[payment.realmId] || 0) + payment.amount;
+      total += payment.amount;
+    }
+    if (!Number.isFinite(total) || !Number.isFinite(state.player.gold) || total > state.player.gold ||
+        Object.keys(credits).some(function (rid) {
+          const closing = account(state, rid).gold + credits[rid];
+          return !Number.isFinite(closing) || Math.abs(closing) > Number.MAX_SAFE_INTEGER;
+        })) return false;
+    state.player.gold -= total;
+    Object.keys(credits).forEach(function (rid) { account(state, rid).gold += credits[rid]; });
+    if (payments.length) count('counterparty transfers', payments.length);
+    return true;
+  };
+
   FB.treasurySeason = function (state, playerTax) {
     if (!state.treasuryAccounting) { FB.treasuryInitialize(state); return false; }
     const period = season(state);

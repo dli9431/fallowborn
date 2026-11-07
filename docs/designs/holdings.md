@@ -20,6 +20,12 @@ Technology impact is none in colonate_tenure, colonate_military_release, colonat
 
 # Holdings (commoner property)
 
+Market stalls can acquire optional council-approved operating obligations.
+Their purchase total includes due permission fees; existing property retains a
+lawful transition and explicit pause, closure and payment choices in its manager.
+Income, physical output and upgrade benefits all share the permission projection.
+See [Targeted operating laws](industry-laws.md) for scope, succession and accounts.
+
 CrazyGames first-business review
 
 The opening recommendation has a direct Review this business action in its coachmark and live checklist. This opens the enterprise requirements sheet with current price, funds, worker eligibility, staffing warnings and base seasonal income, followed by a separate purchase action. The recommendation does not bypass ordinary purchase eligibility, staffing or technology. A changed price, worker set or warning category requires another review before purchase; successful confirmation still spends the ordinary deed day. This is an existing-action shortcut and has no new technology impact.

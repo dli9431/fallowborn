@@ -9595,6 +9595,8 @@ window.FB = window.FB || {};
       h += '<button class="actionbtn" data-auction-bid="' + option.increments + '"' +
         (option.affordable ? '' : ' disabled') + '>⚖ ' +
         esc(FB.T('Bid {money:amount}', { amount:option.amount })) +
+        (option.operatingFee > 0 ? '<span class="adesc">' + esc(FB.T(
+          'If won: {money:total}, including operating permission {money:fee}.', {total:option.total, fee:option.operatingFee})) + '</span>' : '') +
         '<span class="adesc">' + esc(option.affordable
           ? FB.T('Raise by {increments} increments.', { increments:option.increments })
           : FB.T('You do not have enough gold for this bid.')) +
@@ -9607,7 +9609,8 @@ window.FB = window.FB || {};
     }), h, { replaceView:!!replaceView, noFocus:true });
     document.querySelectorAll('[data-auction-bid]').forEach(function (button) {
       button.addEventListener('click', function () {
-        const result = FB.placeAuctionBid(s, button.dataset.auctionBid);
+        const reviewed = options.filter(function (o) { return o.increments === Number(button.dataset.auctionBid); })[0];
+        const result = FB.placeAuctionBid(s, button.dataset.auctionBid, reviewed && reviewed.industryQuote);
         if (!result) return;
         if (result.status === 'countered') {
           UI.showAuction(true);
@@ -14000,12 +14003,24 @@ window.FB = window.FB || {};
       }))) + kv('Time', esc(FB.T('1 day')))) + '<div class="gm-list">';
     for (const id in FBDATA.localCouncilMotions) {
       const def = FBDATA.localCouncilMotions[id];
+      const lawId = FB.industryLaws.forMotion(id);
+      if (lawId) {
+        const lawReview = FB.industryLaws.quoteMotion(s, lawId);
+        if (!lawReview || !lawReview.ready) continue;
+      }
       h += '<button type="button" class="actionbtn" data-local-motion="' +
         esc(id) + '">' + def.icon + ' ' +
         esc(dt(s, 'localCouncilMotion', id, def, 'name')) +
         '<span class="adesc">' +
         esc(dt(s, 'localCouncilMotion', id, def, 'desc')) +
         '</span></button>';
+    }
+    for (const law of (s.industryLaws ? s.industryLaws.laws : [])) {
+      const q = FB.industryLaws.quoteMotion(s, law.definitionId, law.id);
+      if (!q || !q.ready) continue;
+      h += '<button type="button" class="actionbtn" data-industry-repeal="' + esc(law.id) +
+        '">' + esc(FB.T('Review repeal: {law}', {law:dt(s, 'localCouncilMotion', law.terms.motionId,
+          FBDATA.localCouncilMotions[law.terms.motionId], 'name')})) + '</button>';
     }
     h += '</div><div class="gm-footer"><button type="button" class="btn" ' +
       'id="local-motion-cancel">' + esc(FB.T('Not now')) + '</button></div>';
@@ -14017,12 +14032,108 @@ window.FB = window.FB || {};
       })) + '</p>' });
     document.querySelectorAll('[data-local-motion]').forEach(function (button) {
       button.addEventListener('click', function () {
+        const lawId = FB.industryLaws.forMotion(button.dataset.localMotion);
+        if (lawId) { UI.showIndustryLawMotion(lawId); return; }
         if (!FB.proposeLocalCouncilMotion(s, button.dataset.localMotion)) return;
         UI.closeModal();
         if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus:true });
       });
     });
+    document.querySelectorAll('[data-industry-repeal]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const law = s.industryLaws.laws.filter(function (r) { return r.id === button.dataset.industryRepeal; })[0];
+        UI.showIndustryLawMotion(law.definitionId, law.id);
+      });
+    });
     $('local-motion-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  function industryOperatingFacts(s, status) {
+    let h = '<p>' + esc(FB.industryLaws.reason(status)) + '</p>';
+    for (const row of status.laws) {
+      const d = FBDATA.industryLaws[row.definitionId];
+      h += '<section class="governance-card">' +
+        kv('Operating law', esc(dt(s, 'localCouncilMotion', d.motionId, FBDATA.localCouncilMotions[d.motionId], 'name'))) +
+        kv('Permission fee', esc(FB.T('{money:fee} for {days} days', {fee:row.fee, days:d.permitDays}))) +
+        kv('Payee', esc(s.realms[row.payeeRealmId].name)) +
+        kv('Law ends in', esc(FB.T('{days} days', {days:Math.max(0, row.endTurn - s.turn)}))) +
+        (row.grace ? kv('Transition ends in', esc(FB.T('{days} days', {days:row.transitionEndTurn - s.turn}))) : '') +
+        (row.permitEndTurn !== null ? kv('Permission ends in', esc(FB.T('{days} days', {days:row.permitEndTurn - s.turn}))) : '') +
+        (row.exempt ? '<p>' + esc(FB.T('Your household qualifies for a beneficiary exemption.')) + '</p>' : '') + '</section>';
+    }
+    return h;
+  }
+
+  UI.showIndustryLawMotion = function (definitionId, repealId) {
+    const s = FB.state, q = FB.industryLaws.quoteMotion(s, definitionId, repealId);
+    if (!q) return;
+    const d = q.terms, def = FBDATA.localCouncilMotions[d.motionId];
+    let h = '<p>' + esc(dt(s, 'localCouncilMotion', d.motionId, def, 'desc')) + '</p>' +
+      reviewFactsCard('', kv('Scope', esc(FB.world.byId[d.provinceId].name)) +
+        kv('Business', esc(dt(s, 'enterprise', d.enterpriseType, FBDATA.enterprises[d.enterpriseType], 'name'))) +
+        kv('Operating rule', esc(d.mode === 'prohibition' ? FB.T('Prohibition with beneficiary exemptions') : FB.T('Paid operating permission'))) +
+        kv('Permission fee', esc(FB.T('{money:fee} for {days} days', {fee:d.fee, days:d.permitDays}))) +
+        kv('Duration', esc(FB.T('{days} days', {days:d.durationDays}))) +
+        kv('Existing business transition', esc(FB.T('{days} days', {days:d.transitionDays}))) +
+        kv('Vote chance', esc(FB.T('{chance}%', {chance:Math.round(FB.localCouncilMotionChance(s) * 100)}))) +
+        kv('Proposal cost', esc(FB.T('No payment; one deed day and the annual council session')))) +
+      '<p>' + esc(repealId ? FB.T('Repeal ends future restrictions and fees. Existing paid permissions remain recorded; there is no refund.') :
+        FB.T('Existing businesses keep their owners. During the transition they may operate; afterward they must qualify, pay, pause or close. Paid workers still receive their contracted wages.')) + '</p>';
+    for (const x of d.exemptions) {
+      h += '<p>' + esc(FB.T('Households resident in {province}: permission {permission}, fee {money:fee}.', {
+        province:FB.world.byId[x.id] ? FB.world.byId[x.id].name : x.id,
+        permission:x.permission ? FB.T('allowed') : FB.T('subject to the ordinary rule'), fee:x.fee
+      })) + '</p>';
+    }
+    h += '<button type="button" class="actionbtn" id="industry-law-propose"' + (q.ready ? '' : ' disabled') + '>' +
+      esc(repealId ? FB.T('Propose repeal') : FB.T('Propose operating law')) + '</button>' +
+      '<div class="gm-footer"><button type="button" class="btn" id="industry-law-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(dt(s, 'localCouncilMotion', d.motionId, def, 'name'), h, {historyView:true});
+    $('industry-law-back').addEventListener('click', function () { modalHistoryBack(UI.showLocalCouncilMotion); });
+    $('industry-law-propose').addEventListener('click', function () {
+      const result = FB.proposeLocalCouncilMotion(s, d.motionId, q);
+      if (!result) { UI.toast('The council review changed. Review the current terms.'); return; }
+      UI.closeModal();
+      FB.game.passDay({skipFocus:true});
+      UI.refresh();
+    });
+  };
+
+  UI.showIndustryOperation = function (uid, returnContext, replaceView) {
+    const s = FB.state, e = (s.player.enterprises || []).filter(function (r) { return r.uid === uid; })[0];
+    if (!e) return;
+    const status = FB.industryLaws.operation(s, e), quotes = {};
+    let h = industryOperatingFacts(s, status) + kv('Your funds', esc(FB.money(s.player.gold))) + '<p>' + esc(FB.T(
+      'Pausing or closing preserves property, paid permissions and obligations. Output and upgrade benefits stop. Existing worker wages continue until you dismiss those workers. Resuming requires lawful permission.')) + '</p>';
+    const actions = [{id:'pay', label:FB.T('Pay operating permissions: {money:amount}', {amount:status.amount})},
+      {id:'pause', label:FB.T('Pause operation')}, {id:'close', label:FB.T('Close operation; retain property')},
+      {id:'resume', label:FB.T('Resume lawful operation')}];
+    for (const a of actions) {
+      const q = quotes[a.id] = FB.industryLaws.quoteOperation(s, e, a.id, 0);
+      h += '<button type="button" class="actionbtn" data-industry-operation="' + a.id + '"' +
+        (q.ready ? '' : ' disabled') + '>' + esc(a.label) +
+        (!q.ready && a.id === 'pay' && status.amount > 0 ? '<span class="adesc">' + esc(q.reason) + '</span>' : '') + '</button>';
+    }
+    for (const p of (s.industryLaws ? s.industryLaws.permits : [])) if (p.enterpriseUid === uid) {
+      h += '<p>' + esc(FB.T('Paid {money:amount} to {payee} on day {day}; permission ended or ends on day {end}.', {
+        amount:p.amount, payee:s.realms[p.payeeRealmId].name, day:p.paidTurn, end:p.endTurn
+      })) + '</p>';
+    }
+    h += '<div class="gm-footer"><button type="button" class="btn" id="industry-operation-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Lawful business operation'), h, {historyView:true, replaceView:!!replaceView,
+      historyBack:true, historyBackRender:function () { UI.showEnterpriseManage(uid, returnContext, true); }});
+    $('industry-operation-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showEnterpriseManage(uid, returnContext, true); });
+    });
+    document.querySelectorAll('[data-industry-operation]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (!FB.industryLaws.commitOperation(s, quotes[button.dataset.industryOperation])) {
+          UI.toast('Operating terms changed. Review the current terms.'); return;
+        }
+        UI.refresh();
+        UI.showIndustryOperation(uid, returnContext, true);
+      });
+    });
   };
 
   UI.showCastellanPetition = function () {
@@ -23802,7 +23913,8 @@ window.FB = window.FB || {};
     const critical = FB.T(
       '{state} · setup {money:cost} · base {money:yield} each season', {
         state:state.label, cost:status.cost, yield:def.yield || 0
-      });
+      }) + (status.industryQuote && status.industryQuote.amount > 0 ? ' · ' +
+        FB.T('includes operating permission {money:fee}; renewal required', {fee:status.industryQuote.amount}) : '');
     const details = '<span class="adesc enterprise-purchase-desc">' +
       esc(dt(s, 'enterprise', status.id, def, 'desc')) + '</span>' +
       '<span class="adesc enterprise-purchase-reason' +
@@ -23864,6 +23976,7 @@ window.FB = window.FB || {};
       'Review every current requirement for {enterprise} in {settlement}.', {
         enterprise:name, settlement:place
       })) + '</p></div>';
+    if (status.industryQuote && status.industryQuote.status.laws.length) h += industryOperatingFacts(s, status.industryQuote.status);
     if (status.ready) {
       const readyState = enterprisePurchaseState(status);
       h += '<div class="enterprise-requirement-summary ' +
@@ -23949,7 +24062,7 @@ window.FB = window.FB || {};
           UI.showEnterpriseRequirements(type, settlement, returnContext, purchaseReview, true);
           return;
         }
-        if (!FB.buyEnterprise(s, type, settlement)) return;
+        if (!FB.buyEnterprise(s, type, settlement, status.industryQuote)) return;
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
         UI.refresh();
@@ -23980,6 +24093,8 @@ window.FB = window.FB || {};
     const place = sts[settlement] ? sts[settlement].name : '?';
     const catalogue = FB.enterpriseCatalogue(
       s, s.player.provinceId, settlement);
+    const industryQuotes = {};
+    catalogue.forEach(function (row) { industryQuotes[row.id] = row.industryQuote; });
     let available = 0;
     for (const status of catalogue) if (status.ready) available++;
     let h = '<div class="enterprise-market-content" data-modal-scroll><div class="gm-body-text"><p>' + esc(FB.T(
@@ -24013,7 +24128,7 @@ window.FB = window.FB || {};
         const live = FB.enterprisePurchaseStatus(s,
           b.dataset.enterpriseBuy, s.player.provinceId, settlement);
         if (!live.ready ||
-            !FB.buyEnterprise(s, b.dataset.enterpriseBuy, settlement)) {
+            !FB.buyEnterprise(s, b.dataset.enterpriseBuy, settlement, industryQuotes[b.dataset.enterpriseBuy])) {
           UI.toast(
             'Enterprise requirements changed. Review the updated status.');
           UI.showEnterpriseMarket(settlement, returnContext, true);
@@ -24194,6 +24309,10 @@ window.FB = window.FB || {};
     let h = managementCard(
       'enterprise-overview', FB.T('Enterprise details'), overviewDetails, '',
       'enterprise-management-status ' + staffing.state) + upgradeHtml +
+      (FB.industryLaws.relevant(s, e) ? '<section class="governance-card"><p>' +
+        esc(FB.industryLaws.reason(FB.industryLaws.operation(s, e))) +
+        '</p><button type="button" class="actionbtn" id="enterprise-operating-law">' +
+        esc(FB.T('Review operating laws, payments and closure')) + '</button></section>' : '') +
       '<section class="enterprise-management-card enterprise-worker-lock settcard' +
       (!assignedIds.length ? ' disabled' : '') + '"' +
       (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
@@ -24227,7 +24346,7 @@ window.FB = window.FB || {};
       const previewIds = assignedIds.slice();
       if (!selected && canAdd) previewIds.push(c.id);
       const preview = {
-        type:e.type, provinceId:e.provinceId, settlement:e.settlement,
+        uid:e.uid, type:e.type, provinceId:e.provinceId, settlement:e.settlement,
         level:level, workerId:previewIds[0] || null, workerIds:previewIds
       };
       h += personAssignmentCard({
@@ -24313,6 +24432,9 @@ window.FB = window.FB || {};
     openModal(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name'), h,
       managementOptions);
     FB.paintFaces($('gm-body'), s);
+    if ($('enterprise-operating-law')) $('enterprise-operating-law').addEventListener('click', function () {
+      UI.showIndustryOperation(uid, returnContext);
+    });
     if ($('enterprise-worker-lock')) {
       $('enterprise-worker-lock').addEventListener('change', function () {
         if (!FB.setEnterpriseWorkerLock(s, uid, this.checked)) {

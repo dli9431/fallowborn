@@ -111,6 +111,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      targeted_industry_laws:{ mode:'none', rationale:'Local operating permissions, civic exemptions and prohibitions are political and economic obligations, independent of discovery. Enterprises and their expansions retain their ordinary technology gates.' },
       expedition_local_passage_policy:{ mode:'none', rationale:'Outside willingness to review local passage is political policy, not a discovery. Actual government consent, original authority, finite capacity and payment remain binding; equipment, supply and physical movement retain their independent gates.' },
       adopted_dynastic_public_treasury:{ mode:'none', rationale:'Preserving an existing public account through ordinary ruler adoption is accounting and identity continuity. Household money stays private; government, military, market and construction gates retain their existing requirements.' },
       expedition_subordinate_formation_authority:{ mode:'none', rationale:'Exact direct-holder authority under an existing sovereign is political jurisdiction. Consent, command, funding, unit and finite resource gates remain authoritative.' },

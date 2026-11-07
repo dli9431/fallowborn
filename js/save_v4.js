@@ -123,6 +123,7 @@
     });
     if (buildings) state = Object.assign({}, state, {buildings:buildings});
     if (FB.homeAuthority) FB.homeAuthority.validate(state);
+    if (FB.industryLaws) FB.industryLaws.validate(state);
     if (FB.expeditionPrograms) FB.expeditionPrograms.validatePassagePolicies(state);
     if (FB.treasuryValidatePreservation) FB.treasuryValidatePreservation(state);
     if (state.treasuryAccounting && own(state.treasuryAccounting, 'fundingRevision') &&
