@@ -3612,6 +3612,66 @@ balance is authored event content rather than an additional schema requirement f
 
 ## Industry operating laws
 
+Optional `voting` opts a definition into affected-interest hearings through both
+the existing town council seat and the controlling court's Estates. Omission
+retains the simple seeded council motion. Both consumers use this law's exact
+county, business, exemptions, issuer/payee and economic transaction; they cannot
+author a parallel effect or a realm-wide jurisdiction.
+
+```json
+"voting": {
+  "town": {"quorum": 0.5, "threshold": 0.5, "days": 30, "members": [
+    {"id": "traders", "kind": "guild", "weight": 2},
+    {"id": "notables", "kind": "notable", "weight": 1}
+  ]},
+  "estates": {"quorum": 0.25, "threshold": 0.5, "days": 40}
+}
+```
+
+Both consumer objects are required. `quorum` is a number greater than zero through
+one; `threshold` is a number from 0.5 inclusive to one exclusive. Passage requires
+cast weight at least quorum times eligible weight and support strictly greater
+than threshold times cast weight. `days` is an integer 1–90. Town `members` has
+1–8 records with unique lowercase ids (up to 40 characters), unique `kind` values
+`guild` or `notable`, and integer weight 1–10. Thus at most one bench of each
+supported kind can be declared. Unknown fields, injected conditions, named NPC
+asset claims and unsupported kinds reject. The actual targeted enterprise
+profession, current local guild careers, current council seat and existing civic
+representatives resolve people; otherwise the UI discloses bounded county
+representation. Exemptions never add members. The independent ordinary JSON
+example is `tests/e2e/fixtures/authoring/industry-law-assemblies.json`.
+
+Estates seats come only from the current direct political court, capped at 10
+influence per house and 128 houses. Unexposed houses abstain. The actual public
+payee and existing player-owned affected property supply noble exposure; no NPC
+business inventory is generated. Estates passage additionally needs the
+controlling court's support. Only territorial government consent currently
+supports these laws, and only in its directly controlled county. Unsupported
+government strategies fail closed rather than borrowing a town or royal office.
+
+`FB.industryLaws.assemblyMembers(state,id,consumer,repealId?)` is a pure projection;
+`assemblyList(state,consumer)` lists applicable definitions. `quoteAssembly(state,
+id,consumer,action,voteId?,memberId?,posture?,repealId?)` reviews `begin`, `ballot`,
+`withdraw` or `resolve`. Consumer is `town` or `estates`; explicit posture is
+`support`, `oppose` or `abstain`. Only the current living player's eligible bench
+can explicitly vote; other principals use the same deterministic interest
+projection. `commitAssembly(state,quote)` rechecks the complete review before a
+single mutation. Begin reserves the annual session without money or a day;
+withdrawal retains that reservation. Resolve closes interrupted/expired hearings
+without enactment, rejects failed quorum/assent or enacts/repeals through the
+existing law owner. Quotes, replacement principals and restore never enact.
+
+The optional schema-1 law ledger additionally accepts `votes`, at most 64 rows.
+Each row stores id, definitionId, consumer, proposerId, original issuer, repealId,
+startedTurn, endTurn, principal-bound ballots, status, endedTurn, lawId and result.
+Status is pending, withdrawn, invalidated, rejected or passed. A decided result
+stores member snapshots and total/cast/support weight, quorum, threshold and
+controlling-court consent; no rendered names or prose are saved. Ballots never
+transfer to a replacement person or ruler generation. Every deliberative law and
+repeal must retain its passed approval record. Malformed tallies, duplicate
+pending hearings, missing approval and changed imported content reject before
+adoption. Legacy ledgers need no votes array; no save-envelope version changes.
+
 `industryLaws` is a keyed JSON-mod table of at most 64 complete definitions.
 Definitions replace by id; executable strategies remain in `js/industry_laws.js`.
 No declaration enacts itself or changes a released opening's defaults.
@@ -3666,8 +3726,8 @@ yield consumers suppress all unlawful output. No separate NPC enterprise ledger
 or unreviewed illegal-operation route is supplied.
 
 The optional schema-1 `state.industryLaws` stores `laws`, `permits` and `choices`.
-Law rows retain `id`, `definitionId`, exact `terms`, original `issuer` (local
-council kind, county, realm and character), `payeeRealmId`, `startTurn`, `endTurn`,
+Law rows retain `id`, `definitionId`, exact `terms`, original `issuer` (kind
+`local_council`, or `estates` for deliberative laws; county, realm and character), `payeeRealmId`, `startTurn`, `endTurn`,
 `transitionEndTurn`, `existingEnterpriseUids` and nullable `repealedTurn`.
 Repealed rows also retain their distinct `repealer`. Permit rows retain `id`,
 `lawId`, `enterpriseUid`, household `payer:"player"`, original `payeeRealmId`,

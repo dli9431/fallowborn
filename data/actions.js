@@ -255,6 +255,8 @@ FBDATA.deeds = [
     section:'realm', group:'realm', flow:'choices', cooldownDays:0, handler:'petition_barony' },
   { id:'bring_council_motion', label:'⚖ Bring a motion before the council…', order:43,
     section:'realm', group:'realm', flow:'choices', layoutGroup:'ruler', handler:'bring_council_motion' },
+  { id:'review_industry_hearings', label:'⚖ Review operating-law hearings…', order:104,
+    section:'realm', group:'realm', flow:'choices', layoutGroup:'ruler', handler:'review_industry_hearings' },
   { id:'seek_castellany', label:'🏰 Seek appointment as Castellan…', order:44,
     section:'realm', group:'realm', flow:'choices', handler:'seek_castellany' },
   { id:'renew_castellany', label:'🏰 Petition to renew the Castellan appointment', order:45,

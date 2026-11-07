@@ -60,6 +60,16 @@ Native contributors use bookmarkSources.stage with explicit source, affected boo
 
 Data authoring contract
 
+Industry-law `voting` declares two consumers of the existing operating-law
+transaction: town benches and current Estates houses. Supply both quorum,
+threshold and finite hearing policies; town data may weight only the supported
+trading and civic-notable benches. Named principals come from actual eligible
+people; missing names use disclosed county representation without creating
+people or businesses. Exemptions vary interests, never franchise. The native
+London levy/restriction and ordinary `industry-law-assemblies.json` import use
+the same pure validator, projections, principal-bound ballots, approval owner
+and detached saved-state checks. See MODDING.md and designs/industry-laws.md.
+
 Optional episcopalClaims declarations compose only actual settlement-charter
 remittances. The native Roman consumer and ordinary episcopal-river-rent.json
 import vary rates, finite term, compensation, offer deadline and NPC responses

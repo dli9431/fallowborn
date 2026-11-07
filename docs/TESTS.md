@@ -545,6 +545,16 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+`industry-law-assemblies.spec.js` covers native town and Estates entry points,
+actual exposure and distinct electorates, bounded representation, explicit
+support/opposition/abstention, quorum rejection, withdrawal, one-time enactment,
+stale and unauthorized reviews, member death/replacement, changed authority,
+succession, expiry, territorial/delegated consent boundaries and policy-campaign
+exclusion. Its ordinary JSON file import varies weights, quorum, exemptions,
+fees and duration. Current pending/completed restore, re-save/reload and atomic
+malformed approval rejection preserve resources and identities. Compact modal
+journeys cover ballot controls, completed results and retained parent navigation.
+
 episcopal-claims.spec.js covers native Roman and ordinary imported fictional
 rent compositions over actual private grants: pure reads/validation, contested
 evidence, competent/refused enforcement, conserved private-to-institutional

@@ -13996,7 +13996,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const status = FB.localCouncilMotionStatus(s);
     const seat = FB.localCouncilOf(s);
-    if (!status.ready || !seat) return;
+    if (!seat) { UI.showIndustryAssemblyList('town'); return; }
     const province = FB.world.byId[seat.provinceId];
     let h = reviewFactsCard('', kv('Vote chance', esc(FB.T('{chance}%', {
         chance:Math.round(status.chance * 100)
@@ -14004,11 +14004,12 @@ window.FB = window.FB || {};
     for (const id in FBDATA.localCouncilMotions) {
       const def = FBDATA.localCouncilMotions[id];
       const lawId = FB.industryLaws.forMotion(id);
+      if (lawId && FBDATA.industryLaws[lawId].voting) continue;
       if (lawId) {
         const lawReview = FB.industryLaws.quoteMotion(s, lawId);
         if (!lawReview || !lawReview.ready) continue;
       }
-      h += '<button type="button" class="actionbtn" data-local-motion="' +
+      h += '<button type="button" class="actionbtn"' + (status.ready ? '' : ' disabled') + ' data-local-motion="' +
         esc(id) + '">' + def.icon + ' ' +
         esc(dt(s, 'localCouncilMotion', id, def, 'name')) +
         '<span class="adesc">' +
@@ -14016,18 +14017,22 @@ window.FB = window.FB || {};
         '</span></button>';
     }
     for (const law of (s.industryLaws ? s.industryLaws.laws : [])) {
+      if (law.terms.voting) continue;
       const q = FB.industryLaws.quoteMotion(s, law.definitionId, law.id);
       if (!q || !q.ready) continue;
       h += '<button type="button" class="actionbtn" data-industry-repeal="' + esc(law.id) +
         '">' + esc(FB.T('Review repeal: {law}', {law:dt(s, 'localCouncilMotion', law.terms.motionId,
           FBDATA.localCouncilMotions[law.terms.motionId], 'name')})) + '</button>';
     }
+    if (FB.industryLaws.assemblyList(s, 'town').length || s.industryLaws && s.industryLaws.votes) {
+      h += '<button type="button" class="actionbtn" id="industry-town-hearings">' + esc(FB.T('Operating-law hearings and ballots')) + '</button>';
+    }
     h += '</div><div class="gm-footer"><button type="button" class="btn" ' +
       'id="local-motion-cancel">' + esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('Council of {province}', {
       province:province ? province.name : seat.provinceId
     }), h, { noFocus:true, titleDetailsHtml:'<p>' + esc(FB.T(
-      'The seeded vote chance is {chance}% for every motion: Diplomacy and Stewardship shape your case, while popular opinion shapes the room.', {
+      'Ordinary ordinances have a seeded vote chance of {chance}%. Operating-law hearings use their disclosed members, interests and passage rules.', {
         chance:Math.round(status.chance * 100)
       })) + '</p>' });
     document.querySelectorAll('[data-local-motion]').forEach(function (button) {
@@ -14046,6 +14051,7 @@ window.FB = window.FB || {};
       });
     });
     $('local-motion-cancel').addEventListener('click', UI.closeModal);
+    if ($('industry-town-hearings')) $('industry-town-hearings').addEventListener('click', function () { UI.showIndustryAssemblyList('town'); });
   };
 
   function industryOperatingFacts(s, status) {
@@ -14065,6 +14071,9 @@ window.FB = window.FB || {};
   }
 
   UI.showIndustryLawMotion = function (definitionId, repealId) {
+    if (FBDATA.industryLaws[definitionId] && FBDATA.industryLaws[definitionId].voting) {
+      UI.showIndustryAssembly(definitionId, 'town', null, repealId); return;
+    }
     const s = FB.state, q = FB.industryLaws.quoteMotion(s, definitionId, repealId);
     if (!q) return;
     const d = q.terms, def = FBDATA.localCouncilMotions[d.motionId];
@@ -14097,6 +14106,169 @@ window.FB = window.FB || {};
       FB.game.passDay({skipFocus:true});
       UI.refresh();
     });
+  };
+
+  function industryVoteStatus(status) {
+    const names = {pending:FB.T('Pending hearing'), withdrawn:FB.T('Withdrawn'), invalidated:FB.T('Authority lost or hearing expired'),
+      passed:FB.T('Passed and enacted'), rejected:FB.T('Rejected')};
+    return names[status] || '';
+  }
+  function industryPosture(posture) {
+    return posture === 'support' ? FB.T('Support') : posture === 'oppose' ? FB.T('Oppose') : FB.T('Abstain');
+  }
+  function industryHearingPosition(button) {
+    const body = $('gm-body');
+    return {scrollTop:body.scrollTop, focusId:button.id, definitionId:button.dataset.industryHearing,
+      voteId:button.dataset.industryVote, repealId:button.dataset.industryRepeal,
+      expanded:Array.prototype.map.call(body.querySelectorAll('.settcard-info[aria-expanded="true"]'),function (b) { return b.getAttribute('aria-controls'); })};
+  }
+  function restoreIndustryHearingPosition(view) {
+    if (!view) return;
+    const body = $('gm-body'), marker = body.firstElementChild;
+    function restore() {
+      if (body.firstElementChild !== marker || $('genmodal').classList.contains('hidden')) return;
+      view.expanded.forEach(function (id) {
+        const panel = $(id);
+        if (panel && body.contains(panel)) {
+          panel.classList.remove('hidden');
+          body.querySelectorAll('.settcard-info').forEach(function (b) { if (b.getAttribute('aria-controls') === id) b.setAttribute('aria-expanded','true'); });
+        }
+      });
+      let focus = view.focusId && $(view.focusId);
+      if (!focus && view.definitionId) body.querySelectorAll('[data-industry-hearing]').forEach(function (b) {
+        if (b.dataset.industryHearing === view.definitionId && b.dataset.industryVote === view.voteId && b.dataset.industryRepeal === view.repealId) focus = b;
+      });
+      if (focus && body.contains(focus)) focus.focus({preventScroll:true});
+      body.scrollTop = view.scrollTop;
+    }
+    restore(); setTimeout(restore,0);
+  }
+  UI.showIndustryHearings = function () {
+    let h = '';
+    ['town','estates'].forEach(function (consumer) {
+      h += reviewActionCardHtml({id:'industry-records-' + consumer,
+        label:consumer === 'town' ? FB.T('Town hearing records') : FB.T('Estates hearing records')});
+    });
+    h += '<div class="gm-footer"><button type="button" class="btn" id="industry-records-close">' + esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('Operating-law hearings'),h,{historyView:true});
+    ['town','estates'].forEach(function (consumer) {
+      $('industry-records-' + consumer).addEventListener('click',function () { UI.showIndustryAssemblyList(consumer); });
+    });
+    $('industry-records-close').addEventListener('click',UI.closeModal);
+  };
+  UI.showIndustryAssemblyList = function (consumer, replaceView, restorePosition) {
+    const s = FB.state, rows = s.industryLaws && s.industryLaws.votes || [];
+    let h = reviewFactsCard('', '<p>' + esc(consumer === 'town' ?
+      FB.T('Only the current town seat may propose. Trading and civic benches represent this county; they confer no noble seat, land or fiscal office.') :
+      FB.T('Only current members of the controlling court’s Estates may propose. Existing noble influence supplies seats; guild membership grants no Estates vote.')) + '</p>');
+    FB.industryLaws.assemblyList(s, consumer).forEach(function (id) {
+      const d = FBDATA.industryLaws[id], name = dt(s, 'localCouncilMotion', d.motionId, FBDATA.localCouncilMotions[d.motionId], 'name');
+      h += reviewActionCardHtml({data:{industryHearing:id}, label:name, note:FB.T('Inspect terms, interests and passage rules'),
+        detailsId:'industry-hearing-' + id, details:'<p>' + esc(dt(s,'localCouncilMotion',d.motionId,FBDATA.localCouncilMotions[d.motionId],'desc')) + '</p><p>' +
+          esc(FB.T('Opening reserves the annual hearing without payment. You may withdraw before settlement; the session remains spent.')) + '</p>'});
+      (s.industryLaws && s.industryLaws.laws || []).forEach(function (law) {
+        if (law.definitionId !== id || law.repealedTurn !== null) return;
+        h += reviewActionCardHtml({data:{industryHearing:id,industryRepeal:law.id}, label:FB.T('Review repeal: {law}', {law:name}),
+          note:FB.T('Ends future fees and restrictions; no refund')});
+      });
+    });
+    rows.filter(function (v) { return v.consumer === consumer; }).slice().reverse().forEach(function (v) {
+      const d = FBDATA.industryLaws[v.definitionId];
+      h += reviewActionCardHtml({data:{industryHearing:v.definitionId,industryVote:v.id},
+        label:dt(s, 'localCouncilMotion', d.motionId, FBDATA.localCouncilMotions[d.motionId], 'name'), note:industryVoteStatus(v.status)});
+    });
+    h += '<div class="gm-footer"><button type="button" class="btn" id="industry-hearings-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Operating-law hearings'), h, {historyView:true, replaceView:!!replaceView});
+    document.querySelectorAll('[data-industry-hearing]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showIndustryAssembly(button.dataset.industryHearing, consumer, button.dataset.industryVote, button.dataset.industryRepeal,false,industryHearingPosition(button));
+      });
+    });
+    $('industry-hearings-back').addEventListener('click', function () { modalHistoryBack(UI.closeModal); });
+    restoreIndustryHearingPosition(restorePosition);
+  };
+  UI.showIndustryAssembly = function (definitionId, consumer, voteId, repealId, replaceView, returnPosition, restorePosition) {
+    const s = FB.state, L = FB.industryLaws, rows = s.industryLaws && s.industryLaws.votes || [];
+    const v = rows.filter(function (r) { return r.id === voteId; })[0];
+    const q = L.quoteAssembly(s, definitionId, consumer, v ? 'resolve' : 'begin', voteId, null, null, repealId);
+    if (!q) return;
+    const d = q.terms, rule = d.voting[consumer], completed = v && v.status !== 'pending';
+    const members = completed && v.result ? v.result.members : q.members;
+    const tally = completed && v.result ? v.result.tally : q.tally;
+    const quotes = {};
+    function action(id, label, review, note) {
+      quotes[id] = review;
+      return reviewActionCardHtml({id:id, label:label, disabled:!review || !review.ready,
+        note:review && review.ready ? note : review && review.reason || FB.T('A current eligible seat, available session, lawful scope and consent are required.'),
+        details:'<p>' + esc(note) + '</p>'});
+    }
+    let h = reviewFactsCard('',
+      kv('Scope', esc(FB.world.byId[d.provinceId].name)) +
+      kv('Business', esc(dt(s, 'enterprise', d.enterpriseType, FBDATA.enterprises[d.enterpriseType], 'name'))) +
+      kv('Operating rule', esc(d.mode === 'prohibition' ? FB.T('Prohibition') : FB.T('Paid operating permission'))) +
+      kv('Permission fee', esc(FB.T('{money:fee} for {days} days', {fee:d.fee,days:d.permitDays}))) +
+      kv('Public payee', esc(s.realms[v ? v.issuer.realmId : q.issuer.realmId] ?
+        s.realms[v ? v.issuer.realmId : q.issuer.realmId].name : FB.T('No current public payee'))) +
+      kv('Duration', esc(FB.T('{days} days', {days:d.durationDays}))) +
+      kv('Existing business transition', esc(FB.T('{days} days', {days:d.transitionDays}))) +
+      kv('Quorum', esc(FB.T('{percent}% of eligible influence must cast support or opposition', {percent:rule.quorum * 100}))) +
+      kv('Passage', esc(FB.T('More than {percent}% of votes cast; abstentions are excluded', {percent:rule.threshold * 100}))) +
+      (consumer === 'estates' ? kv('Additional consent', esc(FB.T('The controlling court must support the terms'))) : '') +
+      kv('Hearing window', esc(FB.T('{days} days', {days:rule.days}))) +
+      kv('Proposal cost', esc(FB.T('No payment or day; the annual hearing remains spent after withdrawal or rejection'))) +
+      kv('Status', esc(v ? industryVoteStatus(v.status) : FB.T('Not proposed'))) +
+      (v && !completed ? kv('Time remaining', esc(FB.T('{days} days', {days:Math.max(0,v.endTurn - s.turn)}))) : '') +
+      '<p>' + esc(FB.T('Ownership, existing permits and worker wages remain with their ordinary owners. Exemptions change liability, never membership.')) + '</p>');
+    h += '<p>' + esc(FB.T('After the transition, unpaid or prohibited businesses earn nothing. Owners may qualify, pay for permission, pause or close; contracted worker wages continue.')) + '</p>';
+    d.exemptions.forEach(function (x) {
+      h += '<p>' + esc(FB.T('Households resident in {province}: permission {permission}, fee {money:fee}.', {
+        province:FB.world.byId[x.id].name,permission:x.permission ? FB.T('allowed') : FB.T('subject to the ordinary rule'),fee:x.fee})) + '</p>';
+    });
+    if (!d.exemptions.length) h += '<p>' + esc(FB.T('No beneficiary exemptions.')) + '</p>';
+    if (q.repealId) h += '<p>' + esc(FB.T('Repeal reverses these interests and ends future fees and restrictions without refunding paid permissions.')) + '</p>';
+    h += reviewFactsCard(FB.T('Affected interests'), members.map(function (m) {
+      const label = m.kind === 'guild' ? FB.T('Trading guild interest') : m.kind === 'notable' ? FB.T('Civic notable interest') :
+        s.realms[m.realmId] ? s.realms[m.realmId].name : FB.T('Noble household interest');
+      const person = m.actorId && s.chars[m.actorId];
+      let body = person ? reviewPeopleHtml(reviewPersonHtml(person, label, null)) : kv('Interest', esc(label));
+      body += kv('Political weight', String(m.weight)) + kv('Position', esc(industryPosture(m.posture))) +
+        '<p>' + esc(m.kind === 'guild' ? FB.T('Exposure: access to the targeted trade and resident trading privilege; no NPC stall ownership is assumed.') :
+          m.kind === 'notable' ? FB.T('Exposure: local receipts and access to civic trade; no private assets are granted.') :
+            FB.T('Exposure: the actual public payee or an existing household business in this county. Unexposed members abstain.')) + '</p>';
+      if (m.represented) body += '<p>' + esc(FB.T('Bounded county representation: no named historical delegate is asserted.')) + '</p>';
+      if (v && !completed && m.actorId === s.player.charId) {
+        ['support','oppose','abstain'].forEach(function (posture) {
+          body += action('industry-ballot-' + m.id + '-' + posture, industryPosture(posture),
+            L.quoteAssembly(s,definitionId,consumer,'ballot',v.id,m.id,posture),
+            FB.T('No payment or day. You may change your own ballot before settlement.'));
+        });
+      }
+      return body;
+    }).join(''));
+    h += reviewFactsCard(FB.T('Tally'), kv('Support',String(tally.supportWeight)) + kv('Votes cast',String(tally.castWeight)) + kv('Eligible influence',String(tally.totalWeight)));
+    if (!v) h += action('industry-hearing-begin', q.repealId ? FB.T('Propose repeal') : FB.T('Propose operating law'), q,
+      FB.T('Reserve the annual hearing. No enactment or payment occurs until the vote is settled.'));
+    else if (!completed) {
+      h += action('industry-hearing-resolve',FB.T('Settle the vote'),q,
+        FB.T('Recheck current principals, authority, quorum and support. A passed motion enacts once; lost authority or expiry closes it without enactment.'));
+      h += action('industry-hearing-withdraw',FB.T('Withdraw before commitment'),
+        L.quoteAssembly(s,definitionId,consumer,'withdraw',v.id),FB.T('No law is enacted. The reserved session remains spent.'));
+    }
+    h += '<div class="gm-footer"><button type="button" class="btn" id="industry-hearing-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(dt(s,'localCouncilMotion',d.motionId,FBDATA.localCouncilMotions[d.motionId],'name'),h,
+      {historyView:true,replaceView:!!replaceView,
+        titleDetailsHtml:'<p>' + esc(dt(s,'localCouncilMotion',d.motionId,FBDATA.localCouncilMotions[d.motionId],'desc')) + '</p>',
+        historyBackRender:function () { UI.showIndustryAssemblyList(consumer,true,returnPosition); }});
+    Object.keys(quotes).forEach(function (id) {
+      $(id).addEventListener('click',function () {
+        const position = industryHearingPosition($(id)), result = L.commitAssembly(s,quotes[id]);
+        if (!result) { UI.toast('The assembly review changed. Review the current terms.'); return; }
+        UI.showIndustryAssembly(definitionId,consumer,result.id,q.repealId,true,returnPosition,position);
+        UI.refresh();
+      });
+    });
+    $('industry-hearing-back').addEventListener('click',function () { modalHistoryBack(function () { UI.showIndustryAssemblyList(consumer,true); }); });
+    restoreIndustryHearingPosition(restorePosition);
   };
 
   UI.showIndustryOperation = function (uid, returnContext, replaceView) {
@@ -17925,6 +18097,9 @@ window.FB = window.FB || {};
     }
     h += parliamentHemicycleHtml(s, politics, activeForecast, overviewHtml);
     h += '<div class="gm-list">';
+    if (FB.industryLaws.assemblyList(s, 'estates').length || s.industryLaws && s.industryLaws.votes) {
+      h += '<button type="button" class="actionbtn" id="industry-estates-hearings">' + esc(FB.T('Operating-law hearings and ballots')) + '</button>';
+    }
     h += estatesActionCard('estates-liege-card-details',
       esc(FB.T('Open {liege}’s ruler card…', {
         liege:liege.ruler.name
@@ -17981,6 +18156,7 @@ window.FB = window.FB || {};
     modalOptions.guide = guideModalOption('estates-guide', 'government',
       'Guide: government');
     openModal(FB.T('The Estates'), h, modalOptions);
+    if ($('industry-estates-hearings')) $('industry-estates-hearings').addEventListener('click', function () { UI.showIndustryAssemblyList('estates'); });
     $('estates-liege-card').addEventListener('click', function () {
       UI.showLiegeModal(s.player.liege, {
         view:'estates',
