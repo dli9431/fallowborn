@@ -1030,6 +1030,15 @@ household-party-travel-conflicts.spec.js imports independent harbor and upland J
 
 634-damascus-program.spec.js covers the assembled Damascus program, all offering revisions and resident identities, seven-stage completeness, peaceful no-work completion, ordinary paid-work progression, death/succession and departure, shared personal/observer incident ownership, stale and remote confirmation rejection, repeated current-content saves and an independent ordinary JSON import. The first-playable attachments remain unchanged.
 
+Family landmarks
+
+family-landmarks.spec.js stages committed plot/enterprise purchases, permanent
+settlement, service and rank records, retirement, death and two played lives.
+It checks truthful attribution, first-rank selection, repeated current-content
+restore without duplicate grants or milestones, pure reads without RNG/UID use,
+40-entry retention under staged writes, and paged biography returns with nonzero
+scroll and focus at desktop and compact widths. No generations are simulated.
+
 634 optional opening goals
 
 634-opening-goals.spec.js covers the six accepted story/historical starts in the assembled court revision: one three-goal profile per protagonist, resolvable fixed target people without friendship, pure projections, repeated current-content save restoration and death archival. Ruler cases complete every goal peacefully, reject repeat choices and archive pending goals on generation loss. Medina and the civilian frontier cases separate ordinary paid focus income from savings and commit actual stationary conclusions. A real independent JSON import changes thresholds, goal count and contacts, preserves spent money across repeated restore and rejects an unknown work source without changing data, RNG or UID. These targeted checks do not establish visual/device or full-suite acceptance.

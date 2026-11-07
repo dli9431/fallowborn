@@ -4323,6 +4323,7 @@ window.FB = window.FB || {};
       settlement:settlement, workerId:null
     };
     FB.enterpriseList(state).push(e);
+    if (state.player.enterprises.length === 1) FB.noteFamilyMilestone(state, 'enterprise', provinceId, settlement, FB.dataParam('enterprise', type));
     if (status.industryQuote) FB.industryLaws.chargeAcquisition(state, e, status.industryQuote);
     for (const worker of status.workers) {
       if (!workerBusy(state, worker.id)) {

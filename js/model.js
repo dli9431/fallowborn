@@ -3903,6 +3903,9 @@ window.FB = window.FB || {};
     preservedEntries:32, playedEntries:40 };
   FB.LIFE_HISTORY_LIMITS = Object.freeze(LIFE_LIMITS);
   const lifeMessages = {
+    relocation:FB.msg('news.biography.relocation', 'Moved the household permanently to {place}.', {}),
+    property:FB.msg('news.biography.property', 'Acquired a first freehold plot at {place}.', {}),
+    enterprise:FB.msg('news.biography.enterprise', 'Acquired {asset} at {place}.', {}),
     tournament:FB.msg('news.biography.tournament', 'Won a competition at the games in {venue}.', {}),
     games_hosted:FB.msg('news.biography.games_hosted', 'Hosted games at {venue}.', {}),
     rank:FB.msg('news.biography.rank', 'Became {title}.', {}),
@@ -3932,6 +3935,7 @@ window.FB = window.FB || {};
     exile:FB.msg('news.biography.exile', 'Sent into exile.', {})
   };
   const lifeWeights = { rank:80, accession:90, loss:85, conquest:70,
+    relocation:110, property:110, enterprise:110,
     tournament:45, games_hosted:40,
     battle:30, defeat:30, command:30, command_defeat:30,
     foundation:90, death:100, death_cause:100, retirement:95,
@@ -4119,6 +4123,60 @@ window.FB = window.FB || {};
     trimLife(record);
     trimFamilyLives(state, archive);
     return FB.lifeHistory(state, id);
+  };
+  // These three firsts share the biography's existing storage and bounds.
+  // Ownership commits call this; readers and restore never infer past facts.
+  FB.noteFamilyMilestone = function (state, kind, provinceId, settlement, asset) {
+    const archive = lifeArchive(state), p = state && state.player;
+    if (!archive || !p || lifeRestoring.has(state) ||
+        ['property', 'enterprise', 'relocation'].indexOf(kind) < 0) return;
+    const key = lifeMessages[kind].key;
+    const duplicate = Object.keys(archive.people).some(function (id) {
+      const row = archive.people[id];
+      return row.played && (kind !== 'relocation' || id === p.charId) &&
+        row.entries.some(function (entry) { return entry.msg.key === key; });
+    });
+    if (duplicate) return;
+    const province = FB.world && FB.world.byId[provinceId];
+    const site = settlement !== undefined && FB.settlementsOf(state, provinceId)[settlement];
+    if (!province || settlement !== undefined && !site) return;
+    const params = { place:site ? site.name : province.name };
+    if (asset) params.asset = asset;
+    FB.noteLifeEvent(state, p.charId, kind, params);
+  };
+  FB.familyLandmarks = function (state) {
+    const rows = FB.lifeHistoryCollection(state).filter(function (row) { return row.played; });
+    rows.sort(function (a, b) {
+      return a.since - b.since || a.identity.born - b.identity.born ||
+        (a.identity.id < b.identity.id ? -1 : 1);
+    });
+    const ranks = Object.create(null);
+    const firstRanks = [];
+    rows.forEach(function (row) {
+      row.entries.forEach(function (entry) {
+        if (entry.msg.key === lifeMessages.rank.key || entry.msg.key === lifeMessages.accession.key) {
+          firstRanks.push({ row:row, entry:entry });
+        }
+      });
+    });
+    firstRanks.sort(function (a, b) { return a.entry.turn - b.entry.turn; });
+    firstRanks.forEach(function (item) {
+      const tier = item.entry.msg.params.title.$title.tier;
+      if (!ranks[tier]) ranks[tier] = item.entry;
+    });
+    return rows.map(function (row) {
+      const seen = Object.create(null);
+      const entries = row.entries.slice().sort(function (a, b) { return a.turn - b.turn; })
+        .filter(function (entry) {
+          const kind = entry.msg.key.slice(entry.msg.key.lastIndexOf('.') + 1);
+          if (kind === 'rank' || kind === 'accession') return ranks[entry.msg.params.title.$title.tier] === entry;
+          if (['appointment', 'conquest', 'battle', 'command', 'property', 'enterprise',
+              'relocation', 'death', 'death_cause', 'retirement'].indexOf(kind) < 0 || seen[kind]) return false;
+          seen[kind] = true;
+          return true;
+        });
+      return { record:row, entries:entries };
+    });
   };
   FB.preserveLifeHistory = function (state, id, preserve) {
     const archive = FB.ensureLifeHistories(state);

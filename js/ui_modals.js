@@ -28444,9 +28444,10 @@ window.FB = window.FB || {};
       };
     }
   };
-  UI.showLifeHistoryCollection = function (page, replace, view) {
+  UI.showLifeHistoryCollection = function (page, replace, view, family) {
     const s = FB.state;
-    const rows = FB.lifeHistoryCollection(s).sort(function (a, b) {
+    const landmarks = family ? FB.familyLandmarks(s) : [];
+    const rows = (family ? landmarks.map(function (item) { return item.record; }) : FB.lifeHistoryCollection(s)).sort(function (a, b) {
       return (b.identity.born || 0) - (a.identity.born || 0) ||
         (a.identity.id < b.identity.id ? -1 : 1);
     });
@@ -28458,6 +28459,8 @@ window.FB = window.FB || {};
       kv('Preserved lives', esc(FB.T('{count} of {limit} places', {
         count:FB.preservedLifeCount(s), limit:FB.LIFE_HISTORY_LIMITS.preserved
       }))) + kv('Played lives', esc(String(playedCount))) + '</section>';
+    if (family) h += '<p class="hint">' + esc(FB.T(
+      'Selected recorded landmarks, including the first recorded attainment of each rank. Open a life for its surviving highlights. Earlier events are not reconstructed.')) + '</p>';
     if (!rows.length) h += '<p class="hint">' + esc(FB.T(
       'No lives are collected yet. Follow someone from their character sheet to preserve their history.')) + '</p>';
     h += '<div class="gm-list life-history-list">';
@@ -28465,12 +28468,27 @@ window.FB = window.FB || {};
       const c = s.chars[row.identity.id] || row.identity;
       const state = row.played ? FB.T('Played life')
         : row.paused && !c.dead ? FB.T('Following paused') : FB.T('Preserved life');
+      let highlights = '';
+      if (family) {
+        const item = landmarks.filter(function (item) { return item.record === row; })[0];
+        const freedom = FB.familyFreedomView ? FB.familyFreedomView(s) : null;
+        if (freedom) [freedom.first, freedom.firstLawful].forEach(function (fact) {
+          if (fact && fact.entry.protagonistId === c.id) highlights +=
+            '<span class="adesc" data-family-landmark data-i18n-ignore>' + esc(fact.text) + '</span>';
+        });
+        item.entries.forEach(function (entry) {
+          highlights += '<span class="adesc" data-family-landmark data-i18n-ignore>' +
+            esc(FB.T('{year} AD: {event}', { year:entry.year,
+              event:FB.renderMessage(entry.msg, { state:s, viewer:s.player.charId }) })) + '</span>';
+        });
+        if (row.condensed) highlights += '<span class="adesc">' + esc(FB.T('Some highlights have been condensed.')) + '</span>';
+      }
       h += '<button type="button" class="actionbtn large-list-row life-history-person" data-life-open="' +
         esc(c.id) + '"><span class="large-list-row-main">' + FB.faceTag(c, 44, 50) +
         '<span class="large-list-row-copy"><span class="large-list-row-title">' + esc(FB.fullName(c)) +
         '</span><span class="adesc">' + esc(lifeDatesText(c)) + ' · ' +
         esc(FB.T('{count} accomplishments', { count:(row.entries || []).length })) +
-        '</span></span></span><span class="large-list-face-state">' + esc(state) + '</span></button>';
+        '</span>' + highlights + '</span></span><span class="large-list-face-state">' + esc(state) + '</span></button>';
     }
     h += '</div><div class="gm-footer"><button type="button" class="btn" id="life-list-back">' +
       esc(FB.T('Back')) + '</button><button type="button" class="btn" id="life-list-prev"' +
@@ -28478,20 +28496,20 @@ window.FB = window.FB || {};
       esc(FB.T('Page {page} of {pages}', { page:page + 1, pages:pages })) +
       '</span><button type="button" class="btn" id="life-list-next"' +
       (page + 1 < pages ? '' : ' disabled') + '>' + esc(FB.T('Next')) + '</button></div>';
-    openModal(FB.T('Remembered lives'), h, { historyView:!replace, replaceView:!!replace,
+    openModal(family ? FB.T('Family landmarks') : FB.T('Remembered lives'), h, { historyView:!replace, replaceView:!!replace,
       historyBack:true, modalClass:'fullsheet-modal life-history-modal', noFocus:!!view,
       titleDetailsHtml:'<p>' + esc(FB.T('Played lives and people you chose to preserve remain here after death.')) +
         '</p><p>' + esc(FB.T('Each preserved life, including a deceased one, uses one place in the collection. Played lives do not.')) + '</p>' });
     paintLifeFaces($('gm-body'));
     $('life-list-back').onclick = function () { modalHistoryBack(UI.closeModal); };
-    $('life-list-prev').onclick = function () { UI.showLifeHistoryCollection(page - 1, true); };
-    $('life-list-next').onclick = function () { UI.showLifeHistoryCollection(page + 1, true); };
+    $('life-list-prev').onclick = function () { UI.showLifeHistoryCollection(page - 1, true, null, family); };
+    $('life-list-next').onclick = function () { UI.showLifeHistoryCollection(page + 1, true, null, family); };
     $('gm-body').querySelectorAll('[data-life-open]').forEach(function (button, index) {
       button.onclick = function () {
         const remembered = { scroll:$('gm-body').scrollTop,
           id:button.getAttribute('data-life-open'), index:index };
         UI.showLifeHistory(remembered.id, false, { back:function () {
-          UI.showLifeHistoryCollection(page, false, remembered);
+          UI.showLifeHistoryCollection(page, false, remembered, family);
         } });
       };
     });

@@ -737,6 +737,7 @@ window.FB = window.FB || {};
     state.population.counties[pid].communities = population.communities;
     if (!q.costsPaid) { p.prestige -= q.prestige; p.piety -= q.piety; }
     if (!q.rulerFounded) {
+      if (p.homeSettlement !== q.settlement) FB.noteFamilyMilestone(state, 'relocation', pid, q.settlement);
       p.homeSettlement = q.settlement;
       const lordship = record(state, pid, q.settlement);
       lordship.founderId = q.founderId; lordship.dynasty = q.dynasty; lordship.source = 'founding';

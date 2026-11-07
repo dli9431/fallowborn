@@ -9654,6 +9654,7 @@ window.FB = window.FB || {};
     FB.landPlots(state).push({
       provinceId:state.player.provinceId, settlement:settlement
     });
+    if (FB.landPlots(state).length === 1) FB.noteFamilyMilestone(state, 'property', state.player.provinceId, settlement);
     FB.news(state, FB.msg('news.action.land_bought',
       '🌾 The household buys another plot at {settlement}.',
       { settlement:site.settlementName }));
