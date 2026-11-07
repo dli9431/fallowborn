@@ -1,5 +1,11 @@
 # The Royal Council
 
+The separate commoner local council can approve targeted market-stall operating
+terms and repeal them through its existing seeded annual session. Pure legal
+reviews do not pay fees or transfer property. These laws outlive the original
+councillor's seat and do not use the royal council or Estates authority.
+See [Targeted operating laws](industry-laws.md) for the shared approval contract.
+
 Local civic and episcopal institutions
 
 The late antique civic_institutions and episcopal_sees systems use FBDATA.localInstitutions in data/political_institutions.js. Councils, senates, bishoprics and patriarchates have separate identities, representatives, counterparty Standing, demands, consent rights and bounded histories. A physical site anchors each on-map institution; the county remains the existing authority scope for that seat. An institution never becomes a territorial realm. Off-map offices have no invented county or settlement.

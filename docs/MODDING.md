@@ -3582,7 +3582,88 @@ Core formative stories use three options: two 65% trait-shaping attempts with a 
 then a 35% option whose only possible mechanical result is a single skill gain. That three-option
 balance is authored event content rather than an additional schema requirement for mods.
 
+## Industry operating laws
+
+`industryLaws` is a keyed JSON-mod table of at most 64 complete definitions.
+Definitions replace by id; executable strategies remain in `js/industry_laws.js`.
+No declaration enacts itself or changes a released opening's defaults.
+
+```json
+{"industryLaws":{"river_permission":{
+  "schema":1,"motionId":"river_permission","bookmarkId":"1204",
+  "provinceId":"london","enterpriseType":"market_stall_business",
+  "minYear":1204,"maxYear":1220,"mode":"license","fee":1.25,
+  "permitDays":45,"durationDays":180,"transitionDays":7,
+  "exemptions":[{"kind":"home_province","id":"york","fee":0.5,"permission":true}]
+}},"localCouncilMotions":{"river_permission":{
+  "name":"River permissions","desc":"An optional fictional market rule.",
+  "icon":"⚖","fx":{}
+}}}
+```
+
+- `schema` is 1. Definition ids are lowercase snake case, at most 80 characters.
+- `motionId` uniquely names an ordinary `localCouncilMotions` display record.
+  Its `name` and `desc` use the established localization owner, including imported
+  English fallback. Its optional `fx` must be empty: enactment cannot also grant
+  personal ordinance bonuses.
+- `bookmarkId` names an existing world; `provinceId` must be an inhabited county
+  in one of its supported revisions. `minYear`/`maxYear` are inclusive integers
+  from 1 through 3000 and bound new proposals, not an already enacted term.
+- `enterpriseType` currently supports only `market_stall_business`.
+- `mode` is `license` or `prohibition`. `fee` is a finite amount from 0 through
+  10000 and must be zero for a prohibition. `durationDays` is 1–3600;
+  `permitDays` is 1 through the duration; `transitionDays` is 0 through the duration.
+  These are integer days from approval or payment, with exclusive end turns.
+- `exemptions` is an explicit array of at most 16 beneficiaries. Each has
+  `kind:"home_province"`, an inhabited province `id` in the named world, a
+  `fee` between zero and the ordinary fee, and boolean `permission`. Matching
+  reads the household's current residence, not a worker's birthplace. Multiple
+  matches use the lowest fee and any permission grant. A prohibition exemption
+  must grant permission to allow operation. Residence is a declared simulation
+  criterion and does not establish historical citizenship.
+- Optional `offense:{id,penalty:"fine",amount}` reserves a snake-case offense
+  identity and amount from 0 through 10000. It creates no offense, sanction,
+  evasion choice, arrest or property transfer.
+- Unrecognized fields, invalid references and contradictory terms reject the
+  whole candidate before publication or RNG/UID changes.
+
+`FB.industryLaws.quoteMotion` and `validMotion` expose the shared council review;
+`FB.proposeLocalCouncilMotion(state,motionId,quote)` submits it to the existing
+approval owner. A stale or unauthorized quote rejects before the seeded vote.
+`operation(state,enterprise)` exposes matching effective laws, fees, exemptions,
+transition, permit dates and permission. `quoteOperation`/`commitOperation` support
+`pay`, `pause`, `close` and `resume`; acquisition uses `enterprisePurchaseStatus`
+and `acquireEnterprise`, including auction acquisitions. Shared staffing and
+yield consumers suppress all unlawful output. No separate NPC enterprise ledger
+or unreviewed illegal-operation route is supplied.
+
+The optional schema-1 `state.industryLaws` stores `laws`, `permits` and `choices`.
+Law rows retain `id`, `definitionId`, exact `terms`, original `issuer` (local
+council kind, county, realm and character), `payeeRealmId`, `startTurn`, `endTurn`,
+`transitionEndTurn`, `existingEnterpriseUids` and nullable `repealedTurn`.
+Repealed rows also retain their distinct `repealer`. Permit rows retain `id`,
+`lawId`, `enterpriseUid`, household `payer:"player"`, original `payeeRealmId`,
+actual `amount`, `paidTurn` and `endTurn`. They are paid obligations, not unpaid
+debt or automatically renewed subscriptions. Choice rows retain `enterpriseUid`,
+`status` (`open`, `pause`, `close`) and `turn`; closure retains ownership.
+Limits are 256 laws, 4096 permits and 512 choices. Validation never creates a
+missing ledger or replays a transaction. Exact imported content remains covered
+by the ordinary mod fingerprint.
+
+Laws survive issuer and household succession. Losing the issuing realm's county
+control suspends future restrictions and fees; recovering control resumes the
+original unexpired term. Repeal and expiry do not refund or remove prior paid
+permissions. Existing property has its saved lawful transition. Paid permissions
+follow the stable enterprise UID within the household; another UID cannot reuse
+them. External business sale and NPC business ownership are unsupported. Original
+payment facts must remain with their payer if a later transfer consumer is added.
+See [Targeted operating laws](designs/industry-laws.md) for lifecycle and accounts.
+
 ## Family enterprises
+
+Optional [industry operating laws](#industry-operating-laws) add reviewed local
+permission fees or prohibitions to market-stall purchase and production. They
+do not change the enterprise's ownership, staffing or original definition.
 
 `FBDATA.enterprises` (in `data/economy.js`, mod key `enterprises`) defines repeatable
 productive property:

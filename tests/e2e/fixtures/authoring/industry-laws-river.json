@@ -1,0 +1,50 @@
+{
+  "name": "River market operating terms",
+  "localCouncilMotions": {
+    "river_stall_permission": {
+      "name": "River market permissions",
+      "icon": "⚖",
+      "desc": "A fictional alternative: stalls pay {money:1.25} for 45 days. York households pay {money:0.5}. Existing stalls receive seven days to arrange permission.",
+      "fx": {}
+    },
+    "river_stall_reserve": {
+      "name": "River market reserve",
+      "icon": "⚖",
+      "desc": "A fictional alternative: prohibit stall operation except for households resident in York. Existing businesses have seven lawful days to pause or close; ownership remains with the household.",
+      "fx": {}
+    }
+  },
+  "industryLaws": {
+    "river_stall_permission": {
+      "schema": 1,
+      "motionId": "river_stall_permission",
+      "bookmarkId": "1204",
+      "provinceId": "london",
+      "enterpriseType": "market_stall_business",
+      "minYear": 1204,
+      "maxYear": 1220,
+      "mode": "license",
+      "fee": 1.25,
+      "permitDays": 45,
+      "durationDays": 180,
+      "transitionDays": 7,
+      "exemptions": [{"kind": "home_province", "id": "york", "fee": 0.5, "permission": true}]
+    },
+    "river_stall_reserve": {
+      "schema": 1,
+      "motionId": "river_stall_reserve",
+      "bookmarkId": "1204",
+      "provinceId": "london",
+      "enterpriseType": "market_stall_business",
+      "minYear": 1204,
+      "maxYear": 1220,
+      "mode": "prohibition",
+      "fee": 0,
+      "permitDays": 30,
+      "durationDays": 180,
+      "transitionDays": 7,
+      "exemptions": [{"kind": "home_province", "id": "york", "fee": 0, "permission": true}],
+      "offense": {"id": "unlicensed_stall", "penalty": "fine", "amount": 3}
+    }
+  }
+}
