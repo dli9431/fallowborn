@@ -7395,3 +7395,20 @@ Retired controls: aiWarChance has no reader and is no longer declared. Use war c
 A partial diplomacy aimOrder is an ordering prefix, not an eligibility list: omitted registered aims retain their original relative order after the prefix, and greater trait weights still win. Expansion contacts count adjacency to the deciding realm's territory, including vassal subtrees. A zero-total weighted investment choice declines private-baron construction without spending or drawing a choice.
 
 docs/research/ai-decision-acceptance.md maps every parameter to its active owner, distinguishes realm decisions from global actor/rebel/approach queues, describes actual fact projections and remaining engine invariants, and records complete import/restore/replay and distribution acceptance commands. Distance in capital-based diplomatic projections is squared map distance; approach relevance keeps its own existing distance unit. Investment ranking quotes actual county/profile cost when requested and derives frontier from neighboring ownership. A policy does not bypass a later canonical transaction review. The old aiWarChance default was unread and has been removed; use aiWarPolicy chance/bellicoseChance or an existing explicit government warChance. No new saved policy record or technology capability is introduced.
+
+## Family landmark presentation records
+
+`state.lifeHistories` remains version 1: `people` maps stable character ids to
+detached `identity`, `since`, `touched`, `entries` and optional retention flags.
+Each entry retains `turn`, `year`, opaque `msg`, `weight` and `size`. Played lives
+keep at most 40 entries; the shared temporary and preserved limits are unchanged.
+The additional message kinds `news.biography.property`, `news.biography.enterprise`
+and `news.biography.relocation` use committed acquisition or permanent-residence
+facts. Property means a freehold plot, enterprise names use the ordinary typed
+data parameter, and place names are captured at the actual transaction site.
+No historical transaction is inferred from a mod's starting property or rank.
+
+`FB.familyLandmarks(state)` is a read-only selection from played biographies.
+It returns `{record, entries}` rows without changing the archive. Ordinary JSON
+enterprise definitions still use the canonical acquisition transaction; no new
+mod root, executable authoring hook, save envelope or history-import API exists.

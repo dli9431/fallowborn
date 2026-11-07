@@ -38,6 +38,14 @@ The compact purchase disclosure paints after the overlapping action without a ra
 
 ## Moving to a founded seat
 
+The first committed freehold-plot acquisition and the first committed enterprise
+acquisition in the recorded played line appear in Family landmarks and the
+buyer's Life history. These retain the actual settlement and enterprise type;
+starting or inherited property is not assigned a fabricated purchase date.
+Further purchases do not create additional acquisition landmarks. Moving home
+to a founded seat uses the same first-per-played-head permanent-move highlight
+as travel settlement and capital relocation. Property itself stays in place.
+
 Ordinary manor recognition requires a later generation to inherit Freeholder
 standing, in addition to the existing plots, prestige and investiture costs.
 Buying freedom and buying plots remain available in the founding generation.

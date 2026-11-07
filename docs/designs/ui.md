@@ -283,6 +283,13 @@ of played and manually preserved biographies. Archived people open from their
 detached identity without recreating a character. Collection returns preserve page,
 scroll and focus, choosing a nearby surviving row after removal.
 
+Kin also exposes Explore the played family under Family landmarks, alongside
+the existing freedom summary. This read-only overview pages every played life
+in the existing portrait list, with selected dated recorded landmarks. Each row
+opens Life history; Back, Escape and mobile Back retain page, scroll and focus.
+The overview labels first rank attainment as first recorded, discloses missing
+earlier events and condensation, and does not repeat the complete biography.
+
 Follow life and Preserve this life disclose the 50-life collection capacity,
 including dead people, and that only future events can be newly recorded.
 Stop following keeps the collected history. Remove preservation is an explicit

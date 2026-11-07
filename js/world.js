@@ -7582,6 +7582,7 @@ window.FB = window.FB || {};
       destinationId:destinationId
     };
     syncPlayerCapitalHome(state, destinationId);
+    FB.noteFamilyMilestone(state, 'relocation', destinationId);
     var params = {
       realm:FB.realmNameParam(state, state.realms.player),
       from:from ? from.name : status.fromId,

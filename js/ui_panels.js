@@ -4359,6 +4359,9 @@ window.FB = window.FB || {};
             esc(freedomHistory.firstLawful.text) + '</p>' : '') +
         '</section>';
     }
+    h += '<section class="family-landmarks">' + (freedomHistory ? '' : panelh('Family landmarks')) +
+      '<button type="button" class="btn" id="btn-family-landmarks">' +
+      esc(FB.T('Explore the played family')) + '</button></section>';
     const sps = FB.spousesOf(s, me);
     h += panelh(sps.length > 1 ? 'Wives' : 'Spouse');
     if (sps.length) {
@@ -4455,6 +4458,7 @@ window.FB = window.FB || {};
     $('btn-ftree').addEventListener('click', function () {
       UI.showFamilyTree();
     });
+    $('btn-family-landmarks').onclick = function () { UI.showLifeHistoryCollection(0, false, null, true); };
   }
 
   function networkLevyLabel(s, entry) {

@@ -311,6 +311,10 @@ write durable localized Chronicle descriptors.
 
 ## Settlement
 
+Committed permanent settlement records the played head's first permanent move
+in Life history and the linked Family landmarks overview. Eligibility checks,
+visits, return travel and repeated settlement calls do not create entries.
+
 `FB.travelSettle` is restricted to freeholders and gentry and moves
 `player.provinceId` only after the destination capstone.
 Culture, faith, enterprise ownership, finance contracts, and the active rival
