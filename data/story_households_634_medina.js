@@ -11,8 +11,19 @@ FBDATA.householdTracks_634_medina = {
         text:'At the opening of this story, Umar had succeeded Abu Bakr. That completed succession is background to your household, not a vote or appointment for you. Your family has its own livelihood to consider.',
         choices:[
           {id:'consider_home',label:'Consider the household’s place',detail:'Continue with ordinary livelihood choices, without entering public service.',operation:{kind:'record_decision'},next:'livelihood'},
+          {id:'review_court',label:'Review court and community',detail:'Consider the current public records before returning to the household livelihood. No cost or public appointment.',operation:{kind:'record_decision'},next:'court_context'},
           {id:'close_opening',label:'Carry on independently',detail:'Review how to close this opening and continue ordinary play.',operation:{kind:'record_decision'},next:'continuation'}
         ],transitions:[]},
+      court_context:{name:'The court and the household',
+        text:'The accession at the opening is past context. Consult the current court and Land records for the living ruler and present authority; this review does not reenact a succession. Your private purse and holding are separate from the court treasury, public revenue and military command. Sharing the court’s faith gives this household no public powers.',
+        choices:[{id:'review_current_authority',label:'Continue from the public records',detail:'Record a costless review without voting, making an oath, joining service or receiving a stipend.',operation:{kind:'record_decision'},next:'community'}],transitions:[]},
+      community:{name:'Neighbours and local life',
+        text:'Your household belongs to the Arabic-speaking early Islamic community represented here. The district also includes other resident communities; its game shares are simulation settings, not a census or proof of common obligations. Use Kin for your own family and the current local records for authority. An observed change of sovereign can appear separately as a local notice in Deeds.',
+        choices:[{id:'consider_notice',label:'Consider the local authority notice',detail:'Review how local authority is reported, without a payment or action day.',operation:{kind:'record_decision'},next:'local_authority'},
+          {id:'continue_local_life',label:'Return to the household livelihood',detail:'Keep the household at home, without converting neighbours, claiming protection or acquiring a religious office.',operation:{kind:'record_decision'},next:'livelihood'}],transitions:[]},
+      local_authority:{name:'Local authority in Medina',
+        text:'The local authority notice in Deeds reports an observed change of sovereign in the Medina district, if one has occurred since the opening. Consult Land and the current court records for authority. The report establishes no battle, household loss, new tax, protection or service obligation. Without a notice, ordinary household life continues.',
+        choices:[{id:'review_local_records',label:'Review the local records',detail:'Acknowledge the report without spending money or an action day. Continue the ordinary household livelihood.',operation:{kind:'record_decision'},next:'livelihood'}],transitions:[]},
       livelihood:{name:'Choosing the day’s livelihood',
         text:'Farming is an ordinary way to support this fictional household. Review work on the land, or retain your present activity. Selecting work brings no immediate payment.',
         choices:[
@@ -24,9 +35,10 @@ FBDATA.householdTracks_634_medina = {
         afterWork:{focusId:'work_land',provinceId:'medina',next:'accounts'},
         choices:[{id:'skip_wait',label:'Leave the optional wait',detail:'Review household accounts without claiming that work paid.',operation:{kind:'record_decision'},next:'accounts'}],transitions:[]},
       accounts:{name:'The household account',
-        text:'Your current purse, upkeep and property belong to ordinary play. These intentions neither reserve money nor certify earnings or a purchase.',
+        text:'Review the private purse, upkeep and property in Station & home. You may spend {money:2} on provisions consumed by the household, or keep the purse unchanged. This buys no property or income bonus; an intention alone reserves nothing.',
         choices:[
           {id:'preserve_savings',label:'Intend to preserve savings',detail:'Record an intention without setting money aside.',operation:{kind:'record_decision'},next:'holding'},
+          {id:'buy_provisions',label:'Buy household provisions',detail:'Spend {money:2} once on provisions for present needs. No action day, property or income bonus.',operation:{kind:'household_expense',amount:2},next:'holding'},
           {id:'household_needs',label:'Consider household needs',detail:'Record attention to family needs without spending anything.',operation:{kind:'record_decision'},next:'holding'}
         ],transitions:[]},
       holding:{name:'Time for the holding',
@@ -66,12 +78,27 @@ FBDATA.householdTracks_634_medina = {
   'use strict';
   var source = FBDATA.bookmarkCompositionSources && FBDATA.bookmarkCompositionSources.autumn_634;
   if (!source || !source.input) return;
+  // The notice observes later county sovereignty, independently of the personal graph.
+  var scene = FBDATA.householdTracks_634_medina.medina_household_track_634.stages.local_authority;
+  source.input.catalogs.storyInstances = source.input.catalogs.storyInstances || {};
+  source.input.catalogs.storyInstances.medina_household_observer_634 = {
+    id:'medina_household_observer_634',type:'household_observer',
+    title:scene.name,intro:scene.text,
+    source:{type:'local_control'},provinceIds:['medina'],expiryTurns:30,
+    requirements:{provinces:['medina']},
+    beats:[{id:'authority_changed',trigger:'rule_changed',reach:'local',
+      name:scene.name,text:scene.text,
+      choices:[{id:'review_records',label:scene.choices[0].label,
+        detail:scene.choices[0].detail,
+        operation:'continue_livelihood'}]}]
+  };
+  source.input.bookmark.stories.push('medina_household_observer_634');
   var unit = source.input.starts.find(function (row) { return row.definition.id === 'medina_household_634'; });
   if (!unit) return;
   try {
     var def = FBDATA.householdTracks_634_medina.medina_household_track_634;
     var local = {all:[{kind:'home',provinceId:'medina'},{kind:'present',provinceId:'medina'},{not:{kind:'travelling'}}]};
-    ['household','livelihood','working','accounts','holding','devotion','limits','continuation'].forEach(function (id) {
+    ['household','court_context','community','local_authority','livelihood','working','accounts','holding','devotion','limits','continuation'].forEach(function (id) {
       def.stages[id].transitions = [
         {when:{not:local},next:'remote'},
         {when:{not:{kind:'sovereign',provinceId:'medina',realmId:'rashidun_634'}},next:'changed_rule'},
