@@ -20,6 +20,12 @@ Technology impact is none in colonate_tenure, colonate_military_release, colonat
 
 # Holdings (commoner property)
 
+Market stalls can acquire optional council-approved operating obligations.
+Their purchase total includes due permission fees; existing property retains a
+lawful transition and explicit pause, closure and payment choices in its manager.
+Income, physical output and upgrade benefits all share the permission projection.
+See [Targeted operating laws](industry-laws.md) for scope, succession and accounts.
+
 CrazyGames first-business review
 
 The opening recommendation has a direct Review this business action in its coachmark and live checklist. This opens the enterprise requirements sheet with current price, funds, worker eligibility, staffing warnings and base seasonal income, followed by a separate purchase action. The recommendation does not bypass ordinary purchase eligibility, staffing or technology. A changed price, worker set or warning category requires another review before purchase; successful confirmation still spends the ordinary deed day. This is an existing-action shortcut and has no new technology impact.
@@ -31,6 +37,14 @@ while the Household Plan entry gives Details a separate column beside its action
 The compact purchase disclosure paints after the overlapping action without a raised z-index, so it stays reachable and remains beneath the sticky modal footer.
 
 ## Moving to a founded seat
+
+The first committed freehold-plot acquisition and the first committed enterprise
+acquisition in the recorded played line appear in Family landmarks and the
+buyer's Life history. These retain the actual settlement and enterprise type;
+starting or inherited property is not assigned a fabricated purchase date.
+Further purchases do not create additional acquisition landmarks. Moving home
+to a founded seat uses the same first-per-played-head permanent-move highlight
+as travel settlement and capital relocation. Property itself stays in place.
 
 Ordinary manor recognition requires a later generation to inherit Freeholder
 standing, in addition to the existing plots, prestige and investiture costs.
@@ -552,6 +566,13 @@ Civic office and private property
 Civic membership, magistracy, public treasury and foreign rights are separate from household land, enterprises and inheritance. Selection, office expiry, resignation, recall and death confer or end a public mandate without confiscating private property. A reviewed sovereign county grant retains private settlement holders and enterprises. Deliberate adoption of a civic constitution preserves existing household loans and property, rather than awarding the fresh bookmark's concessions. See docs/designs/city-republic.md.
 
 Institutional property boundary
+
+An episcopal civil rent composition changes only the existing tax remittance of
+its exact delegated settlement for a finite future term. It never transfers the
+private grant, buildings or military service. Accepted terms follow inheritance
+of that same grant; a replacement grant or charter cannot acquire them. One-time
+compensation leaves the actual possessor's household or barony account and enters
+the institutional see's public treasury. See episcopal-claims.md.
 
 A civic or ecclesiastical officeholder remains a private settlement actor distinct from the public realm. Personal settlement inheritance follows the existing heir; public counties and spiritual offices remain institutional. Current control and vacancy rules may limit public receipts without redirecting private property.
 

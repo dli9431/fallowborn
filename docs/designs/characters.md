@@ -18,6 +18,30 @@ Self skill labels wrap within the available space beside the portrait on narrow 
 
 ## Life histories
 
+Kin's Family landmarks links to a paged overview of every played life. Each
+portrait row opens its existing biography. The overview selects the first
+recorded attainment of each station across the played line, and each life's
+first recorded household-service appointment, conquest, victory, permanent move,
+and its retirement and death. The existing bounded freedom record supplies its
+own attributed route; it is not reconstructed from Chronicle prose. First means
+first among surviving recorded events, never an inferred date from present rank.
+
+Committed first freehold-plot and first enterprise acquisitions add biography
+highlights with the acquiring head, year, actual settlement and enterprise type.
+A plot is the substantial-property boundary; tools, household standards and
+ordinary purchases are not landmarks. Existing starting property does not receive
+a backdated acquisition. A second purchase is not another milestone. Permanent
+travel settlement, capital relocation and moving to a newly founded seat record
+only the first move per played head; temporary visits and eligibility reviews do
+not write history. No ancestor-to-heir financing is implied.
+
+These three milestones use the existing opaque biography messages and 40-entry
+played-life limit, with retention priority above repeatable accomplishments.
+Deduplication reads retained played biographies only at the committed write.
+There is no additional ledger, daily scan, reward, simulated historical person,
+save-envelope change, or gameplay/technology gate. Older histories retain their
+existing entries and condensation disclosure; missing events remain missing.
+
 Life history is a shared feature of every edition. Character sheets, including
 deceased relatives opened from the family tree, lead to a dated selection of
 accomplishments and turning points. Chronicle's Remembered lives collection

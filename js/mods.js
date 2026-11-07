@@ -22,6 +22,7 @@ window.FBMODS = window.FBMODS || [];
   const authoringRoots = ['fortProfiles','siegeSupportProfiles','buildingProfiles','positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','rulerFaithTargets','federateServiceStarts','federateMigrations','rankPrestigeYearly','historicalAmbitions','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','freedomTerms','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','quickStarts','traitMechanics','authorityOffices','legitimacySources','customaryBases','storyPlacements'];
   const authoredRoots = Object.create(null);
   authoringRoots.push('aiDecisionPolicies');
+  authoringRoots.push('industryLaws');
   let baseCatalogues = null;
   let baseRootFingerprints = null;
   let installedCatalogues = null;
@@ -223,6 +224,9 @@ window.FBMODS = window.FBMODS || [];
     var effective = {};
     Object.keys(PUBLIC_KEYS).concat(['faithDefaults','defaultGeography']).forEach(function (key) {
       if (roots && authoringRoots.indexOf(key) >= 0 && !roots[key]) return;
+      // An optional new claim catalogue cannot restamp unchanged older mods.
+      // Claims themselves pin their exact native definition on first review.
+      if (roots && key === 'episcopalClaims' && !roots[key]) return;
       if (own(data, key)) effective[key] = data[key];
     });
     return effective;
@@ -343,7 +347,13 @@ window.FBMODS = window.FBMODS || [];
       transitionFault('declaration.bookmarkId');
     transitionWorlds(row.predecessor,row.current,row);
     if (own(row,'sharedDefinitions')) {
-      transitionFields(row.sharedDefinitions,['religions','legalTraditions','startScenarios'],'declaration.sharedDefinitions');
+      // Older declarations retain their exact three-root shape. Government
+      // catalogue additions use the same absence/current-definition proof.
+      var sharedRoots = ['religions','legalTraditions','startScenarios'];
+      ['governmentForms','administrationProfiles','aristocraticProfiles'].forEach(function (root) {
+        if (plainObject(row.sharedDefinitions) && own(row.sharedDefinitions,root)) sharedRoots.push(root);
+      });
+      transitionFields(row.sharedDefinitions,sharedRoots,'declaration.sharedDefinitions');
       var count = 0;
       Object.keys(row.sharedDefinitions).forEach(function (root) {
         var records = row.sharedDefinitions[root];
@@ -698,6 +708,7 @@ window.FBMODS = window.FBMODS || [];
     cultureTraditions:true, cultures:true, cultureDoctrineDefaults:true,
     doctrineCatalogs:true, religions:true, religiousPaths:true, religiousOfficeRanks:true,
     religiousAffiliations:true, religiousInstitutionProfiles:true, religiousActivities:true, religiousPatronage:true,
+    episcopalClaims:true,
     traits:true, traitMechanics:true, aiDecisionPolicies:true,
     ailments:true, modifiers:true, buildings:true, forts:true, siteResourceProfiles:true,
     buildingInstitutionProfiles:true, buildingOperationProfiles:true, buildingProfiles:true, fortProfiles:true, productionGoods:true, productionRecipes:true, productionExchangeProfiles:true, productionProducerProfiles:true, siegeSupportProfiles:true, relayServiceProfiles:true,
@@ -706,7 +717,7 @@ window.FBMODS = window.FBMODS || [];
     capabilities:true,
     techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
     positionRules:true, policyGovernance:true, marketRaidYields:true, authoringDefaults:true,
-    positions:true, localCouncilMotions:true, feudalServiceCharters:true,
+    positions:true, localCouncilMotions:true, industryLaws:true, feudalServiceCharters:true,
     tenureArchetypes:true, tenureDuties:true, tenureRights:true, freedomTerms:true, freedomBargaining:true,
     schooling:true, abbeys:true, householdServiceRoles:true, enterprises:true, enterpriseMechanics:true, specializationMarketEffects:true, householdStandardDemand:true, auctionLotTypes:true,
     householdStandards:true, marketGoods:true, marketEndowmentTypes:true,
@@ -2666,6 +2677,9 @@ window.FBMODS = window.FBMODS || [];
     if (institutionFaults.length) fail('religiousInstitutionProfiles', institutionFaults.join(' '));
     var activityFaults = FB.religiousActivityCatalogFaults(FBDATA);
     if (activityFaults.length) fail('religiousActivities', activityFaults.join(' '));
+    if (own(mod,'episcopalClaims') && !plainObject(mod.episcopalClaims)) fail('episcopalClaims','must be an object keyed by id.');
+    var claimFaults = FB.episcopalClaims.catalogFaults(FBDATA);
+    if (claimFaults.length) fail('episcopalClaims',claimFaults.join(' '));
     if (own(mod, 'councilSeats') || own(mod, 'councilRules') || own(mod, 'councilSeatRoles') || own(mod, 'elections') || own(mod, 'privileges') || own(mod, 'collectiveDemands')) {
       validateCouncilDefinitions(mod);
       validateInstitutionDefinitions();
@@ -2732,6 +2746,8 @@ window.FBMODS = window.FBMODS || [];
     if (serviceFaults.length) fail('householdServiceRoles', serviceFaults.join(' '));
     const enterpriseFaults = FB.validateEnterpriseMechanics();
     if (enterpriseFaults.length) fail('enterpriseMechanics', enterpriseFaults.join(' '));
+    const industryFaults = FB.industryLaws.definitionFaults(FBDATA.industryLaws, FBDATA);
+    if (industryFaults.length) fail('industryLaws', industryFaults.join(' '));
     const tournamentFaults = FB.tournaments.validateData(FBDATA.tournaments, FBDATA.tournamentRules);
     if (tournamentFaults.length) fail('tournamentRules', tournamentFaults.join(' '));
     const lifecycleFaults = FB.validateEventLifecycle(FBDATA.eventSubscriptions, FBDATA.events);
@@ -2828,6 +2844,7 @@ window.FBMODS = window.FBMODS || [];
       });
     });
     var live = FBDATA, staged = Object.assign({}, live), prepared;
+    if (own(mod, 'industryLaws') && !plainObject(mod.industryLaws)) fail('industryLaws', 'must be an object keyed by id.');
     ['positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','federateServiceStarts','federateMigrations','rankPrestigeYearly','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','eras','wardrobes','settlementLayouts','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','traitMechanics','authorityOffices','legitimacySources','customaryBases','storyPlacements'].forEach(function (key) {
       if (own(mod, key) && !plainObject(mod[key])) fail(key, 'must be an object keyed by id.');
     });
@@ -3247,6 +3264,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.religiousInstitutionProfiles) mergeTable(FBDATA.religiousInstitutionProfiles, mod.religiousInstitutionProfiles);
     if (mod.religiousActivities) mergeTable(FBDATA.religiousActivities, mod.religiousActivities);
     if (mod.religiousPatronage) mergeTable(FBDATA.religiousPatronage, mod.religiousPatronage);
+    if (mod.episcopalClaims) mergeTable(FBDATA.episcopalClaims, mod.episcopalClaims);
     if (mod.fortProfiles) mergeTable(FBDATA.fortProfiles, mod.fortProfiles);
     if (mod.buildingProfiles) mergeTable(FBDATA.buildingProfiles, mod.buildingProfiles);
     if (mod.buildingInstitutionProfiles) mergeTable(FBDATA.buildingInstitutionProfiles, mod.buildingInstitutionProfiles);
@@ -3314,6 +3332,7 @@ window.FBMODS = window.FBMODS || [];
       if (mod[key]) mergeTable(FBDATA[key], mod[key]);
     });
     if (mod.enterprises) for (const k in mod.enterprises) FBDATA.enterprises[k] = mod.enterprises[k];
+    if (mod.industryLaws) mergeTable(FBDATA.industryLaws, mod.industryLaws);
     if (mod.auctionLotTypes) mergeTable(FBDATA.auctionLotTypes,
       mod.auctionLotTypes);
     if (mod.householdStandards) {
@@ -3517,6 +3536,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.storyPlacements) FBDATA.storyPlacements = FB.stories.mergePlacements(FBDATA.storyPlacements, mod.storyPlacements);
     FB.stories.publish(prepared.stories);
     authoringRoots.forEach(function (key) { if (own(mod, key)) authoredRoots[key] = true; });
+    if (own(mod,'episcopalClaims')) authoredRoots.episcopalClaims = true;
     // Newly exposed roots join the fingerprint only when authored. Otherwise
     // exposing an existing engine table would invalidate unchanged older mods.
     // Bind to the definitions actually installed, including inherited defaults

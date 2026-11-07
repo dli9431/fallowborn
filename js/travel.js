@@ -2038,6 +2038,7 @@ window.FB = window.FB || {};
         }));
     }
     p.provinceId = destination;
+    if (destination !== t.homeId) FB.noteFamilyMilestone(state, 'relocation', destination);
     if (FB.localCouncilValidate) FB.localCouncilValidate(state, false);
     FB.changePlayerLiege(state, null, 'travel:flight');
     delete state.roles.lord;

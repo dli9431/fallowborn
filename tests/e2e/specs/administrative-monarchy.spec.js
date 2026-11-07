@@ -115,6 +115,41 @@ test('800 historical profiles choose public holders, independent catalogs and sc
   expect(result.profiles[0].offices.some(function (id) { return result.profiles[1].offices.includes(id); })).toBe(false);
 });
 
+for (const rid of ['abbasid','byzantium']) {
+  test(rid+' public profile cannot be bypassed through legacy offices when its era enables Roman petitions', async function ({page},info) {
+    await start(page,info);await prepare(page,rid);
+    expect(await page.evaluate(function () {
+      const s=FB.state,a=ADMIN,era=FBDATA.eras[s.start.era],original=era.systems;
+      const layer=JSON.parse(JSON.stringify(original || {}));
+      layer.enable=(layer.enable || []).filter(function (id) { return id!=='roman_offices'; }).concat(['roman_offices']);
+      layer.disable=(layer.disable || []).filter(function (id) { return id!=='roman_offices'; });
+      delete layer.roman_offices;
+      era.systems=layer;
+      try {
+        const profile=FB.administrationProfile(s,a.rid),foreign=a.rid==='abbasid' ? 'byzantine_strategos' : 'abbasid_wali';
+        const terms={institutionId:a.rid,officeId:profile.governor,holder:a.me,scope:{kind:'county',id:a.pid}};
+        const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+        const legacy=FB.officeAppointmentQuote(s,a.patron,terms);
+        const fake=Object.assign({},legacy,{allowed:true});
+        const rejected=!legacy.allowed && !FB.officeSeekAppointment(s,fake);
+        const scopes=FB.officeScopes(s,a.rid,profile.governor);
+        const absent=!FB.officeCourts(s).some(function (court) { return court.id===a.rid; });
+        const wrong=FB.publicAppointmentQuote(s,a.patron,a.input(foreign));
+        const right=FB.publicAppointmentQuote(s,a.patron,a.input());
+        const pure=before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
+        const row=FB.publicAppoint(s,right);
+        const committed=JSON.stringify(s);
+        const transition=!!row && FB.officeTransitionQuote(s,a.patron,row.id,'remove')===null &&
+          !FB.officeTransition(s,{actor:a.patron,id:row.id,action:'remove',allowed:true}) &&
+          committed===JSON.stringify(s);
+        return {eraEnabled:FB.systemEnabled(s,'roman_offices',{realm:a.rid}),rejected:rejected,
+          scopes:scopes,absent:absent,foreign:!wrong.allowed,pure:pure,
+          transition:transition,public:right.allowed && !!row && row.officeId===profile.governor && !!row.publicTerms};
+      } finally { era.systems=original; }
+    })).toEqual({eraEnabled:true,rejected:true,scopes:[],absent:true,foreign:true,pure:true,transition:true,public:true});
+  });
+}
+
 test('appointments are pure reviews, reject changed budgets and scopes, and grant only public jurisdiction', async function ({page},testInfo) {
   await start(page,testInfo); await prepare(page,'abbasid');
   const result = await page.evaluate(function () {

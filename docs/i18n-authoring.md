@@ -42,6 +42,15 @@ Regional administrationProfiles and aristocraticProfiles maps may stage date-own
 
 Household story presentation
 
+The assembled Damascus program and its goal profile are complete literal entries
+in householdTracks_634_damascus and openingProfiles_634_damascus. Their full
+revision ids use the existing householdStory and openingProfile owners; shared
+English retains exact-source aliases. Composition adds only local operational
+transitions and revision bindings. It does not derive or replace display prose.
+634-catalogue-integration.spec.js checks literal display reachability and exact
+definition equivalence with the former composer. Generated catalogues remain an
+explicit integration action.
+
 data/story_ruler_agendas_1241.js declares literal rulerAgendas_1241 and openingProfiles_rulers_1241 tables. Their stage/choice and goal/contact text use the ordinary rulerAgenda and openingProfile owners and exact-source aliases. The generic dated-agenda extractor discovers rulerAgendas_<suffix> in story sources without executing composition. Scenario fields remain in literal startScenarios_1241 under scenario owners. Royal personal names, kin ids, dates and physical site ids stay untranslated. No catalogue generation accompanies feature authoring.
 
 Household presentation sources may also use data/story_<suffix>.js with literal FBDATA.householdTracks_<suffix> and FBDATA.openingProfiles_<suffix> tables. data/story_novgorod_1241.js uses this convention. The static extractor preserves the same householdStory and openingProfile display owners and exact-source aliases as story_households_<suffix>.js, without executing the source. Scenario text remains in data/starts_novgorod_1241.js under the ordinary scenario owners. No generated catalogues are changed by feature authoring.
@@ -134,6 +143,12 @@ The literal FBDATA.bookmarkReligions1241 table in data/identities_1241.js uses t
 Literal FBDATA.bookmarkRevisionContent_<suffix> objects in data/bookmark_*.js may organize a dated revision's presentation. Each object supplies bookmarkId and revision strings, literal provinces and realms arrays, duchies, kingdoms, empires and cultures maps, and a layouts map of county ids to settlement slots. The static extractor reads name fields with distinct bookmark/revision owners and exact-source aliases; culture names retain their global culture owner. It does not execute composers or extract ruler names. These are source organization tables, not new JSON mod roots. Compose their records into the ordinary bookmark, culture and settlement-layout catalogues. Keep labels literal and retain old revision owners.
 
 ## Route new text by where it lives
+
+Episcopal claim display fields use `episcopalClaim.<id>.name/desc` through
+`FB.dataText`. The native declaration shares the exact English title and scope
+explanation used by the localized generic review, so existing source aliases
+also reach those fields without a separate catalogue root. Ordinary JSON text
+retains its effective English fallback and can use the same structured owners.
 
 - **UI chrome (built as HTML/DOM in `js/*.js`):** wrap with `FB.T('English text', params?)`
   (i18n.js), or `FB.TC('context', 'English text', params?)` when identical English needs different
@@ -302,6 +317,12 @@ The late antique purse uses literal label and singular/plural unit names in data
 Campaign story authoring
 
 FBDATA.storyCampaigns name and desc fields use storyCampaign.<id>.<field>.default through FB.dataText. Their news outcome rows carry key and text; the static extractor registers each text under that opaque message key. Runtime registration supplies English for saved Chronicle descriptors without requiring catalog generation on the feature branch. Political stage labels use literal FB.T calls. The named commanders in FBDATA.storyActors476 are historical proper names and are not translated.
+
+The two 634 frontier declarations read name/desc from the literal
+bookmarkContent['634'].campaigns display table in data/bookmark_634_campaigns.js.
+This uses the existing numeric bookmark campaign extractor and storyCampaign
+owners; data/story_campaigns_634.js owns eligibility and hidden-world attachment.
+No duplicate display prose, extractor extension or generated catalogue is needed.
 
 
 476 regional content extraction

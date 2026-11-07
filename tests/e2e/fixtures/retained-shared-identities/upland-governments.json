@@ -1,0 +1,31 @@
+{
+  "governmentForms": {
+    "upland_added_crown": {
+      "holders": "direct", "succession": "dynastic", "territory": "fixed",
+      "consent": "territorial", "levy": "feudal_levy", "revenue": "demesne_revenue",
+      "council": "royal_council", "diplomacy": "territorial_diplomacy", "ai": "realm_decisions",
+      "ladder": "inherited_ladder", "officeCatalogue": [], "systems": {"disable": ["feudal_service"]}
+    }
+  },
+  "administrationProfiles": {
+    "upland_added_service": {
+      "name": "Upland provincial service",
+      "offices": ["provincial_governor", "provincial_receiver", "provincial_commander"],
+      "governor": "provincial_governor", "fiscal": "provincial_receiver", "commander": "provincial_commander",
+      "appointmentCost": 7, "termDays": 540, "confirmation": "continues",
+      "finance": {"kind": "revenue_service", "share": 0.15, "salary": 0, "serviceShare": 0, "remittance": 1},
+      "accession": {"mode": "recognition", "minimumAge": 18, "allowMinor": false, "officeCandidates": false, "threshold": 0.7, "interests": []}
+    }
+  },
+  "aristocraticProfiles": {
+    "upland_added_court": {
+      "name": "Upland household court", "administrationProfileId": "upland_added_service",
+      "minimumAge": 18, "allowMinor": false, "threshold": 0.7, "negotiationCost": 7,
+      "defaultTerms": {"revenue": 0.7, "levy": 0.6}, "minimumRevenue": 0.5, "minimumLevy": 0.3,
+      "refusalSupport": -15, "enforcementSupportCost": 6,
+      "interests": [{"id": "ash", "name": "Ash household", "dynasty": "Ash", "actorId": "upland_ash",
+        "provinceId": "upland_market", "officeId": "hereditary_interest", "weight": 2,
+        "minimumMartial": 0, "maximumRevenue": 0.8, "maximumLevy": 0.75}]
+    }
+  }
+}

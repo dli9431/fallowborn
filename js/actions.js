@@ -3604,17 +3604,26 @@ window.FB = window.FB || {};
       }
     } },
 
+  { id:'review_industry_hearings', opensChoices:true, noConsume:true,
+    desc:function () { return FB.T('Inspect saved operating-law hearings, change an eligible ballot or settle an interrupted hearing.'); },
+    show:function (s) { return !!(s.industryLaws && s.industryLaws.votes && s.industryLaws.votes.length); },
+    run:function () { if (FB.ui && FB.ui.showIndustryHearings) FB.ui.showIndustryHearings(); }
+  },
   { id: 'bring_council_motion', opensChoices:true, readinessAlert:true,
     noConsume:true,
     desc: function (s) {
+      if (s.industryLaws && (s.industryLaws.votes || []).some(function (v) { return v.consumer === 'town'; }))
+        return FB.T('Review local ordinances and operating-law hearings, ballots and decisions.');
       const status = FB.localCouncilMotionStatus(s);
       return status.ready
         ? FB.T('Put one local ordinance to a seeded vote. Current chance: {chance}%.', {
           chance:Math.round(status.chance * 100)
         }) : status.reason;
     },
-    show: function (s) { return !!FB.localCouncilOf(s); },
+    show: function (s) { return !!FB.localCouncilOf(s) || !!(s.industryLaws &&
+      (s.industryLaws.votes || []).some(function (v) { return v.consumer === 'town'; })); },
     can: function (s) {
+      if (s.industryLaws && (s.industryLaws.votes || []).some(function (v) { return v.consumer === 'town'; })) return true;
       const status = FB.localCouncilMotionStatus(s);
       return status.ready ? true : status.reason;
     },
@@ -3733,7 +3742,7 @@ window.FB = window.FB || {};
     run: function (s) { if (FB.ui && FB.ui.showBuildings) FB.ui.showBuildings(); } },
   { id: 'bishopric', opensChoices:true, noConsume: true,
     show: function (s) {
-      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+      return !!(FB.episcopalClaims && FB.episcopalClaims.entry(s,'bishopric') || FB.hasBishopric && FB.hasBishopric(s, me(s)));
     },
     run: function () {
       if (FB.ui && FB.ui.showBishopric) FB.ui.showBishopric();
@@ -3741,13 +3750,13 @@ window.FB = window.FB || {};
   { id:'abbeys', opensChoices:true, noConsume:true,
     show:function (s) { return !!(FB.abbeyAccess && FB.abbeyAccess(s)); },
     run:function () { if (FB.ui && FB.ui.showAbbeys) FB.ui.showAbbeys(); } },
-  { id: 'visit_diocese',
+  { id: 'visit_diocese', opensChoices:true,
     show: function (s) {
-      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+      return !!(FB.episcopalClaims && FB.episcopalClaims.entry(s,'visit_diocese') || FB.hasBishopric && FB.hasBishopric(s, me(s)));
     } },
-  { id: 'ecclesiastical_court',
+  { id: 'ecclesiastical_court', opensChoices:true,
     show: function (s) {
-      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+      return !!(FB.episcopalClaims && FB.episcopalClaims.entry(s,'ecclesiastical_court') || FB.hasBishopric && FB.hasBishopric(s, me(s)));
     } },
   { id: 'convene_synod',
     show: function (s) {
@@ -5958,19 +5967,32 @@ window.FB = window.FB || {};
     };
   };
 
-  FB.proposeLocalCouncilMotion = function (state, motionId) {
+  FB.resolveLocalCouncilVote = function (state, onPass) {
+    const status = FB.localCouncilMotionStatus(state);
+    if (!status.ready) return false;
+    state.player.localCouncil.nextMotionTurn = state.turn + LOCAL_COUNCIL_DAYS;
+    const passed = FB.chance(status.chance);
+    if (passed) onPass();
+    return {passed:passed, chance:status.chance};
+  };
+
+  FB.proposeLocalCouncilMotion = function (state, motionId, review) {
+    if (FB.industryLaws && FB.industryLaws.forMotion(motionId)) {
+      return FB.industryLaws.propose(state, motionId, review);
+    }
     const status = FB.localCouncilMotionStatus(state);
     const def = FBDATA.localCouncilMotions[motionId];
     if (!status.ready || !def) return false;
     const seat = state.player.localCouncil;
-    seat.nextMotionTurn = state.turn + LOCAL_COUNCIL_DAYS;
-    const passed = FB.chance(status.chance);
-    if (passed) {
+    const result = FB.resolveLocalCouncilVote(state, function () {
       seat.ordinance = {
         id:motionId,
         passedTurn:state.turn,
         endTurn:state.turn + LOCAL_COUNCIL_DAYS
       };
+    });
+    const passed = result.passed;
+    if (passed) {
       FB.news(state, FB.msg('news.local_council.motion_passed',
         '⚖ The council of {province} adopts {motion} for one year.', {
           province:FB.world.byId[seat.provinceId].name,
@@ -9641,6 +9663,7 @@ window.FB = window.FB || {};
     FB.landPlots(state).push({
       provinceId:state.player.provinceId, settlement:settlement
     });
+    if (FB.landPlots(state).length === 1) FB.noteFamilyMilestone(state, 'property', state.player.provinceId, settlement);
     FB.news(state, FB.msg('news.action.land_bought',
       '🌾 The household buys another plot at {settlement}.',
       { settlement:site.settlementName }));
@@ -12696,6 +12719,10 @@ window.FB = window.FB || {};
         sacrilegious:sameFaithPolicy === 'sacrilege'
       }
     };
+    // Registration wrappers can refuse a newly ineligible public command.
+    // Charge conduct and publish the declaration only after a war exists.
+    const registered = FB.registerOrdinaryWar(state, 'player', newWar);
+    if (!registered) return false;
     if (cause.type === 'aggression') {
       FB.applyWarOfAggressionConsequences(state, cause);
     }
@@ -12717,7 +12744,6 @@ window.FB = window.FB || {};
       state.player.prestige += FB.warPrestigeReward
         ? FB.warPrestigeReward(cause, 'declaration') : 5;
     }
-    const registered = FB.registerOrdinaryWar(state, 'player', newWar);
     registered.legacy = false;
     registered.objectives = [{ target:cause.target, type:cause.type,
       titleKind:cause.titleKind || null, titleId:cause.titleId || null }];
@@ -12805,6 +12831,7 @@ window.FB = window.FB || {};
   }
 
   function instantStatusReadyTurnForAction(state, action) {
+    if (FB.episcopalClaims && FB.episcopalClaims.entry(state,action.id)) return null;
     let readyTurn = null;
     if (action.cd !== undefined) {
       const cooldowns = state.player.cooldowns || {};
@@ -12832,7 +12859,7 @@ window.FB = window.FB || {};
       can = false;
       reason = adultDeedReason();
     }
-    if (can && action.cd !== undefined) {
+    if (can && action.cd !== undefined && !(FB.episcopalClaims && !(options && options.pastoralOnly) && FB.episcopalClaims.entry(state,action.id))) {
       const cooldownDays = actionCooldownDays(state, action);
       const cooldowns = state.player.cooldowns || {};
       const last = cooldowns[action.id];
@@ -13050,8 +13077,13 @@ window.FB = window.FB || {};
     if (automaticDay && !FB.recurringDeeds(state, true).some(function (action) {
       return action.id === id;
     })) return false;
-    const status = FB.instantStatus(state, id);
+    if (options && options.pastoralOnly && !(FB.bishopricSnapshot && FB.bishopricSnapshot(state,me(state)))) return;
+    const status = FB.instantStatus(state, id, options);
     if (!status.shown || !status.can) return;
+    if (id !== 'bishopric' && FB.episcopalClaims && FB.episcopalClaims.entry(state,id) && !(options && options.pastoralOnly)) {
+      if (FB.ui && FB.ui.showEpiscopalClaims) FB.ui.showEpiscopalClaims();
+      return;
+    }
     if (id === 'seek_match' && !(options && options.localMatch) &&
         FB.ui && FB.ui.showMatchChoices) {
       FB.ui.showMatchChoices();

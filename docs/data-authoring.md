@@ -60,6 +60,33 @@ Native contributors use bookmarkSources.stage with explicit source, affected boo
 
 Data authoring contract
 
+Industry-law offense and relief terms use the same detached validator and
+canonical consumers for native London and the ordinary
+`industry-law-enforcement.json` import. Supported variation includes fees,
+beneficiaries, petition chance/term, fine amount and operation closure; stronger
+penalties and asset confiscation reject. Actual seasonal output, original-party
+evidence, canonical custody and court competence remain intrinsic invariants.
+No declaration can create guilt merely by enactment or detection, transfer
+unrelated private property, redirect a payee or replay an imposed balance.
+
+Industry-law `voting` declares two consumers of the existing operating-law
+transaction: town benches and current Estates houses. Supply both quorum,
+threshold and finite hearing policies; town data may weight only the supported
+trading and civic-notable benches. Named principals come from actual eligible
+people; missing names use disclosed county representation without creating
+people or businesses. Exemptions vary interests, never franchise. The native
+London levy/restriction and ordinary `industry-law-assemblies.json` import use
+the same pure validator, projections, principal-bound ballots, approval owner
+and detached saved-state checks. See MODDING.md and designs/industry-laws.md.
+
+Optional episcopalClaims declarations compose only actual settlement-charter
+remittances. The native Roman consumer and ordinary episcopal-river-rent.json
+import vary rates, finite term, compensation, offer deadline and NPC responses
+through the same pure validator, reviews, justice gate and transactions. Existing
+people, grants, private accounts and institutional treasuries remain canonical.
+No declaration can manufacture property or debt. See docs/MODDING.md and
+docs/designs/episcopal-claims.md for exact identities and lifecycle rules.
+
 Trusted retained catalogue compatibility
 
 Native source authors may call bookmarkSources.retainCatalogueTransition before
@@ -73,6 +100,8 @@ explicit bounded sharedDefinitions evidence documented above. Capture
 the trusted predecessor directly; never infer history from unknown revisions or
 from a saved signature. Ordinary JSON remains ordinary content and cannot
 authorize compatibility, provide signature allowlists or install callbacks.
+
+The optional governmentForms, administrationProfiles and aristocraticProfiles evidence arrays certify additions only, using null predecessor and exact complete current records. They share the existing per-root and combined limits; religions, legalTraditions and startScenarios remain required when sharedDefinitions is supplied. Exact replay and predecessor absence remain mandatory. Declare hidden on a newly added revision to withhold that fresh world while preserving the root and all older visibility. Omission inherits existing visibility, while explicit true or false uses the ordinary boolean world validator. These internal compatibility and visibility repairs add no save format, gameplay strategy or technology unlock.
 
 The shared mods owner reconstructs the old effective catalogue using unchanged
 JSON bytes and ordered bundled payloads through detached canonical import
@@ -150,6 +179,15 @@ Supply two independently authored configurations with meaningful behavioral diff
 Keep per-tick work bounded. Resolve declaration graphs at import or activation; iterate only active records and bounded selectors during simulation. Retain existing performance and save-size budgets and use owner-run measurements when accepting a larger workload.
 
 Implemented extension surfaces
+
+`industryLaws` composes bounded license or prohibition terms with an existing
+local council motion, dated county jurisdiction and market-stall consumer. The
+native London declaration and independent industry-laws-river.json ordinary
+import differ in term, fee, transition and explicit residence beneficiaries.
+Both use the same pure validators, reviewed council approval, purchase, operating
+permission and conserved-account transactions. Display fields remain under
+localCouncilMotions; JSON cannot provide executable law or justice callbacks.
+See docs/designs/industry-laws.md and the Industry operating laws schema.
 
 buildingOperationProfiles and effective bookmark/revision buildingOperationAssignments bind conserved draw/store/deliver/use routes to exact ordinary assets and actual site demand. Shared detached compilation, quote/commit, construction and bounded annual AI protect finite water, paid work/upkeep and existing reserves. One actual use supplies one matching existing building field through every fiscal, population, migration, piety, research and UI projection. Unbound assets keep their defaults. The independent water-operations-river.json and water-operations-catchment.json imports contrast supplied conveyance with dry storage and shared demand competition. Strict optional version-1 asset/receipt records restore without allocation, payment, output or new property. The ordinary mod signature covers all imported terms. See docs/designs/building-operations.md and docs/MODDING.md for exact bounds and unsupported seasonal, named-worker and production extensions.
 
@@ -345,6 +383,19 @@ Single-camp reserve authoring
 The optional typed mobile.opening.reserves memberId/count array partitions existing people after the ordinary muster through detached JSON validation and the shared fresh constructor. The complete independent mobile-opening-reserves-harbor.json and mobile-opening-reserves-dune.json Mods imports vary members, explicit zero and full remaining-member allocation, command authority, classes, supply and expedition routes. This option composes with real columns and expedition intent; it rejects civilianCamps and preparationId, whose existing source accounting remains separate. It adds no stock, host, equipment, executable callback or mod root. Strict optional matching-save provenance retains the original allocation while ordinary demographic and resource owners validate subsequent play. Exact fields, bounds and intrinsic exclusions are in docs/MODDING.md and docs/designs/mobile-confederation.md.
 
 Existing ordinary campaign authoring
+
+Conditional campaign stories may opt into the bounded ordinary_declaration
+admission policy documented in MODDING.md. Declare the real actor court, inhabited
+county objective, current owner constraints and finite offer/duration values.
+Admission never invents a territorial right or grants access, an army or money.
+Keep ordinary aggression costs visible in the shared story review, recheck live
+permission at commitment and stamp only a successfully registered war. Existing
+starting-court identity and war remapping preserve adoption without restarting the
+story; household land acquisition supplies no court alias. The independent native
+634 frontiers and ordinary JSON frontier-campaigns.json policies vary actor courts,
+conditions, offer windows and durations. Omission retains existing campaigns.
+Technology impact campaign_ordinary_admission is none: baseline political review
+needs no discovery, and all underlying war/public-authority gates remain in force.
 
 Optional mobile.openingCampaigns records bounded existing conflicts for the original command and exact columns through the same ordinary JSON path. The complete independent mobile-opening-campaigns-harbor.json and mobile-opening-campaigns-dune.json imports vary multiple versus single opponents, actual remote positions, living original rulers, retained versus external command, reserve allocation and bounded program windows. Dune also exercises an adopted opponent ruler. Shared pure validation and complete-batch fresh preflight reconcile planned hostility with real connected geography before the canonical war owner registers conflicts and assigns existing hosts. No force, territorial sovereignty, past outcome, stock, income, completed journey or executable callback is supplied. Strict optional saved provenance preserves original identities through peace, death, loss, movement, retirement and pruned history without replay. This bounded contract excludes protective guard, civilianCamps, preparation and landed/home-authority command compositions. Exact schema, exclusions and the technology decision are in docs/MODDING.md and docs/designs/mobile-columns.md.
 

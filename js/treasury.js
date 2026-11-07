@@ -66,7 +66,7 @@
           !Number.isFinite(row.retirement.gold) || !Number.isFinite(row.retirement.accrued) || row.retirement.accrued < 0)) invalid();
       return true;
     }
-    if (!realm || !realm.alive || !row || holders.length !== 1 || row.version !== 1 ||
+    if (!realm || realm.alive !== true || !row || holders.length !== 1 || row.version !== 1 ||
         row.publicOwnerId !== p.originalRealmId || row.retired !== false || own(row,'retirement') ||
         !Number.isFinite(row.gold) || Math.abs(row.gold) > Number.MAX_SAFE_INTEGER ||
         !Number.isFinite(row.militaryAccrued) || row.militaryAccrued < 0 || row.militaryAccrued > Number.MAX_SAFE_INTEGER ||
@@ -621,6 +621,29 @@
     const row = account(state, rid);
     if (!row || state.treasuryAccounting.mode !== 'active' || !isFinite(amount) || amount < 0) return false;
     row.gold += amount;
+    return true;
+  };
+
+  // A household purchase can settle several original public payees. Preflight
+  // every account and debit the combined price once, including fractional fees.
+  FB.treasuryHouseholdPurchase = function (state, payments, price) {
+    if (!Array.isArray(payments) || !Number.isFinite(price) || price < 0) return false;
+    const credits = Object.create(null);
+    let total = price;
+    for (const payment of payments) {
+      if (!payment || typeof payment.realmId !== 'string' || !Number.isFinite(payment.amount) || payment.amount < 0 ||
+          !FB.treasuryPublicAccountSnapshot(state, payment.realmId)) return false;
+      credits[payment.realmId] = (credits[payment.realmId] || 0) + payment.amount;
+      total += payment.amount;
+    }
+    if (!Number.isFinite(total) || !Number.isFinite(state.player.gold) || total > state.player.gold ||
+        Object.keys(credits).some(function (rid) {
+          const closing = account(state, rid).gold + credits[rid];
+          return !Number.isFinite(closing) || Math.abs(closing) > Number.MAX_SAFE_INTEGER;
+        })) return false;
+    state.player.gold -= total;
+    Object.keys(credits).forEach(function (rid) { account(state, rid).gold += credits[rid]; });
+    if (payments.length) count('counterparty transfers', payments.length);
     return true;
   };
 

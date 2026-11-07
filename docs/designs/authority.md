@@ -1,5 +1,7 @@
 Roman offices and imperial claims
 
+Administrative profiles retain their separate public commission path. Enabling roman_offices in an era does not expose a profile-owned court through legacy officeCourts, officeScopes or appointment petitions. Rows with publicTerms also use their public owner's transition reviews rather than legacy officeTransitionQuote/officeTransition. Public commissions retain their dated catalogue, productive source, pay and confirmation rules. This does not change the Roman catalogues of regnum, roman_civic or federate_polity, or rewrite existing authority records.
+
 Occupation and claimant boundaries
 
 docs/designs/occupation-and-claims.md records the existing separation between territorial holders, campaign occupation, scoped customary rights, recognition and conserved public renders. The complete river-control.json and upland-control.json authoring examples exercise a nonpossessing outside actor and an explicitly granted Peace jurisdiction without a second county tax stream. Neither diplomatic standing nor a military controller supplies an opening fiscal institution.

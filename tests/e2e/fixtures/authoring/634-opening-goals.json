@@ -1,0 +1,18 @@
+{
+  "name": "Independent Medinan household goals",
+  "storyInstances": {
+    "opening_medina_634": {
+      "id": "opening_medina_634",
+      "type": "opening_profile",
+      "title": "A different household outlook",
+      "intro": "Two optional private goals without contacts or rewards.",
+      "scenarioIds": ["medina_household_634"],
+      "provinceIds": ["medina"],
+      "goals": [
+        {"id":"import_income","name":"Earn through farming","text":"Receive two gold from actual farming.","criterion":{"kind":"earnings","amount":2,"focusIds":["work_land"]}},
+        {"id":"import_reserve","name":"Keep a larger reserve","text":"Hold thirty-three private gold.","criterion":{"kind":"reserve","amount":33}}
+      ],
+      "contacts": []
+    }
+  }
+}

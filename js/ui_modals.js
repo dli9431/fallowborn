@@ -9595,6 +9595,8 @@ window.FB = window.FB || {};
       h += '<button class="actionbtn" data-auction-bid="' + option.increments + '"' +
         (option.affordable ? '' : ' disabled') + '>⚖ ' +
         esc(FB.T('Bid {money:amount}', { amount:option.amount })) +
+        (option.operatingFee > 0 ? '<span class="adesc">' + esc(FB.T(
+          'If won: {money:total}, including operating permission {money:fee}.', {total:option.total, fee:option.operatingFee})) + '</span>' : '') +
         '<span class="adesc">' + esc(option.affordable
           ? FB.T('Raise by {increments} increments.', { increments:option.increments })
           : FB.T('You do not have enough gold for this bid.')) +
@@ -9607,7 +9609,8 @@ window.FB = window.FB || {};
     }), h, { replaceView:!!replaceView, noFocus:true });
     document.querySelectorAll('[data-auction-bid]').forEach(function (button) {
       button.addEventListener('click', function () {
-        const result = FB.placeAuctionBid(s, button.dataset.auctionBid);
+        const reviewed = options.filter(function (o) { return o.increments === Number(button.dataset.auctionBid); })[0];
+        const result = FB.placeAuctionBid(s, button.dataset.auctionBid, reviewed && reviewed.industryQuote);
         if (!result) return;
         if (result.status === 'countered') {
           UI.showAuction(true);
@@ -13993,36 +13996,409 @@ window.FB = window.FB || {};
     const s = FB.state;
     const status = FB.localCouncilMotionStatus(s);
     const seat = FB.localCouncilOf(s);
-    if (!status.ready || !seat) return;
+    if (!seat) { UI.showIndustryAssemblyList('town'); return; }
     const province = FB.world.byId[seat.provinceId];
     let h = reviewFactsCard('', kv('Vote chance', esc(FB.T('{chance}%', {
         chance:Math.round(status.chance * 100)
       }))) + kv('Time', esc(FB.T('1 day')))) + '<div class="gm-list">';
     for (const id in FBDATA.localCouncilMotions) {
       const def = FBDATA.localCouncilMotions[id];
-      h += '<button type="button" class="actionbtn" data-local-motion="' +
+      const lawId = FB.industryLaws.forMotion(id);
+      if (lawId && FBDATA.industryLaws[lawId].voting) continue;
+      if (lawId) {
+        const lawReview = FB.industryLaws.quoteMotion(s, lawId);
+        if (!lawReview || !lawReview.ready) continue;
+      }
+      h += '<button type="button" class="actionbtn"' + (status.ready ? '' : ' disabled') + ' data-local-motion="' +
         esc(id) + '">' + def.icon + ' ' +
         esc(dt(s, 'localCouncilMotion', id, def, 'name')) +
         '<span class="adesc">' +
         esc(dt(s, 'localCouncilMotion', id, def, 'desc')) +
         '</span></button>';
     }
+    for (const law of (s.industryLaws ? s.industryLaws.laws : [])) {
+      if (law.terms.voting) continue;
+      const q = FB.industryLaws.quoteMotion(s, law.definitionId, law.id);
+      if (!q || !q.ready) continue;
+      h += '<button type="button" class="actionbtn" data-industry-repeal="' + esc(law.id) +
+        '">' + esc(FB.T('Review repeal: {law}', {law:dt(s, 'localCouncilMotion', law.terms.motionId,
+          FBDATA.localCouncilMotions[law.terms.motionId], 'name')})) + '</button>';
+    }
+    if (FB.industryLaws.assemblyList(s, 'town').length || s.industryLaws && s.industryLaws.votes) {
+      h += '<button type="button" class="actionbtn" id="industry-town-hearings">' + esc(FB.T('Operating-law hearings and ballots')) + '</button>';
+    }
     h += '</div><div class="gm-footer"><button type="button" class="btn" ' +
       'id="local-motion-cancel">' + esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('Council of {province}', {
       province:province ? province.name : seat.provinceId
     }), h, { noFocus:true, titleDetailsHtml:'<p>' + esc(FB.T(
-      'The seeded vote chance is {chance}% for every motion: Diplomacy and Stewardship shape your case, while popular opinion shapes the room.', {
+      'Ordinary ordinances have a seeded vote chance of {chance}%. Operating-law hearings use their disclosed members, interests and passage rules.', {
         chance:Math.round(status.chance * 100)
       })) + '</p>' });
     document.querySelectorAll('[data-local-motion]').forEach(function (button) {
       button.addEventListener('click', function () {
+        const lawId = FB.industryLaws.forMotion(button.dataset.localMotion);
+        if (lawId) { UI.showIndustryLawMotion(lawId); return; }
         if (!FB.proposeLocalCouncilMotion(s, button.dataset.localMotion)) return;
         UI.closeModal();
         if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus:true });
       });
     });
+    document.querySelectorAll('[data-industry-repeal]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const law = s.industryLaws.laws.filter(function (r) { return r.id === button.dataset.industryRepeal; })[0];
+        UI.showIndustryLawMotion(law.definitionId, law.id);
+      });
+    });
     $('local-motion-cancel').addEventListener('click', UI.closeModal);
+    if ($('industry-town-hearings')) $('industry-town-hearings').addEventListener('click', function () { UI.showIndustryAssemblyList('town'); });
+  };
+
+  function industryOperatingFacts(s, status) {
+    let h = '<p>' + esc(FB.industryLaws.reason(status)) + '</p>';
+    for (const row of status.laws) {
+      const d = FBDATA.industryLaws[row.definitionId];
+      h += '<section class="governance-card">' +
+        kv('Operating law', esc(dt(s, 'localCouncilMotion', d.motionId, FBDATA.localCouncilMotions[d.motionId], 'name'))) +
+        kv('Permission fee', esc(FB.T('{money:fee} for {days} days', {fee:row.fee, days:d.permitDays}))) +
+        kv('Payee', esc(s.realms[row.payeeRealmId].name)) +
+        kv('Law ends in', esc(FB.T('{days} days', {days:Math.max(0, row.endTurn - s.turn)}))) +
+        (row.grace ? kv('Transition ends in', esc(FB.T('{days} days', {days:row.transitionEndTurn - s.turn}))) : '') +
+        (row.permitEndTurn !== null ? kv('Permission ends in', esc(FB.T('{days} days', {days:row.permitEndTurn - s.turn}))) : '') +
+        (row.exempt ? '<p>' + esc(FB.T('Your household qualifies for a beneficiary exemption.')) + '</p>' : '') + '</section>';
+      if (d.offense) h += '<p>' + esc(FB.T('Unauthorized trading may bring a court fine of {money:amount}. {closure} Imprisonment, forfeiture and execution are unavailable for this offense.', {
+        amount:d.offense.amount, closure:d.offense.closure ? FB.T('A judgment also closes this business while the law is active; ownership is retained.') : FB.T('This law does not authorize court closure.')
+      })) + '</p>';
+    }
+    return h;
+  }
+
+  UI.showIndustryLawMotion = function (definitionId, repealId) {
+    if (FBDATA.industryLaws[definitionId] && FBDATA.industryLaws[definitionId].voting) {
+      UI.showIndustryAssembly(definitionId, 'town', null, repealId); return;
+    }
+    const s = FB.state, q = FB.industryLaws.quoteMotion(s, definitionId, repealId);
+    if (!q) return;
+    const d = q.terms, def = FBDATA.localCouncilMotions[d.motionId];
+    let h = '<p>' + esc(dt(s, 'localCouncilMotion', d.motionId, def, 'desc')) + '</p>' +
+      reviewFactsCard('', kv('Scope', esc(FB.world.byId[d.provinceId].name)) +
+        kv('Business', esc(dt(s, 'enterprise', d.enterpriseType, FBDATA.enterprises[d.enterpriseType], 'name'))) +
+        kv('Operating rule', esc(d.mode === 'prohibition' ? FB.T('Prohibition with beneficiary exemptions') : FB.T('Paid operating permission'))) +
+        kv('Permission fee', esc(FB.T('{money:fee} for {days} days', {fee:d.fee, days:d.permitDays}))) +
+        kv('Duration', esc(FB.T('{days} days', {days:d.durationDays}))) +
+        kv('Existing business transition', esc(FB.T('{days} days', {days:d.transitionDays}))) +
+        kv('Vote chance', esc(FB.T('{chance}%', {chance:Math.round(FB.localCouncilMotionChance(s) * 100)}))) +
+        kv('Proposal cost', esc(FB.T('No payment; one deed day and the annual council session')))) +
+      '<p>' + esc(repealId ? FB.T('Repeal ends future restrictions and fees. Existing paid permissions remain recorded; there is no refund.') :
+        FB.T('Existing businesses keep their owners. During the transition they may operate; afterward they must qualify, pay, pause or close. Paid workers still receive their contracted wages.')) + '</p>';
+    for (const x of d.exemptions) {
+      h += '<p>' + esc(FB.T('Households resident in {province}: permission {permission}, fee {money:fee}.', {
+        province:FB.world.byId[x.id] ? FB.world.byId[x.id].name : x.id,
+        permission:x.permission ? FB.T('allowed') : FB.T('subject to the ordinary rule'), fee:x.fee
+      })) + '</p>';
+    }
+    h += '<button type="button" class="actionbtn" id="industry-law-propose"' + (q.ready ? '' : ' disabled') + '>' +
+      esc(repealId ? FB.T('Propose repeal') : FB.T('Propose operating law')) + '</button>' +
+      '<div class="gm-footer"><button type="button" class="btn" id="industry-law-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(dt(s, 'localCouncilMotion', d.motionId, def, 'name'), h, {historyView:true});
+    $('industry-law-back').addEventListener('click', function () { modalHistoryBack(UI.showLocalCouncilMotion); });
+    $('industry-law-propose').addEventListener('click', function () {
+      const result = FB.proposeLocalCouncilMotion(s, d.motionId, q);
+      if (!result) { UI.toast('The council review changed. Review the current terms.'); return; }
+      UI.closeModal();
+      FB.game.passDay({skipFocus:true});
+      UI.refresh();
+    });
+  };
+
+  function industryVoteStatus(status) {
+    const names = {pending:FB.T('Pending hearing'), withdrawn:FB.T('Withdrawn'), invalidated:FB.T('Authority lost or hearing expired'),
+      passed:FB.T('Passed and enacted'), rejected:FB.T('Rejected')};
+    return names[status] || '';
+  }
+  function industryPosture(posture) {
+    return posture === 'support' ? FB.T('Support') : posture === 'oppose' ? FB.T('Oppose') : FB.T('Abstain');
+  }
+  function industryHearingPosition(button) {
+    const body = $('gm-body');
+    return {scrollTop:body.scrollTop, focusId:button.id, definitionId:button.dataset.industryHearing,
+      voteId:button.dataset.industryVote, repealId:button.dataset.industryRepeal,
+      expanded:Array.prototype.map.call(body.querySelectorAll('.settcard-info[aria-expanded="true"]'),function (b) { return b.getAttribute('aria-controls'); })};
+  }
+  function restoreIndustryHearingPosition(view) {
+    if (!view) return;
+    const body = $('gm-body'), marker = body.firstElementChild;
+    function restore() {
+      if (body.firstElementChild !== marker || $('genmodal').classList.contains('hidden')) return;
+      view.expanded.forEach(function (id) {
+        const panel = $(id);
+        if (panel && body.contains(panel)) {
+          panel.classList.remove('hidden');
+          body.querySelectorAll('.settcard-info').forEach(function (b) { if (b.getAttribute('aria-controls') === id) b.setAttribute('aria-expanded','true'); });
+        }
+      });
+      let focus = view.focusId && $(view.focusId);
+      if (!focus && view.definitionId) body.querySelectorAll('[data-industry-hearing]').forEach(function (b) {
+        if (b.dataset.industryHearing === view.definitionId && b.dataset.industryVote === view.voteId && b.dataset.industryRepeal === view.repealId) focus = b;
+      });
+      if (focus && focus.disabled) {
+        const card = focus.closest('.review-action-card');
+        if (card) { card.tabIndex = 0; focus = card; }
+        else focus = $('industry-operation-back');
+      }
+      if (focus && body.contains(focus)) focus.focus({preventScroll:true});
+      body.scrollTop = view.scrollTop;
+    }
+    restore(); setTimeout(restore,0);
+  }
+  UI.showIndustryHearings = function () {
+    let h = '';
+    ['town','estates'].forEach(function (consumer) {
+      h += reviewActionCardHtml({id:'industry-records-' + consumer,
+        label:consumer === 'town' ? FB.T('Town hearing records') : FB.T('Estates hearing records')});
+    });
+    h += '<div class="gm-footer"><button type="button" class="btn" id="industry-records-close">' + esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('Operating-law hearings'),h,{historyView:true});
+    ['town','estates'].forEach(function (consumer) {
+      $('industry-records-' + consumer).addEventListener('click',function () { UI.showIndustryAssemblyList(consumer); });
+    });
+    $('industry-records-close').addEventListener('click',UI.closeModal);
+  };
+  UI.showIndustryAssemblyList = function (consumer, replaceView, restorePosition) {
+    const s = FB.state, rows = s.industryLaws && s.industryLaws.votes || [];
+    let h = reviewFactsCard('', '<p>' + esc(consumer === 'town' ?
+      FB.T('Only the current town seat may propose. Trading and civic benches represent this county; they confer no noble seat, land or fiscal office.') :
+      FB.T('Only current members of the controlling court’s Estates may propose. Existing noble influence supplies seats; guild membership grants no Estates vote.')) + '</p>');
+    FB.industryLaws.assemblyList(s, consumer).forEach(function (id) {
+      const d = FBDATA.industryLaws[id], name = dt(s, 'localCouncilMotion', d.motionId, FBDATA.localCouncilMotions[d.motionId], 'name');
+      h += reviewActionCardHtml({data:{industryHearing:id}, label:name, note:FB.T('Inspect terms, interests and passage rules'),
+        detailsId:'industry-hearing-' + id, details:'<p>' + esc(dt(s,'localCouncilMotion',d.motionId,FBDATA.localCouncilMotions[d.motionId],'desc')) + '</p><p>' +
+          esc(FB.T('Opening reserves the annual hearing without payment. You may withdraw before settlement; the session remains spent.')) + '</p>'});
+      (s.industryLaws && s.industryLaws.laws || []).forEach(function (law) {
+        if (law.definitionId !== id || law.repealedTurn !== null) return;
+        h += reviewActionCardHtml({data:{industryHearing:id,industryRepeal:law.id}, label:FB.T('Review repeal: {law}', {law:name}),
+          note:FB.T('Ends future fees and restrictions; no refund')});
+      });
+    });
+    rows.filter(function (v) { return v.consumer === consumer; }).slice().reverse().forEach(function (v) {
+      const d = FBDATA.industryLaws[v.definitionId];
+      h += reviewActionCardHtml({data:{industryHearing:v.definitionId,industryVote:v.id},
+        label:dt(s, 'localCouncilMotion', d.motionId, FBDATA.localCouncilMotions[d.motionId], 'name'), note:industryVoteStatus(v.status)});
+    });
+    h += '<div class="gm-footer"><button type="button" class="btn" id="industry-hearings-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Operating-law hearings'), h, {historyView:true, replaceView:!!replaceView});
+    document.querySelectorAll('[data-industry-hearing]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showIndustryAssembly(button.dataset.industryHearing, consumer, button.dataset.industryVote, button.dataset.industryRepeal,false,industryHearingPosition(button));
+      });
+    });
+    $('industry-hearings-back').addEventListener('click', function () { modalHistoryBack(UI.closeModal); });
+    restoreIndustryHearingPosition(restorePosition);
+  };
+  UI.showIndustryAssembly = function (definitionId, consumer, voteId, repealId, replaceView, returnPosition, restorePosition, parentReturn) {
+    const s = FB.state, L = FB.industryLaws, rows = s.industryLaws && s.industryLaws.votes || [];
+    const v = rows.filter(function (r) { return r.id === voteId; })[0];
+    const q = L.quoteAssembly(s, definitionId, consumer, v ? 'resolve' : 'begin', voteId, null, null, repealId);
+    if (!q) return;
+    const d = q.terms, rule = d.voting[consumer], completed = v && v.status !== 'pending';
+    const members = completed && v.result ? v.result.members : q.members;
+    const tally = completed && v.result ? v.result.tally : q.tally;
+    const quotes = {};
+    function action(id, label, review, note) {
+      quotes[id] = review;
+      return reviewActionCardHtml({id:id, label:label, disabled:!review || !review.ready,
+        note:review && review.ready ? note : review && review.reason || FB.T('A current eligible seat, available session, lawful scope and consent are required.'),
+        details:'<p>' + esc(note) + '</p>'});
+    }
+    let h = reviewFactsCard('',
+      kv('Scope', esc(FB.world.byId[d.provinceId].name)) +
+      kv('Business', esc(dt(s, 'enterprise', d.enterpriseType, FBDATA.enterprises[d.enterpriseType], 'name'))) +
+      kv('Operating rule', esc(d.mode === 'prohibition' ? FB.T('Prohibition') : FB.T('Paid operating permission'))) +
+      kv('Permission fee', esc(FB.T('{money:fee} for {days} days', {fee:d.fee,days:d.permitDays}))) +
+      kv('Public payee', esc(s.realms[v ? v.issuer.realmId : q.issuer.realmId] ?
+        s.realms[v ? v.issuer.realmId : q.issuer.realmId].name : FB.T('No current public payee'))) +
+      kv('Duration', esc(FB.T('{days} days', {days:d.durationDays}))) +
+      kv('Existing business transition', esc(FB.T('{days} days', {days:d.transitionDays}))) +
+      kv('Quorum', esc(FB.T('{percent}% of eligible influence must cast support or opposition', {percent:rule.quorum * 100}))) +
+      kv('Passage', esc(FB.T('More than {percent}% of votes cast; abstentions are excluded', {percent:rule.threshold * 100}))) +
+      (consumer === 'estates' ? kv('Additional consent', esc(FB.T('The controlling court must support the terms'))) : '') +
+      kv('Hearing window', esc(FB.T('{days} days', {days:rule.days}))) +
+      kv('Proposal cost', esc(FB.T('No payment or day; the annual hearing remains spent after withdrawal or rejection'))) +
+      kv('Status', esc(v ? industryVoteStatus(v.status) : FB.T('Not proposed'))) +
+      (v && !completed ? kv('Time remaining', esc(FB.T('{days} days', {days:Math.max(0,v.endTurn - s.turn)}))) : '') +
+      '<p>' + esc(FB.T('Ownership, existing permits and worker wages remain with their ordinary owners. Exemptions change liability, never membership.')) + '</p>');
+    h += '<p>' + esc(FB.T('After the transition, unpaid or prohibited businesses earn nothing. Owners may qualify, pay for permission, pause or close; contracted worker wages continue.')) + '</p>';
+    d.exemptions.forEach(function (x) {
+      h += '<p>' + esc(FB.T('Households resident in {province}: permission {permission}, fee {money:fee}.', {
+        province:FB.world.byId[x.id].name,permission:x.permission ? FB.T('allowed') : FB.T('subject to the ordinary rule'),fee:x.fee})) + '</p>';
+    });
+    if (!d.exemptions.length) h += '<p>' + esc(FB.T('No beneficiary exemptions.')) + '</p>';
+    if (q.repealId) h += '<p>' + esc(FB.T('Repeal reverses these interests and ends future fees and restrictions without refunding paid permissions.')) + '</p>';
+    h += reviewFactsCard(FB.T('Affected interests'), members.map(function (m) {
+      const label = m.kind === 'guild' ? FB.T('Trading guild interest') : m.kind === 'notable' ? FB.T('Civic notable interest') :
+        s.realms[m.realmId] ? s.realms[m.realmId].name : FB.T('Noble household interest');
+      const person = m.actorId && s.chars[m.actorId];
+      let body = person ? reviewPeopleHtml(reviewPersonHtml(person, label, null)) : kv('Interest', esc(label));
+      body += kv('Political weight', String(m.weight)) + kv('Position', esc(industryPosture(m.posture))) +
+        '<p>' + esc(m.kind === 'guild' ? FB.T('Exposure: access to the targeted trade and resident trading privilege; no NPC stall ownership is assumed.') :
+          m.kind === 'notable' ? FB.T('Exposure: local receipts and access to civic trade; no private assets are granted.') :
+            FB.T('Exposure: the actual public payee or an existing household business in this county. Unexposed members abstain.')) + '</p>';
+      if (m.represented) body += '<p>' + esc(FB.T('Bounded county representation: no named historical delegate is asserted.')) + '</p>';
+      if (v && !completed && m.actorId === s.player.charId) {
+        ['support','oppose','abstain'].forEach(function (posture) {
+          body += action('industry-ballot-' + m.id + '-' + posture, industryPosture(posture),
+            L.quoteAssembly(s,definitionId,consumer,'ballot',v.id,m.id,posture),
+            FB.T('No payment or day. You may change your own ballot before settlement.'));
+        });
+      }
+      return body;
+    }).join(''));
+    h += reviewFactsCard(FB.T('Tally'), kv('Support',String(tally.supportWeight)) + kv('Votes cast',String(tally.castWeight)) + kv('Eligible influence',String(tally.totalWeight)));
+    if (!v) h += action('industry-hearing-begin', q.repealId ? FB.T('Propose repeal') : FB.T('Propose operating law'), q,
+      FB.T('Reserve the annual hearing. No enactment or payment occurs until the vote is settled.'));
+    else if (!completed) {
+      h += action('industry-hearing-resolve',FB.T('Settle the vote'),q,
+        FB.T('Recheck current principals, authority, quorum and support. A passed motion enacts once; lost authority or expiry closes it without enactment.'));
+      h += action('industry-hearing-withdraw',FB.T('Withdraw before commitment'),
+        L.quoteAssembly(s,definitionId,consumer,'withdraw',v.id),FB.T('No law is enacted. The reserved session remains spent.'));
+    }
+    h += '<div class="gm-footer"><button type="button" class="btn" id="industry-hearing-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(dt(s,'localCouncilMotion',d.motionId,FBDATA.localCouncilMotions[d.motionId],'name'),h,
+      {historyView:true,replaceView:!!replaceView,
+        titleDetailsHtml:'<p>' + esc(dt(s,'localCouncilMotion',d.motionId,FBDATA.localCouncilMotions[d.motionId],'desc')) + '</p>',
+        historyBackRender:parentReturn || function () { UI.showIndustryAssemblyList(consumer,true,returnPosition); }});
+    Object.keys(quotes).forEach(function (id) {
+      $(id).addEventListener('click',function () {
+        const position = industryHearingPosition($(id)), result = L.commitAssembly(s,quotes[id]);
+        if (!result) { UI.toast('The assembly review changed. Review the current terms.'); return; }
+        UI.showIndustryAssembly(definitionId,consumer,result.id,q.repealId,true,returnPosition,position,parentReturn);
+        UI.refresh();
+      });
+    });
+    $('industry-hearing-back').addEventListener('click',function () { modalHistoryBack(parentReturn || function () { UI.showIndustryAssemblyList(consumer,true); }); });
+    restoreIndustryHearingPosition(restorePosition);
+  };
+
+  UI.showIndustryOperation = function (uid, returnContext, replaceView, restorePosition) {
+    const s = FB.state, e = (s.player.enterprises || []).filter(function (r) { return r.uid === uid; })[0];
+    if (!e) return;
+    const parentPosition = $('enterprise-operating-law') && industryHearingPosition($('enterprise-operating-law'));
+    function returnToManager() {
+      UI.showEnterpriseManage(uid, returnContext, true);
+      restoreIndustryHearingPosition(parentPosition);
+    }
+    const status = FB.industryLaws.operation(s, e), quotes = {};
+    let h = industryOperatingFacts(s, status) + kv('Your funds', esc(FB.money(s.player.gold))) + '<p>' + esc(FB.T(
+      'Pausing or closing preserves property, paid permissions and obligations. Output and upgrade benefits stop. Existing worker wages continue until you dismiss those workers. Resuming requires lawful permission.')) + '</p>';
+    const actions = [{id:'pay', label:FB.T('Pay operating permissions: {money:amount}', {amount:status.amount})},
+      {id:'pause', label:FB.T('Pause operation')}, {id:'close', label:FB.T('Close operation; retain property')},
+      {id:'resume', label:FB.T('Resume lawful operation')}, {id:'violate', label:FB.T('Review deliberate unauthorized operation')}];
+    for (const a of actions) {
+      const q = quotes[a.id] = FB.industryLaws.quoteOperation(s, e, a.id, 0);
+      h += '<button type="button" class="actionbtn" id="industry-operation-' + a.id + '" data-industry-operation="' + a.id + '"' +
+        (q.ready ? '' : ' disabled') + '>' + esc(a.label) +
+        (!q.ready && (a.id === 'resume' || a.id === 'pay' && status.amount > 0) ? '<span class="adesc">' + esc(q.reason) + '</span>' : '') + '</button>';
+    }
+    const petitions = {}, complaints = {}, debts = {};
+    status.laws.forEach(function (row) {
+      ['exemption','repeal'].forEach(function (kind) {
+        const key = kind + '-' + row.lawId, q = petitions[key] = FB.industryLaws.quotePetition(s, uid, row.lawId, kind);
+        if (!q) return;
+        h += reviewActionCardHtml({id:'industry-petition-' + key, label:kind === 'exemption' ? FB.T('Petition for a temporary exemption') : FB.T('Petition for repeal'),
+          note:q.kind === 'industry_assembly' ? FB.T('Request an ordinary council hearing; no seat or ballot is granted. One petition hearing per year; no money cost.') :
+            kind === 'repeal' ? FB.T('{chance}% chance to end future restrictions. One request per business and law; no money cost. Refusal consumes the request.', {chance:Math.round(q.chance * 100)}) :
+              FB.T('{chance}% chance; exemption lasts at most {days} days. One request per business and law; no money cost. Refusal consumes the request.', {chance:Math.round(q.chance * 100), days:q.days}),
+          disabled:!q.ready, details:q.reason ? '<p>' + esc(q.reason) + '</p>' : ''});
+      });
+    });
+    (s.industryLaws && s.industryLaws.petitions || []).forEach(function (p) {
+      if (p.enterpriseUid === uid) h += '<p>' + esc(p.granted ? (p.kind === 'repeal' ? FB.T('Repeal petition granted on day {day}.', {day:p.turn}) :
+        FB.T('Petition granted on day {day}; relief ends on day {end}.', {day:p.turn,end:p.endTurn})) :
+        FB.T('Petition refused on day {day}.', {day:p.turn})) + '</p>';
+    });
+    (s.industryLaws && s.industryLaws.violations || []).forEach(function (v) {
+      if (v.enterpriseUid !== uid) return;
+      h += '<section class="governance-card">' + UI.charCardHtml(s, s.chars[v.actorId], false) +
+        kv('Recorded unauthorized trading', esc(FB.T('Day {day}; material proof of actual output. A complaint is not a conviction.', {day:v.turn})));
+      if (!v.resolved) {
+        const q = complaints[v.id] = FB.industryLaws.quoteComplaint(s, v.id);
+        h += reviewActionCardHtml({id:'industry-complaint-' + v.id, label:FB.T('Answer the complaint'),
+          note:FB.T('The competent court first sends an arrest demand. Submission creates provisional custody; evidence challenge and clemency remain available before judgment.'), disabled:!q || !q.ready});
+      } else h += kv('Decision', esc(dt(s, 'justiceSentence', v.resolved, FBDATA.justiceSentences[v.resolved], 'name')));
+      if (v.judgment) {
+        h += kv('Assessed fine', esc(FB.money(v.judgment.fine))) + kv('Paid', esc(FB.money(v.judgment.paid))) +
+          kv('Remaining personal liability', esc(FB.money(v.judgment.fine - v.judgment.paid))) +
+          kv('Court closure', esc(v.judgment.closure ? FB.T('Affected operation closed; ownership retained') : FB.T('None')));
+        const q = debts[v.id] = FB.industryLaws.quoteDebt(s, v.id);
+        if (q.amount > 0) h += reviewActionCardHtml({id:'industry-debt-' + v.id, label:FB.T('Pay remaining fine: {money:amount}', {amount:q.amount}),
+          disabled:!q.ready, note:q.ready ? '' : FB.T('The original operator must have enough personal funds. No new offense or payment is created by review.')});
+      }
+      h += '</section>';
+    });
+    for (const p of (s.industryLaws ? s.industryLaws.permits : [])) if (p.enterpriseUid === uid) {
+      h += '<p>' + esc(FB.T('Paid {money:amount} to {payee} on day {day}; permission ended or ends on day {end}.', {
+        amount:p.amount, payee:s.realms[p.payeeRealmId].name, day:p.paidTurn, end:p.endTurn
+      })) + '</p>';
+    }
+    h += '<div class="gm-footer"><button type="button" class="btn" id="industry-operation-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Lawful business operation'), h, {historyView:true, replaceView:!!replaceView,
+      historyBack:true, historyBackRender:returnToManager});
+    $('industry-operation-back').addEventListener('click', function () {
+      modalHistoryBack(returnToManager);
+    });
+    document.querySelectorAll('[data-industry-operation]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const position = industryHearingPosition(button);
+        if (button.dataset.industryOperation === 'violate') { UI.showIndustryViolation(uid, returnContext, quotes.violate, position); return; }
+        if (!FB.industryLaws.commitOperation(s, quotes[button.dataset.industryOperation])) {
+          UI.toast('Operating terms changed. Review the current terms.'); return;
+        }
+        UI.refresh();
+        UI.showIndustryOperation(uid, returnContext, true, position);
+      });
+    });
+    Object.keys(petitions).forEach(function (key) {
+      const b = $('industry-petition-' + key);
+      if (b) b.addEventListener('click', function () {
+        const q = petitions[key], position = industryHearingPosition(b), result = FB.industryLaws.commitPetition(s, q);
+        if (!result) { UI.toast('Operating terms changed. Review the current terms.'); return; }
+        if (q.kind === 'industry_assembly') UI.showIndustryAssembly(q.definitionId, 'town', result.id, null, false, null, null,
+          function () { UI.showIndustryOperation(uid, returnContext, true, position); });
+        else UI.showIndustryOperation(uid, returnContext, true, position);
+        UI.refresh();
+      });
+    });
+    Object.keys(complaints).forEach(function (id) {
+      $('industry-complaint-' + id).addEventListener('click', function () {
+        if (!FB.industryLaws.answerComplaint(s, complaints[id])) { UI.toast('Operating terms changed. Review the current terms.'); return; }
+        UI.closeModal(); UI.refresh();
+        UI.toast('The court demand will appear as time advances. You may then submit or resist and challenge the evidence before judgment.');
+      });
+    });
+    Object.keys(debts).forEach(function (id) {
+      const b = $('industry-debt-' + id);
+      if (b) b.addEventListener('click', function () {
+        const position = industryHearingPosition(b);
+        if (!FB.industryLaws.payDebt(s, debts[id])) { UI.toast('Operating terms changed. Review the current terms.'); return; }
+        UI.showIndustryOperation(uid, returnContext, true, position); UI.refresh();
+      });
+    });
+    restoreIndustryHearingPosition(restorePosition);
+  };
+
+  UI.showIndustryViolation = function (uid, returnContext, q, returnPosition) {
+    const s = FB.state;
+    let h = '<p>' + esc(FB.T('Authorize actual productive trading without permission. Merely choosing this creates no offense; actual output records the original operator and applicable law. The court may arrest you and hear a challenge before imposing the disclosed fine and closure. Other private property is unaffected.')) + '</p>' +
+      industryOperatingFacts(s, q.status) + '<p>' + esc(FB.T('This authority ends at household succession. Wages continue under existing contracts.')) + '</p>' +
+      '<button type="button" class="actionbtn" id="industry-violation-confirm">' + esc(FB.T('Deliberately operate without permission')) + '</button>' +
+      '<div class="gm-footer"><button type="button" class="btn" id="industry-violation-cancel">' + esc(FB.T('Cancel')) + '</button></div>';
+    openModal(FB.T('Review unauthorized operation'), h, {historyView:true,historyBack:true,
+      historyBackRender:function () { UI.showIndustryOperation(uid, returnContext, true, returnPosition); }});
+    $('industry-violation-cancel').addEventListener('click',function () { modalHistoryBack(function () { UI.showIndustryOperation(uid,returnContext,true,returnPosition); }); });
+    $('industry-violation-confirm').addEventListener('click',function () {
+      if (!FB.industryLaws.commitOperation(s,q)) { UI.toast('Operating terms changed. Review the current terms.'); return; }
+      modalHistoryBack(function () { UI.showIndustryOperation(uid,returnContext,true,returnPosition); }); UI.refresh();
+    });
   };
 
   UI.showCastellanPetition = function () {
@@ -17814,6 +18190,9 @@ window.FB = window.FB || {};
     }
     h += parliamentHemicycleHtml(s, politics, activeForecast, overviewHtml);
     h += '<div class="gm-list">';
+    if (FB.industryLaws.assemblyList(s, 'estates').length || s.industryLaws && s.industryLaws.votes) {
+      h += '<button type="button" class="actionbtn" id="industry-estates-hearings">' + esc(FB.T('Operating-law hearings and ballots')) + '</button>';
+    }
     h += estatesActionCard('estates-liege-card-details',
       esc(FB.T('Open {liege}’s ruler card…', {
         liege:liege.ruler.name
@@ -17870,6 +18249,7 @@ window.FB = window.FB || {};
     modalOptions.guide = guideModalOption('estates-guide', 'government',
       'Guide: government');
     openModal(FB.T('The Estates'), h, modalOptions);
+    if ($('industry-estates-hearings')) $('industry-estates-hearings').addEventListener('click', function () { UI.showIndustryAssemblyList('estates'); });
     $('estates-liege-card').addEventListener('click', function () {
       UI.showLiegeModal(s.player.liege, {
         view:'estates',
@@ -22663,6 +23043,10 @@ window.FB = window.FB || {};
   UI.showBishopric = function () {
     const s = FB.state;
     const me = s && s.chars[s.player.charId];
+    const rentClaims = !!(FB.episcopalClaims && FB.episcopalClaims.entry(s,'bishopric'));
+    if (rentClaims && !(me && FB.bishopricSnapshot && FB.bishopricSnapshot(s,me))) {
+      UI.showEpiscopalClaims(); return;
+    }
     const record = me && FB.bishopricOf && FB.bishopricOf(s, me);
     if (!record) return;
     const see = FB.world.byId[record.seeProvinceId];
@@ -22728,6 +23112,8 @@ window.FB = window.FB || {};
       esc(FB.T('The see returns to the Church; private property and separate secular titles follow dynasty law.')) + '</div>' +
       '</section></div>';
 
+    if (rentClaims) h += reviewActionsHtml(reviewActionCardHtml({ id:'bishop-rent-claims',
+      label:FB.T('Review episcopal rent claims'), note:FB.T('No fee or day spent; review existing rights and the actual accounts.') }));
     const powerIds = [
       'visit_diocese', 'ecclesiastical_court',
       'convene_synod', 'extraordinary_tithe'
@@ -22744,7 +23130,9 @@ window.FB = window.FB || {};
         (item.can ? '' : ' disabled') + '>' +
         esc(actionLabel(s, item.a.id, item.a)) +
         '<span class="adesc">' + esc(item.can
-          ? FB.T('1 day · {days}-day cooldown', { days:item.a.cd }) : item.reason) +
+          ? rentClaims && ['visit_diocese','ecclesiastical_court'].indexOf(item.a.id) >= 0 ?
+            FB.T('Free rent review; ordinary pastoral events remain available.') :
+            FB.T('1 day · {days}-day cooldown', { days:item.a.cd }) : item.reason) +
         (item.a.id === 'convene_synod' ? ' · ' + esc(FB.T('Cost: {money:10}')) : '') +
         '</span></button>' + cardInfoButton(detailsId) + '</div>' +
         '<div class="settcard-details hidden" id="' + detailsId + '">' +
@@ -22779,6 +23167,8 @@ window.FB = window.FB || {};
       });
     });
     const cardinalButton = $('bishop-cardinal');
+    const rentButton = $('bishop-rent-claims');
+    if (rentButton) rentButton.addEventListener('click', function () { UI.showEpiscopalClaims({ parentHistory:true }); });
     if (cardinalButton) cardinalButton.addEventListener('click', function () {
       submitCardinalPetition(me, 'bishopric');
     });
@@ -23802,7 +24192,8 @@ window.FB = window.FB || {};
     const critical = FB.T(
       '{state} · setup {money:cost} · base {money:yield} each season', {
         state:state.label, cost:status.cost, yield:def.yield || 0
-      });
+      }) + (status.industryQuote && status.industryQuote.amount > 0 ? ' · ' +
+        FB.T('includes operating permission {money:fee}; renewal required', {fee:status.industryQuote.amount}) : '');
     const details = '<span class="adesc enterprise-purchase-desc">' +
       esc(dt(s, 'enterprise', status.id, def, 'desc')) + '</span>' +
       '<span class="adesc enterprise-purchase-reason' +
@@ -23864,6 +24255,7 @@ window.FB = window.FB || {};
       'Review every current requirement for {enterprise} in {settlement}.', {
         enterprise:name, settlement:place
       })) + '</p></div>';
+    if (status.industryQuote && status.industryQuote.status.laws.length) h += industryOperatingFacts(s, status.industryQuote.status);
     if (status.ready) {
       const readyState = enterprisePurchaseState(status);
       h += '<div class="enterprise-requirement-summary ' +
@@ -23949,7 +24341,7 @@ window.FB = window.FB || {};
           UI.showEnterpriseRequirements(type, settlement, returnContext, purchaseReview, true);
           return;
         }
-        if (!FB.buyEnterprise(s, type, settlement)) return;
+        if (!FB.buyEnterprise(s, type, settlement, status.industryQuote)) return;
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
         UI.refresh();
@@ -23980,6 +24372,8 @@ window.FB = window.FB || {};
     const place = sts[settlement] ? sts[settlement].name : '?';
     const catalogue = FB.enterpriseCatalogue(
       s, s.player.provinceId, settlement);
+    const industryQuotes = {};
+    catalogue.forEach(function (row) { industryQuotes[row.id] = row.industryQuote; });
     let available = 0;
     for (const status of catalogue) if (status.ready) available++;
     let h = '<div class="enterprise-market-content" data-modal-scroll><div class="gm-body-text"><p>' + esc(FB.T(
@@ -24013,7 +24407,7 @@ window.FB = window.FB || {};
         const live = FB.enterprisePurchaseStatus(s,
           b.dataset.enterpriseBuy, s.player.provinceId, settlement);
         if (!live.ready ||
-            !FB.buyEnterprise(s, b.dataset.enterpriseBuy, settlement)) {
+            !FB.buyEnterprise(s, b.dataset.enterpriseBuy, settlement, industryQuotes[b.dataset.enterpriseBuy])) {
           UI.toast(
             'Enterprise requirements changed. Review the updated status.');
           UI.showEnterpriseMarket(settlement, returnContext, true);
@@ -24194,6 +24588,10 @@ window.FB = window.FB || {};
     let h = managementCard(
       'enterprise-overview', FB.T('Enterprise details'), overviewDetails, '',
       'enterprise-management-status ' + staffing.state) + upgradeHtml +
+      (FB.industryLaws.relevant(s, e) ? '<section class="governance-card"><p>' +
+        esc(FB.industryLaws.reason(FB.industryLaws.operation(s, e))) +
+        '</p><button type="button" class="actionbtn" id="enterprise-operating-law">' +
+        esc(FB.T('Review operating laws, payments and closure')) + '</button></section>' : '') +
       '<section class="enterprise-management-card enterprise-worker-lock settcard' +
       (!assignedIds.length ? ' disabled' : '') + '"' +
       (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
@@ -24227,7 +24625,7 @@ window.FB = window.FB || {};
       const previewIds = assignedIds.slice();
       if (!selected && canAdd) previewIds.push(c.id);
       const preview = {
-        type:e.type, provinceId:e.provinceId, settlement:e.settlement,
+        uid:e.uid, type:e.type, provinceId:e.provinceId, settlement:e.settlement,
         level:level, workerId:previewIds[0] || null, workerIds:previewIds
       };
       h += personAssignmentCard({
@@ -24313,6 +24711,9 @@ window.FB = window.FB || {};
     openModal(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name'), h,
       managementOptions);
     FB.paintFaces($('gm-body'), s);
+    if ($('enterprise-operating-law')) $('enterprise-operating-law').addEventListener('click', function () {
+      UI.showIndustryOperation(uid, returnContext);
+    });
     if ($('enterprise-worker-lock')) {
       $('enterprise-worker-lock').addEventListener('change', function () {
         if (!FB.setEnterpriseWorkerLock(s, uid, this.checked)) {
@@ -27002,6 +27403,7 @@ window.FB = window.FB || {};
       historyView:!!returnContext && !royalFamilyNavigation,
       replaceView:!!replaceView,
       historyBackRender:returnContext && (returnContext.view === 'marriage-finder' ||
+        returnContext.view === 'story' ||
         returnContext.view === 'abbeys' ||
         returnContext.view === 'family-office' ||
         returnContext.view === 'religious-office-result' ||
@@ -27480,6 +27882,9 @@ window.FB = window.FB || {};
       piety:def.pietyCost === undefined ? 40 : def.pietyCost, prestige:def.prestigeCost === undefined ? 20 : def.prestigeCost })));
     else if (def.kind !== 'custody') h += kv('Consequence', esc(FB.T('Released')));
     if (['fine','ransom'].indexOf(def.kind) >= 0) h += kv('Collect', esc(FB.T('{money:amount}', { amount:p.amount })));
+    if (p.industry && def.kind === 'fine') h += kv('Remaining personal liability', esc(FB.money(p.fine - p.amount))) +
+      kv('Public payee', esc(s.realms[p.industry.payeeRealmId].name)) +
+      kv('Business closure', esc(p.industry.closure ? FB.T('Close the affected operation while its law is active; retain ownership') : FB.T('None')));
     if (p.endTurn) h += kv('Release due', esc(fortDateText(s, p.endTurn)));
     if (p.destination) h += kv('Exile to', esc(FB.world.byId[p.destination].name));
     if (!p.ready) h += kv('Unavailable', esc(justiceBlocker(p.blocker)));
@@ -27548,7 +27953,7 @@ window.FB = window.FB || {};
     }
     if (!offense) return '<p class="justice-evidence">' + esc(FB.T('No proven offense')) + '</p>';
     const evidence = { testimony:FB.T('Testimony'), material:FB.T('Material proof'), redhanded:FB.T('Caught red-handed') };
-    const kind = offense.kind === 'rebellion' ? FB.T('Rebellion') :
+    const kind = offense.kind === 'industry_violation' ? FB.T('Unauthorized business operation') : offense.kind === 'rebellion' ? FB.T('Rebellion') :
       FB.dataText(s, s.player.charId, 'plot', offense.kind, FBDATA.plots[offense.kind], 'name', {});
     return '<p>' + esc(FB.T(offense.closed ? 'Recorded offense: {offense}. Evidence: {evidence}.' : 'Offense: {offense}. Evidence: {evidence}.', {
       offense:kind, evidence:evidence[offense.evidence] || ''
@@ -28311,9 +28716,10 @@ window.FB = window.FB || {};
       };
     }
   };
-  UI.showLifeHistoryCollection = function (page, replace, view) {
+  UI.showLifeHistoryCollection = function (page, replace, view, family) {
     const s = FB.state;
-    const rows = FB.lifeHistoryCollection(s).sort(function (a, b) {
+    const landmarks = family ? FB.familyLandmarks(s) : [];
+    const rows = (family ? landmarks.map(function (item) { return item.record; }) : FB.lifeHistoryCollection(s)).sort(function (a, b) {
       return (b.identity.born || 0) - (a.identity.born || 0) ||
         (a.identity.id < b.identity.id ? -1 : 1);
     });
@@ -28325,6 +28731,8 @@ window.FB = window.FB || {};
       kv('Preserved lives', esc(FB.T('{count} of {limit} places', {
         count:FB.preservedLifeCount(s), limit:FB.LIFE_HISTORY_LIMITS.preserved
       }))) + kv('Played lives', esc(String(playedCount))) + '</section>';
+    if (family) h += '<p class="hint">' + esc(FB.T(
+      'Selected recorded landmarks, including the first recorded attainment of each rank. Open a life for its surviving highlights. Earlier events are not reconstructed.')) + '</p>';
     if (!rows.length) h += '<p class="hint">' + esc(FB.T(
       'No lives are collected yet. Follow someone from their character sheet to preserve their history.')) + '</p>';
     h += '<div class="gm-list life-history-list">';
@@ -28332,12 +28740,27 @@ window.FB = window.FB || {};
       const c = s.chars[row.identity.id] || row.identity;
       const state = row.played ? FB.T('Played life')
         : row.paused && !c.dead ? FB.T('Following paused') : FB.T('Preserved life');
+      let highlights = '';
+      if (family) {
+        const item = landmarks.filter(function (item) { return item.record === row; })[0];
+        const freedom = FB.familyFreedomView ? FB.familyFreedomView(s) : null;
+        if (freedom) [freedom.first, freedom.firstLawful].forEach(function (fact) {
+          if (fact && fact.entry.protagonistId === c.id) highlights +=
+            '<span class="adesc" data-family-landmark data-i18n-ignore>' + esc(fact.text) + '</span>';
+        });
+        item.entries.forEach(function (entry) {
+          highlights += '<span class="adesc" data-family-landmark data-i18n-ignore>' +
+            esc(FB.T('{year} AD: {event}', { year:entry.year,
+              event:FB.renderMessage(entry.msg, { state:s, viewer:s.player.charId }) })) + '</span>';
+        });
+        if (row.condensed) highlights += '<span class="adesc">' + esc(FB.T('Some highlights have been condensed.')) + '</span>';
+      }
       h += '<button type="button" class="actionbtn large-list-row life-history-person" data-life-open="' +
         esc(c.id) + '"><span class="large-list-row-main">' + FB.faceTag(c, 44, 50) +
         '<span class="large-list-row-copy"><span class="large-list-row-title">' + esc(FB.fullName(c)) +
         '</span><span class="adesc">' + esc(lifeDatesText(c)) + ' · ' +
         esc(FB.T('{count} accomplishments', { count:(row.entries || []).length })) +
-        '</span></span></span><span class="large-list-face-state">' + esc(state) + '</span></button>';
+        '</span>' + highlights + '</span></span><span class="large-list-face-state">' + esc(state) + '</span></button>';
     }
     h += '</div><div class="gm-footer"><button type="button" class="btn" id="life-list-back">' +
       esc(FB.T('Back')) + '</button><button type="button" class="btn" id="life-list-prev"' +
@@ -28345,20 +28768,20 @@ window.FB = window.FB || {};
       esc(FB.T('Page {page} of {pages}', { page:page + 1, pages:pages })) +
       '</span><button type="button" class="btn" id="life-list-next"' +
       (page + 1 < pages ? '' : ' disabled') + '>' + esc(FB.T('Next')) + '</button></div>';
-    openModal(FB.T('Remembered lives'), h, { historyView:!replace, replaceView:!!replace,
+    openModal(family ? FB.T('Family landmarks') : FB.T('Remembered lives'), h, { historyView:!replace, replaceView:!!replace,
       historyBack:true, modalClass:'fullsheet-modal life-history-modal', noFocus:!!view,
       titleDetailsHtml:'<p>' + esc(FB.T('Played lives and people you chose to preserve remain here after death.')) +
         '</p><p>' + esc(FB.T('Each preserved life, including a deceased one, uses one place in the collection. Played lives do not.')) + '</p>' });
     paintLifeFaces($('gm-body'));
     $('life-list-back').onclick = function () { modalHistoryBack(UI.closeModal); };
-    $('life-list-prev').onclick = function () { UI.showLifeHistoryCollection(page - 1, true); };
-    $('life-list-next').onclick = function () { UI.showLifeHistoryCollection(page + 1, true); };
+    $('life-list-prev').onclick = function () { UI.showLifeHistoryCollection(page - 1, true, null, family); };
+    $('life-list-next').onclick = function () { UI.showLifeHistoryCollection(page + 1, true, null, family); };
     $('gm-body').querySelectorAll('[data-life-open]').forEach(function (button, index) {
       button.onclick = function () {
         const remembered = { scroll:$('gm-body').scrollTop,
           id:button.getAttribute('data-life-open'), index:index };
         UI.showLifeHistory(remembered.id, false, { back:function () {
-          UI.showLifeHistoryCollection(page, false, remembered);
+          UI.showLifeHistoryCollection(page, false, remembered, family);
         } });
       };
     });

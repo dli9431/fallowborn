@@ -207,6 +207,8 @@ tests/e2e/fixtures/authoring/mobile-hosted-harbor.json and mobile-hosted-dune.js
 
 Personal ruler agenda authoring
 
+The active stage displays each distinct referenced world's current status once, without advancing or attaching that source. Its original bound incumbent uses the shared character portrait. Available funds come from the ordinary treasury owner; public/private labels follow its separation policy. These are projections of existing records, with no extra declaration or saved fields. Campaign sources with ordinary_declaration also display the live objective controller and initiating court; a result belongs to that initiating court rather than to whichever ruler reads it.
+
 storyInstances accepts type ruler_agenda. Its only top-level fields are id, type, subjectRealmId, title, intro, optional requires and registrationBefore/registrationAfter, and stages. subjectRealmId must be an opening realm offered by the start's effective bookmark. The type is a player track: list its id in an existing-ruler scenario's tracks. It initializes only for the original ruler or current delegated incumbent of that start. No executable callbacks, arbitrary state paths or world initialization are supported.
 
 stages is an ordered array of 1-16 objects with unique slug id, name, text, earliest year (1-9999), season (0-3) and 1-12 choices. Each choice has a globally unique slug id, label, detail and operation. Every stage needs agenda_priority as an unconditional alternative. The engine also exposes Set the program aside before the next review date; its agenda_stop_program id is reserved. Ordinary successful choices advance one stage. agenda_finish completes early, agenda_priority records a priority without a political effect, and either operation accepts no additional fields.
@@ -375,6 +377,34 @@ must call `FB.invalidateSettlementLordships(state, pid)`; prefer the mutation AP
 
 No construction, tax, levy, capacity-penalty, or founding gameplay is enabled by
 calling a projection. Those integrations are separate phases of the saved plan.
+
+## Episcopal civil rent claims
+
+`episcopalClaims` is an optional table of complete records merged by id, with at
+most 32 definitions. Each record requires `name`, `desc`, `bookmarkId`, `provinceId`,
+`realmId`, `yearMin`, `yearMax`, `recurringShare`, `compensation`, `termSeasons`,
+`offerDays`, `possessorPolicy` and `enforcementPolicy`. Ids use lowercase snake case;
+the bookmark, inhabited county and temporal ecclesiastical realm must already
+exist. Only one declaration per bookmark/county is allowed. A declaration grants
+no property or office and authors no arrears. Runtime eligibility also requires
+the actual ecclesiastical binding, recognized incumbent, controlled county and
+privately delegated settlement with a positive ordinary charter rent.
+
+Years are integers from -10000 to 10000 with ordered bounds. `recurringShare` is
+a fraction from zero to one, capped at the source charter's share on review.
+`compensation` is 1–1000 currency units; `termSeasons` is 1–8 and `offerDays` is
+1–90. `possessorPolicy` is `accept`, `contest` or `decline`; `enforcementPolicy` is
+`compose` or `reject`. The policies govern only actual NPC responses to a pending
+player interaction through the same quote/apply contract. The bishop's NPC
+response accepts a valid possessor offer, including the current private-funds
+check. An imported record cannot install callbacks, generate estates, declare
+unpaid debts or override court competence.
+
+Display fields render through `episcopalClaim.<id>.name/desc` with effective English
+fallback. The complete JSON consumer is
+`tests/e2e/fixtures/authoring/episcopal-river-rent.json`. The implemented workflow,
+account owners, future-term boundaries and public interfaces are described in
+[episcopal-claims.md](designs/episcopal-claims.md).
 
 ## Ruler justice
 
@@ -1587,16 +1617,15 @@ Revision-specific fixed-start identities
 
 A fixed start may declare revisionIdentities:{bookmarkId:{revision:{startReligion,governmentForm}}}. The map contains 1-16 declared bookmark ids and at most 32 revision records. Each record has a known startReligion, a known governmentForm, or both. A governmentForm projection requires an existing rulerRealmId start. Bookmark ids must belong to the start, and revisions must exist in that bookmark's candidate catalogue; the implicit revision is named baseline. No other identity, resource, binding or display field can be patched. The normal start fields are the default for revisions without a record. Every offered revision validates its projected identity against its own residents, ruler or original person. The projected government must match that revision's actual ruler realm and rank, including for hidden starts; it grants no adoption exception. A government-only record preserves the default faith, and a faith-only record preserves the default government. Picker, start-code creation, direct ruler adoption and saved-start resolution use the same pure projection. Retained shared-definition proofs compare the complete projected start, including its government, for every predecessor revision. Changing the map in ordinary JSON still changes its exact mod fingerprint and supplies no authority to accept an older signature. Ordinary JSON can author this field but cannot authorize an older signature. The canonical start owner resolves it for validation, creation and saved-start readers without mutating the catalogue or the saved scenario id.
 
+World-revision visibility
+
+hidden is an optional boolean whole-field revision override. An omitted value inherits the authored root or baseline; true hides that selected revision from fresh setup, and false explicitly allows the ordinary visibility checks. A newly added hidden revision can leave every older visible layer exact. Menu summaries and campaign entry resolve the selected revision; matching retained saves remain loadable under the existing save gates. The authored root and existing layers cannot be rewritten by retained compatibility evidence. Ordinary JSON imports validate the same boolean field and carry their own exact mod signature.
+
 ### Explicit retained shared-definition evidence
 
-A trusted schema-1 transition may additionally declare `sharedDefinitions`,
-with exactly `religions`, `legalTraditions` and `startScenarios` arrays. Each has
-at most 32 records, with at most 64 records total, under the declaration's
-existing depth, node and payload limits. Each record has exactly `id`,
-`predecessor` and `current`. Ids are unique within their root. Current evidence
-must equal the complete pristine current definition.
+A trusted schema-1 transition may additionally declare sharedDefinitions, with required religions, legalTraditions and startScenarios arrays and optional governmentForms, administrationProfiles and aristocraticProfiles arrays. Earlier three-root declarations remain valid without adding empty optional arrays. No other root is supported. Each array has at most 32 records, with at most 64 records total across all roots, under the declaration's existing depth, node and payload limits. Each record has exactly id, predecessor and current. Ids are unique within their root. Current evidence must equal the complete pristine current definition.
 
-Faith and law records certify additions only: `predecessor:null` means absent.
+Faith, law, government-form and administration/aristocratic-profile records certify additions only: predecessor:null means absent.
 An existing shared definition cannot be replaced under this contract. This
 preserves the meaning of saved faith ancestry and legal ids without a runtime
 catalogue swap or a saved historical-catalogue selector. A start record supplies
@@ -3581,7 +3610,196 @@ Core formative stories use three options: two 65% trait-shaping attempts with a 
 then a 35% option whose only possible mechanical result is a single skill gain. That three-option
 balance is authored event content rather than an additional schema requirement for mods.
 
+## Industry operating laws
+
+Optional `voting` opts a definition into affected-interest hearings through both
+the existing town council seat and the controlling court's Estates. Omission
+retains the simple seeded council motion. Both consumers use this law's exact
+county, business, exemptions, issuer/payee and economic transaction; they cannot
+author a parallel effect or a realm-wide jurisdiction.
+
+```json
+"voting": {
+  "town": {"quorum": 0.5, "threshold": 0.5, "days": 30, "members": [
+    {"id": "traders", "kind": "guild", "weight": 2},
+    {"id": "notables", "kind": "notable", "weight": 1}
+  ]},
+  "estates": {"quorum": 0.25, "threshold": 0.5, "days": 40}
+}
+```
+
+Both consumer objects are required. `quorum` is a number greater than zero through
+one; `threshold` is a number from 0.5 inclusive to one exclusive. Passage requires
+cast weight at least quorum times eligible weight and support strictly greater
+than threshold times cast weight. `days` is an integer 1–90. Town `members` has
+1–8 records with unique lowercase ids (up to 40 characters), unique `kind` values
+`guild` or `notable`, and integer weight 1–10. Thus at most one bench of each
+supported kind can be declared. Unknown fields, injected conditions, named NPC
+asset claims and unsupported kinds reject. The actual targeted enterprise
+profession, current local guild careers, current council seat and existing civic
+representatives resolve people; otherwise the UI discloses bounded county
+representation. Exemptions never add members. The independent ordinary JSON
+example is `tests/e2e/fixtures/authoring/industry-law-assemblies.json`.
+
+Estates seats come only from the current direct political court, capped at 10
+influence per house and 128 houses. Unexposed houses abstain. The actual public
+payee and existing player-owned affected property supply noble exposure; no NPC
+business inventory is generated. Estates passage additionally needs the
+controlling court's support. Only territorial government consent currently
+supports these laws, and only in its directly controlled county. Unsupported
+government strategies fail closed rather than borrowing a town or royal office.
+
+`FB.industryLaws.assemblyMembers(state,id,consumer,repealId?)` is a pure projection;
+`assemblyList(state,consumer)` lists applicable definitions. `quoteAssembly(state,
+id,consumer,action,voteId?,memberId?,posture?,repealId?)` reviews `begin`, `ballot`,
+`withdraw` or `resolve`. Consumer is `town` or `estates`; explicit posture is
+`support`, `oppose` or `abstain`. Only the current living player's eligible bench
+can explicitly vote; other principals use the same deterministic interest
+projection. `commitAssembly(state,quote)` rechecks the complete review before a
+single mutation. Begin reserves the annual session without money or a day;
+withdrawal retains that reservation. Resolve closes interrupted/expired hearings
+without enactment, rejects failed quorum/assent or enacts/repeals through the
+existing law owner. Quotes, replacement principals and restore never enact.
+
+The optional schema-1 law ledger additionally accepts `votes`, at most 64 rows.
+Each row stores id, definitionId, consumer, proposerId, original issuer, repealId,
+startedTurn, endTurn, principal-bound ballots, status, endedTurn, lawId and result.
+Status is pending, withdrawn, invalidated, rejected or passed. A decided result
+stores member snapshots and total/cast/support weight, quorum, threshold and
+controlling-court consent; no rendered names or prose are saved. Ballots never
+transfer to a replacement person or ruler generation. Every deliberative law and
+repeal must retain its passed approval record. Malformed tallies, duplicate
+pending hearings, missing approval and changed imported content reject before
+adoption. Legacy ledgers need no votes array; no save-envelope version changes.
+
+`industryLaws` is a keyed JSON-mod table of at most 64 complete definitions.
+Definitions replace by id; executable strategies remain in `js/industry_laws.js`.
+No declaration enacts itself or changes a released opening's defaults.
+
+```json
+{"industryLaws":{"river_permission":{
+  "schema":1,"motionId":"river_permission","bookmarkId":"1204",
+  "provinceId":"london","enterpriseType":"market_stall_business",
+  "minYear":1204,"maxYear":1220,"mode":"license","fee":1.25,
+  "permitDays":45,"durationDays":180,"transitionDays":7,
+  "exemptions":[{"kind":"home_province","id":"york","fee":0.5,"permission":true}]
+}},"localCouncilMotions":{"river_permission":{
+  "name":"River permissions","desc":"An optional fictional market rule.",
+  "icon":"⚖","fx":{}
+}}}
+```
+
+- `schema` is 1. Definition ids are lowercase snake case, at most 80 characters.
+- `motionId` uniquely names an ordinary `localCouncilMotions` display record.
+  Its `name` and `desc` use the established localization owner, including imported
+  English fallback. Its optional `fx` must be empty: enactment cannot also grant
+  personal ordinance bonuses.
+- `bookmarkId` names an existing world; `provinceId` must be an inhabited county
+  in one of its supported revisions. `minYear`/`maxYear` are inclusive integers
+  from 1 through 3000 and bound new proposals, not an already enacted term.
+- `enterpriseType` currently supports only `market_stall_business`.
+- `mode` is `license` or `prohibition`. `fee` is a finite amount from 0 through
+  10000 and must be zero for a prohibition. `durationDays` is 1–3600;
+  `permitDays` is 1 through the duration; `transitionDays` is 0 through the duration.
+  These are integer days from approval or payment, with exclusive end turns.
+- `exemptions` is an explicit array of at most 16 beneficiaries. Each has
+  `kind:"home_province"`, an inhabited province `id` in the named world, a
+  `fee` between zero and the ordinary fee, and boolean `permission`. Matching
+  reads the household's current residence, not a worker's birthplace. Multiple
+  matches use the lowest fee and any permission grant. A prohibition exemption
+  must grant permission to allow operation. Residence is a declared simulation
+  criterion and does not establish historical citizenship.
+- Optional `offense:{id,penalty:"fine",amount,closure?}` declares a snake-case
+  offense identity and amount from 0 through 10000. `closure` is an optional
+  boolean, default false. Only actual unauthorized productive operation creates
+  evidence. The canonical court may impose this fine and, when declared, close
+  the affected operation while the law is active. Closure retains ownership.
+  Stronger sanctions and private-asset transfers are unsupported and reject.
+- Optional `relief:{days,chance}` declares temporary-exemption petitions, with
+  integer `days` from 1 through durationDays and finite `chance` from 0 through 1.
+  A granted exemption waives the fee and prohibition for the original operator
+  and enterprise until its deadline. A refused or expired request cannot be
+  rerolled for the same business/law/kind. Simple laws also use this chance for
+  repeal petitions; deliberative repeal still requires its ordinary town vote.
+- Unrecognized fields, invalid references and contradictory terms reject the
+  whole candidate before publication or RNG/UID changes.
+
+`FB.industryLaws.quoteMotion` and `validMotion` expose the shared council review;
+`FB.proposeLocalCouncilMotion(state,motionId,quote)` submits it to the existing
+approval owner. A stale or unauthorized quote rejects before the seeded vote.
+`operation(state,enterprise)` exposes matching effective laws, fees, exemptions,
+transition, permit dates and permission. `quoteOperation`/`commitOperation` support
+`pay`, `pause`, `close`, `resume` and explicit `violate`; acquisition uses `enterprisePurchaseStatus`
+and `acquireEnterprise`, including auction acquisitions. Shared staffing and
+yield consumers require lawful permission or the current original operator's
+deliberate-violation authorization. No NPC enterprise ledger is supplied.
+
+The optional schema-1 `state.industryLaws` stores `laws`, `permits` and `choices`.
+Law rows retain `id`, `definitionId`, exact `terms`, original `issuer` (kind
+`local_council`, or `estates` for deliberative laws; county, realm and character), `payeeRealmId`, `startTurn`, `endTurn`,
+`transitionEndTurn`, `existingEnterpriseUids` and nullable `repealedTurn`.
+Repealed rows also retain their distinct `repealer`. Permit rows retain `id`,
+`lawId`, `enterpriseUid`, household `payer:"player"`, original `payeeRealmId`,
+actual `amount`, `paidTurn` and `endTurn`. They are paid obligations, not unpaid
+debt or automatically renewed subscriptions. Choice rows retain `enterpriseUid`,
+`status` (`open`, `pause`, `close`, `violate`) and `turn`; violation also retains
+`actorId`. Optional `closedBy` points to the original judicial closure. Closure retains ownership.
+Limits are 256 laws, 4096 permits and 512 choices. Validation never creates a
+missing ledger or replays a transaction. Exact imported content remains covered
+by the ordinary mod fingerprint.
+
+Laws survive issuer and household succession. Losing the issuing realm's county
+control suspends future restrictions and fees; recovering control resumes the
+original unexpired term. Repeal and expiry do not refund or remove prior paid
+permissions. Existing property has its saved lawful transition. Paid permissions
+follow the stable enterprise UID within the household; another UID cannot reuse
+them. External business sale and NPC business ownership are unsupported. Original
+payment facts must remain with their payer if a later transfer consumer is added.
+See [Targeted operating laws](designs/industry-laws.md) for lifecycle and accounts.
+
+`quotePetition(state,enterpriseUid,lawId,kind)` / `commitPetition` support
+`exemption` and `repeal`. A deliberative repeal returns the existing assembly
+quote and opens its ordinary town hearing, with optional `petitionEnterpriseUid`
+on that vote. The affected current owner may request it without gaining a seat.
+Only one petition hearing per proposer per 360 days is available. Other hearing
+eligibility, ballots, deadlines and consent remain unchanged. The normal seeded
+simple-law petition uses an optional `petitions` array capped at 512, retaining
+id, kind, lawId, enterpriseUid, actorId, turn, granted and endTurn.
+
+Actual market/livelihood settlement calls `recordSeason`, iterating only the
+bounded committed enterprise choices. `violations` has at most 512 rows, unique
+by law, enterprise UID and original operator. Each retains id, lawId,
+enterpriseUid, actorId, provinceId, homeProvinceId, turn, positive actual output,
+fee, material evidence, nullable caseId, resolved and judgment. The canonical
+justice offense kind is `industry_violation`; its source is `industry:` plus the
+violation id, authority is the original issuing realm, and severity is 1.
+Arbitrary calls cannot record this kind without the actual operating evidence.
+`quoteComplaint` / `answerComplaint` use the original competent court's arrest
+projection and normal queued player response. Absence of physical custody blocks
+judgment. Repeated detection and filing cannot duplicate a source or payment.
+
+Only fine and mercy sentences are supported for these offenses, intersected with
+current court procedures and distribution rules. Fine definitions must close
+the case and cannot also forgive other cases, preventing repeated collection
+through a custom open-case fine.
+Historically overlapping paid permissions or granted exemptions invalidate a
+backdated saved accusation; same-day later compliance never erases prior output.
+The fine's amount is the frozen offense amount; it credits the original public
+account. `judgment` retains turn,
+fine, paid and closure. Insufficient funds leave a personal balance without a new
+case; `quoteDebt` / `payDebt` settle that balance once from the original operator.
+Household succession transfers neither authorization nor personal liability.
+Court succession retains the original case but invalidates a pending review.
+Lost jurisdiction suspends enforcement and operation closure. Repeal/expiry remove
+future restrictions while retaining evidence of actual prior operation and
+already imposed balances. No confiscation or unrelated property is supported.
+Matching restore validates these optional facts without replay or initialization.
+
 ## Family enterprises
+
+Optional [industry operating laws](#industry-operating-laws) add reviewed local
+permission fees or prohibitions to market-stall purchase and production. They
+do not change the enterprise's ownership, staffing or original definition.
 
 `FBDATA.enterprises` (in `data/economy.js`, mod key `enterprises`) defines repeatable
 productive property:
@@ -5832,6 +6050,31 @@ actor requires realmId and may name character as an exact character id or {story
 
 conditions is an array of records. kind:'owner' needs provinceId and realmId and requires that owner, normally for a capital. kind:'ruler' needs realmId and character and requires the named living ruler. kind:'landless' needs realmId and forbids prior territorial settlement. kind:'host' needs hostId and realmId and requires the existing living army. Unknown condition kinds are rejected. Busy actor and target courts wait rather than declaring a second war.
 
+Optional admission has exactly schema:1, mode:'ordinary_declaration' and
+cause:'aggression'. Unknown fields, versions, modes or causes reject. It requires
+real living current court incumbents, current attacker public readiness, ordinary
+war permission and frontier contact. An unlawful declaration or ordinary religious
+policy block waits. A player defender needs readiness to volunteer through the story;
+the defender has no veto over an unrelated ordinary attack. A player attacker must
+have the same aggression objective in the ordinary cause catalogue and reviews its
+current political costs. Both AI and player declarations use the ordinary aggression
+consequence writer. Actor and optional target-owner ids must resolve in each attached
+world, and the objective must be inhabited. No commission, migrationId, settlement,
+settlementForm, firstDate or lastDate composes with this policy. The supported offer
+window uses firstYear/lastYear and closes on the last day of lastYear; it adds no
+exact-date capability. Omission preserves existing campaign admission.
+
+For this policy a refused registration spends no duration, costs or player decision.
+A successful declaration stamps the existing war id, original commitment turn,
+duration-derived deadline, actor character/generation and target owner. Those facts
+survive starting-court adoption through the existing alias/remapping contract; owning
+one county supplies no original-court provenance. Current-content validation rejects
+pending commitment stamps, incompatible phases, unknown record fields and mismatched
+retained wars. Ordinary ended-war pruning remains supported. Restore never retries a
+declaration or enrolls a missing story. The current save envelope and campaign record
+shape are unchanged. Complete independent JSON policies are in
+tests/e2e/fixtures/authoring/frontier-campaigns.json.
+
 commission declares source and issuerRealmId. Recognition names the actor realm as subject and scope and uses the ordinary authority boundary. An existing effective recognition from that issuer may be reused. A later loss of the exact recognition interrupts the opportunity; it is not silently reaffirmed after succession. The story stores the commission id without granting the ruler property.
 
 migrationId names an existing FBDATA.federateMigrations definition. Its actor realm, target, patron and host must match the campaign conditions. The type reuses the named host and cannot manufacture lost troops. It creates at most one moving court and contract, negotiates through ordinary government AI and requests force only after the commission's terms become effective. War must secure the objective and the ordinary claims session must settle it before the story records won. Legacy already-declared wars remain ordinary wars without a newly synthesized migration.
@@ -6468,6 +6711,8 @@ Polity foundations accept rebelling, founded, failed and diverted. Rebellion req
 Holy-war triggers are called, won, failed, declined and diverted. Called requires the matching live campaign id, calledTurn and faith and reaches its actual objectiveCounties. Outcomes use that campaign's nonhistorical recorded target; a missing campaign supplies closure only to previous recipients. Declined and diverted use previous reach. Historical seeds are never occurrences. These reports create no preaching, contribution, vow, harm or travel transaction. Reviews include current source-party identities, life and generation so changed courts invalidate confirmation. household-settlement-observers.json demonstrates two independent imported sources with different milestones and expiry. These county source adapters retain the existing bounded version-1 save shape.
 
 Local reach uses the declared affected places and, for active campaigns, real matching host/war locations. Previous reach requires an earlier local notice from this observer. Home and actual presence must agree. Initial source facts are baselined; opening context is an explicit exception. Declarations contain no callbacks or unrestricted state paths. The shared story compiler validates imported and bundled definitions identically and never initializes a campaign while validating candidates.
+
+provinceIds bounds delivery and confirmation even when a source's matching host moves into another county. The 634-local-notices.json example supplies a five-day host-only campaign report at Emesa and an independent two-day authority report in the Hira district. Both import through ordinary Mods; unsupported demands remain rejected rather than being inferred from the campaign result.
 
 Version-1 observer records are optional state.stories entries with householdId, actorId, revision, attachedTurn, cursors, controls, reached, pending, history and householdReceipts. Cursors hold semantic source tokens and nonfuture turns. Controls retain old/new sovereign and nullable occurrence turn. Pending notices retain their beat, common receipt key, occurrence, source token, county, offered/expiry turns and current controller/holder/sovereign/generation stamp. Limits are eight pending notices, sixteen decisions, thirty-two reached counties and sixty-four closures per observer. The validator rejects unknown fields and malformed ids, decisions, bounds, receipt tuples or future stamps. No migration or restore hook creates missing records or replays a source transaction. The household-observers.json file supplies two independent campaign observers through the ordinary Mods picker.
 
@@ -7258,3 +7503,20 @@ Retired controls: aiWarChance has no reader and is no longer declared. Use war c
 A partial diplomacy aimOrder is an ordering prefix, not an eligibility list: omitted registered aims retain their original relative order after the prefix, and greater trait weights still win. Expansion contacts count adjacency to the deciding realm's territory, including vassal subtrees. A zero-total weighted investment choice declines private-baron construction without spending or drawing a choice.
 
 docs/research/ai-decision-acceptance.md maps every parameter to its active owner, distinguishes realm decisions from global actor/rebel/approach queues, describes actual fact projections and remaining engine invariants, and records complete import/restore/replay and distribution acceptance commands. Distance in capital-based diplomatic projections is squared map distance; approach relevance keeps its own existing distance unit. Investment ranking quotes actual county/profile cost when requested and derives frontier from neighboring ownership. A policy does not bypass a later canonical transaction review. The old aiWarChance default was unread and has been removed; use aiWarPolicy chance/bellicoseChance or an existing explicit government warChance. No new saved policy record or technology capability is introduced.
+
+## Family landmark presentation records
+
+`state.lifeHistories` remains version 1: `people` maps stable character ids to
+detached `identity`, `since`, `touched`, `entries` and optional retention flags.
+Each entry retains `turn`, `year`, opaque `msg`, `weight` and `size`. Played lives
+keep at most 40 entries; the shared temporary and preserved limits are unchanged.
+The additional message kinds `news.biography.property`, `news.biography.enterprise`
+and `news.biography.relocation` use committed acquisition or permanent-residence
+facts. Property means a freehold plot, enterprise names use the ordinary typed
+data parameter, and place names are captured at the actual transaction site.
+No historical transaction is inferred from a mod's starting property or rank.
+
+`FB.familyLandmarks(state)` is a read-only selection from played biographies.
+It returns `{record, entries}` rows without changing the archive. Ordinary JSON
+enterprise definitions still use the canonical acquisition transaction; no new
+mod root, executable authoring hook, save envelope or history-import API exists.

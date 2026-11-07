@@ -494,6 +494,18 @@ FBDATA.localCouncilMotions = {
     name:'Watch and Ward', icon:'🛡',
     desc:'An organized town watch adds 30 men to the household retinue.',
     fx:{ retinue:30 }
+  },
+  london_market_levy: {
+    name:'London market levy hearing', icon:'⚖', fx:{},
+    desc:'Review a levy of {money:3} per 90 days on London market stalls, exempting resident households. Town trading and civic interests or the controlling court’s Estates must consent. This is a bounded reconstruction, not a historical fee schedule.'
+  },
+  london_market_restriction: {
+    name:'London market restriction hearing', icon:'⚖', fx:{},
+    desc:'Review a 180-day restriction on London market stalls, with a 30-day transition and no exemptions. Traders lose operating access. Town interests or the controlling court’s Estates decide; property remains with its owners.'
+  },
+  london_stall_license: {
+    name:'London stall permissions', icon:'⚖', fx:{},
+    desc:'An optional reconstruction of chartered trading privileges: market stalls pay {money:2} for 90 days of operation, with 30 days to arrange existing businesses. Households resident in London are exempt. Residence represents civic privilege at game scale; this is not a historical fee schedule.'
   }
 };
 

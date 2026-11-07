@@ -111,6 +111,12 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      episcopal_rent_compositions:{ mode:'none', rationale:'Civil compositions of an existing institutional rent require actual property, living parties, competent temporal jurisdiction and conserved funds. Neither spiritual office nor a discovery supplies title or an unpaid debt.' },
+      targeted_industry_laws:{ mode:'none', rationale:'Local operating permissions, civic exemptions and prohibitions are political and economic obligations, independent of discovery. Enterprises and their expansions retain their ordinary technology gates.' },
+      affected_industry_law_consent:{ mode:'none', rationale:'Affected trading, civic and noble interests deliberate through current seats, territory and consent. Political membership and lawful access require no discovery; enterprise technology gates remain independent.' },
+      industry_law_enforcement:{ mode:'none', rationale:'Compliance, relief petitions, evidence challenges, fines and business closure are baseline political and judicial remedies. Current custody, authority and enterprise technology remain with their existing owners.' },
+      industry_law_relief:{ mode:'none', rationale:'Temporary exemptions and affected-owner repeal petitions depend on current court competence, declared terms and existing consent, not research.' },
+      industry_law_closure:{ mode:'none', rationale:'Closing the named operation is a baseline judicial remedy that retains ownership. Fine payment, enterprise technology and lawful reopening keep their ordinary owners.' },
       expedition_local_passage_policy:{ mode:'none', rationale:'Outside willingness to review local passage is political policy, not a discovery. Actual government consent, original authority, finite capacity and payment remain binding; equipment, supply and physical movement retain their independent gates.' },
       adopted_dynastic_public_treasury:{ mode:'none', rationale:'Preserving an existing public account through ordinary ruler adoption is accounting and identity continuity. Household money stays private; government, military, market and construction gates retain their existing requirements.' },
       expedition_subordinate_formation_authority:{ mode:'none', rationale:'Exact direct-holder authority under an existing sovereign is political jurisdiction. Consent, command, funding, unit and finite resource gates remain authoritative.' },
@@ -195,6 +201,9 @@ window.FBDATA = window.FBDATA || {};
       period_493_african_campaign:{ mode:'none', rationale:'The African expedition uses existing armies, transport and supply. Its date window adds no separate gateable military capability.' },
       period_493_italian_campaign:{ mode:'none', rationale:'The Italian opportunity requires an actual eastern African foothold and ordinary conquest. Research cannot replace those territorial conditions.' },
       period_711_crossing:{ mode:'none', rationale:'The crossing uses existing coastal possession, ordinary armies and the registered campaign type. Its political opportunity requires no new discovery; normal army transport and supply rules remain.' },
+      campaign_ordinary_admission:{ mode:'none', rationale:'Reviewing a conditional ordinary declaration requires no discovery. Living courts, public authority, consent, current frontier, war laws and ordinary declaration consequences remain binding.' },
+      period_634_syrian_front:{ mode:'none', rationale:'A conditional Damascus district objective uses current courts and ordinary war. Political opportunity requires no invention; military technology retains its ordinary role.' },
+      period_634_iraqi_front:{ mode:'none', rationale:'A separate Hira district opportunity depends on current control and lawful ordinary declaration. No discovery or Syrian outcome gates this political choice.' },
       period_711_toledo:{ mode:'none', rationale:'Contesting Toledo depends on a surviving coastal foothold, living courts and ordinary war. A capital campaign is a political opportunity, not an invention.' },
       period_711_septimania:{ mode:'none', rationale:'Contesting Narbonne depends on actual Iberian possession and a surviving northeastern Gothic court. Ordinary military and territorial rules remain sufficient.' },
       period_711_gaul:{ mode:'none', rationale:'An Aquitanian campaign depends on actual Septimanian possession, living rulers and ordinary armies. Regional political timing creates no credible research gate.' },

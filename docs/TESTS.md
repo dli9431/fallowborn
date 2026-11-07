@@ -1,5 +1,34 @@
 Autumn 634 core identity coverage
 
+634-catalogue-integration.spec.js checks the complete standard-edition loader
+order, all 33 regional inputs, 527 anchors, 506 inhabited districts, 122 court
+replacements and six local institutions. It inventories every offered start and
+its exact world/personal attachment ledger, checks the real beginning picker,
+and follows quiet household or court decisions without requiring either war.
+All eight starts preserve current-content facts and spent resources through a
+different-date activation, hidden-revision restore, re-save and second restore.
+The incumbent starts inherit the original court's exact technology record with
+its existing historical-seed marker completed, preventing reseeding on restore.
+Personal death and succession checks use detached branches without advancing
+the daily loop. Independent Syrian and Iraqi cases cover no start, changed
+ownership, ordinary declaration, interruption, victory and saved commitment.
+An ordinary JSON import covers a changed institution configuration and a real
+household expense, reload, exact fingerprints and atomic malformed/changed
+content rejection. Missing personal content withholds its start while healthy
+siblings and an unrelated date remain available. Source checks also protect
+the public runtime asset boundary and type-owned engine dispatch. The focused
+runtime declaration lists the actual dated sources and their shared consumers;
+the spec exercises Chromium served content, not packaged, device or visual
+acceptance.
+
+The same spec checks that the assembled Damascus program and optional goals have
+complete literal display owners before composition. Its pinned public source
+fixture compares all four effective Damascus declarations exactly, including
+their ordering, against the former composer. The normal start cases cover quiet
+choices, local receipt priority, interruption and repeat restoration.
+
+634-ruler-agendas.spec.js covers the two assembled incumbent starts, unchanged earlier revision attachments and visibility, four-review peaceful completion, exact identity/rank/faith/treasury adoption, independent delegated frontier decisions, actual ordinary costs and blockers, stale confirmation, defender participation, truthful third-party diversion, public-appointment observation, original-person/generation/jurisdiction interruption, absent-track restoration and repeated current-content saves. A compact story sheet shows the original portrait and retains nonzero scroll and focus through character and decision returns. The independent 634-court-agenda.json enters through the ordinary Mods file picker and varies source, review order and earliest season; malformed source operations reject without data/RNG/UID mutation, and changed content under the same mod name rejects the saved campaign atomically. These bounded checks do not establish device, visual or longer campaign acceptance.
+
 634-identities.spec.js covers scoped local faith availability, exact unchanged
 resident weights and unrelated communities, fresh fixed household starts and
 matching restoration. Pinned predecessor data under fixtures/634-core-identities
@@ -11,6 +40,10 @@ religious law remains the existing fallback. These bounded checks do not replace
 owner runtime, historical or device acceptance.
 
 Retained shared definitions and fixed-start identities
+
+Additional estuary-governments.json and upland-governments.json inputs cover additive government forms, administration profiles and aristocratic profiles through trusted native evidence and real ordinary JSON file imports. retained-shared-identities.spec.js checks missing evidence, attempted replacement, forged current rows and warmed stale-live definitions independently for each root, with pure rejection and exact subsequent proof. A hidden new revision preserves visible retained raw/effective worlds, menu visibility, spent resources, exact people, RNG and uid through repeated loads and cold re-saves. Boolean visibility overrides also validate through ordinary JSON; malformed values remain rejected. Existing three-root evidence, configuration, edition and forgery controls remain in place.
+
+western-rulers-1096.spec.js additionally requires Raymond's existing Elvira/Bertrand stepfamily link before the first save, preserves biological parentage and named ids, and checks idempotent normalization and exact people, RNG and uid through repeated restore.
 
 retained-shared-identities.spec.js uses two independent fictional native
 predecessor/current catalogues and actual JSON file imports. It creates genuine
@@ -63,6 +96,20 @@ The scenery revision compatibility journeys separate predecessor setup, save/rel
 634-scenery-revisions.spec.js pins the pre-protection source at 51c5f5751e8e29a1136aa1518e1e7c2f858728ea and its complete-publication root evidence. It creates actual predecessor envelopes through two ordinary JSON file imports, then restores explicit and inferred conversions with the ordinary fresh catalogue installed. Coverage includes both player settlement routes, spent resources, unchanged people and public records, repeat restoration, ordinary re-save and fresh-page reload, strict JSON/bundle rejection, atomic malformed protected saves, cross-revision cache binding, all 21 source ids, all 506 inhabited rows and every existing start binding. Standard unmodded and CrazyGames use their own signatures. No fixture substitutes a recomputed new-catalogue signature for an old save.
 
 bookmark-composition-native.spec.js compares the exact retained projection of all public definition roots, native worlds, revisions, starts and story order against the unchanged native-before-shared fixtures. Only the enumerated 634 revision, fresh pointer, separately asserted visibility change and exact previously merged quadrant and technology-review deltas are reconciled. merged-corrections.json records the old/new map values, Aquitaine insertion and minority-stewardship technology-review rationale; both sides must match those declarations before full equality. Koten and its graph remain in the full equality comparison. Its unrelated-date spent-resource journeys use ordinary unmodded signatures rather than turning a diagnostic fingerprint application into a synthetic modded save. Actual persisted mod compatibility for the certified 634 predecessor is covered by 634-scenery-revisions.spec.js. 634-first-playable.spec.js and 634-rulers.spec.js name ordinary_settlement_v2 while retaining baseline opening and diagnostic checks.
+
+Office applicability and ruler-save regression coverage
+
+expedition-codec-validation.spec.js imports independent harbor and dune worlds with an original dynastic home provider and a preparation-bound outside review. It compares raw compact, character-id-only, realm-live-only, combined partial and fully expanded snapshots through direct story checks and platform validation. Preparing and genuinely funded/formed checkpoints restore twice with exact people, accounts, authority, host, population, market, story, RNG, UID and signature preservation. Forged current providers or counterparties, explicit null/conflicting royal links, wrong character identity or lineage, missing people, dead realms and extra optional fields reject without mutating caller or live state. western-rulers-1096.spec.js retains its ordinary pilgrim parity-helper import alongside the separate ruler-start helper.
+
+political-religious-head.spec.js additionally stages independent native southern and imported estuary predecessor/current revisions with the same source polities. It checks strict candidate validation, no additive office, pointer or vacancy in headless predecessors, ordinary dynastic restore, unchanged state/RNG/UID, cross-revision activation and repeated matching restoration. Opted-in counterparts retain recognized bindings and reject invalid sources, succession families, seats, faiths and explicit mapping attempts.
+
+administrative-monarchy.spec.js additionally enables Roman petitions in each public court's era and checks that the legacy catalogue, appointment and transition paths cannot bypass its administration profile. Both distinct public profiles retain the ordinary source-backed appointment path and reject the other's offices.
+
+adopted-public-treasury.spec.js additionally checks compact omitted and expanded true realm live flags in both independent JSON imports. Detached platform validation and migration preserve raw input, live state, cash, RNG and UID. Explicit dead, null, numeric, string, array and object flags reject before adoption. Existing forged, missing, duplicated and restocked account checks remain intact.
+
+ruler-start-restoration.spec.js uses real Godfrey, Raymond, Bohemond and Kilij Arslan starts, requires household succession and canonical vassal contracts before saving, checks idempotent local setup, and compares start, stories, people, ownership, holders, realms, player, hosts, authority, RNG, UID and signatures through two matching restores. The scenario-local rulers-1096.js helper preserves exact canonical seed assertions, including the ruler's nonprincipal identity suffix. western-rulers-1096.spec.js and eastern-rulers-1096.spec.js use that helper without changing universal parity or navigation. Eastern restore still crosses an actual different world through the supported load boundary, and its detached mod assertions use the current validation array contract.
+
+1096-world-stories.spec.js asserts the exact composed story list and five separately authored mobile declarations, while retaining the original call's empty seeded-host ledger, once-only behavior and no involuntary vow. It separately pins the retained baseline to its two world stories and no mobile declarations.
 
 political-religious-head.spec.js covers native and ordinary JSON political office
 configurations with distinct age/sex, constituency, polity and seat rules. It checks
@@ -498,6 +545,64 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+`industry-law-enforcement.spec.js` covers the native council/vote/output/arrest/
+hearing/fine/closure/repeal loop, absence of offenses during lawful or unproductive
+operation, personal liability after insufficient payment, once-only detection and
+settlement, original court and actor identities, stale reviews, lost custody and
+jurisdiction, successful canonical challenge, sentence limits under both runtime
+distribution flags, ordinary JSON relief/fine/closure variation, malformed-import
+purity, current pending and imposed save round trips, atomic malformed-evidence
+rejection (including backdated permission overlap and unsupported resolved
+sentences), rejection of repeatable custom fines, ordinary justice's stamped review
+shape and pending restore, canonical pardon flags, overlapping judged closures,
+and compact confirmation/cancellation returns. Runtime distribution checks
+exercise the common sentencing boundaries in an activated standard world;
+they do not establish a separate distribution's catalogue activation or device
+acceptance. No existing regression assertions are replaced by this coverage.
+
+`industry-law-assemblies.spec.js` covers native town and Estates entry points,
+actual exposure and distinct electorates, bounded representation, explicit
+support/opposition/abstention, quorum rejection, withdrawal, one-time enactment,
+stale and unauthorized reviews, member death/replacement, changed authority,
+succession, expiry, territorial/delegated consent boundaries and policy-campaign
+exclusion. Its ordinary JSON file import varies weights, quorum, exemptions,
+fees and duration. Current pending/completed restore, re-save/reload and atomic
+malformed approval rejection preserve resources and identities. Compact modal
+journeys cover ballot controls, completed results and retained parent navigation.
+
+episcopal-claims.spec.js covers native Roman and ordinary imported fictional
+rent compositions over actual private grants: pure reads/validation, contested
+evidence, competent/refused enforcement, conserved private-to-institutional
+compensation, paired recurring remittances and once-only seasonal settlement,
+expiry, stale/poor acceptance, institutional and private succession, occupation
+and replaced grants, exact matching restore and atomic malformed save rejection.
+The three ordinary deed entries and mobile scroll/focus return are included.
+These bounded checks do not establish historical litigation or device acceptance.
+
+`industry-laws.spec.js` covers optional London council enactment and repeal,
+pure/cancelled reviews, seeded refusal, unauthorized and stale rejection,
+existing-business grace, actual exemptions, paid permissions and renewal,
+prohibited income/physical output/upgrade effects, retained pause/closure,
+remote acquisition and original-payee conservation. It imports the independent
+fictional river JSON through Mods and covers reduced fees and prohibition,
+malformed-import purity, issuer generation/control changes, repeated current
+save round trips, malformed receipts, exact mod mismatch and phone navigation.
+It also covers the actual household succession owner, atomic multi-recipient
+account preflight, suspended-law duplication, dead-head rejection and the
+auction's combined-price and stale-review gates before bidding advances.
+It does not establish device, appearance or owner play acceptance.
+
+634-local-notices.spec.js covers the hidden assembled revision's two five-beat campaign observers and enumerated sovereignty reports, ordinary farmer/craftsman delivery, quiet initial source snapshots, real campaign endings, scoped matching forces, actual residence/presence, personal control priority before dispatch and through expiry, shared victory/control receipts, costless acknowledgment, repeated current-content save/restore, absent observer preservation and atomic malformed-save rejection. The real 634-local-notices.json import varies source, reach and expiry, checks unsupported demands and pure rejection, retains exact mod content and rejects changed content. No historical siege, harm, population or payment is inferred by these reports.
+
+634-frontier-campaigns.spec.js covers the hidden assembled Syrian and Iraqi
+district opportunities, independent choices, finite offer and commitment
+boundaries, ordinary declaration permission, refused-start atomicity, political
+costs, current control, living courts, succession, adoption before and after story
+initialization, timeout and ordinary war endings. It imports independent JSON
+policies through Mods, checks detached malformed-input/save rejection and repeated
+matching restoration without another declaration, cost or historical event.
+Boundaries are staged; these checks establish no long campaign or device acceptance.
+
 household-control-predicate.spec.js imports two independent household graphs and covers unchanged baselines, actual sovereign changes before and after the track hook, choice and automatic branches, a different sovereign at fresh attachment, pure queries and detached rejection of malformed predicates. Save checks retain pending control facts, resolved and expired receipts, existing graph closure routes and missing records without reinitialization. These staged boundaries do not establish longer campaign or device acceptance.
 
 household-observer-local-control.spec.js imports ordinary local-control observers in a world without campaigns. It covers seeded unchanged baselines, actual transfers, separate county cursors, local presence, generation invalidation, personal priority, shared observer receipts, independent expiry/continuation terms, pure malformed-source rejection, pending/closed/unobserved restore, absent records and strict baseline/token/receipt validation. Retained campaign and exact-site source configurations also round trip with their existing receipt versions and behavior. All boundaries are staged without a long simulation.
@@ -885,6 +990,8 @@ tests/e2e/specs/marriage-discovery.spec.js bounds the court and character return
 
 634-damascus-household.spec.js covers the hidden complete Damascus start, resident identity and layout, ordinary craft income, stationary six-review completion, costless and stale choices, protagonist-only departure, death/succession, absent legacy records, matching hidden save continuity, actual local-control notices and remote/war silence. An independent household-plan JSON fixture is imported through Mods and retains its own exact save identity. These bounded checks do not establish device or longer campaign acceptance.
 
+634-medina-household.spec.js covers the selectable resident start and hidden expanded-court visibility, both stationary conclusions, actual paid farming, the optional unpaid holding day, private provisions spending, stale reviews and protagonist interruption. Integrated-court cases distinguish the private household from public authority and baseline opening accession separately from later local sovereign-change notices. Current-content round trips retain decisions, spending and notice receipts; an independent provisions configuration enters through a real Mods JSON import and malformed progress rejects atomically. These checks do not establish visual, device or long-campaign acceptance.
+
 634-first-playable.spec.js checks canonical publication diagnostics and the standard/CrazyGames trait scheme preferences, including retained ordering, excluded plots and rejection of unknown references. ai-decision-integration.spec.js compares research records structurally across restore, normalizes completed/exposed set order and RNG bit representation, and retains exact active-slot, progress, reserve, priority and UID comparisons. Its neutral ruler fixture explicitly clears current character traits; trait-sensitive behavior remains covered by ai-war-preferences.spec.js.
 
 story-placement.spec.js covers story cards placed inside their Deeds sections. It validates the shipped FBDATA.storyPlacements table, requires a record for every registered story type and rejects the retired stories renderer. Damascus 634 checks that the household track and its goals lead Work & Wealth, count in the header, carry the waiting marker and take the section's first item key. A collapsed section stays closed until a new stage waits. Mainz 1096 checks Affairs of the world, its Back to the list and Close focus return. The action-type layout and two ordinary JSON imports, story-placement-family.json and story-placement-ledger.json, move entries through type and single-story records, while malformed placement rejects without publication. The leaf helper support/game/story-placement.js opens a story's placed section for 476-presentation.spec.js and 476-world-stories.spec.js, and deeds-registry.spec.js now checks that story cards follow Daily Focus inside their section.
@@ -940,4 +1047,23 @@ The local-access outside-decline journey expands the ordinary Rank and Realm dee
 
 Prerequisite regression coverage
 
+pilgrim-household-1096.spec.js covers the Cologne picker and start code, ordinary work and solo pilgrimage, independent Peter/Walter preparation and finite payment, civilian admission, named family consent and separate host acceptance, bounded actual camp arrival, field loss, expiry, full following loss, paid recovery beside an untouched alternate admission and retained two-track saves. Its fixed-income ordinary JSON fixture completes the ten-gold goal through actual focus ticks; the native-income case checks the paid ledger without assuming a completion date. The closed-admission JSON fixture preserves refusal and ordinary household choices. Staged route boundaries do not establish natural multi-year travel or historical acceptance.
+
 revision-ruler-government.spec.js covers two independent ordinary JSON configurations, retained/current government and combined faith projections, strict pure rejection, picker and start-code adoption and repeated save restoration. household-parties.spec.js covers empty/consented compact associations and requested/active/ended camp records with omitted character ids, preserved decisions and strict forged-identity rejection. preparation-ration-targets.spec.js covers exactly funded fractional formation, real shortfall rejection, one finite food purchase and no-replay restoration. ai-treasury-transfers.spec.js covers the combined debit, military reserves, invalid counterparties and unchanged strict ordinary transfers. tools/test_i18n_regional_literals.py covers preserved scaffold keys in inert court files, independent configurations, strict literals, aliases, collisions and the committed court shards. Execution and runtime/device acceptance remain owner-controlled.
+
+household-party-travel-conflicts.spec.js imports independent harbor and upland JSON configurations with two optional participation tracks. It covers ordinary consent and travel, camp expiry and full following dispersal, unchanged unused alternatives, genuine pending/active/suspended and held-location exclusions, rejected transaction purity, exact priced recovery, actual arrival, home-worker availability and resumed farming earnings, and repeated restoration before, during and after recovery. These bounded checkpoints do not establish broader runtime or device acceptance.
+
+634-damascus-program.spec.js covers the assembled Damascus program, all offering revisions and resident identities, seven-stage completeness, peaceful no-work completion, ordinary paid-work progression, death/succession and departure, shared personal/observer incident ownership, stale and remote confirmation rejection, repeated current-content saves and an independent ordinary JSON import. The first-playable attachments remain unchanged.
+
+Family landmarks
+
+family-landmarks.spec.js stages committed plot/enterprise purchases, permanent
+settlement, service and rank records, retirement, death and two played lives.
+It checks truthful attribution, first-rank selection, repeated current-content
+restore without duplicate grants or milestones, pure reads without RNG/UID use,
+40-entry retention under staged writes, and paged biography returns with nonzero
+scroll and focus at desktop and compact widths. No generations are simulated.
+
+634 optional opening goals
+
+634-opening-goals.spec.js covers the six accepted story/historical starts in the assembled court revision: one three-goal profile per protagonist, resolvable fixed target people without friendship, pure projections, repeated current-content save restoration and death archival. Ruler cases complete every goal peacefully, reject repeat choices and archive pending goals on generation loss. Medina and the civilian frontier cases separate ordinary paid focus income from savings and commit actual stationary conclusions. A real independent JSON import changes thresholds, goal count and contacts, preserves spent money across repeated restore and rejects an unknown work source without changing data, RNG or UID. These targeted checks do not establish visual/device or full-suite acceptance.

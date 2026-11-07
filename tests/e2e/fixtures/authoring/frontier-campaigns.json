@@ -1,0 +1,23 @@
+{
+  "name": "Independent court frontier policies",
+  "storyInstances": {
+    "western_counterfront": {
+      "id": "western_counterfront", "type": "campaign",
+      "name": "A counterfront review", "desc": "An independent simulation policy for a southern district objective.",
+      "requires": [], "firstYear": 634, "lastYear": 636, "durationDays": 4,
+      "actor": {"realmId": "byzantium_634"},
+      "target": {"provinceId": "medina", "ownerIds": ["rashidun_634"]},
+      "conditions": [{"kind": "owner", "provinceId": "constantinople", "realmId": "byzantium_634"}],
+      "admission": {"schema": 1, "mode": "ordinary_declaration", "cause": "aggression"}
+    },
+    "eastern_counterfront": {
+      "id": "eastern_counterfront", "type": "campaign",
+      "name": "A second court review", "desc": "An independent simulation policy with a shorter offer and a different governing court.",
+      "requires": [], "firstYear": 634, "lastYear": 634, "durationDays": 2,
+      "actor": {"realmId": "sasanian_634"},
+      "target": {"provinceId": "damascus", "ownerIds": ["byzantium_634"]},
+      "conditions": [{"kind": "owner", "provinceId": "baghdad", "realmId": "sasanian_634"}],
+      "admission": {"schema": 1, "mode": "ordinary_declaration", "cause": "aggression"}
+    }
+  }
+}

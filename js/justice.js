@@ -79,6 +79,22 @@
     var rid = realmOf(s, id);
     return rid ? FB.realmHeldCounties(s, rid).slice().sort() : FB.justiceCounties(s, id);
   };
+  /* A civil rent review uses the actual temporal court, never clerical rank. */
+  FB.justiceCivilRentJurisdiction = function (s, actorId, realmId, provinceId) {
+    var c = realmId && FB.realmRulerCharacterSnapshot(s,realmId);
+    return !!c && c.id === actorId && live(s,actorId) &&
+      !c.captive && !c.exiled && !FB.justiceCustodyOf(s,actorId) &&
+      FB.governments.publicAuthorityReadiness(s,realmId).allowed &&
+      FB.realmTerritory(s,realmId).indexOf(provinceId) >= 0 &&
+      FB.political.power(s,{ kind:'realm',id:realmId },'peace',{ provinceId:provinceId }).allowed;
+  };
+  FB.justiceIndustryJurisdiction = function (s, realmId, provinceId) {
+    var c = realmId === 'player' ? person(s, s.player.charId) : FB.realmRulerCharacterSnapshot(s, realmId);
+    return c && !c.dead && !c.captive && !c.exiled && !FB.justiceCustodyOf(s, c.id) &&
+      FB.justiceRulerEligible(s, c.id) && FB.governments.publicAuthorityReadiness(s, realmId).allowed &&
+      FB.justiceCounties(s, c.id).indexOf(provinceId) >= 0 &&
+      FB.political.power(s, {kind:'realm', id:realmId}, 'peace', {provinceId:provinceId}).allowed ? c.id : null;
+  };
   // No repair here: a sheet must neither materialize rulers nor change saves.
   FB.justiceCustodyOf = function (s, id) {
     var rows = s.intrigue && s.intrigue.captives || [];
@@ -109,6 +125,7 @@
       var row = list[i];
       if (row.accusedId !== target || row.closed || !authorityMatches(s, actor, row.authority) ||
           id && row.id !== id) continue;
+      if (row.kind === 'industry_violation' && (!FB.industryLaws || !FB.industryLaws.caseAvailable(s, row, actor))) continue;
       var law = FB.justiceTradition(s, actor, courtKind,
         { accusedId:target, otherPartyId:row.victimId }).definition;
       var evidence = law && law.justification && law.justification.evidence || [];
@@ -121,8 +138,10 @@
   }
   FB.justiceOffenseFor = caseFor;
   FB.justiceRecordOffense = function (s, actor, target, kind, evidence, successful, victimId, sourceId) {
+    if (kind === 'industry_violation' && (!FB.industryLaws ||
+        !FB.industryLaws.offenseSource(s, sourceId, actor, target) || evidence !== 'material' || !successful || victimId)) return null;
     if (!FB.justiceRulerEligible(s, actor) || !live(s, target) || actor === target ||
-        ['assassination','abduction','fabricated_charge','sabotage','blackmail','rebellion'].indexOf(kind) < 0 ||
+        ['assassination','abduction','fabricated_charge','sabotage','blackmail','rebellion','industry_violation'].indexOf(kind) < 0 ||
         ['testimony', 'material', 'redhanded'].indexOf(evidence) < 0) return null;
     var j = ensure(s), key = authorityKey(s, actor);
     var source = sourceId || kind + ':' + target + ':' + (victimId || '') + ':' + s.turn;
@@ -490,7 +509,7 @@
             rule.successful !== undefined && typeof rule.successful !== 'boolean' ||
             rule.offenseKinds !== undefined && (!Array.isArray(rule.offenseKinds) || !rule.offenseKinds.length ||
               rule.offenseKinds.some(function (value) {
-                return ['assassination','abduction','fabricated_charge','sabotage','blackmail','rebellion'].indexOf(value) < 0;
+                return ['assassination','abduction','fabricated_charge','sabotage','blackmail','rebellion','industry_violation'].indexOf(value) < 0;
               }))) fault(id + '.justification.' + sid);
       });
       ['minor','serious','severe','arbitrary','excessive'].forEach(function (band) {
@@ -564,6 +583,10 @@
     sentence = distributionSentence(s, actor, target, sentence, offenseId, courtKind);
     var def = FBDATA.justiceSentences[sentence], row = held(s, actor, target);
     var offense = caseFor(s, actor, target, offenseId, courtKind), counties = FB.justiceCounties(s, actor);
+    var contextCase = offense || (records(s).offenses || []).filter(function (o) {
+      return o.id === (offenseId || row && row.offenseId);
+    })[0];
+    var industry = FB.industryLaws && FB.industryLaws.sentenceTerms(s, contextCase);
     var legal = FB.justiceTradition(s, actor, courtKind, courtParties(s, actor, target, offenseId, courtKind)), t = legal.definition, sentenceKind = def && def.kind;
     var rule = t && t.justification && t.justification.sentences && t.justification.sentences[sentence];
     var level = rule && rule.level !== undefined ? rule.level : def && def.level;
@@ -575,6 +598,8 @@
         counties.indexOf(s.player.provinceId) >= 0 && actor !== target;
     }
     var regional = def && sentenceAllowed(t, sentence, offense);
+    if (industry && ['fine','pardon'].indexOf(sentenceKind) < 0) regional = false;
+    if (industry && sentenceKind === 'fine' && (def.closesCase === false || def.forgive)) regional = false;
     var needs = sentenceKind === 'ransom' ? 'ransom' : def && def.forgive ? 'pardon' :
       sentenceKind !== 'pardon' ? 'hearing' : null;
     var destination = sentenceKind === 'exile' ? exileDestination(s, counties, location(s, target)) : null;
@@ -583,6 +608,7 @@
       !live(s, target) || actor === target ? 'target' :
       FB.justiceCustodyOf(s, actor) || actor === s.player.charId && s.player.flags.in_prison ? 'confined' :
       !row ? 'custody' : !regional ? 'regional' :
+      industry && sentenceKind !== 'pardon' && (!offense || !FB.treasuryPublicAccountSnapshot(s, industry.payeeRealmId)) ? 'case' :
       needs && !procedure(s, actor, needs, courtKind, target, offenseId) ? 'procedure' :
       offenseId && !offense ? 'case' :
       sentenceKind === 'forfeiture' && !localTitle ? 'title' :
@@ -592,13 +618,16 @@
     var station = target === s.player.charId ? FB.playerStation(s) :
       FB.clamp(live(s, target) ? FB.stationOf(person(s, target)) : 0, 0, 4);
     var fine = Math.max(5, Math.round(((offense ? offense.severity : 1) + 3) * [5,8,12,20,30][station]));
+    if (industry) fine = industry.fine;
     if (sentenceKind === 'ransom') fine = row && row.demand ? row.demand.amount :
       (FBDATA.intrigue.captiveRansoms[station] || 30);
     var amount = def && ['fine','ransom'].indexOf(sentenceKind) >= 0 ? Math.min(fine, live(s, target) ? available(s, target) : 0) : 0;
+    if (industry && sentenceKind === 'fine') amount = Math.min(fine, FB.industryLaws.fineAvailable(s, offense));
     var loss = def && !justified ? -def.penalty : 0;
     if (sentenceKind === 'custody' && row && !row.sentenced) loss = Math.min(0, loss + num(row.unjustPaid, 0));
     return { ready:!blocker, blocker:blocker, actorId:actor, targetId:target, sentence:sentence,
       custody:row, offenseId:offense && offense.id, evidence:offense && offense.evidence,
+      industry:industry,
       justified:justified, level:level, form:legal.id, traditionId:legal.id, courtKind:courtKind, amount:amount, fine:fine, counties:counties,
       courtSource:legal.source, assessorId:legal.assessorId,
       supportCounties:FB.justiceSupportCounties(s, actor),
@@ -693,18 +722,30 @@
     var def = FBDATA.justiceSentences[sentence], row = p.custody;
     var pietyBefore = target === s.player.charId ? num(s.player.piety, 0) : 0;
     var prestigeBefore = target === s.player.charId ? num(s.player.prestige, 0) : 0;
-    if (['fine','ransom'].indexOf(def.kind) >= 0 && !transfer(s, target, actor, p.amount)) return { ok:false, blocker:'funds' };
+    var payingOffense = caseFor(s, actor, target, p.offenseId, courtKind);
+    if (['fine','ransom'].indexOf(def.kind) >= 0 && !(p.industry ? FB.industryLaws.payFine(s, payingOffense, p.amount) :
+        transfer(s, target, actor, p.amount))) return { ok:false, blocker:'funds' };
     j.pending = null;
     var effects = support(s, p.supportCounties, p.support).concat(standingPenalty(s, actor, p.support));
     effects.push({ type:'system', system:'justice', action:sentence,
       days:p.endTurn ? p.endTurn - s.turn : null, lethal:def.kind === 'death',
       permanent:['death','corporal','forfeiture'].indexOf(def.kind) >= 0 });
     if (target === s.player.charId && p.amount) effects.push({ type:'gold', amount:-p.amount });
-    if (actor === s.player.charId && p.amount) effects.push({ type:'gold', amount:p.amount });
+    if (p.industry && def.kind === 'fine') {
+      if (p.industry.closure) effects.push({type:'system', system:'industry_law', action:'closure'});
+      if (p.fine > p.amount) effects.push({type:'system', system:'industry_law', action:'liability', amount:p.fine - p.amount});
+    }
+    if (actor === s.player.charId && p.amount && !p.industry) effects.push({ type:'gold', amount:p.amount });
     var offense = caseFor(s, actor, target, p.offenseId, courtKind);
-    if (offense && def.closesCase !== false) { offense.closed = true; offense.sentence = sentence; }
+    if (offense && def.closesCase !== false) {
+      offense.closed = true; offense.sentence = sentence;
+      if (FB.industryLaws) FB.industryLaws.judged(s, offense, sentence, p.amount);
+    }
     if (def.forgive) (j.offenses || []).forEach(function (o) {
-      if (o.accusedId === target && authorityMatches(s, actor, o.authority)) o.closed = true;
+      if (o.accusedId === target && authorityMatches(s, actor, o.authority)) {
+        o.closed = true;
+        if (FB.industryLaws) FB.industryLaws.judged(s, o, sentence, 0);
+      }
     });
     // Claim the sentence before death/succession and any callbacks can re-enter.
     if (!row.sentenceIds) row.sentenceIds = [];
@@ -821,7 +862,7 @@
       if (!o || typeof o.id !== 'string' || seen[o.id] || !live(s, o.accusedId) ||
           typeof o.authority !== 'string' || !o.authority ||
           ['testimony','material','redhanded'].indexOf(o.evidence) < 0 ||
-          ['assassination','abduction','fabricated_charge','sabotage','blackmail','rebellion'].indexOf(o.kind) < 0) return false;
+          ['assassination','abduction','fabricated_charge','sabotage','blackmail','rebellion','industry_violation'].indexOf(o.kind) < 0) return false;
       seen[o.id] = true;
       o.severity = o.kind === 'assassination' || o.kind === 'rebellion' ? 3 :
         o.kind === 'abduction' || o.kind === 'fabricated_charge' ? 2 : 1;
@@ -967,7 +1008,7 @@
       actorCulture:actor && actor.culture, actorFaith:actor && actor.religion,
       targetCulture:target && target.culture, targetFaith:target && target.religion,
       station:target && (p.targetId === s.player.charId ? FB.playerStation(s) : FB.stationOf(target)),
-      offense:offense, custody:row && { captorId:row.captorId, authority:row.authority,
+      offense:offense, industry:FB.industryLaws && FB.industryLaws.sentenceTerms(s, offense) || undefined, custody:row && { captorId:row.captorId, authority:row.authority,
         captorGeneration:row.captorGeneration, source:row.source, captureTurn:row.captureTurn,
         courtKind:row.courtKind || 'secular', sentenced:!!row.sentenced, endTurn:row.endTurn,
         sentenceIds:row.sentenceIds || [] }, crazyGames:!!FB.platform.isCrazyGames }));
@@ -993,12 +1034,13 @@
     var quote = FB.justicePunishmentProjection(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.courtKind);
     var def = FBDATA.justiceSentences[quote.sentence];
     return {
-      sentenceKind:def.kind,
+      sentenceKind:quote.industry && def.kind === 'fine' ? (quote.industry.closure ? 'industry_fine_closure' : 'industry_fine') : def.kind,
       sentenceName:{ $data:'justiceSentence', id:quote.sentence, path:'name' },
       sentenceTermDays:num(def.termDays, 360),
       sentenceRemainingDays:quote.endTurn === null ? 0 : Math.max(0, quote.endTurn - s.turn),
       sentenceCustodyMode:quote.custody.sentenced ? 'extension' : 'initial',
       sentenceAmount:quote.amount,
+      sentenceBalance:quote.industry ? quote.fine - quote.amount : 0,
       sentencePietyCost:num(def.pietyCost, 40),
       sentencePrestigeCost:num(def.prestigeCost, 20)
     };
@@ -1111,6 +1153,10 @@
       lethal:d.kind === 'death', permanent:['death','corporal','forfeiture'].indexOf(d.kind) >= 0,
       variable:action === 'justice_plead' || action === 'justice_challenge' }];
     if (['fine','ransom'].indexOf(d.kind) >= 0) out.push({ type:'gold', amount:-quote.amount });
+    if (quote.industry && d.kind === 'fine') {
+      if (quote.industry.closure) out.push({type:'system', system:'industry_law', action:'closure', variable:out[0].variable});
+      if (quote.fine > quote.amount) out.push({type:'system', system:'industry_law', action:'liability', amount:quote.fine - quote.amount, variable:out[0].variable});
+    }
     if (d.kind === 'penance') out.push({ type:'piety', amount:-num(d.pietyCost, 40) },
       { type:'prestige', amount:-num(d.prestigeCost, 20) });
     return out;

@@ -593,11 +593,22 @@
     references(s.bookmarkSetup, id);
     references(s.governmentSupport, id);
     rekey(s.authority && s.authority.governments, id);
+    // An ordinary adopted crown now belongs to the existing household, as
+    // on restore. Do not leave its first succession record for loading to add.
+    if (!retainedSelection && !keptSettlementCourt &&
+        !(FB.administrationProfile && FB.administrationProfile(s, 'player'))) {
+      realm.succession = { playerDynasty:true,
+        rulerGeneration:realm.ruler && realm.ruler.generation !== undefined ? realm.ruler.generation : 1,
+        heirCharId:null };
+    }
     if (retainedSelection && government.rules.aristocraticProfileId) FB.aristocracy.adopt(s,id);
     rekey(s.armyLogistics && s.armyLogistics.purses, id);
     ['realmTech','armyDown','armyDownSurvival','armyDetachmentDown','armyCohorts'].forEach(function (key) {
       rekey(s[key], id);
     });
+    // This court already owns its seeded knowledge. Restore must not treat
+    // adoption as the creation of a new player nation and seed it again.
+    if (s.realmTech && s.realmTech.player) s.realmTech.player.historicalSeeded = 1;
     Object.keys(s.localInstitutions || {}).forEach(function (key) {
       var institution = s.localInstitutions[key];
       ['standing','petitions'].forEach(function (field) {

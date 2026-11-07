@@ -1,7 +1,9 @@
 'use strict';
 const {test,expect} = require('../support/fixture');
-const {openGame} = require('../support/game/navigation');
-const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const path = require('path');
+const {openGame,prepareGameContent} = require('../support/game/navigation');
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {injectBrowserHarness} = require('../support/game/browser-harness');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -12,13 +14,41 @@ dependsOnRuntime(__filename,[
   'data/bookmark_sources.js','data/story_instances.js','data/settlements.js',
   'data/starts.js','data/actions.js','data/economy.js','data/travel.js',
   'js/bookmark_composition.js','js/bookmark_sources.js','js/bookmark_setup.js',
-  'js/story_household.js','js/story_opening_goals.js','js/stories.js','js/starts.js',
+  'js/story_household_observer.js','js/story_household.js','js/story_opening_goals.js','js/stories.js','js/starts.js',
   'js/main.js','js/model.js','js/world.js','js/actions.js','js/economy.js',
   'js/travel.js','js/save.js','js/save_v4.js','js/mods.js','js/i18n.js',
   'js/ui_misc.js','js/ui_panels.js'
 ]);
 
 const ID = 'ctesiphon_household_track_634';
+
+async function beginCtesiphonFromTitle(page) {
+  const code = await page.evaluate(function () {
+    const b = FB.bookmark('634');
+    FBDATA.bookmarks['634'].hidden = false;
+    const raw = FBDATA.startScenarios.find(function (r) { return r.id === 'ctesiphon_household_634'; });
+    const sc = FB.startIdentity(raw,b);
+    return 'CTESIPHON-634-ctesiphon_household_634-baghdad-m-Review-established-0-' + sc.startCulture + '.' + sc.startReligion;
+  });
+  const full = page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill(code); await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+  await injectBrowserHarness(page);
+  await page.evaluate(function () {
+    FB.game.setPaused(true); FB.game.auto.all = true; FB.game.auto.style = 'first';
+    FB.game.uiPrefs.hideTips = true; FB.game.uiPrefs.hideBeginnerHints = true;
+    delete FB.state.player.flags.tutorial;
+  });
+}
+async function beginBookmark(page,info) {
+  await openGame(page,info); await prepareGameContent(page);
+  await beginCtesiphonFromTitle(page);
+}
 
 async function choose(page,choice) {
   return page.evaluate(function (choice) {
@@ -27,14 +57,15 @@ async function choose(page,choice) {
   },choice);
 }
 
-test('hidden 634 owns a complete Ctesiphon household graph and actual resident identity', async function ({page},info) {
+test('selectable 634 owns a complete Ctesiphon household graph and actual resident identity', async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
-    const b = FB.bookmark('634'), sc = FBDATA.startScenarios.find(function (r) { return r.id === 'ctesiphon_household_634'; });
+    const b = FB.bookmark('634'), raw = FBDATA.startScenarios.find(function (r) { return r.id === 'ctesiphon_household_634'; });
+    const sc = FB.startIdentity(raw,b);
     const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
     const errors = FB.validateBookmark(b), p = b.provinces.find(function (p) { return p.id === 'baghdad'; });
     const slots = FBDATA.settlementLayouts[b.settlementLayout].baghdad;
-    return {errors:errors,hidden:b.hidden,available:FB.bookmarkAvailable('634'),
+    return {errors:errors,hidden:!!b.hidden,available:FB.bookmarkAvailable('634'),
       tracks:FB.startTracks(sc,'baghdad'),storyline:FB.startStoryTracks(sc,'baghdad'),away:FB.startTracks(sc,'hira'),
       local:FB.startProvinceAllowed(sc,b,'baghdad'),elsewhere:FB.startProvinceAllowed(sc,b,'hira'),
       resident:p.communities.some(function (c) { return c.culture === sc.startCulture && c.religion === sc.startReligion && c.populationShare0 > 0; }),
@@ -43,7 +74,7 @@ test('hidden 634 owns a complete Ctesiphon household graph and actual resident i
       institutions:b.localInstitutions,heads:b.religiousHeads,
       independent:!FBDATA.storyInstances.ctesiphon_household_track_634.requires,
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toMatchObject({errors:[],hidden:true,available:false,
+  })).toMatchObject({errors:[],hidden:false,available:true,
     tracks:[ID,'opening_ctesiphon_634'],storyline:[ID],away:[],local:true,elsewhere:false,resident:true,
     family:['established'],age:24,resources:[1,'farmer',20,5,0],site:'baghdad_outer_476',
     coordinates:{x:44.58,y:33.1},institutions:{},heads:{},independent:true,pure:true});
@@ -54,7 +85,7 @@ test('hidden 634 owns a complete Ctesiphon household graph and actual resident i
       home:s.player.provinceId,culture:c.culture,faith:c.religion,age:FB.ageOf(c,s.date.year),
       family:FB.householdMembers(s).length > 1,profession:s.player.profession,gold:s.player.gold,
       errors:FBTEST.checkInvariants()};
-  })).toEqual({phase:'household',actor:true,home:'baghdad',culture:'syriac',faith:'east_syriac',age:24,
+  })).toEqual({phase:'household',actor:true,home:'baghdad',culture:'syriac',faith:'east_syriac_local_634',age:24,
     family:true,profession:'farmer',gold:20,errors:[]});
 });
 
@@ -189,4 +220,114 @@ test('shared work review cancels back to the story and restores its originating 
   expect(await page.evaluate(function () {
     return {gold:FB.state.player.gold,phase:FB.state.stories.ctesiphon_household_track_634.phase};
   })).toEqual({gold:20,phase:'farming'});
+});
+
+
+test('Ctesiphon observes only actual local sovereignty with private accounts and exact pending saves', async function ({page},info) {
+  await beginBookmark(page,info,'634','ctesiphon_household_634');
+  expect(await page.evaluate(function () {
+    let s = FB.state;
+    const id = 'ctesiphon_household_observer_634', m = FB.stories.get(id), t = s.stories[id];
+    const quiet = !FB.stories.status(s,id), cash = s.player.gold;
+    const from = FB.topRealm(s,s.owner.baghdad), target = 'byzantium_634';
+    s.turn = 4; FB.transferProvince(s,'baghdad',target); m.day(s,t);
+    const event = t.pending[0].event;
+    const expected = event.source === 'control' && event.milestone === 'rule_changed' &&
+      event.provinceId === 'baghdad' && event.turn === 4 && event.before === from && event.after === target;
+    const pending = JSON.stringify(t);
+    FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+    const restored = pending === JSON.stringify(s.stories[id]);
+    const quote = FB.stories.quote(s,id,'review_records'), read = JSON.stringify(s);
+    FB.stories.status(s,id); FB.stories.choices(s,id);
+    const pure = read === JSON.stringify(s);
+    s.player.provinceId = 'hira';
+    const remote = FB.stories.apply(s,id,'review_records',quote);
+    s.player.provinceId = 'baghdad';
+    const accounts = JSON.stringify(s.realms);
+    const applied = FB.stories.apply(s,id,'review_records',FB.stories.quote(s,id,'review_records'));
+    const repeated = FB.stories.apply(s,id,'review_records',quote);
+    const closed = JSON.stringify(s.stories[id]);
+    FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state; m.day(s,s.stories[id]);
+    return {quiet:quiet,expected:expected,restored:restored,pure:pure,remote:remote,applied:applied,repeated:repeated,
+      closed:closed === JSON.stringify(s.stories[id]),quietAgain:!FB.stories.status(s,id),
+      gold:s.player.gold === cash,publicSame:accounts === JSON.stringify(s.realms),
+      receipts:Object.keys(s.stories[id].householdReceipts).length};
+  })).toEqual({quiet:true,expected:true,restored:true,pure:true,remote:false,applied:true,repeated:false,
+    closed:true,quietAgain:true,gold:true,publicSame:true,receipts:1});
+});
+
+test('remote control and war context supply neither a local transfer notice nor public money', async function ({page},info) {
+  await beginBookmark(page,info,'634','ctesiphon_household_634');
+  for (const c of ['take_stock','defer_work','review_records']) expect(await choose(page,c)).toBe(true);
+  expect(await page.evaluate(function () {
+    const s = FB.state, id = 'ctesiphon_household_observer_634', m = FB.stories.get(id), t = s.stories[id];
+    const before = JSON.stringify(t), gold = s.player.gold;
+    const peace = FB.stories.quote(s,'ctesiphon_household_track_634','war_context').allowed;
+    s.turn = 3; FB.transferProvince(s,'hira','byzantium_634'); m.day(s,t);
+    const remoteQuiet = before === JSON.stringify(t);
+    const rid = FB.topRealm(s,s.owner.baghdad);
+    s.realms[rid].war = {enemy:'rashidun_634'}; m.day(s,t);
+    const applied = FB.stories.apply(s,'ctesiphon_household_track_634','war_context',FB.stories.quote(s,'ctesiphon_household_track_634','war_context'));
+    const resumed = FB.stories.apply(s,'ctesiphon_household_track_634','resume_plans',FB.stories.quote(s,'ctesiphon_household_track_634','resume_plans'));
+    return {peace:peace,remoteQuiet:remoteQuiet,quiet:!FB.stories.status(s,id),pending:t.pending.length,
+      applied:applied,resumed:resumed,gold:s.player.gold === gold,phase:s.stories.ctesiphon_household_track_634.phase};
+  })).toEqual({peace:false,remoteQuiet:true,quiet:true,pending:0,applied:true,resumed:true,gold:true,phase:'horizon'});
+});
+
+test('assembled Ctesiphon uses the actual ancient site, living court and resident faith without replay', async function ({page},info) {
+  await openGame(page,info); await prepareGameContent(page);
+  expect(await page.evaluate(function () { return FB.bookmark('634','core_courts_v4').hidden; })).toBe(true);
+  await page.evaluate(function () {
+    FBDATA.bookmarks['634'].revision = 'core_courts_v4';
+    FBDATA.bookmarks['634'].revisions.core_courts_v4.hidden = false;
+  });
+  await beginCtesiphonFromTitle(page);
+  const result = await page.evaluate(function () {
+    let s = FB.state;
+    const b = FB.campaignBookmark(s), c = s.chars[s.player.charId];
+    const site = FBDATA.settlementLayouts[b.settlementLayout].baghdad[0];
+    const identity = c.culture === 'syriac' && c.religion === 'east_syriac_local_634';
+    const resident = FB.provinceCommunities(b.provinces.find(function (p) { return p.id === 'baghdad'; })).some(function (r) {
+      return r.culture === c.culture && r.religion === c.religion;
+    });
+    const court = s.realms.sasanian_634.ruler.name;
+    const id = 'ctesiphon_household_track_634';
+    ['take_stock','work_fields'].forEach(function (choice) { FB.stories.apply(s,id,choice,FB.stories.quote(s,id,choice)); });
+    s.turn++; FB.tickFocus(s);
+    const paid = s.player.gold > 20, phase = s.stories[id].phase;
+    const saved = JSON.parse(FB.save.serialize());
+    function facts() {
+      const e = JSON.parse(FB.save.serialize()), state = FB.save.expandedSnapshot(e.state);
+      return [state.player,state.chars,state.stories,state.realms,state.property];
+    }
+    const before = facts(), rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
+    FB.save.restore(saved); const once = facts();
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    return {revision:b.revision,identity:identity,resident:resident,court:court,site:site.site,name:site.name,
+      paid:paid,phase:phase,once:once,twice:facts(),before:before,rng:rng === (FB.getRngState() >>> 0),uid:uid === FB.getUidCounter(),
+      observer:!!FB.state.stories.ctesiphon_household_observer_634};
+  });
+  expect(result.once).toEqual(result.before); expect(result.twice).toEqual(result.before);
+  delete result.once; delete result.twice; delete result.before;
+  expect(result).toEqual({revision:'core_courts_v4',identity:true,resident:true,court:'Yazdegerd III',site:'baghdad_outer_476',name:'Ctesiphon',
+    paid:true,phase:'obligations',rng:true,uid:true,observer:true});
+});
+
+test('ordinary JSON import supplies independent property and stationary decisions', async function ({page},info) {
+  await openGame(page,info);
+  await prepareGameContent(page);
+  expect(await page.evaluate(function (m) { return FB.mods.validate(m); },require('../fixtures/authoring/ctesiphon-household-plans.json'))).toEqual([]);
+  await page.evaluate(function () { FB.ui.showMods(); });
+  await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/ctesiphon-household-plans.json'));
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
+  await beginCtesiphonFromTitle(page);
+  expect(await page.evaluate(function () {
+    const s = FB.state, id = 'ctesiphon_reserve_example', gold = s.player.gold;
+    const applied = FB.stories.apply(s,id,'keep',FB.stories.quote(s,id,'keep'));
+    const saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    return {gold:gold,unchanged:FB.state.player.gold === gold,applied:applied,phase:FB.state.stories[id].phase,
+      original:!!FB.state.stories.ctesiphon_household_track_634,identity:FB.state.chars[FB.state.player.charId].religion};
+  })).toEqual({gold:12,unchanged:true,applied:true,phase:'done',original:false,identity:'east_syriac_local_634'});
 });

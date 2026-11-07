@@ -1,5 +1,16 @@
 # National technology
 
+Existing-court adoption
+
+Adopting an existing ruler moves that court's technology record to the player
+key with its actual completions, exposure, projects, priorities and reserve. It
+marks the existing historical seed as complete through historicalSeeded, the
+same marker used by ordinary player nations. Matching restoration therefore
+does not seed the adopted court again or add later historical knowledge. No
+knowledge is granted by adoption, and the saved record and envelope keep their
+existing format. The combined 634 ruler/start and restoration cases cover both
+adopted courts and ordinary household controls.
+
 Composed catalogue
 
 The catalogue retains its 187 original technology ids and their 37 corrections across the foundation, learning, civic/military, maritime, wind and transmission supplements. Feltmaking and Regularized Bookhands bring the total to 189. The original entries keep their costs, scalar effects and capability grants; their regional adoption pairs are unchanged except for the five transmission changes described below. National caps remain unchanged. Source maps retain one correction owner per id; JSON uses the ordinary tech root. Fresh historical knowledge closes the effective graph, while matching saves retain completion, exposure and partial projects without reseeding. The composition and its independent construction/property boundaries are documented in docs/research/technology-and-buildings.md.

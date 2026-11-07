@@ -1,5 +1,34 @@
 Government dispatch
 
+Unpublished autumn 634 court declarations
+
+data/bookmark_634_courts.js stages three complete court replacements and their
+dated profiles. medinan_selection_634 uses crown_election with adult male,
+non-ancestral eligibility, living nomination, separate designation and capital
+community assent. byzantine_634 uses administrative_monarchy with ordinary
+public governor, fiscal and host commissions; it adds no thematic office or
+automatic appointment. sasanian_634 uses aristocratic_monarchy with matching
+recognition profiles and the ten-year-old incumbent. Two fictional adult
+principals have distinct county jurisdictions at Qazvin and Isfahan; the first
+is the declared opening steward. Their permanent assignments and Peace/Consent
+rights remain separate from sovereign holdings and private estates.
+
+The direct actors live in the separate bookmarkOpeningActors634 source map.
+Whole-world assembly copies it once into opening.actors before validation;
+royalCourt members and actor references cannot replace these declarations.
+The canonical setup and aristocracy owners initialize the actors, assignments
+and stewardship; matching restore validates those existing records without
+replaying setup. The optional Yazdegerd ruler start remains absent.
+
+The court faith and ruler-start companions remain unpublished alongside these
+profiles. Their complete candidate uses revisionIdentities for Umar and
+Heraclius, preserving every predecessor projection and enforcing the actual
+chosen constitution during adoption. The current fresh world stays unchanged.
+Publication requires whole-world composition and retained-catalogue evidence.
+These declarations reuse existing nomination, public-service and minority
+stewardship capabilities, whose technology-impact decisions remain none; no
+new generic capability or saved schema is introduced.
+
 Dated fresh-world rollout
 
 data/government_rollout.js composes each declared date revision with its named administrative and papal profiles. Fresh 711 uses terrain_v2_governments_v2 and fresh 800 uses inhabited_v2_governments_v2. Fresh 867 and 1066 retain governments_v2 on their original geography until their expanded openings are explicitly accepted. Both dates also expose inhabited_v2_governments_v2 for opt-in review. Composition preserves explicitly retained combined definitions and never selects a review world merely because it exists. Baseline fields, era defaults and unrelated courts remain independent. Missing named courts fail validation. Dated evidence and unresolved consumers are in docs/research/government-rollout.md.
@@ -31,6 +60,14 @@ Shared owner adapters
 registerSource(id, adapter), reviewSource(state, id, request) and commitSource(state, review) compose pure review and revalidation around an existing owner. elective_crown delegates to the typed selection record and its declared profile; civic_election forecasts and resolves the canonical institutions election; administrative_appointment quotes and commits the authority appointment; religious_office_result returns the existing eligible office holder and only acknowledges that result. Religious elections still appoint through their own owner. None of these adapters creates a second election, incumbent, religious head or property ledger. Future forms register another source or use the declared eligibility profile; they do not copy canonical elections into government state. Profiles can declare ancestry, adult age, sex and a live office requirement.
 
 Technology review is none independently for kin recognition, succession, obligations, community enrollment, form transformation and commoner standing. Each depends on living relationships, control, qualification or available resources rather than discovery. See docs/research/476-lineage-kingship.md for the historical consumer and tests/e2e/fixtures/lineage-kingship.js for an independent data-only fixture.
+
+Industry-law consent
+
+The territorial consent strategy accepts `industry_law` only for a living
+realm's directly controlled county and current public-authority readiness.
+Delegated consent fails closed for this operation. This is a competence check
+for the industry-law assembly adapter; it grants no fiscal office, membership,
+new government form or generic reserved-operation bypass.
 
 Forms and defaults
 

@@ -46,6 +46,47 @@ FBDATA.householdTracks_634_damascus = {
       remote:{ name:'A different course', text:'The protagonist is no longer pursuing this plan at home. Ordinary play determines residence and livelihood; this story certifies no journey arrival or family relocation.', terminal:true, choices:[], transitions:[] },
       interrupted:{ name:'The personal plan ended', text:'Death or succession ended this protagonist’s unfinished plan. The next generation makes its own decisions.', terminal:true, choices:[], transitions:[] }
     }
+  },
+  damascus_household_full_634:{ id:'damascus_household_full_634', type:'household_track',
+    title:'A living in Damascus',
+    intro:'A Syriac Christian craft household considers work, actual local changes and a continuing livelihood in Damascus.',
+    homeProvinceId:'damascus', continuity:'protagonist', interruptedStage:'interrupted', initialStage:'household',
+    requirements:{ provinces:['damascus'] },
+    stages:{
+      household:{ name:'Household and stores',
+        text:'Consult Kin for your actual family and Station & home for the private purse, property and recorded obligations. Your Syriac Christian household is one local community perspective, not a representative of every resident. Identity alone establishes no exact tax, exemption or service.',
+        choices:[{ id:'take_stock', label:'Take stock of the household', detail:'Continue after consulting the present household records. This decision buys no stores and grants no money.', operation:{kind:'record_decision'}, next:'crafting' }], transitions:[] },
+      crafting:{ name:'Work in the district',
+        text:'The household can earn its living through ordinary craft work. Selecting work begins no special contract and promises no payment from a court.',
+        choices:[
+          { id:'work_bench', label:'Work the bench', detail:'Select ordinary craft work. Only actual paid work advances the working stage.', operation:{kind:'set_focus',focusId:'craft_work'}, next:'working' },
+          { id:'defer_work', label:'Leave work for later', detail:'Keep your current focus and continue without claiming earnings.', operation:{kind:'record_decision'}, next:'local_life' }
+        ], transitions:[] },
+      working:{ name:'The daily work', text:'The ordinary work focus determines income. Choosing it alone has earned nothing.',
+        afterWork:{focusId:'craft_work',provinceId:'damascus',next:'local_life'},
+        choices:[{ id:'reconsider', label:'Consider other household matters', detail:'Continue without claiming that the work has paid.', operation:{kind:'record_decision'}, next:'local_life' }], transitions:[] },
+      local_life:{ name:'Local authority and work',
+        text:'Consult Land for current local authority. An observed change of sovereignty can be reviewed once; war alone proves no local damage or requisition. With no change, ordinary household plans continue.',
+        choices:[
+          {id:'review_control',label:'Review changed local authority',detail:'Review an actual unacknowledged local change without paying or changing identity.',when:{kind:'control_changed',stageId:'authority'},operation:{kind:'record_decision'},next:'authority'},
+          {id:'continue_work',label:'Continue ordinary craft work',detail:'Select ordinary craft work. Only its usual daily transaction pays income.',operation:{kind:'set_focus',focusId:'craft_work'},next:'horizon'},
+          {id:'keep_plans',label:'Keep the present plans',detail:'Continue without changing focus, funds or obligations.',operation:{kind:'record_decision'},next:'horizon'}
+        ], transitions:[] },
+      horizon:{ name:'A continuing home',
+        text:'Remaining in Damascus requires no journey or public grant. You can conclude the household plan here regardless of whether any court starts a war. Ordinary personal travel remains a separate decision; departure ends this local plan without moving relatives or claiming later settlement.',
+        choices:[{ id:'stay', label:'Keep the household here', detail:'Review the present livelihood at home without spending money.', operation:{kind:'record_decision'}, next:'livelihood' }], transitions:[] },
+      livelihood:{ name:'A livelihood at home',
+        text:'Review the private purse, household and current work focus as they stand now. Plans alone have supplied no earnings, protection or new property. The household can continue crafting here whatever course the courts take.',
+        choices:[{ id:'continue_life', label:'Continue life here', detail:'Conclude the opening plan at home. Ordinary work, worship and household choices remain yours.', operation:{kind:'record_decision'}, next:'stayed' }], transitions:[] },
+      stayed:{ name:'Life in the district continues', text:'You concluded this opening plan at home. The household continues through ordinary play, without requiring any conquest or conversion.', terminal:true, choices:[], transitions:[] },
+      personal_journey:{ name:'A personal journey begun', text:'An ordinary personal journey took the protagonist away from this local plan. Journey controls govern travel and return. This conclusion records neither arrival nor a household move.', terminal:true, choices:[], transitions:[] },
+      remote:{ name:'A different course', text:'The protagonist is no longer pursuing this plan at home. Ordinary play determines residence and livelihood; this story certifies no journey arrival or family relocation.', terminal:true, choices:[], transitions:[] },
+      interrupted:{ name:'The personal plan ended', text:'Death or succession ended this protagonist’s unfinished plan. The next generation makes its own decisions.', terminal:true, choices:[], transitions:[] },
+      authority:{ name:'The present local authority',
+        text:'Local sovereignty has actually changed since this household began observing it. Review Land and the recorded household obligations. This report supplies no protection, tax exemption, payment or conversion; your community identity remains your own.',
+        incident:{source:'control',provinceId:'damascus',milestone:'rule_changed'},afterIncident:'horizon',
+        choices:[{id:'acknowledge',label:'Continue under the current records',detail:'Acknowledge this occurrence once at no cost. Ordinary work and existing obligations retain their own rules.',operation:{kind:'record_decision'},next:'horizon'}],transitions:[] }
+    }
   }
 };
 FBDATA.openingProfiles_634_damascus = {
@@ -56,6 +97,14 @@ FBDATA.openingProfiles_634_damascus = {
       {id:'craft_income',name:'Earn {money:5} through craft work',text:'Earn {money:5} through actual ordinary craft work after the opening.',criterion:{kind:'earnings',amount:5,focusIds:['craft_work']}},
       {id:'household_reserve',name:'Keep a household reserve',text:'Hold {money:25} in the private purse as a free household.',criterion:{kind:'reserve',amount:25}},
       {id:'home_decision',name:'Continue life at home',text:'Conclude the opening livelihood plan in Damascus.',criterion:{kind:'household_phase',storyId:'damascus_household_track_634',phases:['stayed']}}
+    ], contacts:[] },
+  opening_damascus_full_634:{ id:'opening_damascus_full_634', type:'opening_profile',
+    title:'The Household’s First Goals', intro:'Optional goals observe ordinary earnings, savings and a decision to stay. They grant no reward.',
+    scenarioIds:['damascus_household_634'], provinceIds:['damascus'], requires:['damascus_household_full_634'],
+    goals:[
+      {id:'craft_income',name:'Earn {money:5} through craft work',text:'Earn {money:5} through actual ordinary craft work after the opening.',criterion:{kind:'earnings',amount:5,focusIds:['craft_work']}},
+      {id:'household_reserve',name:'Keep a household reserve',text:'Hold {money:25} in the private purse as a free household.',criterion:{kind:'reserve',amount:25}},
+      {id:'home_decision',name:'Continue life at home',text:'Conclude the opening livelihood plan in Damascus.',criterion:{kind:'household_phase',storyId:'damascus_household_full_634',phases:['stayed']}}
     ], contacts:[] }
 };
 (function () {
@@ -89,6 +138,24 @@ FBDATA.openingProfiles_634_damascus = {
         {when:{not:local},next:'remote'}
       ];
     });
+    // The assembled world selects a complete independent program. Earlier
+    // revisions keep their original graph and companion commitments.
+    var full = FBDATA.householdTracks_634_damascus.damascus_household_full_634;
+    ['household','crafting','working','local_life','horizon','livelihood','authority'].forEach(function (id) {
+      full.stages[id].transitions = JSON.parse(JSON.stringify(def.stages.household.transitions));
+    });
+    var goals = FBDATA.openingProfiles_634_damascus.opening_damascus_full_634;
+    var revision = source.input.bookmark.revisions.core_courts_v4;
+    if (!revision) throw new Error('Missing assembled Damascus world');
+    delete unit.locations;
+    unit.bindings = {root:{locations:['damascus']},revisions:{}};
+    if (Array.isArray(source.input.bookmark.starts)) unit.bindings.root.offered = true;
+    Object.keys(source.input.bookmark.revisions).forEach(function (id) {
+      unit.bindings.revisions[id] = Array.isArray(source.input.bookmark.revisions[id].starts) ? {offered:true} : {};
+    });
+    unit.bindings.revisions.core_courts_v4.trackOverride = {
+      tracks:[full.id,goals.id],trackLocations:{damascus_household_full_634:['damascus'],opening_damascus_full_634:['damascus']}
+    };
     var declarations = Object.assign({},FBDATA.householdTracks_634_damascus,FBDATA.openingProfiles_634_damascus);
     unit.storyAfter = FB.bookmarkCompositions.captureStories('autumn_634','damascus',declarations);
     unit.storyInstances = JSON.parse(JSON.stringify(declarations));

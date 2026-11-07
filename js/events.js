@@ -11410,6 +11410,9 @@ window.FB = window.FB || {};
         if (sentence) return FB.dataText(state, state.player.charId, 'justiceSentence', record.action, sentence, 'name', {});
         return FB.T('Custody changes');
       }
+      if (record.system === 'industry_law') return record.action === 'closure' ?
+        FB.T('Close the affected business while its law is active; ownership is retained') :
+        FB.T('Remaining personal fine: {money:amount}', {amount:record.amount});
       if (record.system === 'war') {
         if (record.action === 'white_peace') return record.resolved
           ? FB.T('The demanded war ended in white peace')

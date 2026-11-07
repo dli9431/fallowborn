@@ -1,0 +1,27 @@
+{
+  "name": "District report examples",
+  "storyInstances": {
+    "emesa_campaign_report": {
+      "id": "emesa_campaign_report", "type": "household_observer",
+      "title": "Reports at Emesa", "intro": "Review actual forces in this district and the later closure of that report.",
+      "sourceStoryId": "syrian_front_634", "requires": ["syrian_front_634"],
+      "provinceIds": ["homs"], "requirements": {"provinces": ["homs"]}, "expiryTurns": 5,
+      "beats": [
+        {"id": "force", "trigger": "started", "reach": "local", "name": "A force is in this district",
+          "text": "A living force assigned to this campaign is currently in the district. This records no fighting or household loss.",
+          "choices": [{"id": "records", "label": "Review the report", "detail": "Acknowledge at no cost.", "operation": "review_records"}]},
+        {"id": "closure", "trigger": "failed", "reach": "previous", "name": "The campaign report closes",
+          "text": "The campaign ended without its objective. This closes the earlier local report.",
+          "choices": [{"id": "continue", "label": "Continue ordinary life", "detail": "Close at no cost without changing the work focus.", "operation": "continue_livelihood"}]}
+      ]
+    },
+    "hira_authority_report": {
+      "id": "hira_authority_report", "type": "household_observer",
+      "title": "Authority in the Hira district", "intro": "Review later observed sovereignty independently of a campaign.",
+      "source": {"type": "local_control"}, "provinceIds": ["kufa"], "requirements": {"provinces": ["kufa"]}, "expiryTurns": 2,
+      "beats": [{"id": "changed", "trigger": "rule_changed", "reach": "local", "name": "The sovereign changed",
+        "text": "Consult current authority and the household’s recorded obligations. This records no tax or payment.",
+        "choices": [{"id": "continue", "label": "Continue ordinary life", "detail": "Acknowledge at no cost without changing work or obligations.", "operation": "continue_livelihood"}]}]
+    }
+  }
+}

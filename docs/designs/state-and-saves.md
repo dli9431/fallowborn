@@ -1,5 +1,13 @@
 Retained fixed-start identity
 
+The optional authority.episcopalClaims ledger preserves exact grant sources,
+principals, effective-definition fingerprints, offers and finite rent terms.
+Compensation cross-references the existing unique authority receipt and actual
+institutional payee; restore cannot grant money or replay settlement. Duplicate
+sources, malformed terms, missing receipts and changed declarations reject on a
+detached state. An absent ledger remains absent. No save envelope or subsystem
+schema version changes. See episcopal-claims.md.
+
 Saved scenario ids continue to resolve through their saved bookmark revision. The canonical start owner projects the declared faith and existing-ruler government for that revision without changing state.start or any person, community, resource, story, RNG or UID fact. The optional native shared-definition proof certifies only additive faith/law ids and exact retained start projections; it cannot replace existing shared runtime definitions. Ordinary re-save keeps the installed current fingerprint, so a fresh page resolves the same retained start without replaying a compatibility exception. No wire field, format increment or identity migration is introduced.
 
 Loading from the lightweight title
@@ -8,6 +16,12 @@ Continue, save slots and imported saves enter FB.game.loadData through the defer
 
 Compact validation snapshots
 
+Expedition preparation and undertaking semantic validators always resolve people against FB.save.expandedSnapshot after their raw optional-record checks. A caller may have supplied character ids and realm alive flags while royal-member charId and royalLine.memberId links remain compacted; no subset of those fields certifies a fully expanded state. The canonical detached decoder derives only omitted links backed by matching original characters and lineage. Explicit conflicting or null links, original story fields, resources, input state and RNG/UID retain their existing meanings. This performs no load repair or story replay and changes no wire or subsystem version.
+
+The compact realm codec omits alive:true. Before platform and public-treasury provenance checks, a shallow detached realm view supplies true only when that property is absent. Explicit false remains false, other explicit types reject, and the compact caller remains unchanged. Active preserved treasuries still require an actually live realm and their original unique account, balance and fiscal clocks. This uses the existing wire default without changing the save format.
+
+Ordinary existing-ruler adoption initializes the same minimal household succession record that matching restore expects, while selection-managed, settlement-genealogy and administrative courts retain their own contracts. Fresh opening setup also initializes canonical local-government and feudal-vassal records after adoption and story attachment. Loading a newly created campaign therefore does not become its first household or vassal setup, and does not replay an opening, grant, election or payment.
+
 Platform validation supplies an omitted character id from its existing chars dictionary key in a shallow detached view before running story and named-party validators. Explicit mismatches, null ids, missing people, forged associations and invalid carrier or consent facts still reject. Empty and consented associations and requested, active and ended camp records pass through the same strict validators without replaying initialization, AI decisions, payment, acceptance or travel. The compact input and live state stay unchanged during validation; neither the wire representation nor the save schema changes.
 
 Guarded parties, guarded personal starts and landed expedition links validate original identities from the saved opening actor and character indexes. They accept the codec's omitted character id while rejecting explicit mismatches and missing people. Guard semantic checks use only a shallow view with the omitted id supplied, leaving compact input and live state untouched. No save-version bump, guard release, command formation or resource repair is involved.
@@ -15,6 +29,18 @@ Guarded parties, guarded personal starts and landed expedition links validate or
 FB.save.expandedSnapshot(state) expands only the existing wire-codec omissions on a detached copy for semantic validators that require explicit character and realm identities. It performs no load repair or state adoption and does not supply optional subsystem records. Preparation first checks its raw exact record, then uses this snapshot for original-person and current-authority queries. Undertaking validation likewise retains its strict raw record while resolving same-generation parties on the expanded core snapshot; a compact missing id or alive flag cannot substitute for a changed party. Direct mobile binding and opening-issuer checks use their canonical saved indexes without expansion.
 
 Platform validation supplies omitted physical-building settlement indices as zero in a shallow detached view before checking profiles, operations, forts and institutional bindings. Explicit null, string, fractional and negative indices remain invalid. The raw input, live state, RNG and identity counters remain unchanged. This uses the existing codec default and adds no save field or schema version.
+
+Conditional campaign admission persistence
+
+Conditional campaign admission retains the existing campaign record and save
+envelope. Opted-in ordinary declarations require unspent pending records and
+coherent committed actor, generation, target owner, war id, start turn and deadline.
+Any retained war must match its original objective and parties after canonical
+starting-court remapping. Pruned ended history need not be recreated. Validation
+reads an expanded detached core view without setup or repair. Adoption preserves
+the original commitment rather than initializing another one; a household's later
+county ownership supplies no court provenance. Matching load/save/load preserves
+decisions, money, wars, RNG and UID without recharging costs or polling outcomes.
 
 Adopted dynastic treasury provenance
 
@@ -228,6 +254,13 @@ CrazyGames Continue preview
 The version-3 save envelope may carry optional meta.household with version 1, numeric tier, enterprise and land counts, a marriage boolean, and a detached objective record. Objectives store stable phase and enterprise IDs, settlement index and proper name, money amounts, readiness booleans and remaining in-game days. They never store localized prose, UI nodes or callbacks. The preview is generated from the live campaign at serialization and rendered in the active locale on the title. It is informational; loading reconstructs progress from authoritative state. Missing preview metadata is compatible with older saves, and a preview calculation failure cannot prevent the campaign from saving. Standard distributions do not add this metadata. The save version and campaign simulation are unchanged.
 
 ## Save v4 platform schema
+
+Optional `state.industryLaws` schema 1 retains enacted operating terms, original
+issuers/payees, paid enterprise permissions and voluntary operation choices.
+`FB.industryLaws.validate` runs in detached platform validation and serialization.
+Absence is valid and is never filled during restore. It rejects changed effective
+terms, malformed identities/dates and overlapping paid windows without replaying
+approval, payment or acquisition. See [Targeted operating laws](industry-laws.md).
 
 This frozen contract fixes which bookmark-platform facts a campaign saves and which it derives, so every system that adds saved state writes against one schema and v4 keeps a single migration. FB.save.v4.validatePlatform accepts the optional fields described here; the registries that resolve their ids arrive with the systems that use them.
 
@@ -1536,6 +1569,9 @@ current protagonist's existing spouse family. If that spouse belongs to a
 compact royal family, required direct children are materialized while the RNG
 state is snapshotted and restored, so compatibility repair cannot alter the
 future random sequence.
+
+Fresh construction performs the same canonical stepfamily normalization after final ruler adoption and opening stories, with the RNG stream snapshotted and restored. Existing spouse and child identities supply the additive links before the first save, so matching restoration does not introduce a new step-parent relation. Repeating normalization preserves biological parentage, existing character ids and counters. The retained-load repair remains available for older saves; this changes no save format or inheritance rule.
+
 New campaigns also record additive `player.houseFounderId` as the first playable
 character for the family-tree jump. CrazyGames also uses it alongside generation 1
 to restrict faster courtship and guaranteed eligible proposals to that character;
@@ -2357,6 +2393,8 @@ Retained catalogue rules
 
 Exact additive compatibility exception
 
+Trusted shared-definition evidence may certify added government forms, administration profiles and aristocratic profiles with null predecessor and exact pristine current definitions. Reconstructing the old catalogue removes only these explicitly proven additions. After unchanged mod replay, predecessor absence, all unrelated roots, retained worlds and the genuine preceding signature must still agree. Replacements, missing evidence, forged current definitions, stale live roots and ordinary JSON compatibility metadata remain rejected. A hidden newly added world revision keeps older visibility exact through its own boolean layer, rather than rewriting the authored root.
+
 FB.mods.saveCompatibility owns the common transient decision used by
 save.otherWorld, detached v4 preflight and game.loadData. A native declaration
 may certify exactly one complete predecessor/current bookmark transition with
@@ -2644,6 +2682,32 @@ Programs using corridor_access retain initial schema 1 until their first mutatio
 
 AI policy declarations introduce no saved field or save version. Current v4 and supported v3 migration keep existing wars, offers, budgets, vows, depleted resources, research and command terms with their original owners. Matching restore recompiles transient preferences under the stamped revision and exact mod signature; it does not dispatch an AI boundary. Changed policy or government content retains ordinary exact-signature rejection. docs/research/ai-decision-acceptance.md describes the combined restore/replay evidence and remaining owner acceptance.
 
+Industry-law hearing persistence
+
+Industry-law hearings optionally retain a bounded `industryLaws.votes` array in
+the existing schema-1 law ledger. Principal-bound explicit ballots and completed
+member/tally snapshots are separate from enacted laws. Every deliberative law
+and repeal retains its passed approval. Matching current-content restore,
+re-save and reload preserve pending/completed decisions without proposals,
+payments, identity allocation or enactment replay. Removed approval records,
+invalid tallies and duplicate pending hearings reject on the detached candidate.
+Absent legacy ledgers/arrays remain absent. The save envelope and released v1
+law/ordinance support are unchanged. Exact fields are in MODDING.md.
+
 Unchanged dates across an additive catalogue transition
 
 An effective-1 signature includes every bookmark, so adding a revision changes signatures for campaigns on otherwise unchanged dates too. The exact native proof may serve such a campaign only when its saved bookmark and revision exist identically in the predecessor and installed catalogues. For this definition comparison, an omitted legacy revision stamp means baseline, matching the existing world-transition proof; the saved envelope is unchanged. Reconstruction replaces the declaration-owned bookmark, not the saved campaign’s bookmark. An explicitly declared saved date still requires its supported retained revision. Missing revisions, changed unrelated definitions and ambiguous unrelated declarations reject. The transient cache binds the saved bookmark and revision as well as the signature; a successful proof cannot authorize a different saved world. No transition chain or signature bypass is introduced.
+
+## Operating-law enforcement facts
+
+The existing optional industry-law ledger retains bounded petition and actual
+operation-evidence arrays, original-party canonical justice links, judgments,
+closure references and paid fine totals. Current-content restoration validates
+these facts before adoption, retains personal liability with its original actor,
+and never replays a complaint, sentence, exemption roll or payment. Absent optional
+ledgers and arrays remain absent. Exact effective mod terms remain required.
+Original issuers, petitioners, named vote principals, operators and retained
+industry-case judges count as references for ordinary court compaction, so their
+bounded historical facts cannot lose their character identities at death.
+See [industry laws](industry-laws.md) for the supported lifecycle and limits.
+The save envelope and released v1 migration contract are unchanged.

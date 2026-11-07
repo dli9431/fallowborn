@@ -73,6 +73,47 @@ async function begin(page,prefix,entry,revision) {
 }
 
 for(const prefix of ['harbor','dune']) {
+  test(prefix+' compact and expanded live flags validate without mutating the save or spending cash',async function({page},info){
+    await importWorld(page,info,prefix);await begin(page,prefix,'code');
+    const result=await page.evaluate(function(){
+      const source=JSON.parse(FB.save.serialize()),wire=JSON.stringify(source),
+        live=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const omitted=!Object.prototype.hasOwnProperty.call(source.state.realms.player,'alive');
+      FB.save.v4.validatePlatform(source.state);
+      FB.save.v4.migrate(source);
+      const expanded=JSON.parse(wire);expanded.state.realms.player.alive=true;
+      const expandedBefore=JSON.stringify(expanded);
+      FB.save.v4.validatePlatform(expanded.state);FB.save.v4.migrate(expanded);
+      const pure=wire===JSON.stringify(source) && expandedBefore===JSON.stringify(expanded) &&
+        live===JSON.stringify(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();
+      const account=JSON.stringify(source.state.realms.player.treasury),privateCash=source.state.player.gold;
+      const rounds=[];
+      [source,expanded].forEach(function(data){
+        FB.save.restore(data);
+        const after=JSON.parse(FB.save.serialize());
+        rounds.push(FB.state.realms.player.alive===true &&
+          account===JSON.stringify(after.state.realms.player.treasury) && after.state.player.gold===privateCash &&
+          (source.rng >>> 0)===(after.rng >>> 0) && source.uid===after.uid);
+      });
+      return {omitted:omitted,pure:pure,rounds:rounds};
+    });
+    expect(result).toEqual({omitted:true,pure:true,rounds:[true,true]});
+  });
+
+  test(prefix+' explicit dead and invalid compact realm flags reject before adoption',async function({page},info){
+    await importWorld(page,info,prefix);await begin(page,prefix,'code');
+    expect(await page.evaluate(function(){
+      const source=JSON.parse(FB.save.serialize());
+      return [false,null,0,1,'true',{},[]].map(function(value){
+        const bad=JSON.parse(JSON.stringify(source));bad.state.realms.player.alive=value;
+        const before=JSON.stringify([FB.state,bad,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter();
+        let rejected=false;try{FB.save.v4.migrate(bad);}catch(error){rejected=true;}
+        return rejected && before===JSON.stringify([FB.state,bad,FBDATA]) &&
+          rng===FB.getRngState() && uid===FB.getUidCounter();
+      });
+    })).toEqual(Array(7).fill(true));
+  });
+
   for(const entry of ['picker','code']) {
     test(prefix+' '+entry+' conserves the original account through real ordinary adoption',async function({page},info){
       await importWorld(page,info,prefix);await begin(page,prefix,entry);

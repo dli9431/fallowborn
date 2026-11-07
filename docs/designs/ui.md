@@ -283,6 +283,13 @@ of played and manually preserved biographies. Archived people open from their
 detached identity without recreating a character. Collection returns preserve page,
 scroll and focus, choosing a nearby surviving row after removal.
 
+Kin also exposes Explore the played family under Family landmarks, alongside
+the existing freedom summary. This read-only overview pages every played life
+in the existing portrait list, with selected dated recorded landmarks. Each row
+opens Life history; Back, Escape and mobile Back retain page, scroll and focus.
+The overview labels first rank attainment as first recorded, discloses missing
+earlier events and condensation, and does not repeat the complete biography.
+
 Follow life and Preserve this life disclose the 50-life collection capacity,
 including dead people, and that only future events can be newly recorded.
 Stop following keeps the collected history. Remove preservation is an explicit
@@ -754,6 +761,27 @@ textareas retain monospace for editing structured text. New fields inherit this
 contract automatically; regression coverage compares field styles across screens.
 
 ## Required navigation and decision presentation
+
+Operating-law reviews use the local council motion list and the enterprise
+manager's retained modal history. Proposal sheets disclose the affected county
+and business, fee and term, beneficiaries, existing-business transition, seeded
+chance and session/day commitment. Business sheets disclose the original payee,
+payment and expiry, lawful status and free pause/closure choices. Cancellation
+spends nothing. Payment replaces the current review and Back refreshes the
+manager while restoring its retained scroll and focus. Existing worker wages
+remain explicitly disclosed when production pauses. See industry-laws.md.
+
+Business operating-law sheets also disclose the exact fine, whether a judgment
+closes the affected operation, and the unsupported stronger sanctions. Deliberate
+unauthorized operation has a separate confirmation and costless Cancel return.
+Temporary-exemption petitions disclose chance, term, zero money cost and the
+spent request on refusal; repeal petitions expose the existing hearing where
+applicable, without promising the petitioner a seat. Complaint rows retain the
+original operator's character card, actual-output evidence, decision, paid fine,
+remaining personal balance and closure. Answering requests the canonical arrest
+demand and hearing; it does not sentence. Hearing prose and judgment reviews
+disclose closure, original public payee and unpaid balance. All business review
+returns preserve the parent manager, focus and scroll.
 
 Whenever a UI references a specific character, show that character's portrait
 with their identity in the same visible surface. This applies to events, outcomes,
@@ -3702,6 +3730,26 @@ The disabled action retains a focusable details wrapper. Other blockers stay inl
 
 ## Decision review layout
 
+Operating-law hearing sheets are shared by the town and Estates entry points.
+They disclose county, public payee, business, exemptions, transition, costs,
+hearing deadline, electorate, weights, positions, quorum and passage rule before
+proposal. Named current principals have portrait rows; unnamed county benches
+explicitly disclose bounded representation. Only the player's eligible bench
+offers support, oppose and abstain. Settlement retains the completed tally and
+decision without replay; withdrawal explains the spent annual hearing. Retained
+modal history refreshes the parent list while restoring scroll and focus through
+Back, Escape and mobile Back. The Deeds record entry remains after lost office.
+
+Episcopal rent reviews use the same fact cards, participant portraits and action
+disclosures through Visit the diocese, Hold ecclesiastical court and The Bishopric.
+They disclose the exact current holding, charter evidence, dispute, existing and
+offered seasonal rates, next-season start, finite term, one-time compensation,
+private payer, institutional receiving account and zero review/court fees.
+Browsing spends no day. The counterparty can refuse; temporal enforcement has
+its own competence gate. Confirmation and outcome return with body/list scroll,
+action focus and disclosures retained. Closed or suspended agreements remain
+readable. Existing pastoral events retain their ordinary day and cooldown.
+
 Decision reviews use the shared review helpers in `ui_misc.js` instead of stacked
 paragraphs. A Governance-style fact card (`reviewFactsCard`) holds label/value
 rows for destination, cost, duration, commitment and consequences, plus a warning
@@ -3932,6 +3980,8 @@ Independent world-story status cards
 Political world stories and date-window campaigns use the shared sheet as read-only status, listed under Affairs of the world while they offer no choice. Pending future campaigns wait until their opening year to appear; active and resolved outcomes remain readable. They add no confirmation buttons or alternate navigation flow. Household track choices keep their reviewed confirmation, quote revalidation, keyboard activation and retained Deeds scroll/focus return. Back from a world-story sheet returns to the Affairs list through the same modal history, and Close returns focus to the Affairs entry.
 
 Ruler opening onboarding
+
+Personal agendas show the original bound incumbent with the shared portrait and character-sheet return. The current review lists available court funds, with separate public/private amounts only for separated accounts, and each referenced source's live status once. Ordinary-declaration frontiers name the actual objective controller and initiating court; their result is not relabeled as the reader's victory. These reads spend nothing and acknowledge no source. Decisions continue through the shared story review, cost disclosure and retained modal navigation.
 
 Existing-ruler openings pin the authored name, sex and culture/faith pair in character creation, disable name reroll, and offer only the existing court household. Their intro explains the actual court, territory and host before play. The Ruling a court checklist in Deeds replaces commoner First steps: review a court story, review Rank & Realm, and let days advance. It then joins ordinary family guidance. Reviewing a sheet records only onboarding progress and never accepts an agreement.
 

@@ -4,7 +4,7 @@ FBDATA.startScenarios_634_medina = [
   {id:'medina_household_634',bookmarkIds:['634'],alwaysUnlocked:true,
     fixedProvinceId:'medina',startCulture:'arabic',startReligion:'early_islam_634',startAge:24,
     name:'Medinan Farming Household',
-    desc:'A fictional free farming household in Medina, with an established family and a small holding. Weigh ordinary work, household needs and devotion without entering public service.',
+    desc:'A fictional free farming household in Medina, with an established family and a small holding. Weigh ordinary farming, provisions and devotion, and review the current court and local community while keeping household and public authority separate.',
     tier:1,profession:'farmer',gold:20,prestige:5,piety:0,
     familyPresets:{established:{}},startEffects:{landPlots:1},
     tracks:['medina_household_track_634'],

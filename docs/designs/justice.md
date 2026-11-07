@@ -20,6 +20,37 @@ Existing justice technology reviews remain applicable; no new capability is adde
 
 # Ruler justice
 
+Industry-law complaints consume the existing offense, arrest, custody, hearing,
+defense and sentence boundaries. Actual unauthorized output supplies the original
+actor, issuing court, law and material evidence; a proposal or detection imposes
+no judgment. The court needs current control, readiness and Peace in the law's
+county. Cases follow that realm through succession; changed court generations,
+lost authority and absent custody invalidate pending responses before effects.
+Repeal does not retrospectively invent or erase an operation: the recorded
+applicable-law policy retains actual earlier violations and imposed balances.
+
+The supported stall offenses permit mercy and a frozen fine, intersected with
+current court law. They exclude imprisonment, penance, exile, forfeiture,
+corporal and lethal sentences, including restricted-distribution substitution.
+The fine goes to the original public payee rather than a judge's private purse.
+Available personal funds are collected once and the original operator retains
+the unpaid balance. A declared closure affects only the named enterprise's
+operation, preserving ownership and unrelated property. These are qualified
+English trading remedies; see [operating laws](industry-laws.md) for research,
+authoring, petitions and lifecycle. Technology impact
+`industry_law_enforcement` is none; no save envelope or custody owner changes.
+Industry-specific mechanical review fields are omitted for ordinary cases,
+preserving their existing stamped review shape. The ordinary hearing's live
+sentence parameters also supply the unpaid balance and specific fine/closure
+prose for industry cases without storing rendered text.
+
+The bounded civil rent adapter justiceCivilRentJurisdiction checks the actual
+temporal ruler, ordinary county jurisdiction, public readiness and scoped Peace.
+It does not treat spiritual office as a court. An episcopal rent assertion or
+objection creates no criminal offense, evidence of religious guilt, custody or
+confiscation. The available civil remedy is a disclosed finite composition of
+an existing charter, or refusal of enforcement. See episcopal-claims.md.
+
 Public intrigue hearing boundary
 
 Player exposure (`queuePlayerHearing`) and AI exposure (`intrigueAutoSentence`)

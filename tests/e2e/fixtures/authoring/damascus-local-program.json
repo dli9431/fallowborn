@@ -1,0 +1,94 @@
+{
+  "name": "Damascus independent local program",
+  "startScenarios": [
+    {
+      "id": "damascus_apprentice_example",
+      "name": "Damascus reserve household",
+      "desc": "An independent costless household review.",
+      "intro": "Your craft household considers its reserve.",
+      "bookmarkIds": [
+        "634"
+      ],
+      "alwaysUnlocked": true,
+      "fixedProvinceId": "damascus",
+      "startCulture": "syriac",
+      "startReligion": "chalcedonian",
+      "startAge": 24,
+      "tier": 1,
+      "profession": "craftsman",
+      "gold": 9,
+      "prestige": 0,
+      "piety": 0,
+      "familyPresets": {
+        "established": {}
+      },
+      "tracks": [
+        "damascus_apprentice_track"
+      ],
+      "trackLocations": {
+        "damascus_apprentice_track": [
+          "damascus"
+        ]
+      },
+      "revisionIdentities": {
+        "634": {
+          "core_identities_v3": {
+            "startReligion": "chalcedonian_local_634"
+          },
+          "core_courts_v4": {
+            "startReligion": "chalcedonian_local_634"
+          }
+        }
+      }
+    }
+  ],
+  "storyInstances": {
+    "damascus_apprentice_track": {
+      "id": "damascus_apprentice_track",
+      "type": "household_track",
+      "title": "A private reserve",
+      "intro": "Consider ordinary savings without a reward.",
+      "homeProvinceId": "damascus",
+      "continuity": "protagonist",
+      "interruptedStage": "ended",
+      "initialStage": "home",
+      "requirements": {
+        "provinces": [
+          "damascus"
+        ]
+      },
+      "stages": {
+        "done": {
+          "name": "Plans recorded",
+          "text": "Ordinary life continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        },
+        "ended": {
+          "name": "The personal plan ended",
+          "text": "A new protagonist makes a separate plan.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        },
+        "home": {
+          "name": "Keep the reserve",
+          "text": "Keep your present purse and remain at home.",
+          "choices": [
+            {
+              "id": "remain",
+              "label": "Keep these savings",
+              "detail": "No money or day cost.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        }
+      }
+    }
+  }
+}

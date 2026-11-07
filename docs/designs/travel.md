@@ -311,6 +311,10 @@ write durable localized Chronicle descriptors.
 
 ## Settlement
 
+Committed permanent settlement records the played head's first permanent move
+in Life history and the linked Family landmarks overview. Eligibility checks,
+visits, return travel and repeated settlement calls do not create entries.
+
 `FB.travelSettle` is restricted to freeholders and gentry and moves
 `player.provinceId` only after the destination capstone.
 Culture, faith, enterprise ownership, finance contracts, and the active rival
@@ -399,6 +403,8 @@ Named companions on ordinary journeys
 An opted-in household party can start an ordinary sites-mode journey for exact separately consenting people. The travel record carries householdPartyId and keeps the only route and movement clock. Named companions project that journey through FB.characterLocation while their permanent FB.characterResidence stays unchanged. Actual county crossings update bounded interruption checkpoints. Cancellation preserves reached position using partyInterrupted rather than implying arrival or a return home. The story review owns group return confirmation; direct solo return controls cannot bypass it. A normal destination stay retains its prepaid return fare and saved speed, while an interrupted recovery route prices current provisions and transport separately. Selective settlement uses the existing eligibility gate and changes only the accompanying people, retaining excluded permanent residences. See docs/designs/household-parties.md for consent, care, partial failures and optional save records.
 
 Named camp continuity and new survivor roads
+
+Named journey conflict checks distinguish an untouched pending expedition option from participation: without a requested role or held location it permits otherwise lawful departure and continuing paid recovery. Requested pending roles, active or suspended commitments, held locations and actual mobile principals retain their exclusions. Camp recovery retains the original binding, separately pays for its ordinary road once and releases home work only on actual return.
 
 Optional named civilian companions project the canonical migration, separately from field armies and the protagonist's personal-admission place. The named and personal adapters share current/checkpoint projection before personal carriage closes. Lost command consent, term, care, custody or migration cannot infer arrival elsewhere. Family refusal preserves solo admission; a continuing original adult is released to that personal carrier while exact relatives stop at their actual checkpoints. A whole-party withdrawal or continuing parental-care group stops personal carriage through its existing owner.
 

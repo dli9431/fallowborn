@@ -6,6 +6,13 @@ Public grants, actual provision-provider receipts, distributions, revaluation, p
 
 # Coin & Credit
 
+Targeted enterprise permissions use `treasuryHouseholdPurchase` to preflight a
+private purchase price and all named public recipients together. It debits the
+combined amount once, credits the original accounts and rejects unavailable or
+overflowing accounts before mutation. Operating-law consumers own their saved
+once-only permits; opening a review creates no liability or payment. See
+[Targeted operating laws](industry-laws.md).
+
 Fresh inherited works and opening reserves
 
 Explicit-inventory worlds defer initial population, market and treasury setup until the complete building ledger and ruler adoption are final. treasuryInitialize can include a freshly adopted player crown in its one opening fiscal snapshot, using the same reserve formula, standing upkeep and direct-holder scope as an ordinary AI crown. A dynastic crown's resulting reserve becomes the player's existing treasury purse; an elective public account stays public, and a delegated official keeps their private scenario gold. No inventory transaction credits or debits money, and repeat or restored initialization preserves current balances. Worlds without an explicit inventory retain their existing boot/adoption order and reserve behavior. This is the existing inherited_opening_infrastructure none decision, with no new finance capability or saved accounting field.

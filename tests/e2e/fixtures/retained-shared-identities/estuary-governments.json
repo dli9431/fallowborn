@@ -1,0 +1,31 @@
+{
+  "governmentForms": {
+    "estuary_added_crown": {
+      "holders": "feudal_vassals", "succession": "dynastic", "territory": "fixed",
+      "consent": "territorial", "levy": "feudal_levy", "revenue": "demesne_revenue",
+      "council": "royal_council", "diplomacy": "territorial_diplomacy", "ai": "realm_decisions",
+      "ladder": "inherited_ladder", "officeCatalogue": [], "systems": {"enable": ["feudal_service"]}
+    }
+  },
+  "administrationProfiles": {
+    "estuary_added_service": {
+      "name": "Estuary provincial service",
+      "offices": ["provincial_governor", "provincial_receiver", "provincial_commander"],
+      "governor": "provincial_governor", "fiscal": "provincial_receiver", "commander": "provincial_commander",
+      "appointmentCost": 4, "termDays": 720, "confirmation": "continues",
+      "finance": {"kind": "revenue_service", "share": 0.1, "salary": 0, "serviceShare": 0, "remittance": 1},
+      "accession": {"mode": "recognition", "minimumAge": 16, "allowMinor": true, "officeCandidates": false, "threshold": 0.6, "interests": []}
+    }
+  },
+  "aristocraticProfiles": {
+    "estuary_added_court": {
+      "name": "Estuary household court", "administrationProfileId": "estuary_added_service",
+      "minimumAge": 16, "allowMinor": true, "threshold": 0.6, "negotiationCost": 4,
+      "defaultTerms": {"revenue": 0.75, "levy": 0.7}, "minimumRevenue": 0.55, "minimumLevy": 0.4,
+      "refusalSupport": -20, "enforcementSupportCost": 8,
+      "interests": [{"id": "reed", "name": "Reed household", "dynasty": "Reed", "actorId": "estuary_reed",
+        "provinceId": "estuary_home", "officeId": "hereditary_interest", "weight": 1,
+        "minimumMartial": 0, "maximumRevenue": 0.8, "maximumLevy": 0.8}]
+    }
+  }
+}

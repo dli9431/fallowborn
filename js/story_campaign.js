@@ -6,6 +6,9 @@
   var RESULTS = ['won','failed','diverted','interrupted'];
   function plain(row) { return !!row && typeof row === 'object' && !Array.isArray(row); }
   function live(s, rid) { return rid === 'player' ? alive(s, s.player && s.player.charId) : !!(s.realms[rid] && s.realms[rid].alive); }
+  function courtLive(s, rid, def) {
+    return live(s, rid) && (!def.admission || !!(s.realms[rid] && s.realms[rid].alive));
+  }
   function characterId(s, ref) { return FB.stories.resolve(s, ref); }
   function alive(s, id) { return !!(id && s.chars[id] && !s.chars[id].dead); }
   function ruler(s, rid) {
@@ -60,12 +63,12 @@
   /* Conditions separate permanent divergence from a waitable fact (Clovis
      must inherit naturally, busy courts can finish their existing wars). */
   function conditions(s, def) {
-    if (!live(s, def.actor.realmId)) return { result:'interrupted', reason:'actor_extinct' };
+    if (!courtLive(s, def.actor.realmId, def)) return { result:'interrupted', reason:'actor_extinct' };
     var expected = characterId(s, def.actor.character);
     if (def.actor.character && !alive(s, expected)) return { result:'interrupted', reason:'actor_dead' };
     var waiting = !!(expected && ruler(s, def.actor.realmId) !== expected);
     var owner = s.owner[def.target.provinceId];
-    if (!owner || !live(s, owner)) return { result:'diverted', reason:'target_lost' };
+    if (!owner || !courtLive(s, owner, def)) return { result:'diverted', reason:'target_lost' };
     if (def.target.ownerIds && def.target.ownerIds.indexOf(owner) < 0)
       return { result:'diverted', reason:'target_changed' };
     if (def.target.character) {
@@ -78,7 +81,7 @@
         return { result:'diverted', reason:'capital_lost' };
       if (row.kind === 'ruler') {
         var id = characterId(s, row.character);
-        if (!live(s, row.realmId) || !alive(s, id))
+        if (!courtLive(s, row.realmId, def) || !alive(s, id))
           return { result:'interrupted', reason:'patron_lost' };
         if (ruler(s, row.realmId) !== id) waiting = true;
       }
@@ -99,6 +102,58 @@
     rec.targetOwnerId = s.owner[def.target.provinceId];
     if (def.commission)
       rec.patronGeneration = FB.realmRulerGeneration(s, def.commission.issuerRealmId);
+  }
+  /* Opted-in declarations use current public courts, never a household's
+     possession of one county as evidence of an original court's continuity. */
+  function admission(s, def) {
+    if (!def.admission) return {allowed:true};
+    var rid = def.actor.realmId, enemy = s.owner[def.target.provinceId];
+    var out = {allowed:false,reason:'living_courts',cause:{type:def.admission.cause,
+      enemy:enemy,target:def.target.provinceId}};
+    if (!s.realms[rid] || !s.realms[rid].alive || !s.realms[enemy] || !s.realms[enemy].alive ||
+        !alive(s, ruler(s, rid)) || !alive(s, ruler(s, enemy))) return out;
+    out.actorReadiness = FB.governments.publicAuthorityReadiness(s, rid);
+    // A defender's readiness gates its voluntary player decision, not the
+    // other court's ordinary right to attack a vulnerable government.
+    out.targetReadiness = enemy === 'player' ? FB.governments.publicAuthorityReadiness(s, enemy) : null;
+    if (!out.actorReadiness.allowed || out.targetReadiness && !out.targetReadiness.allowed) {
+      out.reason = 'public_authority'; return out;
+    }
+    out.preview = FB.warDeclarationPreview(s, rid, [out.cause]);
+    if (!out.preview.valid || out.preview.unlawful) { out.reason = 'ordinary_declaration'; return out; }
+    if (FB.sameFaithHeadWarPolicy(s, FB.realmReligionId(s, rid), enemy, def.target.provinceId, true)) {
+      out.reason = 'faith_policy'; return out;
+    }
+    if (rid === 'player') {
+      var offered = FB.warCauses(s, false, true).some(function (cause) {
+        return cause.type === out.cause.type && cause.enemy === enemy && cause.target === out.cause.target;
+      });
+      if (!offered) { out.reason = 'ordinary_declaration'; return out; }
+      out.costs = FB.warCausePreview(s, out.cause);
+    } else {
+      var burden = FBDATA.modifiers.aggressive_rule;
+      out.costs = {support:(burden.fx.commonVoice || 0) +
+        (burden.supportPerStack || 0) * FB.aggressionDeclarationCount(s, rid),days:burden.days,
+        enemyStanding:enemy === 'player' ? FB.warEnemyStandingPreview(s, rid) : null};
+    }
+    out.allowed = true; out.reason = null;
+    return out;
+  }
+  function declare(s, def, check) {
+    var rid = def.actor.realmId, cause = check.cause;
+    if (rid === 'player') {
+      if (!FB.startPlayerWar(s, cause, {confirmAggression:true})) return null;
+      return FB.ordinaryWarBetween(s, rid, cause.enemy);
+    }
+    var owner = cause.enemy === 'player' ? 'player' : rid;
+    var war = FB.registerOrdinaryWar(s, owner, {enemy:owner === 'player' ? rid : cause.enemy,
+      defending:owner === 'player',target:cause.target,legacy:false,casus:cause,objectives:[cause]});
+    if (!war) return null;
+    FB.recordWarDeclaration(s, war, check.preview);
+    if (owner === 'player') FB.withOrdinaryWar(s, war.id, function () {
+      FB.warFooting(s); FB.announcePlayerDefense(s, war);
+    });
+    return war;
   }
   function commission(s, rec, def) {
     if (!def.commission) return true;
@@ -161,7 +216,7 @@
       if (!rec.migrationId && rec.warId && s.owner[county] === rid) {
         finish(s, rec, def, 'won', 'objective_held'); return;
       }
-      if (!live(s, rid) || rec.actorId && !alive(s, rec.actorId) ||
+      if (!courtLive(s, rid, def) || rec.actorId && !alive(s, rec.actorId) ||
           rec.actorGeneration !== null && rec.actorGeneration !== FB.realmRulerGeneration(s, rid) ||
           def.commission && rec.patronGeneration !== null && (!live(s, def.commission.issuerRealmId) ||
             !alive(s, ruler(s, def.commission.issuerRealmId)) ||
@@ -212,13 +267,18 @@
     if (!check.allowed || FB.isRealmAtWar(s, rid) || FB.isRealmAtWar(s, s.owner[county])) return;
     if (playerParty(s, def) && (rec.playerDecision !== 'campaign' ||
         rec.playerDecisionGeneration !== FB.realmRulerGeneration(s, 'player'))) return;
+    var admitted = admission(s, def);
+    if (!admitted.allowed) return;
     if (!commission(s, rec, def)) return;
-    if (rec.startedTurn === null) stamp(s, rec, def);
-    if (def.migrationId) { migration(s, rec, def); return; }
-    var war = FB.registerOrdinaryWar(s, rid, { enemy:s.owner[county],
+    if (def.migrationId) {
+      if (rec.startedTurn === null) stamp(s, rec, def);
+      migration(s, rec, def); return;
+    }
+    var war = def.admission ? declare(s, def, admitted) : FB.registerOrdinaryWar(s, rid, { enemy:s.owner[county],
       target:county, legacy:false, casus:{ type:'border', target:county },
       objectives:[{ target:county, type:'border' }] });
     if (!war) return;
+    stamp(s, rec, def);
     rec.warId = war.id; rec.phase = 'started'; notice(s, def, 'started');
   }
   function playerParty(s, def) {
@@ -227,17 +287,18 @@
   }
   function playerQuote(s, rec, authored, id) {
     var def = FB.stories.definition(s, authored), check = conditions(s, def);
+    var admitted = admission(s, def);
     var facts = { phase:rec.phase, decision:rec.playerDecision || null, turn:s.turn,
-      year:s.date.year, generation:FB.realmRulerGeneration(s, 'player'),
+      date:s.date, generation:FB.realmRulerGeneration(s, 'player'),
       actor:ruler(s, def.actor.realmId), target:s.owner[def.target.provinceId],
       actorGeneration:FB.realmRulerGeneration(s, def.actor.realmId),
       patronGeneration:def.commission && FB.realmRulerGeneration(s, def.commission.issuerRealmId),
-      check:check, gold:s.player.gold, owner:s.owner[def.target.provinceId],
+      check:check, admission:admitted, definition:def, gold:s.player.gold, owner:s.owner[def.target.provinceId],
       wars:[FB.isRealmAtWar(s, def.actor.realmId), FB.isRealmAtWar(s, s.owner[def.target.provinceId])] };
     return { id:id, allowed:!!(playerParty(s, def) && rec.phase === 'pending' &&
       !rec.playerDecision && !s.player.dead && s.date.year >= def.firstYear && !closed(s, def) &&
-      (id === 'leave_campaign' || id === 'face_campaign' && check.allowed && !facts.wars[0] && !facts.wars[1])),
-      reason:'campaign_conditions', facts:facts, stamp:JSON.stringify(facts) };
+      (id === 'leave_campaign' || id === 'face_campaign' && check.allowed && admitted.allowed && !facts.wars[0] && !facts.wars[1])),
+      reason:admitted.reason || 'campaign_conditions', facts:facts, stamp:JSON.stringify(facts) };
   }
   function validate(rec, id) {
     function bad(field) { throw new Error(FB.T('Invalid v4 save field at {path}.',
@@ -258,7 +319,54 @@
         (rec.startedTurn === null || rec.deadline === null)) bad('startedTurn');
     if (rec.phase === 'started' && !rec.warId) bad('warId');
   }
-  function validateDefinition(def) {
+  function validateAdmission(rec, def, state) {
+    if (!def.admission) return;
+    function need(ok) { if (!ok) throw new Error(FB.T('Invalid v4 save field at {path}.',
+      {path:'state.stories.' + def.id + '.admission'})); }
+    var fields = Object.keys(fresh());
+    need(Object.keys(rec).length === fields.length && fields.every(function (key) {
+      return Object.prototype.hasOwnProperty.call(rec, key);
+    }));
+    need(rec.phase !== 'negotiating' && rec.migrationId === null && rec.commissionId === null &&
+      rec.contractId === null && rec.patronGeneration === null && rec.settlementApplied === false);
+    need(rec.playerDecision === null ? rec.playerDecisionGeneration === null :
+      Number.isInteger(rec.playerDecisionGeneration) && rec.playerDecisionGeneration >= 1);
+    need(rec.phase !== 'pending' || rec.playerDecision === null && rec.reason === null);
+    need(rec.playerDecision !== 'declined' || rec.phase === 'resolved' && rec.reason === 'player_declined');
+    need(rec.startedTurn === null ? rec.deadline === null && rec.actorId === null &&
+      rec.actorGeneration === null && rec.targetOwnerId === null && rec.warId === null && rec.result !== 'won' && rec.result !== 'failed' :
+      rec.phase !== 'pending' && rec.deadline === rec.startedTurn + def.durationDays &&
+      !!rec.actorId && Number.isInteger(rec.actorGeneration) && rec.actorGeneration >= 1 && !!rec.targetOwnerId && !!rec.warId);
+    if (!state) return;
+    // Core identities may be omitted by the wire codec. Expand a detached
+    // view, without setup, repair, adoption or observation.
+    var s = FB.save.expandedSnapshot(state), effective = FB.stories.definition(s, def);
+    need((rec.startedTurn === null || rec.startedTurn <= s.turn) &&
+      (rec.outcomeTurn === null || rec.outcomeTurn <= s.turn &&
+        (rec.startedTurn === null || rec.outcomeTurn >= rec.startedTurn)));
+    if (rec.startedTurn === null) return;
+    need(!!s.chars[rec.actorId] && (!effective.target.ownerIds ||
+      effective.target.ownerIds.indexOf(rec.targetOwnerId) >= 0));
+    var serial = /^war_([1-9][0-9]*)$/.exec(rec.warId);
+    need(!!serial && Number(serial[1]) <= s.warSerial);
+    var rid = effective.actor.realmId, generation = FB.realmRulerGeneration(s, rid);
+    if (s.realms[rid] && s.realms[rid].alive) need(rec.actorGeneration <= generation);
+    if (s.realms[rid] && s.realms[rid].alive && rec.actorGeneration === generation && alive(s, ruler(s, rid)))
+      need(rec.actorId === ruler(s, rid));
+    var war = s.wars && s.wars[rec.warId];
+    if (!war) need(!Object.keys(s.wars || {}).some(function (key) {
+      var row = s.wars[key];
+      return row.status === 'active' && row.attacker === rid && row.defender === rec.targetOwnerId &&
+        row.startedTurn === rec.startedTurn && row.objectives && row.objectives.some(function (objective) {
+          return objective.target === effective.target.provinceId && objective.type === effective.admission.cause;
+        });
+    }));
+    if (war) need(war.attacker === rid && war.defender === rec.targetOwnerId &&
+      war.startedTurn === rec.startedTurn && war.casus && war.casus.type === effective.admission.cause &&
+      war.objectives && war.objectives.length === 1 && war.objectives[0].type === effective.admission.cause &&
+      war.objectives[0].target === effective.target.provinceId);
+  }
+  function validateDefinition(def, context, bm) {
     function id(value) { return typeof value === 'string' && !!value; }
     function cast(ref) { return FB.stories.referenceValid(ref, def); }
     if (!def || typeof def.name !== 'string' || typeof def.desc !== 'string' ||
@@ -276,6 +384,20 @@
         def.commission && (!plain(def.commission) || typeof def.commission.source !== 'string' ||
           typeof def.commission.issuerRealmId !== 'string'))
       throw new Error('Invalid campaign story definition.');
+    if (def.admission !== undefined) {
+      var rule = def.admission;
+      if (!plain(rule) || Object.keys(rule).length !== 3 || rule.schema !== 1 ||
+          rule.mode !== 'ordinary_declaration' || rule.cause !== 'aggression' ||
+          def.commission !== undefined || def.migrationId !== undefined || def.settlement !== undefined || def.settlementForm !== undefined ||
+          def.firstDate !== undefined || def.lastDate !== undefined)
+        throw new Error('Invalid campaign admission policy.');
+      if (bm) {
+        var known = function (id) { return (bm.realms || []).some(function (r) { return r.id === id; }); };
+        if (!known(def.actor.realmId) || (def.target.ownerIds || []).some(function (id) { return !known(id); }) ||
+            !(bm.provinces || []).some(function (p) { return p.id === def.target.provinceId && !p.wasteland; }))
+          throw new Error('Unresolved campaign admission party or objective.');
+      }
+    }
     for (var row of def.conditions || [])
       if (!plain(row) || ['owner','ruler','landless','host'].indexOf(row.kind) < 0 ||
           !id(row.realmId) || row.kind === 'owner' && !id(row.provinceId) ||
@@ -312,12 +434,47 @@
         if (!playerParty(s, effective) || rec.phase !== 'pending' || rec.playerDecision ||
             s.date.year < def.firstYear || closed(s, def)) return [];
         return [
-          { id:'face_campaign', label:FB.T('Face the campaign'), detail:FB.T('Authorize this political opportunity to proceed through ordinary war and its existing conditions. No territory is awarded by this decision.') },
+          { id:'face_campaign', label:FB.T('Face the campaign'), detail:def.admission ?
+            FB.T('Commit to an ordinary war of aggression, with its political costs and uncertain outcome. No payment or territory grant accompanies this decision.') :
+            FB.T('Authorize this political opportunity to proceed through ordinary war and its existing conditions. No territory is awarded by this decision.') },
           { id:'leave_campaign', label:FB.T('Use ordinary diplomacy instead'), detail:FB.T('Close this historical opportunity without a declaration, commission or payment. Neighboring courts retain their ordinary political choices.') }
         ];
       },
       quote:function (s, rec, id) { return playerQuote(s, rec, def, id); },
-      blocker:function () { return FB.T('The campaign needs its living rulers, current territory, date window and peaceful courts. Review the opportunity again when those conditions hold.'); },
+      blocker:function (s, rec, reason) {
+        if (reason === 'public_authority') return FB.T('The court needs a capable current public authority before making this commitment.');
+        if (reason === 'ordinary_declaration') {
+          var a = admission(s, FB.stories.definition(s, def));
+          return a.preview && a.preview.reason || FB.T('Ordinary war permission, frontier access and a currently offered aggression objective are required.');
+        }
+        if (reason === 'faith_policy') return FB.T('The ordinary religious policy prevents this declaration.');
+        return FB.T('The campaign needs its living rulers, current territory, date window and peaceful courts. Review the opportunity again when those conditions hold.');
+      },
+      review:function (s, rec, id, q) {
+        if (!def.admission || id !== 'face_campaign') return [];
+        var cost = q.facts.admission.costs, aggression = cost.aggression;
+        var lines = [FB.T('No payment. The attempt lasts at most {days} days from declaration; an ordinary war may continue afterward. No conquest is guaranteed.', {days:def.durationDays}),
+          FB.T('Popular support in every attacking county: {change}, recovering over {days} days.',
+            {change:aggression ? aggression.realmSupportChange : cost.support,days:aggression ? aggression.realmSupportDays : cost.days})];
+        if (aggression) {
+          lines.push(FB.T('Prestige: {change}.', {change:aggression.prestigeChange}));
+          ['vassals','foreign'].forEach(function (kind) {
+            var groups = {};
+            aggression[kind].forEach(function (row) { groups[row.change] = (groups[row.change] || 0) + 1; });
+            Object.keys(groups).sort().forEach(function (change) {
+              lines.push(kind === 'vassals' ? FB.T('Standing with {count} direct subjects: {change} each.', {count:groups[change],change:Number(change)}) :
+                FB.T('Standing with {count} foreign courts: {change} each.', {count:groups[change],change:Number(change)}));
+            });
+          });
+          lines.push(FB.T('Recent aggression multiplies ordinary subject breakaway pressure by {factor}.',
+            {factor:aggression.breakawayMultiplier}));
+          if (aggression.modifier) lines.push(FB.T('A conquered objective receives {support} Popular support and ordinary tax, levy and unrest penalties for {days} days.',
+            {support:aggression.modifier.fx.commonVoice || 0,days:aggression.modifier.days}));
+        }
+        if (cost.enemyStanding) lines.push(FB.T('War hostility adds a Standing change of {change} with the opposing court, ending at {after}.',
+          {change:cost.enemyStanding.change,after:cost.enemyStanding.after}));
+        return lines;
+      },
       apply:function (s, rec, id, reviewed) {
         var q = playerQuote(s, rec, def, id);
         if (!q.allowed || !reviewed || reviewed.id !== id || reviewed.stamp !== q.stamp) return false;
@@ -326,9 +483,13 @@
         var effective = FB.stories.definition(s, def);
         if (id === 'leave_campaign') finish(s, rec, effective, 'diverted', 'player_declined');
         else day(s, rec, effective);
+        if (def.admission && id === 'face_campaign' && rec.phase === 'pending') {
+          rec.playerDecision = null; rec.playerDecisionGeneration = null;
+          return false;
+        }
         return true;
       },
-      validate:function (rec) { validate(rec, def.id); },
+      validate:function (rec, s) { validate(rec, def.id); validateAdmission(rec, def, s); },
       title:function (s) { return FB.dataText(s, null, 'storyCampaign', def.id, def, 'name', {}); },
       intro:function (s) { return FB.dataText(s, null, 'storyCampaign', def.id, def, 'desc', {}); },
       status:function (s, rec) {
@@ -337,8 +498,16 @@
             ? FB.T('Awaiting your decision') : FB.T('Awaiting the courts'), negotiating:FB.T('Commission and service terms'),
           started:FB.T('Campaign underway'), won:FB.T('Objective secured'), failed:FB.T('Campaign ended'),
           diverted:FB.T('History took another course'), interrupted:FB.T('Political opportunity interrupted') };
-        return { phase:rec.phase, name:names[rec.result || rec.phase],
-          lines:[FB.T('Territory depends on the campaign’s armies and any agreed settlement.')] };
+        var lines = [FB.T('Territory depends on the campaign’s armies and any agreed settlement.')];
+        if (def.admission) {
+          var effective = FB.stories.definition(s, def), pid = effective.target.provinceId;
+          var owner = s.realms[s.owner[pid]], actor = s.realms[effective.actor.realmId];
+          lines.push(FB.T('Objective: {province}. Current controller: {realm}.',
+            { province:FB.world.byId[pid].name, realm:owner ? owner.name : FB.T('No current court') }));
+          lines.push(FB.T('Initiating court: {realm}. A secured objective describes that court’s campaign result.',
+            { realm:actor ? actor.name : FB.T('No current court') }));
+        }
+        return { phase:rec.phase, name:names[rec.result || rec.phase], lines:lines };
       } };
   }, 'js/story_campaign.js', validateDefinition);
 })();

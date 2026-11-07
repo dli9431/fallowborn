@@ -97,6 +97,18 @@
       chars[id] = Object.assign({}, c, {id:id});
     });
     if (chars) state = Object.assign({}, state, {chars:chars});
+    // A live realm's true flag is omitted by the same wire codec. Supply
+    // only that default before treasury and platform provenance checks;
+    // explicit invalid flags and the caller's compact records stay untouched.
+    var realms = null;
+    Object.keys(state.realms || {}).forEach(function (id) {
+      var r = state.realms[id];
+      if (!plain(r) || own(r, 'alive') && typeof r.alive !== 'boolean') field('state.realms.' + id + '.alive');
+      if (own(r, 'alive')) return;
+      if (!realms) realms = Object.assign({}, state.realms);
+      realms[id] = Object.assign({}, r, {alive:true});
+    });
+    if (realms) state = Object.assign({}, state, {realms:realms});
     // The wire codec omits settlement zero on physical building records.
     // All building validators must see that default, without expanding other
     // saved identities or mutating the caller's compact input.
@@ -111,6 +123,7 @@
     });
     if (buildings) state = Object.assign({}, state, {buildings:buildings});
     if (FB.homeAuthority) FB.homeAuthority.validate(state);
+    if (FB.industryLaws) FB.industryLaws.validate(state);
     if (FB.expeditionPrograms) FB.expeditionPrograms.validatePassagePolicies(state);
     if (FB.treasuryValidatePreservation) FB.treasuryValidatePreservation(state);
     if (state.treasuryAccounting && own(state.treasuryAccounting, 'fundingRevision') &&
@@ -337,7 +350,7 @@
         !Number.isInteger(authority.lastCustomYear)) invalid('authority');
     var allowed = { schema:1, nextId:1, appointments:1, recognitions:1,
       contracts:1, rights:1, receipts:1, governments:1, lastCustomYear:1,
-      civicActors:1, migrations:1 };
+      civicActors:1, migrations:1, episcopalClaims:1 };
     for (var key in authority) if (own(authority, key) && !own(allowed, key))
       invalid('authority.' + key);
     var seen = Object.create(null);
@@ -495,6 +508,7 @@
         'Duplicate v4 authority receipt for obligation {id}.', { id:value.obligationId }));
       obligations[value.obligationId] = true;
     });
+    if (FB.episcopalClaims) FB.episcopalClaims.validateState(state);
     for (var rid in authority.governments) if (own(authority.governments, rid)) {
       var form = authority.governments[rid];
       if (FB.governmentSelection && plain(form)) FB.governmentSelection.validate(state, rid, form.selection);
