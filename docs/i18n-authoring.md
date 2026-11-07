@@ -303,6 +303,12 @@ Campaign story authoring
 
 FBDATA.storyCampaigns name and desc fields use storyCampaign.<id>.<field>.default through FB.dataText. Their news outcome rows carry key and text; the static extractor registers each text under that opaque message key. Runtime registration supplies English for saved Chronicle descriptors without requiring catalog generation on the feature branch. Political stage labels use literal FB.T calls. The named commanders in FBDATA.storyActors476 are historical proper names and are not translated.
 
+The two 634 frontier declarations read name/desc from the literal
+bookmarkContent['634'].campaigns display table in data/bookmark_634_campaigns.js.
+This uses the existing numeric bookmark campaign extractor and storyCampaign
+owners; data/story_campaigns_634.js owns eligibility and hidden-world attachment.
+No duplicate display prose, extractor extension or generated catalogue is needed.
+
 
 476 regional content extraction
 

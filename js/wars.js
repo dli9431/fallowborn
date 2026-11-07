@@ -1521,7 +1521,9 @@
     };
   });
   FB.remapWarRealm = function (state, from, to) {
+    const adopted = [];
     rows(state).forEach(function (w) {
+      const joining = to === 'player' && endpoint(w, from);
       if (w.attacker === from) w.attacker = to;
       if (w.defender === from) w.defender = to;
       if (w.legacyOwner === from) w.legacyOwner = to;
@@ -1537,10 +1539,21 @@
       w.enemy = endpoint(w, 'player') ? (w.attacker === 'player' ? w.defender : w.attacker) : w.defender;
       bindMilitary(state, w);
       if (w.attacker === w.defender) { w.status = 'ended'; w.occupations = {}; }
+      if (joining && w.status === 'active') adopted.push(w);
       invalidateWars(state);
     });
     (state.armies || []).forEach(function (a) { if (a.realm === from) a.realm = to; });
     if (state.warLaws && state.warLaws[from]) { state.warLaws[to] = state.warLaws[to] || state.warLaws[from]; delete state.warLaws[from]; }
+    // Adoption makes an existing war a player relationship now. Establish
+    // the same idempotent hostility and feedback facts that repair expects,
+    // without declaring again, raising a host or waiting for the first load.
+    adopted.forEach(function (w) {
+      FB.withOrdinaryWar(state, w.id, function () {
+        if (FB.applyPlayerWarEnemyStanding) FB.applyPlayerWarEnemyStanding(state, w, 'war:adoption');
+        if (FB.ensurePlayerWarHistory) FB.ensurePlayerWarHistory(state);
+        if (FB.ensurePlayerWarFeedback) FB.ensurePlayerWarFeedback(state);
+      });
+    });
   };
   FB.campaignDaily = function (state) {
     rows(state).forEach(function (w) {

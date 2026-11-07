@@ -12696,6 +12696,10 @@ window.FB = window.FB || {};
         sacrilegious:sameFaithPolicy === 'sacrilege'
       }
     };
+    // Registration wrappers can refuse a newly ineligible public command.
+    // Charge conduct and publish the declaration only after a war exists.
+    const registered = FB.registerOrdinaryWar(state, 'player', newWar);
+    if (!registered) return false;
     if (cause.type === 'aggression') {
       FB.applyWarOfAggressionConsequences(state, cause);
     }
@@ -12717,7 +12721,6 @@ window.FB = window.FB || {};
       state.player.prestige += FB.warPrestigeReward
         ? FB.warPrestigeReward(cause, 'declaration') : 5;
     }
-    const registered = FB.registerOrdinaryWar(state, 'player', newWar);
     registered.legacy = false;
     registered.objectives = [{ target:cause.target, type:cause.type,
       titleKind:cause.titleKind || null, titleId:cause.titleId || null }];

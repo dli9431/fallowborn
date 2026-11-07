@@ -236,6 +236,49 @@ FB.stories.registerType registers a trusted factory and its source file before b
 
 Campaigns have a date window, actor and target, explicit conditions, optional commission and migration, bounded duration, optional civic settlement and durable outcome messages. Pending opportunities wait for inheritance and peaceful courts; death, extinction and incompatible control resolve them. A started campaign records the exact ruler generation and commitment ids. Its result follows actual ownership or a completed migration claims session. Authority loss interrupts a political opportunity while the underlying ordinary war remains independent. Timeout bounds an unfinished opportunity. Resolved campaign records never reopen, pay again or award territory on restore.
 
+Optional admission:{schema:1,mode:'ordinary_declaration',cause:'aggression'} uses
+the ordinary declaration preview and transaction. Both courts need living current
+incumbents; the attacker needs current public readiness, political consent and
+actual frontier contact. Truces, alliances, pacts, government objectives, war laws
+and religious policy remain binding. An unlawful preview waits. A player defender
+also needs public readiness for its voluntary story decision; ordinary aggression
+against an impaired AI defender needs no defender consent. Player attackers review
+the existing aggression costs and use the ordinary player declaration. AI attackers
+use the same ordinary preview and realm support consequence writer. These campaigns
+cannot compose with commissions, migration or political settlement. Omission retains
+the existing campaign admission behavior.
+
+The review shows the ordinary realm support burden, player prestige and grouped
+Standing changes, hostility toward the opposing court, and the existing conquest
+and breakaway consequences. It grants no separate reward or payment.
+
+A refused ordinary registration leaves the duration unspent. A refused reviewed
+choice also leaves the decision unspent. Successful registration stamps the existing
+actor, generation, target owner, turn, deadline and exact war id once. Current court
+successors may commit before that stamp; a later actor generation change interrupts.
+Identity-preserving adoption uses the saved starting-court alias and existing realm
+and war remapping, preserving all progress. Household location or acquisition of a
+county supplies no such alias. Detached validation checks the opted-in phase and
+commitment invariants against existing court provenance and any retained war facts.
+Matching restoration runs no initialization, declaration, cost or observation.
+Extinction of an adopted public court closes the opportunity even if the household
+survives; later land does not reopen the resolved record.
+
+The hidden assembled autumn 634 revision attaches independent syrian_front_634 and
+iraqi_front_634 opportunities. Their current district targets are Damascus and Hira
+(damascus and kufa); neither depends on the other's record or success. Both offers
+close on 635/3/90. Successful commitments last 360 and 180 days respectively, even
+when begun near the offer cutoff. Busy shared courts can delay either beyond its
+window. Control already held, incompatible ownership, extinction, decline and no
+eligible start are valid outcomes. Actual objective ownership with a recorded war
+wins before deadline or actor succession checks; timeout leaves the ordinary war
+intact. No named battle, casualty, faith change or royal death is inferred.
+
+Technology impact is none for campaign_ordinary_admission and each independently
+declared 634 frontier: political admission needs no discovery. Existing military
+technology and public authority retain their own gates. The independent ordinary
+JSON policies in frontier-campaigns.json vary courts, conditions, windows and duration.
+
 World-story cards use the existing shared story sheet and are listed under Affairs of the world while they offer no choice. Future pending campaign cards are omitted until their first year; active and resolved records remain readable. Political observers have no gameplay choices; pending campaigns involving a player-controlled party offer the reviewed decisions described below. Household choices retain their existing reviewed flow and scroll/focus return.
 
 

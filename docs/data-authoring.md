@@ -348,6 +348,19 @@ The optional typed mobile.opening.reserves memberId/count array partitions exist
 
 Existing ordinary campaign authoring
 
+Conditional campaign stories may opt into the bounded ordinary_declaration
+admission policy documented in MODDING.md. Declare the real actor court, inhabited
+county objective, current owner constraints and finite offer/duration values.
+Admission never invents a territorial right or grants access, an army or money.
+Keep ordinary aggression costs visible in the shared story review, recheck live
+permission at commitment and stamp only a successfully registered war. Existing
+starting-court identity and war remapping preserve adoption without restarting the
+story; household land acquisition supplies no court alias. The independent native
+634 frontiers and ordinary JSON frontier-campaigns.json policies vary actor courts,
+conditions, offer windows and durations. Omission retains existing campaigns.
+Technology impact campaign_ordinary_admission is none: baseline political review
+needs no discovery, and all underlying war/public-authority gates remain in force.
+
 Optional mobile.openingCampaigns records bounded existing conflicts for the original command and exact columns through the same ordinary JSON path. The complete independent mobile-opening-campaigns-harbor.json and mobile-opening-campaigns-dune.json imports vary multiple versus single opponents, actual remote positions, living original rulers, retained versus external command, reserve allocation and bounded program windows. Dune also exercises an adopted opponent ruler. Shared pure validation and complete-batch fresh preflight reconcile planned hostility with real connected geography before the canonical war owner registers conflicts and assigns existing hosts. No force, territorial sovereignty, past outcome, stock, income, completed journey or executable callback is supplied. Strict optional saved provenance preserves original identities through peace, death, loss, movement, retirement and pruned history without replay. This bounded contract excludes protective guard, civilianCamps, preparation and landed/home-authority command compositions. Exact schema, exclusions and the technology decision are in docs/MODDING.md and docs/designs/mobile-columns.md.
 
 Guarded principal beginning authoring

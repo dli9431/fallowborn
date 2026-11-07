@@ -22,6 +22,18 @@ FB.save.expandedSnapshot(state) expands only the existing wire-codec omissions o
 
 Platform validation supplies omitted physical-building settlement indices as zero in a shallow detached view before checking profiles, operations, forts and institutional bindings. Explicit null, string, fractional and negative indices remain invalid. The raw input, live state, RNG and identity counters remain unchanged. This uses the existing codec default and adds no save field or schema version.
 
+Conditional campaign admission persistence
+
+Conditional campaign admission retains the existing campaign record and save
+envelope. Opted-in ordinary declarations require unspent pending records and
+coherent committed actor, generation, target owner, war id, start turn and deadline.
+Any retained war must match its original objective and parties after canonical
+starting-court remapping. Pruned ended history need not be recreated. Validation
+reads an expanded detached core view without setup or repair. Adoption preserves
+the original commitment rather than initializing another one; a household's later
+county ownership supplies no court provenance. Matching load/save/load preserves
+decisions, money, wars, RNG and UID without recharging costs or polling outcomes.
+
 Adopted dynastic treasury provenance
 
 Optional state.start.publicTreasury has exactly schema:1, originalRealmId, realmId and retirement. The original id must be the selected ruler realm in the effective saved revision and that declaration must opt in with publicTreasury:{schema:1}. Current realmId is player or the original realm after a supported court release. An active record has retirement:null and requires exactly one live canonical version-1 treasury with publicOwnerId matching originalRealmId, finite signed cash, nonnegative military accrual and valid fiscal clocks. Retirement is exactly turn and recipientId, records the canonical terminal transfer and requires any retained original account to remain retired and zero. A removed terminal realm supplies no new account.

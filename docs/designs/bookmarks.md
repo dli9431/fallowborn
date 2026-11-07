@@ -27,6 +27,14 @@ original owners and order. Hidden status does not exempt any world, institution
 or offered start from validation. No new technology capability or save field is
 introduced; the existing institution and government gates remain authoritative.
 
+The mandatory world catalogue also supplies two independent conditional frontier
+campaigns on core_courts_v4 only. data/story_campaigns_634.js adds their declarations
+and world attachments after the complete revision is assembled, before source
+sealing; no engine-dependent work runs during loading. The selectable predecessor
+and its story list retain their prior meanings. Native compilation and ordinary
+JSON mods use the same registered campaign type. See stories.md for admission,
+finite deadlines, adoption and the technology-impact decisions.
+
 The older raw world layers remain selectable by revision within the current
 catalogue. Current-build matching saves preserve people, offices, resources and
 story commitments without replaying setup. No historical catalogue signature

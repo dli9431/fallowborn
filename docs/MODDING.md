@@ -5831,6 +5831,31 @@ actor requires realmId and may name character as an exact character id or {story
 
 conditions is an array of records. kind:'owner' needs provinceId and realmId and requires that owner, normally for a capital. kind:'ruler' needs realmId and character and requires the named living ruler. kind:'landless' needs realmId and forbids prior territorial settlement. kind:'host' needs hostId and realmId and requires the existing living army. Unknown condition kinds are rejected. Busy actor and target courts wait rather than declaring a second war.
 
+Optional admission has exactly schema:1, mode:'ordinary_declaration' and
+cause:'aggression'. Unknown fields, versions, modes or causes reject. It requires
+real living current court incumbents, current attacker public readiness, ordinary
+war permission and frontier contact. An unlawful declaration or ordinary religious
+policy block waits. A player defender needs readiness to volunteer through the story;
+the defender has no veto over an unrelated ordinary attack. A player attacker must
+have the same aggression objective in the ordinary cause catalogue and reviews its
+current political costs. Both AI and player declarations use the ordinary aggression
+consequence writer. Actor and optional target-owner ids must resolve in each attached
+world, and the objective must be inhabited. No commission, migrationId, settlement,
+settlementForm, firstDate or lastDate composes with this policy. The supported offer
+window uses firstYear/lastYear and closes on the last day of lastYear; it adds no
+exact-date capability. Omission preserves existing campaign admission.
+
+For this policy a refused registration spends no duration, costs or player decision.
+A successful declaration stamps the existing war id, original commitment turn,
+duration-derived deadline, actor character/generation and target owner. Those facts
+survive starting-court adoption through the existing alias/remapping contract; owning
+one county supplies no original-court provenance. Current-content validation rejects
+pending commitment stamps, incompatible phases, unknown record fields and mismatched
+retained wars. Ordinary ended-war pruning remains supported. Restore never retries a
+declaration or enrolls a missing story. The current save envelope and campaign record
+shape are unchanged. Complete independent JSON policies are in
+tests/e2e/fixtures/authoring/frontier-campaigns.json.
+
 commission declares source and issuerRealmId. Recognition names the actor realm as subject and scope and uses the ordinary authority boundary. An existing effective recognition from that issuer may be reused. A later loss of the exact recognition interrupts the opportunity; it is not silently reaffirmed after succession. The story stores the commission id without granting the ruler property.
 
 migrationId names an existing FBDATA.federateMigrations definition. Its actor realm, target, patron and host must match the campaign conditions. The type reuses the named host and cannot manufacture lost troops. It creates at most one moving court and contract, negotiates through ordinary government AI and requests force only after the commission's terms become effective. War must secure the objective and the ordinary claims session must settle it before the story records won. Legacy already-declared wars remain ordinary wars without a newly synthesized migration.
