@@ -1,0 +1,94 @@
+{
+  "name": "Medina independent household provisions",
+  "startScenarios": [
+    {
+      "id": "medina_household_634",
+      "name": "Medina reserve household",
+      "desc": "An independent costless household review.",
+      "intro": "Your farming household considers its reserve.",
+      "bookmarkIds": [
+        "634"
+      ],
+      "alwaysUnlocked": true,
+      "fixedProvinceId": "medina",
+      "startCulture": "arabic",
+      "startReligion": "early_islam_634",
+      "startAge": 24,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 8,
+      "prestige": 0,
+      "piety": 0,
+      "familyPresets": {
+        "established": {}
+      },
+      "tracks": [
+        "medina_reserve_example"
+      ],
+      "trackLocations": {
+        "medina_reserve_example": [
+          "medina"
+        ]
+      }
+    }
+  ],
+  "storyInstances": {
+    "medina_reserve_example": {
+      "id": "medina_reserve_example",
+      "type": "household_track",
+      "title": "A private reserve",
+      "intro": "Consider ordinary savings without a reward.",
+      "homeProvinceId": "medina",
+      "continuity": "protagonist",
+      "interruptedStage": "ended",
+      "initialStage": "reserve",
+      "requirements": {
+        "provinces": [
+          "medina"
+        ]
+      },
+      "stages": {
+        "reserve": {
+          "name": "Keep the reserve",
+          "text": "Keep your present purse and remain at home.",
+          "choices": [
+            {
+              "id": "keep",
+              "label": "Keep these savings",
+              "detail": "No money or day cost.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            },
+            {
+              "id": "provide",
+              "label": "Buy provisions",
+              "detail": "Spend {money:3} on present household needs. No day or property grant.",
+              "operation": {
+                "kind": "household_expense",
+                "amount": 3
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "done": {
+          "name": "Plans recorded",
+          "text": "Ordinary life continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        },
+        "ended": {
+          "name": "The personal plan ended",
+          "text": "A new protagonist makes a separate plan.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    }
+  }
+}
