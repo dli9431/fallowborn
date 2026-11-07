@@ -60,6 +60,15 @@ Native contributors use bookmarkSources.stage with explicit source, affected boo
 
 Data authoring contract
 
+Industry-law offense and relief terms use the same detached validator and
+canonical consumers for native London and the ordinary
+`industry-law-enforcement.json` import. Supported variation includes fees,
+beneficiaries, petition chance/term, fine amount and operation closure; stronger
+penalties and asset confiscation reject. Actual seasonal output, original-party
+evidence, canonical custody and court competence remain intrinsic invariants.
+No declaration can create guilt merely by enactment or detection, transfer
+unrelated private property, redirect a payee or replay an imposed balance.
+
 Industry-law `voting` declares two consumers of the existing operating-law
 transaction: town benches and current Estates houses. Supply both quorum,
 threshold and finite hearing policies; town data may weight only the supported

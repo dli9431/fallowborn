@@ -21,6 +21,8 @@ FBDATA.events.push(
   trigger:{ never:true }, contextValidator:'justice_response_valid',
   text:{ forms:{ select:'value', param:'sentenceKind', cases:{
     fine:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: pay {money:sentenceAmount} and be released.',
+    industry_fine:'You are held in {student}’s custody for recorded unauthorized trading. The proposed fine collects {money:sentenceAmount} for the original public payee and releases you. A balance of {money:sentenceBalance} remains your personal liability. You may challenge the evidence before judgment.',
+    industry_fine_closure:'You are held in {student}’s custody for recorded unauthorized trading. The proposed judgment closes the affected business while its law is active, collects {money:sentenceAmount} for the original public payee and releases you. Ownership is retained. A balance of {money:sentenceBalance} remains your personal liability. You may challenge the evidence before judgment.',
     ransom:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: pay {money:sentenceAmount} and be released without pardoning unresolved offenses.',
     penance:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: lose {sentencePietyCost} piety and {sentencePrestigeCost} prestige, then be released.',
     custody:{ select:'value', param:'sentenceCustodyMode', cases:{

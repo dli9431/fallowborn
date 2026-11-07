@@ -28,7 +28,7 @@
     Object.keys(table).forEach(function (id) {
       const d = table[id];
       if (!/^[a-z][a-z0-9_]{0,79}$/.test(id) || !fields(d,
-          ['schema','motionId','bookmarkId','provinceId','enterpriseType','minYear','maxYear','mode','fee','permitDays','durationDays','transitionDays','exemptions','offense','voting']) ||
+          ['schema','motionId','bookmarkId','provinceId','enterpriseType','minYear','maxYear','mode','fee','permitDays','durationDays','transitionDays','exemptions','offense','voting','relief']) ||
           d.schema !== 1 || !own(data.localCouncilMotions, d.motionId) ||
           !own(data.bookmarks, d.bookmarkId) || d.enterpriseType !== 'market_stall_business' ||
           !own(data.enterprises, d.enterpriseType) ||
@@ -54,9 +54,12 @@
               return (world.provinces || []).some(function (p) { return p.id === e.id && !p.wasteland; });
             })) errors.push('Invalid industry-law exemption: ' + id);
       });
-      if (own(d, 'offense') && (!fields(d.offense, ['id','penalty','amount']) ||
+      if (own(d, 'relief') && (!fields(d.relief, ['days','chance']) || !integer(d.relief.days, 1, d.durationDays) ||
+          typeof d.relief.chance !== 'number' || !isFinite(d.relief.chance) || d.relief.chance < 0 || d.relief.chance > 1)) errors.push('Invalid industry-law relief: ' + id);
+      if (own(d, 'offense') && (!fields(d.offense, ['id','penalty','amount','closure']) ||
           typeof d.offense.id !== 'string' || !/^[a-z][a-z0-9_]{0,79}$/.test(d.offense.id) ||
-          d.offense.penalty !== 'fine' || !money(d.offense.amount))) errors.push('Invalid industry-law offense: ' + id);
+          d.offense.penalty !== 'fine' || !money(d.offense.amount) ||
+          own(d.offense, 'closure') && typeof d.offense.closure !== 'boolean')) errors.push('Invalid industry-law offense: ' + id);
       const motion = data.localCouncilMotions[d.motionId];
       if (Object.keys(motion.fx || {}).length) errors.push('Industry-law motions cannot also grant ordinance effects: ' + id);
       if (own(d, 'voting') && (!fields(d.voting, ['town','estates']) || !d.voting.town || !d.voting.estates ||
@@ -247,11 +250,17 @@
       return m;
     });
   };
-  function assemblyAuthority(s, d, consumer, proposerId, issuer) {
+  function assemblyAuthority(s, d, consumer, proposerId, issuer, petitionUid, repealId) {
     const rid = controller(s, d.provinceId), r = realm(s, rid), seat = FB.localCouncilOf(s);
     if (!applicable(s, d) || !living(s, proposerId) || s.player.dead || proposerId !== s.player.charId ||
         !r || !r.alive || !account(s, rid) || issuer && issuer.realmId !== rid ||
         !FB.political.consent(s, {kind:'realm', id:rid}, 'industry_law', {provinceId:d.provinceId}).allowed) return false;
+    if (consumer === 'town' && petitionUid) {
+      const e = currentEnterprise(s, petitionUid), law = lawById(s, repealId);
+      return !!(e && law && law.definitionId === L.forMotion(d.motionId) && law.issuer.realmId === rid &&
+        e.type === d.enterpriseType && e.provinceId === d.provinceId &&
+        FB.political.civicConsent(s, d.provinceId).allowed);
+    }
     if (consumer === 'town') return !!(seat && seat.holderCharId === proposerId && seat.provinceId === d.provinceId &&
       s.player.provinceId === d.provinceId && FB.station.isFreeUnlanded(s.player, s) &&
       (FB.professionHasRole(s.player.profession, ['trading','craft']) || s.player.profession === 'administration') &&
@@ -274,21 +283,23 @@
         FB.localCouncilOf(s).provinceId === d.provinceId : FB.parliamentActive(s) && s.player.liege === controller(s, d.provinceId));
     });
   };
-  L.quoteAssembly = function (s, definitionId, consumer, action, voteId, memberId, posture, repealId) {
+  L.quoteAssembly = function (s, definitionId, consumer, action, voteId, memberId, posture, repealId, petitionUid) {
     const d = FBDATA.industryLaws[definitionId];
     if (['town','estates'].indexOf(consumer) < 0 || !d || !d.voting || !d.voting[consumer]) return null;
     const v = votes(s).filter(function (r) { return r.id === voteId; })[0] || null;
     if (voteId && (!v || v.definitionId !== definitionId || v.consumer !== consumer)) return null;
     repealId = v ? v.repealId : repealId || null;
+    petitionUid = v ? v.petitionEnterpriseUid || null : petitionUid || null;
     const rules = d.voting[consumer], members = L.assemblyMembers(s, definitionId, consumer, repealId);
     if (v) members.forEach(function (m) {
       const b = v.ballots.filter(function (b) { return b.memberId === m.id && b.principal === m.principal; })[0];
       if (b) m.posture = b.posture;
     });
-    const authorized = assemblyAuthority(s, d, consumer, v ? v.proposerId : s.player.charId, v && v.issuer);
+    const authorized = assemblyAuthority(s, d, consumer, v ? v.proposerId : s.player.charId, v && v.issuer, petitionUid, repealId);
     const member = members.filter(function (m) { return m.id === memberId && m.actorId === s.player.charId; })[0];
     const parliament = consumer === 'estates' && FB.parliamentSummary(s);
-    const sessionReady = consumer === 'town' ? FB.localCouncilOf(s) && (FB.localCouncilOf(s).nextMotionTurn || 0) <= s.turn :
+    const sessionReady = petitionUid ? !votes(s).some(function (r) { return r.petitionEnterpriseUid && r.proposerId === s.player.charId && r.startedTurn + 360 > s.turn; }) :
+      consumer === 'town' ? FB.localCouncilOf(s) && (FB.localCouncilOf(s).nextMotionTurn || 0) <= s.turn :
       !!parliament && FB.parliamentTerms(s).motionYears.industry !== s.date.year && !parliament.pendingMotion;
     const open = !!v && v.status === 'pending', expired = open && s.turn >= v.endTurn;
     const valid = authorized && members.length > 0 && members.length <= 128 && availableLaw(s, definitionId, repealId);
@@ -314,6 +325,7 @@
       !ready ? FB.T('Another hearing is pending, this action is settled, or the hearing record limit has been reached.') : '';
     return {kind:'industry_assembly', definitionId:definitionId, consumer:consumer, action:action,
       voteId:voteId || null, memberId:memberId || null, posture:posture || null, repealId:repealId,
+      petitionEnterpriseUid:petitionUid,
       actorId:s.player.charId, turn:s.turn, terms:copy(d), members:members, tally:tally,
       issuer:{kind:consumer === 'town' ? 'local_council' : 'estates', provinceId:d.provinceId,
         realmId:controller(s, d.provinceId), holderCharId:s.player.charId},
@@ -325,7 +337,7 @@
   };
   L.commitAssembly = function (s, q) {
     if (!q || q.kind !== 'industry_assembly') return false;
-    const fresh = L.quoteAssembly(s, q.definitionId, q.consumer, q.action, q.voteId, q.memberId, q.posture, q.repealId);
+    const fresh = L.quoteAssembly(s, q.definitionId, q.consumer, q.action, q.voteId, q.memberId, q.posture, q.repealId, q.petitionEnterpriseUid);
     if (!fresh || !fresh.ready || !same(q, fresh)) return false;
     const rows = writable(s);
     if (!rows.votes) rows.votes = [];
@@ -335,7 +347,8 @@
         startedTurn:s.turn, endTurn:s.turn + q.terms.voting[q.consumer].days,
         ballots:[], status:'pending', endedTurn:null, lawId:null, result:null};
       rows.votes.push(r);
-      if (q.consumer === 'town') s.player.localCouncil.nextMotionTurn = s.turn + 360;
+      if (q.petitionEnterpriseUid) r.petitionEnterpriseUid = q.petitionEnterpriseUid;
+      else if (q.consumer === 'town') s.player.localCouncil.nextMotionTurn = s.turn + 360;
       else FB.parliamentEnsure(s).motionYears.industry = s.date.year;
       return r;
     }
@@ -381,6 +394,11 @@
       const d = law.terms;
       if (L.lifecycle(s, law) !== 'active' || d.provinceId !== e.provinceId || d.enterpriseType !== e.type) return;
       const x = exemption(s, d);
+      const relief = (rows.petitions || []).some(function (p) {
+        return p.kind === 'exemption' && p.lawId === law.id && p.enterpriseUid === e.uid &&
+          p.actorId === s.player.charId && p.granted && p.endTurn > s.turn;
+      });
+      if (relief) { x.fee = 0; x.permission = true; x.exempt = true; }
       const grace = law.existingEnterpriseUids.indexOf(e.uid) >= 0 && s.turn < law.transitionEndTurn;
       const permit = rows.permits.filter(function (p) {
         return p.lawId === law.id && p.enterpriseUid === e.uid && p.endTurn > s.turn;
@@ -396,12 +414,24 @@
         permitEndTurn:permit ? permit.endTurn : null, payeeRealmId:law.payeeRealmId});
     });
     const choice = rows.choices.filter(function (c) { return c.enterpriseUid === e.uid; })[0];
-    const paused = !!choice && choice.status !== 'open';
-    return {permitted:permitted, covered:covered, operational:permitted && covered && !paused,
+    const courtClosed = activeClosure(s, e.uid);
+    const deliberate = !courtClosed && !!choice && choice.status === 'violate' && choice.actorId === s.player.charId &&
+      matches.filter(function (m) { return !m.covered; }).every(function (m) {
+        const law = lawById(s, m.lawId);
+        return !!law.terms.offense && ((rows.violations || []).length < 512 || (rows.violations || []).some(function (v) {
+          return v.lawId === law.id && v.enterpriseUid === e.uid && v.actorId === choice.actorId;
+        }));
+      });
+    const paused = courtClosed || !!choice && choice.status !== 'open' && !deliberate;
+    return {permitted:permitted, covered:covered, operational:(permitted && covered || deliberate) && !paused,
+      deliberate:deliberate,
+      courtClosed:courtClosed,
       paused:paused, choice:choice ? choice.status : 'open', charges:charges, laws:matches,
       amount:charges.reduce(function (n, c) { return n + c.amount; }, 0)};
   };
   L.reason = function (status) {
+    if (status.courtClosed) return FB.T('This court-closed operation cannot resume while its original law is active. Ownership is retained. Repeal, expiry or jurisdiction suspension removes that restriction.');
+    if (status.deliberate && !status.covered) return FB.T('Deliberate unauthorized operation. Actual productive trading records a complaint; only a court hearing can impose the disclosed fine or closure.');
     if (!status.permitted) return FB.T('Operation is prohibited. Ownership is retained; pause or close this business.');
     if (status.paused) return FB.T('This business is voluntarily paused or closed. Ownership and paid obligations are retained.');
     if (!status.covered) return FB.T('An operating permission is due: {money:amount}. The business earns nothing until it is paid.', {amount:status.amount});
@@ -417,19 +447,25 @@
     const canChoose = ledger(s).choices.length < 512 || ledger(s).choices.some(function (c) { return c.enterpriseUid === e.uid; });
     const actor = s.chars[s.player.charId];
     const authorized = actor && !actor.dead && !s.player.dead;
+    const forced = activeClosure(s, e.uid);
+    const canViolate = !forced && !status.covered && status.laws.every(function (m) {
+      return m.covered || !!lawById(s, m.lawId).terms.offense;
+    }) && (ledger(s).violations || []).length < 512 && !FB.justiceCustodyOf(s, s.player.charId);
     const ready = authorized && (['pay','acquire'].indexOf(action) >= 0
       ? canPay && enough && capacity && (action === 'acquire' || status.charges.length > 0)
-      : canChoose && L.relevant(s, e) && (['pause','close'].indexOf(action) >= 0 || action === 'resume' && status.covered && status.permitted));
+      : canChoose && L.relevant(s, e) && (['pause','close'].indexOf(action) >= 0 || action === 'violate' && canViolate ||
+        action === 'resume' && !forced && status.covered && status.permitted));
     let reason = '';
     if (!authorized) reason = FB.T('A living household head must authorize this transaction.');
     else if (!status.permitted) reason = L.reason(status);
     else if (!canPay) reason = FB.T('The original law payee has no available public account.');
     else if (!enough) reason = FB.T('You need {money:amount} more for this payment.', {amount:amount + (baseCost || 0) - s.player.gold});
     else if (!capacity || !canChoose) reason = FB.T('The operating-law record limit has been reached.');
+    else if (forced && !ready) reason = FB.T('A court closure remains in force while its original law is active. Repeal or expiry permits a fresh lawful resumption.');
     else if (!ready) reason = L.reason(status);
     return {schema:1, kind:'industry_operation', action:action, actorId:s.player.charId,
       enterprise:copy(e), turn:s.turn, amount:amount, baseCost:baseCost || 0, status:status,
-      ready:!!ready, reason:reason, signature:FB.mods.fingerprint({ledger:ledger(s), controller:controller(s, e.provinceId),
+      ready:!!ready, reason:reason, signature:FB.mods.fingerprint({ledger:ledger(s), controller:controller(s, e.provinceId), custody:FB.justiceCustodyOf(s, s.player.charId),
         gold:s.player.gold, actor:s.player.charId, home:s.player.provinceId, accounts:accounts,
         enterprises:s.player.enterprises || [], turn:s.turn})};
   };
@@ -452,6 +488,9 @@
       const rows = writable(s), old = rows.choices.filter(function (r) { return r.enterpriseUid === e.uid; })[0];
       if (old) { old.status = q.action === 'resume' ? 'open' : q.action; old.turn = s.turn; }
       else rows.choices.push({enterpriseUid:e.uid, status:q.action === 'resume' ? 'open' : q.action, turn:s.turn});
+      const choice = rows.choices.filter(function (r) { return r.enterpriseUid === e.uid; })[0];
+      if (q.action === 'violate') choice.actorId = s.player.charId;
+      else delete choice.actorId;
     }
     return true;
   };
@@ -465,11 +504,185 @@
         amount:c.amount, paidTurn:s.turn, endTurn:c.endTurn});
     });
   };
+  function lawById(s, id) { return ledger(s).laws.filter(function (r) { return r.id === id; })[0]; }
+  function violationById(s, id) { return (ledger(s).violations || []).filter(function (r) { return r.id === id; })[0]; }
+  function activeClosure(s, uid) {
+    return (ledger(s).violations || []).some(function (v) {
+      return v.enterpriseUid === uid && v.judgment && v.judgment.closure && L.lifecycle(s, lawById(s, v.lawId)) === 'active';
+    });
+  }
+  function court(s, law) {
+    return controller(s, law.terms.provinceId) === law.issuer.realmId ?
+      FB.justiceIndustryJurisdiction(s, law.issuer.realmId, law.terms.provinceId) : null;
+  }
+  L.quotePetition = function (s, uid, lawId, kind) {
+    const e = currentEnterprise(s, uid), law = lawById(s, lawId);
+    if (!e || !law || ['exemption','repeal'].indexOf(kind) < 0) return null;
+    if (kind === 'repeal' && law.terms.voting) return L.quoteAssembly(s, law.definitionId, 'town', 'begin', null, null, null, law.id, uid);
+    const d = law.terms, petitions = ledger(s).petitions || [], actorId = s.player.charId;
+    const ready = !!(d.relief && living(s, actorId) && !s.player.dead && court(s, law) &&
+      L.lifecycle(s, law) === 'active' && e.type === d.enterpriseType && e.provinceId === d.provinceId &&
+      petitions.length < 512 && !petitions.some(function (p) { return p.lawId === lawId && p.enterpriseUid === uid && p.kind === kind; }));
+    return {kind:'industry_petition', petitionKind:kind, enterpriseUid:uid, lawId:lawId, actorId:actorId,
+      turn:s.turn, chance:d.relief ? d.relief.chance : 0, days:d.relief ? d.relief.days : 0, ready:ready,
+      reason:ready ? '' : FB.T('A competent original court, supported relief terms and an unused petition for this business and law are required.'),
+      signature:FB.mods.fingerprint({ledger:ledger(s), player:s.player, court:court(s, law),
+        generation:FB.realmRulerGeneration(s, law.issuer.realmId), date:s.date})};
+  };
+  L.commitPetition = function (s, q) {
+    if (q && q.kind === 'industry_assembly') return q.petitionEnterpriseUid && q.repealId ? L.commitAssembly(s, q) : false;
+    const fresh = q && L.quotePetition(s, q.enterpriseUid, q.lawId, q.petitionKind);
+    if (!fresh || !fresh.ready || !same(q, fresh)) return false;
+    const rows = writable(s), law = lawById(s, q.lawId), granted = FB.chance(q.chance);
+    if (!rows.petitions) rows.petitions = [];
+    const row = {id:'industry_petition_' + FB.uid(), kind:q.petitionKind, lawId:law.id,
+      enterpriseUid:q.enterpriseUid, actorId:q.actorId, turn:s.turn, granted:granted,
+      endTurn:Math.min(law.endTurn, s.turn + q.days)};
+    rows.petitions.push(row);
+    if (granted && q.petitionKind === 'repeal') applyApproved(s, {repealId:law.id,
+      issuer:{kind:'local_council', provinceId:law.terms.provinceId, realmId:law.issuer.realmId, holderCharId:court(s, law)}});
+    FB.news(s, FB.msg('news.industry_law.petition',
+      'Your operating-law petition for {motion} is {decision}. No property changes hands.',
+      {motion:FB.dataParam('localCouncilMotion', law.terms.motionId), decision:granted ? FB.msg('news.industry_law.granted','granted',{}) : FB.msg('news.industry_law.refused','refused',{})}));
+    return row;
+  };
+  // Only actual seasonal output writers call this. Quotes never detect or accuse.
+  L.recordOperation = function (s, e, output) {
+    const status = L.operation(s, e);
+    if (!(output > 0) || currentEnterprise(s, e.uid) !== e || s.player.dead || !status.deliberate || status.covered) return false;
+    const rows = writable(s);
+    if (!rows.violations) rows.violations = [];
+    status.laws.forEach(function (m) {
+      if (m.covered || rows.violations.some(function (v) {
+        return v.lawId === m.lawId && v.enterpriseUid === e.uid && v.actorId === s.player.charId;
+      })) return;
+      if (rows.violations.length >= 512) return;
+      const law = lawById(s, m.lawId);
+      if (!law.terms.offense) return;
+      const row = {id:'industry_violation_' + FB.uid(), lawId:law.id, enterpriseUid:e.uid,
+        actorId:s.player.charId, provinceId:e.provinceId, homeProvinceId:s.player.provinceId,
+        turn:s.turn, output:output, fee:m.fee, evidence:'material', caseId:null, resolved:null, judgment:null};
+      rows.violations.push(row);
+      L.fileComplaint(s, row.id);
+    });
+    return true;
+  };
+  L.recordSeason = function (s) {
+    ledger(s).choices.forEach(function (c) {
+      if (c.status !== 'violate') return;
+      const e = currentEnterprise(s, c.enterpriseUid);
+      if (e) L.recordOperation(s, e, FB.enterprisePhysicalYield(s, e));
+    });
+  };
+  L.caseRecord = function (s, offense) {
+    if (!offense || offense.kind !== 'industry_violation') return null;
+    return (ledger(s).violations || []).filter(function (v) {
+      return 'industry:' + v.id === offense.sourceId && v.actorId === offense.accusedId;
+    })[0] || null;
+  };
+  L.offenseSource = function (s, sourceId, actorId, targetId) {
+    const v = (ledger(s).violations || []).filter(function (r) { return 'industry:' + r.id === sourceId; })[0];
+    const law = v && lawById(s, v.lawId);
+    return !!(law && v.actorId === targetId && v.resolved === null && !v.caseId && court(s, law) === actorId);
+  };
+  L.caseAvailable = function (s, offense, actorId) {
+    const v = L.caseRecord(s, offense), law = v && lawById(s, v.lawId);
+    return !!(law && v.caseId === offense.id && v.resolved === null && court(s, law) === actorId);
+  };
+  L.fileComplaint = function (s, violationId) {
+    const v = violationById(s, violationId), law = v && lawById(s, v.lawId), actorId = law && court(s, law);
+    if (!v || v.caseId || v.resolved || !actorId) return false;
+    const o = FB.justiceRecordOffense(s, actorId, v.actorId, 'industry_violation', v.evidence, true, null, 'industry:' + v.id);
+    if (!o) return false;
+    v.caseId = o.id;
+    FB.news(s, FB.msg('news.industry_law.complaint',
+      'Actual unauthorized trading under {motion} has been recorded. The original operator may answer the complaint and challenge its evidence; no judgment has been imposed.',
+      {motion:FB.dataParam('localCouncilMotion', law.terms.motionId)}));
+    return o;
+  };
+  L.quoteComplaint = function (s, violationId) {
+    const v = violationById(s, violationId), law = v && lawById(s, v.lawId), actorId = law && court(s, law);
+    if (!v || !actorId || v.actorId !== s.player.charId || v.resolved) return null;
+    const arrest = v.caseId && FB.justiceArrestProjection(s, actorId, v.actorId, v.caseId);
+    return {kind:'industry_complaint', violationId:violationId, actorId:actorId,
+      ready:!v.caseId || !!(arrest && arrest.ready),
+      signature:FB.mods.fingerprint({ledger:ledger(s), justice:s.justice || null, actor:actorId,
+        generation:FB.realmRulerGeneration(s, law.issuer.realmId), arrest:arrest, turn:s.turn})};
+  };
+  L.answerComplaint = function (s, q) {
+    const fresh = q && L.quoteComplaint(s, q.violationId);
+    if (!fresh || !fresh.ready || !same(q, fresh)) return false;
+    const v = violationById(s, q.violationId);
+    if (!v.caseId && !L.fileComplaint(s, v.id)) return false;
+    return FB.justiceAttemptArrest(s, q.actorId, v.actorId, v.caseId).ok;
+  };
+  L.sentenceTerms = function (s, offense) {
+    const v = L.caseRecord(s, offense), law = v && lawById(s, v.lawId);
+    return law ? {violationId:v.id, lawId:law.id, enterpriseUid:v.enterpriseUid,
+      payeeRealmId:law.payeeRealmId, fine:law.terms.offense.amount, closure:!!law.terms.offense.closure,
+      courtGeneration:FB.realmRulerGeneration(s, law.issuer.realmId), controller:controller(s, law.terms.provinceId)} : null;
+  };
+  L.payFine = function (s, offense, amount) {
+    const v = L.caseRecord(s, offense), terms = L.sentenceTerms(s, offense), payee = terms && account(s, terms.payeeRealmId);
+    if (!v || !payee || !money(amount) || payee.gold + amount > Number.MAX_SAFE_INTEGER) return false;
+    if (v.actorId === s.player.charId) return FB.treasuryHouseholdPurchase(s, [{realmId:terms.payeeRealmId, amount:amount}], 0);
+    const c = s.chars[v.actorId];
+    if (!c || c.dead || !Number.isFinite(c.wealth) || c.wealth < amount) return amount === 0;
+    if (!FB.treasuryCredit(s, terms.payeeRealmId, amount)) return false;
+    c.wealth -= amount;
+    return true;
+  };
+  L.fineAvailable = function (s, offense) {
+    const v = L.caseRecord(s, offense), c = v && s.chars[v.actorId];
+    return !c || c.dead ? 0 : Math.max(0, Number(v.actorId === s.player.charId ? s.player.gold : c.wealth) || 0);
+  };
+  L.judged = function (s, offense, sentence, amount) {
+    const v = L.caseRecord(s, offense), terms = L.sentenceTerms(s, offense), def = FBDATA.justiceSentences[sentence];
+    if (!v || !terms || !offense.closed || v.resolved) return;
+    v.resolved = sentence;
+    if (def.kind !== 'fine') return;
+    v.judgment = {turn:s.turn, fine:terms.fine, paid:amount, closure:terms.closure};
+    if (terms.closure) {
+      const rows = writable(s), c = rows.choices.filter(function (r) { return r.enterpriseUid === v.enterpriseUid; })[0];
+      // The deliberate-operation commitment already owns this choice row.
+      if (c) { c.status = 'close'; c.turn = s.turn; c.closedBy = v.id; delete c.actorId; }
+    }
+  };
+  L.quoteDebt = function (s, violationId) {
+    const v = violationById(s, violationId), law = v && lawById(s, v.lawId), j = v && v.judgment;
+    if (!j || !law) return null;
+    const amount = j.fine - j.paid, payee = account(s, law.payeeRealmId);
+    return {kind:'industry_debt', violationId:violationId, amount:amount,
+      ready:amount > 0 && v.actorId === s.player.charId && living(s, v.actorId) && !!payee &&
+        payee.gold + amount <= Number.MAX_SAFE_INTEGER && s.player.gold >= amount,
+      signature:FB.mods.fingerprint({v:v, payee:payee, player:s.player.charId, gold:s.player.gold})};
+  };
+  L.payDebt = function (s, q) {
+    const fresh = q && L.quoteDebt(s, q.violationId);
+    if (!fresh || !fresh.ready || !same(q, fresh)) return false;
+    const v = violationById(s, q.violationId), law = lawById(s, v.lawId);
+    if (!FB.treasuryHouseholdPurchase(s, [{realmId:law.payeeRealmId, amount:q.amount}], 0)) return false;
+    v.judgment.paid += q.amount;
+    return true;
+  };
+  L.referencesCharacter = function (s, id) {
+    if (!s.industryLaws) return false;
+    const rows = ledger(s);
+    return rows.laws.some(function (r) { return r.issuer.holderCharId === id || r.repealer && r.repealer.holderCharId === id; }) ||
+      votes(s).some(function (v) { return v.proposerId === id || v.result && v.result.members.some(function (m) { return m.actorId === id; }); }) ||
+      (rows.petitions || []).some(function (p) { return p.actorId === id; }) ||
+      (rows.violations || []).some(function (v) { return v.actorId === id; }) ||
+      (s.justice && s.justice.offenses || []).some(function (o) { return o.kind === 'industry_violation' && o.actorId === id; });
+  };
   L.validate = function (s) {
-    if (!own(s, 'industryLaws')) return;
+    if (!own(s, 'industryLaws')) {
+      if ((s.justice && s.justice.offenses || []).some(function (o) { return o.kind === 'industry_violation'; }))
+        throw new Error(FB.T('Invalid industry-law record.'));
+      return;
+    }
     const rows = s.industryLaws, ids = {}, permitKeys = {};
     function bad() { throw new Error(FB.T('Invalid industry-law record.')); }
-    if (!fields(rows, ['schema','laws','permits','choices','votes']) || rows.schema !== 1 ||
+    if (!fields(rows, ['schema','laws','permits','choices','votes','petitions','violations']) || rows.schema !== 1 ||
         !Array.isArray(rows.laws) || rows.laws.length > 256 || !Array.isArray(rows.permits) || rows.permits.length > 4096 ||
         !Array.isArray(rows.choices) || rows.choices.length > 512) bad();
     function issuer(i, d) {
@@ -509,8 +722,12 @@
     });
     const choices = {};
     rows.choices.forEach(function (c) {
-      if (!fields(c, ['enterpriseUid','status','turn']) || typeof c.enterpriseUid !== 'string' || !c.enterpriseUid ||
-          choices[c.enterpriseUid] || ['open','pause','close'].indexOf(c.status) < 0 || !integer(c.turn, 0, s.turn)) bad();
+      if (!fields(c, ['enterpriseUid','status','turn','actorId','closedBy']) || typeof c.enterpriseUid !== 'string' || !c.enterpriseUid ||
+          choices[c.enterpriseUid] || ['open','pause','close','violate'].indexOf(c.status) < 0 || !integer(c.turn, 0, s.turn) ||
+          (c.status === 'violate' ? !own(s.chars, c.actorId) : own(c, 'actorId')) ||
+          own(c, 'closedBy') && !(rows.violations || []).some(function (v) {
+            return v.id === c.closedBy && v.enterpriseUid === c.enterpriseUid && v.judgment && v.judgment.closure;
+          })) bad();
       choices[c.enterpriseUid] = true;
     });
     if (own(rows, 'votes')) {
@@ -519,7 +736,7 @@
         const d = v && FBDATA.industryLaws[v.definitionId], rules = d && d.voting && d.voting[v.consumer];
         const ended = v && v.status !== 'pending', decided = v && ['passed','rejected'].indexOf(v.status) >= 0;
         if (!rules || !fields(v, ['id','definitionId','consumer','proposerId','issuer','repealId','startedTurn','endTurn',
-            'ballots','status','endedTurn','lawId','result']) || typeof v.id !== 'string' || !/^industry_vote_/.test(v.id) || ids[v.id] ||
+            'ballots','status','endedTurn','lawId','result','petitionEnterpriseUid']) || typeof v.id !== 'string' || !/^industry_vote_/.test(v.id) || ids[v.id] ||
             !issuer(v.issuer, d) || v.issuer.holderCharId !== v.proposerId ||
             v.issuer.kind !== (v.consumer === 'town' ? 'local_council' : 'estates') ||
             ['pending','withdrawn','invalidated','passed','rejected'].indexOf(v.status) < 0 ||
@@ -528,6 +745,8 @@
             v.repealId !== null && !rows.laws.some(function (r) { return r.id === v.repealId && r.definitionId === v.definitionId; }) ||
             !Array.isArray(v.ballots) || v.ballots.length > 128 ||
             (!decided && v.result !== null) || (v.status !== 'passed' && v.lawId !== null)) bad();
+        if (own(v, 'petitionEnterpriseUid') && (v.consumer !== 'town' || !v.repealId ||
+            typeof v.petitionEnterpriseUid !== 'string' || !v.petitionEnterpriseUid)) bad();
         ids[v.id] = v;
         const seen = {};
         v.ballots.forEach(function (b) {
@@ -571,6 +790,67 @@
         }
       });
     }
+    if (own(rows, 'petitions')) {
+      if (!Array.isArray(rows.petitions) || rows.petitions.length > 512) bad();
+      const petitionKeys = {};
+      rows.petitions.forEach(function (p) {
+        const law = p && ids[p.lawId], d = law && law.terms;
+        const key = p && p.lawId + ':' + p.enterpriseUid + ':' + p.kind;
+        if (!fields(p, ['id','kind','lawId','enterpriseUid','actorId','turn','granted','endTurn']) || !d || !d.relief ||
+            typeof p.id !== 'string' || !/^industry_petition_/.test(p.id) || ids[p.id] || petitionKeys[key] ||
+            ['exemption','repeal'].indexOf(p.kind) < 0 || p.kind === 'repeal' && d.voting ||
+            typeof p.enterpriseUid !== 'string' || !p.enterpriseUid || !own(s.chars, p.actorId) ||
+            !integer(p.turn, law.startTurn, Math.min(s.turn, law.endTurn - 1)) ||
+            typeof p.granted !== 'boolean' || p.endTurn !== Math.min(law.endTurn, p.turn + d.relief.days) ||
+            p.kind === 'repeal' && p.granted && law.repealedTurn !== p.turn) bad();
+        ids[p.id] = p; petitionKeys[key] = true;
+      });
+    }
+    if (own(rows, 'violations')) {
+      if (!Array.isArray(rows.violations) || rows.violations.length > 512) bad();
+      const violationKeys = {}, cases = {};
+      rows.violations.forEach(function (v) {
+        const law = v && ids[v.lawId], d = law && law.terms;
+        const key = v && v.lawId + ':' + v.enterpriseUid + ':' + v.actorId;
+        const x = d && privilege(d, v.homeProvinceId);
+        if (!fields(v, ['id','lawId','enterpriseUid','actorId','provinceId','homeProvinceId','turn','output','fee','evidence','caseId','resolved','judgment']) ||
+            !d || !d.offense || typeof v.id !== 'string' || !/^industry_violation_/.test(v.id) || ids[v.id] || violationKeys[key] ||
+            typeof v.enterpriseUid !== 'string' || !v.enterpriseUid || !own(s.chars, v.actorId) ||
+            v.provinceId !== d.provinceId || !FB.world.byId[v.homeProvinceId] ||
+            !integer(v.turn, law.startTurn, Math.min(s.turn, law.endTurn - 1)) ||
+            law.repealedTurn !== null && v.turn > law.repealedTurn ||
+            law.existingEnterpriseUids.indexOf(v.enterpriseUid) >= 0 && v.turn < law.transitionEndTurn ||
+            typeof v.output !== 'number' || !isFinite(v.output) || v.output <= 0 || v.output > Number.MAX_SAFE_INTEGER ||
+            v.fee !== x.fee || x.permission && x.fee === 0 || v.evidence !== 'material' ||
+            rows.permits.some(function (p) { return p.lawId === v.lawId && p.enterpriseUid === v.enterpriseUid && p.paidTurn < v.turn && p.endTurn > v.turn; }) ||
+            (rows.petitions || []).some(function (p) { return p.kind === 'exemption' && p.granted && p.actorId === v.actorId &&
+              p.lawId === v.lawId && p.enterpriseUid === v.enterpriseUid && p.turn < v.turn && p.endTurn > v.turn; }) ||
+            v.caseId !== null && (typeof v.caseId !== 'string' || !/^justice-/.test(v.caseId) || cases[v.caseId]) ||
+            v.resolved !== null && (!v.caseId || !own(FBDATA.justiceSentences, v.resolved) ||
+              ['fine','pardon'].indexOf(FBDATA.justiceSentences[v.resolved].kind) < 0 ||
+              FBDATA.justiceSentences[v.resolved].closesCase === false && !FBDATA.justiceSentences[v.resolved].forgive ||
+              FBDATA.justiceSentences[v.resolved].kind === 'fine' && v.judgment === null) ||
+            v.judgment !== null && (!v.resolved || !fields(v.judgment, ['turn','fine','paid','closure']) ||
+              !integer(v.judgment.turn, v.turn, s.turn) || v.judgment.fine !== d.offense.amount ||
+              !money(v.judgment.paid) || v.judgment.paid > v.judgment.fine ||
+              v.judgment.closure !== !!d.offense.closure || FBDATA.justiceSentences[v.resolved].kind !== 'fine')) bad();
+        ids[v.id] = v; violationKeys[key] = true;
+        if (v.caseId) cases[v.caseId] = v;
+      });
+      (s.justice && s.justice.offenses || []).forEach(function (o) {
+        if (o.kind !== 'industry_violation') return;
+        const v = cases[o.id], law = v && ids[v.lawId];
+        if (!v || o.sourceId !== 'industry:' + v.id || o.authority !== law.issuer.realmId ||
+            o.accusedId !== v.actorId || o.victimId !== null || !own(s.chars, o.actorId) ||
+            o.evidence !== v.evidence || o.severity !== 1 || !o.successful ||
+            !integer(o.turn, v.turn, s.turn) || typeof o.closed !== 'boolean' || o.closed !== (v.resolved !== null)) bad();
+      });
+      rows.violations.forEach(function (v) {
+        if (v.caseId && !v.resolved && !s.chars[v.actorId].dead && !(s.justice && s.justice.offenses || []).some(function (o) {
+          return o.id === v.caseId && o.kind === 'industry_violation';
+        })) bad();
+      });
+    } else if ((s.justice && s.justice.offenses || []).some(function (o) { return o.kind === 'industry_violation'; })) bad();
     rows.laws.forEach(function (law) {
       if (!law.terms.voting) return;
       if (votes(s).filter(function (v) { return v.status === 'passed' && !v.repealId && v.lawId === law.id; }).length !== 1 ||

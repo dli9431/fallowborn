@@ -545,6 +545,21 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+`industry-law-enforcement.spec.js` covers the native council/vote/output/arrest/
+hearing/fine/closure/repeal loop, absence of offenses during lawful or unproductive
+operation, personal liability after insufficient payment, once-only detection and
+settlement, original court and actor identities, stale reviews, lost custody and
+jurisdiction, successful canonical challenge, sentence limits under both runtime
+distribution flags, ordinary JSON relief/fine/closure variation, malformed-import
+purity, current pending and imposed save round trips, atomic malformed-evidence
+rejection (including backdated permission overlap and unsupported resolved
+sentences), rejection of repeatable custom fines, ordinary justice's stamped review
+shape and pending restore, canonical pardon flags, overlapping judged closures,
+and compact confirmation/cancellation returns. Runtime distribution checks
+exercise the common sentencing boundaries in an activated standard world;
+they do not establish a separate distribution's catalogue activation or device
+acceptance. No existing regression assertions are replaced by this coverage.
+
 `industry-law-assemblies.spec.js` covers native town and Estates entry points,
 actual exposure and distinct electorates, bounded representation, explicit
 support/opposition/abstention, quorum rejection, withdrawal, one-time enactment,

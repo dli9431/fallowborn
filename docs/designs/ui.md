@@ -771,6 +771,18 @@ spends nothing. Payment replaces the current review and Back refreshes the
 manager while restoring its retained scroll and focus. Existing worker wages
 remain explicitly disclosed when production pauses. See industry-laws.md.
 
+Business operating-law sheets also disclose the exact fine, whether a judgment
+closes the affected operation, and the unsupported stronger sanctions. Deliberate
+unauthorized operation has a separate confirmation and costless Cancel return.
+Temporary-exemption petitions disclose chance, term, zero money cost and the
+spent request on refusal; repeal petitions expose the existing hearing where
+applicable, without promising the petitioner a seat. Complaint rows retain the
+original operator's character card, actual-output evidence, decision, paid fine,
+remaining personal balance and closure. Answering requests the canonical arrest
+demand and hearing; it does not sentence. Hearing prose and judgment reviews
+disclose closure, original public payee and unpaid balance. All business review
+returns preserve the parent manager, focus and scroll.
+
 Whenever a UI references a specific character, show that character's portrait
 with their identity in the same visible surface. This applies to events, outcomes,
 cards, lists, dialogs, and tooltips, including deceased characters. A named person

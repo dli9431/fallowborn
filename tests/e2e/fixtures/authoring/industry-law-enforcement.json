@@ -1,0 +1,41 @@
+{
+  "name": "Estuary trading remedies",
+  "localCouncilMotions": {
+    "estuary_stall_due": {
+      "name": "Estuary stall dues",
+      "desc": "A fictional paid permission with a temporary relief petition and a bounded fine. A court judgment may close only the affected operation, retaining its property.",
+      "icon": "⚖", "fx": {}
+    },
+    "estuary_stall_reserve": {
+      "name": "Estuary reserved stalls",
+      "desc": "A fictional restriction with a lawful York household exemption and no court closure.",
+      "icon": "⚖", "fx": {}
+    }
+  },
+  "industryLaws": {
+    "estuary_stall_due": {
+      "schema": 1, "motionId": "estuary_stall_due", "bookmarkId": "1204",
+      "provinceId": "london", "enterpriseType": "market_stall_business",
+      "minYear": 1204, "maxYear": 1215, "mode": "license", "fee": 1.5,
+      "permitDays": 30, "durationDays": 180, "transitionDays": 0, "exemptions": [],
+      "relief": {"days": 45, "chance": 1},
+      "offense": {"id": "estuary_unpaid_due", "penalty": "fine", "amount": 5, "closure": true}
+    },
+    "estuary_stall_reserve": {
+      "schema": 1, "motionId": "estuary_stall_reserve", "bookmarkId": "1204",
+      "provinceId": "london", "enterpriseType": "market_stall_business",
+      "minYear": 1204, "maxYear": 1215, "mode": "prohibition", "fee": 0,
+      "permitDays": 30, "durationDays": 180, "transitionDays": 0,
+      "exemptions": [{"kind": "home_province", "id": "york", "fee": 0, "permission": true}],
+      "relief": {"days": 20, "chance": 0},
+      "offense": {"id": "estuary_reserved_trade", "penalty": "fine", "amount": 7, "closure": false},
+      "voting": {
+        "town": {"quorum": 1, "threshold": 0.6, "days": 15, "members": [
+          {"id": "estuary_traders", "kind": "guild", "weight": 3},
+          {"id": "estuary_notables", "kind": "notable", "weight": 1}
+        ]},
+        "estates": {"quorum": 0.25, "threshold": 0.6, "days": 20}
+      }
+    }
+  }
+}
