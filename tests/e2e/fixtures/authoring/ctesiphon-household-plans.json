@@ -1,0 +1,97 @@
+{
+  "name": "Ctesiphon independent household plans",
+  "startScenarios": [
+    {
+      "id": "ctesiphon_household_634",
+      "name": "Ctesiphon reserve household",
+      "desc": "An independent costless household review.",
+      "intro": "Your farming household considers its reserve.",
+      "bookmarkIds": [
+        "634"
+      ],
+      "alwaysUnlocked": true,
+      "fixedProvinceId": "baghdad",
+      "startCulture": "syriac",
+      "startReligion": "east_syriac",
+      "startAge": 24,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "familyPresets": {
+        "established": {}
+      },
+      "tracks": [
+        "ctesiphon_reserve_example"
+      ],
+      "trackLocations": {
+        "ctesiphon_reserve_example": [
+          "baghdad"
+        ]
+      },
+      "startEffects": {
+        "landPlots": 2
+      },
+      "revisionIdentities": {
+        "634": {
+          "core_identities_v3": {
+            "startReligion": "east_syriac_local_634"
+          },
+          "core_courts_v4": {
+            "startReligion": "east_syriac_local_634"
+          }
+        }
+      }
+    }
+  ],
+  "storyInstances": {
+    "ctesiphon_reserve_example": {
+      "id": "ctesiphon_reserve_example",
+      "type": "household_track",
+      "title": "A private reserve",
+      "intro": "Consider ordinary savings without a reward.",
+      "homeProvinceId": "baghdad",
+      "continuity": "protagonist",
+      "interruptedStage": "ended",
+      "initialStage": "reserve",
+      "requirements": {
+        "provinces": [
+          "baghdad"
+        ]
+      },
+      "stages": {
+        "reserve": {
+          "name": "Keep the reserve",
+          "text": "Keep your present purse and remain at home.",
+          "choices": [
+            {
+              "id": "keep",
+              "label": "Keep these savings",
+              "detail": "No money or day cost.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "done": {
+          "name": "Plans recorded",
+          "text": "Ordinary life continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        },
+        "ended": {
+          "name": "The personal plan ended",
+          "text": "A new protagonist makes a separate plan.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    }
+  }
+}
