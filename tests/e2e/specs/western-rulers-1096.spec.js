@@ -2,6 +2,7 @@
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { beginRuler1096 } = require('../support/game/rulers-1096');
+const { startParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [

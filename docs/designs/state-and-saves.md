@@ -8,6 +8,8 @@ Continue, save slots and imported saves enter FB.game.loadData through the defer
 
 Compact validation snapshots
 
+Expedition preparation and undertaking semantic validators always resolve people against FB.save.expandedSnapshot after their raw optional-record checks. A caller may have supplied character ids and realm alive flags while royal-member charId and royalLine.memberId links remain compacted; no subset of those fields certifies a fully expanded state. The canonical detached decoder derives only omitted links backed by matching original characters and lineage. Explicit conflicting or null links, original story fields, resources, input state and RNG/UID retain their existing meanings. This performs no load repair or story replay and changes no wire or subsystem version.
+
 The compact realm codec omits alive:true. Before platform and public-treasury provenance checks, a shallow detached realm view supplies true only when that property is absent. Explicit false remains false, other explicit types reject, and the compact caller remains unchanged. Active preserved treasuries still require an actually live realm and their original unique account, balance and fiscal clocks. This uses the existing wire default without changing the save format.
 
 Ordinary existing-ruler adoption initializes the same minimal household succession record that matching restore expects, while selection-managed, settlement-genealogy and administrative courts retain their own contracts. Fresh opening setup also initializes canonical local-government and feudal-vassal records after adoption and story attachment. Loading a newly created campaign therefore does not become its first household or vassal setup, and does not replay an opening, grant, election or payment.

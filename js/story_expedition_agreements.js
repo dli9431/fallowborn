@@ -229,12 +229,9 @@
         }
       }
       // Validate the original record without filling any optional story data.
-      // Current-office readers require the codec's omitted character ids and
-      // realm alive flags, expanded on a detached snapshot only.
-      var current=s;
-      if (Object.keys(s.chars).some(function (id) {return s.chars[id] && s.chars[id].id===undefined;}) ||
-          Object.keys(s.realms).some(function (id) {return s.realms[id] && s.realms[id].alive===undefined;}))
-        current=FB.save.expandedSnapshot(s);
+      // Resolve every omitted core relationship on the canonical detached
+      // codec view, even when a caller has already supplied ids/alive.
+      var current=FB.save.expandedSnapshot(s);
       var p=parties(current),g=generations(current);
       r.partyIds.forEach(function (id,i) {
         need(r.generations[i] <= g[i]);
