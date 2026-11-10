@@ -2626,6 +2626,19 @@ FB.CHANGELOG = [
     }
     next();
   }
+  /* Dated sources outside the eager title set load on demand (see
+     data/bookmark_manifest.js). Loaded dates continue synchronously. A
+     failed file reports which data could not load and stays retryable. */
+  function loadBookmarkDates(ids, done) {
+    const sources = FB.bookmarkSources;
+    if (!sources || !sources.loadDates || sources.datesLoaded(ids)) { done(null); return; }
+    preparationProgress(0,FB.T('Loading bookmark data…'));
+    const phase = loadTiming.phase('Load bookmark data');
+    sources.loadDates(ids,function (error) {
+      loadTiming.endPhase(phase);
+      done(error);
+    },function (fraction) { preparationProgress(fraction,FB.T('Loading bookmark data…')); });
+  }
   G.prepareContent = function (done) {
     if (G.contentReady || contentError) { done(contentError); return; }
     if (campaignPreparing) { done(new Error(FB.T('Content preparation is already in progress.'))); return; }
@@ -2649,15 +2662,22 @@ FB.CHANGELOG = [
       }
       if (error && rollback) rollback();
       loadTiming.endPhase(contentPhase);
-      contentError = error;
+      // A source file that failed to download can be requested again.
+      contentError = error && !error.retryable ? error : null;
       G.contentReady = !error;
       if (!error) { campaignContentId = null; campaignContentData = null; }
       contentPreparing = false;
       var callbacks = contentWaiters; contentWaiters = [];
-      callbacks.forEach(function (callback) { callback(contentError); });
+      callbacks.forEach(function (callback) { callback(error || null); });
     }
     preparationProgress(0,FB.T('Preparing bookmarks…'));
     afterPreparationPaint(function () {
+      // Mods, authoring and complete publication review every date.
+      try { loadBookmarkDates(null,publishAll); }
+      catch (error) { finish(error); }
+    });
+    function publishAll(loadError) {
+      if (loadError) { finish(loadError); return; }
       try {
         const sourcesPhase = loadTiming.phase('Publish all source catalogues');
         FB.bookmarkCompositions.publishPending(function (fraction,status) {
@@ -2678,7 +2698,7 @@ FB.CHANGELOG = [
           ],0.8,1,finish);
         });
       } catch (error) { finish(error); }
-    });
+    }
   };
   G.withContent = function (next, screen) {
     if (G.contentReady) { next(); return; }
@@ -2687,12 +2707,13 @@ FB.CHANGELOG = [
     preparationProgress(0,FB.T('Preparing bookmarks…'));
     G.prepareContent(function (error) {
       if (error) {
-        FB.ui.showScreen(FB.state ? 'game' : 'title');
+        FB.ui.showScreen(FB.state ? null : 'title');
         FB.ui.openModal('Bookmark unavailable', '<div class="gm-body-text"><p>' + FB.esc(error.message) + '</p></div>');
         loadTiming.finish('error',error);
         return;
       }
-      if (screen !== undefined) FB.ui.showScreen(screen);
+      // A running campaign returns to the game view, which is showScreen(null).
+      if (screen !== undefined) FB.ui.showScreen(screen === 'game' ? null : screen);
       next();
     });
   };
@@ -2705,6 +2726,16 @@ FB.CHANGELOG = [
     // Keep a running life intact in the rollback closure while a different
     // saved date is prepared. No simulation or autosave observes partial data.
     FB.state = null; G.paused = true;
+    loadBookmarkDates([id],function (loadError) {
+      if (loadError) {
+        campaignPreparing = false; loadTiming.endPhase(phase);
+        rollback(); done(loadError,rollback);
+        return;
+      }
+      prepareLoadedCampaignContent(id,phase,rollback,done);
+    });
+  }
+  function prepareLoadedCampaignContent(id, phase, rollback, done) {
     preparationSteps([
       {message:FB.T('Checking bookmark {bookmark}…',{bookmark:id}),work:function () { FB.bookmarkSources.prepareSetup(id); }},
       {message:FB.T('Loading stories…'),work:function () { FB.stories.load(); }},
@@ -2726,7 +2757,7 @@ FB.CHANGELOG = [
     prepareCampaignContent(id,function (error,rollback) {
       if (error) {
         if (failed) failed(error);
-        FB.ui.showScreen(FB.state ? 'game' : 'title');
+        FB.ui.showScreen(FB.state ? null : 'title');
         FB.ui.openModal('Bookmark unavailable','<div class="gm-body-text"><p>' + FB.esc(error.message) + '</p></div>');
         loadTiming.finish('error',error);
         return;
@@ -2742,18 +2773,21 @@ FB.CHANGELOG = [
     if (!sources || !sources.prepareSetup || sources.hasPublished() || FB.mods.count()) { G.withContent(next); return; }
     FB.ui.closeModal();
     FB.ui.showScreen('loading');
-    preparationSteps([
-      {message:FB.T('Checking bookmark {bookmark}…', {bookmark:id}),work:function () { sources.prepareSetup(id); }},
-      {message:FB.T('Preparing faiths and cultures…'),work:function () { FB.configureReligions(); FB.configureCultures(); }},
-      {message:FB.T('Preparing interface…'),work:function () { FB.finalizeLocale(contentLocaleLoaded); }}
-    ],0,1,function (error) {
-      if (error) {
-        showBookmarks(true);
-        FB.ui.openModal('Bookmark unavailable', '<div class="gm-body-text"><p>' + FB.esc(error.message) + '</p></div>');
-        loadTiming.finish('error',error);
-        return;
-      }
-      next();
+    function failed(error) {
+      showBookmarks(true);
+      FB.ui.openModal('Bookmark unavailable', '<div class="gm-body-text"><p>' + FB.esc(error.message) + '</p></div>');
+      loadTiming.finish('error',error);
+    }
+    loadBookmarkDates([id],function (loadError) {
+      if (loadError) { failed(loadError); return; }
+      preparationSteps([
+        {message:FB.T('Checking bookmark {bookmark}…', {bookmark:id}),work:function () { sources.prepareSetup(id); }},
+        {message:FB.T('Preparing faiths and cultures…'),work:function () { FB.configureReligions(); FB.configureCultures(); }},
+        {message:FB.T('Preparing interface…'),work:function () { FB.finalizeLocale(contentLocaleLoaded); }}
+      ],0,1,function (error) {
+        if (error) { failed(error); return; }
+        next();
+      });
     });
   }
   function prepareCampaignStart(next, screen) {
@@ -7281,7 +7315,7 @@ FB.CHANGELOG = [
       withCampaignContent(FB.save.bookmarkOf(data),function (rollback) {
         if (G.loadData(data,afterLoad,rollback) === false) {
           if (rollback) rollback();
-          FB.ui.showScreen(FB.state ? 'game' : 'title');
+          FB.ui.showScreen(FB.state ? null : 'title');
           if (!G.lastLoadError) return;
           FB.ui.openModal('Load Game', '<div class="gm-body-text"><p>' + FB.esc(G.lastLoadError.message) + '</p></div>');
         }

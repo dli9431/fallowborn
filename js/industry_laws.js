@@ -41,7 +41,11 @@
         errors.push('Invalid industryLaws.' + id); return;
       }
       const raw = data.bookmarks[d.bookmarkId];
-      if (!FB.bookmarkRevisions(d.bookmarkId, raw).some(function (world) {
+      // A date whose sources are not loaded in this candidate is reviewed
+      // with that date; its jurisdiction cannot apply to another campaign.
+      const reviewable = !(FB.bookmarkSources && FB.bookmarkSources.unreviewedReference &&
+        FB.bookmarkSources.unreviewedReference(raw));
+      if (reviewable && !FB.bookmarkRevisions(d.bookmarkId, raw).some(function (world) {
         return (world.provinces || []).some(function (p) { return p.id === d.provinceId && !p.wasteland; });
       })) errors.push('Unknown industry-law jurisdiction: ' + id);
       if (Object.keys(table).some(function (other) { return other !== id && table[other] && table[other].motionId === d.motionId; }))
@@ -50,7 +54,7 @@
         if (!fields(e, ['kind','id','fee','permission']) ||
             e.kind !== 'home_province' || typeof e.id !== 'string' || !e.id ||
             !money(e.fee) || e.fee > d.fee || typeof e.permission !== 'boolean' ||
-            e.kind === 'home_province' && !FB.bookmarkRevisions(d.bookmarkId, raw).some(function (world) {
+            e.kind === 'home_province' && reviewable && !FB.bookmarkRevisions(d.bookmarkId, raw).some(function (world) {
               return (world.provinces || []).some(function (p) { return p.id === e.id && !p.wasteland; });
             })) errors.push('Invalid industry-law exemption: ' + id);
       });

@@ -54,6 +54,16 @@ async function watchPreparation(page) {
   });
 }
 
+// Dates outside the eager title set load on demand. Direct setup API calls
+// first load the requested date, as the picker and saved-game paths do.
+async function loadBookmarkDates(page,ids) {
+  await page.evaluate(function (ids) {
+    return new Promise(function (resolve,reject) {
+      FB.bookmarkSources.loadDates(ids,function (error) { if (error) reject(error); else resolve(); });
+    });
+  },ids);
+}
+
 test('initial classic scripts preserve dependency order after HTML parsing',async function ({page},info) {
   await page.addInitScript(function () {
     window.__initialScripts = [];
@@ -142,6 +152,7 @@ test('map work slices reduce timer waits without changing geometry, settlements 
   // chunk per turn. This checks scheduling and output, not machine speed.
   for (const increment of [0.25,10]) {
     await openTitle(page,info);
+    await loadBookmarkDates(page,['1241']);
     runs.push(await page.evaluate(function (increment) {
       FB.bookmarkSources.prepareSetup('1241');
       return new Promise(function (resolve,reject) {
@@ -493,6 +504,7 @@ test('a save from another date prepares only that date and failed preflight rest
 for (const id of ['476','493','568','634','711','800','867','1066','1096','1204','1241']) {
   test(id + ' prepares independently from the cold title with complete dependencies',async function ({page},info) {
     await openTitle(page,info);
+    await loadBookmarkDates(page,[id]);
     const result = await page.evaluate(function (id) {
       const base = FBDATA, rng = FB.getRngState(), uid = FB.getUidCounter();
       function foundation() {
@@ -532,6 +544,7 @@ for (const id of ['476','493','568','634','711','800','867','1066','1096','1204'
 
 test('setup faith references recognize unloaded dates without weakening availability or candidate validation',async function ({page},info) {
   await openTitle(page,info);
+  await loadBookmarkDates(page,['476']);
   const result = await page.evaluate(function () {
     FB.bookmarkSources.prepareSetup('476');
     const live = FBDATA, religions = live.religions, world = FB.bookmark('476');
@@ -608,6 +621,7 @@ test('switching affected setup dates preserves the complete catalogue at the fin
   await openTitle(page,info);
   // The owner-facing synchronous API must produce the same catalogue as the
   // yielding menu gate, including after a partially prepared setup session.
+  await loadBookmarkDates(page,null);
   await page.evaluate(function () { FB.bookmarkCompositions.publishPending(); });
   await prepareGameContent(page);
   expect(await catalogue()).toEqual(afterSetup);
@@ -642,6 +656,7 @@ test('a genuinely missing constituency still rejects setup without publishing pa
     await route.fulfill({response:response,body:'(' + removeProfile.toString() + ')();\n' + await response.text()});
   });
   await openTitle(page,info);
+  await loadBookmarkDates(page,['1204']);
   const result = await page.evaluate(function () {
     const base = FBDATA, before = JSON.stringify(base), rng = FB.getRngState(), uid = FB.getUidCounter();
     const messages = JSON.stringify(FB.englishMessages()), stories = FB.stories.list().map(function (row) { return row.id; });

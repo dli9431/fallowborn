@@ -1497,7 +1497,7 @@ def extract_structured(inv: Inventory) -> None:
         candidate_catalogues = {
             "authorityOffices": [(DATA / "bookmark_1066_inhabited.js", "bookmarkOffices1066Terrain")],
             "cultures": [(DATA / "bookmark_1066_inhabited.js", "bookmarkCultures1066Terrain"),
-                         (DATA / "bookmark_711.js", "bookmarkCultures711"),
+                         (DATA / "bookmark_711_identities.js", "bookmarkCultures711"),
                          (DATA / "bookmark_476_wider_identities.js", "bookmarkCultures476Wider"),
                          (DATA / "bookmark_568_identities.js", "bookmarkCultures568"),
                          (DATA / "bookmark_1204_terrain.js", "bookmarkCultures1204Terrain")],
@@ -1505,7 +1505,7 @@ def extract_structured(inv: Inventory) -> None:
                           (DATA / "bookmark_634_identities.js", "bookmarkReligions634"),
                           (DATA / "identities_1096.js", "bookmarkReligions1096"),
                           (DATA / "identities_1241.js", "bookmarkReligions1241"),
-                          (DATA / "bookmark_711.js", "bookmarkReligions711"),
+                          (DATA / "bookmark_711_identities.js", "bookmarkReligions711"),
                           (DATA / "bookmark_476_wider_identities.js", "bookmarkReligions476Wider")],
             "storyCampaigns": [(DATA / "story_campaigns_711.js", "storyCampaigns711"),
                                (DATA / "bookmark_800_history.js", "storySettlements800")],
