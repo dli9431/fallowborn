@@ -240,9 +240,9 @@
     });
   };
   P.outletReady = function (s,siteId,outputs) {
-    var r = s.production;
-    if (!FB.productionEconomy || !r || !r.economy || r.economy.receipts.length >= LIMIT || r.nextId >= MAX - 4 || r.revision >= MAX ||
-        r.lots.length + outputs.length + r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0) >= LIMIT) return false;
+    var r = s.production, live = r && P.liveCounts(s);
+    if (!FB.productionEconomy || !r || !r.economy || live.trades >= LIMIT || r.nextId >= MAX - 4 || r.revision >= MAX ||
+        live.lots + outputs.length + r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0) >= LIMIT) return false;
     var p = plan(s), routes = FB.productionEconomy.compilePrepared(FB.campaignBookmark(s),p.sites).routes;
     return outputs.every(function (output) {
       return routes.some(function (route) {
@@ -282,10 +282,10 @@
   P.snapshot = function (s,countyId,siteId) {
     var p = plan(s), r = s.production, held=reservationTotals(r);
     return p.sites.filter(function (a) { return (!countyId || a.countyId === countyId) && (!siteId || a.siteId === siteId); }).map(function (a) {
-      var asset = r && enrolled(s,a,r);
+      var asset = r && enrolled(s,a,r), folded = asset && r.retired && r.retired.assets[asset.id];
       return {site:copy(a),asset:asset ? copy(asset) : null,lots:asset ? r.lots.filter(function (x) { return x.assetId === asset.id; }).map(function (x) {
         return Object.assign(copy(x),{available:Math.max(0,FB.buildingSeasons.lotAvailable(s,x)-(held[x.id] || 0))});
-      }) : [],batches:r ? r.batches.filter(function (b) { return b.siteId === a.id; }).map(copy) : []};
+      }) : [],batches:r ? r.batches.filter(function (b) { return b.siteId === a.id; }).map(copy) : [],history:folded ? copy(folded) : null};
     });
   };
   P.quote = function (s,request) {
@@ -324,11 +324,12 @@
           });
           if (left) q.short = true;
         });
-        var funds = money(s,request.actor); q.funds = funds; q.payer = copy(payer(s,request.actor));
+        var funds = money(s,request.actor), live = r && P.liveCounts(s); q.funds = funds; q.payer = copy(payer(s,request.actor));
         if (recipe.water) q.water = FB.siteResources.quote(s,{operation:'reserve',sourceId:a.sourceId,actor:request.actor,amount:recipe.water});
+        // Settled history does not count; only live lots, batches and their provenance do.
         q.allowed = !!r && !!asset && eq(asset.owner,request.actor) && !q.short && (!q.water || q.water.allowed) &&
           !q.missingTech.length && worker(s,a,auth.characterId) && funds.available >= recipe.workPrice + funds.reserve &&
-          r.batches.length < LIMIT && r.lots.length + recipe.outputs.length + r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0) <= LIMIT && r.assets.length <= 128 &&
+          live.batches < LIMIT && live.lots + recipe.outputs.length + r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0) <= LIMIT && r.assets.length <= 128 &&
           !r.batches.some(function (b) { return b.status === 'reserved' && b.assetId === asset.id; });
         if (recipe.requiresSale && (request.disposition !== 'store' || !P.outletReady(s,a.id,recipe.outputs))) {
           q.allowed = false;q.reason = 'outlet';
@@ -454,6 +455,132 @@
     return FB.T('A living lawful asset holder, the original owner and an actual standing building are required.');
   };
 
+  /* Windowed retention. Every production-family owner contributes its records to
+     one graph: lot stock, pending work, current terms and agreements are live,
+     and each record needs the provenance its validator reads. Caps count the live
+     closure. A season boundary folds unreached history settled before the window
+     into production.retired, buildingSeasons.retired and siegeSupport.retired. */
+  var ASSET_TOTALS = ['lots','quantity','batches','cancelled','workDays','paid'];
+  var LEDGER_TOTALS = ['trades','traded','tradePaid','records','invoices','credit','arrivals','consents','revocations','deliveries','delivered','deliveryPaid'];
+  var RETAINED_ROOTS = ['production','buildingSeasons','siegeSupport'];
+  function rows(v) { return Array.isArray(v) ? v : []; }
+  function owners() {
+    return [FB.productionEconomy,FB.buildingOperations,FB.maritimeWork,FB.relayServices,FB.buildingSeasons,FB.siegeSupport].filter(function (x) { return !!x; });
+  }
+  P.lotNeeds = function (inputs) { return rows(inputs).map(function (x) { return 'lot:' + (x && x.lotId); }); };
+  P.retentionGraph = function (s,cutoff) {
+    var g = FB.ledgerRetention.graph(cutoff), r = s.production;
+    if (r) {
+      var assets = {}, batches = {}, trades = {};
+      rows(r.assets).forEach(function (a) { if (a) assets[a.id] = a; });
+      rows(r.batches).forEach(function (b) { if (b) batches[b.id] = b; });
+      rows(r.economy && r.economy.receipts).forEach(function (x) { if (x) trades[x.id] = x; });
+      // Origin fields identify the provenance kind: opening index, batch id or receipt id.
+      rows(r.lots).forEach(function (lot) {
+        if (!lot) return;
+        var o = object(lot.origin) ? lot.origin : {};
+        var born = own(o,'batchId') ? (batches[o.batchId] || {}).closedTurn : own(o,'receiptId') ? (trades[o.receiptId] || {}).turn : (assets[lot.assetId] || {}).openedTurn;
+        g.add('lot:' + lot.id,lot.remaining > 0,born,own(o,'batchId') ? ['batch:' + o.batchId] : own(o,'receiptId') ? ['trade:' + o.receiptId] : []);
+      });
+      // A pending batch has no close turn; it is live and needs its reserved lots and seasonal term.
+      rows(r.batches).forEach(function (b) {
+        if (!b) return;
+        var needs = P.lotNeeds(b.inputs).concat(rows(b.outputs).map(function (key) { return 'lot:' + key; }));
+        var term = FB.buildingSeasons.batchTerm(s,b);
+        if (term) needs.push('term:' + term.id);
+        g.add('batch:' + b.id,b.closedTurn === null,b.closedTurn,needs);
+      });
+    }
+    owners().forEach(function (x) { if (x.retentionNodes) x.retentionNodes(s,g); });
+    return g;
+  };
+  P.liveCounts = function (s) {
+    var R = FB.ledgerRetention, keep = P.retentionGraph(s,null).keep();
+    return {lots:R.count(keep,'lot:'),batches:R.count(keep,'batch:'),trades:R.count(keep,'trade:'),records:R.count(keep,'water:'),
+      invoices:R.count(keep,'invoice:'),relay:R.count(keep,'arrival:')+R.count(keep,'consent:')+R.count(keep,'relay:'),
+      terms:R.count(keep,'term:'),debits:R.count(keep,'debit:'),siege:R.count(keep,'siege:')};
+  };
+  function retiredTotals(t) {
+    var r = t.production;
+    if (!r.retired) r.retired = {used:{},assets:{},ledgers:FB.ledgerRetention.blank(LEDGER_TOTALS)};
+    return r.retired;
+  }
+  function assetTotals(retired,assetId) {
+    var key = String(assetId);
+    if (!retired.assets[key]) retired.assets[key] = Object.assign(FB.ledgerRetention.blank(ASSET_TOTALS),{openings:[]});
+    return retired.assets[key];
+  }
+  function foldProduction(t,keep,ctx) {
+    var r = t.production, R = FB.ledgerRetention;
+    if (!r) return;
+    var lots = R.split(r.lots,function (x) { return 'lot:' + x.id; },keep), batches = R.split(r.batches,function (b) { return 'batch:' + b.id; },keep);
+    if (!lots.folded.length && !batches.folded.length) return;
+    var retired = ctx.retired();
+    // Folded batches are closed: committed ones have outputs, cancelled ones released their inputs.
+    // Outputs need their batch, so a folded batch's output lots fold with it.
+    batches.folded.forEach(function (b) {
+      var a = assetTotals(retired,b.assetId);
+      a.batches++; a.workDays += b.workTurns.length; a.paid += b.paid;
+      if (!b.outputs.length) { a.cancelled++; return; }
+      b.inputs.forEach(function (x) { ctx.consume(x.lotId,x.quantity); });
+    });
+    lots.folded.forEach(function (lot) {
+      var a = assetTotals(retired,lot.assetId);
+      a.lots++; a.quantity += lot.quantity;
+      if (own(lot.origin,'index')) { a.openings.push(lot.origin.index); a.openings.sort(function (x,y) { return x-y; }); }
+      delete retired.used[lot.id];
+    });
+    r.lots = lots.kept; r.batches = batches.kept;
+  }
+  // Called at each season boundary. Deterministic, payment-free and RNG-free.
+  P.compact = function (s) {
+    var R = FB.ledgerRetention;
+    if (!R || !R.due(s) || !s.production && !s.buildingSeasons && !s.siegeSupport) return false;
+    var graph = P.retentionGraph(s,R.cutoff(s)), keep = graph.keep();
+    if (!R.folds(graph,keep)) return false;
+    return R.stage(s,RETAINED_ROOTS,function (t) {
+      var ctx = {
+        retired:function () { return retiredTotals(t); },
+        ledgers:function () { return retiredTotals(t).ledgers; },
+        // Consumption of retained stock by a folded record moves into the retained lot's folded use.
+        consume:function (lotId,amount) { if (t.production && keep['lot:' + lotId]) R.add(retiredTotals(t).used,String(lotId),amount); }
+      };
+      owners().forEach(function (x) { if (x.retentionFold) x.retentionFold(t,keep,ctx); });
+      foldProduction(t,keep,ctx);
+      return true;
+    },function (t) {
+      FB.siteResources.validate(t); FB.buildingOperations.validate(t); P.validate(t);
+      if (FB.siegeSupport) FB.siegeSupport.validate(t);
+      FB.buildingSeasons.validate(t);
+    });
+  };
+  // Folded history is exact derived bookkeeping: id and revision use follow from its totals.
+  function foldedCounters(r,assets,siteTable,openings,fail) {
+    var out = {ids:0,revision:0}, v = r.retired;
+    if (v === undefined) return out;
+    if (!object(v) || Object.keys(v).length !== 3 || !object(v.used) || !object(v.assets) ||
+        !FB.ledgerRetention.totals(v.ledgers,LEDGER_TOTALS)) fail();
+    var l = v.ledgers;
+    if (l.traded < l.trades || l.credit < l.invoices || l.revocations > l.consents || l.delivered < l.deliveries) fail();
+    Object.keys(v.assets).forEach(function (key) {
+      var t = v.assets[key], asset = assets[key], fields = {};
+      if (!object(t)) fail();
+      Object.keys(t).forEach(function (k) { if (k !== 'openings') fields[k] = t[k]; });
+      if (!asset || String(asset.id) !== key || !Array.isArray(t.openings) || !FB.ledgerRetention.totals(fields,ASSET_TOTALS) ||
+          t.cancelled > t.batches || t.quantity < t.lots || t.openings.length > t.lots ||
+          !(t.lots || t.batches) || t.openings.length && asset.constructed !== undefined) fail();
+      t.openings.forEach(function (index,i) {
+        if (!int(index,0,7) || i && index <= t.openings[i-1] || !siteTable[asset.siteId].openingLots[index] ||
+            own(openings,asset.siteId + ':' + index)) fail();
+        openings[asset.siteId + ':' + index] = 0;
+      });
+      out.ids += t.lots + t.batches; out.revision += 2*t.batches + t.workDays;
+    });
+    out.ids += l.trades + l.records + l.invoices + l.arrivals + l.consents + l.revocations + l.deliveries;
+    out.revision += l.trades + l.records + 2*l.invoices + l.arrivals + l.consents + l.revocations + l.deliveries;
+    return out;
+  }
+
   P.validate = function (s) {
     function fail() { throw new Error(FB.T('Invalid saved production inventory or batch.')); }
     var r = s.production, stamps = [];
@@ -462,10 +589,11 @@
     });
     if (r === undefined) { var bm=FB.campaignBookmark(s);if (stamps.length || bm && (bm.relayServiceAssignments || []).length) fail();return true; }
     var p = plan(s), originalAssets = FB.compileOpeningInfrastructure(FB.campaignBookmark(s)), siteTable = {}, assets = {}, lots = {}, batches = {}, seen = {}, work = {}, claims = {}, used = {}, openings = {};
-    if (p.errors.length || !keys(r,['version','definition','revision','nextId','assets','lots','batches','economy','maritime','relay','waterInputs']) || r.version !== 1 ||
+    // Lot and batch arrays may also hold settled history inside the retention window; caps apply to live records below.
+    if (p.errors.length || !keys(r,['version','definition','revision','nextId','assets','lots','batches','economy','maritime','relay','waterInputs','retired']) || r.version !== 1 ||
         r.definition !== definition(p) || !int(r.revision,0,MAX) || !int(r.nextId,1,MAX) ||
-        !Array.isArray(r.assets) || r.assets.length > 128 || !Array.isArray(r.lots) || r.lots.length > LIMIT ||
-        !Array.isArray(r.batches) || r.batches.length > LIMIT) fail();
+        !Array.isArray(r.assets) || r.assets.length > 128 || !Array.isArray(r.lots) || r.lots.length >= MAX ||
+        !Array.isArray(r.batches) || r.batches.length >= MAX) fail();
     p.sites.forEach(function (a) { siteTable[a.id] = a; });
     function identity(who) {
       return actor(who) && (who.kind === 'character' ? own(s.chars,who.id) : own(s.realms,who.id));
@@ -489,6 +617,7 @@
           x.pid !== d.countyId || x.b.id !== d.buildingId || x.b.s !== d.slot) fail();
       stampIds[a.id] = true;
     });
+    var folded = foldedCounters(r,assets,siteTable,openings,fail), foldedUse = r.retired ? r.retired.used : {};
     r.lots.forEach(function (lot) {
       var asset = lot && assets[lot.assetId],good=lot && FBDATA.productionGoods[lot.goodId];
       if (!keys(lot,['id','assetId','owner','goodId','unit','quantity','remaining','origin']) || !asset ||
@@ -574,12 +703,14 @@
     waterInputs.ids.forEach(unique);
     Object.keys(waterInputs.used).forEach(function(key){if(!lots[key])fail();used[key]+=waterInputs.used[key];});
     var held=reservationTotals(r);
+    Object.keys(foldedUse).forEach(function (key) { if (!lots[key] || String(lots[key].id) !== key || !int(foldedUse[key],1,lots[key].quantity)) fail(); });
     r.lots.forEach(function (lot) {
       if (lot.origin.kind === 'batch') {
         var b=batches[lot.origin.batchId];
         if (!b || b.status !== 'committed' || b.outputs.indexOf(lot.id) < 0) fail();
       }
-      if (lot.quantity-lot.remaining !== used[lot.id]+FB.buildingSeasons.debited(s,lot.id)+(FB.siegeSupport ? FB.siegeSupport.debited(s,lot.id) : 0) || (held[lot.id] || 0)>lot.remaining) fail();
+      // Folded consumers of retained stock remain in the conservation equation through their exact folded use.
+      if (lot.quantity-lot.remaining !== used[lot.id]+(foldedUse[lot.id] || 0)+FB.buildingSeasons.debited(s,lot.id)+(FB.siegeSupport ? FB.siegeSupport.debited(s,lot.id) : 0) || (held[lot.id] || 0)>lot.remaining) fail();
     });
     var delivered={};
     r.batches.forEach(function(b){
@@ -592,7 +723,10 @@
     });
     var pending={};
     r.batches.forEach(function(b){if(b.status==='reserved'){if(pending[b.assetId])fail();pending[b.assetId]=true;}});
-    if (Object.keys(seen).length !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)+economic.revision+maritime.revision+relay.revision+waterInputs.revision+r.assets.filter(function(a){return a.constructed;}).length) fail();
+    if (Object.keys(seen).length+folded.ids !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)+economic.revision+maritime.revision+relay.revision+waterInputs.revision+r.assets.filter(function(a){return a.constructed;}).length+folded.revision) fail();
+    // Only live records and the provenance they need count against the bounded journals.
+    var live = P.liveCounts(s);
+    if (live.lots > LIMIT || live.batches > LIMIT || live.trades > LIMIT || live.records > LIMIT || live.invoices > LIMIT || live.relay > LIMIT) fail();
     return true;
   };
 })();
