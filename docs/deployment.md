@@ -15,6 +15,8 @@ Zip the folder contents with `index.html` at the zip root, upload to itch.io as 
 `notes/deploy.cmd` runs `notes/stamp.ps1`, which appends `?v=<FB.VERSION>` to every `css/`, `js/`,
 `data/`, and `mods/` URL in the **staged** `index.html` before the push. That makes the version
 the cache key for the itch build, so browsers and the itch CDN fetch fresh files on each release.
+The bookmark source loader inherits that version query from the staged manifest tag for every
+lazy source URL.
 The script stages only `index.html`, `LICENSE`, `css/`, `data/`, `docs/`, `js/`, `mods/`, and
 `static/`, then uses `tools/music_catalog.py` to validate and add the complete soundtrack.
 Gameplay music must fit beneath 200,000,000 bytes; all three intro themes are required and sit
@@ -115,10 +117,14 @@ the selected bookmark before any campaign date exists.
 `js/util.js` adds the manifest metadata and `js/main.js` registers `/sw.js` only when the page
 is on `https://play.fallowborn.com`. The worker derives its versioned precache list during the
 Docker build from every `css/js/data/mods` reference in the unstamped `index.html`, including
-the inert deferred `ui_modals.js` asset pointer, plus every shipped `data/lang_*.js` catalog. It also
+the inert deferred `ui_modals.js` asset pointer, every per-date bookmark source listed in
+`data/bookmark_manifest.js`, and every shipped `data/lang_*.js` catalog. It also
 precaches PNG sprite URLs referenced by css/style.css and all three intro themes, but not the full
 soundtrack. Installation activates only after that whole bundle and the unversioned HTML,
 manifest, favicons, install icons, and intros have cached successfully.
+The same build stamps each quoted `data/...js` path in that manifest with the deployment
+fingerprint, so a date loaded on demand requests exactly the precached URL and works offline.
+The build fails if a manifest path is missing from the image.
 
 Hosted navigation is network-first so an online visit still receives the newest deployment.
 The response is not written into the active worker's cache: only a completed worker installation
@@ -264,7 +270,7 @@ index.html loads data/bookmark_1066_inhabited.js after the shared wider declarat
 
 2.0 script distribution
 
-index.html declares the ordered local data and engine inputs. js/ui_modals.js stays reachable through the inert hidden asset pointer, so deployment stamping and offline precache include the deferred modal script. Use the current index.html as the source of truth for script inventory and order. play.fallowborn.com copies the css, data, docs, js, mods, music and static folders whole and derives its versioned precache from index.html, language catalogs, sprite URLs and intro themes, so a new script needs only its index.html tag. The itch staging copies css, js, data, mods, docs and static whole from the working tree into a fresh staging folder, so removed files never linger, and refuses to stage while any untracked or ignored file sits in those folders or at the shipped root files. Track a new script before staging either target.
+index.html declares the ordered local data and engine inputs. js/ui_modals.js stays reachable through the inert hidden asset pointer, so deployment stamping and offline precache include the deferred modal script. Use the current index.html and data/bookmark_manifest.js as the source of truth for script inventory and order: dated sources outside the eager title set are listed by date in that manifest, after the eager script they originally followed, and load on demand as ordinary local script elements (file://, the itch iframe and the hosted origin alike). A new file for such a date belongs in its manifest run rather than index.html; the hosted precache and version stamping include it automatically, and the tracked data directory already ships it in both standard and CrazyGames packages. play.fallowborn.com copies the css, data, docs, js, mods, music and static folders whole and derives its versioned precache from index.html, the per-date manifest, language catalogs, sprite URLs and intro themes. The itch staging copies css, js, data, mods, docs and static whole from the working tree into a fresh staging folder, so removed files never linger, and refuses to stage while any untracked or ignored file sits in those folders or at the shipped root files. Track a new script before staging either target.
 
 tools/settlement_import.py fills only the shared base layouts declared in data/settlements.js (867, 1066 and 476). It refuses a date whose settlements are authored in its own data/bookmark_<id>*.js files (711, 800, 1204, 493) rather than filling it from the 867 fallback. tools/i18n_catalog.py reads the 1204 period kingdom names from FBDATA.bookmarkContent['1204'].kingdomNames and the transformation option names of forms declared outside data/political_institutions.js. tools/music_catalog.py validates selector syntax only and needs no date list.
 

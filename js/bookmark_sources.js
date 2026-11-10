@@ -10,6 +10,40 @@
   var usedGraphs = Object.create(null), catalogUses = Object.create(null);
   var publishing = false, setup = null, setupFaults = Object.create(null);
   var retainedTransitions = [];
+  /* Per-date source loading. Every contributor is recorded at its original
+     document position. Boot runs the eager subset exactly as before; a later
+     date load replays all recorded contributors from the pristine authoring
+     root in that same order (see data/bookmark_manifest.js). */
+  var manifest = null, files = Object.create(null), fileOrder = [], manifestFaults = [];
+  var recorded = [], sequence = 0, pristine = null, stageProduced = Object.create(null);
+  var replaying = false, deltaPrimary = -1, lastStagePrimary = -1, finishBase = null, lastSandbox = null;
+  var loadQueue = [], batch = null, batchSerial = 0, publicFaults = [];
+  // File load states and recorded public-foundation delta kinds.
+  var PENDING = 0, LOADING = 1, FETCHED = 2, MISSING = 3, LOADED = 4;
+  var WHOLE_ROOT = 1, LIST_ROW = 2, TABLE_ENTRY = 3;
+  function normalPath(value) { return String(value || '').split(/[?#]/)[0]; }
+  function scriptIndex(element) {
+    var index = element ? Array.prototype.indexOf.call(document.scripts, element) : -1;
+    return index < 0 ? Number.MAX_SAFE_INTEGER : index;
+  }
+  function documentScript(path) {
+    return Array.prototype.filter.call(document.scripts, function (script) {
+      var url = normalPath(script.src);
+      return !!url && !script.hasAttribute('data-bookmark-source') && url.slice(-path.length - 1) === '/' + path;
+    })[0] || null;
+  }
+  function record(row) { row.seq = sequence++; recorded.push(row); return row; }
+  // A declared date absent from this candidate (not loaded, or withheld) is
+  // a bare identity reference {id}. Bookmark-scoped shared declarations are
+  // reviewed with that date itself, never against this placeholder. Detached
+  // candidates copy their tables, so the placeholder is recognized by shape.
+  function reference(id) { return {id:id}; }
+  C.unreviewedReference = function (world) {
+    if (!world || typeof world !== 'object' || Array.isArray(world) || Object.keys(world).length !== 1 ||
+        typeof world.id !== 'string' || declared.indexOf(world.id) < 0) return false;
+    return !C.dateLoaded(world.id) || !frozen || !own(frozen.bookmarks,world.id);
+  };
+  function compareRows(a, b) { return a.primary - b.primary || a.secondary - b.secondary || a.seq - b.seq; }
   function copyTransition(value) {
     var count = 0, units = 0, parents = [];
     function clone(row,depth) {
@@ -156,11 +190,29 @@
     }
     return true;
   }
+  // Public foundation changes observed between eager contributors are kept
+  // as ordered deltas, so a replay sees them at the same contributor.
+  function recordDelta(row) {
+    row.primary = deltaPrimary; row.secondary = 0; row.boot = true;
+    record(row);
+    // A lazily loaded run that sits after eager scripts in this interval
+    // could have preceded the change; its order would be ambiguous.
+    fileOrder.forEach(function (path) {
+      var file = files[path];
+      if (file.secondary !== 1 || !(file.primary > lastStagePrimary && file.primary < deltaPrimary)) return;
+      manifestFaults.push({source:'data/bookmark_manifest.js',bookmarks:file.runDates.slice(),
+        message:'Public foundation ' + row.root + ' changed between ' + file.after + ' and the next eager contributor; lazily loaded sources cannot be ordered against it.'});
+    });
+  }
   function syncFoundations(roots,initial) {
     roots.forEach(function (root) {
       var text = JSON.stringify(FBDATA[root]);
       if (!own(seen,root)) {
-        if (!initial) view[root] = copy(FBDATA[root]); seen[root] = text;
+        if (!initial) {
+          view[root] = copy(FBDATA[root]);
+          recordDelta({delta:WHOLE_ROOT,root:root,value:copy(FBDATA[root])});
+        }
+        seen[root] = text;
         if (root === 'startScenarios') view[root].forEach(function (row) { if (row && row.id) starts[row.id] = 'data/starts.js'; });
       }
       else if (seen[root] !== text) {
@@ -171,9 +223,13 @@
           FBDATA[root].forEach(function (row) {
             if (!row || !row.id || prior.some(function (old) { return old && old.id === row.id && JSON.stringify(old) === JSON.stringify(row); })) return;
             view[root] = view[root].filter(function (old) { return !old || old.id !== row.id; }); view[root].push(copy(row));
+            recordDelta({delta:LIST_ROW,root:root,value:copy(row)});
           });
         } else Object.keys(FBDATA[root] || {}).forEach(function (id) {
-          if (!own(prior,id) || JSON.stringify(prior[id]) !== JSON.stringify(FBDATA[root][id])) view[root][id] = copy(FBDATA[root][id]);
+          if (!own(prior,id) || JSON.stringify(prior[id]) !== JSON.stringify(FBDATA[root][id])) {
+            view[root][id] = copy(FBDATA[root][id]);
+            recordDelta({delta:TABLE_ENTRY,root:root,id:id,value:copy(FBDATA[root][id])});
+          }
         });
         seen[root] = text;
       }
@@ -181,7 +237,8 @@
   }
   function refresh() {
     var initial = !view, roots = [];
-    if (initial) view = copy(FBDATA);
+    // The pristine root is the authoring view's starting point for replays.
+    if (initial) { view = copy(FBDATA); pristine = copy(view); }
     Object.keys(FBDATA).forEach(function (root) {
       if (protectedRoots.indexOf(root) < 0) { if (!initial) view[root] = FBDATA[root]; }
       else roots.push(root);
@@ -208,18 +265,35 @@
     return !!row && (row.bookmarkIds === undefined || Array.isArray(row.bookmarkIds) && row.bookmarkIds.indexOf(id) >= 0) &&
       (row.eras === undefined || Array.isArray(row.eras) && row.eras.indexOf(era) >= 0);
   };
+  // The script element a lazily injected contributor is running from.
+  function lazyFile() {
+    var script = document.currentScript, path = script && script.getAttribute && script.getAttribute('data-bookmark-source');
+    var file = path && own(files,path) ? files[path] : null;
+    return file && batch && file.state === LOADING && batch.paths.indexOf(path) >= 0 ? file : null;
+  }
   C.stage = function (spec,fn) {
     if (!spec || typeof spec.source !== 'string' || !Array.isArray(spec.bookmarks) || typeof fn !== 'function')
       throw new Error('Invalid trusted source adapter.');
+    (spec.catalogs || []).forEach(function (root) { if (catalogs.indexOf(root) < 0) throw new Error('Unknown source catalogue: ' + root); });
     if (frozen) {
+      var file = lazyFile();
+      // A manifest date's contributor records its declaration for the replay.
+      if (file) { bodies[spec.source] = String(fn); record({primary:file.primary,secondary:file.secondary,spec:spec,fn:fn,batch:batch.id}); return; }
       if (bodies[spec.source] !== String(fn)) error(spec.source,spec.bookmarks,'Source authoring is sealed; reload changed declarations.');
       return;
     }
+    deltaPrimary = scriptIndex(document.currentScript);
     refresh(); bodies[spec.source] = String(fn);
+    record({primary:deltaPrimary,secondary:0,spec:spec,fn:fn,boot:true});
+    lastStagePrimary = deltaPrimary;
+    author(spec,fn);
+  };
+  function author(spec,fn) {
     var before = {}, roots = spec.catalogs || [];
-    roots.forEach(function (root) { if (catalogs.indexOf(root) < 0) throw new Error('Unknown source catalogue: ' + root); before[root] = stamp(view[root]); });
+    roots.forEach(function (root) { before[root] = stamp(view[root]); });
     var priorStarts = view.startScenarios, priorStories = view.storyInstances;
-    var priorWorlds = Object.assign({},view.bookmarks);
+    var priorWorlds = Object.assign({},view.bookmarks), priorRoots = Object.create(null);
+    Object.keys(view).forEach(function (root) { if (protectedRoots.indexOf(root) < 0) priorRoots[root] = view[root]; });
     var oldWorlds = Object.keys(view.bookmarks), previous = active, previousSource = C.source; active = view; C.source = spec.source;
     try { fn(view); } catch (e) { error(spec.source,spec.bookmarks,e.message); }
     finally { active = previous; C.source = previousSource; }
@@ -252,16 +326,28 @@
       if (!graphs[id]) graphs[id] = spec.source;
     });
     // Source tables remain inspectable authoring metadata. Protected runtime
-    // roots never cross this seam during data loading.
-    Object.keys(view).forEach(function (root) { if (protectedRoots.indexOf(root) < 0) FBDATA[root] = view[root]; });
-  };
+    // roots never cross this seam during data loading. A replay keeps its
+    // unprotected roots private until publishSandbox merges the difference.
+    Object.keys(view).forEach(function (root) {
+      if (protectedRoots.indexOf(root) >= 0) return;
+      if (!own(priorRoots,root) || priorRoots[root] !== view[root]) stageProduced[root] = true;
+      if (!replaying) FBDATA[root] = view[root];
+    });
+  }
   C.scope = function (id,fn) {
     try { return fn(); }
     catch (e) { error(C.source || 'trusted source',[id],e.message); }
   };
   C.finish = function (ids) {
     if (frozen) return;
-    refresh(); declared = ids.slice();
+    deltaPrimary = scriptIndex(document.currentScript);
+    refresh(); seal(ids);
+    // Manifest files present in the document already ran in place.
+    fileOrder.forEach(function (path) { if (documentScript(path)) { files[path].state = LOADED; files[path].boot = true; } });
+    validateManifest();
+  };
+  function seal(ids) {
+    declared = ids.slice();
     frozen = copy(view); orders = FB.bookmarkCompositions.sourceOrder(frozen);
     Object.keys(frozen.bookmarkCompositionSources || {}).forEach(function (owner) {
       var row = frozen.bookmarkCompositionSources[owner], input = row.input;
@@ -289,8 +375,13 @@
         ids.splice(at,0,ownId);
       });
     });
+    // A replay starts again from the foundations present before the first seal.
+    if (!finishBase) {
+      finishBase = Object.create(null);
+      catalogs.forEach(function (root) { finishBase[root] = FBDATA[root]; });
+    }
     catalogs.forEach(function (root) {
-      var shared = Object.assign({},FBDATA[root]);
+      var shared = Object.assign({},finishBase[root]);
       Object.keys(frozen[root] || {}).forEach(function (id) {
         if (!ownership[root] || !own(ownership[root],id) || !ownership[root][id].length) shared[id] = copy(frozen[root][id]);
       });
@@ -299,7 +390,7 @@
     // Existing converted sources participate in the same known-world proof.
     FBDATA.bookmarkCompositionSources = frozen.bookmarkCompositionSources || {};
     view = null; foundationSnapshot = null; seen = Object.create(null);
-  };
+  }
   C.ready = function () { return !!frozen; };
   /* Display-only projections of the sealed authoring view. Nothing here is
      published or accepted for play; selection still runs the canonical gate. */
@@ -315,6 +406,10 @@
       if (!input || !input.bookmark) return;
       worlds[input.bookmark.id] = input.bookmark;
       list(input.starts).forEach(function (unit) { if (unit && unit.definition) scenarios[unit.definition.id] = unit.definition; });
+    });
+    // A date whose sources have not loaded is listed from its manifest summary.
+    Object.keys(manifest ? manifest.dates : {}).forEach(function (id) {
+      if (!C.dateLoaded(id)) worlds[id] = Object.assign({id:id},copy(manifest.dates[id].summary));
     });
     list(mods).forEach(function (mod) {
       if (!mod || typeof mod !== 'object') return;
@@ -482,6 +577,25 @@
     });
     law(FBDATA.faithDefaults && FBDATA.faithDefaults.legalTradition);
     law(FBDATA.authoringDefaults && FBDATA.authoringDefaults.intrigueLaw);
+    // Starting any campaign validates the whole event catalogue, including
+    // events authored for other dates, so the community identities those
+    // events name remain dependencies of every date.
+    function events(value) {
+      if (!value || typeof value !== 'object') return;
+      if (Array.isArray(value)) { value.forEach(events); return; }
+      if (value.community && typeof value.community === 'object')
+        walk({cultureId:value.community.culture,faithId:value.community.religion});
+      Object.keys(value).forEach(function (key) {
+        var item = value[key], probe = {};
+        if (key === 'countyCulture' || key === 'settlementCulture') walk({cultureId:item});
+        else if (key === 'countyFaith' || key === 'settlementFaith') walk({faithId:item});
+        else if (key === 'countyCommunityShare' && item && typeof item.kind === 'string') {
+          probe[item.kind + 'Id'] = item.target; walk(probe);
+        }
+        events(item);
+      });
+    }
+    events(FBDATA.events);
     walk(spec.bookmark);
     spec.starts.forEach(function (unit) { walk(unit.definition); walk(unit.bindings); walk(unit.storyInstances); });
     walk(result.storyInstances);
@@ -503,14 +617,15 @@
     var result = [], source = frozen, converted = source.bookmarkCompositionSources || {};
     var convertedIds = Object.keys(converted).map(function (key) { return converted[key].bookmarkId; });
     var allStarts = source.startScenarios, selectorWorlds = Object.assign({},source.bookmarks);
-    declared.forEach(function (id) { if (!own(selectorWorlds,id)) selectorWorlds[id] = {id:id}; });
+    declared.forEach(function (id) { if (!own(selectorWorlds,id)) selectorWorlds[id] = reference(id); });
     declared.forEach(function (id) {
       if (only !== undefined && id !== only) return;
+      if (!C.dateLoaded(id)) { result.push({id:'native_' + id,source:'data/bookmark_manifest.js',bookmarkId:id,faults:[notLoaded(id)]}); return; }
       if (convertedIds.indexOf(id) >= 0) return;
       var original = source.bookmarks[id];
       var entry = {id:'native_' + id,source:origins[id] || 'data/bookmarks.js',bookmarkId:id};
       try {
-      var failures = faults.filter(function (fault) { return fault.bookmarks.indexOf(id) >= 0; });
+      var failures = faults.concat(manifestFaults).filter(function (fault) { return fault.bookmarks.indexOf(id) >= 0; });
       if (failures.length || !original) { entry.faults = failures.map(function (fault) { return fault.source + ': ' + fault.message; }); if (!entry.faults.length) entry.faults.push('Missing complete source world.'); result.push(entry); return; }
       if (original.id !== id) throw new Error('Source world id differs from its declared owner.');
       var world = copy(original), mandatory = [];
@@ -553,7 +668,7 @@
         });
         delete row.input.availability;
       }
-      var failures = faults.filter(function (fault) { return fault.bookmarks.indexOf(row.bookmarkId) >= 0; });
+      var failures = faults.concat(manifestFaults).filter(function (fault) { return fault.bookmarks.indexOf(row.bookmarkId) >= 0; });
       if (failures.length) row.faults = failures.map(function (fault) { return fault.source + ': ' + fault.message; });
       result.push(row);
     });
@@ -644,6 +759,7 @@
   };
   C.prepareSetup = function (id) {
     if (publishing || published || FB.state) throw new Error('Setup preparation requires an unstarted, unpublished campaign.');
+    if (!C.dateLoaded(id)) throw new Error(notLoaded(id));
     if (own(setupFaults,id)) throw new Error(setupFaults[id]);
     if (setup && setup.id === id) return copy(setup.report);
     resetSetup();
@@ -654,7 +770,7 @@
     publishing = true;
     try {
       var entry = inputs(id)[0], known = Object.assign({},frozen.bookmarks);
-      declared.forEach(function (key) { if (!own(known,key)) known[key] = {id:key}; });
+      declared.forEach(function (key) { if (!own(known,key)) known[key] = reference(key); });
       if (!entry) throw new Error('Unknown bookmark: ' + id);
       if (entry.faults) throw new Error(entry.faults.join('\n'));
       // A cold setup still contains the original public foundation records.
@@ -693,7 +809,7 @@
     function plan() {
     var entries = FB.loadTiming ? FB.loadTiming.measure('Assemble source envelopes',inputs) : inputs();
     var known = Object.assign({},frozen.bookmarks), rejected = Object.create(null), reviews = [], tickets = [];
-    declared.forEach(function (id) { if (!known[id]) known[id] = {id:id}; });
+    declared.forEach(function (id) { if (!known[id]) known[id] = reference(id); });
     entries.forEach(function (row) { if (row.input) known[row.bookmarkId] = row.input.bookmark; });
     entries.forEach(function (row) {
       addTask('Review date ' + row.bookmarkId,{stage:'review',bookmarkId:row.bookmarkId},function () {
@@ -851,6 +967,301 @@
   C.hasPublished = function () { return !!published; };
   C.owns = function (id) { return !!published && published.some(function (row) { return row.id === id; }); };
   C.replay = function () { if (published) published.forEach(function (row) { if (row.published) row.reused = true; }); };
+
+  /* ---------- Per-date source manifest ---------- */
+  function notLoaded(id) { return FB.T('Bookmark {bookmark} has not finished loading.',{bookmark:id}); }
+  // data/bookmark_manifest.js registers once, after this module and before
+  // any contributor. Each run follows one eager script in document order.
+  C.manifest = function (definition) {
+    if (manifest || frozen || view) throw new Error('The bookmark source manifest must register once before sources load.');
+    if (!definition || typeof definition !== 'object' || !definition.dates || typeof definition.dates !== 'object' || !Array.isArray(definition.runs))
+      throw new Error('Invalid bookmark source manifest.');
+    // Hosted staging already versions the manifest tag. Inherit that key for
+    // injected sources too, including itch builds that only stamp index.html.
+    // A query-free file:// document keeps query-free local source paths.
+    var version = document.currentScript && document.currentScript.src.match(/[?&]v=([^&#]*)/);
+    var versionQuery = version ? '?v=' + version[1] : '';
+    var dates = Object.create(null);
+    Object.keys(definition.dates).forEach(function (id) {
+      var row = definition.dates[id];
+      if (!row || typeof row.name !== 'string' || typeof row.desc !== 'string' || typeof row.era !== 'string' ||
+          !row.date || typeof row.date.year !== 'number' || typeof row.date.season !== 'number' || typeof row.date.day !== 'number')
+        throw new Error('Invalid bookmark manifest summary: ' + id);
+      dates[id] = {summary:{name:row.name,desc:row.desc,date:{year:row.date.year,season:row.date.season,day:row.date.day},era:row.era},
+        requires:list(row.requires).slice(),files:[]};
+      if (row.hidden === true) dates[id].summary.hidden = true;
+    });
+    definition.runs.forEach(function (run) {
+      if (!run || typeof run.after !== 'string' || !Array.isArray(run.files) || !run.files.length) throw new Error('Invalid bookmark manifest run.');
+      var after = normalPath(run.after), anchor = documentScript(after), runDates = [];
+      run.files.forEach(function (entry) { list(entry && entry[1]).forEach(function (id) { if (runDates.indexOf(id) < 0) runDates.push(id); }); });
+      if (!anchor) manifestFaults.push({source:'data/bookmark_manifest.js',bookmarks:runDates,message:'Missing manifest anchor script: ' + after});
+      run.files.forEach(function (entry, index) {
+        var url = entry && entry[0], path = normalPath(url), ids = list(entry && entry[1]);
+        if (typeof url !== 'string' || !/^data\/[a-z0-9_]+\.js$/.test(path) || !ids.length || own(files,path))
+          throw new Error('Invalid or duplicate bookmark manifest file: ' + url);
+        ids.forEach(function (id) {
+          if (!own(dates,id)) throw new Error('Bookmark manifest file names an undeclared date: ' + path);
+          dates[id].files.push(path);
+        });
+        files[path] = {path:path,url:url.indexOf('?') < 0 ? url + versionQuery : url,dates:ids.slice(),after:after,runDates:runDates,primary:anchor ? scriptIndex(anchor) : -1,
+          secondary:index + 1,state:PENDING,boot:false};
+        fileOrder.push(path);
+      });
+    });
+    manifest = {dates:dates};
+  };
+  function validateManifest() {
+    if (!manifest) return;
+    Object.keys(manifest.dates).forEach(function (id) {
+      var problems = [];
+      if (declared.indexOf(id) < 0) problems.push('Bookmark manifest date is not a declared source date: ' + id);
+      manifest.dates[id].requires.forEach(function (ref) { if (!own(manifest.dates,ref) && declared.indexOf(ref) < 0) problems.push('Unknown required date ' + ref + ' for ' + id); });
+      problems.forEach(function (message) { manifestFaults.push({source:'data/bookmark_manifest.js',bookmarks:[id],message:message}); });
+    });
+  }
+  // Manifest dates and their required dates, in a stable first-seen order.
+  function closure(ids) {
+    var result = [];
+    function visit(id) {
+      if (result.indexOf(id) >= 0) return;
+      result.push(id);
+      if (manifest && own(manifest.dates,id)) manifest.dates[id].requires.forEach(visit);
+    }
+    ids.forEach(visit); return result;
+  }
+  function missing(ids) {
+    if (!manifest) return [];
+    var paths = [];
+    closure(ids === null || ids === undefined ? Object.keys(manifest.dates) : list(ids).map(String)).forEach(function (id) {
+      if (!own(manifest.dates,id)) return;
+      manifest.dates[id].files.forEach(function (path) { if (files[path].state !== LOADED && paths.indexOf(path) < 0) paths.push(path); });
+    });
+    return paths.sort(function (a,b) { return compareRows(files[a],files[b]) || fileOrder.indexOf(a) - fileOrder.indexOf(b); });
+  }
+  C.dateLoaded = function (id) {
+    if (!manifest || !own(manifest.dates,String(id))) return true;
+    return !missing([String(id)]).length;
+  };
+  C.datesLoaded = function (ids) { return !missing(ids).length; };
+  // Inspection only: the manifest's dates, files and load states.
+  C.manifestReport = function () {
+    return {registered:!!manifest,dates:manifest ? Object.keys(manifest.dates).map(function (id) {
+      var row = manifest.dates[id];
+      return {id:id,summary:copy(row.summary),requires:row.requires.slice(),files:row.files.slice(),loaded:C.dateLoaded(id)};
+    }) : [],files:fileOrder.map(function (path) {
+      var file = files[path];
+      return {path:path,url:file.url,dates:file.dates.slice(),after:file.after,loaded:file.state === LOADED,boot:file.boot};
+    }),faults:manifestFaults.map(function (fault) { return copy(fault); }),publicFaults:publicFaults.slice()};
+  };
+  /* Load the sources of the named dates (null means every manifest date),
+     then replay all recorded contributors. Requests are serialized; a date
+     already present completes synchronously. A failed file withdraws the
+     whole batch, leaving the prior catalogue intact and the files retryable. */
+  C.loadDates = function (ids, done, progress) {
+    var request = {ids:ids,done:typeof done === 'function' ? done : function () {},progress:progress};
+    if (batch || loadQueue.length) { loadQueue.push(request); return; }
+    startLoad(request);
+  };
+  function drainLoads() { if (!batch && loadQueue.length) startLoad(loadQueue.shift()); }
+  function startLoad(request) {
+    var paths, failure = null;
+    try {
+      paths = missing(request.ids);
+      if (paths.length && (publishing || published || FB.state))
+        throw new Error('Bookmark sources can load only before campaign content is prepared.');
+      paths.forEach(function (path) { if (files[path].primary < 0) throw new Error('Missing manifest anchor script: ' + files[path].after); });
+    } catch (error) { failure = error; }
+    if (failure || !paths.length) { request.done(failure); drainLoads(); return; }
+    // Injected contributors write the base root, never a setup snapshot.
+    resetSetup();
+    var current = batch = {id:++batchSerial,request:request,paths:paths,scripts:[],remaining:paths.length,failed:[]};
+    paths.forEach(function (path) {
+      var file = files[path], script = document.createElement('script');
+      file.state = LOADING;
+      script.src = file.url;
+      script.async = false;
+      script.setAttribute('data-bookmark-source',path);
+      script.onload = function () { settleFile(current,file,true); };
+      script.onerror = function () { settleFile(current,file,false); };
+      current.scripts.push(script);
+      (document.body || document.head).appendChild(script);
+    });
+  }
+  function settleFile(current, file, ok) {
+    if (batch !== current || file.state !== LOADING) return;
+    file.state = ok ? FETCHED : MISSING;
+    if (!ok) current.failed.push(file.path);
+    current.remaining--;
+    if (current.request.progress) {
+      try { current.request.progress((current.paths.length - current.remaining) / current.paths.length); }
+      catch (ignored) { /* Progress display never affects loading. */ }
+    }
+    if (!current.remaining) completeLoad(current);
+  }
+  function completeLoad(current) {
+    var failure = null;
+    if (current.failed.length) {
+      recorded = recorded.filter(function (row) { return row.batch !== current.id; });
+      current.paths.forEach(function (path) { files[path].state = PENDING; });
+      current.scripts.forEach(function (script) { if (script.parentNode) script.parentNode.removeChild(script); });
+      failure = new Error(FB.T('Bookmark data could not be loaded: {files}. Check the connection and try again.',{files:current.failed.join(', ')}));
+      failure.retryable = true;
+    } else {
+      try {
+        reauthor();
+        current.paths.forEach(function (path) { files[path].state = LOADED; });
+      } catch (error) {
+        recorded = recorded.filter(function (row) { return row.batch !== current.id; });
+        current.paths.forEach(function (path) { files[path].state = PENDING; });
+        failure = error;
+      }
+    }
+    batch = null;
+    try { current.request.done(failure); }
+    finally { drainLoads(); }
+  }
+  function defaultRoots() {
+    protectedRoots.forEach(function (root) {
+      if (legacyRoots.indexOf(root) < 0 && !own(view,root)) view[root] = root === 'startScenarios' ? [] : {};
+    });
+  }
+  function applyDelta(row) {
+    if (row.delta === WHOLE_ROOT) view[row.root] = copy(row.value);
+    else if (row.delta === LIST_ROW) {
+      view[row.root] = list(view[row.root]).filter(function (old) { return !old || old.id !== row.value.id; });
+      view[row.root].push(copy(row.value));
+    } else {
+      if (!view[row.root] || typeof view[row.root] !== 'object') view[row.root] = {};
+      view[row.root][row.id] = copy(row.value);
+    }
+  }
+  // Author recorded contributors from the pristine root. Unprotected roots
+  // stay private to the replay; public roots created outside contributors
+  // (ordinary data tables, inert literal tables) are read in place.
+  function replayRows(rows) {
+    faults = []; origins = Object.create(null); starts = Object.create(null); graphs = Object.create(null);
+    ownership = Object.create(null); catalogUses = Object.create(null); usedGraphs = Object.create(null);
+    view = copy(pristine); seen = Object.create(null); foundationSnapshot = null;
+    list(view.startScenarios).forEach(function (row) { if (row && row.id) starts[row.id] = 'data/starts.js'; });
+    // Sealing owns the public composition-source table; contributors rebuild it.
+    Object.keys(FBDATA).forEach(function (root) {
+      if (protectedRoots.indexOf(root) < 0 && root !== 'bookmarkCompositionSources' && !own(view,root) && !stageProduced[root])
+        view[root] = FBDATA[root];
+    });
+    FB.bookmarkCompositions.resetSourceSession();
+    replaying = true;
+    try {
+      rows.slice().sort(compareRows).forEach(function (row) {
+        if (!row.fn) { applyDelta(row); return; }
+        defaultRoots(); author(row.spec,row.fn);
+      });
+      defaultRoots();
+    } finally { replaying = false; }
+    return view;
+  }
+  function sourceOwnerIds() {
+    return ['native_unattached_declarations'].concat(declared.map(function (id) { return 'native_' + id; }),
+      Object.keys(frozen && frozen.bookmarkCompositionSources || {}));
+  }
+  function reauthor() {
+    var state = {view:view,frozen:frozen,orders:orders,declared:declared,faults:faults,origins:origins,starts:starts,graphs:graphs,
+      ownership:ownership,catalogUses:catalogUses,usedGraphs:usedGraphs,seen:seen,foundationSnapshot:foundationSnapshot,
+      stageProduced:Object.assign(Object.create(null),stageProduced),catalogs:{},sources:FBDATA.bookmarkCompositionSources};
+    catalogs.forEach(function (root) { state.catalogs[root] = FBDATA[root]; });
+    var ids = declared.slice();
+    if (!pristine) throw new Error('Bookmark sources have no recorded authoring root.');
+    // Owner fingerprints of the smaller source set no longer apply.
+    FB.bookmarkCompositions.resetSourceSession(sourceOwnerIds());
+    try {
+      // The first replay reproduces the eager boot contributors privately, so
+      // public tables receive only the difference made by the new dates.
+      var previous = lastSandbox || replayRows(recorded.filter(function (row) { return row.boot; }));
+      var next = replayRows(recorded);
+      frozen = null; seal(ids);
+      publishSandbox(previous,next);
+      lastSandbox = next;
+    } catch (error) {
+      view = state.view; frozen = state.frozen; orders = state.orders; declared = state.declared; faults = state.faults;
+      origins = state.origins; starts = state.starts; graphs = state.graphs; ownership = state.ownership;
+      catalogUses = state.catalogUses; usedGraphs = state.usedGraphs; seen = state.seen; foundationSnapshot = state.foundationSnapshot;
+      stageProduced = state.stageProduced;
+      catalogs.forEach(function (root) { FBDATA[root] = state.catalogs[root]; });
+      FBDATA.bookmarkCompositionSources = state.sources;
+      throw error;
+    }
+    setupFaults = Object.create(null);
+    FB.invalidateCultureData(); FB.invalidateReligionData(); FB.lexicon.reset(); FB.governments.invalidate();
+  }
+  /* ---------- Merging a replay's unprotected roots into public data ---------- */
+  function plainObject(value) {
+    return !!value && typeof value === 'object' && !Array.isArray(value) &&
+      (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
+  }
+  function same(a,b) {
+    if (a === b) return true;
+    if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return sameValue(a,b);
+    if (Array.isArray(a) !== Array.isArray(b)) return false;
+    var keys = Object.keys(a);
+    if (keys.length !== Object.keys(b).length) return false;
+    for (var i = 0; i < keys.length; i++) if (!own(b,keys[i]) || !same(a[keys[i]],b[keys[i]])) return false;
+    return true;
+  }
+  // Insert keys new to the replay after their nearest earlier replay key,
+  // keeping public-only keys (ordinary data scripts) where they are.
+  function insertKeys(target, before, after) {
+    var order = Object.keys(target), keys = Object.keys(after), values = Object.create(null);
+    keys.forEach(function (key, i) {
+      if (own(target,key)) return;
+      var at = -1;
+      for (var j = i - 1; j >= 0 && at < 0; j--) at = order.indexOf(keys[j]);
+      order.splice(at + 1,0,key);
+    });
+    order.forEach(function (key) { values[key] = own(target,key) ? target[key] : copy(after[key]); });
+    order.forEach(function (key) { delete target[key]; });
+    order.forEach(function (key) { target[key] = values[key]; });
+  }
+  function patchList(path, target, before, after) {
+    var b = before.map(canonical), a = after.map(canonical), j = 0, inserts = [];
+    for (var i = 0; i < a.length; i++) {
+      if (j < b.length && a[i] === b[j]) { j++; continue; }
+      inserts.push({value:after[i],previous:j - 1});
+    }
+    if (j < b.length) { publicFaults.push('Replay removed or reordered entries in ' + path + '; public data was kept.'); return target; }
+    if (!inserts.length) return target;
+    var t = target.map(canonical), position = [], k = 0;
+    b.forEach(function (row, n) { while (k < t.length && t[k] !== row) k++; position[n] = k < t.length ? k++ : -1; });
+    for (var m = inserts.length - 1; m >= 0; m--) {
+      var p = inserts[m].previous, at = p < 0 ? (b.length && position[0] >= 0 ? position[0] : target.length) :
+        position[p] >= 0 ? position[p] + 1 : target.length;
+      target.splice(at,0,copy(inserts[m].value));
+    }
+    return target;
+  }
+  function patch(path, target, before, after) {
+    if (same(before,after)) return target;
+    if (plainObject(before) && plainObject(after) && plainObject(target)) {
+      Object.keys(before).forEach(function (key) { if (!own(after,key)) delete target[key]; });
+      var added = false;
+      Object.keys(after).forEach(function (key) {
+        if (!own(before,key) || !own(target,key)) { added = true; return; }
+        var value = patch(path + '.' + key,target[key],before[key],after[key]);
+        if (value !== target[key]) target[key] = value;
+      });
+      if (added) insertKeys(target,before,after);
+      return target;
+    }
+    if (Array.isArray(before) && Array.isArray(after) && Array.isArray(target)) return patchList(path,target,before,after);
+    return copy(after);
+  }
+  function publishSandbox(previous, next) {
+    Object.keys(next).forEach(function (root) {
+      if (protectedRoots.indexOf(root) >= 0 || root === 'bookmarkCompositionSources' || next[root] === FBDATA[root]) return;
+      if (!own(FBDATA,root)) { FBDATA[root] = copy(next[root]); return; }
+      var value = patch(root,FBDATA[root],previous[root],next[root]);
+      if (value !== FBDATA[root]) FBDATA[root] = value;
+    });
+  }
   if (timing) {
     var originalStage = C.stage, originalFinish = C.finish, originalRefresh = refresh;
     var originalSync = syncFoundations, originalCapture = captureFoundations;

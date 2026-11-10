@@ -71,7 +71,11 @@
       if (!supportedEnterprise(data, d.enterpriseType))
         errors.push('Unsupported industry-law enterprise type (ordinary acquisition, staffing and yield required): ' + id + ': ' + d.enterpriseType);
       const raw = data.bookmarks[d.bookmarkId];
-      if (!FB.bookmarkRevisions(d.bookmarkId, raw).some(function (world) {
+      // A date whose sources are not loaded in this candidate is reviewed
+      // with that date; its jurisdiction cannot apply to another campaign.
+      const reviewable = !(FB.bookmarkSources && FB.bookmarkSources.unreviewedReference &&
+        FB.bookmarkSources.unreviewedReference(raw));
+      if (reviewable && !FB.bookmarkRevisions(d.bookmarkId, raw).some(function (world) {
         return (world.provinces || []).some(function (p) { return p.id === d.provinceId && !p.wasteland; });
       })) errors.push('Unknown industry-law jurisdiction: ' + id);
       if (Object.keys(table).some(function (other) { return other !== id && table[other] && table[other].motionId === d.motionId; }))
@@ -80,7 +84,7 @@
         if (!fields(e, ['kind','id','fee','permission']) ||
             ['home_province','guild','office'].indexOf(e.kind) < 0 || typeof e.id !== 'string' || !e.id ||
             !money(e.fee) || e.fee > d.fee || typeof e.permission !== 'boolean' ||
-            e.kind === 'home_province' && !FB.bookmarkRevisions(d.bookmarkId, raw).some(function (world) {
+            e.kind === 'home_province' && reviewable && !FB.bookmarkRevisions(d.bookmarkId, raw).some(function (world) {
               return (world.provinces || []).some(function (p) { return p.id === e.id && !p.wasteland; });
             }) || e.kind === 'guild' && (!own(data.careers, e.id) || data.careers[e.id].guild !== true) ||
             e.kind === 'office' && !supportedOffice(data, e.id))

@@ -42,6 +42,8 @@ Both Deeds layouts expose Elective crown for an affected household. The shared k
 
 Saves, conversion and mods
 
+The 24 selection-member slots intentionally describe the original electoral institution, including retained invited principals and their duties. Recorded terms, obligations and recognition must not disappear to admit an unrelated principal. Candidate admission and validation count only the at most 64 living electoral candidates; archived deceased royal members do not consume that limit. Vacancy candidates/support replace their current selection rather than append an election history. These permanent institutional identities retain their existing bounds.
+
 The additive schema-1 selection record retains its existing envelope. Election progress references ordinary canonical court members and typed institution principals. Electoral candidate roles are validated against their royalLine binding and court origin. Invalid support, references, duplicate interests, excessive candidates and inconsistent results fail before adopting a detached save. Restore initializes no person, constituency, election, public account or historical outcome. Existing 711, 1066 and 1204 saved government forms remain as stored.
 
 Selection validation runs before save inflation. Compact character ids come from their table keys, omitted root parents mean null, and an omitted realm alive flag means true. A recorded death permits an archived candidate without a retained character. These defaults do not relax the royalLine binding, candidate identity, ancestry restrictions or required active public account. Validation reads both expanded and compact records without repairing either input.
