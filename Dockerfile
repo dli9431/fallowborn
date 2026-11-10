@@ -26,19 +26,26 @@ COPY static/ /usr/share/nginx/html/static/
 COPY --from=music-catalog /catalog/data/music_catalog.js /usr/share/nginx/html/data/music_catalog.js
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Derive the offline asset list, including sprites and every intro theme, before stamping
-# index.html (the match excludes
-# query strings), then stamp the worker and document with one deployment
+# Derive the offline asset list, including sprites, every intro theme and the
+# per-date bookmark sources named in data/bookmark_manifest.js, before stamping
+# index.html and that manifest (the matches exclude query strings), then stamp
+# the worker, document and lazily injected sources with one deployment
 # fingerprint. Uses only BusyBox-compatible shell tools from nginx:alpine.
 RUN set -eu; \
     root=/usr/share/nginx/html; \
+    manifest="$root/data/bookmark_manifest.js"; \
     V="${SOURCE_COMMIT:-}"; \
     [ -n "$V" ] || V="$(sed -n -r "s/.*FB\.VERSION[[:space:]]*=[[:space:]]*'([^']+)'.*/\1/p" "$root/js/main.js" | head -n1)"; \
     [ -n "$V" ]; \
     grep -q "'__FB_ASSET_LIST__'" "$root/sw.js"; \
     grep -q "__FB_CACHE_KEY__" "$root/sw.js"; \
+    grep -q 'src="data/bookmark_manifest.js"' "$root/index.html"; \
+    for f in $(grep -o -E "'data/[^'?#]+\.js'" "$manifest" | tr -d "'"); do \
+      [ -f "$root/$f" ] || { echo "missing bookmark manifest source $f"; exit 1; }; \
+    done; \
     { grep -o -E '(src|href)="(css|js|data|mods)/[^"?#]+"' "$root/index.html" \
         | sed -r 's/^(src|href)="//; s/"$//'; \
+      grep -o -E "'data/[^'?#]+\.js'" "$manifest" | tr -d "'"; \
       ls "$root"/data/lang_*.js | sed "s|^$root/||"; \
       grep -o -E 'url\("\.\./static/sprites/[^"?#]+\.png"\)' "$root/css/style.css" \
         | sed -r 's|^url\("\.\./||; s|"\)$||'; \
@@ -50,6 +57,7 @@ RUN set -eu; \
            -e "/'__FB_ASSET_LIST__'/d" "$root/sw.js"; \
     sed -i "s/__FB_CACHE_KEY__/$V/g" "$root/sw.js"; \
     sed -i -r "s@(src|href)=\"((css|js|data|mods)/[^\"?#]+)\"@\1=\"\2?v=$V\"@g" "$root/index.html"; \
+    sed -i -r "s@'(data/[^'?#]+\.js)'@'\1?v=$V'@g" "$manifest"; \
     sed -i -r "s@url\(\"(\.\./static/sprites/[^\"?#]+\.png)\"\)@url(\"\1?v=$V\")@g" "$root/css/style.css"; \
     rm -f /tmp/fb-assets.txt; \
     echo "stamped ?v=$V, precaching $ASSET_COUNT versioned assets"

@@ -65,8 +65,12 @@
           ['accept','contest','decline'].indexOf(p.possessorPolicy) < 0 ||
           ['compose','reject'].indexOf(p.enforcementPolicy) < 0) { faults.push('Invalid episcopal claim ' + id + '.'); return; }
       var key = p.bookmarkId + ':' + p.provinceId;
-      var worlds = FB.bookmarkRevisions(p.bookmarkId,catalog.bookmarks[p.bookmarkId]);
-      if (used[key] || !worlds.some(function (bm) {
+      // A date whose sources are not loaded in this candidate is reviewed
+      // with that date; the claim cannot apply to any other campaign.
+      var unreviewed = FB.bookmarkSources && FB.bookmarkSources.unreviewedReference &&
+        FB.bookmarkSources.unreviewedReference(catalog.bookmarks[p.bookmarkId]);
+      var worlds = unreviewed ? [] : FB.bookmarkRevisions(p.bookmarkId,catalog.bookmarks[p.bookmarkId]);
+      if (used[key] || !unreviewed && !worlds.some(function (bm) {
         return (bm.provinces || []).some(function (v) { return v.id === p.provinceId && !v.wasteland; }) &&
           (bm.realms || []).some(function (v) { return v.id === p.realmId && v.ecclesiastical; });
       })) faults.push('Episcopal claim ' + id + ' requires a distinct existing temporal see and county.');
