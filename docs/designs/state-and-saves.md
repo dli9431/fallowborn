@@ -260,7 +260,9 @@ issuers/payees, paid enterprise permissions and voluntary operation choices.
 `FB.industryLaws.validate` runs in detached platform validation and serialization.
 Absence is valid and is never filled during restore. It rejects changed effective
 terms, malformed identities/dates and overlapping paid windows without replaying
-approval, payment or acquisition. See [Targeted operating laws](industry-laws.md).
+approval, payment or acquisition. Settled history older than FBDATA.balance.ledgerRetentionDays
+folds only at a season boundary into optional `industryLaws.retired` totals, and its
+limits count only live records. See [Targeted operating laws](industry-laws.md).
 
 This frozen contract fixes which bookmark-platform facts a campaign saves and which it derives, so every system that adds saved state writes against one schema and v4 keeps a single migration. FB.save.v4.validatePlatform accepts the optional fields described here; the registries that resolve their ids arrive with the systems that use them.
 
@@ -2691,7 +2693,9 @@ and repeal retains its passed approval. Matching current-content restore,
 re-save and reload preserve pending/completed decisions without proposals,
 payments, identity allocation or enactment replay. Removed approval records,
 invalid tallies and duplicate pending hearings reject on the detached candidate.
-Absent legacy ledgers/arrays remain absent. The save envelope and released v1
+Absent legacy ledgers/arrays remain absent. Ended hearings that no retained law
+needs fold after the retention window into per-body totals; at most 64 hearings
+are live. The save envelope and released v1
 law/ordinance support are unchanged. Exact fields are in MODDING.md.
 
 Unchanged dates across an additive catalogue transition
@@ -2709,5 +2713,8 @@ ledgers and arrays remain absent. Exact effective mod terms remain required.
 Original issuers, petitioners, named vote principals, operators and retained
 industry-case judges count as references for ordinary court compaction, so their
 bounded historical facts cannot lose their character identities at death.
+Settled petitions, permits and violations whose cases, closures and balances
+are finished fold with their ended laws into exact law and enterprise totals that
+name no person, so folding releases those references only after the window.
 See [industry laws](industry-laws.md) for the supported lifecycle and limits.
 The save envelope and released v1 migration contract are unchanged.

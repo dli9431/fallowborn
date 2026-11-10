@@ -3663,7 +3663,7 @@ withdrawal retains that reservation. Resolve closes interrupted/expired hearings
 without enactment, rejects failed quorum/assent or enacts/repeals through the
 existing law owner. Quotes, replacement principals and restore never enact.
 
-The optional schema-1 law ledger additionally accepts `votes`, at most 64 rows.
+The optional schema-1 law ledger additionally accepts `votes`, at most 64 live rows.
 Each row stores id, definitionId, consumer, proposerId, original issuer, repealId,
 startedTurn, endTurn, principal-bound ballots, status, endedTurn, lawId and result.
 Status is pending, withdrawn, invalidated, rejected or passed. A decided result
@@ -3746,9 +3746,11 @@ actual `amount`, `paidTurn` and `endTurn`. They are paid obligations, not unpaid
 debt or automatically renewed subscriptions. Choice rows retain `enterpriseUid`,
 `status` (`open`, `pause`, `close`, `violate`) and `turn`; violation also retains
 `actorId`. Optional `closedBy` points to the original judicial closure. Closure retains ownership.
-Limits are 256 laws, 4096 permits and 512 choices. Validation never creates a
+Limits are 256 laws, 4096 permits and 512 choices in the live closure. Validation never creates a
 missing ledger or replays a transaction. Exact imported content remains covered
 by the ordinary mod fingerprint.
+
+Settled industry-law history folds at a season boundary after FBDATA.balance.ledgerRetentionDays (default 3600, at least 360), so an ordinary JSON mod's `balance.ledgerRetentionDays` changes the window. Every limit counts only live records and the records they name: unexpired unrepealed laws, pending hearings, current permits of live laws, petitions and violations of live laws, violations with an existing justice case, unresolved violations and owed balances of a living original operator, all choices, and the passed hearings of retained deliberative laws. Optional `retired` has exactly `laws`, `hearings` and `enterprises`. `retired.laws.<definitionId>` has exactly laws, repealed, permits, paid, petitions, granted, violations, fines, finesPaid and closures; `retired.hearings.<town|estates>` has exactly passed, rejected, withdrawn and invalidated; `retired.enterprises.<enterpriseUid>` has the law fields except laws and repealed, for property the household still owns. Counts are nonnegative integers and paid, fines and finesPaid are nonnegative finite amounts. Unknown keys or definitions, grants above petitions, closures above violations, paid fines above assessed fines, enterprise totals above law totals, empty summaries and an over-limit live closure reject before adoption. Retained records keep their ids and fields. See [Targeted operating laws](designs/industry-laws.md) for the live rules and presentation.
 
 Laws survive issuer and household succession. Losing the issuing realm's county
 control suspends future restrictions and fees; recovering control resumes the
@@ -3765,11 +3767,11 @@ quote and opens its ordinary town hearing, with optional `petitionEnterpriseUid`
 on that vote. The affected current owner may request it without gaining a seat.
 Only one petition hearing per proposer per 360 days is available. Other hearing
 eligibility, ballots, deadlines and consent remain unchanged. The normal seeded
-simple-law petition uses an optional `petitions` array capped at 512, retaining
+simple-law petition uses an optional `petitions` array capped at 512 live rows, retaining
 id, kind, lawId, enterpriseUid, actorId, turn, granted and endTurn.
 
 Actual market/livelihood settlement calls `recordSeason`, iterating only the
-bounded committed enterprise choices. `violations` has at most 512 rows, unique
+bounded committed enterprise choices. `violations` has at most 512 live rows, unique
 by law, enterprise UID and original operator. Each retains id, lawId,
 enterpriseUid, actorId, provinceId, homeProvinceId, turn, positive actual output,
 fee, material evidence, nullable caseId, resolved and judgment. The canonical
