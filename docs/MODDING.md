@@ -778,6 +778,8 @@ including a generated-only table or internal compatibility alias, rejects that m
 before any of its data mutates `FBDATA`. The validated configuration records below
 also reject unknown fields and cross-references at application time.
 
+Object keys named `__proto__`, `constructor` and `prototype` are reserved at every depth of a JSON mod: at the top level, as a table key, inside a nested record and inside an array row. `FB.mods.validate`, `FB.mods.apply`, pasted or file imports and stored-mod activation reject such a mod as a whole before any of its data is composed or merged. The single error names the first reserved path in key order, for example `Mod data events[0].options[0].prototype is a reserved key; mods cannot use __proto__, constructor or prototype as a field name.` The rejection leaves `FBDATA`, the stored mod list, RNG and UID unchanged. An array-form `bookmarks` entry whose `id` is one of these names is rejected at `bookmarks[i].id`, because bookmark ids become table keys. Ordinary ids and field names are unaffected.
+
 `balance.freedomCost` is the household head's direct-purchase share. Each living
 spouse adds `freedomSpouseFactor` times that share and every living descendant adds
 `freedomDescendantFactor` times it; every share rounds up separately. Negotiated

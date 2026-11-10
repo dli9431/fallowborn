@@ -403,6 +403,10 @@ pretend unsupported renderer ids were generic data. Cosmetic modding therefore r
 an independent feature requiring a shared renderer/schema decision, not an unvalidated
 milestone-zero registry.
 
+## Reserved object keys
+
+JSON.parse keeps a `__proto__` key as ordinary data, but assigning that key into a live table would replace the table's prototype and expose injected entries to `for...in` readers. Detached candidate preparation therefore scans every validated, applied, stored and bundled JSON mod before composition and rejects the first `__proto__`, `constructor` or `prototype` object key at any depth with one path-bearing error. Array-form bookmark ids with those names reject at `bookmarks[i].id`. Rejection is atomic: storage, `FBDATA`, signatures, RNG and UID do not change, and the Mods menu preview omits such stored text while activation reports it. As defense in depth, `mergeTable`, `mergeTechCaps`, `combinedTable` and every keyed apply loop skip or refuse reserved keys, and `mergeById` skips rows that carry one, so no `FBDATA` table can acquire a replaced prototype. Trusted native composition keeps its own plain-data gate in js/bookmark_composition.js and is not rescanned. The public top-level key list and table merge semantics are unchanged. Coverage: tests/e2e/specs/mod-reserved-keys.spec.js.
+
 ## Restricted distribution profile
 
 CrazyGames skips stored/bundled mods and rejects apply/store/toggle operations.
