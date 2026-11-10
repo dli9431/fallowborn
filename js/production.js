@@ -10,35 +10,52 @@
   function int(v,min,max) { return Number.isSafeInteger(v) && v >= min && v <= max; }
   function id(v) { return typeof v === 'string' && /^[a-z][a-z0-9_]{0,79}$/.test(v); }
   function actor(v) { return keys(v,['kind','id']) && ['realm','character'].indexOf(v.kind) >= 0 && typeof v.id === 'string' && !!v.id; }
-  function text(v) { return typeof v === 'string' && v.trim() && v.length <= 1000; }
-  function amountRows(rows,goods) {
-    var seen = {};
-    return Array.isArray(rows) && rows.length > 0 && rows.length <= 8 && rows.every(function (r) {
-      if (!keys(r,['goodId','quantity']) || !own(goods,r.goodId) || seen[r.goodId] || !int(r.quantity,1,10000)) return false;
-      seen[r.goodId] = true; return true;
-    });
+  var S = FB.schema;
+  var identifierSpec = {type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/};
+  var textSpec = {type:'string',nonblank:true,maxLength:1000};
+  var optionalTextSpec = Object.assign({optional:true},textSpec);
+  function amountSpec(min) {
+    return {type:'array',minItems:min,maxItems:8,uniqueBy:[function (r) { return String(r.goodId); }],items:{type:'object',fields:{
+      // The original amount-row index rejects inherited Object prototype names.
+      goodId:{ref:{table:'productionGoods'},test:function (v) { return !Object.prototype[v]; }},
+      quantity:{type:'integer',min:1,max:10000}
+    }}};
   }
+  var goodSpec = {type:'object',fields:{
+    name:textSpec, desc:optionalTextSpec, unit:identifierSpec, mass:{type:'integer',min:1,max:1000},
+    provisionUnits:{type:'number',min:0.001,max:1000,optional:true}
+  }};
+  var recipeSpec = {type:'object',fields:{
+    name:textSpec, desc:optionalTextSpec, inputs:amountSpec(1), outputs:amountSpec(1),
+    workDays:{type:'integer',min:1,max:30}, workPrice:{type:'integer',min:1,max:10000},
+    water:{type:'integer',min:1,max:10000,optional:true},
+    requiresTech:{type:'array',maxItems:8,unique:true,items:{ref:{table:'tech'}}},
+    impactReviewId:identifierSpec, fallback:{optional:true}, requiresSale:{type:'boolean',optional:true}
+  },test:function (r,c) {
+    var t = c.data.techImpactReviews && c.data.techImpactReviews.features && c.data.techImpactReviews.features[r.impactReviewId];
+    return !!t && S.valid(t.rationale,textSpec) && (r.requiresTech.length ? t.mode === 'hard' && Array.isArray(t.tech) &&
+      eq(r.requiresTech.slice().sort(),t.tech.slice().sort()) && S.valid(r.fallback,textSpec) && r.fallback === t.fallback :
+      t.mode === 'none' && r.fallback === undefined);
+  }};
+  var recipeListSpec = {type:'array',minItems:1,maxItems:16,unique:true,items:{ref:{table:'productionRecipes'}}};
+  var siteSpec = {type:'object',fields:{
+    id:identifierSpec, countyId:identifierSpec, siteId:identifierSpec, buildingId:{ref:{table:'buildings'}},
+    recipeIds:recipeListSpec, sourceId:{optional:true}, openingLots:amountSpec(0)
+  },test:function (a) { return !FB.isFortificationBuilding(a.buildingId); }};
   P.catalogFaults = function (data) {
-    var goods = data.productionGoods, recipes = data.productionRecipes, faults = [];
-    if (!object(goods) || Object.keys(goods).length > 128 || !object(recipes) || Object.keys(recipes).length > 128)
+    var goods = data.productionGoods, recipes = data.productionRecipes, faults = [], context = {data:data};
+    // Keep the legacy table-key contract; ordinary mod import rejects reserved
+    // JSON keys independently before reaching these definition validators.
+    var tableSpec = {type:'object',maxProperties:128,reservedKeys:false};
+    if (!S.valid(goods,tableSpec) || !S.valid(recipes,tableSpec))
       return ['productionGoods/productionRecipes require bounded tables.'];
     Object.keys(goods).forEach(function (key) {
-      var g = goods[key];
-      if (!id(key) || !keys(g,['name','desc','unit','mass','provisionUnits']) || !text(g.name) || g.desc !== undefined && !text(g.desc) ||
-          g.provisionUnits !== undefined && !(typeof g.provisionUnits==='number' && Number.isFinite(g.provisionUnits) && g.provisionUnits>=0.001 && g.provisionUnits<=1000) ||
-          !id(g.unit) || !int(g.mass,1,1000)) faults.push('productionGoods.' + key + ': invalid unit or conservative mass.');
+      if (!S.valid(key,identifierSpec) || !S.valid(goods[key],goodSpec,context))
+        faults.push('productionGoods.' + key + ': invalid unit or conservative mass.');
     });
     Object.keys(recipes).forEach(function (key) {
-      var r = recipes[key], req = r && r.requiresTech;
-      var t = r && data.techImpactReviews && data.techImpactReviews.features && data.techImpactReviews.features[r.impactReviewId];
-      if (!id(key) || !keys(r,['name','desc','inputs','outputs','water','workDays','workPrice','requiresTech','impactReviewId','fallback','requiresSale']) ||
-          r.requiresSale !== undefined && typeof r.requiresSale !== 'boolean' ||
-          !text(r.name) || r.desc !== undefined && !text(r.desc) || !amountRows(r.inputs,goods) || !amountRows(r.outputs,goods) ||
-          !int(r.workDays,1,30) || !int(r.workPrice,1,10000) || r.water !== undefined && !int(r.water,1,10000) ||
-          !Array.isArray(req) || req.length > 8 || new Set(req).size !== req.length || req.some(function (k) { return !own(data.tech,k); }) ||
-          !id(r.impactReviewId) || !t || !text(t.rationale) ||
-          (req.length ? t.mode !== 'hard' || !Array.isArray(t.tech) || !eq(req.slice().sort(),t.tech.slice().sort()) || !text(r.fallback) ||
-            r.fallback !== t.fallback : t.mode !== 'none' || r.fallback !== undefined)) {
+      var r = recipes[key];
+      if (!S.valid(key,identifierSpec) || !S.valid(r,recipeSpec,context)) {
         faults.push('productionRecipes.' + key + ': invalid finite recipe, work or technology review.'); return;
       }
       function mass(rows) { return rows.reduce(function (n,x) { return n + x.quantity * goods[x.goodId].mass; },0); }
@@ -49,8 +66,7 @@
     Object.keys(data.buildings || {}).forEach(function (key) {
       var b = data.buildings[key], list = b && b.productionRecipeIds;
       if (list === undefined) return;
-      if (b.fort || b.operationProfile || b.institutionProfile || !Array.isArray(list) || !list.length || list.length > 16 ||
-          new Set(list).size !== list.length || list.some(function (k) { return !own(recipes,k); }))
+      if (b.fort || b.operationProfile || b.institutionProfile || !S.valid(list,recipeListSpec,context))
         faults.push('Building ' + key + ': invalid finite production recipe references.');
     });
     return faults;
@@ -64,23 +80,19 @@
       return out;
     }
     function fault(v) { errors.push('productionSites: ' + v); }
-    if (!Array.isArray(rows) || rows.length > 128) { fault('requires at most 128 sites.'); return out; }
+    if (!S.valid(rows,{type:'array',maxItems:128})) { fault('requires at most 128 sites.'); return out; }
     var seen = {}, physical = {}, resource = FB.siteResources.compilePrepared(bm);
     if (resource.errors.length) errors.push.apply(errors,resource.errors);
-    rows.forEach(function (a) {
-      if (!keys(a,['id','countyId','siteId','buildingId','recipeIds','sourceId','openingLots']) || !id(a.id) || seen[a.id] ||
-          !id(a.countyId) || !id(a.siteId) || !own(FBDATA.buildings,a.buildingId) || FB.isFortificationBuilding(a.buildingId) ||
-          !Array.isArray(a.recipeIds) || !a.recipeIds.length || a.recipeIds.length > 16 || new Set(a.recipeIds).size !== a.recipeIds.length ||
-          a.recipeIds.some(function (key) { return !own(FBDATA.productionRecipes,key); }) ||
-          !Array.isArray(a.openingLots) || a.openingLots.length > 8 || a.openingLots.length && !amountRows(a.openingLots,FBDATA.productionGoods)) {
-        fault('invalid asset, recipe or opening lot reference.'); return;
+    rows.forEach(function (a,i) {
+      if (!S.valid(a,siteSpec,{data:FBDATA}) || seen[a.id]) {
+        fault((a && a.id || '[' + i + ']') + ': invalid asset, recipe or opening lot reference.'); return;
       }
       seen[a.id] = true;
       var county = (bm.provinces || []).find(function (p) { return p.id === a.countyId && !p.wasteland; });
       var slot = county && (county.settlements || []).findIndex(function (e) { return e.site === a.siteId; });
       var occurrence = (bm.provinces || []).reduce(function (n,p) { return n + (p.settlements || []).filter(function (e) { return e.site === a.siteId; }).length; },0);
       var place = JSON.stringify([a.siteId,a.buildingId]);
-      if (!county || slot < 0 || occurrence !== 1 || physical[place]) { fault(a.id + ': requires one unique inhabited physical asset.'); return; }
+      if (!S.valid(a.countyId,{ref:{provinces:true,inhabited:true}},{bookmark:bm}) || slot < 0 || occurrence !== 1 || physical[place]) { fault(a.id + ': requires one unique inhabited physical asset.'); return; }
       physical[place] = true;
       var water = a.recipeIds.some(function (key) { return !!FBDATA.productionRecipes[key].water; });
       var source = resource.sources.find(function (r) { return r.id === a.sourceId; });

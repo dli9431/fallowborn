@@ -60,6 +60,48 @@ Native contributors use bookmarkSources.stage with explicit source, affected boo
 
 Data authoring contract
 
+New data tables use `FB.schema` in `js/schema.js` for declarative definition
+validation. Industry laws and production goods, recipes and sites use this
+helper; save-state validation remains with each system. Specs are trusted engine
+objects, never executable JSON mod fields. Validate against the detached effective
+candidate, including additions in the same import, before publication.
+
+`FB.schema.faults(value, spec, path, context)` returns an array of diagnostics
+containing the failing path; `valid(value, spec, context)` returns a boolean.
+Neither API writes data, specs, state, RNG or UID. Predicates must also be pure.
+The context may supply `data` (otherwise FBDATA), `bookmark` (an effective world)
+and `root` (the containing definition when checking a subfield). Nested checks
+receive that root, their immediate `parent`, `key` and `path`.
+
+Specs support `type` (`string`, `boolean`, finite `number`, safe `integer`,
+`array`, `object`), exact `value`, `enum`, inclusive `min`/`max`, exclusive
+numeric bounds, string `minLength`/`maxLength`, `nonblank` and `pattern`.
+Numeric bounds may be pure context functions for dependent limits. Arrays use
+`minItems`/`maxItems`, nested `items`, primitive `unique` or `uniqueBy` field
+names/pure key selectors (each selected key must be unique). Objects use `minProperties`/
+`maxProperties`, nested `fields`, key specs in `keys` and entry specs in `values`.
+`fields` rejects unknown fields unless `additional:true`. Objects reject own
+enumerable `__proto__`, `constructor` and `prototype` keys by default.
+`optional:true` permits undefined; `optional:'absent'` permits only an omitted
+own property. This distinction preserves existing definition contracts.
+
+`ref:{table:'productionGoods'}` checks own keys of a candidate table; an array
+table path supports nested catalogues such as `['techImpactReviews','features']`.
+`ref:{provinces:true,inhabited:true}` checks the context bookmark.
+`ref:{bookmark:'bookmarkId',inhabited:true,deferUnreviewed:true}` reads the root's
+bookmark field and checks its supported revisions, deferring a declared unloaded
+date until its own source review. Use deferral only for that existing lifecycle.
+Reference checks do not impose a string type; declare one when required.
+
+Use `test(value, context)` only for cross-field or system-owned rules that cannot
+be expressed structurally, such as conservative mass, matching technology-review
+terms, supported enterprise carriers or co-located water. It runs only after the
+node's other checks pass. Existing validator entrypoints retain their diagnostic
+grouping and compilation order. The migrated legacy table containers explicitly
+use `reservedKeys:false` to preserve their prior direct-call acceptance; ordinary
+JSON mod import still rejects reserved keys at every depth before validation.
+New tables retain the default rejection.
+
 Industry-law offense and relief terms use the same detached validator and
 canonical consumers for native London and the ordinary
 `industry-law-enforcement.json` import. Supported variation includes fees,
@@ -175,6 +217,11 @@ continuing minority stewardship express the same political capability.
 Electoral admission uses optional selectionProfile.procedure.livingNomination, a strict boolean defaulting false. It admits an existing qualified local person before a vacancy through the common selection owner, without designation, recognition, accession, payment or kinship. The unchanged candidate identity and selection schema support matching restoration without replay; do not add a saved nominee or normalize omitted procedure fields. The complete consultation.json and river-consultation.json examples under tests/e2e/fixtures/living-nomination exercise different ages, personal filters, interest weights, assent and designation policies through ordinary JSON import. The existing elective_crown_nomination technology review remains none: admission timing is a social procedure, while material capabilities retain their gates.
 
 Identify the owning catalogue and its actual gameplay, AI, UI and restore consumers. A public key alone is not proof that a newly added id has behavior. Use the complete per-system schema in docs/MODDING.md and retain its merge or replacement semantics.
+
+Declare new table fields and bounds with `FB.schema`; keep genuine cross-field
+predicates pure and system-owned. Cover accepted and rejected definitions,
+including candidate references and precise diagnostic paths. When migrating an
+existing validator, freeze its fixture acceptance first and retain that matrix.
 
 Name stable ids, supported fields, reference scopes, bounded values, defaults, permitted policies, localization fields and saved identities. Resolve references against the candidate effective catalogues, including same-file additions. Reject unknown operations and incompatible combinations before storing or installing a mod.
 

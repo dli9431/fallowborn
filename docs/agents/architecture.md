@@ -1,5 +1,9 @@
 Architecture
 
+`js/schema.js` loads immediately after `js/util.js` as an ordered deferred
+classic script. It installs only the pure `FB.schema` definition helper; owning
+validators invoke it after their required engine and candidate tables exist.
+
 index.html loads classic (non-module) scripts in a fixed order; everything hangs off two globals. Load order matters  -  do not reorder the <script> tags casually:
 
 Metadata capture exception: js/bookmark_composition.js initializes immediately after data/starts.js, followed by js/bookmark_sources.js and data/bookmark_manifest.js, before the dated builders. They define pure source-order capture and a private native authoring view. Canonical validation/publication requires the complete engine and runs through main.js deferred content preparation after a player requests campaign content. js/util.js preserves this early FB namespace. Do not invoke engine-dependent composition methods from data loading.

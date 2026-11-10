@@ -59,6 +59,12 @@ without a fine. Its setting and terms are fictional.
 the referenced ordinary `localCouncilMotions` definition, using its existing
 localization owners. `FB.industryLaws.definitionFaults` validates bundled and
 detached JSON candidates without changing content, people, RNG or identities.
+Structural fields, nested terms and references use the shared `FB.schema`
+declarative helper. Enterprise/office eligibility, unique motion ownership and
+motion-effect exclusion remain trusted system rules. Deferred date references
+retain selected-date review; supported revisions still govern jurisdiction.
+The frozen definition acceptance matrix covers the former validator and the
+shared implementation, including optional-field and reserved-id edge cases.
 The independent `industry-laws-river.json` example supplies fictional paid and
 prohibition alternatives, with different terms and beneficiaries through the
 ordinary Mods file picker.

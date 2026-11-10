@@ -1,5 +1,16 @@
 Conserved production batches
 
+Definition validation uses the shared `FB.schema` helper for goods, recipes,
+building recipe references and site fields. Conservative mass, disjoint input
+and output kinds, exact technology-review terms, unique physical assets,
+co-located lawful water and standing opening placements remain system-owned
+cross-field checks. The helper reads detached candidate tables and effective
+bookmark provinces without mutation. Existing caps, accepted optional fields,
+compiled order, structural fingerprints and saved-state validators are unchanged.
+Frozen pre-migration validators and a fixed acceptance matrix cover both valid
+and invalid declarations; site diagnostics additionally identify the failing
+assignment or array index when structural validation fails.
+
 js/production.js owns opt-in finite material accounting. data/production.js declares productionGoods and productionRecipes, including the finite timber/cordage preparation used by maintained boathouse invoices; no bundled world receives a plant, material lot or production assignment. Effective bookmark/revision productionSites bind one existing physical county/site/building to supported recipes and, where required, one co-located site-resource water source. Whole-field revision replacement and ordinary Mods file import use the same pure compiler. Geography, scenery, knowledge and cash cannot stand in for a physical asset or material input.
 
 Goods use stable ids, explicit unit ids and positive integer conservative mass per unit. Recipes consume one to eight actual good quantities and create one to eight different good quantities. Their dimensionless output mass cannot exceed input mass. Water is a separate real site-resource allocation, never a second material stock. A paid recipe needs one to thirty real action days and a positive integral processing price. Units, ratios, fees and work are authored simulation accounts, not archaeological yields. The batch interface itself has no supplier, sale or arbitrary deposit operation. The optional finite exchange and enterprise-output adapter below composes those operations over the same stock owner.
