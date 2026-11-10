@@ -480,6 +480,10 @@ FBDATA.householdServiceRoles = {
    separate from the royal Council: the saved seat names one county and the
    motion definition supplies only the successful, time-bounded effect. */
 FBDATA.localCouncilMotions = {
+  constantinople_workshop_permission: {
+    name:'Constantinople workshop permissions', icon:'⚖', fx:{},
+    desc:'An optional reconstruction informed by Byzantine trade regulation: workshops pay {money:3} for 60 days of operation; craft-guild members are exempt. Existing workshops have a 30-day transition. A court may suspend unauthorized operation for 30 days. The local council represents civic review, not a historical eparch appointment; the fee and term are simulation choices.'
+  },
   fair_measures: {
     name:'Fair Measures', icon:'⚖',
     desc:'Enforced weights and measures increase enterprise income by 10%.',

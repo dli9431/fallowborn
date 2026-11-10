@@ -29,20 +29,26 @@ lost authority and absent custody invalidate pending responses before effects.
 Repeal does not retrospectively invent or erase an operation: the recorded
 applicable-law policy retains actual earlier violations and imposed balances.
 
-The supported stall offenses permit mercy and a frozen fine, intersected with
-current court law. They exclude imprisonment, penance, exile, forfeiture,
+Supported enterprise offenses permit mercy and the frozen fine/remedy,
+intersected with current court law. They exclude imprisonment, penance, exile, forfeiture,
 corporal and lethal sentences, including restricted-distribution substitution.
 The fine goes to the original public payee rather than a judge's private purse.
 Available personal funds are collected once and the original operator retains
 the unpaid balance. A declared closure affects only the named enterprise's
-operation, preserving ownership and unrelated property. These are qualified
-English trading remedies; see [operating laws](industry-laws.md) for research,
+operation, preserving ownership and unrelated property. A standalone closure or
+bounded suspension uses that same hearing with a zero fine; suspension records
+the earlier of judgment plus its declared days or original law expiry. It never
+imprisons the operator or restarts after jurisdiction recovery. Recorded guild
+and office standing remains historical when current membership changes. See
+[operating laws](industry-laws.md) for the qualified historical interpretations,
 authoring, petitions and lifecycle. Technology impact
 `industry_law_enforcement` is none; no save envelope or custody owner changes.
 Industry-specific mechanical review fields are omitted for ordinary cases,
 preserving their existing stamped review shape. The ordinary hearing's live
 sentence parameters also supply the unpaid balance and specific fine/closure
 prose for industry cases without storing rendered text.
+The same live parameters disclose suspension days or closure without a fine;
+only the affected enterprise stops, and lawful resumption remains explicit.
 
 The bounded civil rent adapter justiceCivilRentJurisdiction checks the actual
 temporal ruler, ordinary county jurisdiction, public readiness and scoped Peace.

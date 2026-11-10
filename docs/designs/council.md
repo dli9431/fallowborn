@@ -1,7 +1,7 @@
 # The Royal Council
 
-The separate commoner local council can approve targeted market-stall operating
-terms and repeal them through its existing seeded annual session. Pure legal
+The separate commoner local council can approve targeted household enterprise
+operating terms and repeal them through its existing seeded annual session. Pure legal
 reviews do not pay fees or transfer property. These laws outlive the original
 councillor's seat and do not use the royal council or Estates authority.
 See [Targeted operating laws](industry-laws.md) for the shared approval contract.

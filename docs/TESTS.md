@@ -547,6 +547,21 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+`industry-law-types.spec.js` covers all seven ordinary enterprise type references,
+unsupported types/criteria and contradictory penalties with detached validation
+purity; the original London residence/fee/fine lifecycle; 1066 Constantinople
+workshop guild exemptions, fees, actual output, canonical custody and timed
+suspension; and a real JSON press-house import with reduced guild fees, current
+local-office exemption and closure without a fine. The imported workshop hearing
+also checks that current guild and office privileges inform the same actual
+principal's assembly interest without changing the electorate or RNG.
+It checks stale and duplicate transactions, exclusive/capped deadlines,
+jurisdiction loss/recovery, expiry,
+repeal, historical standing after membership changes, pending and imposed
+load/re-save/reload, malformed evidence/deadline and changed-mod rejection,
+compact disclosures/cancellation focus and exact content-spelling counts in the
+changed engine files. Boundaries are staged directly; no long campaign is run.
+
 `industry-law-enforcement.spec.js` covers the native council/vote/output/arrest/
 hearing/fine/closure/repeal loop, absence of offenses during lawful or unproductive
 operation, personal liability after insufficient payment, once-only detection and
