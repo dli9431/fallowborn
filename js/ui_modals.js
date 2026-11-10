@@ -10287,6 +10287,9 @@ window.FB = window.FB || {};
       h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(dt(s,'building',row.site.buildingId,FBDATA.buildings[row.site.buildingId],'name'))+'</div>';
       row.lots.forEach(function (lot) { h+=kv(name('productionGood',lot.goodId,FBDATA.productionGoods),esc(FB.T('{available} available / {remaining} remaining ({unit})',{
         available:lot.available,remaining:lot.remaining,unit:lot.unit}))); });
+      // Settled records older than the retention window are summarized, not listed.
+      if (row.history) h+=kv('Earlier records',esc(FB.T('{batches} closed batches ({cancelled} cancelled), {days} work days, {gold} gold processing; {lots} spent lots totalling {quantity} units',{
+        batches:row.history.batches,cancelled:row.history.cancelled,days:row.history.workDays,gold:row.history.paid,lots:row.history.lots,quantity:row.history.quantity})));
       row.site.recipeIds.forEach(function (key) {
         const recipe=FBDATA.productionRecipes[key],selection=view.dispositions[key] || 'store';
         h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(name('productionRecipe',key,FBDATA.productionRecipes))+'</div>'+
@@ -14157,6 +14160,13 @@ window.FB = window.FB || {};
       h += reviewActionCardHtml({id:'industry-records-' + consumer,
         label:consumer === 'town' ? FB.T('Town hearing records') : FB.T('Estates hearing records')});
     });
+    const s = FB.state;
+    // Laws, permits, petitions and violations folded after the retention window remain as totals per law.
+    FB.industryLaws.lawHistory(s).forEach(function (row) {
+      const d = FBDATA.industryLaws[row.definitionId];
+      h += reviewFactsCard(dt(s, 'localCouncilMotion', d.motionId, FBDATA.localCouncilMotions[d.motionId], 'name'), '<p>' + esc(FB.T(
+        'Earlier records: {laws} ended laws, {repealed} of them repealed; {permits} paid permissions totalling {money:paid}; {petitions} petitions, {granted} granted; {violations} recorded violations with fines of {money:fines} assessed and {money:finesPaid} paid; {closures} court closures.', row)) + '</p>');
+    });
     h += '<div class="gm-footer"><button type="button" class="btn" id="industry-records-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('Operating-law hearings'),h,{historyView:true});
     ['town','estates'].forEach(function (consumer) {
@@ -14185,6 +14195,9 @@ window.FB = window.FB || {};
       h += reviewActionCardHtml({data:{industryHearing:v.definitionId,industryVote:v.id},
         label:dt(s, 'localCouncilMotion', d.motionId, FBDATA.localCouncilMotions[d.motionId], 'name'), note:industryVoteStatus(v.status)});
     });
+    const heard = FB.industryLaws.hearingHistory(s, consumer);
+    if (heard) h += reviewFactsCard(FB.T('Earlier hearings'), '<p>' + esc(FB.T(
+      'Summarized after the retention window: {passed} passed, {rejected} rejected, {withdrawn} withdrawn and {invalidated} closed without enactment.', heard)) + '</p>');
     h += '<div class="gm-footer"><button type="button" class="btn" id="industry-hearings-back">' + esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Operating-law hearings'), h, {historyView:true, replaceView:!!replaceView});
     document.querySelectorAll('[data-industry-hearing]').forEach(function (button) {
@@ -14340,6 +14353,10 @@ window.FB = window.FB || {};
         amount:p.amount, payee:s.realms[p.payeeRealmId].name, day:p.paidTurn, end:p.endTurn
       })) + '</p>';
     }
+    // Settled records older than the retention window are summarized, not listed.
+    const earlier = FB.industryLaws.enterpriseHistory(s, uid);
+    if (earlier) h += reviewFactsCard(FB.T('Earlier operating-law records'), '<p>' + esc(FB.T(
+      '{permits} paid permissions totalling {money:paid}; {petitions} petitions, {granted} granted; {violations} recorded violations with fines of {money:fines} assessed and {money:finesPaid} paid; {closures} court closures.', earlier)) + '</p>');
     h += '<div class="gm-footer"><button type="button" class="btn" id="industry-operation-back">' + esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Lawful business operation'), h, {historyView:true, replaceView:!!replaceView,
       historyBack:true, historyBackRender:returnToManager});

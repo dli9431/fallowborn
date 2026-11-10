@@ -260,7 +260,9 @@ issuers/payees, paid enterprise permissions and voluntary operation choices.
 `FB.industryLaws.validate` runs in detached platform validation and serialization.
 Absence is valid and is never filled during restore. It rejects changed effective
 terms, malformed identities/dates and overlapping paid windows without replaying
-approval, payment or acquisition. See [Targeted operating laws](industry-laws.md).
+approval, payment or acquisition. Settled history older than FBDATA.balance.ledgerRetentionDays
+folds only at a season boundary into optional `industryLaws.retired` totals, and its
+limits count only live records. See [Targeted operating laws](industry-laws.md).
 
 This frozen contract fixes which bookmark-platform facts a campaign saves and which it derives, so every system that adds saved state writes against one schema and v4 keeps a single migration. FB.save.v4.validatePlatform accepts the optional fields described here; the registries that resolve their ids arrive with the systems that use them.
 
@@ -2550,9 +2552,9 @@ A player pledge in mode mobile must carry mobileParticipation schema 1 with exac
 
 Optional conserved production state
 
-state.production version 1 stores a structural definition fingerprint, exact transaction revision/next local id, at most 128 original assets, 512 lots and 512 batch receipts. A physical building may carry productionAsset with exactly version 1 and its local asset id. Assets retain original declared site and owner; lots retain exact unit, original quantity, remaining stock and opening/batch provenance; batches retain actor/payer, original worker/generation, reserved input lot quantities, output lot ids, paid price, disposition, work turns, water claim/period and lifecycle chronology. Every local id is accounted for, input/output mass and stock equations remain bounded, and no worker supplies a second shift on one turn. Original opening inventory and realm-adoption aliases are checked without generating people or grants.
+state.production version 1 stores a structural definition fingerprint, exact transaction revision/next local id, at most 128 original assets, 512 live lots and 512 live batch receipts, and optional retired totals for folded history. A physical building may carry productionAsset with exactly version 1 and its local asset id. Assets retain original declared site and owner; lots retain exact unit, original quantity, remaining stock and opening/batch provenance; batches retain actor/payer, original worker/generation, reserved input lot quantities, output lot ids, paid price, disposition, work turns, water claim/period and lifecycle chronology. Every local id is accounted for, input/output mass and stock equations remain bounded, and no worker supplies a second shift on one turn. Original opening inventory and realm-adoption aliases are checked without generating people or grants.
 
-Validation runs in the detached platform boundary before state/RNG adoption. Legacy missing owners remain absent. Restore never enrolls an asset, creates opening lots, reserves/uses water, advances work, charges, refunds, produces, or prunes receipts. Existing removed or inactive property may retain truthful provenance; current authority is checked only by live transactions. Unchanged save envelope and subsystem versions retain their meanings. Exact field contracts and operational limits are in docs/designs/production.md.
+Validation runs in the detached platform boundary before state/RNG adoption. Legacy missing owners remain absent. Restore never enrolls an asset, creates opening lots, reserves/uses water, advances work, charges, refunds, produces, or folds receipts. Only the season boundary folds settled history older than FBDATA.balance.ledgerRetentionDays into production.retired, buildingSeasons.retired and siegeSupport.retired; validation derives folded ids and revisions from those exact totals and keeps every retained provenance link. Existing removed or inactive property may retain truthful provenance; current authority is checked only by live transactions. Unchanged save envelope and subsystem versions retain their meanings. Exact field contracts and operational limits are in docs/designs/production.md.
 
 Named camp and recovery records
 
@@ -2584,7 +2586,7 @@ Optional buildingProfile version 1 additionally admits inherited with exactly bo
 
 Optional siege equipment state
 
-state.siegeSupport is optional version 1, with a structural definition fingerprint and at most 128 sequential local records. Each retains its profile, original realm/person/generation, exact host/war/siege county and occupation direction, original production asset/site/county, consumed lot quantities, load/expiry turns, bounded pulse turns and carried/spent/interrupted lifecycle. No stock is recreated on restore. Production conservation includes the original consumed quantities even after expiry, loss or war closure. Strict detached validation rejects wrong definitions, malformed/duplicate references, missing batch/work provenance, overconsumption, altered expiry, duplicate per-siege pulse turns, overlapping host carriage and contradictory lifecycle chronology before state/RNG adoption. Retained saves without the optional owner remain unchanged; a consumed production inventory cannot omit its corresponding receipts. Historical references survive current war/host removal and original people remain retained. See docs/MODDING.md for exact fields.
+state.siegeSupport is optional version 1, with a structural definition fingerprint, at most 128 live local records with strictly increasing ids and optional retired totals for folded closed records. Each retains its profile, original realm/person/generation, exact host/war/siege county and occupation direction, original production asset/site/county, consumed lot quantities, load/expiry turns, bounded pulse turns and carried/spent/interrupted lifecycle. No stock is recreated on restore. Production conservation includes the original consumed quantities even after expiry, loss or war closure. Strict detached validation rejects wrong definitions, malformed/duplicate references, missing batch/work provenance, overconsumption, altered expiry, duplicate per-siege pulse turns, overlapping host carriage and contradictory lifecycle chronology before state/RNG adoption. Retained saves without the optional owner remain unchanged; a consumed production inventory cannot omit its corresponding receipts. Historical references survive current war/host removal and original people remain retained. See docs/MODDING.md for exact fields.
 
 Maritime production invoices
 
@@ -2691,7 +2693,9 @@ and repeal retains its passed approval. Matching current-content restore,
 re-save and reload preserve pending/completed decisions without proposals,
 payments, identity allocation or enactment replay. Removed approval records,
 invalid tallies and duplicate pending hearings reject on the detached candidate.
-Absent legacy ledgers/arrays remain absent. The save envelope and released v1
+Absent legacy ledgers/arrays remain absent. Ended hearings that no retained law
+needs fold after the retention window into per-body totals; at most 64 hearings
+are live. The save envelope and released v1
 law/ordinance support are unchanged. Exact fields are in MODDING.md.
 
 Unchanged dates across an additive catalogue transition
@@ -2709,5 +2713,8 @@ ledgers and arrays remain absent. Exact effective mod terms remain required.
 Original issuers, petitioners, named vote principals, operators and retained
 industry-case judges count as references for ordinary court compaction, so their
 bounded historical facts cannot lose their character identities at death.
+Settled petitions, permits and violations whose cases, closures and balances
+are finished fold with their ended laws into exact law and enterprise totals that
+name no person, so folding releases those references only after the window.
 See [industry laws](industry-laws.md) for the supported lifecycle and limits.
 The save envelope and released v1 migration contract are unchanged.

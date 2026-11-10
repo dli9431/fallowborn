@@ -75,7 +75,8 @@ leave a separate personal balance, described below.
 ## Lifecycle and saved identities
 
 The optional `state.industryLaws` schema-1 ledger contains `laws`, `permits` and
-`choices`. It is absent until the first commitment; restore never initializes it.
+`choices`, plus optional folded `retired` totals described under Settled history
+retention. It is absent until the first commitment; restore never initializes it.
 Paid permits bind a stable enterprise UID and the household account `player`.
 They follow that property through household succession; changing a worker does
 not transfer the obligation. A different enterprise UID never inherits a permit.
@@ -164,8 +165,8 @@ consent or expiry closes a freshly reviewed hearing without enactment. Stale and
 duplicate commits do nothing. An issuing ruler's succession requires a fresh
 review, but does not itself cancel a lawful hearing or an enacted law.
 
-The optional `industryLaws.votes` array retains at most 64 pending/completed
-hearings with original issuer/proposer, principal-bound ballots and completed
+The optional `industryLaws.votes` array retains pending/completed hearings, at
+most 64 of them live, with original issuer/proposer, principal-bound ballots and completed
 member/tally snapshots. Each enacted deliberative law requires its unique passed
 hearing; a repeal retains its own approval. Matching restore initializes nothing
 and enacts nothing. Missing legacy arrays remain absent; malformed tallies,
@@ -219,7 +220,7 @@ temporary relief are simulation choices. The independent ordinary JSON example
 `industry-law-enforcement.json` varies fees, relief, exemption, fines and closure.
 Unrecognized sanctions and relief fields reject through detached mod validation.
 
-A bounded optional `violations` array retains at most 512 continuing violations,
+A bounded optional `violations` array retains at most 512 live continuing violations,
 one per law, enterprise UID and original operator. Each names the law and
 jurisdiction, home at operation, actual output, fee, material evidence and turn.
 Once filed, its source points to exactly one ordinary `justice.offenses` case.
@@ -258,12 +259,20 @@ Issuer succession passes court competence with the realm while invalidating old
 pending reviews. Jurisdiction loss suspends enforcement rather than redirecting
 the case or payee. Records retain the original actor through all succession.
 
-The optional `petitions` array is capped at 512. Matching current-content saves
+The optional `petitions` array is capped at 512 live petitions. Matching current-content saves
 retain petition results, original evidence, open cases, closure and paid balances
 without replay. Malformed evidence, case links, terms and payment totals reject
 before state adoption. Released saves without these optional arrays remain valid.
 Existing justice custody expiry and case pruning remain in charge; the bounded
 industry facts prevent a pruned case from being filed again.
+
+Settled history retention
+
+The ledger uses the shared windowed retention of FBDATA.balance.ledgerRetentionDays (default 3600 days, never less than 360). Live records are unexpired, unrepealed laws (suspended ones included), pending hearings, permits whose paid window and law are both current, every petition and violation of a live law, violations whose ordinary justice case still exists, unresolved violations and judged balances still owed while their original operator lives, and every enterprise operating choice. Each record also keeps the law it names; a deliberative law and its passed enactment or repeal hearing keep each other, and a court-closure choice keeps its judgment. The limits of 256 laws, 4096 permits, 512 choices, 64 hearings, 512 petitions and 512 violations count only this live closure, so settled history never stops a new law, hearing, petition, permit or recorded operation. A full live ledger still refuses the new commitment.
+
+The seasonal market and livelihood settlement first folds, at a season boundary, every record outside the live closure that settled before the window: a law at expiry or repeal, a hearing when it ended, a permit when its window or law ended, and a petition or violation when its law ended or its judgment was recorded. Folded records become optional `retired` totals. `retired.laws` is keyed by law definition with ended laws, repealed laws, permits, permit payments, petitions, grants, violations, assessed fines, paid fines and court closures. `retired.hearings` keeps passed, rejected, withdrawn and invalidated counts for each hearing body (town or estates). `retired.enterprises` keeps the same enterprise totals only for businesses the household still owns; totals for property no longer held remain in the law totals. Summaries name no person or record identity. Retained votes, petitions, permits and violations keep their original identities, justice links and paid facts. Folding is deterministic and spends no money, RNG or identities; a staged fold that fails validation changes nothing.
+
+The business sheet lists retained permits, petitions and violations and summarizes earlier ones for that business. Each hearing list summarizes its earlier hearings, and Deeds → Review operating-law hearings lists per-law totals and stays available while any folded history remains. A folded law's county and trade keep the business sheet's operating-law entry, so a paused or closed business can still resume. Save validation accepts settled history beyond the old lifetime limits, requires exact summary fields keyed by current definitions, keeps grants within petitions, closures within violations, paid fines within assessed fines and enterprise totals within law totals, and rejects any ledger whose live closure exceeds a limit. Law rules, fees, voting thresholds and enforcement outcomes are unchanged.
 
 Historical qualification: the [Magna Carta Project, clause 20](https://magnacarta.cmp.uea.ac.uk/read/magna_carta_1215/Clause_20?com=!all)
 documents amercements in English courts around 1200 and proportionality protecting

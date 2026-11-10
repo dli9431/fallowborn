@@ -193,7 +193,9 @@
     if (!a || plan(s).errors.length || !person || a.profile.seasonKinds.indexOf(FB.localSeason(s,a.countyId))<0) return q;
     if (s.production) FB.production.validate(s);
     S.validate(s);
-    if (r && (r.revision>=1000000 || r.terms.length>=512 || r.debits.length>=LIMIT)) return q;
+    // Ended terms and settled debits do not count; only live terms, debits and their provenance do.
+    var live=r && FB.production.liveCounts(s);
+    if (r && (r.revision>=1000000 || live.terms>=512 || live.debits>=LIMIT)) return q;
     var old=term(s,a),period=Math.floor(s.turn/a.profile.periodDays),until=Math.min((period+1)*a.profile.periodDays,s.turn+a.profile.maxDays,s.turn+91-s.date.day);
     q.reason='period';
     if (request.operation==='open') {
@@ -226,10 +228,12 @@
     q.signature=JSON.stringify([s.turn,s.date,definition(s),r || null,s.production || null,s.siteResources || null,building(s,a),person,q]);
     return q;
   };
+  var FOLDED=['terms','ended','debits','quantity'];
+  function folded(r) {return r.retired || FB.ledgerRetention.blank(FOLDED);}
   function apply(s,q,notify) {
     var a=assignment(s,'id',q.request.assignmentId),r=s.buildingSeasons ? copy(s.buildingSeasons) : blank(s);
     if (q.request.operation==='open') {
-      r.terms.push({id:r.terms.length+1,assignmentId:a.id,actor:copy(q.request.actor),characterId:q.identity.characterId,generation:q.identity.generation,assetId:q.identity.assetId,
+      r.terms.push({id:folded(r).terms+r.terms.length+1,assignmentId:a.id,actor:copy(q.request.actor),characterId:q.identity.characterId,generation:q.identity.generation,assetId:q.identity.assetId,
         turn:s.turn,untilTurn:q.untilTurn,period:q.period,endedTurn:null,resources:copy(q.resources)});
       if (q.resourceState!==null) s.siteResources=copy(q.resourceState);
     } else {
@@ -254,8 +258,14 @@
     return out;
   };
   S.boundary=function(s) {
+    var changed=expire(s);
+    // The season boundary folds settled production-family history older than the retention window.
+    if (FB.production.compact(s)) changed++;
+    return changed;
+  };
+  function expire(s) {
     if (!plan(s).assignments.length) return 0;
-    var changed=0,r=s.buildingSeasons;
+    var changed=0,r=s.buildingSeasons,room=null;
     if (r) r.terms.forEach(function(t){var a=assignment(s,'id',t.assignmentId);if(t.endedTurn===null && !live(s,a,t)) {
       t.endedTurn=Math.min(s.turn,t.untilTurn);r.revision++;changed++;FB.invalidateBuildingIndex(s,a.countyId);
     }});
@@ -263,14 +273,15 @@
       var l=life(s,lot);if(!l || s.turn<l.born+l.days || !lot.remaining)return;
       if (!r) {r=blank(s);s.buildingSeasons=r;}
       // One loss receipt per lot; reserved work closes through the material owner before stock is lost.
-      if (r.debits.length>=LIMIT || r.revision>=1000000) return;
+      if (room===null) room=FB.production.liveCounts(s).debits<LIMIT;
+      if (!room || r.revision>=1000000) return;
       s.production.batches.forEach(function(b){if(b.status==='reserved' && b.inputs.some(function(x){return x.lotId===lot.id;})) FB.production.expireSeasonalBatch(s,b.id);});
       if(FB.maritimeWork)FB.maritimeWork.expireLot(s,lot.id);
       r.debits.push({kind:'expired',assignmentId:l.assignment.id,lotId:lot.id,quantity:lot.remaining,turn:l.born+l.days,termId:null,untilTurn:null});
       lot.remaining=0;r.revision++;changed++;
     });
     return changed;
-  };
+  }
   S.runAI=function(s) {
     var count=0;
     plan(s).assignments.forEach(function(a){
@@ -300,6 +311,46 @@
   S.snapshot=function(s,pid,slot) {
     return plan(s).assignments.filter(function(a){return a.countyId===pid && a.slot===slot;}).map(function(a){return {assignment:copy(a),term:term(s,a) ? copy(term(s,a)) : null};});
   };
+  // The original term covering a seasonal batch's reservation; null outside seasonal sites.
+  S.batchTerm=function(s,b) {
+    var r=s.buildingSeasons,a=b && r && Array.isArray(r.terms) && assignment(s,'productionSiteId',b.siteId);
+    return a ? r.terms.find(function(t){return t && t.assignmentId===a.id && t.assetId===b.assetId && eq(t.actor,b.actor) && t.characterId===b.workerId &&
+      t.generation===b.generation && t.turn<=b.openedTurn && t.untilTurn>b.openedTurn;}) || null : null;
+  };
+  /* The latest term per assignment and any term covering a current service receipt
+     stay live. A term needs its benefit allocation; a debit needs its lot and term. */
+  S.retentionNodes=function(s,g) {
+    var r=s.buildingSeasons;
+    if (!r || !Array.isArray(r.terms) || !Array.isArray(r.debits)) return;
+    var last={},covering={};
+    r.terms.forEach(function(t){if(t)last[t.assignmentId]=t;});
+    Object.keys(s.buildingOperations && s.buildingOperations.receipts || {}).forEach(function(k){
+      var v=s.buildingOperations.receipts[k],a=v && assignment(s,'operationId',v.assignmentId);
+      if (a && v.authority) r.terms.forEach(function(t){
+        if (t && t.assignmentId===a.id && t.assetId===v.assetId && eq(t.actor,v.actor) && t.characterId===v.authority.characterId &&
+            t.generation===v.authority.generation && t.turn<=v.turn && v.turn<t.untilTurn && v.untilTurn<=t.untilTurn) covering[t.id]=true;
+      });
+    });
+    r.terms.forEach(function(t){
+      if (t) g.add('term:'+t.id,last[t.assignmentId]===t || covering[t.id]===true,t.endedTurn===null ? t.untilTurn : t.endedTurn,[]);
+    });
+    r.debits.forEach(function(d,i){
+      if (!d) return;
+      var benefit=d.termId!==null;
+      g.add('debit:'+i,benefit && d.untilTurn>s.turn,benefit ? d.untilTurn : d.turn,['lot:'+d.lotId].concat(benefit ? ['term:'+d.termId] : []));
+      if (benefit) g.need('term:'+d.termId,'debit:'+i);
+    });
+  };
+  S.retentionFold=function(t,keep,ctx) {
+    var r=t.buildingSeasons,L=FB.ledgerRetention;
+    if (!r) return;
+    var terms=L.split(r.terms,function(x){return 'term:'+x.id;},keep),debits=L.split(r.debits,function(d,i){return 'debit:'+i;},keep);
+    if (!terms.folded.length && !debits.folded.length) return;
+    var totals=r.retired=folded(r);
+    terms.folded.forEach(function(x){totals.terms++;if(x.endedTurn!==null)totals.ended++;});
+    debits.folded.forEach(function(d){totals.debits++;totals.quantity+=d.quantity;ctx.consume(d.lotId,d.quantity);});
+    r.terms=terms.kept;r.debits=debits.kept;
+  };
   S.referencesCharacter=function(s,cid) {return !!s.buildingSeasons && s.buildingSeasons.terms.some(function(t){return t.characterId===cid;});};
   S.reason=function(q) {
     if(q.allowed && q.request.operation==='open') return FB.T('Commit a local window through day {day}, consuming {water} water units and {grazing} grazing places once. No gold payment, output or benefit; ordinary paid work and service are still required.',{day:q.untilTurn,water:q.water,grazing:q.grazing});
@@ -317,15 +368,20 @@
           Object.keys(s.buildingOperations && s.buildingOperations.receipts || {}).some(function(k){return !!assignment(s,'operationId',s.buildingOperations.receipts[k].assignmentId);})) fail();
       return true;
     }
-    if (!keys(r,['version','definition','revision','terms','debits']) || r.version!==1 || r.definition!==definition(s) ||
-        !int(r.revision,0,1000000) || !Array.isArray(r.terms) || r.terms.length>512 || !Array.isArray(r.debits) || r.debits.length>LIMIT || plan(s).errors.length) fail();
+    // Folded history keeps exact counts; term ids stay unique and increasing after earlier terms fold.
+    if (!keys(r,['version','definition','revision','terms','debits'].concat(own(r,'retired') ? ['retired'] : [])) ||
+        r.version!==1 || r.definition!==definition(s) || own(r,'retired') && (!FB.ledgerRetention.totals(r.retired,FOLDED) ||
+          r.retired.ended>r.retired.terms || r.retired.quantity<r.retired.debits || !(r.retired.terms+r.retired.debits)) ||
+        !int(r.revision,0,1000000) || !Array.isArray(r.terms) || !Array.isArray(r.debits) || plan(s).errors.length) fail();
+    var past=folded(r),total=past.terms+r.terms.length;
     var terms={},periods={},losses={},allocated={},sum={},consumed={},resourceIds={};
     var resources=FB.siteResources.compile(FB.campaignBookmark(s)),production=FB.production.compile(FB.campaignBookmark(s));
     Object.keys(s.siteResources && s.siteResources.sources || {}).forEach(function(k){s.siteResources.sources[k].reservations.forEach(function(c){resourceIds[c.id]=true;});});
     (s.production && s.production.batches || []).forEach(function(b){if(b.waterClaimId!==null)resourceIds[b.waterClaimId]=true;});
     r.terms.forEach(function(t,i){
       var a=t && assignment(s,'id',t.assignmentId),person=t && s.chars[t.characterId];
-      if (!a || !keys(t,['id','assignmentId','actor','characterId','generation','assetId','turn','untilTurn','period','endedTurn','resources']) || t.id!==i+1 || !actor(t.actor) ||
+      if (!a || !keys(t,['id','assignmentId','actor','characterId','generation','assetId','turn','untilTurn','period','endedTurn','resources']) ||
+          !int(t.id,i ? r.terms[i-1].id+1 : 1,total) || !actor(t.actor) ||
           !person || (t.actor.kind==='realm' ? !own(s.realms,t.actor.id) || !int(t.generation,0,FB.realmRulerGeneration(s,t.actor.id)) : t.actor.id!==t.characterId || t.generation!==null) ||
           !int(t.turn,0,s.turn) || !int(t.untilTurn,t.turn+1,t.turn+a.profile.maxDays) || t.period!==Math.floor(t.turn/a.profile.periodDays) || t.untilTurn>(t.period+1)*a.profile.periodDays ||
           t.endedTurn!==null && !int(t.endedTurn,t.turn,Math.min(s.turn,t.untilTurn)) || own(periods,a.id) && periods[a.id]>=t.period ||
@@ -357,7 +413,7 @@
       } else fail();
       sum[d.lotId]=(sum[d.lotId] || 0)+d.quantity;if(sum[d.lotId]>lot.quantity-lot.remaining)fail();
     });
-    if(r.revision!==r.terms.length+r.debits.length+r.terms.filter(function(t){return t.endedTurn!==null;}).length)fail();
+    if(r.revision!==r.terms.length+r.debits.length+r.terms.filter(function(t){return t.endedTurn!==null;}).length+past.terms+past.debits+past.ended)fail();
     (s.production && s.production.batches || []).forEach(function(b){
       var a=assignment(s,'productionSiteId',b.siteId);if(!a)return;
       var t=r.terms.find(function(t){return t.assignmentId===a.id && t.assetId===b.assetId && eq(t.actor,b.actor) && t.characterId===b.workerId &&
@@ -381,6 +437,8 @@
       if(row && b.waterPeriod!==null && row.period===b.waterPeriod) consumed[site.sourceId]=(consumed[site.sourceId] || 0)+FBDATA.productionRecipes[b.recipeId].water;
     });
     Object.keys(consumed).forEach(function(k){if(s.siteResources.sources[k].consumed<consumed[k])fail();});
+    var live=FB.production.liveCounts(s);
+    if(live.terms>512 || live.debits>LIMIT)fail();
     return true;
   };
 })();
