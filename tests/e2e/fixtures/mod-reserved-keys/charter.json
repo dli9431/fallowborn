@@ -1,0 +1,25 @@
+{
+  "name": "Reserved key check charter",
+  "modifiers": {
+    "e2e_reserved_charter": {
+      "name": "Reserved Key Check Charter",
+      "icon": "📜",
+      "desc": "A temporary grant encourages tolls and construction.",
+      "scope": "county",
+      "days": 720,
+      "upkeep": { "gold": 1 },
+      "fx": { "tax": 0.1, "buildingCost": -0.1, "unrest": -0.15 }
+    }
+  },
+  "events": [
+    {
+      "id": "e2e_reserved_charter_event",
+      "title": "A charter is read",
+      "text": "The steward reads the new charter aloud.",
+      "trigger": { "never": true },
+      "options": [
+        { "label": "Accept the charter.", "desc": "Nothing else changes.", "effects": { "prestige": 1 } }
+      ]
+    }
+  ]
+}
