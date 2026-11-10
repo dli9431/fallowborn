@@ -1,0 +1,55 @@
+{
+  "name": "Estuary press permissions",
+  "localCouncilMotions": {
+    "estuary_workshop_hearing": {
+      "name": "Estuary workshop hearing",
+      "desc": "A fictional workshop levy with existing guild and local-office privileges, decided by trading and civic benches.",
+      "icon": "⚖", "fx": {}
+    },
+    "estuary_press_permission": {
+      "name": "Estuary press permissions",
+      "desc": "A fictional press-house permission: pay {money:1.25} per 45 days. Merchant-guild members pay {money:0.75}; current local councillors pay nothing. Unauthorized operation can bring court closure without a fine.",
+      "icon": "⚖",
+      "fx": {}
+    }
+  },
+  "industryLaws": {
+    "estuary_workshop_hearing": {
+      "schema": 1, "motionId": "estuary_workshop_hearing", "bookmarkId": "1204",
+      "provinceId": "york", "enterpriseType": "workshop_business",
+      "minYear": 1204, "maxYear": 1220, "mode": "license", "fee": 2,
+      "permitDays": 30, "durationDays": 180, "transitionDays": 7,
+      "exemptions": [
+        {"kind": "guild", "id": "craftsman", "fee": 0, "permission": true},
+        {"kind": "office", "id": "councilman", "fee": 0, "permission": true}
+      ],
+      "voting": {
+        "town": {"quorum": 0.5, "threshold": 0.5, "days": 20, "members": [
+          {"id": "traders", "kind": "guild", "weight": 2},
+          {"id": "notables", "kind": "notable", "weight": 1}
+        ]},
+        "estates": {"quorum": 0.08, "threshold": 0.5, "days": 30}
+      }
+    },
+    "estuary_press_permission": {
+      "schema": 1,
+      "motionId": "estuary_press_permission",
+      "bookmarkId": "1204",
+      "provinceId": "york",
+      "enterpriseType": "press_business",
+      "minYear": 1204,
+      "maxYear": 1220,
+      "mode": "license",
+      "fee": 1.25,
+      "permitDays": 45,
+      "durationDays": 180,
+      "transitionDays": 7,
+      "exemptions": [
+        {"kind": "guild", "id": "merchant", "fee": 0.75, "permission": true},
+        {"kind": "office", "id": "councilman", "fee": 0, "permission": true}
+      ],
+      "relief": {"days": 15, "chance": 1},
+      "offense": {"id": "unlicensed_press", "penalty": "closure", "amount": 0}
+    }
+  }
+}

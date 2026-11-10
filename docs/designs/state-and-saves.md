@@ -255,6 +255,14 @@ The version-3 save envelope may carry optional meta.household with version 1, nu
 
 ## Save v4 platform schema
 
+For guild/office laws, violation evidence additionally retains the exact
+`exemptionMatches` criterion indices satisfied at operation; later standing
+changes do not reinterpret that evidence. Suspension judgments retain their
+exclusive `suspendedUntil`, exactly judgment plus the declared duration capped
+by original law expiry. Other judgments omit it. Existing home-only law records
+keep their original shape. Detached validation rejects altered criteria, fees
+and deadlines; restore does not pay, accuse, close or resume a business.
+
 Optional `state.industryLaws` schema 1 retains enacted operating terms, original
 issuers/payees, paid enterprise permissions and voluntary operation choices.
 `FB.industryLaws.validate` runs in detached platform validation and serialization.

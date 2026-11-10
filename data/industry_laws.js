@@ -2,6 +2,14 @@
 (function () {
   'use strict';
   FBDATA.industryLaws = {
+    constantinople_workshop_permission:{
+      schema:1, motionId:'constantinople_workshop_permission', bookmarkId:'1066',
+      provinceId:'constantinople', enterpriseType:'workshop_business',
+      minYear:1066, maxYear:1081, mode:'license', fee:3,
+      permitDays:60, durationDays:360, transitionDays:30,
+      exemptions:[{kind:'guild', id:'craftsman', fee:0, permission:true}],
+      relief:{days:30, chance:0.4}, offense:{id:'unlicensed_workshop', penalty:'suspension', amount:0, days:30}
+    },
     london_stall_license:{
       schema:1, motionId:'london_stall_license', bookmarkId:'1204',
       provinceId:'london', enterpriseType:'market_stall_business',

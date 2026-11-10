@@ -772,8 +772,14 @@ manager while restoring its retained scroll and focus. Existing worker wages
 remain explicitly disclosed when production pauses. See industry-laws.md.
 
 Business operating-law sheets also disclose the exact fine, whether a judgment
-closes the affected operation, and the unsupported stronger sanctions. Deliberate
-unauthorized operation has a separate confirmation and costless Cancel return.
+closes the affected operation, and the unsupported stronger sanctions. Reviews
+distinguish a zero-fine closure from a bounded suspension,
+show its duration before commitment and its exclusive deadline after judgment.
+Proposal and hearing sheets label residence, career-guild and local-office
+beneficiaries through their existing localized display owners. These disclosures
+reuse the same retained modal history, cancellation focus and manager returns.
+Deliberate unauthorized operation has a separate confirmation and costless
+Cancel return.
 Temporary-exemption petitions disclose chance, term, zero money cost and the
 spent request on refusal; repeal petitions expose the existing hearing where
 applicable, without promising the petitioner a seat. Complaint rows retain the
