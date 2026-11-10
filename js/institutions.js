@@ -3419,6 +3419,7 @@ window.FB = window.FB || {};
       : person(row(s, id).representativeId), subject, scope);
   };
   FB.localInstitutionsSeason = function (s) {
+    if (FB.religiousInstitutionCompact) FB.religiousInstitutionCompact(s);
     if (FB.religiousInstitutionAI) FB.religiousInstitutionAI(s);
     if (FB.religiousActivityAI) FB.religiousActivityAI(s);
     if (!s.localInstitutions || !FB.localInstitutionList(s).length) return;

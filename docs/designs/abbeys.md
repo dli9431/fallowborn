@@ -25,6 +25,8 @@ does not credibly gate them. Existing property acquisition gates remain intact.
 
 ## Institutional contract
 
+House capacity is permanent property capacity, not a count of past foundations. The twelve houses and each house's endowed plot groups retain their original assets through vacancy, succession and inactivity; deleting a house would destroy still-owned property and accounts. Plot donations to the same county/settlement group coalesce. Temporary residents leave at their ordinary boundary, and connections already retain only the latest sixteen people. These bounds need no lifetime-history fold.
+
 One house per county, at most twelve active houses, bounds simulation and save
 growth. Houses are established by an explicit foundation or an application to
 an existing local religious community; merely browsing does not create a house.

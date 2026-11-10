@@ -30,6 +30,8 @@ Military transfer changes occupation while preserving the community holder, hous
 
 Persistence
 
+These are current slots and rolling windows, not lifetime counters. A new vacancy replaces nominations/votes; each member is one declared constituency slot. History and decisions drop their oldest entry at twelve, and new agreements first prune expired agreements. Civic variants prune dead citizens before admission (32 living people), replace sixteen-person vacancy nominations, roll twelve history entries, and prune inactive rights or paid debts when adding a commitment. No settled-history fold is needed to keep transactions available across successive mandates.
+
 governmentSupport.schema is 1. Each polity has stable id, profileId, scopes, serial, revision, typed members, one mandate, one selection, at most 12 decisions, 12 history entries and 12 agreements, and at most one temporary dues record. Membership and nomination lists are bounded at 16. Serial ids distinguish selections, mandates, decisions, replacements, agreements and dues. The compact save carries this ledger without rendered text.
 
 Detached validation checks principal and county references, scope ownership rules, unique members, bounded numeric values, term policy, ruler generations, selection resolution, decision quorum and commitment shape before adoption. An absent root stays absent on legacy restore; restore never seeds the new opening or backfills a dynasty. Character retention protects current delegates, open nominees and member principals. Expired commitments remain inert until bounded replacement prunes them.
