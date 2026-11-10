@@ -3699,23 +3699,41 @@ No declaration enacts itself or changes a released opening's defaults.
 - `bookmarkId` names an existing world; `provinceId` must be an inhabited county
   in one of its supported revisions. `minYear`/`maxYear` are inclusive integers
   from 1 through 3000 and bound new proposals, not an already enacted term.
-- `enterpriseType` currently supports only `market_stall_business`.
+- `enterpriseType` names an ordinary household `enterprises` definition with a
+  registered `careers` profession, finite nonnegative cost and positive finite
+  yield. All seven native types and ordinary imported enterprise definitions use
+  the same checked acquisition, staffing, yield and upgrade paths. Unknown or
+  incomplete enterprise types reject with an explicit reason.
 - `mode` is `license` or `prohibition`. `fee` is a finite amount from 0 through
   10000 and must be zero for a prohibition. `durationDays` is 1–3600;
   `permitDays` is 1 through the duration; `transitionDays` is 0 through the duration.
   These are integer days from approval or payment, with exclusive end turns.
 - `exemptions` is an explicit array of at most 16 beneficiaries. Each has
-  `kind:"home_province"`, an inhabited province `id` in the named world, a
-  `fee` between zero and the ordinary fee, and boolean `permission`. Matching
-  reads the household's current residence, not a worker's birthplace. Multiple
+  a supported `kind`, an existing `id`, a `fee` between zero and the ordinary
+  fee, and boolean `permission`. Matching
+  reads the household operator's standing, never a worker's birthplace. Multiple
   matches use the lowest fee and any permission grant. A prohibition exemption
   must grant permission to allow operation. Residence is a declared simulation
   criterion and does not establish historical citizenship.
-- Optional `offense:{id,penalty:"fine",amount,closure?}` declares a snake-case
-  offense identity and amount from 0 through 10000. `closure` is an optional
-  boolean, default false. Only actual unauthorized productive operation creates
-  evidence. The canonical court may impose this fine and, when declared, close
-  the affected operation while the law is active. Closure retains ownership.
+  `home_province` ids name inhabited provinces in the declared bookmark and read
+  household residence. `guild` ids name careers with `guild:true` and match the
+  operator's actual current career at member, master, officer or guildmaster
+  rank. `office` ids name `positions` with kind `earned` and a
+  `positionRules.<id>.localCouncil:true` rule. They require the actual current
+  eligible local-council holder and earned flag in the law's county; flags alone
+  and seats elsewhere do not qualify. Other office carriers are unsupported.
+  Exemptions do not create careers, offices, property, seats or ballots.
+- Optional `offense:{id,penalty,amount,closure?,days?}` declares a snake-case
+  offense identity. `penalty:"fine"` supports amount 0–10000 and optional boolean
+  `closure`, default false, retaining existing fine/closure behavior. Standalone
+  `penalty:"closure"` and `penalty:"suspension"` require amount zero and omit
+  `closure`. Suspension requires integer `days` from 1 through the lesser of 360
+  and durationDays; every other penalty omits days. Only actual unauthorized
+  productive output supplies evidence. The existing canonical fine/remedy
+  hearing can impose the declared remedy; closure/suspension collect no fine.
+  Suspension ends at judgment plus days, capped by original law expiry, with an
+  exclusive deadline. Reopening still requires explicit lawful resumption.
+  All remedies retain ownership and worker contracts.
   Stronger sanctions and private-asset transfers are unsupported and reject.
 - Optional `relief:{days,chance}` declares temporary-exemption petitions, with
   integer `days` from 1 through durationDays and finite `chance` from 0 through 1.
@@ -3782,15 +3800,22 @@ Arbitrary calls cannot record this kind without the actual operating evidence.
 projection and normal queued player response. Absence of physical custody blocks
 judgment. Repeated detection and filing cannot duplicate a source or payment.
 
-Only fine and mercy sentences are supported for these offenses, intersected with
-current court procedures and distribution rules. Fine definitions must close
+Only the existing fine/remedy and mercy sentences are supported for these
+offenses, intersected with current court procedures and distribution rules. Fine definitions must close
 the case and cannot also forgive other cases, preventing repeated collection
 through a custom open-case fine.
 Historically overlapping paid permissions or granted exemptions invalidate a
 backdated saved accusation; same-day later compliance never erases prior output.
 The fine's amount is the frozen offense amount; it credits the original public
 account. `judgment` retains turn,
-fine, paid and closure. Insufficient funds leave a personal balance without a new
+fine, paid and closure, plus exact `suspendedUntil` only for a suspension. Its
+deadline continues during jurisdiction loss and cannot be restarted. Guild or
+office laws additionally require `exemptionMatches` on evidence: unique
+indices of non-residence exemptions satisfied at operation. The retained
+homeProvinceId and indices determine the historical fee without re-reading
+current membership. Existing home-only laws omit that field. Inconsistent fees,
+unsupported or duplicate indices, missing facts and altered deadlines reject.
+Insufficient funds leave a personal balance without a new
 case; `quoteDebt` / `payDebt` settle that balance once from the original operator.
 Household succession transfers neither authorization nor personal liability.
 Court succession retains the original case but invalidates a pending review.

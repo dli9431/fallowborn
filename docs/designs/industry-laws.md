@@ -1,6 +1,7 @@
 # Targeted operating laws
 
-Market stalls can be subject to optional, council-approved local operating terms.
+Ordinary household enterprises can be subject to optional, council-approved
+local operating terms.
 No campaign starts with an enacted law. In the 1204 London setting, a qualified
 local council member can open **Propose a council motion**, review London stall
 permissions, and submit the ordinary seeded annual council vote. The same sheet
@@ -21,6 +22,38 @@ existing county controller's public treasury represents the recipient; the game
 does not create a separate municipal treasury or a historical sheriff.
 
 ## Contract and transactions
+
+Definitions may target any ordinary enterprise whose definition has a registered
+career, finite nonnegative purchase cost and positive finite seasonal yield.
+The seven native enterprise types and imported definitions using that same
+acquisition/staffing/yield contract share all law checks. Unknown or incomplete
+enterprise types reject with an explicit unsupported-type reason. There is no
+new business owner, government form or independent legal engine.
+
+Alongside residence, exemptions may name an existing guild-enabled career or an
+existing earned local-council office. Guild qualification reads the operator's
+current career and member-or-higher rank, never a worker's rank or an invented
+guild inventory. Office qualification requires the actual current local seat,
+holder, residence, eligible station/career and earned office flag in the law's
+county. A flag alone, a foreign seat or a previous holder cannot qualify.
+Unsupported office kinds and non-guild careers reject. These criteria change
+prospective assembly interests through the same permission projection; they
+grant no vote or seat. Multiple matches retain the lowest fee and any permission
+grant. Reads and detached validation do not initialize careers or offices.
+
+The optional **Constantinople workshop permissions** proposal in the 1066 setting
+targets workshops, charges 3 per 60 days, exempts craft-guild members and grants
+existing businesses thirty days to comply. It lasts 360 days and is available
+for proposal in 1066–1081. No law is enacted at campaign creation. The
+[Book of the Eparch, edited by Jules Nicole](https://sourcelibrary.org/book/le-livre-du-prefet-ou-l-edit-de-l-empereur-leon-le-sage-sur-nicole)
+provides earlier evidence for Constantinople's regulation of distinct trades.
+The broad workshop category, fee, guild exemption, council review and thirty-day
+operating suspension are explicit game abstractions, not an attested 1066 tariff
+or a reconstruction of the eparch's appointment or full historical penalties.
+The existing controlling realm receives actual fees in its public account.
+The independent ordinary JSON `industry-law-press.json` example targets a press
+house in 1204 York, varies guild and local-office fees, and permits court closure
+without a fine. Its setting and terms are fictional.
 
 `FBDATA.industryLaws` is a bounded typed definition table. Display text belongs to
 the referenced ordinary `localCouncilMotions` definition, using its existing
@@ -238,8 +271,9 @@ compensation and judgment retain their existing justice owners. A successful
 challenge pardons through that owner without taking money or closing property.
 A vote, accusation or detection never captures, convicts or kills anyone.
 
-These offenses permit only release/pardon or a fine, intersected with current
-court law. They cannot justify imprisonment, exile, religious penance, forfeiture,
+These offenses permit only release/pardon or the existing financial-remedy
+hearing, intersected with current court law. They cannot justify imprisonment,
+exile, religious penance, forfeiture,
 corporal punishment or execution, including the restricted distribution's
 normalization path. The fine is the law's frozen amount, paid from the original
 operator's available personal funds to the original public account. Judgment
@@ -281,6 +315,39 @@ it is not a 1204 licensing ordinance. Operational closure and temporary exemptio
 are explicit game abstractions. The selected evidence does not establish
 imprisonment, forfeiture or death for these stall offenses, so those penalties
 are unsupported here. No confiscation or recipient of private assets is declared.
+
+Typed offense penalties are `fine`, `closure` and `suspension`. Existing fine
+definitions, including their optional closure flag, retain their exact terms.
+A standalone closure or suspension has amount zero and uses the same canonical
+fine/remedy sentence with no collection. It still requires competent authority,
+material evidence, physical custody and a hearing, closes that one case, releases
+the operator and invokes the law owner's operation remedy once. Suspension has
+an integer `days` from 1 through the lesser of 360 and the law duration. Its
+exclusive deadline is the earlier of judgment plus those days or original law
+expiry. It continues to elapse during loss of jurisdiction; recovery cannot
+restart it. Payment, new membership and another enterprise's permit cannot buy
+out an imposed stop. At the deadline, repeal or expiry, the owner may explicitly
+resume if remaining permission requirements are satisfied. Other active judged
+laws still apply. Property and worker contracts remain with their existing owners.
+
+For laws with guild/office exemptions, evidence additionally retains the
+`exemptionMatches` indices of non-residence criteria actually satisfied at the
+time of output. Residence continues to use the original `homeProvinceId` fact.
+Later membership, office loss or succession cannot change historical liability.
+Validation checks exact criterion references, uniqueness and the resulting fee;
+it never rechecks mutable current standing to reinterpret an earlier operation.
+A suspension judgment additionally retains its exact `suspendedUntil`; other
+judgments must omit it. Missing facts for these new terms, unsupported criteria,
+altered deadlines and inconsistent fees reject before adoption. Existing London
+records retain their original shape, and released saves without this ledger
+remain supported. No save envelope, migration or alternate retention owner is
+added. The shared retention graph keeps each remedy's original law and evidence;
+settled operating stops count in the existing `closures` summary total.
+
+Technology impact `industry_law_suspension` is **none**: a finite operating stop
+is an ordinary judicial remedy. The expanded `targeted_industry_laws` decision
+remains **none** for all checked enterprises and both new standing criteria;
+all enterprise technology gates remain authoritative.
 
 Technology impacts `industry_law_enforcement`, `industry_law_relief` and
 `industry_law_closure` are **none**: deliberate operation/evidence and fines,

@@ -63,11 +63,23 @@ Data authoring contract
 Industry-law offense and relief terms use the same detached validator and
 canonical consumers for native London and the ordinary
 `industry-law-enforcement.json` import. Supported variation includes fees,
-beneficiaries, petition chance/term, fine amount and operation closure; stronger
-penalties and asset confiscation reject. Actual seasonal output, original-party
+beneficiaries, petition chance/term, fine amount, operation closure and bounded
+suspension; stronger penalties and asset confiscation reject. Actual seasonal
+output, original-party
 evidence, canonical custody and court competence remain intrinsic invariants.
 No declaration can create guilt merely by enactment or detection, transfer
 unrelated private property, redirect a payee or replay an imposed balance.
+
+Industry-law enterprise references use the ordinary acquisition/staffing/yield
+contract rather than a named trade whitelist. Guild-enabled career membership
+and earned local-council office holdings are supported exemption criteria;
+unsupported carriers reject. Constantinople workshops and London stalls are
+independent native declarations. The ordinary `industry-law-press.json` import
+targets press houses with reduced guild fees, local-office exemption and a
+zero-fine closure. All share canonical public-account payment, permission,
+evidence, custody and sentence transactions. A timed stop retains an exact
+exclusive deadline, capped by the original law term; historical standing is
+saved as criterion matches rather than reinterpreted after membership changes.
 
 Industry-law `voting` declares two consumers of the existing operating-law
 transaction: town benches and current Estates houses. Supply both quorum,
