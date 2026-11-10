@@ -104,6 +104,180 @@ daily selection and do not consume seasonal story slots or postpone decisions.
 Acknowledging a result consumes no day and no random draw; event auto-resume
 preferences apply after the final visible acknowledgement or decision.
 
+## Registered daily phases
+
+`G.passDay(opts)` dispatches the ordered `FB.dayPhases` registry in
+`js/day_phases.js`. Each declaration has a unique id and numeric order, a cadence
+(`daily`, `seasonBoundary`, `newYear`), a mode (`play`, `observe`, `both`),
+a nullable condition and a synchronous function. Trusted systems register new
+phases without extending the call list in `main.js`; see
+[architecture.md](../agents/architecture.md) for the registration API. Boundary
+cadences refer to the date just advanced by `calendar.advance`. A new year also
+requires a season boundary; the building boundary hook itself still runs daily
+because it owns its own local-season rules.
+
+Dispatch preserves the existing sequence and seeded RNG order. Preflight gates
+run before any work or calendar change. Rejected production/household actions
+stop without a day; recurring deeds precede focus and replace its tick, while
+travel skips both focus tick and validation. Optional hook checks are evaluated
+at their former positions. Papal decisions probe world availability even when
+observing, but only block play. Papacy, abbeys, tournaments and great holy wars
+retain `systemAvailable` gates; landed council and parliament repair retain
+`systemEnabled`, and dependent tenure retains `tenureEnabled`.
+
+The observe branch finishes after clearing personal events and refreshing. Its
+tournament reconcile checks availability once; its season/tick phases reuse
+that transient decision, with season work only at the boundary. Play can stop
+immediately after seasonal intrigue or yearly life kills the protagonist.
+Seasonal tax quotes, finance results and annual world context pass only through
+the transient dispatch context. Household income still precedes necessities;
+the winter ledger and slot RNG still precede annual revaluation/world processing;
+autosave still precedes mortality. A deferred refresh stays deferred, a live
+refresh retains its option, and visible/autoresolved events finish through
+exactly one existing post-event path. No system's own rules or saved data change.
+
+The complete built-in order is below. `condition` supplies optional-hook and
+availability checks in the engine declarations; related calculations that form
+one accounting transaction remain together within their phase.
+
+| Order | Phase | Cadence | Mode |
+| --- | --- | --- | --- |
+| 10 | `gate.state` | `daily` | `both` |
+| 20 | `gate.events` | `daily` | `both` |
+| 30 | `gate.travelPicker` | `daily` | `both` |
+| 40 | `gate.papalDecision` | `daily` | `both` |
+| 50 | `gate.holyWarSettlement` | `daily` | `play` |
+| 60 | `preflight.production` | `daily` | `both` |
+| 70 | `preflight.household` | `daily` | `both` |
+| 80 | `play.recurringDeed` | `daily` | `play` |
+| 90 | `deed.completion` | `daily` | `both` |
+| 100 | `play.maternalCustoms` | `daily` | `play` |
+| 110 | `play.householdServiceBeforeFocus` | `daily` | `play` |
+| 120 | `play.focus` | `daily` | `play` |
+| 130 | `play.socialAttention` | `daily` | `play` |
+| 140 | `calendar.advance` | `daily` | `both` |
+| 150 | `building.boundary` | `daily` | `both` |
+| 160 | `building.dayAI` | `daily` | `both` |
+| 170 | `government.supportDay` | `daily` | `both` |
+| 180 | `play.firstDayActivation` | `daily` | `play` |
+| 190 | `government.localDay` | `daily` | `both` |
+| 200 | `world.scripted` | `daily` | `both` |
+| 210 | `world.historicalAmbitions` | `seasonBoundary` | `both` |
+| 220 | `world.fortifications` | `daily` | `both` |
+| 230 | `world.settlementFounding` | `daily` | `both` |
+| 240 | `religion.headRecovery` | `daily` | `both` |
+| 250 | `religion.papacyDay` | `daily` | `both` |
+| 260 | `guild.monopoly` | `daily` | `both` |
+| 270 | `modifiers.day` | `daily` | `both` |
+| 280 | `intrigue.day` | `daily` | `both` |
+| 290 | `politics.day` | `daily` | `both` |
+| 300 | `observe.marketSeason` | `seasonBoundary` | `observe` |
+| 310 | `observe.treasurySeason` | `seasonBoundary` | `observe` |
+| 320 | `observe.authoritySeason` | `seasonBoundary` | `observe` |
+| 330 | `observe.storySeason` | `seasonBoundary` | `observe` |
+| 340 | `observe.treasuryRevalue` | `newYear` | `observe` |
+| 350 | `observe.intrigueSeason` | `seasonBoundary` | `observe` |
+| 360 | `observe.techSeason` | `seasonBoundary` | `observe` |
+| 370 | `observe.warSeason` | `seasonBoundary` | `observe` |
+| 380 | `observe.worldYear` | `newYear` | `observe` |
+| 390 | `observe.authorityYear` | `newYear` | `observe` |
+| 400 | `observe.storyYear` | `newYear` | `observe` |
+| 410 | `observe.federatePrepare` | `daily` | `observe` |
+| 420 | `observe.mobile` | `daily` | `observe` |
+| 430 | `observe.armies` | `daily` | `observe` |
+| 440 | `observe.federates` | `daily` | `observe` |
+| 450 | `observe.storyDay` | `daily` | `observe` |
+| 460 | `observe.holyWarDay` | `daily` | `observe` |
+| 470 | `observe.tournamentReconcile` | `daily` | `observe` |
+| 471 | `observe.tournamentSeason` | `seasonBoundary` | `observe` |
+| 472 | `observe.tournamentTick` | `daily` | `observe` |
+| 480 | `observe.clearEvents` | `daily` | `observe` |
+| 490 | `observe.refresh` | `daily` | `observe` |
+| 500 | `observe.complete` | `daily` | `observe` |
+| 510 | `play.institutionsDay` | `daily` | `play` |
+| 520 | `play.financeDay` | `daily` | `play` |
+| 530 | `play.intrigueSeason` | `seasonBoundary` | `play` |
+| 540 | `play.intrigueDeath` | `seasonBoundary` | `play` |
+| 550 | `play.marketSeason` | `seasonBoundary` | `play` |
+| 560 | `play.taxQuote` | `seasonBoundary` | `play` |
+| 570 | `play.tournamentSample` | `seasonBoundary` | `play` |
+| 580 | `play.treasurySeason` | `seasonBoundary` | `play` |
+| 590 | `play.authoritySeason` | `seasonBoundary` | `play` |
+| 600 | `play.storySeason` | `seasonBoundary` | `play` |
+| 610 | `play.publicIncome` | `seasonBoundary` | `play` |
+| 620 | `play.privateIncome` | `seasonBoundary` | `play` |
+| 630 | `play.livelihoodSeason` | `seasonBoundary` | `play` |
+| 640 | `play.publicOfficeSettle` | `seasonBoundary` | `play` |
+| 650 | `play.enterpriseUpgrade` | `seasonBoundary` | `play` |
+| 660 | `play.necessities` | `seasonBoundary` | `play` |
+| 670 | `play.papacySeason` | `seasonBoundary` | `play` |
+| 680 | `play.abbeySeason` | `seasonBoundary` | `play` |
+| 690 | `play.householdStandards` | `seasonBoundary` | `play` |
+| 700 | `play.retainers` | `seasonBoundary` | `play` |
+| 710 | `play.enterpriseLabor` | `seasonBoundary` | `play` |
+| 720 | `play.education` | `seasonBoundary` | `play` |
+| 730 | `play.prestige` | `seasonBoundary` | `play` |
+| 731 | `play.rankPrestigeYear` | `newYear` | `play` |
+| 740 | `play.piety` | `seasonBoundary` | `play` |
+| 741 | `play.councilEnsure` | `seasonBoundary` | `play` |
+| 742 | `play.parliamentEnsure` | `seasonBoundary` | `play` |
+| 743 | `play.autoBuild` | `seasonBoundary` | `play` |
+| 750 | `play.realmPolicy` | `seasonBoundary` | `play` |
+| 760 | `play.reinforcementUpkeep` | `seasonBoundary` | `play` |
+| 770 | `play.techSeason` | `seasonBoundary` | `play` |
+| 780 | `play.warSeason` | `seasonBoundary` | `play` |
+| 790 | `play.devastation` | `seasonBoundary` | `play` |
+| 800 | `play.holyWarSeason` | `seasonBoundary` | `play` |
+| 810 | `play.sacredCustody` | `seasonBoundary` | `play` |
+| 820 | `play.foreignPolicy` | `seasonBoundary` | `play` |
+| 830 | `play.financeSeason` | `seasonBoundary` | `play` |
+| 840 | `play.fiscalSeason` | `seasonBoundary` | `play` |
+| 850 | `play.rivalry` | `seasonBoundary` | `play` |
+| 860 | `play.seasonLedger` | `seasonBoundary` | `play` |
+| 870 | `play.scheduleSlots` | `seasonBoundary` | `play` |
+| 880 | `play.financeYear` | `newYear` | `play` |
+| 890 | `play.worldYear` | `newYear` | `play` |
+| 900 | `play.authorityYear` | `newYear` | `play` |
+| 910 | `play.storyYear` | `newYear` | `play` |
+| 920 | `play.tournamentSeason` | `seasonBoundary` | `play` |
+| 930 | `play.autosave` | `seasonBoundary` | `play` |
+| 940 | `play.yearlyLife` | `newYear` | `play` |
+| 950 | `play.yearlyDeath` | `newYear` | `play` |
+| 960 | `play.fiscalDay` | `daily` | `play` |
+| 970 | `play.births` | `daily` | `play` |
+| 980 | `play.federatePrepare` | `daily` | `play` |
+| 990 | `play.mobile` | `daily` | `play` |
+| 1000 | `play.armies` | `daily` | `play` |
+| 1010 | `play.federates` | `daily` | `play` |
+| 1020 | `play.storyDay` | `daily` | `play` |
+| 1030 | `play.holyWarDay` | `daily` | `play` |
+| 1040 | `play.tournamentReconcile` | `daily` | `play` |
+| 1050 | `play.travel` | `daily` | `play` |
+| 1060 | `play.religiousActivity` | `daily` | `play` |
+| 1070 | `play.tournamentTick` | `daily` | `play` |
+| 1080 | `play.giftDelivery` | `daily` | `play` |
+| 1090 | `play.peakTitle` | `daily` | `play` |
+| 1100 | `play.freedom` | `daily` | `play` |
+| 1110 | `play.householdServiceAfterTravel` | `daily` | `play` |
+| 1120 | `play.tenure` | `daily` | `play` |
+| 1130 | `play.serfStory` | `daily` | `play` |
+| 1140 | `play.serfNeighbor` | `daily` | `play` |
+| 1150 | `play.educationStory` | `daily` | `play` |
+| 1160 | `play.pickEvents` | `daily` | `play` |
+| 1170 | `play.refresh` | `daily` | `play` |
+| 1180 | `play.dispatchEvents` | `daily` | `play` |
+| 1190 | `play.afterEvents` | `daily` | `play` |
+| 1200 | `play.complete` | `daily` | `play` |
+
+`daily-phases-parity.spec.js` pins complete-state SHA-256, serialized byte count,
+RNG, UID, date, result, refresh and autosave checkpoints from the former loop for
+fixed-seed play and observe campaigns. Each stages ordinary, seasonal and annual
+dates directly and advances only three days. `daily-phase-registry.spec.js`
+checks this phase list, registration and dispatch guards, preflight purity,
+deed/travel focus branches, event completion and refresh options, mortality
+exits and reviewed engine-id counts. These bounded checks do not
+establish longer-campaign, visual, package or device acceptance.
+
 ## Daily time, focuses, and deeds
 
 **Time is daily** (`G.passDay` in main.js): 90-day seasons, 360-day years; `state.turn`
