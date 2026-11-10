@@ -10287,6 +10287,9 @@ window.FB = window.FB || {};
       h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(dt(s,'building',row.site.buildingId,FBDATA.buildings[row.site.buildingId],'name'))+'</div>';
       row.lots.forEach(function (lot) { h+=kv(name('productionGood',lot.goodId,FBDATA.productionGoods),esc(FB.T('{available} available / {remaining} remaining ({unit})',{
         available:lot.available,remaining:lot.remaining,unit:lot.unit}))); });
+      // Settled records older than the retention window are summarized, not listed.
+      if (row.history) h+=kv('Earlier records',esc(FB.T('{batches} closed batches ({cancelled} cancelled), {days} work days, {gold} gold processing; {lots} spent lots totalling {quantity} units',{
+        batches:row.history.batches,cancelled:row.history.cancelled,days:row.history.workDays,gold:row.history.paid,lots:row.history.lots,quantity:row.history.quantity})));
       row.site.recipeIds.forEach(function (key) {
         const recipe=FBDATA.productionRecipes[key],selection=view.dispositions[key] || 'store';
         h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(name('productionRecipe',key,FBDATA.productionRecipes))+'</div>'+

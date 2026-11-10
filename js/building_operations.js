@@ -200,7 +200,8 @@
   function inputPlan(s,a,who) {
     if (!a.profile.inputs) return [];
     var r = s.production, ledger = r && r.waterInputs;
-    if (!r || r.revision >= 1000000 || r.nextId >= 1000000 || ledger && ledger.records.length >= 512) return null;
+    // Superseded and settled material records do not count; only live records and their provenance do.
+    if (!r || r.revision >= 1000000 || r.nextId >= 1000000 || ledger && FB.production.liveCounts(s).records >= 512) return null;
     var lots = [];
     FB.production.snapshot(s,a.countyId,a.siteId).forEach(function (row) {
       if (row.asset && equal(row.asset.owner,who) && FB.production.authority(s,row.site,who))
@@ -226,7 +227,7 @@
     var root = s.buildingOperations, assignments = plan(s).assignments;
     var receipts = root && root.receipts || {};
     if (ledger !== undefined && (!keys(ledger,['version','records']) || ledger.version !== 1 ||
-        !Array.isArray(ledger.records) || !ledger.records.length || ledger.records.length > 512)) fail();
+        !Array.isArray(ledger.records) || !ledger.records.length)) fail();
     var revisions = {}, last = {}, priorId = 0, priorRevision = 0;
     var sites = ledger ? FB.compileProduction(FB.campaignBookmark(s)).sites : [];
     (ledger && ledger.records || []).forEach(function (v) {
@@ -270,6 +271,23 @@
           input && (!a || !a.profile.inputs || input.operationRevision !== v.revision)) fail();
     });
     return out;
+  };
+  // The latest record per asset matches its service receipt and stays live; earlier records are history.
+  O.retentionNodes = function (s,g) {
+    var ledger = s.production && s.production.waterInputs, list = ledger && Array.isArray(ledger.records) ? ledger.records : [], last = {};
+    list.forEach(function (v) { if (v) last[v.assetId] = v; });
+    list.forEach(function (v) { if (v) g.add('water:' + v.id,last[v.assetId] === v,v.untilTurn,FB.production.lotNeeds(v.inputs)); });
+  };
+  O.retentionFold = function (t,keep,ctx) {
+    var ledger = t.production && t.production.waterInputs;
+    if (!ledger) return;
+    var split = FB.ledgerRetention.split(ledger.records,function (v) { return 'water:' + v.id; },keep);
+    if (!split.folded.length) return;
+    split.folded.forEach(function (v) {
+      ctx.ledgers().records++;
+      v.inputs.forEach(function (x) { ctx.consume(x.lotId,x.quantity); });
+    });
+    ledger.records = split.kept;
   };
   O.referencesInputCharacter = function (s,cid) {
     return !!(s.production && s.production.waterInputs && s.production.waterInputs.records.some(function (v) { return v.characterId === cid; }));

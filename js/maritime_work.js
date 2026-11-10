@@ -182,7 +182,7 @@
       if (!int(q.credit,1,1000000) || !Number.isFinite(s.player.gold) || s.player.gold<q.due) return q;
       q.reason='capacity';
       if (s.production.nextId>=1000000 || s.production.revision>=999999 ||
-          request.operation==='prepare' && r && r.invoices.length>=512) return q;
+          request.operation==='prepare' && r && P.liveCounts(s).invoices>=512) return q;
       q.allowed=true;q.reason=null;
     }
     q.signature=JSON.stringify([request,s.turn,identity,s.production,s.siteResources || null,s.player.gold,s.player.enterprises || [],q.baseCost,q.level,q.credit,q.launch || null]);
@@ -262,8 +262,10 @@
     if(ledger===undefined)return out;
     function fail(){throw new Error(FB.T('Invalid saved maritime production invoice.'));}
     var p=plan(s),pending={}, committed={},launches={},claims={};
+    // A ledger may be empty only after its settled invoices folded into production history.
+    var folded=r.retired && r.retired.ledgers && r.retired.ledgers.invoices;
     if(p.errors.length || !keys(ledger,['version','definition','invoices']) || ledger.version!==1 || ledger.definition!==stamp(p) ||
-        !Array.isArray(ledger.invoices) || !ledger.invoices.length || ledger.invoices.length>512)fail();
+        !Array.isArray(ledger.invoices) || !ledger.invoices.length && !(Number.isSafeInteger(folded) && folded>0))fail();
     ledger.invoices.forEach(function(x){
       var a=x && p.assignments.find(function(a){return a.id===x.assignmentId;}),profile=a && FBDATA.maritimeWorkProfiles[a.profileId];
       var asset=x && r.assets.find(function(y){return y.id===x.assetId;});
@@ -313,6 +315,25 @@
       out.ids.push(x.id);out.revision+=x.status==='pending'?1:2;
     });
     return out;
+  };
+  // Pending invoices are live reservations; settled invoices need their exact paid lots until they fold.
+  M.retentionNodes = function(s,g) {
+    var ledger=root(s);
+    (ledger && Array.isArray(ledger.invoices) ? ledger.invoices : []).forEach(function(x){
+      if(x)g.add('invoice:'+x.id,x.closedTurn===null,x.closedTurn,P.lotNeeds(x.inputs));
+    });
+  };
+  M.retentionFold = function(t,keep,ctx) {
+    var ledger=root(t);
+    if(!ledger)return;
+    var split=FB.ledgerRetention.split(ledger.invoices,function(x){return 'invoice:'+x.id;},keep);
+    if(!split.folded.length)return;
+    split.folded.forEach(function(x){
+      var totals=ctx.ledgers();totals.invoices++;totals.credit+=x.credit;
+      // Only a completed invoice (with its enterprise result) consumed its reserved lots.
+      if(x.resultUid!==null)x.inputs.forEach(function(i){ctx.consume(i.lotId,i.quantity);});
+    });
+    ledger.invoices=split.kept;
   };
   M.referencesCharacter = function(s,cid) {
     return !!root(s) && root(s).invoices.some(function(x){return x.identity.characterId===cid;});
