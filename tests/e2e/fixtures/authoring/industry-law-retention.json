@@ -1,0 +1,22 @@
+{
+  "name": "Wharf stall dues with a short record window",
+  "balance": {"ledgerRetentionDays": 720},
+  "localCouncilMotions": {
+    "wharf_stall_due": {
+      "name": "Wharf stall due",
+      "icon": "⚖",
+      "desc": "A fictional London due: every market stall pays {money:1} for 60 days. Unpaid trading may bring a fine and court closure; settled records are summarized after two years.",
+      "fx": {}
+    }
+  },
+  "industryLaws": {
+    "wharf_stall_due": {
+      "schema": 1, "motionId": "wharf_stall_due", "bookmarkId": "1204",
+      "provinceId": "london", "enterpriseType": "market_stall_business",
+      "minYear": 1204, "maxYear": 1240, "mode": "license", "fee": 1,
+      "permitDays": 60, "durationDays": 120, "transitionDays": 0, "exemptions": [],
+      "relief": {"days": 30, "chance": 0.5},
+      "offense": {"id": "wharf_unpaid_due", "penalty": "fine", "amount": 6, "closure": true}
+    }
+  }
+}
