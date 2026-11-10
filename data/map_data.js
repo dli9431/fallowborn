@@ -1539,6 +1539,7 @@ FBDATA.balance = {
   governmentSeatCost: 0.5,
   governmentCourtAllowance: [1, 2, 4, 8, 16],
   realmReserveSeasons: 10,
+  ledgerRetentionDays: 3600, // settled production-family ledger history folds after this many days
   realmReserveRevenueFloor: 0.50,
   distributionMinimum: 10,
   distributionSurplusRate: 0.10,

@@ -98,10 +98,11 @@
     if(who.id===s.player.charId){s.player.gold+=amount;return true;}
     return FB.creditBaronyAccount(s,who.id,amount);
   }
+  // Only live receipts and lots count; folded or settled history never stops a trade.
   function room(s) {
-    var r=s.production;
-    return r && r.economy && r.economy.receipts.length<LIMIT && r.nextId<999990 && r.revision<1000000 &&
-      r.lots.length+r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0)<LIMIT;
+    var r=s.production,live=r && r.economy && P.liveCounts(s);
+    return !!live && live.trades<LIMIT && r.nextId<999990 && r.revision<1000000 &&
+      live.lots+r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0)<LIMIT;
   }
   E.quote = function(s,request) {
     var q={exchange:true,allowed:false,reason:'request',request:obj(request)?copy(request):null};
@@ -228,7 +229,7 @@
     if(economy===undefined)return out;
     var p=plan(s),seen={},produced={},demand={},costs={},linked={};
     if(!keys(economy,['version','definition','receipts']) || economy.version!==1 || economy.definition!==definition(s) ||
-      p.errors.length || !Array.isArray(economy.receipts) || economy.receipts.length>LIMIT)fail();
+      p.errors.length || !Array.isArray(economy.receipts))fail();
     function asset(key){return r.assets.find(function(a){return a.id===key;});}
     function lot(key){return r.lots.find(function(a){return a.id===key;});}
     function person(who,owner) {
@@ -293,5 +294,25 @@
       if(!int(created,0,x.turn))fail();
     });});
     out.revision=economy.receipts.length;return out;
+  };
+  // A receipt needs its delivered lot and the exact source lots its provenance and expiry read.
+  E.retentionNodes = function(s,g) {
+    var r=s.production;
+    (r && r.economy && Array.isArray(r.economy.receipts) ? r.economy.receipts : []).forEach(function(x){
+      if(x)g.add('trade:'+x.id,false,x.turn,['lot:'+x.lotId].concat(P.lotNeeds(x.inputs)));
+    });
+  };
+  E.retentionFold = function(t,keep,ctx) {
+    var economy=t.production && t.production.economy;
+    if(!economy)return;
+    var split=FB.ledgerRetention.split(economy.receipts,function(x){return 'trade:'+x.id;},keep);
+    if(!split.folded.length)return;
+    var totals=ctx.ledgers();
+    split.folded.forEach(function(x){
+      totals.trades++;totals.traded+=x.quantity;
+      // Exchange receipts carry payment and source lots; producer receipts have neither.
+      if(Array.isArray(x.inputs)){totals.tradePaid+=x.paid;x.inputs.forEach(function(i){ctx.consume(i.lotId,i.quantity);});}
+    });
+    economy.receipts=split.kept;
   };
 })();

@@ -34,6 +34,10 @@
     return FB.mods.fingerprint(rows);
   }
   function rows(s) { return s.siegeSupport ? s.siegeSupport.records : []; }
+  var FOLDED = ['records','uses','quantity'];
+  function folded(s) { return s.siegeSupport && s.siegeSupport.retired || FB.ledgerRetention.blank(FOLDED); }
+  // Spent, interrupted and expired equipment receipts do not count against the bound.
+  function full(s) { return FB.production.liveCounts(s).siege>=LIMIT; }
   function host(s,key) { return (s.armies || []).find(function(a){return a.id===key;}); }
   function identity(s,rid) {
     var a=FB.political.actor(s,{kind:'realm',id:rid}),c=a && s.chars[a.characterId];
@@ -94,7 +98,7 @@
     q.person=person;q.realmId=a.realm;q.assetId=source.asset.id;q.sourceCountyId=source.site.countyId;
     q.homeRealm=target.homeRealm;q.occupied=target.occupied;
     q.endTurn=q.inputs.reduce(function(end,x){return Math.min(end,FB.buildingSeasons.lotExpiry(s,s.production.lots.find(function(l){return l.id===x.lotId;})));},s.turn+p.termDays);
-    q.termDays=q.endTurn-s.turn;q.recordLimit=rows(s).length>=LIMIT;
+    q.termDays=q.endTurn-s.turn;q.recordLimit=full(s);
     q.allowed=!left && !q.missingTech.length && q.termDays>0 && !q.recordLimit;
     q.reason=q.allowed?null:q.reason;
     q.signature=JSON.stringify([s.turn,definition(),s.production,s.siegeSupport || null,request,a,person,target,q.inputs,known,p]);
@@ -107,7 +111,7 @@
     var request=q.request,p=FBDATA.siegeSupportProfiles[request.profileId];
     if(!s.siegeSupport)s.siegeSupport={version:1,definition:definition(),records:[]};
     S.tick(s);
-    var list=rows(s),rid=list.length+1;
+    var list=rows(s),rid=folded(s).records+list.length+1;
     q.inputs.forEach(function(x){s.production.lots.find(function(l){return l.id===x.lotId;}).remaining-=x.quantity;});
     list.push({id:rid,profileId:request.profileId,hostId:request.hostId,warId:request.warId,countyId:request.countyId,
       realmId:q.realmId,characterId:q.person.characterId,generation:q.person.generation,assetId:q.assetId,
@@ -138,7 +142,7 @@
   };
   S.aiQuote = function(s,request) { return S.quote(s,request); };
   S.runAI = function(s,hosts) {
-    if(!Object.keys(FBDATA.siegeSupportProfiles).length || !s.production || rows(s).length>=LIMIT)return;
+    if(!Object.keys(FBDATA.siegeSupportProfiles).length || !s.production || full(s))return;
     var inventory=FB.production.snapshot(s),profiles=Object.keys(FBDATA.siegeSupportProfiles).sort();
     (hosts || []).filter(function(a){return a.realm!=='player';}).slice(0,LIMIT).forEach(function(a){
       var w=FB.ordinaryWarById(s,a.warId);
@@ -161,6 +165,25 @@
     return rows(s).reduce(function(n,r){return n+r.inputs.reduce(function(m,x){return m+(x.lotId===lotId?x.quantity:0);},0);},0);
   };
   S.referencesCharacter = function(s,cid) { return rows(s).some(function(r){return r.characterId===cid;}); };
+  // A carried record within its term is live and needs its consumed lots; closed records fold after the window.
+  S.retentionNodes = function(s,g) {
+    var root=s.siegeSupport;
+    (root && Array.isArray(root.records) ? root.records : []).forEach(function(r){
+      if(r)g.add('siege:'+r.id,r.closedTurn===null && s.turn<r.endTurn,r.closedTurn===null ? r.endTurn : r.closedTurn,FB.production.lotNeeds(r.inputs));
+    });
+  };
+  S.retentionFold = function(t,keep,ctx) {
+    var root=t.siegeSupport;
+    if(!root)return;
+    var split=FB.ledgerRetention.split(root.records,function(r){return 'siege:'+r.id;},keep);
+    if(!split.folded.length)return;
+    var totals=root.retired=folded(t);
+    split.folded.forEach(function(r){
+      totals.records++;totals.uses+=r.uses.length;
+      r.inputs.forEach(function(x){totals.quantity+=x.quantity;ctx.consume(x.lotId,x.quantity);});
+    });
+    root.records=split.kept;
+  };
   S.snapshot = function(s,hostId) {
     return rows(s).filter(function(r){return r.hostId===hostId;}).map(function(r){
       var out=copy(r),p=FBDATA.siegeSupportProfiles[r.profileId];
@@ -173,14 +196,18 @@
     function fail(){throw new Error(FB.T('Invalid saved siege equipment.'));}
     var root=s.siegeSupport;
     if(root===undefined)return true;
-    if(!keys(root,['version','definition','records']) || root.version!==1 || root.definition!==definition() ||
-      !Array.isArray(root.records) || root.records.length>LIMIT || !s.production || S.catalogFaults(FBDATA).length)fail();
+    // Folded receipts keep exact counts; retained ids stay unique and increasing.
+    if(!keys(root,['version','definition','records','retired']) || root.version!==1 || root.definition!==definition() ||
+      root.retired!==undefined && (!FB.ledgerRetention.totals(root.retired,FOLDED) || !root.retired.records ||
+        root.retired.quantity<root.retired.records || root.retired.uses>root.retired.records*8) ||
+      !Array.isArray(root.records) || !s.production || S.catalogFaults(FBDATA).length)fail();
+    var total=folded(s).records+root.records.length;
     var bm=FB.campaignBookmark(s),sites=FB.compileProduction(bm).sites,counties={};
     (bm.provinces || []).forEach(function(p){if(!p.wasteland)counties[p.id]=true;});
     root.records.forEach(function(r,index){
       var p=r && FBDATA.siegeSupportProfiles[r.profileId],asset=r && s.production.assets.find(function(a){return a.id===r.assetId;});
       if(!p || !keys(r,['id','profileId','hostId','warId','countyId','realmId','characterId','generation','assetId','siteId','sourceCountyId',
-        'homeRealm','occupied','loadedTurn','endTurn','inputs','uses','status','closedTurn']) || r.id!==index+1 ||
+        'homeRealm','occupied','loadedTurn','endTurn','inputs','uses','status','closedTurn']) || !int(r.id,index ? root.records[index-1].id+1 : 1,total) ||
         !(typeof r.hostId==='string' && r.hostId.length>0 && r.hostId.length<=120 || int(r.hostId,1,Number.MAX_SAFE_INTEGER)) ||
         typeof r.warId!=='string' || !r.warId || r.warId.length>120 ||
         !own(s.realms,r.realmId) || !own(s.chars,r.characterId) || !own(s.realms,r.homeRealm) || !counties[r.countyId] ||
@@ -209,6 +236,7 @@
       if(r.status==='spent' && r.closedTurn!==previous || root.records.slice(0,index).some(function(old){return old.hostId===r.hostId &&
         (old.loadedTurn>=r.loadedTurn || old.closedTurn===null || old.closedTurn>r.loadedTurn);}))fail();
     });
+    if(FB.production.liveCounts(s).siege>LIMIT)fail();
     return true;
   };
   S.name = function(key) { var p=FBDATA.siegeSupportProfiles[key];return FB.T(p.name); };

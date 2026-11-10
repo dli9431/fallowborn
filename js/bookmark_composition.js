@@ -669,6 +669,16 @@ window.FB = window.FB || {};
       appendObserved(storyStream.ids,storyStream.known,Object.keys(view.storyInstances || {}),2048);
       return {starts:startStream.ids.slice(),stories:storyStream.ids.slice()};
     },
+    /* Per-date source loading replays every recorded contributor from its
+       original document position. A replay rebuilds the logical order from
+       empty streams, and the earlier native owner fingerprints described a
+       smaller source set, so both are released before the fresh pass. */
+    resetSourceSession:function (ownerIds) {
+      startStream = {ids:[],known:Object.create(null),groups:Object.create(null)};
+      storyStream = {ids:[],known:Object.create(null),groups:Object.create(null)};
+      faithOrders = Object.create(null); faithCaptures = Object.create(null);
+      (ownerIds || []).forEach(function (id) { delete owners[id]; });
+    },
     prepareSource:function (input,base,authored) { return prepare(input,base,authored); },
     reviewSource:function (input,base) { return prepare(input,base,undefined,true); },
     /* Sources stage data before engine loading. Publication waits until all

@@ -778,6 +778,8 @@ including a generated-only table or internal compatibility alias, rejects that m
 before any of its data mutates `FBDATA`. The validated configuration records below
 also reject unknown fields and cross-references at application time.
 
+Object keys named `__proto__`, `constructor` and `prototype` are reserved at every depth of a JSON mod: at the top level, as a table key, inside a nested record and inside an array row. `FB.mods.validate`, `FB.mods.apply`, pasted or file imports and stored-mod activation reject such a mod as a whole before any of its data is composed or merged. The single error names the first reserved path in key order, for example `Mod data events[0].options[0].prototype is a reserved key; mods cannot use __proto__, constructor or prototype as a field name.` The rejection leaves `FBDATA`, the stored mod list, RNG and UID unchanged. An array-form `bookmarks` entry whose `id` is one of these names is rejected at `bookmarks[i].id`, because bookmark ids become table keys. Ordinary ids and field names are unaffected.
+
 `balance.freedomCost` is the household head's direct-purchase share. Each living
 spouse adds `freedomSpouseFactor` times that share and every living descendant adds
 `freedomDescendantFactor` times it; every share rounds up separately. Negotiated
@@ -3661,7 +3663,7 @@ withdrawal retains that reservation. Resolve closes interrupted/expired hearings
 without enactment, rejects failed quorum/assent or enacts/repeals through the
 existing law owner. Quotes, replacement principals and restore never enact.
 
-The optional schema-1 law ledger additionally accepts `votes`, at most 64 rows.
+The optional schema-1 law ledger additionally accepts `votes`, at most 64 live rows.
 Each row stores id, definitionId, consumer, proposerId, original issuer, repealId,
 startedTurn, endTurn, principal-bound ballots, status, endedTurn, lawId and result.
 Status is pending, withdrawn, invalidated, rejected or passed. A decided result
@@ -3697,23 +3699,41 @@ No declaration enacts itself or changes a released opening's defaults.
 - `bookmarkId` names an existing world; `provinceId` must be an inhabited county
   in one of its supported revisions. `minYear`/`maxYear` are inclusive integers
   from 1 through 3000 and bound new proposals, not an already enacted term.
-- `enterpriseType` currently supports only `market_stall_business`.
+- `enterpriseType` names an ordinary household `enterprises` definition with a
+  registered `careers` profession, finite nonnegative cost and positive finite
+  yield. All seven native types and ordinary imported enterprise definitions use
+  the same checked acquisition, staffing, yield and upgrade paths. Unknown or
+  incomplete enterprise types reject with an explicit reason.
 - `mode` is `license` or `prohibition`. `fee` is a finite amount from 0 through
   10000 and must be zero for a prohibition. `durationDays` is 1–3600;
   `permitDays` is 1 through the duration; `transitionDays` is 0 through the duration.
   These are integer days from approval or payment, with exclusive end turns.
 - `exemptions` is an explicit array of at most 16 beneficiaries. Each has
-  `kind:"home_province"`, an inhabited province `id` in the named world, a
-  `fee` between zero and the ordinary fee, and boolean `permission`. Matching
-  reads the household's current residence, not a worker's birthplace. Multiple
+  a supported `kind`, an existing `id`, a `fee` between zero and the ordinary
+  fee, and boolean `permission`. Matching
+  reads the household operator's standing, never a worker's birthplace. Multiple
   matches use the lowest fee and any permission grant. A prohibition exemption
   must grant permission to allow operation. Residence is a declared simulation
   criterion and does not establish historical citizenship.
-- Optional `offense:{id,penalty:"fine",amount,closure?}` declares a snake-case
-  offense identity and amount from 0 through 10000. `closure` is an optional
-  boolean, default false. Only actual unauthorized productive operation creates
-  evidence. The canonical court may impose this fine and, when declared, close
-  the affected operation while the law is active. Closure retains ownership.
+  `home_province` ids name inhabited provinces in the declared bookmark and read
+  household residence. `guild` ids name careers with `guild:true` and match the
+  operator's actual current career at member, master, officer or guildmaster
+  rank. `office` ids name `positions` with kind `earned` and a
+  `positionRules.<id>.localCouncil:true` rule. They require the actual current
+  eligible local-council holder and earned flag in the law's county; flags alone
+  and seats elsewhere do not qualify. Other office carriers are unsupported.
+  Exemptions do not create careers, offices, property, seats or ballots.
+- Optional `offense:{id,penalty,amount,closure?,days?}` declares a snake-case
+  offense identity. `penalty:"fine"` supports amount 0–10000 and optional boolean
+  `closure`, default false, retaining existing fine/closure behavior. Standalone
+  `penalty:"closure"` and `penalty:"suspension"` require amount zero and omit
+  `closure`. Suspension requires integer `days` from 1 through the lesser of 360
+  and durationDays; every other penalty omits days. Only actual unauthorized
+  productive output supplies evidence. The existing canonical fine/remedy
+  hearing can impose the declared remedy; closure/suspension collect no fine.
+  Suspension ends at judgment plus days, capped by original law expiry, with an
+  exclusive deadline. Reopening still requires explicit lawful resumption.
+  All remedies retain ownership and worker contracts.
   Stronger sanctions and private-asset transfers are unsupported and reject.
 - Optional `relief:{days,chance}` declares temporary-exemption petitions, with
   integer `days` from 1 through durationDays and finite `chance` from 0 through 1.
@@ -3744,9 +3764,11 @@ actual `amount`, `paidTurn` and `endTurn`. They are paid obligations, not unpaid
 debt or automatically renewed subscriptions. Choice rows retain `enterpriseUid`,
 `status` (`open`, `pause`, `close`, `violate`) and `turn`; violation also retains
 `actorId`. Optional `closedBy` points to the original judicial closure. Closure retains ownership.
-Limits are 256 laws, 4096 permits and 512 choices. Validation never creates a
+Limits are 256 laws, 4096 permits and 512 choices in the live closure. Validation never creates a
 missing ledger or replays a transaction. Exact imported content remains covered
 by the ordinary mod fingerprint.
+
+Settled industry-law history folds at a season boundary after FBDATA.balance.ledgerRetentionDays (default 3600, at least 360), so an ordinary JSON mod's `balance.ledgerRetentionDays` changes the window. Every limit counts only live records and the records they name: unexpired unrepealed laws, pending hearings, current permits of live laws, petitions and violations of live laws, violations with an existing justice case, unresolved violations and owed balances of a living original operator, all choices, and the passed hearings of retained deliberative laws. Optional `retired` has exactly `laws`, `hearings` and `enterprises`. `retired.laws.<definitionId>` has exactly laws, repealed, permits, paid, petitions, granted, violations, fines, finesPaid and closures; `retired.hearings.<town|estates>` has exactly passed, rejected, withdrawn and invalidated; `retired.enterprises.<enterpriseUid>` has the law fields except laws and repealed, for property the household still owns. Counts are nonnegative integers and paid, fines and finesPaid are nonnegative finite amounts. Unknown keys or definitions, grants above petitions, closures above violations, paid fines above assessed fines, enterprise totals above law totals, empty summaries and an over-limit live closure reject before adoption. Retained records keep their ids and fields. See [Targeted operating laws](designs/industry-laws.md) for the live rules and presentation.
 
 Laws survive issuer and household succession. Losing the issuing realm's county
 control suspends future restrictions and fees; recovering control resumes the
@@ -3763,11 +3785,11 @@ quote and opens its ordinary town hearing, with optional `petitionEnterpriseUid`
 on that vote. The affected current owner may request it without gaining a seat.
 Only one petition hearing per proposer per 360 days is available. Other hearing
 eligibility, ballots, deadlines and consent remain unchanged. The normal seeded
-simple-law petition uses an optional `petitions` array capped at 512, retaining
+simple-law petition uses an optional `petitions` array capped at 512 live rows, retaining
 id, kind, lawId, enterpriseUid, actorId, turn, granted and endTurn.
 
 Actual market/livelihood settlement calls `recordSeason`, iterating only the
-bounded committed enterprise choices. `violations` has at most 512 rows, unique
+bounded committed enterprise choices. `violations` has at most 512 live rows, unique
 by law, enterprise UID and original operator. Each retains id, lawId,
 enterpriseUid, actorId, provinceId, homeProvinceId, turn, positive actual output,
 fee, material evidence, nullable caseId, resolved and judgment. The canonical
@@ -3778,15 +3800,22 @@ Arbitrary calls cannot record this kind without the actual operating evidence.
 projection and normal queued player response. Absence of physical custody blocks
 judgment. Repeated detection and filing cannot duplicate a source or payment.
 
-Only fine and mercy sentences are supported for these offenses, intersected with
-current court procedures and distribution rules. Fine definitions must close
+Only the existing fine/remedy and mercy sentences are supported for these
+offenses, intersected with current court procedures and distribution rules. Fine definitions must close
 the case and cannot also forgive other cases, preventing repeated collection
 through a custom open-case fine.
 Historically overlapping paid permissions or granted exemptions invalidate a
 backdated saved accusation; same-day later compliance never erases prior output.
 The fine's amount is the frozen offense amount; it credits the original public
 account. `judgment` retains turn,
-fine, paid and closure. Insufficient funds leave a personal balance without a new
+fine, paid and closure, plus exact `suspendedUntil` only for a suspension. Its
+deadline continues during jurisdiction loss and cannot be restarted. Guild or
+office laws additionally require `exemptionMatches` on evidence: unique
+indices of non-residence exemptions satisfied at operation. The retained
+homeProvinceId and indices determine the historical fee without re-reading
+current membership. Existing home-only laws omit that field. Inconsistent fees,
+unsupported or duplicate indices, missing facts and altered deadlines reject.
+Insufficient funds leave a personal balance without a new
 case; `quoteDebt` / `payDebt` settle that balance once from the original operator.
 Household succession transfers neither authorization nor personal liability.
 Court succession retains the original case but invalidates a pending review.
@@ -6498,6 +6527,8 @@ The example's regnum superior court uses nonTerritorial and an on-map diplomatic
 
 Religious affiliations and profile institutions
 
+Profile membership and assent save limits count live commitments: 64 members and 16 pending decisions per institution, including required original member references. Settled rows may remain beyond those counts inside balance.ledgerRetentionDays. At a seasonal boundary eligible older rows fold into optional retired:{members,withdrawn,assents,decisions} nonnegative safe-integer totals; withdrawn cannot exceed members. Retained votes keep their original members. Temporary ineligibility does not settle living consent, canonical head references remain protected, and death timing conservatively uses the end of the recorded year. Load validates without pruning or replay. Profiles accept no retention override; the shared balance window is the only retention setting. See designs/religious-institutions.md.
+
 religiousAffiliations is an object keyed by id. Each entry contains name, faithIds (one to 32 registered faith ids), period:{yearMin,yearMax}, and exclusiveWith (up to eight other affiliation ids). yearMin is an integer; yearMax is null or an integer at least yearMin. Names are nonempty and at most 160 characters. Conflicting affiliations block only acquisition in the scoped institution and do not change doctrinal relations or primary religion.
 
 religiousInstitutionProfiles is an object keyed by id. Its required fields are name, faithIds, period, system (null or a registered system id), roles, selection, recognition, actions, fees and affiliationIds; ai is optional. IDs use lowercase letters, digits and underscores, start with a letter and have at most 80 characters. roles contains one to 16 role entries with required fields name (up to 80 characters), minAge (integer 0 to 80), sexes (unique m/f list, empty means either), unmarried (boolean), professions (up to 16 career ids, empty means no restriction), skills (registered skill ids with nonnegative finite floors) and affiliationId (null or a profile affiliation id). Optional careerIds lists up to 16 existing careers this qualified member may choose; optional pathId references an existing religiousPaths route. All profile faithIds must pass the route's faith filter, and its profession filter must intersect careerIds or prerequisite professions. professions never grants new work. affiliationIds lists at most eight declared affiliations. Qualification never grants an office or changes a career.
@@ -7078,7 +7109,7 @@ Effective bookmark/revision productionSites replaces as a whole. Each of at most
 
 FB.production.quote(state, request) supports reserve with siteId, actor, recipeId, disposition (store or use), or work/finish/cancel with siteId, actor and batchId. Actor is an exact realm/character reference. Quotes reserve nothing until commit; commit returns the new batch id for reserve and true for completed operations, or false without changing state for stale/repeated/ineligible requests. perform routes protagonist work through canonical passDay; direct commit refuses it. aiQuote selects the actual holder and uses the same checks. Work replaces one daily focus and never duplicates enterprise or military labor. Processing charges are non-refundable. Cancel releases unconsumed material reservations and any surviving water claim; it grants no refund or output. Store retains exact finite lots; use consumes the output without creating an effect or sale. Supplier, purchase, producer-output, sale and material-transfer consumers are outside this interface.
 
-state.production and building.productionAsset are strict optional version-1 records owned by production.js. Their exact bounds, original owner/asset references, unique local ids, stock/work/source equations and restore rules are in docs/designs/production.md. No owner is initialized while restoring. Unknown fields, units, identities, impossible balances, erased output links, duplicate work and malformed provenance reject before adoption. The two complete production-fiber.json and production-iron.json examples use the ordinary Mods file picker and contain only explicit fictional finite stock. They do not install a bundled historical facility or supplier.
+state.production and building.productionAsset are strict optional version-1 records owned by production.js. Optional state.production.retired holds folded history totals under FBDATA.balance.ledgerRetentionDays (default 3600). Their exact bounds, original owner/asset references, unique local ids, stock/work/source equations and restore rules are in docs/designs/production.md. No owner is initialized while restoring. Unknown fields, units, identities, impossible balances, erased output links, duplicate work and malformed provenance reject before adoption. The two complete production-fiber.json and production-iron.json examples use the ordinary Mods file picker and contain only explicit fictional finite stock. They do not install a bundled historical facility or supplier.
 
 Production saved field shapes
 
@@ -7166,7 +7197,7 @@ Allocation spends exactly the declared owned, unreserved, unexpired quantity fro
 
 boundary(state) is called once on each canonical player/observer day after date advancement and before other daily consumers. It can also be repeated safely at a directly staged boundary. Expiring reserved inputs close the canonical batch without output or refund, retain actual work, release any still-releasable water claim and then lose the remaining material once. Expiry never removes property, herd or population. Reads never perform this transaction. runAI uses the same reviews, at most 32 successful openings per dispatch, and checks prospective useful paid operation or actual allocatable stock before consuming capacity. It creates no automatic manufacturing shifts or inventory.
 
-Optional state.buildingSeasons has exactly version:1, definition, revision, terms and debits. terms is bounded to 512 records, each with id (consecutive local integer), assignmentId, actor, characterId, generation, assetId (the canonical water stamp or production asset id), turn, untilTurn, period, endedTurn (null or its once-only end), and resources. Each resource reference has exactly sourceId, period (null for storage), claimId and amount, pointing to actual consumed siteResources capacity. debits is bounded to 1024 records, each exactly kind (allocated or expired), assignmentId, lotId, quantity, turn, termId (null for expiry) and untilTurn (null for expiry). Allocation dates and duration derive from its term and lot; expiry's date derives from actual receipt and lifetime. revision equals terms plus debits plus ended terms, bounded to 1000000. Definitions fingerprint structural profiles, assignment and existing effect values. Strict pre-adoption validation composes source consumption, original seasonal coverage of water/batch work and the production material equation. Missing legacy state stays absent; matching restore never seeds, allocates, cancels, pays or renews. Full journals stop new commitments without making expired goods available. The save envelope and other subsystem versions remain unchanged.
+Optional state.buildingSeasons has exactly version:1, definition, revision, terms and debits. terms is bounded to 512 live records, each with id (unique strictly increasing local integer; new ids continue after folded terms), assignmentId, actor, characterId, generation, assetId (the canonical water stamp or production asset id), turn, untilTurn, period, endedTurn (null or its once-only end), and resources. Each resource reference has exactly sourceId, period (null for storage), claimId and amount, pointing to actual consumed siteResources capacity. debits is bounded to 1024 live records, each exactly kind (allocated or expired), assignmentId, lotId, quantity, turn, termId (null for expiry) and untilTurn (null for expiry). Allocation dates and duration derive from its term and lot; expiry's date derives from actual receipt and lifetime. revision equals terms plus debits plus ended terms, including folded ones, bounded to 1000000. Optional retired has exactly terms, ended, debits and quantity for history folded at a season boundary. Definitions fingerprint structural profiles, assignment and existing effect values. Strict pre-adoption validation composes source consumption, original seasonal coverage of water/batch work and the production material equation. Missing legacy state stays absent; matching restore never seeds, allocates, cancels, pays or renews. Full journals stop new commitments without making expired goods available. The save envelope and other subsystem versions remain unchanged.
 
 FB.climateZoneOf(countyId, optionalBookmark) and FB.seasonKindAt(countyId, calendarSeason, optionalBookmark) accept a detached resolved bookmark for pure pre-adoption historical checks. Omission retains the existing active-world behavior. Normal seasonal availability reads FB.localSeason. Complete independent ordinary imports are tests/e2e/fixtures/authoring/building-seasons-dry.json and building-seasons-pasture.json. Details and limitations are in docs/designs/building-seasons.md.
 
@@ -7186,7 +7217,7 @@ FB.siegeSupport.quote(state, {profileId, siteId, hostId, warId, countyId}) reads
 
 FB.siegeSupport.commit(state, quote) recomputes the complete quote/signature, returns its sequential local record id on success and false for stale, repeated or ineligible terms. No debit occurs on failure. aiQuote uses the identical transaction. runAI considers declared equipment at actual host sources, with no manufactured supply. snapshot(state, hostId) returns pure copied records with effectiveStatus and remaining charges, including immediate interruption projection. Daily tick archives invalid carriage without replenishment or refund. The canonical fort pulse alone consumes a supported charge, once per war/county/turn, after uncontested force requirements. Its contribution is capped at the declared maximum of one progress and composes with, rather than copies, the existing national bonus. Actual casualties, breach and occupation keep their ordinary owners. Holy wars, legacy campaigns, transferred/split equipment, purchases of trade-origin equipment and off-map production are unsupported; ordinary siege remains available in every case.
 
-Optional state.siegeSupport has exactly version:1, definition and records (at most 128). A record has exactly id (sequential from 1), profileId, hostId, warId, countyId, realmId, characterId, generation, assetId, siteId, sourceCountyId, homeRealm, occupied (original boolean siege direction), loadedTurn, endTurn, inputs (nonempty unique lotId/quantity pairs), uses (at most the profile's pulses, each exactly {turn}), status (carried, spent or interrupted) and closedTurn (null only while carried). Commander identity and original realm generation remain retained historical facts. All load inputs reference original paid committed stored production batches completed no later than loadedTurn. Input totals equal the complete finite load and participate in production's stock equation. Uses have strictly increasing turns within the finite term, cannot repeat one siege/turn across records and spent records close at their last use. A host cannot carry overlapping records. Original host and war may later cease to exist; restore validates history without resurrecting them or granting successor authority. No new envelope or existing production schema version is required. Display names/descriptions are excluded from the support structure fingerprint, while exact mod content remains fingerprinted by the ordinary mod stack.
+Optional state.siegeSupport has exactly version:1, definition, records (at most 128 live) and optional retired (exactly records, uses and quantity for folded closed records). A record has exactly id (strictly increasing from 1; new ids continue after folded records), profileId, hostId, warId, countyId, realmId, characterId, generation, assetId, siteId, sourceCountyId, homeRealm, occupied (original boolean siege direction), loadedTurn, endTurn, inputs (nonempty unique lotId/quantity pairs), uses (at most the profile's pulses, each exactly {turn}), status (carried, spent or interrupted) and closedTurn (null only while carried). Commander identity and original realm generation remain retained historical facts. All load inputs reference original paid committed stored production batches completed no later than loadedTurn. Input totals equal the complete finite load and participate in production's stock equation. Uses have strictly increasing turns within the finite term, cannot repeat one siege/turn across records and spent records close at their last use. A host cannot carry overlapping records. Original host and war may later cease to exist; restore validates history without resurrecting them or granting successor authority. No new envelope or existing production schema version is required. Display names/descriptions are excluded from the support structure fingerprint, while exact mod content remains fingerprinted by the ordinary mod stack.
 
 The independent development-only examples tests/e2e/fixtures/authoring/siege-support-light.json and siege-support-heavy.json are ordinary Mods imports. Their workshops must actually manufacture equipment using conserved goods and paid work. Neither fixture seeds engines or equipment into a released historical world.
 
@@ -7198,7 +7229,7 @@ Effective bookmark/revision maritimeWorkAssignments is a whole-field array of at
 
 FB.maritimeWork.quote(state,request) takes exactly operation (prepare, complete or cancel), assignmentId, actor ({kind:realm|character,id}) and either enterpriseUid for prepare (null for new construction, otherwise the exact existing string uid) or invoiceId for complete/cancel (the original local production integer). aiQuote(state,assignmentId,operation,terms) projects the current facility holder into that same request. commit(state,review) re-quotes and rejects stale/repeated signatures. snapshot(state,countyId,siteId) supplies actual assignment rows. Pure reviews do not pay, reserve, perform work or consume RNG/global ids. Preparation reserves exact owned output without payment; completion consumes the reserved material and one canonical launching place while the ordinary enterprise owner charges the remaining private invoice. At most ten percent of the unchanged live ordinary gold cost can be substituted, and all other ordinary gates remain. Expired/changed terms need cancellation and a new review. See docs/designs/maritime-work.md for ownership, conservative valuation, interruption and UI limits.
 
-Optional state.production.maritime has exactly version:1, definition and invoices (1-512 records). definition fingerprints structural profiles and resolved assignments, excluding display prose. Each invoice has exactly id, assignmentId, assetId, actor, identity ({characterId,generation}), payer (the original character account), enterpriseUid (null or exact existing string), level (0 for construction or the original next upgrade index), baseCost, credit, inputs (unique {lotId,quantity} rows), openedTurn, expiresTurn, closedTurn (null while pending), status (pending, cancelled or committed), resultUid (null before success, original resulting enterprise string on success) launchPeriod (null before success, consumed source period on success) and launchClaimId (null before success, the unique actually consumed site-resource claim id on success). expiresTurn equals openedTurn plus profile termDays. Each row uses production.nextId; preparation adds one production.revision and cancellation/completion adds one. Cancelled invoices retain provenance but consume nothing; committed ones enter the exact per-lot conservation equation. Only one pending invoice per assignment and one committed contribution per resulting enterprise/stage are valid. The original exact batches, work/payer/generation, material quantity/unit, conservative credit and launching consumption are validated before save adoption. A matching restore never reserves, pays, completes or supplies materials. Original enterprise sales/removal do not erase receipts. Legacy absent ledgers remain absent and the existing save envelope/production versions do not change.
+Optional state.production.maritime has exactly version:1, definition and invoices (at most 512 live records; empty only after settled invoices folded into production.retired). definition fingerprints structural profiles and resolved assignments, excluding display prose. Each invoice has exactly id, assignmentId, assetId, actor, identity ({characterId,generation}), payer (the original character account), enterpriseUid (null or exact existing string), level (0 for construction or the original next upgrade index), baseCost, credit, inputs (unique {lotId,quantity} rows), openedTurn, expiresTurn, closedTurn (null while pending), status (pending, cancelled or committed), resultUid (null before success, original resulting enterprise string on success) launchPeriod (null before success, consumed source period on success) and launchClaimId (null before success, the unique actually consumed site-resource claim id on success). expiresTurn equals openedTurn plus profile termDays. Each row uses production.nextId; preparation adds one production.revision and cancellation/completion adds one. Cancelled invoices retain provenance but consume nothing; committed ones enter the exact per-lot conservation equation. Only one pending invoice per assignment and one committed contribution per resulting enterprise/stage are valid. The original exact batches, work/payer/generation, material quantity/unit, conservative credit and launching consumption are validated before save adoption. A matching restore never reserves, pays, completes or supplies materials. Original enterprise sales/removal do not erase receipts. Legacy absent ledgers remain absent and the existing save envelope/production versions do not change.
 
 Independent ordinary imports are tests/e2e/fixtures/authoring/maritime-work-shore.json and maritime-work-river.json. Both are development examples, with different recipes, terms and invoice behavior, and install no shipped historical facility. Profile display fields in data/maritime_work.js have static maritimeWorkProfile.<id>.<field>.default owners; generated catalogs are unchanged.
 
@@ -7286,7 +7317,7 @@ buildingOperationProfiles may declare inputs, a unique nonempty list of at most 
 
 Different operation profiles may offer alternative assignments for one county/site/building. Each policy may occur once there, and all existing demand identity and site/effect overlap constraints remain. The selected construction or inherited profile chooses the exact assignment; one physical record and one service receipt remain authoritative. Service quote/commit includes the finite inputs with water, work, upkeep, original payer and reserves. No separate input transaction or automatic purchase occurs. FB.buildingOperations.validateInputs returns canonical ids, used lot quantities and revision contributions for production validation.
 
-Optional production.waterInputs is exactly version:1 and records (1-512 entries). Each entry is exactly id, assignmentId, assetId, operationRevision, actor, characterId, generation, turn, untilTurn and inputs (unique lotId/quantity objects). Id uses production.nextId; each entry increments production.revision once. assetId identifies the ordinary water binding. Original local lot owner, original person/generation, existing assignment, exact goods/quantities, nonfuture lot/receipt chronology, nonoverlapping asset terms, monotonic ids and operation revisions and latest water receipt linkage are validated. Full historical inputs remain after renewal or demolition. Missing required journal, reused stock, altered terms and mismatched signatures reject; legacy records remain absent. See docs/designs/building-operations.md and the independent water-operation-inputs-river.json and water-operation-inputs-upland.json examples.
+Optional production.waterInputs is exactly version:1 and records (at least one; at most 512 live entries, and settled earlier entries fold into production.retired). Each entry is exactly id, assignmentId, assetId, operationRevision, actor, characterId, generation, turn, untilTurn and inputs (unique lotId/quantity objects). Id uses production.nextId; each entry increments production.revision once. assetId identifies the ordinary water binding. Original local lot owner, original person/generation, existing assignment, exact goods/quantities, nonfuture lot/receipt chronology, nonoverlapping asset terms, monotonic ids and operation revisions and latest water receipt linkage are validated. Full historical inputs remain after renewal or demolition. Missing required journal, reused stock, altered terms and mismatched signatures reject; legacy records remain absent. See docs/designs/building-operations.md and the independent water-operation-inputs-river.json and water-operation-inputs-upland.json examples.
 
 Declared river intakes
 

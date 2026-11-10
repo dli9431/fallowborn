@@ -10287,6 +10287,9 @@ window.FB = window.FB || {};
       h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(dt(s,'building',row.site.buildingId,FBDATA.buildings[row.site.buildingId],'name'))+'</div>';
       row.lots.forEach(function (lot) { h+=kv(name('productionGood',lot.goodId,FBDATA.productionGoods),esc(FB.T('{available} available / {remaining} remaining ({unit})',{
         available:lot.available,remaining:lot.remaining,unit:lot.unit}))); });
+      // Settled records older than the retention window are summarized, not listed.
+      if (row.history) h+=kv('Earlier records',esc(FB.T('{batches} closed batches ({cancelled} cancelled), {days} work days, {gold} gold processing; {lots} spent lots totalling {quantity} units',{
+        batches:row.history.batches,cancelled:row.history.cancelled,days:row.history.workDays,gold:row.history.paid,lots:row.history.lots,quantity:row.history.quantity})));
       row.site.recipeIds.forEach(function (key) {
         const recipe=FBDATA.productionRecipes[key],selection=view.dispositions[key] || 'store';
         h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(name('productionRecipe',key,FBDATA.productionRecipes))+'</div>'+
@@ -14054,6 +14057,27 @@ window.FB = window.FB || {};
     if ($('industry-town-hearings')) $('industry-town-hearings').addEventListener('click', function () { UI.showIndustryAssemblyList('town'); });
   };
 
+  function industryExemptionText(s, x) {
+    const params = {permission:x.permission ? FB.T('allowed') : FB.T('subject to the ordinary rule'), fee:x.fee};
+    if (x.kind === 'guild') {
+      params.career = dt(s, 'career', x.id, FBDATA.careers[x.id], 'name');
+      return FB.T('Members of the {career} guild: permission {permission}, fee {money:fee}.', params);
+    }
+    if (x.kind === 'office') {
+      params.office = dt(s, 'position', x.id, FBDATA.positions[x.id], 'name');
+      return FB.T('Current local holders of {office}: permission {permission}, fee {money:fee}.', params);
+    }
+    params.province = FB.world.byId[x.id] ? FB.world.byId[x.id].name : x.id;
+    return FB.T('Households resident in {province}: permission {permission}, fee {money:fee}.', params);
+  }
+  function industryPenaltyText(d) {
+    if (!d.offense) return '';
+    if (d.offense.penalty === 'suspension') return FB.T('Unauthorized operation may bring a court suspension of this business for at most {days} days, ending no later than law expiry. No fine; ownership and worker contracts are retained.', {days:d.offense.days});
+    if (d.offense.penalty === 'closure') return FB.T('Unauthorized operation may bring court closure of this business while the law is active. No fine; ownership and worker contracts are retained.');
+    return FB.T('Unauthorized trading may bring a court fine of {money:amount}. {closure} Imprisonment, forfeiture and execution are unavailable for this offense.', {
+      amount:d.offense.amount, closure:d.offense.closure ? FB.T('A judgment also closes this business while the law is active; ownership is retained.') : FB.T('This law does not authorize court closure.')
+    });
+  }
   function industryOperatingFacts(s, status) {
     let h = '<p>' + esc(FB.industryLaws.reason(status)) + '</p>';
     for (const row of status.laws) {
@@ -14066,9 +14090,7 @@ window.FB = window.FB || {};
         (row.grace ? kv('Transition ends in', esc(FB.T('{days} days', {days:row.transitionEndTurn - s.turn}))) : '') +
         (row.permitEndTurn !== null ? kv('Permission ends in', esc(FB.T('{days} days', {days:row.permitEndTurn - s.turn}))) : '') +
         (row.exempt ? '<p>' + esc(FB.T('Your household qualifies for a beneficiary exemption.')) + '</p>' : '') + '</section>';
-      if (d.offense) h += '<p>' + esc(FB.T('Unauthorized trading may bring a court fine of {money:amount}. {closure} Imprisonment, forfeiture and execution are unavailable for this offense.', {
-        amount:d.offense.amount, closure:d.offense.closure ? FB.T('A judgment also closes this business while the law is active; ownership is retained.') : FB.T('This law does not authorize court closure.')
-      })) + '</p>';
+      if (d.offense) h += '<p>' + esc(industryPenaltyText(d)) + '</p>';
     }
     return h;
   }
@@ -14092,11 +14114,9 @@ window.FB = window.FB || {};
       '<p>' + esc(repealId ? FB.T('Repeal ends future restrictions and fees. Existing paid permissions remain recorded; there is no refund.') :
         FB.T('Existing businesses keep their owners. During the transition they may operate; afterward they must qualify, pay, pause or close. Paid workers still receive their contracted wages.')) + '</p>';
     for (const x of d.exemptions) {
-      h += '<p>' + esc(FB.T('Households resident in {province}: permission {permission}, fee {money:fee}.', {
-        province:FB.world.byId[x.id] ? FB.world.byId[x.id].name : x.id,
-        permission:x.permission ? FB.T('allowed') : FB.T('subject to the ordinary rule'), fee:x.fee
-      })) + '</p>';
+      h += '<p>' + esc(industryExemptionText(s, x)) + '</p>';
     }
+    if (d.offense) h += '<p>' + esc(industryPenaltyText(d)) + '</p>';
     h += '<button type="button" class="actionbtn" id="industry-law-propose"' + (q.ready ? '' : ' disabled') + '>' +
       esc(repealId ? FB.T('Propose repeal') : FB.T('Propose operating law')) + '</button>' +
       '<div class="gm-footer"><button type="button" class="btn" id="industry-law-back">' + esc(FB.T('Back')) + '</button></div>';
@@ -14157,6 +14177,13 @@ window.FB = window.FB || {};
       h += reviewActionCardHtml({id:'industry-records-' + consumer,
         label:consumer === 'town' ? FB.T('Town hearing records') : FB.T('Estates hearing records')});
     });
+    const s = FB.state;
+    // Laws, permits, petitions and violations folded after the retention window remain as totals per law.
+    FB.industryLaws.lawHistory(s).forEach(function (row) {
+      const d = FBDATA.industryLaws[row.definitionId];
+      h += reviewFactsCard(dt(s, 'localCouncilMotion', d.motionId, FBDATA.localCouncilMotions[d.motionId], 'name'), '<p>' + esc(FB.T(
+        'Earlier records: {laws} ended laws, {repealed} of them repealed; {permits} paid permissions totalling {money:paid}; {petitions} petitions, {granted} granted; {violations} recorded violations with fines of {money:fines} assessed and {money:finesPaid} paid; {closures} court closures.', row)) + '</p>');
+    });
     h += '<div class="gm-footer"><button type="button" class="btn" id="industry-records-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('Operating-law hearings'),h,{historyView:true});
     ['town','estates'].forEach(function (consumer) {
@@ -14185,6 +14212,9 @@ window.FB = window.FB || {};
       h += reviewActionCardHtml({data:{industryHearing:v.definitionId,industryVote:v.id},
         label:dt(s, 'localCouncilMotion', d.motionId, FBDATA.localCouncilMotions[d.motionId], 'name'), note:industryVoteStatus(v.status)});
     });
+    const heard = FB.industryLaws.hearingHistory(s, consumer);
+    if (heard) h += reviewFactsCard(FB.T('Earlier hearings'), '<p>' + esc(FB.T(
+      'Summarized after the retention window: {passed} passed, {rejected} rejected, {withdrawn} withdrawn and {invalidated} closed without enactment.', heard)) + '</p>');
     h += '<div class="gm-footer"><button type="button" class="btn" id="industry-hearings-back">' + esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Operating-law hearings'), h, {historyView:true, replaceView:!!replaceView});
     document.querySelectorAll('[data-industry-hearing]').forEach(function (button) {
@@ -14229,9 +14259,9 @@ window.FB = window.FB || {};
       '<p>' + esc(FB.T('Ownership, existing permits and worker wages remain with their ordinary owners. Exemptions change liability, never membership.')) + '</p>');
     h += '<p>' + esc(FB.T('After the transition, unpaid or prohibited businesses earn nothing. Owners may qualify, pay for permission, pause or close; contracted worker wages continue.')) + '</p>';
     d.exemptions.forEach(function (x) {
-      h += '<p>' + esc(FB.T('Households resident in {province}: permission {permission}, fee {money:fee}.', {
-        province:FB.world.byId[x.id].name,permission:x.permission ? FB.T('allowed') : FB.T('subject to the ordinary rule'),fee:x.fee})) + '</p>';
+      h += '<p>' + esc(industryExemptionText(s, x)) + '</p>';
     });
+    if (d.offense) h += '<p>' + esc(industryPenaltyText(d)) + '</p>';
     if (!d.exemptions.length) h += '<p>' + esc(FB.T('No beneficiary exemptions.')) + '</p>';
     if (q.repealId) h += '<p>' + esc(FB.T('Repeal reverses these interests and ends future fees and restrictions without refunding paid permissions.')) + '</p>';
     h += reviewFactsCard(FB.T('Affected interests'), members.map(function (m) {
@@ -14329,6 +14359,8 @@ window.FB = window.FB || {};
         h += kv('Assessed fine', esc(FB.money(v.judgment.fine))) + kv('Paid', esc(FB.money(v.judgment.paid))) +
           kv('Remaining personal liability', esc(FB.money(v.judgment.fine - v.judgment.paid))) +
           kv('Court closure', esc(v.judgment.closure ? FB.T('Affected operation closed; ownership retained') : FB.T('None')));
+        if (v.judgment.suspendedUntil !== undefined) h += kv('Suspension deadline', esc(FB.T('Day {day}; {days} days remaining. Review lawful resumption after the deadline.', {
+          day:v.judgment.suspendedUntil, days:Math.max(0, v.judgment.suspendedUntil - s.turn)})));
         const q = debts[v.id] = FB.industryLaws.quoteDebt(s, v.id);
         if (q.amount > 0) h += reviewActionCardHtml({id:'industry-debt-' + v.id, label:FB.T('Pay remaining fine: {money:amount}', {amount:q.amount}),
           disabled:!q.ready, note:q.ready ? '' : FB.T('The original operator must have enough personal funds. No new offense or payment is created by review.')});
@@ -14340,6 +14372,10 @@ window.FB = window.FB || {};
         amount:p.amount, payee:s.realms[p.payeeRealmId].name, day:p.paidTurn, end:p.endTurn
       })) + '</p>';
     }
+    // Settled records older than the retention window are summarized, not listed.
+    const earlier = FB.industryLaws.enterpriseHistory(s, uid);
+    if (earlier) h += reviewFactsCard(FB.T('Earlier operating-law records'), '<p>' + esc(FB.T(
+      '{permits} paid permissions totalling {money:paid}; {petitions} petitions, {granted} granted; {violations} recorded violations with fines of {money:fines} assessed and {money:finesPaid} paid; {closures} court closures.', earlier)) + '</p>');
     h += '<div class="gm-footer"><button type="button" class="btn" id="industry-operation-back">' + esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Lawful business operation'), h, {historyView:true, replaceView:!!replaceView,
       historyBack:true, historyBackRender:returnToManager});
@@ -14388,7 +14424,7 @@ window.FB = window.FB || {};
 
   UI.showIndustryViolation = function (uid, returnContext, q, returnPosition) {
     const s = FB.state;
-    let h = '<p>' + esc(FB.T('Authorize actual productive trading without permission. Merely choosing this creates no offense; actual output records the original operator and applicable law. The court may arrest you and hear a challenge before imposing the disclosed fine and closure. Other private property is unaffected.')) + '</p>' +
+    let h = '<p>' + esc(FB.T('Authorize actual productive operation without permission. Merely choosing this creates no offense; actual output records the original operator and applicable law. The court may arrest you and hear a challenge before imposing the disclosed penalty. Other private property is unaffected.')) + '</p>' +
       industryOperatingFacts(s, q.status) + '<p>' + esc(FB.T('This authority ends at household succession. Wages continue under existing contracts.')) + '</p>' +
       '<button type="button" class="actionbtn" id="industry-violation-confirm">' + esc(FB.T('Deliberately operate without permission')) + '</button>' +
       '<div class="gm-footer"><button type="button" class="btn" id="industry-violation-cancel">' + esc(FB.T('Cancel')) + '</button></div>';

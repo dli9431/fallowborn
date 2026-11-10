@@ -3606,7 +3606,9 @@ window.FB = window.FB || {};
 
   { id:'review_industry_hearings', opensChoices:true, noConsume:true,
     desc:function () { return FB.T('Inspect saved operating-law hearings, change an eligible ballot or settle an interrupted hearing.'); },
-    show:function (s) { return !!(s.industryLaws && s.industryLaws.votes && s.industryLaws.votes.length); },
+    // Folded history keeps the review reachable after every retained hearing has been summarized.
+    show:function (s) { return !!(s.industryLaws && s.industryLaws.votes && s.industryLaws.votes.length) ||
+      !!(FB.industryLaws && FB.industryLaws.hasHistory(s)); },
     run:function () { if (FB.ui && FB.ui.showIndustryHearings) FB.ui.showIndustryHearings(); }
   },
   { id: 'bring_council_motion', opensChoices:true, readinessAlert:true,

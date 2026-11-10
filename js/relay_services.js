@@ -48,7 +48,8 @@
   }
   function definition(s) { return FB.mods.fingerprint([FB.campaignBookmark(s).relayServiceAssignments || [],FBDATA.relayServiceProfiles]); }
   function ledger(s) { return s.production && s.production.relay; }
-  function room(s) {var r=ledger(s),p=s.production;return r && r.arrivals.length+r.consents.length+r.receipts.length<LIMIT && p.nextId<999990 && p.revision<1000000;}
+  // Only live agreements, usable arrivals and their receipts count against the journal bound.
+  function room(s) {var r=ledger(s),p=s.production;return !!r && P.liveCounts(s).relay<LIMIT && p.nextId<999990 && p.revision<1000000;}
   R.initialize=function(s) {
     var p=plan(s);
     if(p.errors.length)throw new Error('Invalid relay provisions declarations.');
@@ -196,6 +197,45 @@
     return key;
   };
   R.snapshot=function(s,countyId,siteId) {return plan(s).assignments.filter(function(a){var row=source(s,a);return row && row.site.countyId===countyId && row.site.siteId===siteId;});};
+  /* A current agreement is live, and so is any agreement whose host still exists:
+     it keeps the one-agreement-per-host rule. A fresh arrival is live while an
+     agreement could still collect it. Agreements and arrivals need their receipts. */
+  R.retentionNodes=function(s,g) {
+    var r=ledger(s),hosts={},open={};
+    if(!r)return;
+    function list(v){return Array.isArray(v)?v:[];}
+    (s.armies || []).forEach(function(a){hosts[a.id]=true;});
+    list(r.consents).forEach(function(c){
+      if(!c)return;
+      var current=c.revokedTurn===null && s.turn<c.untilTurn;
+      if(current)open[JSON.stringify([c.serviceId,c.hostId])]=c;
+      g.add('consent:'+c.id,current || hosts[c.hostId]===true,c.revokedTurn===null?c.untilTurn:c.revokedTurn,[]);
+    });
+    list(r.arrivals).forEach(function(x){
+      var c=x && open[JSON.stringify([x.serviceId,x.hostId])];
+      if(x)g.add('arrival:'+x.id,!!c && x.id>c.id && x.turn>=c.turn,x.turn,[]);
+    });
+    list(r.receipts).forEach(function(x){
+      if(!x)return;
+      g.add('relay:'+x.id,false,x.turn,['consent:'+x.consentId,'arrival:'+x.arrivalId].concat(P.lotNeeds(x.inputs)));
+      g.need('consent:'+x.consentId,'relay:'+x.id);g.need('arrival:'+x.arrivalId,'relay:'+x.id);
+    });
+  };
+  R.retentionFold=function(t,keep,ctx) {
+    var r=ledger(t),L=FB.ledgerRetention;
+    if(!r)return;
+    var arrivals=L.split(r.arrivals,function(x){return 'arrival:'+x.id;},keep),consents=L.split(r.consents,function(c){return 'consent:'+c.id;},keep),
+      receipts=L.split(r.receipts,function(x){return 'relay:'+x.id;},keep);
+    if(!arrivals.folded.length && !consents.folded.length && !receipts.folded.length)return;
+    var totals=ctx.ledgers();
+    totals.arrivals+=arrivals.folded.length;
+    consents.folded.forEach(function(c){totals.consents++;if(c.revocationId!==null)totals.revocations++;});
+    receipts.folded.forEach(function(x){
+      totals.deliveries++;totals.delivered+=x.quantity;totals.deliveryPaid+=x.paid;
+      x.inputs.forEach(function(i){ctx.consume(i.lotId,i.quantity);});
+    });
+    r.arrivals=arrivals.kept;r.consents=consents.kept;r.receipts=receipts.kept;
+  };
   R.referencesCharacter=function(s,cid) {var r=ledger(s);return !!r && (r.arrivals.some(function(a){return a.person.characterId===cid;}) ||
     r.consents.some(function(c){return c.providerPerson.characterId===cid || c.recipientPerson.characterId===cid;}));};
   R.reason=function(q) {
@@ -216,7 +256,7 @@
     var p=plan(s);
     if(r===undefined){if(s.production && p.assignments.length)fail();return out;}
     if(!keys(r,['version','definition','arrivals','consents','receipts']) || r.version!==1 || r.definition!==definition(s) || p.errors.length ||
-      !Array.isArray(r.arrivals) || !Array.isArray(r.consents) || !Array.isArray(r.receipts) || r.arrivals.length+r.consents.length+r.receipts.length>LIMIT)fail();
+      !Array.isArray(r.arrivals) || !Array.isArray(r.consents) || !Array.isArray(r.receipts))fail();
     var arrivals={},arrivalKeys={},consentTable={},usedArrivals={},totals={},production=s.production;
     function unique(v){if(!int(v,1,production.nextId-1) || out.ids.indexOf(v)>=0)fail();out.ids.push(v);}
     function assignment(key){return p.assignments.find(function(a){return a.id===key;});}

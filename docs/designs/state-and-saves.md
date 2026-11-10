@@ -176,6 +176,8 @@ Absent legacy resource state stays absent, even in an opted-in world. Neither mi
 
 Local institutional ledger
 
+Profile institutions retain membership and individual assent. Their 64-member and 16-decision limits count the live retention closure; settled rows inside the configured window may exceed those counts. Optional retired has exactly members, withdrawn, assents and decisions nonnegative safe-integer totals, with withdrawn no greater than members. Seasonal folding uses the shared retention graph and detached adoption. Load and re-save preserve retained rows and totals without pruning or replay. Original member and character-target identities remain court-compaction roots until references fold. Canonical offices, recognition generations, affiliations, property and accounts retain their owners. See religious-institutions.md for conservative death-year timing and pending consent rules.
+
 Optional state.localInstitutions is keyed by definition id. Records hold site, representativeId, counterparty standing, demands, consentRights, rightIds, petitions and at most 24 history entries. Petitions carry subject, stage, normalized terms, representative, controlling/applicant generation stamps, startedTurn, expiresTurn, retryTurn, recognitionId and the ballot. state.localInstitutionPeriod guards seasonal AI replay. Fields are locale-neutral; prose comes from definitions and durable message descriptors.
 
 The v4 platform validator rejects unknown ids, wrong sites, invalid actors, malformed terms, bad turn stamps and invalid ratification results before adoption. Existing records restore without voting or paying again. Missing legacy institutions are seeded after world adoption through the story restore hook, reusing the original cast and preserving vacancies. Generic repair fills missing definitions. Disabled systems retain dormant records; ordinary medieval campaigns allocate no ledger.
@@ -255,12 +257,22 @@ The version-3 save envelope may carry optional meta.household with version 1, nu
 
 ## Save v4 platform schema
 
+For guild/office laws, violation evidence additionally retains the exact
+`exemptionMatches` criterion indices satisfied at operation; later standing
+changes do not reinterpret that evidence. Suspension judgments retain their
+exclusive `suspendedUntil`, exactly judgment plus the declared duration capped
+by original law expiry. Other judgments omit it. Existing home-only law records
+keep their original shape. Detached validation rejects altered criteria, fees
+and deadlines; restore does not pay, accuse, close or resume a business.
+
 Optional `state.industryLaws` schema 1 retains enacted operating terms, original
 issuers/payees, paid enterprise permissions and voluntary operation choices.
 `FB.industryLaws.validate` runs in detached platform validation and serialization.
 Absence is valid and is never filled during restore. It rejects changed effective
 terms, malformed identities/dates and overlapping paid windows without replaying
-approval, payment or acquisition. See [Targeted operating laws](industry-laws.md).
+approval, payment or acquisition. Settled history older than FBDATA.balance.ledgerRetentionDays
+folds only at a season boundary into optional `industryLaws.retired` totals, and its
+limits count only live records. See [Targeted operating laws](industry-laws.md).
 
 This frozen contract fixes which bookmark-platform facts a campaign saves and which it derives, so every system that adds saved state writes against one schema and v4 keeps a single migration. FB.save.v4.validatePlatform accepts the optional fields described here; the registries that resolve their ids arrive with the systems that use them.
 
@@ -2550,9 +2562,9 @@ A player pledge in mode mobile must carry mobileParticipation schema 1 with exac
 
 Optional conserved production state
 
-state.production version 1 stores a structural definition fingerprint, exact transaction revision/next local id, at most 128 original assets, 512 lots and 512 batch receipts. A physical building may carry productionAsset with exactly version 1 and its local asset id. Assets retain original declared site and owner; lots retain exact unit, original quantity, remaining stock and opening/batch provenance; batches retain actor/payer, original worker/generation, reserved input lot quantities, output lot ids, paid price, disposition, work turns, water claim/period and lifecycle chronology. Every local id is accounted for, input/output mass and stock equations remain bounded, and no worker supplies a second shift on one turn. Original opening inventory and realm-adoption aliases are checked without generating people or grants.
+state.production version 1 stores a structural definition fingerprint, exact transaction revision/next local id, at most 128 original assets, 512 live lots and 512 live batch receipts, and optional retired totals for folded history. A physical building may carry productionAsset with exactly version 1 and its local asset id. Assets retain original declared site and owner; lots retain exact unit, original quantity, remaining stock and opening/batch provenance; batches retain actor/payer, original worker/generation, reserved input lot quantities, output lot ids, paid price, disposition, work turns, water claim/period and lifecycle chronology. Every local id is accounted for, input/output mass and stock equations remain bounded, and no worker supplies a second shift on one turn. Original opening inventory and realm-adoption aliases are checked without generating people or grants.
 
-Validation runs in the detached platform boundary before state/RNG adoption. Legacy missing owners remain absent. Restore never enrolls an asset, creates opening lots, reserves/uses water, advances work, charges, refunds, produces, or prunes receipts. Existing removed or inactive property may retain truthful provenance; current authority is checked only by live transactions. Unchanged save envelope and subsystem versions retain their meanings. Exact field contracts and operational limits are in docs/designs/production.md.
+Validation runs in the detached platform boundary before state/RNG adoption. Legacy missing owners remain absent. Restore never enrolls an asset, creates opening lots, reserves/uses water, advances work, charges, refunds, produces, or folds receipts. Only the season boundary folds settled history older than FBDATA.balance.ledgerRetentionDays into production.retired, buildingSeasons.retired and siegeSupport.retired; validation derives folded ids and revisions from those exact totals and keeps every retained provenance link. Existing removed or inactive property may retain truthful provenance; current authority is checked only by live transactions. Unchanged save envelope and subsystem versions retain their meanings. Exact field contracts and operational limits are in docs/designs/production.md.
 
 Named camp and recovery records
 
@@ -2584,7 +2596,7 @@ Optional buildingProfile version 1 additionally admits inherited with exactly bo
 
 Optional siege equipment state
 
-state.siegeSupport is optional version 1, with a structural definition fingerprint and at most 128 sequential local records. Each retains its profile, original realm/person/generation, exact host/war/siege county and occupation direction, original production asset/site/county, consumed lot quantities, load/expiry turns, bounded pulse turns and carried/spent/interrupted lifecycle. No stock is recreated on restore. Production conservation includes the original consumed quantities even after expiry, loss or war closure. Strict detached validation rejects wrong definitions, malformed/duplicate references, missing batch/work provenance, overconsumption, altered expiry, duplicate per-siege pulse turns, overlapping host carriage and contradictory lifecycle chronology before state/RNG adoption. Retained saves without the optional owner remain unchanged; a consumed production inventory cannot omit its corresponding receipts. Historical references survive current war/host removal and original people remain retained. See docs/MODDING.md for exact fields.
+state.siegeSupport is optional version 1, with a structural definition fingerprint, at most 128 live local records with strictly increasing ids and optional retired totals for folded closed records. Each retains its profile, original realm/person/generation, exact host/war/siege county and occupation direction, original production asset/site/county, consumed lot quantities, load/expiry turns, bounded pulse turns and carried/spent/interrupted lifecycle. No stock is recreated on restore. Production conservation includes the original consumed quantities even after expiry, loss or war closure. Strict detached validation rejects wrong definitions, malformed/duplicate references, missing batch/work provenance, overconsumption, altered expiry, duplicate per-siege pulse turns, overlapping host carriage and contradictory lifecycle chronology before state/RNG adoption. Retained saves without the optional owner remain unchanged; a consumed production inventory cannot omit its corresponding receipts. Historical references survive current war/host removal and original people remain retained. See docs/MODDING.md for exact fields.
 
 Maritime production invoices
 
@@ -2691,7 +2703,9 @@ and repeal retains its passed approval. Matching current-content restore,
 re-save and reload preserve pending/completed decisions without proposals,
 payments, identity allocation or enactment replay. Removed approval records,
 invalid tallies and duplicate pending hearings reject on the detached candidate.
-Absent legacy ledgers/arrays remain absent. The save envelope and released v1
+Absent legacy ledgers/arrays remain absent. Ended hearings that no retained law
+needs fold after the retention window into per-body totals; at most 64 hearings
+are live. The save envelope and released v1
 law/ordinance support are unchanged. Exact fields are in MODDING.md.
 
 Unchanged dates across an additive catalogue transition
@@ -2709,5 +2723,48 @@ ledgers and arrays remain absent. Exact effective mod terms remain required.
 Original issuers, petitioners, named vote principals, operators and retained
 industry-case judges count as references for ordinary court compaction, so their
 bounded historical facts cannot lose their character identities at death.
+Settled petitions, permits and violations whose cases, closures and balances
+are finished fold with their ended laws into exact law and enterprise totals that
+name no person, so folding releases those references only after the window.
 See [industry laws](industry-laws.md) for the supported lifecycle and limits.
 The save envelope and released v1 migration contract are unchanged.
+
+Capped ledger inventory
+
+The following saved owners distinguish renewable history from permanent facts. Production-family and industry-law retention are documented separately in their owning sections. Pure definition validation, transient caches and scalar revisions do not allocate a saved record for each transaction.
+
+| Owner / ledger | Bound and disposition |
+| --- | --- |
+| Profile institution members | Changed: 64 live references; withdrawn/dead unreferenced history folds after the shared window into exact totals. |
+| Profile institution assent decisions and voter maps | Changed: 16 pending decisions with required original members; ended votes/targets fold after the window. Temporary ineligibility remains pending. |
+| Character religiousAffiliations; institutional aiPeriod | Unchanged: eight current personal commitments, removable by withdrawal; one replacing quarterly guard. |
+| Character religiousActivityHistory | Unchanged: 64 permanent earned milestones per original character; deleting one would repeat a one-time reward. |
+| Religious activity participants and AI guard | Unchanged: 64 unfinished participants, removed on finish/interruption; one replacing period. |
+| Religious property plots, restrictedFunds, activityServices and project activitySupport | Unchanged: 64 coalesced owned plot groups, declaration-bounded account/service slots, and one replacing finite project support record. |
+| Story registry, records and original attachments | Unchanged: 2048 declarations and 512 world/track ids; initialization-only finite original identities, not transactions. |
+| Household track decisions, incident closures, controls and jobs | Unchanged: 64 per-stage decisions/closures and declaration-keyed control slots; incident stages cannot recur, and eight job slots replace prior contracts. Permanent original-track decisions prevent replay. |
+| Household observer closures, reached places and history | Unchanged: existing rolling windows of 64, 32 and 16, plus replacing source cursors. |
+| Household shelter requests and named people | Unchanged: eight original requests and sixteen people; permanent particular-party consent, payments, admission and incident provenance. |
+| Expedition preparation bindings, reserves/consumed/released and formed receipt | Unchanged: 24 original members, 64 conserved cohorts, twenty original jurisdiction links and one receipt; finite original preparation prevents duplicate formation. |
+| Expedition program steps, cursors, access receipts and orders | Unchanged: sixteen declared steps, thirty-two total route waypoints, original receipt slots and four current reconciled tickets; finite program, not dispatch history. |
+| Expedition participation, party travel and camp bindings | Unchanged: original named people and current membership/cohort slots; finite consent and conserved people, not a list of elapsed travel days. |
+| Mobile coalition members | Unchanged: at most 24 original membership/pledge slots with demographic, ballot and command provenance, permanent for that coalition. |
+| Mobile ordinary agreements | Unchanged: at most twelve slots; daily/AI expiry pruning frees slots. |
+| Mobile program-origin agreements and corridor envelopes | Unchanged: permanent declaration-bounded request slots, including ended outcomes, prevent repeat offers/charges. |
+| Mobile worked actors and shared pasture used counties | Unchanged: 64 actors reset daily, 512 counties reset seasonally. |
+| Mobile camp, host and reserve cohorts | Unchanged: current coalesced conserved population/class slots (64), not movement receipts. |
+| Site resource sources and reservations | Unchanged: 256 declared source slots and 64 outstanding claims each; release/consume/transfer removes claims and renewable periods replace their claims. Storage remains a current allocation. |
+| Assembly members, vacancy nominations/votes and mandate | Unchanged: sixteen declared member/current nomination slots and one replacing mandate/selection. |
+| Assembly decisions, history and agreements | Unchanged: twelve-entry rolling decision/history windows; new agreements prune expired terms. |
+| Civic citizens, office nominations/history, rights and debts | Unchanged: 32 living citizens prune on admission, sixteen nominations replace per vacancy, history rolls at twelve, inactive rights and paid debts prune on new commitments. |
+| Elective institution members and candidate rosters | Unchanged: 24 permanent institutional principal slots; 64 living candidates, with archived dead candidates excluded; current vacancy/support replaces. |
+| Administration and aristocratic interests, scopes and current support | Unchanged: declaration/principal-keyed current slots; later rulers replace support and terms instead of appending yearly records. |
+| Episcopal rent claims | Unchanged: 32 permanent declaration/settlement source slots, updated in place for stale pending reviews; settled property and compensation receipts must remain. |
+| Abbey houses, plot groups, residents and connections | Unchanged: twelve enduring properties, coalesced owned plot groups, current resident slots and sixteen rolling connections. Vacancy does not destroy endowed assets. |
+| Local institution standing, petitions, rights and history | Unchanged: counterparty/current-right slots; petition replacement and 24 rolling history entries. No lifetime history cap gates another petition. |
+| Story court office history, war effects and holy-war campaign history | Unchanged: existing rolling twelve, ten and twenty-four entry windows. |
+| Tournament events and participant rosters | Unchanged: concurrent event/entry capacities; ordinary close-boundary pruning removes ended events. |
+| Ordinary log and travel history | Unchanged: existing rolling 300-message and twenty-journey windows. |
+| AI policy reports and candidates | Unchanged: transient 512-policy/2048-candidate/128-trait evaluation bounds; no saved report ledger. |
+
+Finite counters remain unchanged: safe-integer transaction ids/revisions, and large type-specific revision bounds, exceed the possible work in their finite original program or character lifetime. No retention pass allocates a replacement identity, replays a payment or changes a saved definition fingerprint.

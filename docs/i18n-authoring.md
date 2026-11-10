@@ -331,7 +331,7 @@ The static extractor reads optional regional events, cultures, legalTraditions a
 
 Spring 711 candidate extraction
 
-The static extractor also reads the literal bookmarkCandidates['711'], bookmarkCultures711 and bookmarkReligions711 declarations in data/bookmark_711.js and storyCampaigns711 in data/story_campaigns_711.js. Candidate visibility does not remove localization ownership. Bookmark, county, realm and inline settlement names retain the ordinary 711 namespaces; independent promotion labels retain their canonical title ids. Supplemental culture and faith display fields, head titles and words retain culture and religion owners. Campaign labels and durable news use the existing storyCampaign and explicit message keys. No review activation or game-script execution is needed for extraction. Feature implementation leaves the generated catalogues unchanged.
+The static extractor reads the literal bookmarkCandidates['711'] in data/bookmark_711.js, bookmarkCultures711 and bookmarkReligions711 in data/bookmark_711_identities.js, and storyCampaigns711 in data/story_campaigns_711.js. Candidate visibility does not remove localization ownership. Bookmark, county, realm and inline settlement names retain the ordinary 711 namespaces; independent promotion labels retain their canonical title ids. Supplemental culture and faith display fields, head titles and words retain culture and religion owners. Campaign labels and durable news use the existing storyCampaign and explicit message keys. No review activation or game-script execution is needed for extraction. Feature implementation leaves the generated catalogues unchanged.
 
 Review bookmark content
 

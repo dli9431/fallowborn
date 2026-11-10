@@ -587,6 +587,8 @@
       return o.id === (offenseId || row && row.offenseId);
     })[0];
     var industry = FB.industryLaws && FB.industryLaws.sentenceTerms(s, contextCase);
+    if (industry && industry.suspensionDays !== undefined)
+      industry.suspendedUntil = Math.min(industry.lawEndTurn, s.turn + industry.suspensionDays);
     var legal = FB.justiceTradition(s, actor, courtKind, courtParties(s, actor, target, offenseId, courtKind)), t = legal.definition, sentenceKind = def && def.kind;
     var rule = t && t.justification && t.justification.sentences && t.justification.sentences[sentence];
     var level = rule && rule.level !== undefined ? rule.level : def && def.level;
@@ -732,7 +734,8 @@
       permanent:['death','corporal','forfeiture'].indexOf(def.kind) >= 0 });
     if (target === s.player.charId && p.amount) effects.push({ type:'gold', amount:-p.amount });
     if (p.industry && def.kind === 'fine') {
-      if (p.industry.closure) effects.push({type:'system', system:'industry_law', action:'closure'});
+      if (p.industry.closure) effects.push({type:'system', system:'industry_law', action:'closure',
+        days:p.industry.suspendedUntil !== undefined ? p.industry.suspendedUntil - s.turn : null});
       if (p.fine > p.amount) effects.push({type:'system', system:'industry_law', action:'liability', amount:p.fine - p.amount});
     }
     if (actor === s.player.charId && p.amount && !p.industry) effects.push({ type:'gold', amount:p.amount });
@@ -1034,7 +1037,9 @@
     var quote = FB.justicePunishmentProjection(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.courtKind);
     var def = FBDATA.justiceSentences[quote.sentence];
     return {
-      sentenceKind:quote.industry && def.kind === 'fine' ? (quote.industry.closure ? 'industry_fine_closure' : 'industry_fine') : def.kind,
+      sentenceKind:quote.industry && def.kind === 'fine' ? (quote.industry.suspendedUntil !== undefined ? 'industry_suspension' :
+        quote.industry.closure ? (quote.industry.fine === 0 ? 'industry_closure' : 'industry_fine_closure') : 'industry_fine') : def.kind,
+      sentenceSuspensionDays:quote.industry && quote.industry.suspendedUntil !== undefined ? quote.industry.suspendedUntil - s.turn : 0,
       sentenceName:{ $data:'justiceSentence', id:quote.sentence, path:'name' },
       sentenceTermDays:num(def.termDays, 360),
       sentenceRemainingDays:quote.endTurn === null ? 0 : Math.max(0, quote.endTurn - s.turn),
@@ -1154,7 +1159,8 @@
       variable:action === 'justice_plead' || action === 'justice_challenge' }];
     if (['fine','ransom'].indexOf(d.kind) >= 0) out.push({ type:'gold', amount:-quote.amount });
     if (quote.industry && d.kind === 'fine') {
-      if (quote.industry.closure) out.push({type:'system', system:'industry_law', action:'closure', variable:out[0].variable});
+      if (quote.industry.closure) out.push({type:'system', system:'industry_law', action:'closure',
+        days:quote.industry.suspendedUntil !== undefined ? quote.industry.suspendedUntil - s.turn : null, variable:out[0].variable});
       if (quote.fine > quote.amount) out.push({type:'system', system:'industry_law', action:'liability', amount:quote.fine - quote.amount, variable:out[0].variable});
     }
     if (d.kind === 'penance') out.push({ type:'piety', amount:-num(d.pietyCost, 40) },

@@ -89,3 +89,7 @@ evidence, refused enforcement, real conserved compensation, recurring paired
 remittances, finite expiry, stale/poor offers, institutional succession and
 private inheritance, lost jurisdiction, exact current-content restoration,
 ordinary JSON import and retained mobile review navigation.
+
+Claim capacity
+
+The 32 claim slots intentionally remain permanent civil source records. Each stable id combines a declaration and settlement slot; a stale pending review updates that slot instead of appending a claim for each ruler or year. Settled compensation and its authority receipt prove the retained rent disposition. Deleting them to free a slot would erase a property agreement rather than retire routine history. The declaration/source capacity remains unchanged.

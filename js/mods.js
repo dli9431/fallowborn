@@ -126,6 +126,37 @@ window.FBMODS = window.FBMODS || [];
     return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
   }
 
+  /* JSON.parse keeps "__proto__" as an ordinary own key, but assigning that
+     key into a table replaces the table's prototype. Mods may not use the
+     reserved prototype names as object keys at any depth. */
+  function reservedKey(key) {
+    return key === '__proto__' || key === 'constructor' || key === 'prototype';
+  }
+  // Returns the first reserved key path in deterministic key order, or ''.
+  function reservedKeyPath(value) {
+    const seen = new WeakSet();
+    function visit(row, path) {
+      if (!row || typeof row !== 'object' || seen.has(row)) return '';
+      seen.add(row);
+      if (Array.isArray(row)) {
+        for (let i = 0; i < row.length; i++) {
+          const found = visit(row[i], path + '[' + i + ']');
+          if (found) return found;
+        }
+        return '';
+      }
+      const keys = Object.keys(row);
+      for (let i = 0; i < keys.length; i++) {
+        const next = path ? path + '.' + keys[i] : keys[i];
+        if (reservedKey(keys[i])) return next;
+        const found = visit(row[keys[i]], next);
+        if (found) return found;
+      }
+      return '';
+    }
+    return visit(value, '');
+  }
+
   function readAll() {
     if (FB.platform.isCrazyGames) return [];
     try {
@@ -172,7 +203,10 @@ window.FBMODS = window.FBMODS || [];
       return enabled.indexOf(mod.id) >= 0;
     }).map(function (mod) { return mod.data; });
     readAll().forEach(function (text) {
-      try { result.push(JSON.parse(text)); } catch (error) { /* applyStored owns the diagnostic */ }
+      try {
+        const declaration = JSON.parse(text);
+        if (!reservedKeyPath(declaration)) result.push(declaration);
+      } catch (error) { /* applyStored owns the diagnostic */ }
     });
     return result;
   };
@@ -436,6 +470,7 @@ window.FBMODS = window.FBMODS || [];
     Object.assign(balance,era && era.balance,FB.activeBookmark && FB.activeBookmark.balance);
     bundles.map(function (row) { return row.data; }).concat(stored.map(function (text) { return JSON.parse(text); })).forEach(function (mod) {
       Object.keys(mod.balance || {}).forEach(function (key) {
+        if (reservedKey(key)) return;
         var value = mod.balance[key];
         balance[key] = key === 'countyCommunityProjectPolicies' && plainObject(value)
           ? Object.assign({},balance[key],value) : value;
@@ -677,9 +712,11 @@ window.FBMODS = window.FBMODS || [];
     location.reload();
   };
 
-  /* merge one mod object into FBDATA */
+  /* merge one mod object into FBDATA. Validation rejects reserved keys first;
+     these helpers also skip them so no table can acquire a new prototype. */
   function mergeById(list, additions, idKey) {
     for (const item of additions) {
+      if (item && typeof item === 'object' && Object.keys(item).some(reservedKey)) continue;
       let replaced = false;
       for (let i = 0; i < list.length; i++) {
         if (list[i][idKey] === item[idKey]) { list[i] = item; replaced = true; break; }
@@ -689,7 +726,7 @@ window.FBMODS = window.FBMODS || [];
   }
 
   function mergeTable(table, additions) {
-    for (const k in additions) if (own(additions, k)) table[k] = additions[k];
+    for (const k in additions) if (own(additions, k) && !reservedKey(k)) table[k] = additions[k];
   }
 
   /* This is the complete public top-level runtime-mod surface. Tables that
@@ -757,6 +794,7 @@ window.FBMODS = window.FBMODS || [];
     if (additions !== undefined) {
       if (!plainObject(additions)) fail(path, 'must be an object.');
       for (const key in additions) {
+        if (own(additions, key) && reservedKey(key)) fail(path + '.' + key, 'is a reserved key.');
         if (own(additions, key)) out[key] = additions[key];
       }
     }
@@ -1106,6 +1144,7 @@ window.FBMODS = window.FBMODS || [];
         const definition = mod.bookmarks[i], path = 'bookmarks[' + i + ']';
         if (!plainObject(definition) || typeof definition.id !== 'string' || !/^[a-z0-9_]+$/i.test(definition.id))
           fail(path + '.id', 'must be a bookmark id.');
+        if (reservedKey(definition.id)) fail(path + '.id', 'is a reserved key.');
         if (own(supplied, definition.id)) fail(path + '.id', 'must not repeat ' + definition.id + '.');
         supplied[definition.id] = true;
         out[definition.id] = definition;
@@ -2791,7 +2830,7 @@ window.FBMODS = window.FBMODS || [];
   function mergeTechCaps(additions) {
     const nested = { costFloor:true, units:true, aiUnits:true };
     for (const k in additions) {
-      if (!own(additions, k)) continue;
+      if (!own(additions, k) || reservedKey(k)) continue;
       const value = additions[k];
       if (nested[k] && value && typeof value === 'object' &&
           !Array.isArray(value) && FBDATA.techCaps[k] &&
@@ -2837,6 +2876,12 @@ window.FBMODS = window.FBMODS || [];
      validator. Never run story init, install actions, or consume RNG here. */
   function prepareRequirements(mod, composition) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
+    // Imported, stored and bundled JSON mods reject reserved keys before any
+    // composition reads them. Trusted composers keep their own plain-data gate.
+    if (!composition) {
+      var reservedPath = reservedKeyPath(mod);
+      if (reservedPath) fail(reservedPath, 'is a reserved key; mods cannot use __proto__, constructor or prototype as a field name.');
+    }
     var worlds = Array.isArray(mod.bookmarks) ? mod.bookmarks : Object.keys(mod.bookmarks || {}).map(function (id) { return mod.bookmarks[id]; });
     worlds.forEach(function (world) {
       ['retainedCatalogueTransitions','retainCatalogueTransition','allowedSignatures','saveCompatibility','sharedDefinitions'].forEach(function (key) {
@@ -3161,13 +3206,13 @@ window.FBMODS = window.FBMODS || [];
     if (mod.bookmarks) {
       if (Array.isArray(mod.bookmarks)) {
         for (const definition of mod.bookmarks) {
-          if (!definition || !definition.id) continue;
+          if (!definition || !definition.id || reservedKey(definition.id)) continue;
           FBDATA.bookmarks[definition.id] = definition;
           if (definition.id === '1066') supplies1066 = true;
         }
       } else {
         for (const bookmarkId in mod.bookmarks) {
-          if (!own(mod.bookmarks, bookmarkId)) continue;
+          if (!own(mod.bookmarks, bookmarkId) || reservedKey(bookmarkId)) continue;
           const definition = mod.bookmarks[bookmarkId];
           if (!definition || typeof definition !== 'object') continue;
           // The table key is authoritative, just like ids in merge-by-id arrays.
@@ -3195,15 +3240,15 @@ window.FBMODS = window.FBMODS || [];
       mergeById(FBDATA.provinces, mod.provinces, 'id');
     }
     if (mod.realms) mergeById(FBDATA.realms, mod.realms, 'id');
-    if (mod.empires) for (const k in mod.empires) FBDATA.empires[k] = mod.empires[k];
-    if (mod.kingdoms) for (const k in mod.kingdoms) FBDATA.kingdoms[k] = mod.kingdoms[k];
-    if (mod.duchies) for (const k in mod.duchies) FBDATA.duchies[k] = mod.duchies[k];
+    if (mod.empires) mergeTable(FBDATA.empires, mod.empires);
+    if (mod.kingdoms) mergeTable(FBDATA.kingdoms, mod.kingdoms);
+    if (mod.duchies) mergeTable(FBDATA.duchies, mod.duchies);
     if (mod.straits) {
       for (const strait of mod.straits) FBDATA.straits.push(strait);
     }
     if (mod.crossingClasses) {
       for (const crossingKey in mod.crossingClasses) {
-        if (own(mod.crossingClasses, crossingKey)) {
+        if (own(mod.crossingClasses, crossingKey) && !reservedKey(crossingKey)) {
           FBDATA.crossingClasses[crossingKey] = mod.crossingClasses[crossingKey];
         }
       }
@@ -3226,7 +3271,7 @@ window.FBMODS = window.FBMODS || [];
     }
     if (mod.cultures) {
       for (const k in mod.cultures) {
-        if (!own(mod.cultures, k)) continue;
+        if (!own(mod.cultures, k) || reservedKey(k)) continue;
         const nextCulture = mod.cultures[k];
         const previousCulture = FBDATA.cultures[k];
         if (previousCulture && previousCulture.tradition && nextCulture &&
@@ -3234,7 +3279,7 @@ window.FBMODS = window.FBMODS || [];
             !own(nextCulture, 'tradition')) {
           const compatibleCulture = {};
           for (const field in nextCulture) {
-            if (own(nextCulture, field)) compatibleCulture[field] = nextCulture[field];
+            if (own(nextCulture, field) && !reservedKey(field)) compatibleCulture[field] = nextCulture[field];
           }
           compatibleCulture.tradition = previousCulture.tradition;
           FBDATA.cultures[k] = compatibleCulture;
@@ -3248,12 +3293,12 @@ window.FBMODS = window.FBMODS || [];
     }
     if (mod.doctrineCatalogs) {
       for (const kind in mod.doctrineCatalogs) {
-        if (!own(mod.doctrineCatalogs, kind)) continue;
+        if (!own(mod.doctrineCatalogs, kind) || reservedKey(kind)) continue;
         if (!FBDATA.doctrineCatalogs[kind]) FBDATA.doctrineCatalogs[kind] = {};
         mergeTable(FBDATA.doctrineCatalogs[kind], mod.doctrineCatalogs[kind]);
       }
     }
-    if (mod.settlementNames) for (const k in mod.settlementNames) FBDATA.settlementNames[k] = mod.settlementNames[k];
+    if (mod.settlementNames) mergeTable(FBDATA.settlementNames, mod.settlementNames);
     /* Physical settlement sites merge by site id into the shared table.
        Per-county `settlements` presentations ride inside complete bookmark or
        legacy province replacements, never as a standalone patch. */
@@ -3277,15 +3322,15 @@ window.FBMODS = window.FBMODS || [];
     if (mod.ecclesiasticalProfiles) { mergeTable(FBDATA.ecclesiasticalProfiles,mod.ecclesiasticalProfiles); FB.governments.invalidate(); }
     if (mod.administrationProfiles) { mergeTable(FBDATA.administrationProfiles, mod.administrationProfiles); FB.governments.invalidate(); }
     if (mod.aristocraticProfiles) { mergeTable(FBDATA.aristocraticProfiles, mod.aristocraticProfiles); FB.governments.invalidate(); }
-    if (mod.religions) for (const k in mod.religions) FBDATA.religions[k] = mod.religions[k];
-    if (mod.traits) for (const k in mod.traits) FBDATA.traits[k] = mod.traits[k];
-    if (mod.ailments) for (const k in mod.ailments) FBDATA.ailments[k] = mod.ailments[k];
-    if (mod.modifiers) for (const k in mod.modifiers) FBDATA.modifiers[k] = mod.modifiers[k];
-    if (mod.buildings) for (const k in mod.buildings) FBDATA.buildings[k] = mod.buildings[k];
+    if (mod.religions) mergeTable(FBDATA.religions, mod.religions);
+    if (mod.traits) mergeTable(FBDATA.traits, mod.traits);
+    if (mod.ailments) mergeTable(FBDATA.ailments, mod.ailments);
+    if (mod.modifiers) mergeTable(FBDATA.modifiers, mod.modifiers);
+    if (mod.buildings) mergeTable(FBDATA.buildings, mod.buildings);
     if (mod.forts) {
       const modFortLevels = mod.forts.levels;
       for (const fortKey in mod.forts) {
-        if (fortKey !== 'levels' && own(mod.forts, fortKey)) {
+        if (fortKey !== 'levels' && own(mod.forts, fortKey) && !reservedKey(fortKey)) {
           FBDATA.forts[fortKey] = mod.forts[fortKey];
         }
       }
@@ -3298,14 +3343,14 @@ window.FBMODS = window.FBMODS || [];
     if ((mod.tech || mod.techCaps || mod.capabilities) && FB.invalidateTechBonuses) {
       FB.invalidateTechBonuses();
     }
-    if (mod.tech) for (const k in mod.tech) FBDATA.tech[k] = mod.tech[k];
+    if (mod.tech) mergeTable(FBDATA.tech, mod.tech);
     if (mod.techDomains) mergeTable(FBDATA.techDomains, mod.techDomains);
     if (mod.techTraditions) mergeTable(FBDATA.techTraditions, mod.techTraditions);
     if (mod.techCaps) mergeTechCaps(mod.techCaps);
     if (mod.capabilities) mergeTable(FBDATA.capabilities, mod.capabilities);
     if (mod.unitClasses) {
       for (const k in mod.unitClasses) {
-        if (!own(mod.unitClasses, k)) continue;
+        if (!own(mod.unitClasses, k) || reservedKey(k)) continue;
         FBDATA.unitClasses[k] = unitClassWithRole(
           own(FBDATA.unitClasses, k) ? FBDATA.unitClasses[k] : null, mod.unitClasses[k]);
       }
@@ -3314,47 +3359,42 @@ window.FBMODS = window.FBMODS || [];
       mergeTable(FBDATA.techImpactReviews.features,
         mod.techImpactReviews.features);
     }
-    if (mod.holdings) for (const k in mod.holdings) FBDATA.holdings[k] = mod.holdings[k];
-    if (mod.careers) for (const k in mod.careers) FBDATA.careers[k] = mod.careers[k];
-    if (mod.positions) for (const k in mod.positions) FBDATA.positions[k] = mod.positions[k];
+    if (mod.holdings) mergeTable(FBDATA.holdings, mod.holdings);
+    if (mod.careers) mergeTable(FBDATA.careers, mod.careers);
+    if (mod.positions) mergeTable(FBDATA.positions, mod.positions);
     if (mod.localCouncilMotions) {
-      for (const k in mod.localCouncilMotions) {
-        FBDATA.localCouncilMotions[k] = mod.localCouncilMotions[k];
-      }
+      mergeTable(FBDATA.localCouncilMotions, mod.localCouncilMotions);
     }
     if (mod.feudalServiceCharters) {
-      for (const k in mod.feudalServiceCharters) {
-        FBDATA.feudalServiceCharters[k] = mod.feudalServiceCharters[k];
-      }
+      mergeTable(FBDATA.feudalServiceCharters, mod.feudalServiceCharters);
     }
-    if (mod.schooling) for (const k in mod.schooling) FBDATA.schooling[k] = mod.schooling[k];
+    if (mod.schooling) mergeTable(FBDATA.schooling, mod.schooling);
     ['enterpriseMechanics','specializationMarketEffects','householdStandardDemand'].forEach(function (key) {
       if (mod[key]) mergeTable(FBDATA[key], mod[key]);
     });
-    if (mod.enterprises) for (const k in mod.enterprises) FBDATA.enterprises[k] = mod.enterprises[k];
+    if (mod.enterprises) mergeTable(FBDATA.enterprises, mod.enterprises);
     if (mod.industryLaws) mergeTable(FBDATA.industryLaws, mod.industryLaws);
     if (mod.auctionLotTypes) mergeTable(FBDATA.auctionLotTypes,
       mod.auctionLotTypes);
     if (mod.householdStandards) {
-      for (const k in mod.householdStandards) {
-        FBDATA.householdStandards[k] = mod.householdStandards[k];
-      }
+      mergeTable(FBDATA.householdStandards, mod.householdStandards);
     }
     if (mod.travelPurposes) {
-      for (const k in mod.travelPurposes) FBDATA.travelPurposes[k] = mod.travelPurposes[k];
+      mergeTable(FBDATA.travelPurposes, mod.travelPurposes);
     }
     if (mod.travelSites) mergeById(FBDATA.travelSites, mod.travelSites, 'id');
     if (mod.tournaments) {
       ['scales','programmes','tracks','tactics'].forEach(function (group) {
         if (!mod.tournaments[group]) return;
         for (const id in mod.tournaments[group]) {
+          if (!own(mod.tournaments[group], id) || reservedKey(id)) continue;
           FBDATA.tournaments[group][id] = Object.assign({}, FBDATA.tournaments[group][id], mod.tournaments[group][id]);
         }
       });
     }
-    if (mod.finance) for (const k in mod.finance) FBDATA.finance[k] = mod.finance[k];
-    if (mod.plots) for (const k in mod.plots) FBDATA.plots[k] = mod.plots[k];
-    if (mod.items) for (const k in mod.items) FBDATA.items[k] = mod.items[k];
+    if (mod.finance) mergeTable(FBDATA.finance, mod.finance);
+    if (mod.plots) mergeTable(FBDATA.plots, mod.plots);
+    if (mod.items) mergeTable(FBDATA.items, mod.items);
     if (mod.itemPools) mergeTable(FBDATA.itemPools, mod.itemPools);
     if (mod.startScenarios) {
       mergeById(FBDATA.startScenarios, mod.startScenarios, 'id');
@@ -3384,7 +3424,7 @@ window.FBMODS = window.FBMODS || [];
     }
     if (mod.intrigue) {
       for (const key in mod.intrigue) {
-        if (!own(mod.intrigue, key)) continue;
+        if (!own(mod.intrigue, key) || reservedKey(key)) continue;
         if (key === 'methodProfiles') {
           mergeTable(FBDATA.intrigue.methodProfiles,
             mod.intrigue.methodProfiles);
@@ -3395,6 +3435,7 @@ window.FBMODS = window.FBMODS || [];
     }
     if (mod.titles) {
       for (const k in mod.titles) {
+        if (!own(mod.titles, k) || reservedKey(k)) continue;
         FBDATA.titles[k] = mod.titles[k];
         /* Title tables predate the lexicon. Mirror the historical group keys
            into its rank ladders so an existing title-only mod keeps changing
@@ -3415,23 +3456,19 @@ window.FBMODS = window.FBMODS || [];
     if (mod.lexicons) FBDATA.lexicons = composeLexicons(FBDATA.lexicons, mod.lexicons);
     if ((mod.lexicons || mod.titles) && FB.lexicon) FB.lexicon.reset();
     if (mod.politicalBlocs) {
-      for (const k in mod.politicalBlocs) {
-        FBDATA.politicalBlocs[k] = mod.politicalBlocs[k];
-      }
+      mergeTable(FBDATA.politicalBlocs, mod.politicalBlocs);
     }
     if (mod.policies) {
-      for (const k in mod.policies) FBDATA.policies[k] = mod.policies[k];
+      mergeTable(FBDATA.policies, mod.policies);
     }
     if (mod.elections) {
-      for (const k in mod.elections) FBDATA.elections[k] = mod.elections[k];
+      mergeTable(FBDATA.elections, mod.elections);
     }
     if (mod.privileges) {
-      for (const k in mod.privileges) FBDATA.privileges[k] = mod.privileges[k];
+      mergeTable(FBDATA.privileges, mod.privileges);
     }
     if (mod.collectiveDemands) {
-      for (const k in mod.collectiveDemands) {
-        FBDATA.collectiveDemands[k] = mod.collectiveDemands[k];
-      }
+      mergeTable(FBDATA.collectiveDemands, mod.collectiveDemands);
     }
     if (own(mod, 'papacy')) FBDATA.papacy = mod.papacy;
     if (own(mod, 'currency')) {
@@ -3441,6 +3478,7 @@ window.FBMODS = window.FBMODS || [];
     /* Mod balance is the last layer over the global, era and bookmark
        values (js/balance.js); project policies merge by policy id. */
     if (mod.balance) for (const k in mod.balance) {
+      if (!own(mod.balance, k) || reservedKey(k)) continue;
       FB.balanceLayers.applyMod(k, mod.balance[k],
         k === 'countyCommunityProjectPolicies' && plainObject(mod.balance[k]));
     }

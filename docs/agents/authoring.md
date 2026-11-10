@@ -20,4 +20,12 @@ Full authoring guide + the catalog regenerate/merge recipe: docs/i18n-authoring.
 
 Data authoring contract
 
+New data tables use the shared `FB.schema` declarative definition validator in
+`js/schema.js`. Declare types, bounds, nested fields and candidate references in
+trusted engine specs; reserve pure predicates for genuine cross-field rules.
+Keep reserved-key rejection enabled for new tables. Follow the API and legacy
+acceptance contract in docs/data-authoring.md. Freeze accepted/rejected fixtures
+before migrating an existing validator, preserve id/path diagnostics and atomic
+ordinary JSON imports, and leave save-state validators with their owners.
+
 New or converted gameplay capabilities must expose their meaningful supported variation through typed data and the ordinary runtime JSON mod path. Read docs/data-authoring.md and the owning schema in docs/MODDING.md. Built-in declarations and imported declarations use the same consumers, pure candidate validation, player/AI gates, shared UI projections and canonical transactions. Preserve stable saved identities and exact mod fingerprints. Author two independent configurations with different behavior, including one real JSON import; a preloaded fixture or test-only executable registration does not establish mod support. Keep executable strategies and factories in trusted engine modules. Record intrinsic invariants and unresolved authoring boundaries honestly.
