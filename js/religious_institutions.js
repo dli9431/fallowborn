@@ -103,6 +103,91 @@
     var voters = Object.keys(a.row.members || {}).sort().filter(function (cid) { return constituency(s, a, cid, roles); });
     return JSON.stringify([control(s, a), leader(s, a), voters, a.def, a.profile]);
   }
+  /* Caps measure commitments, not all the people a community has ever known.
+     Recent history and every surviving vote keep their original member rows.
+     Temporary loss of qualification or control is deliberately not settlement:
+     those votes may become effective again without a fresh transaction. */
+  var RETIRED_FIELDS = ['members','withdrawn','assents','decisions'];
+  function deathEnd(s, c) {
+    // Death stores a year, not a day. Keep the entire death year conservatively.
+    return c && c.dead && Number.isInteger(c.died) && c.died <= s.date.year ?
+      s.turn - (s.date.season * 90 + s.date.day - 1) - (s.date.year - c.died - 1) * 360 - 1 : null;
+  }
+  function memberEnd(s, cid, m) {
+    return m.status === 'withdrawn' ? m.changedTurn : deathEnd(s, s.chars[cid]);
+  }
+  function voteKey(k, cid) { return 'vote:' + JSON.stringify([k,cid]); }
+  function membershipGraph(s, a, cutoff) {
+    var g = FB.ledgerRetention.graph(cutoff), r = a.row;
+    Object.keys(r.members || {}).forEach(function (cid) {
+      var m = r.members[cid], canonical = r.representativeId === cid ||
+        a.def.officeId && s.religiousHeads && s.religiousHeads[a.def.officeId] === cid;
+      g.add('member:' + cid, !!canonical || m.status === 'active' && !!character(s,cid), memberEnd(s,cid,m));
+    });
+    Object.keys(r.assents || {}).forEach(function (k) {
+      var parts = k.split(':'), subject = parts[1] === 'character' && s.chars[parts[2]];
+      // A dead target can never receive this decision. Realm targets and living
+      // voters survive reversible occupation, custody and qualification changes.
+      g.add('decision:' + k, false, 0);
+      Object.keys(r.assents[k]).forEach(function (cid) {
+        var v = r.assents[k][cid], m = r.members[cid], ended = v.turn, known = true;
+        var voterLive = m && m.status === 'active' && !!character(s,cid), targetDead = subject && subject.dead;
+        if (!voterLive) {
+          var end = m && memberEnd(s,cid,m);
+          if (end === null || end === undefined) known = false; else ended = Math.max(ended,end);
+        }
+        if (targetDead) {
+          var targetEnd = deathEnd(s,subject);
+          if (targetEnd === null) known = false; else ended = Math.max(ended,targetEnd);
+        }
+        g.add(voteKey(k,cid), voterLive && !targetDead, known ? ended : null, ['member:' + cid,'decision:' + k]);
+      });
+    });
+    return g;
+  }
+  FB.religiousInstitutionLiveCounts = function (s, institutionId) {
+    var a = at(s,institutionId), R = FB.ledgerRetention;
+    var keep = a ? membershipGraph(s,a,null).keep() : {};
+    return {members:R.count(keep,'member:'), decisions:R.count(keep,'decision:')};
+  };
+  FB.religiousInstitutionCompact = function (s) {
+    var R = FB.ledgerRetention, plans = [];
+    if (!R.due(s) || !s.localInstitutions) return false;
+    Object.keys(s.localInstitutions).forEach(function (iid) {
+      var a = at(s,iid); if (!a) return;
+      var g = membershipGraph(s,a,R.cutoff(s)), keep = g.keep();
+      if (R.folds(g,keep)) plans.push({id:iid,keep:keep});
+    });
+    if (!plans.length) return false;
+    return R.stage(s,['localInstitutions'],function (t) {
+      plans.forEach(function (p) {
+        var r = t.localInstitutions[p.id];
+        if (!r.retired) r.retired = R.blank(RETIRED_FIELDS);
+        Object.keys(r.members).forEach(function (cid) {
+          if (p.keep['member:' + cid]) return;
+          R.add(r.retired,'members',1);
+          if (r.members[cid].status === 'withdrawn') R.add(r.retired,'withdrawn',1);
+          delete r.members[cid];
+        });
+        Object.keys(r.assents).forEach(function (k) {
+          Object.keys(r.assents[k]).forEach(function (cid) {
+            if (p.keep[voteKey(k,cid)]) return;
+            R.add(r.retired,'assents',1); delete r.assents[k][cid];
+          });
+          if (!p.keep['decision:' + k]) { R.add(r.retired,'decisions',1); delete r.assents[k]; }
+        });
+      });
+      return true;
+    },FB.validateReligiousInstitutionState);
+  };
+  FB.religiousInstitutionReferencesCharacter = function (s, cid) {
+    return Object.keys(s.localInstitutions || {}).some(function (iid) {
+      var a = at(s,iid); if (!a) return false;
+      return own(a.row.members,cid) || Object.keys(a.row.assents || {}).some(function (k) {
+        var parts = k.split(':'); return parts[1] === 'character' && parts[2] === cid;
+      });
+    });
+  };
   FB.religiousInstitutionIssuerValid = function (s, institutionId, source) {
     var a = at(s, institutionId), def = FBDATA.legitimacySources[source];
     return !!(a && available(s, a) && def && def.institutional === true &&
@@ -464,7 +549,9 @@
        never spend or create property; patronage owns that separate review. */
     if (action === 'admit') {
       if (!keys(t, ['roleId']) || !c || !qualified(s, a, c.id, t.roleId)) block('qualification');
-      if (m && m.roleId === t.roleId || Object.keys(a.row.members || {}).length >= MAX_MEMBERS && !own(a.row.members, actor.id)) block('membership');
+      var keep = membershipGraph(s,a,null).keep();
+      if (m && m.roleId === t.roleId || !keep['member:' + actor.id] &&
+          FB.ledgerRetention.count(keep,'member:') >= MAX_MEMBERS) block('membership');
     } else if (action === 'affiliate') {
       var ad = catalogs().affiliations[t.affiliationId], existing = c && c.religiousAffiliations || [];
       if (!keys(t, ['affiliationId']) || !m || !c || !free(s, c) || !ad ||
@@ -494,7 +581,9 @@
       var roles = t.decision === 'appoint' && sel ? sel.consentRoles : rec.roles;
       if (!c || !constituency(s, a, c.id, roles)) block('qualification');
       if (t.decision === 'appoint' && (!subjectValid(s, t.subject) || !sel || t.subject.kind !== 'character' || current || !FB.religiousInstitutionOfficeEligible(s, institutionId, t.subject.id))) block('qualification');
-      if (!own(a.row.assents, decisionKey(t.decision, t.subject || {})) && Object.keys(a.row.assents || {}).length >= MAX_DECISIONS) block('consent_bound');
+      var pending = membershipGraph(s,a,null).keep();
+      if (!pending['decision:' + decisionKey(t.decision,t.subject || {})] &&
+          FB.ledgerRetention.count(pending,'decision:') >= MAX_DECISIONS) block('consent_bound');
     } else if (['recognize','mediate','dispute'].indexOf(action) >= 0) {
       if (!keys(t, ['subject','provinceId','source','recognitionId']) || !subjectValid(s, t.subject) ||
           rec.sources.indexOf(t.source) < 0 || !recognizeScope(a, t.provinceId)) block('scope');
@@ -617,9 +706,10 @@
     });
     Object.keys(s.localInstitutions || {}).forEach(function (institutionId) {
       var a = at(s, institutionId), r = s.localInstitutions[institutionId], path = 'state.localInstitutions.' + institutionId;
-      if (!a) { if (r.members !== undefined || r.assents !== undefined) fail(path); return; }
-      if (['active','suspended','closed'].indexOf(r.status) < 0 || !plain(r.members) || Object.keys(r.members).length > MAX_MEMBERS ||
-          !plain(r.assents) || Object.keys(r.assents).length > MAX_DECISIONS) fail(path);
+      if (!a) { if (r.members !== undefined || r.assents !== undefined || r.retired !== undefined) fail(path); return; }
+      if (['active','suspended','closed'].indexOf(r.status) < 0 || !plain(r.members) || !plain(r.assents)) fail(path);
+      if (r.retired !== undefined && (!FB.ledgerRetention.totals(r.retired,RETIRED_FIELDS) ||
+          r.retired.withdrawn > r.retired.members)) fail(path + '.retired');
       if (r.aiPeriod !== undefined && (!Number.isInteger(r.aiPeriod) || r.aiPeriod < 0 || r.aiPeriod > Math.floor(s.turn / 90))) fail(path + '.aiPeriod');
       Object.keys(r.members).forEach(function (cid) {
         var m = r.members[cid];
@@ -631,13 +721,15 @@
         var parts = k.split(':'), votes = r.assents[k];
         if (parts.length !== 3 || ['appoint','recognize','dispute'].indexOf(parts[0]) < 0 ||
             ['character','realm'].indexOf(parts[1]) < 0 || !own(parts[1] === 'character' ? s.chars : s.realms, parts[2]) ||
-            !plain(votes) || Object.keys(votes).length > MAX_MEMBERS) fail(path + '.assents');
+            !plain(votes)) fail(path + '.assents');
         Object.keys(votes).forEach(function (cid) {
           var v = votes[cid];
           if (!own(r.members, cid) || !keys(v, ['turn','control']) || !Number.isInteger(v.turn) || v.turn < 0 || v.turn > s.turn ||
               typeof v.control !== 'string' || v.control.length > 2048) fail(path + '.assents');
         });
       });
+      var counts = FB.religiousInstitutionLiveCounts(s,institutionId);
+      if (counts.members > MAX_MEMBERS || counts.decisions > MAX_DECISIONS) fail(path);
     });
     (s.authority && s.authority.recognitions || []).forEach(function (r) {
       if (r.issuer.kind !== 'religious-institution') return;

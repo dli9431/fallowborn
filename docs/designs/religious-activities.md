@@ -64,6 +64,8 @@ Only ai:true public local activities and public patronage participate. Each quar
 
 Retained saves
 
+The 64 religiousActivityHistory milestones are permanent per-character earned facts, not a reusable transaction log. Removing them would allow a one-time reward again; they end with their original person rather than growing through successors. The 64 active participant ids count unfinished commitments and are removed on completion or interruption. A house's 64 plot groups describe still-owned endowed property, coalesced by county and settlement, rather than past donations; restrictedFunds and activityServices are bounded declaration-owned account/service slots. These caps intentionally retain their existing meanings. The single AI period replaces itself quarterly, and expired project activitySupport is replaced rather than appended.
+
 The optional character commitment and milestone receipts, travel adapter, institution service accounts, project support and quarterly AI period serialize with their canonical owners. Validation uses the saved campaign's institutions and provinces, validates frozen definitions and bounded amounts, and performs no live date or access reevaluation during load. It neither starts an activity nor redirects travel. A restored commitment next completes or interrupts through the normal tick. Existing ranks, old journey history, unwrapped routes and legacy abbey records are untouched. Detached validation rejects malformed dates, destinations, receipts, capacities, restricted balances and future AI periods. The specification includes standard and CrazyGames restore after another bookmark, deterministic continuation, household interruption, public treasury funding and narrow-screen retained review.
 
 493 local church service

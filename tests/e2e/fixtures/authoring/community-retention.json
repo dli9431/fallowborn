@@ -1,0 +1,247 @@
+{
+  "name": "Community participation history",
+  "balance": {
+    "ledgerRetentionDays": 720
+  },
+  "religiousInstitutionProfiles": {
+    "history_readers": {
+      "name": "Fictional study community",
+      "faithIds": [
+        "catholic"
+      ],
+      "period": {
+        "yearMin": 1,
+        "yearMax": null
+      },
+      "system": null,
+      "roles": {
+        "reader": {
+          "name": "Reader",
+          "minAge": 16,
+          "sexes": [],
+          "unmarried": false,
+          "professions": [],
+          "skills": {},
+          "affiliationId": null
+        }
+      },
+      "selection": null,
+      "recognition": {
+        "sources": [
+          "institution_support"
+        ],
+        "roles": [
+          "reader"
+        ],
+        "quorum": 2,
+        "requiresLeader": false,
+        "protectedWorship": false
+      },
+      "actions": [
+        "admit",
+        "withdraw",
+        "assent",
+        "recognize",
+        "dispute"
+      ],
+      "fees": {},
+      "affiliationIds": []
+    }
+  },
+  "geographies": {
+    "community_history_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "resource_hill",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "hills"
+        },
+        {
+          "id": "resource_fold",
+          "x": 3.1,
+          "y": 1.5,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_roof": {
+          "x": 1.5,
+          "y": 1.5
+        },
+        "resource_tank": {
+          "x": 1.7,
+          "y": 1.5
+        },
+        "resource_grazing": {
+          "x": 3.1,
+          "y": 1.5
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "community_history_household",
+      "name": "Community household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives near the community.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "community_history"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "community_history": {
+      "id": "community_history",
+      "name": "Fictional community",
+      "desc": "A finite fictional community with retained participation.",
+      "date": {
+        "year": 950,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "community_history_land",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "localInstitutions": {
+        "history_community": {
+          "city": "Fictional hill community",
+          "kind": "school",
+          "provinceId": null,
+          "site": null,
+          "offMap": true,
+          "religion": "catholic",
+          "culture": "frankish",
+          "profileId": "history_readers",
+          "vacant": true,
+          "jurisdictionIds": [
+            "resource_hill"
+          ]
+        }
+      },
+      "stories": [],
+      "starts": [
+        "community_history_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_hill",
+          "name": "Hill",
+          "realm": "resource_hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "resource_roof",
+              "name": "Roof Town",
+              "kind": "town"
+            },
+            {
+              "site": "resource_tank",
+              "name": "Tank Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "resource_fold",
+          "name": "Fold",
+          "realm": "resource_fold_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "resource_grazing",
+              "name": "Fold Village",
+              "kind": "village"
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "resource_hill_court",
+          "name": "Hill court",
+          "capital": "resource_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "m"
+          }
+        },
+        {
+          "id": "resource_fold_court",
+          "name": "Fold court",
+          "capital": "resource_fold",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 920,
+            "mar": 5,
+            "trait": "patient",
+            "sex": "m"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {}
+    }
+  }
+}
