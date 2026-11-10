@@ -50,70 +50,73 @@
     return own(data.positions, id) && data.positions[id].kind === 'earned' &&
       own(data.positionRules, id) && data.positionRules[id].localCouncil === true;
   }
+  const S = FB.schema;
+  const identifierSpec = {type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/};
+  const moneySpec = {type:'number',min:0,max:10000};
+  const jurisdictionSpec = {ref:{bookmark:'bookmarkId',inhabited:true,deferUnreviewed:true}};
+  const definitionSpec = {type:'object',fields:{
+    schema:{value:1}, motionId:{ref:{table:'localCouncilMotions'}}, bookmarkId:{ref:{table:'bookmarks'}},
+    provinceId:{}, enterpriseType:{}, minYear:{type:'integer',min:1,max:3000},
+    maxYear:{type:'integer',min:function (c) { return c.root.minYear; },max:3000},
+    mode:{enum:['license','prohibition']}, fee:moneySpec,
+    durationDays:{type:'integer',min:1,max:3600},
+    permitDays:{type:'integer',min:1,max:function (c) { return c.root.durationDays; }},
+    transitionDays:{type:'integer',min:0,max:function (c) { return c.root.durationDays; }},
+    exemptions:{type:'array',maxItems:16}, offense:{optional:'absent'}, voting:{optional:'absent'}, relief:{optional:'absent'}
+  },test:function (d) { return d.mode !== 'prohibition' || d.fee === 0; }};
+  const exemptionSpec = {type:'object',fields:{
+    kind:{enum:['home_province','guild','office']}, id:{type:'string',minLength:1},
+    fee:{type:'number',min:0,max:function (c) { return c.root.fee; }}, permission:{type:'boolean'}
+  },test:function (e,c) {
+    return e.kind === 'home_province' ? S.valid(e.id,jurisdictionSpec,c) :
+      e.kind === 'guild' ? own(c.data.careers,e.id) && c.data.careers[e.id].guild === true : supportedOffice(c.data,e.id);
+  }};
+  const reliefSpec = {type:'object',fields:{
+    days:{type:'integer',min:1,max:function (c) { return c.root.durationDays; }}, chance:{type:'number',min:0,max:1}
+  }};
+  const offenseSpec = {type:'object',fields:{
+    id:identifierSpec, penalty:{enum:['fine','closure','suspension']}, amount:moneySpec,
+    closure:{type:'boolean',optional:'absent'}, days:{optional:'absent'}
+  },test:function (o,c) {
+    return (!own(o,'closure') || o.penalty === 'fine') && (o.penalty === 'fine' || o.amount === 0) &&
+      (o.penalty === 'suspension' ? S.valid(o.days,{type:'integer',min:1,max:Math.min(360,c.root.durationDays)}) : !own(o,'days'));
+  }};
+  const memberSpec = {type:'object',fields:{
+    id:{type:'string',pattern:/^[a-z][a-z0-9_]{0,39}$/,test:function (v) { return !own(Object.prototype,v); }},
+    kind:{enum:['guild','notable']}, weight:{type:'integer',min:1,max:10}
+  }};
+  const hearingFields = {quorum:{type:'number',exclusiveMin:0,max:1},
+    threshold:{type:'number',min:0.5,exclusiveMax:1},days:{type:'integer',min:1,max:90}};
+  const votingSpec = {type:'object',fields:{
+    town:{type:'object',fields:Object.assign({},hearingFields,{
+      members:{type:'array',minItems:1,maxItems:8,items:memberSpec,uniqueBy:['id','kind']}
+    })}, estates:{type:'object',fields:hearingFields}
+  }};
   L.definitionFaults = function (table, data) {
     const errors = [];
     data = data || FBDATA;
-    if (!plain(table) || Object.keys(table).length > 64) return ['industryLaws must be a table of at most 64 definitions.'];
+    // Legacy definition ids retain their accepted spellings. Ordinary JSON mods
+    // independently reject reserved keys before any catalogue validation.
+    if (!S.valid(table,{type:'object',maxProperties:64,reservedKeys:false})) return ['industryLaws must be a table of at most 64 definitions.'];
     Object.keys(table).forEach(function (id) {
-      const d = table[id];
-      if (!/^[a-z][a-z0-9_]{0,79}$/.test(id) || !fields(d,
-          ['schema','motionId','bookmarkId','provinceId','enterpriseType','minYear','maxYear','mode','fee','permitDays','durationDays','transitionDays','exemptions','offense','voting','relief']) ||
-          d.schema !== 1 || !own(data.localCouncilMotions, d.motionId) ||
-          !own(data.bookmarks, d.bookmarkId) ||
-          !integer(d.minYear, 1, 3000) || !integer(d.maxYear, d.minYear, 3000) ||
-          ['license','prohibition'].indexOf(d.mode) < 0 || !money(d.fee) ||
-          d.mode === 'prohibition' && d.fee !== 0 ||
-          !integer(d.durationDays, 1, 3600) || !integer(d.permitDays, 1, d.durationDays) ||
-          !integer(d.transitionDays, 0, d.durationDays) ||
-          !Array.isArray(d.exemptions) || d.exemptions.length > 16) {
+      const d = table[id], context = {data:data,root:d};
+      if (!S.valid(id,identifierSpec) || !S.valid(d,definitionSpec,context)) {
         errors.push('Invalid industryLaws.' + id); return;
       }
       if (!supportedEnterprise(data, d.enterpriseType))
         errors.push('Unsupported industry-law enterprise type (ordinary acquisition, staffing and yield required): ' + id + ': ' + d.enterpriseType);
-      const raw = data.bookmarks[d.bookmarkId];
-      // A date whose sources are not loaded in this candidate is reviewed
-      // with that date; its jurisdiction cannot apply to another campaign.
-      const reviewable = !(FB.bookmarkSources && FB.bookmarkSources.unreviewedReference &&
-        FB.bookmarkSources.unreviewedReference(raw));
-      if (reviewable && !FB.bookmarkRevisions(d.bookmarkId, raw).some(function (world) {
-        return (world.provinces || []).some(function (p) { return p.id === d.provinceId && !p.wasteland; });
-      })) errors.push('Unknown industry-law jurisdiction: ' + id);
+      if (!S.valid(d.provinceId,jurisdictionSpec,context)) errors.push('Unknown industry-law jurisdiction: ' + id);
       if (Object.keys(table).some(function (other) { return other !== id && table[other] && table[other].motionId === d.motionId; }))
         errors.push('Duplicate industry-law motion: ' + id);
       d.exemptions.forEach(function (e) {
-        if (!fields(e, ['kind','id','fee','permission']) ||
-            ['home_province','guild','office'].indexOf(e.kind) < 0 || typeof e.id !== 'string' || !e.id ||
-            !money(e.fee) || e.fee > d.fee || typeof e.permission !== 'boolean' ||
-            e.kind === 'home_province' && reviewable && !FB.bookmarkRevisions(d.bookmarkId, raw).some(function (world) {
-              return (world.provinces || []).some(function (p) { return p.id === e.id && !p.wasteland; });
-            }) || e.kind === 'guild' && (!own(data.careers, e.id) || data.careers[e.id].guild !== true) ||
-            e.kind === 'office' && !supportedOffice(data, e.id))
+        if (!S.valid(e,exemptionSpec,context))
           errors.push('Invalid or unsupported industry-law exemption kind/reference: ' + id + ': ' + (e && e.kind));
       });
-      if (own(d, 'relief') && (!fields(d.relief, ['days','chance']) || !integer(d.relief.days, 1, d.durationDays) ||
-          typeof d.relief.chance !== 'number' || !isFinite(d.relief.chance) || d.relief.chance < 0 || d.relief.chance > 1)) errors.push('Invalid industry-law relief: ' + id);
-      if (own(d, 'offense') && (!fields(d.offense, ['id','penalty','amount','closure','days']) ||
-          typeof d.offense.id !== 'string' || !/^[a-z][a-z0-9_]{0,79}$/.test(d.offense.id) ||
-          ['fine','closure','suspension'].indexOf(d.offense.penalty) < 0 || !money(d.offense.amount) ||
-          own(d.offense, 'closure') && (d.offense.penalty !== 'fine' || typeof d.offense.closure !== 'boolean') ||
-          d.offense.penalty !== 'fine' && d.offense.amount !== 0 ||
-          (d.offense.penalty === 'suspension' ? !integer(d.offense.days, 1, Math.min(360, d.durationDays)) : own(d.offense, 'days'))))
-        errors.push('Invalid industry-law offense: ' + id);
+      if (own(d,'relief') && !S.valid(d.relief,reliefSpec,context)) errors.push('Invalid industry-law relief: ' + id);
+      if (own(d,'offense') && !S.valid(d.offense,offenseSpec,context)) errors.push('Invalid industry-law offense: ' + id);
       const motion = data.localCouncilMotions[d.motionId];
       if (Object.keys(motion.fx || {}).length) errors.push('Industry-law motions cannot also grant ordinance effects: ' + id);
-      if (own(d, 'voting') && (!fields(d.voting, ['town','estates']) || !d.voting.town || !d.voting.estates ||
-          ['town','estates'].some(function (consumer) {
-            const v = d.voting[consumer];
-            return !fields(v, consumer === 'town' ? ['quorum','threshold','days','members'] : ['quorum','threshold','days']) ||
-              typeof v.quorum !== 'number' || !(v.quorum > 0 && v.quorum <= 1) ||
-              typeof v.threshold !== 'number' || !(v.threshold >= 0.5 && v.threshold < 1) ||
-              !integer(v.days, 1, 90) || consumer === 'town' && (!Array.isArray(v.members) ||
-                !v.members.length || v.members.length > 8 || v.members.some(function (m, i) {
-                  return !fields(m, ['id','kind','weight']) || typeof m.id !== 'string' || own(Object.prototype, m.id) || !/^[a-z][a-z0-9_]{0,39}$/.test(m.id) ||
-                    ['guild','notable'].indexOf(m.kind) < 0 || !integer(m.weight, 1, 10) ||
-                    v.members.some(function (n, j) { return i !== j && (n.id === m.id || n.kind === m.kind); });
-                }));
-          }))) errors.push('Invalid industry-law voting rules: ' + id);
+      if (own(d,'voting') && !S.valid(d.voting,votingSpec,context)) errors.push('Invalid industry-law voting rules: ' + id);
     });
     return errors;
   };

@@ -547,6 +547,13 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+`schema.spec.js` compares industry-law, production-good, recipe and physical-site
+acceptance with frozen pre-migration validators over a fixed boundary matrix.
+It checks identical law/catalogue diagnostics, compiled sites, candidate and
+RNG/UID purity, nested schema paths, reserved keys and real valid/invalid JSON
+file imports. It also checks exact reviewed spelling counts in the changed
+engine files. No campaign time advances.
+
 `industry-law-types.spec.js` covers all seven ordinary enterprise type references,
 unsupported types/criteria and contradictory penalties with detached validation
 purity; the original London residence/fee/fine lifecycle; 1066 Constantinople
