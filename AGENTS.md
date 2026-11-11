@@ -61,12 +61,42 @@ viewport, or scenario, keep its setup in that specification or a leaf helper imp
 the affected specifications. Do not change `support/game/navigation.js`, the universal fixture,
 or the page contract to solve a scenario-local test unless their shared contract truly changed.
 
-These commands are for owner-initiated manual runs. AI coding agents must author or update
+These commands are for owner-initiated local runs. AI coding agents must author or update
 relevant tests, but must not install test browsers or dependencies and must not execute
-`npm run check`, Playwright, the static-server regression, runtime verification, or any other
-command from the test harness. In the final user handoff, report the tests added and state that
-they were not run. This is handoff-only status; never put it in a commit or merge message. Do not
-launch ad hoc shell browsers or servers outside this harness. Keep tests deterministic, bounded,
+`npm run check`, Playwright, the static-server regression, runtime verification, profiling, or any
+other command from the test harness on the local machine. Test execution happens in GitHub
+Actions instead (see **Continuous integration** below): agents may trigger those workflows and
+read their results, summaries, and artifacts. In the final user handoff, report the tests added
+and state whether and where they ran (for example "not run" or "CI run <id>: passed"). This is
+handoff-only status; never put it in a commit or merge message. Do not launch ad hoc shell
+browsers or servers outside this harness.
+
+### Continuous integration
+
+GitHub Actions runs all tests; nothing runs on the owner's machine unless the owner starts it.
+
+- `.github/workflows/tests.yml` runs on every push to `main`, `dev`, and `476`, on pull requests,
+  and by hand: `npm run check`, `npm run test:server`, then the changed specs plus the boot and
+  determinism canaries (the `test:changed` selection) across all four projects, sharded. A manual
+  run can choose `mode=all`, a `base` commit, `projects`, and `shards`.
+- `.github/workflows/nightly.yml` runs from `main` every night and by hand: the full suite on
+  `476` and `dev`, and season timing for every start on `476`.
+- `.github/workflows/e2e.yml` and `season-timing.yml` are the reusable jobs behind them.
+
+Trigger and read runs with the GitHub CLI, for example:
+
+```sh
+gh workflow run tests.yml --ref dev -f mode=all
+gh workflow run nightly.yml -f suite=false -f timing_ref=476
+gh run list --workflow tests.yml --branch dev --limit 5
+gh run view <run-id>                 # job results and summary
+gh run view <run-id> --log-failed    # failing step logs
+gh run download <run-id> -n report-tests -D ci-report   # merged HTML/JSON report
+```
+
+Only pushed branches can be tested. Do not push a branch solely to test it unless the owner asked
+for that branch to be pushed. A passing run is evidence, not owner acceptance; visual, device, and
+play acceptance remain the owner's. Keep tests deterministic, bounded,
 and isolated in fresh browser contexts. Manual testing remains required for appearance, touch
 behavior, itch.io iframe behavior, real mobile browsers, and subjective game feel.
 
@@ -118,8 +148,19 @@ remain opt-in and transient, balance enter/leave in `finally`, and restore wrapp
 functions after the burst, including errors. Relevant coverage lives in
 `tests/e2e/specs/time-controls.spec.js`, `annual-world-profiling.spec.js`, and
 `army-daily-performance.spec.js`. Agents may inspect owner-provided reports and
-saved traces, but must not run profiling or the harness themselves under the
-owner-controlled testing policy above.
+saved traces, and may trigger and read the CI season timing, but must not run
+profiling or the harness on the local machine.
+
+### Season timing
+
+`tests/e2e/measure/season-timing.js` is a measurement tool, not a regression spec. It enumerates
+every start the catalogue offers, starts each through the ordinary seed input with automation
+resolving events, enables this profiler, and fast-forwards season by season. It records wall and
+simulation time, the slowest rows and counters, and workload (player settlements against their
+limit, held counties, armies, characters) per season. Its report flags a season far slower than
+the start's typical season, a season 1.5 times slower than the same season a year earlier, a
+season 1.5 times slower than the previous nightly measurement, and starts that fail or stall.
+It runs nightly in CI; the 90-day spec bound does not apply to it.
 
 Deployment: zip the folder (`index.html` at the zip root) to itch.io as an HTML5 project, or in
 practice the owner runs `notes/deploy.cmd` (butler push). It ships to **two independent targets** —
@@ -174,14 +215,14 @@ finalizing any merge into `main` or `dev`, follow the
 
 1. Add or update automated tests for every observable behavior change or bug fix. The tests must
    exercise the expected behavior and land in the same commit or merge as the implementation.
-2. Do not run the tests. Test execution, including focused cases, syntax checks, browser
-   matrices, runtime verification, and manual browser checks, is always owner-controlled.
-3. In the final user handoff, list the test files added or updated and explicitly record that no
-   tests were run. Never copy that test-execution status into Git metadata.
+2. Do not run the tests locally. Focused cases, syntax checks, browser matrices, runtime
+   verification, and manual browser checks run in GitHub Actions or by the owner.
+3. In the final user handoff, list the test files added or updated and record whether and where
+   they ran. Never copy that test-execution status into Git metadata.
 
-For a branch merge, add the tests on the branch with the behavior change, but leave all
-execution to the owner. A documentation-only change does not need an artificial gameplay test.
-There is no GitHub Actions test workflow. The owner runs any desired test commands locally.
+For a branch merge, add the tests on the branch with the behavior change. A documentation-only
+change does not need an artificial gameplay test. Pushes to `main`, `dev`, and `476` run the
+changed tests in GitHub Actions; see **Continuous integration**.
 
 **Commit-message hygiene.** Commit subjects and bodies describe only the durable repository or
 player-facing change. Never include transient agent-process metadata such as test-execution
@@ -196,8 +237,15 @@ commit subject**, using `vMAJOR.MINOR.PATCH: description` (for example,
 to the final merge/integration commit. Feature-branch commits do not guess a version, and
 docs-only commits do not assign one, so those commits are exempt.
 
-**Never manage git worktrees.** Their lifecycle is owner-controlled. Do not create, add, remove,
-move, prune, repair, or otherwise modify a worktree or its registration.
+**Git worktrees.** Agents may create a worktree when work needs a branch other than the one
+checked out in the primary working directory. Create each one at `.worktrees/<branch-name>/`
+under the repository root, never elsewhere, and never check out a branch already in use by
+another worktree. Do not switch the primary checkout's branch to avoid creating one. When a
+worktree's branch is fully merged and the owner asks for cleanup, run `git worktree remove`
+followed by `git branch -d <branch>` (never `-D`). Remove a temporary worktree created only to
+commit to an existing long-lived branch with `git worktree remove` alone once its work is
+committed. Never remove a worktree with uncommitted changes, and never delete `main`, `dev`, or
+another long-lived integration branch.
 
 **When the owner explicitly asks for a new branch and a merge into `main` or `dev`:**
 
@@ -205,7 +253,8 @@ move, prune, repair, or otherwise modify a worktree or its registration.
 2. Merge that temporary branch into the requested integration target.
 3. Once the branch is fully merged, switch the current checkout off it if Git requires that,
    then delete **only the branch** with `git branch -d <branch>` (use `-d`, not `-D`, so Git
-   refuses if it is not fully merged). Leave every worktree and worktree registration intact.
+   refuses if it is not fully merged). If the branch has its own worktree, remove that worktree
+   first as described under **Git worktrees**.
 
 **The `dev` branch is long-lived — never delete it.** It survives its merges into `main`
 and serves as the owner's test branch for larger changes. Every merge of any branch into `dev`

@@ -60,6 +60,9 @@ music/**/*.wma
 notes/
 saves/
 
+# Agent and owner git worktrees (see AGENTS.md, Git worktrees).
+/.worktrees/
+
 # Owner-derived local stress exports; root placement makes manual import easy.
 /logistics-stress-save*.txt
 /logistics-stress-save*.json
