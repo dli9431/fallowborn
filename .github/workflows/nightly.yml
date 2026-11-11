@@ -58,6 +58,6 @@ jobs:
     uses: ./.github/workflows/season-timing.yml
     with:
       ref: ${{ inputs.timing_ref || '476' }}
-      seasons: ${{ inputs.seasons || 4 }}
+      seasons: ${{ fromJSON(format('{0}', inputs.seasons || 4)) }}
       only: ${{ inputs.only || '' }}
       shards: 12
