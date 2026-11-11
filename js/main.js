@@ -10,8 +10,14 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.17';
+FB.VERSION = '1.189.19';
 FB.CHANGELOG = [
+  { v: '1.189.19', date: '2026-11-11', changes: [
+    'Saves stay visible after a slow start on phones and are protected from being cleared when the device runs low on space in the main game.'
+  ] },
+  { v: '1.189.18', date: '2026-11-11', changes: [
+    'Saves no longer appear missing after a slow start on phones, and the game asks the browser to keep saves when the device runs low on space.'
+  ] },
   { v: '1.189.17', date: '2026-10-31', changes: [
     'Research for larger family estates and more settlement capacity is now available in the main game.'
   ] },
@@ -2355,6 +2361,8 @@ FB.CHANGELOG = [
     FB.ui.wire();
     wireMenus();
     refreshTitle();
+    // Saves that finish loading after the title opened must still offer Continue.
+    FB.save.onLateStorage = function () { if (!FB.state) refreshTitle(); };
     FB.ui.showScreen('title');
     document.documentElement.classList.remove('boot-loading');
     $('title').setAttribute('aria-busy', 'false');
