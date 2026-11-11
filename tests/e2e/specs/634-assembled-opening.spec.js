@@ -2,9 +2,10 @@
 const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {installPageGuards} = require('../support/page-contract');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,['index.html','data/bookmark_634.js','data/bookmark_sources.js',
+dependsOnRuntime(__filename,['data/bookmark_manifest.js','index.html','data/bookmark_634.js','data/bookmark_sources.js',
   'data/bookmark_634_identities.js','data/starts_634_rulers.js','data/bookmark_634_courts.js',
   'data/starts_634_damascus.js','data/starts_634_ctesiphon.js','data/story_ruler_agendas_634.js',
   'data/bookmark_634_scaffold_a.js','data/bookmark_634_scaffold_b.js',
@@ -81,14 +82,17 @@ test('complete hidden opening consumes each court once and preserves the selecta
       identities:starts.filter(function (r) { return ['umar_634','heraclius_634','damascus_household_634','ctesiphon_household_634'].indexOf(r.id)>=0; }).map(function (r) {
         const v=FB.startIdentity(r,b); return [r.id,v.startReligion,v.governmentForm || null];
       }).sort(),
-      held:!starts.some(function (r) { return /yazdegerd|jabala/.test(r.id); }) && !FBDATA.storyInstances.syrian_front_634 && !FBDATA.storyInstances.iraqi_front_634,
+      held:!starts.some(function (r) { return /yazdegerd|jabala/.test(r.id); }),
+      fronts:['syrian_front_634','iraqi_front_634'].map(function (id) {
+        return [id,!!FBDATA.storyInstances[id],b.stories.indexOf(id)>=0,old.stories.indexOf(id)>=0];
+      }),
       baseline:raw.revisions.baseline};
   })).toEqual({fresh:'core_identities_v3',visible:true,hidden:true,counts:[527,506,122,244,50,50],
     courts:true,landscape:true,layouts:true,earlierEmpty:true,
     institutions:['constantinople_see','jerusalem_see','rome_see','ctesiphon_catholicos_634','antioch_west_syriac_claim_634','alexandria_imperial_claim_634'],
     scoped:true,actors:true,starts:['craftsman_634','ctesiphon_household_634','damascus_household_634','farmer_634','frontier_household_634','heraclius_634','medina_household_634','umar_634'],
     identities:[['ctesiphon_household_634','east_syriac_local_634',null],['damascus_household_634','chalcedonian_local_634',null],
-      ['heraclius_634','chalcedonian','administrative_monarchy'],['umar_634','medinan_court_634','medinan_selection_634']],held:true,baseline:{}});
+      ['heraclius_634','chalcedonian','administrative_monarchy'],['umar_634','medinan_court_634','medinan_selection_634']],held:true,fronts:[['syrian_front_634',true,true,false],['iraqi_front_634',true,true,false]],baseline:{}});
 });
 
 test('six distinct incumbents initialize without global seeds or extra authority',async function ({page},info) {
@@ -159,10 +163,38 @@ for (const imported of [false,true]) test((imported?'JSON':'native')+' assembled
     reject(function (e) { e.state.start.revision='absent_revision'; });
     return {cases:cases,signature:FB.mods.saveCompatibility(original).compatible};
   },resaved)).toEqual({cases:[true,true,true,true,true,true],signature:true});
-  if (imported) {
+
+});
+
+test.describe('assembled JSON reload and changed-content boundaries',function () {
+  let sample;
+  test.beforeAll(async function ({browser},info) {
+    const context=await browser.newContext(),page=await context.newPage(),guard=installPageGuards(page);
+    try {
+      await review(page,info,'farmer_634',true);
+      await page.evaluate(function () { FB.state.player.gold-=7; });
+      sample={text:await page.evaluate(function () { return FB.save.serialize(); }),before:await page.evaluate(facts),
+        configuration:await page.evaluate(function () { return [localStorage.getItem('fb_mods'),localStorage.getItem('fb_mods_bundled')]; })};
+    } finally { try { expect(guard.faults).toEqual([]); } finally { await context.close(); } }
+  });
+  async function restoreSample(page,info) {
+    await page.addInitScript(function (configuration) {
+      if (sessionStorage.getItem('assembled-json-seeded')) return;
+      if (configuration[0]!==null) localStorage.setItem('fb_mods',configuration[0]);
+      if (configuration[1]!==null) localStorage.setItem('fb_mods_bundled',configuration[1]);
+      sessionStorage.setItem('assembled-json-seeded','1');
+    },sample.configuration);
+    await openGame(page,info); await restoreBookmark(page,sample.text);
+    expect(await page.evaluate(facts)).toEqual(sample.before);
+  }
+  test('current JSON content reloads with exact spent resources and commitments',async function ({page},info) {
+    await restoreSample(page,info);
     await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page);
-    await restoreBookmark(page,resaved);
-    expect(await page.evaluate(facts)).toEqual(before);
+    await restoreBookmark(page,sample.text);
+    expect(await page.evaluate(facts)).toEqual(sample.before);
+  });
+  test('changed JSON institution content rejects matching-name saves before mutation',async function ({page},info) {
+    await restoreSample(page,info);
     const changed=await page.evaluate(function () {
       const b=JSON.parse(JSON.stringify(FBDATA.bookmarks['634']));
       b.revisions.core_courts_v4.localInstitutions.rome_see.representative.skills.dip=8;
@@ -178,8 +210,8 @@ for (const imported of [false,true]) test((imported?'JSON':'native')+' assembled
       let rejected=false; try { FB.save.restore(e); } catch(error) { rejected=/mod set|incompatible content/.test(error.message); }
       return {rejected:rejected,changed:e.mods!==FB.mods.sig(),
         pure:before===JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage])};
-    },resaved)).toEqual({rejected:true,changed:true,pure:true});
-  }
+    },sample.text)).toEqual({rejected:true,changed:true,pure:true});
+  });
 });
 
 test('invalid complete candidates reject purely and missing court input withholds publication',async function ({page},info) {
@@ -240,13 +272,13 @@ for (const id of ['umar_634','heraclius_634','damascus_household_634','ctesiphon
     await enterCode(page,code);
     expect(await page.evaluate(function (id) {
       const s=FB.state,start=FB.campaignStart(s),c=s.chars[s.player.charId],old=window.originalCourt;
+      const tracks=FB.startTracks(start,s.player.provinceId,FB.campaignBookmark(s));
       const result={id:s.start.scenarioId,revision:s.start.revision,faith:c.religion,
-        attached:start.tracks.every(function (track) { return !!s.stories[track]; }),six:Object.keys(s.localInstitutions).length===6};
+        attached:tracks.length>0 && tracks.every(function (track) { return !!s.stories[track]; }),six:Object.keys(s.localInstitutions).length===6};
       if (old) {
         result.adopted=c.id===old.person && !s.realms[old.source] && FB.realmRulerGeneration(s,'player')===old.generation;
         result.form=FB.governments.forRealm(s,'player').id;
-        result.money=id==='umar_634' ? s.player.gold===100 && s.realms.player.treasury.gold===old.treasury :
-          s.player.gold===old.treasury && !s.realms.player.treasury;
+        result.money=s.player.gold===100 && s.realms.player.treasury.gold===old.treasury;
       }
       return result;
     },id)).toEqual(Object.assign({id:id,revision:'core_courts_v4',attached:true,six:true,

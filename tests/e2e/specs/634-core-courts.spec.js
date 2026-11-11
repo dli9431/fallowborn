@@ -1,11 +1,13 @@
 'use strict';
+const fs = require('fs');
 const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {manifestRuns,manifestFiles} = require('../fixtures/bookmark-manifest/eager-document');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const path = require('path');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/bookmark_manifest.js',
   'index.html','data/bookmark_634_courts.js','data/bookmark_634_identities.js','data/starts_634_rulers.js',
   'data/bookmark_634.js','data/bookmark_634_scaffold_a.js','data/bookmark_634_scaffold_b.js',
   'data/bookmark_634_scaffold_c.js','data/bookmark_634_scaffold_d.js','data/story_ruler_agendas_634.js',
@@ -15,25 +17,18 @@ dependsOnRuntime(__filename,[
   'js/government_administration.js','js/government_recognition.js','js/authority.js',
   'js/model.js','js/world.js','js/starts.js','js/main.js','js/treasury.js','js/mods.js','js/save.js','js/save_v4.js',
   'js/lordships.js','js/fiscal.js','js/settlement.js','js/title_ids.js'
-]);
+].concat(manifestFiles(manifestRuns(fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_manifest.js'),'utf8')))
+  .filter(function (file) { return /634/.test(file); })));
 
-// Assemble only in this isolated review. Production sources remain unpublished.
+// Select the assembled catalogue only in this isolated review; shipping visibility stays hidden.
 function candidate() {
   const copy=function (v) { return JSON.parse(JSON.stringify(v)); };
   const table=FBDATA.bookmarkRevisionContent_634_courts, raw=copy(FBDATA.bookmarks['634']);
-  const current=FB.bookmark('634'), opening=copy(current.opening);
-  opening.actors=copy(FBDATA.bookmarkOpeningActors634);
-  const openings=copy(current.openingRevisions);
-  openings.core_courts_v4=copy(opening);
-  raw.revisions.core_courts_v4={
-    realms:current.realms.map(function (r) { return copy(table.realms.find(function (v) { return v.id===r.id; }) || r); }),
-    opening:opening,openingRevision:'core_courts_v4',openingRevisions:openings
-  };
   raw.revision='core_courts_v4';
   return {name:'Autumn core court review',bookmarks:{'634':raw},
     religions:copy(FBDATA.bookmarkCourtReligions634),governmentForms:copy(table.governmentForms),
     administrationProfiles:copy(table.administrationProfiles),aristocraticProfiles:copy(table.aristocraticProfiles),
-    startScenarios:copy(FBDATA.startScenarios_634_rulers)};
+    startScenarios:copy(FBDATA.startScenarios.filter(function (r) { return r.id==='umar_634' || r.id==='heraclius_634'; }))};
 }
 
 async function load(page,info) {
@@ -63,6 +58,7 @@ async function importCourts(page,revision) {
       return FB.titleIds.normalizeBookmark(FB.bookmarkRevisions('634').find(function (b) { return b.revision===world.revision; }));
     });
   },predecessors)).toEqual(predecessors);
+  await page.evaluate(function () { FBDATA.bookmarks['634'].revisions.core_courts_v4.hidden=false; });
 }
 
 function roundTrip() {
@@ -97,10 +93,17 @@ test('core companions stay inert and preserve every preceding ruler projection',
         return b.revision===world.revision;
       }))===JSON.stringify(world);
     });
+    const projectionFaults=[];
     const projections=FBDATA.startScenarios_634_rulers.every(function (row) {
       const old=FBDATA.startScenarios.find(function (r) { return r.id===row.id; });
+      const expected=JSON.parse(JSON.stringify(row));
+      const companion=row.id==='umar_634'?'opening_umar_634':'opening_heraclius_634';
+      expected.tracks.push(companion); expected.trackLocations[companion]=[row.fixedProvinceId];
       return Object.keys(raw.revisions).every(function (revision) {
-        return JSON.stringify(FB.startIdentity(row,{id:'634',revision:revision}))===JSON.stringify(old);
+        const a=FB.startIdentity(expected,FB.bookmark('634',revision)),b=FB.startIdentity(old,FB.bookmark('634',revision));
+        const fields=Object.keys(a).concat(Object.keys(b).filter(function (key) { return !Object.prototype.hasOwnProperty.call(a,key); }));
+        fields.forEach(function (key) { if (JSON.stringify(a[key])!==JSON.stringify(b[key])) projectionFaults.push([row.id,revision,key]); });
+        return JSON.stringify(a)===JSON.stringify(b);
       });
     });
     const rejected=[];
@@ -117,13 +120,13 @@ test('core companions stay inert and preserve every preceding ruler projection',
     reject(function (m) { m.religions.medinan_court_634.properties.head.seat='w_arabia'; });
     reject(function (m) { m.bookmarks['634'].revisions.core_courts_v4.realms.find(function (r) { return r.id==='rashidun_634'; }).religion='early_islam_634'; });
     reject(function (m) { m.startScenarios[0].revisionIdentities['634'].core_courts_v4.governmentForm='regnum'; });
-    return {faults:faults,rejected:rejected,projections:projections,retained:retained,
+    return {faults:faults,rejected:rejected,projections:projections,projectionFaults:projectionFaults,retained:retained,
       fresh:raw.revision,head:FBDATA.religions.early_islam_634.properties.head,
-      unpublished:!FBDATA.religions.medinan_court_634 && !FBDATA.governmentForms.medinan_selection_634 &&
-        !FBDATA.administrationProfiles.byzantine_634 && !raw.revisions.core_courts_v4,
+      assembled:!!FBDATA.religions.medinan_court_634 && !!FBDATA.governmentForms.medinan_selection_634 &&
+        !!FBDATA.administrationProfiles.byzantine_634 && raw.revisions.core_courts_v4.hidden===true,
       pure:before===JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter()])};
-  },mod)).toEqual({faults:[],rejected:Array(9).fill(true),projections:true,retained:true,fresh:'core_identities_v3',head:null,
-    unpublished:true,pure:true});
+  },mod)).toEqual({faults:[],rejected:Array(9).fill(true),projections:true,projectionFaults:[],retained:true,fresh:'core_identities_v3',head:null,
+    assembled:true,pure:true});
 });
 
 test('dated actors initialize minority stewardship and scoped source-backed interests once',async function ({page},info) {
@@ -194,8 +197,7 @@ for (const start of ['umar_634','heraclius_634']) {
         sourceGone:!s.realms[original.source],head:!!head && head.id===ruler.id,
         revision:s.start.revision,scenario:s.start.scenarioId,
         exactSeed:s.seed===input.code,
-        accountConserved:id==='umar_634' ? s.player.gold===100 && s.realms.player.treasury.gold===original.treasury :
-          s.player.gold===original.treasury && !s.realms.player.treasury,
+        accountConserved:s.player.gold===100 && s.realms.player.treasury.gold===original.treasury,
         treasuryOwner:FB.treasuryCounterparty(s,'player')};
     },{id:start,code:code})).toEqual({form:start==='umar_634' ? 'medinan_selection_634' : 'administrative_monarchy',
       faith:start==='umar_634' ? 'medinan_court_634' : 'chalcedonian',same:true,generation:true,

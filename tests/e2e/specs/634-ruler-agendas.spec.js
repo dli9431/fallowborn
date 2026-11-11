@@ -6,7 +6,7 @@ const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/bookmark_manifest.js',
   'index.html','data/starts_634_rulers.js','data/story_ruler_agendas_634.js',
   'data/bookmark_634.js','data/bookmark_634_courts.js','data/bookmark_634_scaffold_d.js',
   'data/bookmark_634_identities.js','data/bookmark_634_campaigns.js','data/story_campaigns_634.js',
@@ -153,7 +153,7 @@ for (const who of ['umar','heraclius']) {
       community:who === 'umar' ? ['arabic','medinan_court_634'] : ['greek','chalcedonian'],family:true,
       rank:4,tier:7,treasury:true,privateFunds:100,source:who === 'umar' ? 'rashidun_634' : 'byzantium_634',alias:true,
       owners:true,binding:true,date:{year:634,season:2,day:1},form:who === 'umar' ? 'medinan_selection_634' : 'administrative_monarchy',
-      home:who === 'umar' ? 'medina' : 'constantinople',attachments:[who+'_court_agenda_634'],
+      home:who === 'umar' ? 'medina' : 'constantinople',attachments:[who+'_court_agenda_634','opening_'+who+'_court_634'],
       applied:[true,true,true,true],repeated:[false,false,false,false],pure:true,status:'agenda_complete',unchanged:true,noCommitment:true});
     await roundTrip(page);
   });
@@ -296,10 +296,17 @@ for (const who of ['umar','heraclius']) {
       const stop = RA.choose(id,'agenda_stop_program'), saved = JSON.parse(FB.save.serialize());
       FB.save.restore(saved);
       const stopped = FB.state.stories[id].status === 'agenda_stopped';
-      const absent = JSON.parse(FB.save.serialize()); delete absent.state.stories[id];
+      const absent = JSON.parse(FB.save.serialize()), companion = 'opening_'+who+'_court_634';
+      delete absent.state.stories[id];
       absent.state.start.storyAttachments.tracks = absent.state.start.storyAttachments.tracks.filter(function (track) { return track !== id; });
+      const before = JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]), wire = JSON.stringify(absent);
+      let rejected = false; try { FB.save.restore(absent); } catch (error) { rejected = true; }
+      if (!rejected || wire !== JSON.stringify(absent) || before !== JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]))
+        throw new Error('An incomplete ruler graph must reject atomically');
+      delete absent.state.stories[companion];
+      absent.state.start.storyAttachments.tracks = absent.state.start.storyAttachments.tracks.filter(function (track) { return track !== companion; });
       FB.save.restore(absent); FB.stories.day(FB.state);
-      return {checks:checks,stop:stop,stopped:stopped,absent:!FB.state.stories[id]};
+      return {checks:checks,stop:stop,stopped:stopped,absent:!FB.state.stories[id] && !FB.state.stories[companion]};
     },who)).toEqual({checks:[true,true,true],stop:true,stopped:true,absent:true});
     await roundTrip(page);
   });

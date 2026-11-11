@@ -24,6 +24,38 @@
           ]
         }
       ]
+    },
+    "opening_umar_634": {
+      "id": "opening_umar_634",
+      "type": "opening_profile",
+      "title": "Optional imported accounts priority",
+      "intro": "Observe the imported personal review without a reward or public commitment.",
+      "scenarioIds": [
+        "umar_634"
+      ],
+      "provinceIds": [
+        "medina"
+      ],
+      "officeRealmId": "rashidun_634",
+      "requires": [
+        "umar_agenda_634"
+      ],
+      "goals": [
+        {
+          "id": "import_accounts",
+          "name": "Retain the accounts",
+          "text": "Commit the imported accounts review.",
+          "office": true,
+          "criterion": {
+            "kind": "story_choice",
+            "storyId": "umar_agenda_634",
+            "choiceIds": [
+              "import_keep_634"
+            ]
+          }
+        }
+      ],
+      "contacts": []
     }
   }
 }

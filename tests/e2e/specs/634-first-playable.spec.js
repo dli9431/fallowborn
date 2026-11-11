@@ -7,8 +7,9 @@ const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
 const {beginBookmark,beginBookmarkFromTitle,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+const {manifestRuns,manifestFiles} = require('../fixtures/bookmark-manifest/eager-document');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/bookmark_manifest.js',
   'index.html','data/bookmark_634.js','data/starts_634_ordinary.js','data/bookmark_634_identities.js',
   'data/bookmark_634_scaffold_a.js','data/bookmark_634_scaffold_b.js',
   'data/bookmark_634_scaffold_c.js','data/bookmark_634_scaffold_d.js',
@@ -31,7 +32,8 @@ dependsOnRuntime(__filename,[
   'js/governments.js','js/government_recognition.js','js/government_elective.js','js/government_selection.js','js/climate.js',
   'js/government_civic.js','js/institutions.js','js/religious_institutions.js',
   'js/save.js','js/save_v4.js','js/systems.js','js/crazygames.js'
-]);
+].concat(manifestFiles(manifestRuns(fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_manifest.js'),'utf8')))
+  .filter(function (file) { return /634/.test(file); })));
 
 const order = ['b01','b02','b03','b04','b05','b06','b07','b08','b09','b10',
   'b11','b12','b13','b14','b15','b16','b17','b18','b19','b20','b21',
@@ -52,22 +54,31 @@ async function chooseBeginning(page) {
 test('634 loads every start and story contributor before the native manifest closes',async function () {
   const html = fs.readFileSync(path.resolve(__dirname,'../../../index.html'),'utf8');
   const scripts = Array.from(html.matchAll(/<script\b[^>]*src="([^"]+)"[^>]*>/g));
-  const sources = ['data/bookmark_634_identities.js','data/bookmark_634_scaffold_a.js',
-    'data/bookmark_634_scaffold_b.js','data/bookmark_634_scaffold_c.js','data/bookmark_634_scaffold_d.js',
-    'data/starts_634_ordinary.js','data/bookmark_634.js','data/starts_634_ctesiphon.js',
-    'data/starts_634_rulers.js','data/starts_634_damascus.js','data/starts_634_frontier.js','data/starts_634_medina.js',
-    'data/story_ruler_agendas_634.js','data/story_households_634_ctesiphon.js',
-    'data/story_households_634_damascus.js','data/story_households_634_frontier.js','data/story_households_634_medina.js'];
-  expect(scripts.filter(function (script) { return /634/.test(script[1]); }).map(function (script) { return script[1]; }))
-    .toEqual(sources);
+  const manifest = fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_manifest.js'),'utf8');
+  const runs = manifestRuns(manifest);
+  const sources = manifestFiles(runs).filter(function (file) { return /634/.test(file); });
+  expect(sources).toEqual(['data/bookmark_634_identities.js','data/bookmark_634_courts.js'].concat(
+    'abcdefghijklmnopqrst'.split('').map(function (c) { return 'data/bookmark_634_courts_' + c + '.js'; }),[
+    'data/bookmark_634_scaffold_a.js','data/bookmark_634_scaffold_b.js',
+    'data/bookmark_634_scaffold_c.js','data/bookmark_634_scaffold_d.js','data/bookmark_634_routes.js',
+    'data/starts_634_ordinary.js','data/bookmark_634.js','data/bookmark_634_campaigns.js','data/story_campaigns_634.js',
+    'data/starts_634_ctesiphon.js','data/starts_634_rulers.js','data/starts_634_damascus.js',
+    'data/starts_634_frontier.js','data/starts_634_medina.js','data/story_ruler_agendas_634.js',
+    'data/story_households_634_ctesiphon.js','data/story_households_634_damascus.js',
+    'data/story_households_634_frontier.js','data/story_households_634_medina.js',
+    'data/story_household_effects_634.js','data/story_opening_goals_634.js','data/start_ambitions_634.js']));
+  expect(scripts.filter(function (script) { return /634/.test(script[1]); })).toEqual([]);
   const paths = scripts.map(function (script) { return script[1]; });
-  sources.forEach(function (source) {
-    const entry = scripts.find(function (script) { return script[1] === source; });
-    expect(entry[0]).toMatch(/\bdefer\b/);
-    expect(entry[0]).not.toMatch(/\basync\b|type="module"/);
-    expect(paths.indexOf(source)).toBeGreaterThan(paths.indexOf('js/bookmark_sources.js'));
-    expect(paths.indexOf(source)).toBeLessThan(paths.indexOf('data/bookmark_sources.js'));
-  });
+  const entry = scripts.find(function (script) { return script[1] === 'data/bookmark_manifest.js'; });
+  expect(entry[0]).toMatch(/\bdefer\b/);
+  expect(entry[0]).not.toMatch(/\basync\b|type="module"/);
+  expect(paths.indexOf('data/bookmark_manifest.js')).toBe(paths.indexOf('js/bookmark_sources.js') + 1);
+  expect(paths.indexOf('data/bookmark_manifest.js')).toBeLessThan(paths.indexOf('data/bookmark_sources.js'));
+  runs.filter(function (run) { return run.files.some(function (row) { return sources.indexOf(row.path) >= 0; }); })
+    .forEach(function (run) {
+      expect(paths.indexOf(run.after)).toBeGreaterThan(paths.indexOf('js/bookmark_sources.js'));
+      expect(paths.indexOf(run.after)).toBeLessThan(paths.indexOf('data/bookmark_sources.js'));
+    });
 });
 
 test('634 is offered chronologically and all eight implemented starts are selectable in development setup',async function ({page},info) {
@@ -148,7 +159,7 @@ test('634 Observe enters the selected opening through the ordinary picker',async
     FB.game.setPaused(true);
     return {observe:FB.game.observe,id:FB.state.start.id,revision:FB.activeBookmark.revision,
       geography:FB.activeBookmark.geography,date:FB.state.date};
-  })).toEqual({observe:true,id:'634',revision:'ordinary_settlement_v2',geography:'europe_regional_2',
+  })).toEqual({observe:true,id:'634',revision:'core_identities_v3',geography:'europe_regional_2',
     date:{year:634,season:2,day:1}});
 });
 
@@ -270,11 +281,11 @@ for (const crazy of [false,true]) {
           pure:data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
       },{order:order});
       expect(result).toEqual({metadata:['634','The Early Conquests',{year:634,season:2,day:1},'late_antique',
-        'europe_regional_2','634_opening','ordinary_settlement_v2','baseline'],hidden:false,available:true,listed:true,
+        'europe_regional_2','634_opening','core_identities_v3','baseline'],hidden:false,available:true,listed:true,
         count:527,inhabited:506,complete:true,ordered:true,courts:122,
         named:['Dagobert I','Heraclius','Oswald','Sigebert III','Umar','Yazdegerd III'],
         climates:['northern_temperate','arid'],layouts:506,crossings:22,disabled:disabled,
-        empty:[{},{},['damascus_household_observer_634'],[],{actors:{},appointments:{},estates:[],claims:[],migrations:[]}],
+        empty:[{},{},['ctesiphon_household_observer_634','damascus_household_observer_634','medina_household_observer_634'],[],{actors:{},appointments:{},estates:[],claims:[],migrations:[]}],
         forms:[],faiths:[],faults:[],validated:[],
         nonTerritorial:[['aures_634','constantine','byzantium_634']],
         otherBookmarks:[{id:'476',faults:[]},{id:'867',faults:[]},{id:'1066',faults:[]}],pure:true});
@@ -312,7 +323,7 @@ test('failed 634 composition leaves other bookmarks and ordinary starts playable
   page.on('pageerror',function (error) { pageErrors.push(error.message); });
   await page.route('**/data/bookmark_634.js',function (route) {
     return route.fulfill({contentType:'application/javascript',
-      body:'delete FBDATA.bookmarkRegions634.b29;\n' + source});
+      body:source.replace('function () {','function () { delete FBDATA.bookmarkRegions634.b29;')});
   });
   await openGame(page,info);
   expect(pageErrors).toEqual([]);
@@ -446,7 +457,7 @@ for (const crazy of [false,true]) {
   test('a bad 634 start leaves its sibling playable on ' + (crazy ? 'CrazyGames' : 'standard'),async function ({page},info) {
     test.skip(!info.project.name.endsWith('-served'),'Response interception requires the served origin.');
     await page.route('**/data/bookmark_634.js',function (route) {
-      return route.fulfill({contentType:'application/javascript',body:'FBDATA.startScenarios_634_ordinary[0].gold = -1;\n' + source});
+      return route.fulfill({contentType:'application/javascript',body:source.replace('function () {','function () { FBDATA.startScenarios_634_ordinary[0].gold = -1;')});
     });
     if (crazy) {
       await mockCrazyGames(page);
@@ -484,7 +495,7 @@ test('canonical 634 world rejection withholds its owned catalogues and keeps oth
   test.skip(!info.project.name.endsWith('-served'),'Response interception requires the served origin.');
   await page.route('**/data/bookmark_634.js',function (route) {
     return route.fulfill({contentType:'application/javascript',body:
-      "FBDATA.bookmarkRegions634.b22.realms.find(function (r) { return r.id === 'aures_634'; }).capital = 'composition_unknown_capital';\n" + source});
+      source.replace('function () {',"function () { FBDATA.bookmarkRegions634.b22.realms.find(function (r) { return r.id === 'aures_634'; }).capital = 'composition_unknown_capital';")});
   });
   await openGame(page,info);
   const result = await page.evaluate(function () {
@@ -546,7 +557,7 @@ for (const scenario of ['farmer_634','craftsman_634']) {
           },[]),
           childAge:s.date.year - s.realms.sasanian_634.ruler.born,
           errors:FBTEST.checkInvariants(),valid:FB.save.v4.validatePlatform(s)};
-      },disabled)).toEqual({scenario:scenario,revision:'ordinary_settlement_v2',date:{year:634,season:2,day:1},provinces:527,
+      },disabled)).toEqual({scenario:scenario,revision:'core_identities_v3',date:{year:634,season:2,day:1},provinces:527,
         opening:'baseline',actors:[],local:[],heads:[],disabled:true,
         courts:['Heraclius','Umar','Yazdegerd III'],oldCourts:false,namedFamilies:[],childAge:10,errors:[],valid:true});
       await page.evaluate(function () { FB.state.player.gold -= 3; });

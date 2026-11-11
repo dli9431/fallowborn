@@ -8,7 +8,7 @@ const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/bookmark_manifest.js',
   'index.html','data/bookmark_634_scaffold_a.js','data/bookmark_634_identities.js',
   'data/bookmark_634.js','data/starts_634_ordinary.js','js/save.js','js/save_v4.js',
   'js/bookmark_sources.js',

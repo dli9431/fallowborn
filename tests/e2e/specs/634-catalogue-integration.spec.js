@@ -4,6 +4,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {eagerDocument,manifestRuns} = require('../fixtures/bookmark-manifest/eager-document');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 const root = path.resolve(__dirname,'../../..');
@@ -20,7 +21,7 @@ const dataSources = ['data/bookmark_634_identities.js'].concat(courtSources,[
   'data/story_households_634_medina.js','data/story_household_effects_634.js',
   'data/story_opening_goals_634.js','data/start_ambitions_634.js'
 ]);
-dependsOnRuntime(__filename,['index.html','Dockerfile','.dockerignore','sw.js','data/bookmark_sources.js','data/story_instances.js',
+dependsOnRuntime(__filename,['data/bookmark_manifest.js','index.html','Dockerfile','.dockerignore','sw.js','data/bookmark_sources.js','data/story_instances.js',
   'data/bookmark_568_identities.js','data/bookmark_568_scaffold_b.js',
   'data/technology.js','js/bookmark_composition.js',
   'js/bookmark_sources.js','js/starts.js','js/stories.js','js/story_campaign.js',
@@ -144,7 +145,9 @@ async function roundTrip(page) {
 }
 
 test('complete catalogue has one loader position per source and no private or test runtime inputs',async function ({page},info) {
-  const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
+  const shell = fs.readFileSync(path.join(root,'index.html'),'utf8');
+  const manifest = fs.readFileSync(path.join(root,'data/bookmark_manifest.js'),'utf8');
+  const html = eagerDocument(shell,manifestRuns(manifest));
   const tags = Array.from(html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"[^>]*>/g));
   dataSources.concat(['data/bookmark_sources.js','data/story_instances.js']).forEach(function (source) {
     const matching = tags.filter(function (m) { return m[1] === source; });
