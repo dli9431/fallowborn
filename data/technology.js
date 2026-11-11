@@ -111,6 +111,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      enforceable_guild_grants:{ mode:'hard', tech:['guild_charters'], fallback:'Ordinary enterprise ownership, careers and council operating-law proposals remain available without Guild Charters.', rationale:'Paid ruler-issued guild privileges reuse the established Guild Charters gate for new charters. Existing grants, exemptions, revocation, petitions and ordinary court enforcement survive research or ruler changes without a new gate.' },
       episcopal_rent_compositions:{ mode:'none', rationale:'Civil compositions of an existing institutional rent require actual property, living parties, competent temporal jurisdiction and conserved funds. Neither spiritual office nor a discovery supplies title or an unpaid debt.' },
       targeted_industry_laws:{ mode:'none', rationale:'Local operating permissions, residence, career-guild and existing local-office exemptions and prohibitions are political and economic obligations, independent of discovery. All ordinary household enterprises and their expansions retain their ordinary technology gates.' },
       affected_industry_law_consent:{ mode:'none', rationale:'Affected trading, civic and noble interests deliberate through current seats, territory and consent. Political membership and lawful access require no discovery; enterprise technology gates remain independent.' },
