@@ -18,6 +18,9 @@ on:
       only:
         type: string
         default: ''
+      profile:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -80,12 +83,14 @@ jobs:
           GAME_REF: ${{ inputs.ref }}
           SEASONS: ${{ inputs.seasons }}
           ONLY: ${{ inputs.only }}
+          PROFILE: ${{ inputs.profile }}
           SHARD: ${{ matrix.shard }}/${{ inputs.shards }}
         run: |
           export GAME_COMMIT="$(git -C "$GITHUB_WORKSPACE/game" rev-parse HEAD)"
           set -- measure --game "$GITHUB_WORKSPACE/game" --seasons "$SEASONS" --shard "$SHARD" \
             --out "$GITHUB_WORKSPACE/timing/shard-${{ matrix.shard }}.json"
           if [ -n "$ONLY" ]; then set -- "$@" --only "$ONLY"; fi
+          if [ "$PROFILE" = true ]; then set -- "$@" --cpu-profile; fi
           node measure/season-timing.js "$@"
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
