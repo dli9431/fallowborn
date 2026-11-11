@@ -95,7 +95,7 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
       desc:'Households keep their livelihoods while the Medinan, Eastern Roman and Sasanian courts face an uncertain autumn.',
       date:{year:634,season:2,day:1},era:'late_antique',
       geography:'europe_regional_2',settlementLayout:'634_opening',
-      revision:'baseline',revisions:{baseline:{}},
+      revision:'baseline',revisions:{baseline:{}},starts:[],
       openingRevision:'baseline',openingLegacyRevision:'baseline',
       systems:{disable:['episcopal_sees','civic_institutions','papacy','excommunication','abbeys',
         'feudal_service','scutage','manorial_tenure','crown_bloc','tournaments','great_holy_wars']}
@@ -163,7 +163,7 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
     var assembledOpenings = copy(world.openingRevisions);
     assembledOpenings.core_courts_v4 = copy(assembledOpening);
     b.revisions.core_courts_v4 = {
-      hidden:true,provinces:copy(identityRows),
+      hidden:true,starts:[],provinces:copy(identityRows),
       realms:world.realms.map(function (row) { return replacements[row.id]; }),
       duchies:copy(world.duchies),kingdoms:copy(world.kingdoms),empires:copy(world.empires),
       settlementLayout:'634_opening',religiousHeads:{},

@@ -42,7 +42,31 @@ FBDATA.rulerAgendas_634 = {
         text:'Conclude these reviews with the court, holdings and resources that now exist. Remaining at Constantinople is a complete course. Ordinary public decisions continue; no journey, named battle, territorial loss or death is scheduled.',choices:[
           {id:'heraclius_conclude_634',label:'Conclude the reviews',detail:'Close the personal program at no cost or reward. Ordinary public actions remain available.',operation:'agenda_finish'},
           {id:'heraclius_retain_conclusion_634',label:'Retain present arrangements',detail:'Complete the reviews without a new public commitment or reward.',operation:'agenda_priority'}]}
-    ]}
+    ]},
+  yazdegerd_agenda_634:{id:'yazdegerd_agenda_634',type:'ruler_agenda',subjectRealmId:'sasanian_634',requires:['iraqi_front_634'],
+    title:'Yazdegerd: the child ruler and the court',
+    intro:'Review the existing court, provincial interests and Iraqi frontier from Ctesiphon. Every personal choice is costless. Public decisions depend on the adult steward during minority, actual provincial assent and ordinary authority and resources.',
+    stages:[
+      {id:'minority_court',name:'The ruler and minority stewardship',year:634,season:2,
+        text:'Review Rank & Realm for the living ruler, adult steward and current recognition. The provincial households represent court interests; their generated principals are not named historical regents. The steward supplies public continuity without becoming sovereign. Personal priorities neither appoint a steward nor repeat accession.',choices:[
+          {id:'yazdegerd_review_court',label:'Prioritize the court and stewardship',detail:'Record attention at no cost. Use the ordinary stewardship review if the current steward becomes incapable.',operation:'agenda_priority'},
+          {id:'yazdegerd_observe_recognition',label:'Acknowledge existing recognition',detail:'Record only actual positive recognition for this ruler generation. Create no vote, appointment or payment.',operation:'agenda_public_record',recordKind:'agenda_recognition'},
+          {id:'yazdegerd_keep_court',label:'Retain present arrangements',detail:'Continue without a new public commitment or reward.',operation:'agenda_priority'}]},
+      {id:'provincial_obligations',name:'Provincial interests and obligations',year:634,season:2,
+        text:'Inspect the actual hereditary interests, their jurisdictions, assent and current revenue and military obligations in Rank & Realm. Where interests remain, changes use the ordinary provincial negotiation review with its public cost and consent checks. Missing interests create no substitute principal or free bargain.',choices:[
+          {id:'yazdegerd_review_provinces',label:'Prioritize current provincial obligations',detail:'Record attention without changing terms or buying assent. Actual negotiations keep their displayed public costs.',operation:'agenda_priority'},
+          {id:'yazdegerd_keep_provinces',label:'Retain current obligations',detail:'Keep the actual terms without payment, enforcement or additional recognition.',operation:'agenda_priority'}]},
+      {id:'iraqi_frontier',name:'The actual Iraqi frontier',year:634,season:2,
+        text:'Consult the current Hira district controller and Iraqi opportunity below, and Land for actual holdings and forces. District control is a simulation scale, not precise urban possession. Defense and diplomacy require the existing court and capable stewardship during minority. No named battle, army, conquest or collapse follows from this review.',choices:[
+          {id:'yazdegerd_review_iraq',label:'Prioritize the current Iraqi situation',detail:'Record attention only. Spend nothing and make no military or diplomatic order.',operation:'agenda_priority'},
+          {id:'yazdegerd_observe_iraq',label:'Acknowledge the actual Iraqi conclusion',detail:'Record only an existing source conclusion. Its result belongs to the initiating court and supplies no Sasanian victory, loss or reward by itself.',operation:'agenda_story_fact',storyId:'iraqi_front_634',stateField:'result',values:['won','failed','diverted','interrupted']},
+          {id:'yazdegerd_keep_iraq',label:'Retain present arrangements',detail:'Make no new frontier commitment. Ordinary public decisions retain their own authority and costs.',operation:'agenda_priority'}]},
+      {id:'sasanian_continuation',name:'Continue with the living court',year:634,season:2,
+        text:'Conclude with the ruler, court and resources that actually remain. Staying at Ctesiphon is a complete course. Stewardship ends at the court’s adulthood boundary while the same ruler continues. Private household inheritance and public royal succession remain distinct; no later monarch, evacuation or historical death is scheduled.',choices:[
+          {id:'yazdegerd_finish',label:'Conclude the reviews',detail:'End this personal program at no cost or reward. Ordinary ongoing government keeps its own rules.',operation:'agenda_finish'},
+          {id:'yazdegerd_keep',label:'Retain present arrangements',detail:'Complete the reviews without a new public commitment or reward.',operation:'agenda_priority'}]}
+    ]
+  }
 };
 /* Complete court reviews use the world revision that owns both opportunities.
    Earlier worlds retain their original personal declarations. */
@@ -99,8 +123,6 @@ FBDATA.rulerAgendas_634_full = {
           {id:'heraclius_keep_court',label:'Retain present arrangements',detail:'Complete the reviews without a journey or new public commitment.',operation:'agenda_priority'}]}
     ]}
 };
-/* The unavailable Yazdegerd program reserves yazdegerd_agenda_634 only as a
-   future identity; it is deliberately absent from the registered graph. */
 (function () {
   'use strict';
   var source = FBDATA.bookmarkCompositionSources && FBDATA.bookmarkCompositionSources.autumn_634;
@@ -114,6 +136,16 @@ FBDATA.rulerAgendas_634_full = {
         if (!FBDATA.rulerAgendas_634[id]) throw new Error('Missing 634 ruler agenda: ' + id);
         unit.storyInstances[id] = JSON.parse(JSON.stringify(FBDATA.rulerAgendas_634[id]));
       });
+      if (definition.id === 'yazdegerd_634') {
+        delete unit.locations;
+        unit.bindings = {root:{offered:false,locations:[definition.fixedProvinceId]},revisions:{}};
+        Object.keys(source.input.bookmark.revisions).forEach(function (id) {
+          unit.bindings.revisions[id] = {};
+        });
+        unit.bindings.revisions.core_courts_v4 = {offered:true};
+        unit.storyAfter = FB.bookmarkCompositions.captureStories('autumn_634',definition.id,unit.storyInstances);
+        return;
+      }
       var fullId = definition.id === 'umar_634' ? 'umar_court_agenda_634' : 'heraclius_court_agenda_634';
       unit.storyInstances[fullId] = JSON.parse(JSON.stringify(FBDATA.rulerAgendas_634_full[fullId]));
       delete unit.locations;
