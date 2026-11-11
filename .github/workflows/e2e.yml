@@ -192,14 +192,14 @@ jobs:
           merge-multiple: true
       - name: Merge reports
         env:
-          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/merged/results.json
+          FB_CI_REPORT_FILE: ${{ github.workspace }}/merged/results.json
           PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ github.workspace }}/merged/html
           REF: ${{ inputs.ref }}
           MODE: ${{ inputs.mode }}
         run: |
           mkdir -p merged
           if ls blobs/*.zip >/dev/null 2>&1; then
-            (cd tooling/tests/e2e && npx playwright merge-reports --reporter=html,json "$GITHUB_WORKSPACE/blobs")
+            (cd tooling/tests/e2e && npx playwright merge-reports --reporter="html,$GITHUB_WORKSPACE/tooling/tests/e2e/support/ci-report.js" "$GITHUB_WORKSPACE/blobs")
             if [ ! -d merged/html ] && [ -d tooling/tests/e2e/playwright-report ]; then
               cp -r tooling/tests/e2e/playwright-report merged/html
             fi
