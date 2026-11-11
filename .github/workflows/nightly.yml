@@ -32,6 +32,10 @@ on:
         description: Comma-separated start ids (bookmark:scenario), empty for every start
         type: string
         default: ''
+      profile:
+        description: Record a CPU profile of every season (use with only)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -60,4 +64,5 @@ jobs:
       ref: ${{ inputs.timing_ref || '476' }}
       seasons: ${{ fromJSON(format('{0}', inputs.seasons || 4)) }}
       only: ${{ inputs.only || '' }}
+      profile: ${{ inputs.profile == true }}
       shards: 12

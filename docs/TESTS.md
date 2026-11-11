@@ -285,11 +285,16 @@ characters, living realms, and active wars. `report` merges shard files, flags s
 2.5 times the start's median season), year-over-year growth and regressions against a baseline
 (more than 1.5 times, ignoring seasons under two seconds), and lists the profiler rows whose
 per-day self time grew most. Builds without the start enumeration helpers report that nothing was
-measured.
+measured. Only starts the date actually offers are enumerated. Each season's workload also records the
+serialized size of every top-level `FB.state` part, so growth and spike flags name the state that grew.
+It also flags per-day cost that more than doubles within a run and a player who dies. With
+`--cpu-profile` (the nightly `profile` input, best combined with `only`), every season also writes a V8
+`.cpuprofile` under `cpuprofiles/` (open it in Chrome DevTools, Performance panel) and the report lists
+the top functions by self time with their main callers.
 
 ```sh
 node measure/season-timing.js measure --game .. --seasons 4 --out timing/all.json
-node measure/season-timing.js measure --game .. --only 1204:muhammad_1204 --seasons 8 --out timing/one.json
+node measure/season-timing.js measure --game .. --only 1204:muhammad_1204 --seasons 8 --cpu-profile --out timing/one.json
 node measure/season-timing.js report --in timing --out report.json --summary summary.md --baseline previous
 ```
 
