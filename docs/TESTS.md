@@ -36,9 +36,11 @@ not included in either deployment artifact.
 
 ## Running the tests
 
-All test execution is owner-controlled. AI coding agents add or update relevant tests but never
-execute the harness, install its dependencies or browsers, or start its server. Agents must
-report which tests changed and state that they were not run.
+Tests run in GitHub Actions (see [Continuous integration](#continuous-integration)) or when the
+owner starts them locally. AI coding agents add or update relevant tests but never execute the
+harness on the local machine, install its dependencies or browsers, or start its server. They may
+trigger the CI workflows and read their results. Agents report which tests changed and whether
+and where they ran.
 
 For an owner-initiated manual run from `tests/e2e/`:
 
@@ -236,12 +238,55 @@ has the same test-authoring requirement:
 3. Add or update automated tests that exercise the expected behavior and would catch its
    regression. Keep those tests in the same commit or branch as the implementation.
 4. Do not run any focused test, syntax gate, browser matrix, runtime verifier, or manual browser
-   check. Do not install Playwright dependencies or browsers.
-5. In the handoff, list the test files added or updated and state that the tests were not run.
+   check locally. Do not install Playwright dependencies or browsers.
+5. In the handoff, list the test files added or updated and state whether and where they ran.
 
-The owner decides when to use the commands in [Running the tests](#running-the-tests), including
-before commits, merges, releases, or deployments. A documentation-only change does not need an
-artificial gameplay test.
+Pushes to `main`, `dev`, and `476` run the changed tests in GitHub Actions. The owner decides when
+to use the local commands in [Running the tests](#running-the-tests). A documentation-only change
+does not need an artificial gameplay test.
+
+## Continuous integration
+
+Workflows live in `.github/workflows/`:
+
+- `tests.yml`: every push to `main`, `dev`, and `476`, pull requests, and manual runs. It runs
+  `npm run check` and `npm run test:server`, then Playwright with `--only-changed` against the
+  pushed range's base and the bounded runtime dependencies of `test:changed`, across all four
+  projects in 4 shards. A manual run accepts `mode` (`changed` or `all`), `base`, `projects`, and
+  `shards`.
+- `nightly.yml`: daily from `main` and by hand. The full suite on `476` and `dev` in 16 shards,
+  then season timing on `476`.
+- `e2e.yml`: the reusable check, sharded Playwright run (blob reporter), and merge job. The merge
+  job writes a job summary with totals, failures and their first error line, flaky tests, and the
+  slowest spec files, and uploads the merged HTML and JSON report as `report-<label>`.
+- `season-timing.yml`: runs `tests/e2e/measure/season-timing.js` from the calling commit against
+  the game at the requested branch, sharded across starts, then compares the merged measurement
+  with the previous nightly one and uploads `season-timing-<branch>`.
+
+Read results with `gh run list`, `gh run view <id>`, `gh run view <id> --log-failed`, and
+`gh run download <id> -n <artifact>`. Only pushed branches can run in CI.
+
+### Season timing
+
+`tests/e2e/measure/season-timing.js` measures simulation cost; it is not a regression spec and
+the one-season journey bound does not apply. `measure` serves a game checkout on 127.0.0.1,
+enumerates every scenario on every bookmark it may start in (the same start-code construction as
+the parity journey), and for each start opens a fresh context, enters the code through the
+ordinary seed input, enables `FB.game.fastForwardTiming`, and fast-forwards season by season with
+automation set to resolve every event. Per season it records days, wall and simulation time,
+milliseconds per simulated day, the slowest profiler rows by self time, the largest counters, and
+workload: the player's directly held settlements against their limit, held counties, armies,
+characters, living realms, and active wars. `report` merges shard files, flags spikes (more than
+2.5 times the start's median season), year-over-year growth and regressions against a baseline
+(more than 1.5 times, ignoring seasons under two seconds), and lists the profiler rows whose
+per-day self time grew most. Builds without the start enumeration helpers report that nothing was
+measured.
+
+```sh
+node measure/season-timing.js measure --game .. --seasons 4 --out timing/all.json
+node measure/season-timing.js measure --game .. --only 1204:muhammad_1204 --seasons 8 --out timing/one.json
+node measure/season-timing.js report --in timing --out report.json --summary summary.md --baseline previous
+```
 
 ## The two browser targets
 
@@ -367,8 +412,7 @@ npx playwright show-trace test-results/<case>/trace.zip
 
 ## Runtime manifest verification
 
-The repository has no GitHub Actions workflow. Test execution and runtime-manifest verification
-are both owner-initiated local operations.
+Runtime-manifest verification is an owner-initiated local operation; CI does not run it.
 
 The verifier can check a stamped local staging directory:
 
