@@ -78,7 +78,8 @@ GitHub Actions runs all tests; nothing runs on the owner's machine unless the ow
 - `.github/workflows/tests.yml` runs on every push to `main`, `dev`, and `476`, on pull requests,
   and by hand: `npm run check`, `npm run test:server`, then the changed specs plus the boot and
   determinism canaries (the `test:changed` selection) across all four projects, sharded. A manual
-  run can choose `mode=all`, a `base` commit, `projects`, and `shards`.
+  run can test any pushed branch or commit (`target`), choose `mode=all` or `mode=specs` with an
+  exact `specs` list, a `base` commit, `projects`, `shards`, and a `request_id` that names the run.
 - `.github/workflows/nightly.yml` runs from `main` every night and by hand: the full suite on
   `476` and `dev`, and season timing for every start on `476`.
 - `.github/workflows/e2e.yml` and `season-timing.yml` are the reusable jobs behind them.

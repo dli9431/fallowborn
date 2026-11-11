@@ -16,9 +16,13 @@ on:
         type: string
         default: tests
       mode:
-        description: changed (Playwright --only-changed against base) or all
+        description: changed (Playwright --only-changed against base), all, or specs (only the listed specs)
         type: string
         default: changed
+      specs:
+        description: Space-separated spec paths relative to tests/e2e (specs mode)
+        type: string
+        default: ''
       base:
         description: Base commit for changed mode; the parent commit when empty or unknown
         type: string
@@ -89,7 +93,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-          fetch-depth: 0
+          # Only the changed-test selection needs history.
+          fetch-depth: ${{ inputs.mode == 'changed' && '0' || '1' }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -113,9 +118,18 @@ jobs:
           MODE: ${{ inputs.mode }}
           BASE: ${{ inputs.base }}
           PROJECTS: ${{ inputs.projects }}
+          SPECS: ${{ inputs.specs }}
         run: |
           args=""
-          if [ "$MODE" = changed ]; then
+          if [ "$MODE" = specs ]; then
+            for spec in $SPECS; do
+              case "$spec" in
+                specs/*.spec.js) args="$args $spec" ;;
+                *) echo "Not a spec path: $spec" >&2; exit 2 ;;
+              esac
+            done
+            if [ -z "$args" ]; then echo "specs mode needs specs" >&2; exit 2; fi
+          elif [ "$MODE" = changed ]; then
             base="$BASE"
             if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
               base="$(git rev-parse HEAD~1)"
@@ -142,6 +156,14 @@ jobs:
           name: blob-${{ inputs.label }}-${{ matrix.shard }}
           path: tests/e2e/blob-report
           retention-days: 5
+          if-no-files-found: ignore
+      # Failure contexts (error-context.md, screenshots, traces) for test-fix triage.
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: results-${{ inputs.label }}-${{ matrix.shard }}
+          path: tests/e2e/test-results
+          retention-days: 14
           if-no-files-found: ignore
 
   report:
