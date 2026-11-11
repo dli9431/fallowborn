@@ -48,6 +48,8 @@ test('six literal court replacements load inertly and preserve every accepted sc
 });
 
 test('complete court replacement composes through JSON import and restores without reseeding',async function ({page},info) {
+  // The import and reload each prepare the complete catalogue (8 to 17 s on a hosted runner); no simulation days run.
+  test.setTimeout(120 * 1000);
   await openGame(page,info);
   const mod = await page.evaluate(function (declaration) {
     const world = JSON.parse(JSON.stringify(FB.bookmark('634')));

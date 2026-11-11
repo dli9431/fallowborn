@@ -234,6 +234,9 @@ for (const entry of [
   ['core_courts_v4','ctesiphon_household_634','east_syriac_local_634']
 ]) {
   test.describe('634 current imported ' + entry[0],function () {
+    // Import, reload and restore each prepare the complete catalogue (8 to 17 s on a hosted runner), as in the
+    // picker and platform journeys; no simulation days run here.
+    test.describe.configure({timeout:120 * 1000});
     let previous;
     test.beforeEach(async function ({page},info) {
       await openGame(page,info);

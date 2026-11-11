@@ -408,6 +408,8 @@ async function beginImportedCourt(page,info) {
 }
 
 test('ordinary JSON full-world content restores twice and malformed saves reject before mutation',async function ({page},info) {
+  // Import and reload each prepare the complete catalogue (8 to 17 s on a hosted runner); no simulation days run.
+  test.setTimeout(120 * 1000);
   await beginImportedCourt(page,info);
   await roundTrip(page);
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
@@ -428,6 +430,8 @@ test('ordinary JSON full-world content restores twice and malformed saves reject
 });
 
 test('changed ordinary JSON full-world definitions reject saved content before mutation',async function ({page},info) {
+  // Two imports each prepare the complete catalogue (8 to 17 s on a hosted runner); no simulation days run.
+  test.setTimeout(120 * 1000);
   const mod = await beginImportedCourt(page,info);
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
   mod.bookmarks['634'].revisions.core_courts_v4.localInstitutions.rome_see.representative.skills.dip = 8;
