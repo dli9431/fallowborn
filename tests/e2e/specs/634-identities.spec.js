@@ -6,16 +6,18 @@ const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
+const {manifestRuns,manifestFiles} = require('../fixtures/bookmark-manifest/eager-document');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,['index.html','data/bookmark_634_identities.js','data/bookmark_634.js','data/starts_634_ordinary.js',
+dependsOnRuntime(__filename,['data/bookmark_manifest.js','index.html','data/bookmark_634_identities.js','data/bookmark_634.js','data/starts_634_ordinary.js',
   'data/bookmark_568_identities.js','data/bookmark_476_wider_identities.js',
   'data/cultures.js','data/bookmarks.js','data/eras.js','js/model.js',
   'data/starts_634_damascus.js','data/starts_634_ctesiphon.js','data/bookmark_634_scaffold_d.js',
   'js/justice.js','js/intrigue.js','js/authority.js','js/starts.js','js/save.js','js/save_v4.js','js/bookmark_sources.js',
-  'js/mods.js','js/world.js','js/bookmark_composition.js','js/main.js','js/ui_misc.js','js/ui_modals.js','js/crazygames.js']);
+  'js/mods.js','js/world.js','js/bookmark_composition.js','js/main.js','js/ui_misc.js','js/ui_modals.js','js/crazygames.js'].concat(manifestFiles(manifestRuns(fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_manifest.js'),'utf8')))
+  .filter(function (file) { return /634/.test(file); })));
 
-const FAITHS = ['early_islam_634','zoroastrian_sasanian_634','chalcedonian_local_634','east_syriac_local_634','west_syriac_lay_634'];
+const FAITHS = ['alexandria_imperial_chalcedonian_634','early_islam_634','zoroastrian_sasanian_634','chalcedonian_local_634','east_syriac_local_634','west_syriac_lay_634'];
 const SOURCE_FAITHS = ['insular_traditional_476','finnic_traditional_476','woodland_traditional_476',
   'steppe_traditional_476','caucasian_traditional_476','nile_traditional_476','horn_traditional_476',
   'arabian_traditional_476','iranian_traditional_476','sogdian_traditional_476',
@@ -94,11 +96,15 @@ test('same-import date and faiths validate purely and publish through the ordina
       }),
       scopes:ids.map(function (id) {
         const rel = FB.religionOf(id,null);
-        const permitted = ['chalcedonian_local_634','east_syriac_local_634'].indexOf(id) >= 0
+        const permitted = id === 'alexandria_imperial_chalcedonian_634' ? ['character','institution'] :
+          ['chalcedonian_local_634','east_syriac_local_634'].indexOf(id) >= 0
           ? ['community','character','start','story','conversion','project'] : consumers;
         return {parent:rel.parent,relation:rel.relationToParent,law:rel.legalTradition,
           head:rel.head,paths:rel.religiousPaths,war:rel.holyWarTradition,raid:rel.raidingTradition,
           spouses:rel.marriage.spouseLimit,rite:rel.marriage.kinship.siblingRite,
+          excluded:consumers.filter(function (consumer) { return permitted.indexOf(consumer)<0; }).every(function (consumer) {
+            return !FB.faithHistoricalAvailable(id,world,consumer);
+          }),
           current:permitted.every(function (consumer) { return FB.faithHistoricalAvailable(id,world,consumer); }),
           retained:permitted.every(function (consumer) {
             return FB.faithHistoricalAvailable(id,Object.assign({},world,{date:{year:700,season:0,day:1}}),consumer);
@@ -112,16 +118,19 @@ test('same-import date and faiths validate purely and publish through the ordina
       oldWindow:FB.faithAvailability('zoroastrian_sasanian_476',null).yearMax,
       minimumYears:ids.every(function (id) {
         const year = FB.faithAvailability(id,null).yearMin;
-        return !FB.faithHistoricalAvailable(id,Object.assign({},world,{date:{year:year-1,season:0,day:1}}),'community');
+        const consumer = id === 'alexandria_imperial_chalcedonian_634' ? 'character' : 'community';
+        return !FB.faithHistoricalAvailable(id,Object.assign({},world,{date:{year:year-1,season:0,day:1}}),consumer);
       })};
   },prior)).toEqual({errors:[],faithErrors:[],earlierUnchanged:true,scopes:[
+    {parent:'chalcedonian',relation:'in_fold',law:'latin',spouses:{m:1,f:1},
+      paths:{lay:'late_antique_lay',professions:{monk:'late_antique_monastic',priest:'late_antique_clerical'}}},
     {parent:'muslim',relation:'in_fold',law:'muslim',spouses:{m:4,f:1}},
     {parent:'zoroastrian',relation:'in_fold',law:'sasanian_custom_476',spouses:{m:1,f:1}},
     {parent:'chalcedonian',relation:'in_fold',law:'byzantine',spouses:{m:1,f:1}},
     {parent:'east_syriac',relation:'in_fold',law:'sasanian_custom_476',spouses:{m:1,f:1}},
     {parent:'miaphysite',relation:'in_fold',law:'customary',spouses:{m:1,f:1}}
-  ].map(function (row) { return Object.assign(row,{head:null,paths:null,war:null,raid:false,
-    rite:null,current:true,retained:true,otherDates:true}); }),
+  ].map(function (row) { return Object.assign({head:null,paths:null,war:null,raid:false,
+    rite:null,current:true,retained:true,otherDates:true,excluded:true},row); }),
     earlyTournament:null,withheldDivorce:true,noAbbasid:true,oldWindow:493,minimumYears:true});
 });
 
@@ -189,6 +198,7 @@ async function coreStart(page,scenario,revision) {
   const original = await page.evaluate(function (revision) {
     const raw = FBDATA.bookmarks['634'], original = raw.revision;
     if (revision) raw.revision = revision;
+    if (revision === 'core_courts_v4') raw.revisions.core_courts_v4.hidden = false;
     return original;
   },revision);
   // This scenario-local journey resolves the revision identity before spelling
@@ -212,6 +222,7 @@ async function coreStart(page,scenario,revision) {
   await page.evaluate(function (original) {
     delete FBDATA.bookmarks['634'].hidden;
     FBDATA.bookmarks['634'].revision = original;
+    FBDATA.bookmarks['634'].revisions.core_courts_v4.hidden = true;
   },original);
 }
 
@@ -219,18 +230,15 @@ for (const entry of [
   ['baseline','damascus_household_634','chalcedonian'],
   ['scenery_protected_v1','ctesiphon_household_634','east_syriac'],
   ['ordinary_settlement_v2','damascus_household_634','chalcedonian'],
-  ['baseline','damascus_household_634','chalcedonian','bookmark_634.predecessor.js'],
-  ['scenery_protected_v1','ctesiphon_household_634','east_syriac','bookmark_634.protected-predecessor.js']
+  ['core_identities_v3','damascus_household_634','chalcedonian_local_634'],
+  ['core_courts_v4','ctesiphon_household_634','east_syriac_local_634']
 ]) {
-  test.describe('634 retained ' + entry[0] + (entry[3] ? ' earlier catalogue' : ''),function () {
+  test.describe('634 current imported ' + entry[0],function () {
+    // Import, reload and restore each prepare the complete catalogue (8 to 17 s on a hosted runner), as in the
+    // picker and platform journeys; no simulation days run here.
+    test.describe.configure({timeout:120 * 1000});
     let previous;
     test.beforeEach(async function ({page},info) {
-      for (const file of ['bookmark_634.js','bookmark_634_identities.js','starts_634_damascus.js','starts_634_ctesiphon.js']) {
-        await page.route('**/data/' + file,function (route) {
-          return route.fulfill({path:file === 'bookmark_634.js' && entry[3]
-            ? path.join(__dirname,'../fixtures/634-scenery-revisions',entry[3]) : path.join(coreFixture,file),contentType:'application/javascript'});
-        });
-      }
       await openGame(page,info);
       await page.evaluate(function () { FB.ui.showMods(); });
       await page.locator('#modfile').setInputFiles(path.join(coreFixture,'household-overlay.json'));
@@ -243,8 +251,6 @@ for (const entry of [
           worlds:FB.bookmarkRevisions('634'),stored:localStorage.getItem('fb_mods')};
       });
       await info.attach('retained-core-catalogue',{body:JSON.stringify(previous.roots),contentType:'application/json'});
-      for (const file of ['bookmark_634.js','bookmark_634_identities.js','starts_634_damascus.js','starts_634_ctesiphon.js'])
-        await page.unroute('**/data/' + file);
       await page.reload({waitUntil:'domcontentloaded'});
       await prepareGameContent(page);
     });
@@ -271,7 +277,7 @@ for (const entry of [
         const keys = ['start','chars','player','population','stories','bookmarkSetup','authority','localInstitutions'];
         return {same:keys.every(function (key) { return JSON.stringify(old.state[key]) === JSON.stringify(next.state[key]); }),
           faith:FB.campaignStart(FB.state).startReligion,
-          rng:(old.rng >>> 0) === (next.rng >>> 0),uid:old.uid === next.uid,mods:next.mods === FB.mods.sig() && next.mods !== old.mods};
+          rng:(old.rng >>> 0) === (next.rng >>> 0),uid:old.uid === next.uid,mods:next.mods === FB.mods.sig() && next.mods === old.mods};
       },previous)).toEqual({same:true,faith:entry[2],rng:true,uid:true,mods:true});
       const current = await page.evaluate(function () { return FB.save.serialize(); });
       await restoreBookmark(page,current);

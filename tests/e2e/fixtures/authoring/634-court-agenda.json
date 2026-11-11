@@ -5,7 +5,9 @@
       "id": "umar_court_agenda_634",
       "type": "ruler_agenda",
       "subjectRealmId": "rashidun_634",
-      "requires": ["iraqi_front_634"],
+      "requires": [
+        "iraqi_front_634"
+      ],
       "title": "Accounts before campaigning",
       "intro": "A peaceful Iraqi decision followed by a later accounts review.",
       "stages": [
@@ -16,8 +18,20 @@
           "year": 634,
           "season": 2,
           "choices": [
-            {"id": "import_decline_iraq", "label": "Use ordinary diplomacy", "detail": "Close this opportunity without payment or declaration.", "operation": "agenda_story_choice", "storyId": "iraqi_front_634", "choiceId": "leave_campaign"},
-            {"id": "import_keep_iraq", "label": "Retain present arrangements", "detail": "Make no public commitment.", "operation": "agenda_priority"}
+            {
+              "id": "import_decline_iraq",
+              "label": "Use ordinary diplomacy",
+              "detail": "Close this opportunity without payment or declaration.",
+              "operation": "agenda_story_choice",
+              "storyId": "iraqi_front_634",
+              "choiceId": "leave_campaign"
+            },
+            {
+              "id": "import_keep_iraq",
+              "label": "Retain present arrangements",
+              "detail": "Make no public commitment.",
+              "operation": "agenda_priority"
+            }
           ]
         },
         {
@@ -27,11 +41,68 @@
           "year": 634,
           "season": 3,
           "choices": [
-            {"id": "import_finish_accounts", "label": "Conclude the reviews", "detail": "Close without payment or reward.", "operation": "agenda_finish"},
-            {"id": "import_keep_accounts", "label": "Retain present arrangements", "detail": "Complete without another commitment.", "operation": "agenda_priority"}
+            {
+              "id": "import_finish_accounts",
+              "label": "Conclude the reviews",
+              "detail": "Close without payment or reward.",
+              "operation": "agenda_finish"
+            },
+            {
+              "id": "import_keep_accounts",
+              "label": "Retain present arrangements",
+              "detail": "Complete without another commitment.",
+              "operation": "agenda_priority"
+            }
           ]
         }
       ]
+    },
+    "opening_umar_court_634": {
+      "id": "opening_umar_court_634",
+      "type": "opening_profile",
+      "title": "Optional imported court priorities",
+      "intro": "These goals observe the imported Iraqi and accounts reviews without rewards.",
+      "scenarioIds": [
+        "umar_634"
+      ],
+      "provinceIds": [
+        "medina"
+      ],
+      "officeRealmId": "rashidun_634",
+      "requires": [
+        "umar_court_agenda_634"
+      ],
+      "goals": [
+        {
+          "id": "import_iraq",
+          "name": "Consider the Iraqi opportunity",
+          "text": "Choose ordinary diplomacy or retain the current arrangements.",
+          "office": true,
+          "criterion": {
+            "kind": "story_choice",
+            "storyId": "umar_court_agenda_634",
+            "choiceIds": [
+              "import_decline_iraq",
+              "import_keep_iraq"
+            ]
+          }
+        },
+        {
+          "id": "import_accounts",
+          "name": "Review winter accounts",
+          "text": "Complete the later accounts review when it is available.",
+          "office": true,
+          "criterion": {
+            "kind": "story_choice",
+            "storyId": "umar_court_agenda_634",
+            "choiceIds": [
+              "import_finish_accounts",
+              "import_keep_accounts"
+            ]
+          }
+        }
+      ],
+      "contacts": []
     }
   }
 }

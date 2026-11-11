@@ -9,7 +9,7 @@ const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/bookmark_manifest.js',
   'index.html','data/bookmark_634_scaffold_d.js','data/bookmark_634_identities.js','data/bookmark_634.js',
   'js/bookmark_composition.js','js/main.js',
   'data/bookmark_568_scaffold_a.js','data/bookmark_568_scaffold_b.js',
@@ -280,7 +280,7 @@ test('634 quadrant d resolves local courts, titles, residents, sites and the imp
     const faults = [], external = {};
     keys.forEach(function (key) {
       const b = FBDATA.bookmarkRegions634[key];
-      if (b !== FBDATA['bookmarkRevisionContent_634_' + key] || b.bookmarkId !== '634' ||
+      if (JSON.stringify(b) !== JSON.stringify(FBDATA['bookmarkRevisionContent_634_' + key]) || b.bookmarkId !== '634' ||
           b.revision !== 'baseline') faults.push(key + ': invalid literal owner');
       if (Object.keys(b.institutions).length || Object.keys(b.opening).length ||
           b.storyIds || b.stories || b.administrationProfiles || b.aristocraticProfiles)

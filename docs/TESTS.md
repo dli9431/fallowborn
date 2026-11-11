@@ -1,5 +1,15 @@
 Autumn 634 core identity coverage
 
+The 634 specifications register data/bookmark_manifest.js as a runtime input.
+The refreshed catalogue, identity and scenery inventories also register the
+manifest's dated 634 source paths as focused runtime inputs.
+634-first-playable.spec.js checks the exact ordered dated source inventory in
+that manifest, its deferred shell boundary and the absence of eager 634 tags.
+bookmark-lazy-dates.spec.js compares selected-date 634 publication with both the
+eager reference and complete content preparation, including the hidden assembled
+revision. The selectable world remains core_identities_v3; core_courts_v4 alone
+attaches the Syrian and Iraqi front opportunities.
+
 634-catalogue-integration.spec.js checks the complete standard-edition loader
 order, all 33 regional inputs, 527 anchors, 506 inhabited districts, 122 court
 replacements and six local institutions. It inventories every offered start and
@@ -27,15 +37,15 @@ fixture compares all four effective Damascus declarations exactly, including
 their ordering, against the former composer. The normal start cases cover quiet
 choices, local receipt priority, interruption and repeat restoration.
 
-634-ruler-agendas.spec.js covers the two assembled incumbent starts, unchanged earlier revision attachments and visibility, four-review peaceful completion, exact identity/rank/faith/treasury adoption, independent delegated frontier decisions, actual ordinary costs and blockers, stale confirmation, defender participation, truthful third-party diversion, public-appointment observation, original-person/generation/jurisdiction interruption, absent-track restoration and repeated current-content saves. A compact story sheet shows the original portrait and retains nonzero scroll and focus through character and decision returns. The independent 634-court-agenda.json enters through the ordinary Mods file picker and varies source, review order and earliest season; malformed source operations reject without data/RNG/UID mutation, and changed content under the same mod name rejects the saved campaign atomically. These bounded checks do not establish device, visual or longer campaign acceptance.
+634-ruler-agendas.spec.js covers the two assembled incumbent starts, unchanged earlier revision attachments and visibility, four-review peaceful completion, exact identity/rank/faith/treasury adoption, independent delegated frontier decisions, actual ordinary costs and blockers, stale confirmation, defender participation, truthful third-party diversion, public-appointment observation, original-person/generation/jurisdiction interruption, absent-track restoration and repeated current-content saves. A compact story sheet shows the original portrait and retains nonzero scroll and focus through character and decision returns. The independent 634-court-agenda.json enters through the ordinary Mods file picker and varies source, review order and earliest season; malformed source operations reject without data/RNG/UID mutation, and changed content under the same mod name rejects the saved campaign atomically. The ordinary JSON ruler-review fixtures replace their opening goal profiles alongside their agendas, so each goal references an actual imported choice. Missing-personal-graph fixtures remove dependent companions and require incomplete graphs to reject atomically. These bounded checks do not establish device, visual or longer campaign acceptance.
 
-634-identities.spec.js covers scoped local faith availability, exact unchanged
+634-identities.spec.js covers the six literal identity-source faiths, their exact
+permitted and excluded consumers, scoped availability, exact unchanged
 resident weights and unrelated communities, fresh fixed household starts and
-matching restoration. Pinned predecessor data under fixtures/634-core-identities
-captures the catalogue source at 888853ff545e674c2d917841f9ed7528c7dcbd1b.
-Real JSON imports and genuine saved campaigns cover all three retained revisions,
-including exact people, start identity, population, stories, authority, RNG and
-UID. Public Sasanian intrigue hearings use the declared civil policy while
+matching restoration. A real JSON import creates current-content campaigns on
+all five revisions, then preserves exact people, start identity, population,
+stories, authority, RNG, UID, fingerprints and stored configuration across
+reload and repeated restoration. Public Sasanian intrigue hearings use the declared civil policy while
 religious law remains the existing fallback. These bounded checks do not replace
 owner runtime, historical or device acceptance.
 
@@ -89,13 +99,29 @@ expedition-command.spec.js validates both ordinary JSON fixtures before import s
 
 Ordinary and explicit-infrastructure home starts also retain exactly one civil appointment through save/restore, with its live institution and realm scope mapped to the adopted player court and its authored declaration unchanged.
 
-The scenery revision compatibility journeys separate predecessor setup, save/reload, repeat restoration and cross-revision switching. Explicit and inferred forms share one fresh context within each bounded restore or switching test; every form still restores twice or makes its own round trip. Fast content and bundle rejections share setup, while raw-byte and retained-definition changes remain separate. The generic compatibility suite groups pure JSON-forgery probes and the public-root/balance rejections to avoid repeated complete-catalogue boot. Each test still has a fresh browser context, the default timeout and exact state/resource/purity assertions. A bounded canonical-mod-normalization counter proves that a repeated identical compatibility decision performs no predecessor replay, while duplicate and reordered declaration probes preserve fail-closed selection coverage.
+The scenery revision journeys separate current-content setup, save/reload,
+repeat restoration and cross-revision switching. Explicit and inferred forms
+share one fresh context within each bounded restore or switching test; every
+form still restores twice or makes its own round trip. Exact state, resource,
+RNG, UID and input-purity assertions remain local to those journeys. Generic
+predecessor proof and raw-configuration rejection coverage lives in
+retained-catalogue-compatibility.spec.js.
 
-634-scenery-revisions.spec.js also pins the protected source at 9315b53a. New scenarios exercise actual commoner and noble settlement in fresh ordinary 634 on standard and CrazyGames, spent-resource restoration, both older 634 revisions and unchanged 476/867 modded campaigns. Two real JSON imports exercise unique predecessor selection, declaration-order independence, duplicate-match rejection after a warm proof, exact state/RNG/UID retention and fresh-page reload. Protected candidate/apply/rejection cases explicitly select the retained protected revision.
+634-scenery-revisions.spec.js compares the current manifest and eager catalogues,
+checks all five 634 revisions, and preserves the exact 21 scenic source ids, all
+506 inhabited rows, protected-layer policies and eight start bindings. Fresh
+ordinary rows differ only by the two declared resident-faith substitutions.
+Current native and ordinary JSON campaigns cover both settlement routes, spent
+resources, explicit and inferred conversions, repeat restoration, revision
+switching and fresh-page reload. Two independent JSON imports cover matching
+signatures and atomic rejection of changed definitions; foreign signatures,
+missing saved revisions and malformed protected conversions reject without
+changing state, storage, RNG or UID. The generic retained-catalogue compatibility
+spec separately owns predecessor-proof selection, ambiguity, JSON order,
+raw JSON bytes, bundled content and public-root rejection. These checks do not
+establish packaged, visual or device acceptance.
 
-634-scenery-revisions.spec.js pins the pre-protection source at 51c5f5751e8e29a1136aa1518e1e7c2f858728ea and its complete-publication root evidence. It creates actual predecessor envelopes through two ordinary JSON file imports, then restores explicit and inferred conversions with the ordinary fresh catalogue installed. Coverage includes both player settlement routes, spent resources, unchanged people and public records, repeat restoration, ordinary re-save and fresh-page reload, strict JSON/bundle rejection, atomic malformed protected saves, cross-revision cache binding, all 21 source ids, all 506 inhabited rows and every existing start binding. Standard unmodded and CrazyGames use their own signatures. No fixture substitutes a recomputed new-catalogue signature for an old save.
-
-bookmark-composition-native.spec.js compares the exact retained projection of all public definition roots, native worlds, revisions, starts and story order against the unchanged native-before-shared fixtures. Only the enumerated 634 revision, fresh pointer, separately asserted visibility change and exact previously merged quadrant and technology-review deltas are reconciled. merged-corrections.json records the old/new map values, Aquitaine insertion and minority-stewardship technology-review rationale; both sides must match those declarations before full equality. Koten and its graph remain in the full equality comparison. Its unrelated-date spent-resource journeys use ordinary unmodded signatures rather than turning a diagnostic fingerprint application into a synthetic modded save. Actual persisted mod compatibility for the certified 634 predecessor is covered by 634-scenery-revisions.spec.js. 634-first-playable.spec.js and 634-rulers.spec.js name ordinary_settlement_v2 while retaining baseline opening and diagnostic checks.
+bookmark-composition-native.spec.js compares the exact retained projection of all public definition roots, native worlds, revisions, starts and story order against the unchanged native-before-shared fixtures. Only the enumerated 634 revision, fresh pointer, separately asserted visibility change and exact previously merged quadrant and technology-review deltas are reconciled. merged-corrections.json records the old/new map values, Aquitaine insertion and minority-stewardship technology-review rationale; both sides must match those declarations before full equality. Koten and its graph remain in the full equality comparison. Its unrelated-date spent-resource journeys use ordinary unmodded signatures rather than turning a diagnostic fingerprint application into a synthetic modded save. Current persisted 634 mod compatibility is covered by 634-scenery-revisions.spec.js. 634-first-playable.spec.js and 634-rulers.spec.js name core_identities_v3 as the selectable fresh revision while retaining baseline opening and diagnostic checks.
 
 Office applicability and ruler-save regression coverage
 
