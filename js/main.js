@@ -2346,6 +2346,8 @@ FB.CHANGELOG = [
     FB.ui.wire();
     wireMenus();
     refreshTitle();
+    // Saves that finish loading after the title opened must still offer Continue.
+    FB.save.onLateStorage = function () { if (!FB.state) refreshTitle(); };
     FB.ui.showScreen('title');
     document.documentElement.classList.remove('boot-loading');
     $('title').setAttribute('aria-busy', 'false');
