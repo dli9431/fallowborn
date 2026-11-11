@@ -61,6 +61,8 @@ jobs:
           echo "shards=[$list]" >> "$GITHUB_OUTPUT"
 
   check:
+    # A spec-only run (the task runner's targeted checks) is judged by its specs alone.
+    if: ${{ inputs.mode != 'specs' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
