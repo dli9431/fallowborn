@@ -14,6 +14,7 @@ not proof that a campaign, public agreement or historical outcome has occurred.
 | --- | --- | --- |
 | Umar | Medina; Arabic, Medinan political-court faith | umar_court_agenda_634; opening_umar_court_634 |
 | Heraclius | Constantinople; Greek, Chalcedonian | heraclius_court_agenda_634; opening_heraclius_court_634 |
+| Yazdegerd III | Ctesiphon capital reconstruction; Persian, Sasanian Zoroastrian court faith | yazdegerd_agenda_634; existing minority stewardship |
 | Damascus craft household | Damascus; Syriac, local Chalcedonian | damascus_household_full_634; opening_damascus_full_634 |
 | Ctesiphon farming household | Existing Baghdad district anchor; Syriac, local East Syriac | ctesiphon_household_track_634; opening_ctesiphon_634 |
 | Medinan farming household | Medina; Arabic, early Islamic | medina_household_track_634; opening_medina_634 |
@@ -24,12 +25,12 @@ not proof that a campaign, public agreement or historical outcome has occurred.
 The ruler beginnings adopt actual living court identities and existing public
 accounts. The four fixed households use the resident communities declared at
 their existing sites; generated kin remain fictional. Ordinary starts retain
-birthplace-based community selection. All six authored personal programs have a
+birthplace-based community selection. All seven authored personal programs have a
 stationary or peaceful conclusion without an imposed conquest; ordinary starts
 need no authored opening outcome. The Christian Arab beginning remains civilian.
-Yazdegerd as a player beginning, Jabala/mobile-polity service, a paid-service
-extension and named battle sequences are omitted. The Sasanian world court is
-present independently of those omissions.
+Jabala/mobile-polity service, a paid-service extension and named battle sequences
+are omitted. The Sasanian world court remains present independently of its
+hidden player beginning, which belongs only to the assembled revision.
 
 The combined catalogue and restoration checks are described in docs/TESTS.md
 under autumn 634 coverage. These bounded checks do not establish historical,
@@ -183,7 +184,7 @@ With the existing development review switch enabled, setup offers all eight impl
 | Open | farmer_634 | Generated farming household, with an inhabited birthplace chosen on the map. |
 | Open | craftsman_634 | Generated craft household, with an inhabited birthplace chosen on the map. |
 
-The two ruler declarations retain their authored hidden flags; the existing review switch offers them during development. Disabling that switch withholds them while leaving the six household beginnings and Observe available. No Yazdegerd start or agenda is registered. Matching saves continue to activate their recorded bookmark, revision and geography before restoring people, story decisions and spent resources; visibility never replays opening grants or track initialization.
+The ruler declarations retain their authored hidden flags. The existing review switch offers eligible rulers during development; Yazdegerd additionally requires the complete court revision. Disabling that switch withholds ruler beginnings while leaving the household beginnings and Observe available. Matching saves continue to activate their recorded bookmark, revision and geography before restoring people, story decisions and spent resources; visibility never replays opening grants or track initialization.
 
 All sources are already ordered deferred scripts in index.html: identities precede the four regional scaffolds, ordinary starts and complete composer; the five additional start sources follow that composer. The ruler-agenda and four household-story sources load before data/bookmark_sources.js seals the native source manifest. The tracked data directory includes every source under the ordinary itch upload allowlist; no additional package entry or runtime dependency is needed.
 
@@ -199,7 +200,7 @@ data/starts_634_ordinary.js supplies two ordinary map-chosen roles, farmer_634 a
 
 Selectable opening identity decisions
 
-Umar's hidden existing-ruler start adopts the Medinan incumbent, court and public account once, using the authored Arabic / Early Islam community and the existing limited selection form. Tier 7 and rank 4 are simulation scales. Four personal reviews examine the opening mandate, actual Syrian and Iraqi borders and available resources independently, then conclude from Medina. All choices are costless priorities or conclusion; public actions keep their ordinary reviews. Accession is not replayed, no living nominee or separate religious-head office is offered, and no campaign or historical outcome is required. The court's existing working birth and incomplete family roster are retained without adding named relatives. Unfinished reviews archive on death or incumbent replacement; matching saves retain decisions without replay. No Yazdegerd start or agenda is registered.
+Umar's hidden existing-ruler start adopts the Medinan incumbent, court and public account once, using the authored Arabic / Early Islam community and the existing limited selection form. Tier 7 and rank 4 are simulation scales. Four personal reviews examine the opening mandate, actual Syrian and Iraqi borders and available resources independently, then conclude from Medina. All choices are costless priorities or conclusion; public actions keep their ordinary reviews. Accession is not replayed, no living nominee or separate religious-head office is offered, and no campaign or historical outcome is required. The court's existing working birth and incomplete family roster are retained without adding named relatives. Unfinished reviews archive on death or incumbent replacement; matching saves retain decisions without replay.
 
 early_islam_634 is a direct child of muslim. Its earliest eligible year is 622, its opening selector is 634, and it has no closing year. No Sunni school, Abbasid head or inherited religious career is selected. Muslim legal dispatch and spouse capacities remain disclosed simulation settings; optional divorce is withheld. A political ruler title is independent of a religious-head office.
 
@@ -322,7 +323,17 @@ Medina holds one Medinan Caliphate under Umar, with 582 used as a working birth 
 
 Umar's accession and the broad consolidation draw on the standard-reference biographies and political overview at https://snl.no/Umar_ibn_al-Khattab and https://en.wikipedia.org/wiki/Rashidun_Caliphate . They do not establish household proportions, exact garrisons, subsidy rights or every locality's obligations. No historical companion, spouse or child is filled in through generated relatives. The explicitly empty royal household prevents invented historical consorts or children.
 
-The Sasanian world court retains Yazdegerd III. His disputed age is represented by the child chronology, born 624, rather than an adult chronology chosen to make him playable. The basic dynastic form represents collective court government and has no authored regent, magnate bargain or minority stewardship contract. Its royal household is explicitly empty. A playable Yazdegerd opening remains unavailable while the age, residence and stewardship requirements are unresolved. The late accession and Iraqi chronology are discussed in Encyclopaedia Iranica, Sasanian Dynasty, https://www.iranicaonline.org/articles/sasanian-dynasty/ , and Arab ii, https://www.iranicaonline.org/articles/arab-ii/ . Competing chronological traditions remain visible limitations.
+The Sasanian world court retains Yazdegerd III, born 624 under the child chronology, with an explicitly empty royal household. Earlier revisions keep their basic dynastic form. The complete court revision supplies the existing aristocratic government and minority stewardship, also consumed by the hidden ruler beginning described below. The age, court location and public-authority reconstruction remain qualified simulation choices.
+
+Yazdegerd's age, residence and minority government
+
+Al-Tabari's History, translated by C. E. Bosworth, volume V (1999), pp. 409–410, reports the Istakhr accession, authority exercised by ministers and magnates because of the king's youth, and a lifespan of twenty-eight years. Bosworth's note 1014 favors eight at accession over traditions making him fifteen or sixteen, partly on the beardless coin portrait. This supports a child opening but not a precise birthday. Simulation choice: retain born 624, hence age ten in the game's autumn 634 calendar; this is a rounded working chronology shared by the world incumbent and player. [Al-Tabari, volume V, pp. 409–410 and note 1014](https://www.emaanlibrary.com/wp-content/uploads/2019/12/Extracted-pages-from-Tabari_Volume_05b.pdf#page=142).
+
+Istakhr's accession site does not prove residence there in autumn 634. Morony also records an older accession-age tradition of sixteen or twenty-one; that disagreement does not establish an exact birth year. His conquest account places court factional conflict at al-Mada'in in 634 and describes the later departure of Yazdegerd and his court from that capital, while warning of contradictory chronology. The exact opening-day itinerary and palace are unestablished. Simulation choice: use the existing Ctesiphon capital site baghdad_outer_476 in district baghdad, without moving the world court, changing the map or claiming a specific palace. The city site and administrative district remain distinct from countywide possession. [Morony, Arab conquest of Iran](https://www.iranicaonline.org/articles/arab-ii/).
+
+Public authority was mediated by court magnates and military leadership. Morony identifies Rostam Farrokhzad's coordination of the Sawad recovery and local elite resistance; this establishes influence, not a complete dated regency charter. Pourshariati's analysis emphasizes Pahlav and Parsig factions under Rustam and Firuzan, and divergent age traditions. No source inspected establishes one exact autumn-634 regent appointment, county jurisdiction and residence packet suitable for a named game actor. Simulation choice: retain the already represented Caspian and Spahan interests, their generated adult principals, and the declared first interest's steward. Neither principal impersonates Rostam or Firuzan, and neither receives royal ancestry. Their counties, weights, burdens, adulthood at sixteen and replacement rule are existing game abstractions, not an attested constitution. No new adult stand-in, historical magnate, relative or royal family is added. [Pourshariati, Decline and Fall of the Sasanian Empire, section 3.4](https://victoriaazad.com/pdf/Decline_and_Fall_of_the_Sasanian_Empire.pdf).
+
+The four immediate personal reviews cover current court/stewardship, actual provincial obligations, the live Iraqi frontier and stationary continuation. Costless priorities remain useful if recognition, interests or campaign conclusions are unavailable. Optional observations acknowledge only canonical positive recognition or a terminal source result. Actual provincial negotiations, reserved public acts and steward replacement use existing consent, treasury and reviewed transactions. An incapable steward blocks public decisions until replaced; majority ends stewardship without an accession or payment. Tier seven, rank four, nominal scenario parameters (100 money units, 120 prestige and 20 piety) and the four immediate autumn review dates are simulation settings. Ordinary adoption retains the actual court funds rather than granting the nominal starting money again. No battle, evacuation, collapse, conversion or death is forced. Current-content saves preserve decisions and public facts without replay; the full revision remains hidden.
 
 The baghdad county anchor and baghdad_outer_476 settlement slot retain the existing Ctesiphon-district presentation. This reuses a map-scale district and physical site; it does not place ancient Ctesiphon at modern Baghdad's exact coordinates or establish the king's daily residence. Hira remains a mixed Lower Euphrates district under the Sasanian reference, with no surviving Lakhmid sovereign. Babylon of Egypt and the earlier district labels at Basra, Kufa, Wasit and Samarra remain period presentations rather than later urban foundations.
 

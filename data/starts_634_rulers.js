@@ -23,9 +23,18 @@ FBDATA.startScenarios_634_rulers = [
     familyPresets:{standard:{name:'Existing imperial court',
       desc:'Adopt the present court and its resources. The opening supplies no named spouse or children.'}},
     tracks:['heraclius_agenda_634'],trackLocations:{heraclius_agenda_634:['constantinople']},onboarding:'ruler',
-    intro:'You are Heraclius at Constantinople. This capital-based opening is a reconstruction, not an exact itinerary. Review the court and resources you actually govern; remaining here and retaining present arrangements is a complete course.'}
+    intro:'You are Heraclius at Constantinople. This capital-based opening is a reconstruction, not an exact itinerary. Review the court and resources you actually govern; remaining here and retaining present arrangements is a complete course.'},
+  {id:'yazdegerd_634',bookmarkIds:['634'],hidden:true,alwaysUnlocked:true,
+    rulerRealmId:'sasanian_634',governmentForm:'aristocratic_monarchy',fixedProvinceId:'baghdad',
+    characterName:'Yazdegerd III',sex:'m',startCulture:'persian',startReligion:'zoroastrian_sasanian_634',
+    name:'Yazdegerd at Ctesiphon',
+    desc:'Begin as the ten-year-old Sasanian ruler with the existing magnate court and minority steward. Review provincial obligations and the Iraqi frontier, or retain present arrangements.',
+    tier:7,profession:'noble',gold:100,prestige:120,piety:20,
+    familyPresets:{standard:{name:'Existing Sasanian court',
+      desc:'Adopt the present child ruler and court. The royal household has no authored spouse or children; the represented provincial interests supply minority stewardship.'}},
+    tracks:['yazdegerd_agenda_634'],trackLocations:{yazdegerd_agenda_634:['baghdad']},onboarding:'ruler',
+    intro:'You are Yazdegerd III, aged ten in this reconstruction. Ctesiphon is a capital-based residence choice, not an exact autumn itinerary. The existing adult steward sustains public government during your minority; provincial assent and ordinary public reviews still govern actual decisions. Remaining here is a complete course.'}
 ];
-/* Yazdegerd has no offered start or attached agenda in this opening. */
 (function () {
   'use strict';
   var source = FBDATA.bookmarkCompositionSources && FBDATA.bookmarkCompositionSources.autumn_634;

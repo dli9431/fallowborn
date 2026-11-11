@@ -1,0 +1,34 @@
+{
+  "name": "Sasanian records review",
+  "storyInstances": {
+    "yazdegerd_agenda_634": {
+      "id": "yazdegerd_agenda_634",
+      "type": "ruler_agenda",
+      "subjectRealmId": "sasanian_634",
+      "title": "The court records",
+      "intro": "Review the present records, then leave a later review open or set it aside.",
+      "stages": [
+        {
+          "id": "present_records",
+          "name": "Present records",
+          "text": "Record attention without a public transaction.",
+          "year": 634,
+          "season": 2,
+          "choices": [
+            {"id": "keep_records", "label": "Retain the records", "detail": "Spend nothing and leave the later review open.", "operation": "agenda_priority"}
+          ]
+        },
+        {
+          "id": "later_records",
+          "name": "Later records",
+          "text": "Review the arrangements that actually remain at the adulthood boundary.",
+          "year": 640,
+          "season": 2,
+          "choices": [
+            {"id": "keep_later_records", "label": "Retain present arrangements", "detail": "Complete the records without a public transaction or reward.", "operation": "agenda_priority"}
+          ]
+        }
+      ]
+    }
+  }
+}

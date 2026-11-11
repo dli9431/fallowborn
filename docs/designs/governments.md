@@ -18,7 +18,9 @@ Whole-world assembly copies it once into opening.actors before validation;
 royalCourt members and actor references cannot replace these declarations.
 The canonical setup and aristocracy owners initialize the actors, assignments
 and stewardship; matching restore validates those existing records without
-replaying setup. The optional Yazdegerd ruler start remains absent.
+replaying setup. The hidden Yazdegerd ruler start adopts this same child court
+and stewardship only in the complete court revision; it creates no substitute
+adult ruler or royal household.
 
 The court faith and ruler-start companions remain unpublished alongside these
 profiles. Their complete candidate uses revisionIdentities for Umar and

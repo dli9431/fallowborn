@@ -670,6 +670,19 @@ policies through Mods, checks detached malformed-input/save rejection and repeat
 matching restoration without another declaration, cost or historical event.
 Boundaries are staged; these checks establish no long campaign or device acceptance.
 
+634-rulers.spec.js additionally covers the full-revision-only Yazdegerd beginning:
+hidden visibility and earlier-start parity, age ten and the existing Ctesiphon
+site, fixed court identity and empty royal household, single adoption and opening
+stewardship, incapable-steward blockers, stale negotiation, independent provincial
+assent, canonical replacement, funded terms and staged majority without accession
+or payment. Four costless reviews and conditional recognition/frontier observations
+preserve pending and terminal decisions through repeated save/load; malformed
+decisions reject atomically. Death, generation change and set-aside archive once.
+The ordinary 634-yazdegerd-review.json import supplies a different two-stage program
+with a future review and an immediate stop route. Existing Umar and Heraclius
+adoption and agenda cases remain in the same focused specification. These staged
+checks do not establish a natural multi-year minority, device or release acceptance.
+
 household-control-predicate.spec.js imports two independent household graphs and covers unchanged baselines, actual sovereign changes before and after the track hook, choice and automatic branches, a different sovereign at fresh attachment, pure queries and detached rejection of malformed predicates. Save checks retain pending control facts, resolved and expired receipts, existing graph closure routes and missing records without reinitialization. These staged boundaries do not establish longer campaign or device acceptance.
 
 household-observer-local-control.spec.js imports ordinary local-control observers in a world without campaigns. It covers seeded unchanged baselines, actual transfers, separate county cursors, local presence, generation invalidation, personal priority, shared observer receipts, independent expiry/continuation terms, pure malformed-source rejection, pending/closed/unobserved restore, absent records and strict baseline/token/receipt validation. Retained campaign and exact-site source configurations also round trip with their existing receipt versions and behavior. All boundaries are staged without a long simulation.
