@@ -1,0 +1,191 @@
+# Reusable Playwright run: syntax and support checks, a sharded browser
+# suite and one merged report. Called by tests.yml (pushes, pull requests,
+# manual runs) and nightly.yml (full suite per branch). The game is checked
+# out at inputs.ref; the report tooling comes from the calling commit.
+name: E2E
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref or commit to test
+        type: string
+        required: true
+      label:
+        description: Unique artifact label within the run
+        type: string
+        default: tests
+      mode:
+        description: changed (Playwright --only-changed against base) or all
+        type: string
+        default: changed
+      base:
+        description: Base commit for changed mode; the parent commit when empty or unknown
+        type: string
+        default: ''
+      projects:
+        description: Space-separated Playwright projects, or all
+        type: string
+        default: all
+      shards:
+        type: number
+        default: 4
+      workers:
+        description: Playwright workers per shard
+        type: number
+        default: 2
+      bounded:
+        description: Bound runtime dependencies to the boot and determinism canaries, as test:changed does
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - id: plan
+        env:
+          SHARDS: ${{ inputs.shards }}
+        run: |
+          list=""; i=1
+          while [ "$i" -le "$SHARDS" ]; do list="$list${list:+,}$i"; i=$((i + 1)); done
+          echo "shards=[$list]" >> "$GITHUB_OUTPUT"
+
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+      - run: npm ci
+        working-directory: tests/e2e
+      - name: Syntax check
+        run: npm run check
+        working-directory: tests/e2e
+      - name: Server and runner support tests
+        run: npm run test:server
+        working-directory: tests/e2e
+
+  e2e:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+      - run: npm ci
+        working-directory: tests/e2e
+      - id: pw
+        working-directory: tests/e2e
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Install browsers
+        working-directory: tests/e2e
+        run: npx playwright install --with-deps chromium firefox webkit
+      - id: select
+        name: Select tests
+        env:
+          MODE: ${{ inputs.mode }}
+          BASE: ${{ inputs.base }}
+          PROJECTS: ${{ inputs.projects }}
+        run: |
+          args=""
+          if [ "$MODE" = changed ]; then
+            base="$BASE"
+            if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+              base="$(git rev-parse HEAD~1)"
+            fi
+            echo "Changed-test base: $base"
+            args="--only-changed=$base --pass-with-no-tests"
+          fi
+          if [ "$PROJECTS" != all ]; then
+            for project in $PROJECTS; do args="$args --project=$project"; done
+          fi
+          echo "args=$args" >> "$GITHUB_OUTPUT"
+      - name: Run Playwright
+        working-directory: tests/e2e
+        env:
+          FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES: ${{ inputs.bounded && '1' || '0' }}
+        run: >-
+          npx playwright test ${{ steps.select.outputs.args }}
+          --shard=${{ matrix.shard }}/${{ inputs.shards }}
+          --workers=${{ inputs.workers }}
+          --reporter=blob
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: blob-${{ inputs.label }}-${{ matrix.shard }}
+          path: tests/e2e/blob-report
+          retention-days: 5
+          if-no-files-found: ignore
+
+  report:
+    needs: e2e
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: tooling
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tooling/tests/e2e/package-lock.json
+      - run: npm ci
+        working-directory: tooling/tests/e2e
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: blob-${{ inputs.label }}-*
+          path: blobs
+          merge-multiple: true
+      - name: Merge reports
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/merged/results.json
+          PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ github.workspace }}/merged/html
+          REF: ${{ inputs.ref }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          mkdir -p merged
+          if ls blobs/*.zip >/dev/null 2>&1; then
+            (cd tooling/tests/e2e && npx playwright merge-reports --reporter=html,json "$GITHUB_WORKSPACE/blobs")
+            if [ ! -d merged/html ] && [ -d tooling/tests/e2e/playwright-report ]; then
+              cp -r tooling/tests/e2e/playwright-report merged/html
+            fi
+            node tooling/tests/e2e/support/ci-summary.js merged/results.json "$REF" "$MODE" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No Playwright reports were produced for $REF." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: report-${{ inputs.label }}
+          path: merged
+          retention-days: 14
+          if-no-files-found: ignore

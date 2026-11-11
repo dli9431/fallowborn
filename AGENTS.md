@@ -26,7 +26,7 @@ Every new or materially expanded independently gateable gameplay capability need
 
 Testing policy
 
-Agents author or update bounded regression tests for observable behavior changes and fixes, but never execute tests, syntax gates, runtime verification, browsers, servers, profilers or any game harness command. Do not install test dependencies or browsers. Execution and visual/device/play acceptance belong to the owner. Report authored test files and that tests were not run in the final handoff, never in Git messages.
+Agents author or update bounded regression tests for observable behavior changes and fixes, but never execute tests, syntax gates, runtime verification, browsers, servers, profilers or any game harness command on the local machine. Do not install test dependencies or browsers. Tests run in GitHub Actions: agents may trigger the workflows and read their results, summaries and artifacts (docs/agents/testing.md, Continuous integration). Visual/device/play acceptance belongs to the owner. Report authored test files and whether and where they ran in the final handoff, never in Git messages.
 
 Before test authoring or profiling-related changes, read docs/agents/testing.md and the relevant sections of docs/TESTS.md. Register focused dependsOnRuntime inputs. Use leaf helpers; do not change universal fixtures or shared navigation for scenario-local behavior. Never import or execute game scripts as Node modules. Keep tests deterministic and isolated. Advance at most one season (90 days), only when the daily loop itself is under test; stage longer boundaries directly. Do not raise timeouts to fit long journeys. Documentation-only changes need no artificial gameplay tests.
 

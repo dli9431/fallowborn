@@ -1,0 +1,63 @@
+# Nightly: the full Playwright suite on each listed branch, and season timing
+# for every start on the timing branch. Runs from main on a schedule or by
+# hand; each job checks out the branch it measures.
+name: Nightly
+
+on:
+  schedule:
+    - cron: '23 7 * * *'
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Run the full Playwright suite
+        type: boolean
+        default: true
+      refs:
+        description: JSON list of branches for the full suite
+        type: string
+        default: '["476", "dev"]'
+      timing:
+        description: Run season timing
+        type: boolean
+        default: true
+      timing_ref:
+        description: Branch for season timing
+        type: string
+        default: '476'
+      seasons:
+        description: Seasons per start
+        type: number
+        default: 4
+      only:
+        description: Comma-separated start ids (bookmark:scenario), empty for every start
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  suite:
+    if: ${{ github.event_name == 'schedule' || inputs.suite }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: ${{ fromJSON(inputs.refs || '["476", "dev"]') }}
+    uses: ./.github/workflows/e2e.yml
+    with:
+      ref: ${{ matrix.ref }}
+      label: suite-${{ matrix.ref }}
+      mode: all
+      projects: all
+      shards: 16
+      bounded: false
+
+  timing:
+    if: ${{ github.event_name == 'schedule' || inputs.timing }}
+    uses: ./.github/workflows/season-timing.yml
+    with:
+      ref: ${{ inputs.timing_ref || '476' }}
+      seasons: ${{ inputs.seasons || 4 }}
+      only: ${{ inputs.only || '' }}
+      shards: 12

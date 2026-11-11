@@ -1,0 +1,47 @@
+# Tests for every push to main, dev and 476, pull requests, and manual runs.
+# Pushes run the changed specs plus the boot and determinism canaries, the
+# same selection as the local test:changed. A manual run can choose the full
+# suite, a base commit, projects and shard count.
+name: Tests
+
+on:
+  push:
+    branches: [main, dev, '476']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: changed or all
+        type: choice
+        options: [changed, all]
+        default: changed
+      base:
+        description: Base commit for changed mode (default the parent commit)
+        type: string
+        default: ''
+      projects:
+        description: Space-separated Playwright projects, or all
+        type: string
+        default: all
+      shards:
+        type: number
+        default: 4
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    uses: ./.github/workflows/e2e.yml
+    with:
+      ref: ${{ github.sha }}
+      label: tests
+      mode: ${{ inputs.mode || 'changed' }}
+      base: ${{ inputs.base || github.event.before || github.event.pull_request.base.sha || '' }}
+      projects: ${{ inputs.projects || 'all' }}
+      shards: ${{ inputs.shards || 4 }}
+      bounded: ${{ (inputs.mode || 'changed') == 'changed' }}
