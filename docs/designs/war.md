@@ -1328,6 +1328,82 @@ the map the hosts march on.
 
 ## Great holy-war campaigns
 
+### Regional accusations and submission
+
+`FBDATA.holyWarCauses` adds the typed `protector_heresy` ground alongside sacred-site
+recovery. A declaration supplies its bookmark, calling faith and competent head
+office, inclusive dates, regional kingdom/counties, protector courts, submission
+payment/support cost and annual AI response/call probabilities. It never classifies
+a county's residents as heretics. Calls require the existing living religious head,
+papal authority where applicable, cooldown and free global campaign slot. The
+ordinary sacred-site and inaugural Catholic targets retain their existing rules.
+Regional calls and launches do not consume the sacred recovery first-call or
+first-launch markers; the common sequence and cooldown still apply.
+
+The Albigensian declaration opens in 1209 and closes at the end of 1229. The current
+Catholic Pope is competent; Innocent III is the 1204 incumbent, rather than a
+permanent named caller. The researched premises are the papal campaign against
+southern lords accused of sheltering heresy and the possibility of submission.
+The translated [legates' report and Treaty of Paris](https://www.cambridge.org/core/books/chronicle-of-william-of-puylaurens/B4FABB34D1037DA1C7207DB8D2F2E4EB/listing)
+support those premises and the 1209–1229 bounds. [Graham-Leigh's study](https://www.cambridge.org/core/books/southern-french-nobility-and-the-albigensian-crusade/83A8CE1F2877B3EDD6DA95D304317DDD/listing)
+distinguishes Raymond VI's submission from Raymond-Roger Trencavel's rule of
+Carcassonne, Béziers and Albi and cautions against reducing Trencavel's relationships
+to Toulouse alone.
+
+The existing 1204 world groups those counties under Toulouse, has no separate
+Trencavel court, and places Toulouse under France. This declaration uses that actual
+court and its subordinate holders in Toulouse, Albi, Cahors, Rodez, Béziers and
+Carcassonne. It excludes the rest of Aquitaine and Toulouse's mapped Auvergne.
+These are coarse regional objectives, not reconstructed confiscation boundaries.
+The existing sovereign-host model makes France the mandatory defending bloc;
+France cannot also volunteer as an attacker. No extra historical court, minority
+faith modifier, inquisitorial case, fixed victor or scheduled conquest is created.
+New calls exclude protectors inside the current head's own sovereign bloc.
+
+The targeted court uses **Answer the holy war** to submit or resist, including
+before a call. Submission pays 80 to the current head's court account and reduces
+popular support by 10 in the affected counties. The existing treasury owner uses
+public accounts where separated and the combined dynastic account for a traditional
+player ruler; a separated treasury never falls back to that ruler's private purse. It is
+a binding court commitment to funded religious oversight, inherited by successors:
+this accusation cannot be called against that court again. It does not convert,
+expel, arrest or confiscate from residents. Resistance costs nothing immediately,
+leaves the cause eligible, and permits ordinary defending service. Close is free.
+A resisting court can still submit during preparation or active fighting; that
+ends this campaign, releases its temporary occupations and awards no territory.
+Unrelated wars continue. Settlement cannot be undone by late submission.
+
+`holyWarCauseReview` is pure; `respondHolyWarCause` rechecks its exact court,
+ruler generation, authority, declaration, campaign, objectives, resources and turn
+before payment, support changes or receipts. AI uses those same transactions once
+per declared court, with a seeded annual submission decision. Unsubmitted targets
+may then receive a call under the declaration's annual probability. AI volunteers
+and player vows use `joinGreatHolyWar`; normal military decisions, host resources,
+sieges, resolve and deadlines determine the result. The native submission probability
+is 25%, and the annual call probability is 100% when otherwise permitted; neither
+guarantees that a campaign can launch or win.
+
+Regional causes without sacred objectives offer land and honor interests, not
+sacred custody. The player review omits that unavailable desire; AI volunteers
+choose supported interests, and direct custody requests fall back to honor.
+
+Cause objectives freeze at the call, independently of lost holy sites. During
+preparation they must still belong to the protector's actual holder hierarchy.
+Already committed campaigns may continue beyond the offer window. Only an attacker
+victory opens the existing settlement authority: its contribution, vows, occupation,
+rights, local confirmation, support and office claims cover occupied objectives
+only. No special beneficiary or right to uncaptured France is supplied.
+Award application commits each surviving recipient's ordinary living court after
+installing any named beneficiary. Loading then resumes those same people rather
+than first materializing a new settlement household; sacred-site settlements use
+this same lifecycle.
+
+The independent ordinary JSON example `holywar-protector-lantern.json` uses a
+fictional head, one county, a seven-day window, a 23 payment, four support loss and
+certain AI submission. The same typed validator and consumers serve both settings.
+Technology impact `holy_war_protector_causes` is **none**: institutional demands and
+submission need no discovery; existing military technology still applies.
+
 The inaugural Catholic crusade retains its historical Syria/Jerusalem target.
 After a faith's first launch, AI calls score the existing eligible sacred-site and
 lost-heartland targets instead of always taking the sacred-first list's first row.
@@ -1453,6 +1529,10 @@ fulfillment doubles the normal piety/prestige loss and records `broken`; later b
 vows reduce the vow basis by 15% each, floored at 50%. AI attackers receive personality-
 shaped desires and terms; old records repair to deterministic defaults without drawing
 RNG.
+
+Load repair backfills legacy service fields only on AI attacker participants.
+The player continues to use the canonical saved vow terms; restoring a current
+campaign does not add a second served/mustered record to its personal participant.
 
 Player-participation campaign modifiers are detailed in
 [modifiers.md](modifiers.md). A valid or renewed great-holy-war vow synchronizes

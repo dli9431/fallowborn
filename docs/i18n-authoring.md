@@ -144,6 +144,14 @@ Literal FBDATA.bookmarkRevisionContent_<suffix> objects in data/bookmark_*.js ma
 
 ## Route new text by where it lives
 
+Religious campaign causes render `name` and `desc` through the `holyWarCause`
+structured owner. The native shared title and explanation also have literal
+`FB.T` sources in the presentation adapter, so they remain extractable without a
+new catalogue command. Imported display fields retain their own English fallback.
+Submission and resistance save `news.holywar.cause_submission` and
+`news.holywar.cause_resistance` descriptors with court snapshots and numeric costs,
+never rendered prose.
+
 Named discipline definitions render `religiousCase.<id>.name/desc` through
 `FB.dataText` with imported English fallback. The native cause and scope text
 also have literal `FB.T` sources in the shared review. Status, account, judgment

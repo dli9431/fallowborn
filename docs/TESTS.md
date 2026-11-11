@@ -687,6 +687,28 @@ project.
 
 ## Shared support
 
+`holywar-protector-causes.spec.js` stages the 1209–1229 French opportunity and
+independently imports `holywar-protector-lantern.json` through Mods. It covers
+authority/window/holder gates, pure previews, costly conserved submission, stale
+and repeated responses, same-faith coalition separation, ordinary host service,
+occupied-only council assets/awards, active submission, player call/answer sheets,
+AI submission, exact changed-content fingerprints, detached malformed-definition
+and save rejection, preparation/active/completed load–re-save–load, and the existing
+Catholic sacred-target campaign without a cause marker. Boundaries are staged
+directly; no years of simulation or device acceptance are inferred.
+
+The same spec covers unrelated selected-date loading, combined versus separated
+player funding, and actual religious-head assignment preservation through court
+adoption, including an explicitly vacant office. Current player service remains
+on its canonical vow when loading rather than acquiring AI participant defaults.
+Regional and sacred-site council awards both commit their ordinary recipient
+courts before saving, retaining the same people and counters across restoration.
+Original response principals also survive ordinary ruler death, with the court's
+submission exemption inherited and no payment replay.
+Separate cold-page cases resume a live imported campaign and restore its spent
+submission resources; each keeps the normal per-test timeout and full repeated
+restore assertions.
+
 Specifications should import `test` and `expect` from `support/fixture.js`, not directly from
 `@playwright/test`. The shared fixture fails the test on page exceptions, console errors, failed
 requests, bad HTTP responses, or network traffic outside the expected local target.

@@ -5809,6 +5809,7 @@ window.FB = window.FB || {};
     if (FB.expeditionPreparation && FB.expeditionPreparation.referencesCharacter(state, c && c.id)) return true;
     if (!state || !c || !state.player) return false;
     if (FB.religiousInstitutionReferencesCharacter && FB.religiousInstitutionReferencesCharacter(state,c.id)) return true;
+    if (FB.holyWarCauseReferencesCharacter && FB.holyWarCauseReferencesCharacter(state,c.id)) return true;
     if (FB.industryLaws && FB.industryLaws.referencesCharacter(state, c.id)) return true;
     if (FB.productionEconomy && FB.productionEconomy.referencesCharacter(state,c.id)) return true;
     if (FB.siegeSupport && FB.siegeSupport.referencesCharacter(state,c.id)) return true;

@@ -8,6 +8,11 @@ window.FB = window.FB || {};
 (function () {
   'use strict';
 
+  FB.msg('news.holywar.cause_submission',
+    '{realm} submits to religious oversight, paying {money:amount} to {head} and losing {loss} popular support in the protected counties. The accusation no longer permits a campaign against this court.');
+  FB.msg('news.holywar.cause_resistance',
+    '{realm} refuses the religious demands. A campaign remains possible; no land changes hands.');
+
   function B(key, fallback) {
     var value = FBDATA.balance[key];
     return value === undefined ? fallback : value;
@@ -66,6 +71,249 @@ window.FB = window.FB || {};
   function dateReached(state, date) {
     return !!date && dateNumber(state.date) >= dateNumber(date);
   }
+
+  /* Cause declarations share the ordinary head, coalition and settlement owners.
+     A protector is a territorial court, including its actual subordinate holders. */
+  var causeIdSpec = {type:'string',pattern:'^[a-z][a-z0-9_]{0,79}$'};
+  var causeDateSpec = {type:'object',fields:{year:{type:'integer',min:1,max:9999},
+    season:{type:'integer',min:0,max:3},day:{type:'integer',min:1,max:90}}};
+  var causeSpec = {type:'object',fields:{
+    schema:{value:1}, kind:{value:'protector_heresy'}, bookmarkId:{type:'string',pattern:'^[a-z0-9_]{1,80}$'},
+    religion:{type:'string',ref:{table:'religions'}}, authorityOfficeId:causeIdSpec,
+    kingdomId:causeIdSpec, name:{type:'string',nonblank:true,maxLength:160},
+    desc:{type:'string',nonblank:true,maxLength:2000},
+    firstDate:causeDateSpec, lastDate:causeDateSpec,
+    protectorRealmIds:{type:'array',minItems:1,maxItems:16,unique:true,items:causeIdSpec},
+    provinceIds:{type:'array',minItems:1,maxItems:32,unique:true,items:causeIdSpec},
+    submission:{type:'object',fields:{gold:{type:'integer',min:1,max:100000},
+      supportLoss:{type:'integer',min:1,max:50}}},
+    ai:{type:'object',fields:{submitChance:{type:'number',min:0,max:1},
+      callChance:{type:'number',min:0,max:1}}}
+  },test:function (d,c) {
+    if (dateNumber(d.firstDate) > dateNumber(d.lastDate)) return false;
+    var raw = c.data.bookmarks[d.bookmarkId];
+    if (!raw) return c.data === FBDATA && FB.bookmarkSources &&
+      FB.bookmarkSources.nativeSelectorKnowsBookmark(d.bookmarkId);
+    if (FB.bookmarkSources && FB.bookmarkSources.unreviewedReference(raw)) return true;
+    return FB.bookmarkRevisions(d.bookmarkId,raw).some(function (b) {
+      return !!b.kingdoms[d.kingdomId] && d.protectorRealmIds.every(function (rid) {
+        return b.realms.some(function (r) {return r.id === rid;});
+      }) && d.provinceIds.every(function (pid) {
+        return b.provinces.some(function (p) {return p.id === pid && !p.wasteland &&
+          b.duchies[p.duchy] && b.duchies[p.duchy].kingdom === d.kingdomId;});
+      });
+    });
+  }};
+  FB.holyWarCauseCatalogFaults = function (data) {
+    return FB.schema.faults(data.holyWarCauses || {},{type:'object',maxProperties:64,
+      keys:causeIdSpec,values:causeSpec},'holyWarCauses',{data:data});
+  };
+  function causeDefinition(id) {
+    var table = FBDATA.holyWarCauses || {};
+    return Object.prototype.hasOwnProperty.call(table,id) ? table[id] : null;
+  }
+  function causeRealm(state, id) { return FB.startRealmId ? FB.startRealmId(state,id) : id; }
+  function causeRuler(state,rid) {
+    return rid === 'player' ? state.chars[state.player.charId] : FB.realmRulerCharacterSnapshot(state,rid);
+  }
+  function causeAccount(state,rid) {
+    var publicAccount = FB.treasuryPublicAccountSnapshot(state,rid);
+    if (publicAccount) return Object.assign({kind:'public'},publicAccount);
+    if (rid === 'player' && state.realms.player && state.realms.player.alive &&
+        !FB.treasurySeparated(state,rid) && state.treasuryAccounting && state.treasuryAccounting.mode === 'active') {
+      return {kind:'dynastic',realmId:rid,gold:state.player.gold,available:FB.treasuryAvailable(state,rid)};
+    }
+    return null;
+  }
+  function causeResponse(state,id,rid) {
+    return (state.holyWarCauseResponses || []).filter(function (r) {
+      return r.causeId === id && r.declaredRealmId === rid;
+    })[0] || null;
+  }
+  function causeOpen(state,d) {
+    return !!(d && state.start && state.start.id === d.bookmarkId && config(state,d.religion) &&
+      dateNumber(state.date) >= dateNumber(d.firstDate) && dateNumber(state.date) <= dateNumber(d.lastDate));
+  }
+  function protectorControls(state,rid,pid) {
+    var holder = state.holder[pid] || state.owner[pid], seen = {};
+    if (!state.owner[pid] || sovereignRealm(state,holder) !== sovereignRealm(state,state.owner[pid])) return false;
+    while (holder && !seen[holder]) {
+      if (holder === rid) return true;
+      seen[holder] = true;
+      holder = state.realms[holder] && state.realms[holder].liege;
+    }
+    return false;
+  }
+  function causeAuthority(state,d) {
+    var religion = FB.religionOf(d.religion,state), head = FB.religiousHeadSnapshot(state,d.religion);
+    if (!religion || !religion.head || religion.head.officeId !== d.authorityOfficeId || !head ||
+        FB.intrigueRealmRulerCaptive && FB.intrigueRealmRulerCaptive(state,head.id)) return null;
+    if (papalFaith(state,d.religion)) {
+      var p = FB.papacyState(state,d.religion), o = p && p.obediences[p.romanObedience];
+      var gate = FBDATA.papacy.authority.gates.greatHolyWar;
+      if (!o || !o.claimantId || !state.chars[o.claimantId] || state.chars[o.claimantId].dead ||
+          o.authority < gate || Object.keys(p.obediences).filter(function (id) {
+            return p.obediences[id].status === 'active';
+          }).length > 1) return null;
+    }
+    return head;
+  }
+  function protectorTarget(state,id,declared,committed) {
+    var d = causeDefinition(id), rid = causeRealm(state,declared), realm = state.realms[rid];
+    var response = causeResponse(state,id,declared);
+    if (!d || d.protectorRealmIds.indexOf(declared) < 0 || !realm || !realm.alive ||
+        !FB.faithInFold(state,d.religion,FB.realmReligionId(state,rid)) ||
+        response && response.disposition === 'submitted' || !committed && !causeOpen(state,d)) return null;
+    var authority = causeAuthority(state,d);
+    if (!committed && authority && sovereignRealm(state,authority.id) === sovereignRealm(state,rid)) return null;
+    var ruler = causeRuler(state,rid);
+    if (!ruler || ruler.dead) return null;
+    var counties = d.provinceIds.filter(function (pid) {return !!FB.world.byId[pid] && protectorControls(state,rid,pid);});
+    if (!counties.length) return null;
+    var development = developmentTotal(state,counties);
+    return {targetId:'cause:' + id + ':' + declared,causeId:id,declaredRealmId:declared,
+      protectorRealmId:rid,rulerId:ruler.id,generation:FB.realmRulerGeneration(state,rid),
+      kingdomId:d.kingdomId,objectiveCounties:counties,holyCounties:[],holyPriority:0,
+      heartlandLoss:development,objectiveDevelopment:development,totalDevelopment:development};
+  }
+  function causeTargets(state,religionId) {
+    var out = [];
+    Object.keys(FBDATA.holyWarCauses || {}).sort().forEach(function (id) {
+      var d = causeDefinition(id);
+      if (d.religion !== religionId || !causeOpen(state,d) || !causeAuthority(state,d)) return;
+      d.protectorRealmIds.forEach(function (rid) {
+        var target = protectorTarget(state,id,rid,false);
+        if (target) out.push(target);
+      });
+    });
+    return out;
+  }
+  FB.holyWarCauseText = function (state,id,field) {
+    var d = causeDefinition(id);
+    if (!d) return '';
+    if (field === 'name' && d.name === 'Campaign against protectors of heresy')
+      return FB.T('Campaign against protectors of heresy');
+    if (field === 'desc' && d.desc === 'The religious head demands funded religious oversight and public submission. Resistance permits a campaign; only occupied objectives can enter its settlement.')
+      return FB.T('The religious head demands funded religious oversight and public submission. Resistance permits a campaign; only occupied objectives can enter its settlement.');
+    return FB.dataText(state,null,'holyWarCause',id,d,field,{});
+  };
+  FB.holyWarCauseReview = function (state,id,declared) {
+    var d = causeDefinition(id), campaign = enabledCampaign(state);
+    var matching = campaign && campaign.cause && campaign.cause.id === id &&
+      campaign.cause.declaredRealmId === declared && campaign.phase !== 'settlement';
+    var target = d && protectorTarget(state,id,declared,matching), head = d && causeAuthority(state,d);
+    if (!target || !head || campaign && !matching) return null;
+    var rid = target.protectorRealmId, response = causeResponse(state,id,declared);
+    var funds = causeAccount(state,rid), payee = causeAccount(state,head.id);
+    var publicReady = FB.governments.publicAuthorityReadiness(state,rid).allowed &&
+      FB.ageOf(causeRuler(state,rid),state.date.year) >= 16 &&
+      !(FB.intrigueRealmRulerCaptive && FB.intrigueRealmRulerCaptive(state,rid));
+    var allowed = !!(funds && payee && funds.available >= d.submission.gold && publicReady &&
+      !(FB.intrigueRealmRulerCaptive && FB.intrigueRealmRulerCaptive(state,rid)) && rid !== head.id);
+    var stamp = JSON.stringify([id,declared,rid,target.rulerId,target.generation,head.id,
+      FB.realmRulerGeneration(state,head.id),FB.mods.fingerprint(d),state.turn,
+      campaign && [campaign.id,campaign.phase,campaign.objectiveCounties],target.objectiveCounties,
+      funds,payee,response,allowed]);
+    return {causeId:id,declaredRealmId:declared,realmId:rid,headRealmId:head.id,
+      rulerId:target.rulerId,gold:d.submission.gold,supportLoss:d.submission.supportLoss,
+      accountKind:funds && funds.kind || null,
+      provinceIds:target.objectiveCounties.slice(),canSubmit:allowed,
+      canResist:publicReady && !response,stamp:stamp};
+  };
+  FB.holyWarCausePlayerOptions = function (state) {
+    var out = [];
+    Object.keys(FBDATA.holyWarCauses || {}).sort().forEach(function (id) {
+      causeDefinition(id).protectorRealmIds.forEach(function (rid) {
+        if (causeRealm(state,rid) !== 'player') return;
+        var review = FB.holyWarCauseReview(state,id,rid);
+        if (review) out.push(review);
+      });
+    });
+    return out;
+  };
+  FB.respondHolyWarCause = function (state,review,submit) {
+    if (!review || typeof submit !== 'boolean') return false;
+    var fresh = FB.holyWarCauseReview(state,review.causeId,review.declaredRealmId);
+    if (!fresh || fresh.stamp !== review.stamp || !(submit ? fresh.canSubmit : fresh.canResist)) return false;
+    if (submit && !FB.treasuryTransfer(state,fresh.realmId,fresh.headRealmId,fresh.gold,false)) return false;
+    if (submit) fresh.provinceIds.forEach(function (pid) {FB.adjustCountySupport(state,pid,-fresh.supportLoss);});
+    var records = state.holyWarCauseResponses || (state.holyWarCauseResponses = []);
+    var old = causeResponse(state,fresh.causeId,fresh.declaredRealmId);
+    if (old) records.splice(records.indexOf(old),1);
+    records.push({causeId:fresh.causeId,declaredRealmId:fresh.declaredRealmId,realmId:fresh.realmId,
+      rulerId:fresh.rulerId,generation:FB.realmRulerGeneration(state,fresh.realmId),turn:state.turn,
+      disposition:submit ? 'submitted' : 'resisted',payeeRealmId:fresh.headRealmId,
+      gold:submit ? fresh.gold : 0,supportLoss:submit ? fresh.supportLoss : 0,provinceIds:fresh.provinceIds.slice()});
+    FB.news(state,submit ? FB.message('news.holywar.cause_submission',
+      {realm:realmName(state,fresh.realmId),head:realmName(state,fresh.headRealmId),amount:fresh.gold,loss:fresh.supportLoss}) :
+      FB.message('news.holywar.cause_resistance',{realm:realmName(state,fresh.realmId)}));
+    if (submit && state.greatHolyWar && state.greatHolyWar.cause &&
+        state.greatHolyWar.cause.id === fresh.causeId && state.greatHolyWar.cause.declaredRealmId === fresh.declaredRealmId) {
+      var campaign = state.greatHolyWar;
+      campaign.result = {outcome:'submitted',reason:'submission',turn:state.turn};
+      markVowOutcomes(state,campaign);
+      finalize(state,campaign);
+    }
+    return true;
+  };
+
+  FB.holyWarCauseReferencesCharacter = function (state,characterId) {
+    if (!state || !characterId) return false;
+    var campaign = state.greatHolyWar;
+    if (campaign && campaign.cause && campaign.cause.rulerId === characterId) return true;
+    return (state.holyWarCauseResponses || []).some(function (r) {return r.rulerId === characterId;});
+  };
+
+  FB.validateHolyWarCauseState = function (state) {
+    function need(ok) {if (!ok) throw new Error(FB.T('Invalid holy-war cause state.'));}
+    function knownRealm(id) {return typeof id === 'string' && (id === 'player' || Object.prototype.hasOwnProperty.call(state.realms,id));}
+    var expanded = null;
+    function principal(rid,cid,generation) {
+      if (!knownRealm(rid) || typeof cid !== 'string' || !Object.prototype.hasOwnProperty.call(state.chars,cid) ||
+          !Number.isSafeInteger(generation) || generation < 1 || generation > 1000000) return false;
+      if (!state.realms[rid]) return rid === 'player';
+      if (!expanded) expanded = FB.save.expandedSnapshot(state);
+      var currentGeneration = FB.realmRulerGeneration(expanded,rid);
+      if (currentGeneration < generation) return false;
+      var ruler = causeRuler(expanded,rid);
+      return currentGeneration !== generation || !ruler || ruler.id === cid;
+    }
+    var seen = {};
+    if (state.holyWarCauseResponses !== undefined) {
+      need(Array.isArray(state.holyWarCauseResponses) && state.holyWarCauseResponses.length <= 1024);
+      state.holyWarCauseResponses.forEach(function (r) {
+        need(r && Object.keys(r).sort().join(',') === 'causeId,declaredRealmId,disposition,generation,gold,payeeRealmId,provinceIds,realmId,rulerId,supportLoss,turn');
+        var d = causeDefinition(r.causeId), key = r.causeId + ':' + r.declaredRealmId;
+        need(d && state.start.id === d.bookmarkId && d.protectorRealmIds.indexOf(r.declaredRealmId) >= 0 && !seen[key]);
+        seen[key] = true;
+        need((r.realmId === r.declaredRealmId || r.realmId === 'player' && state.start.rulerRealmId === r.declaredRealmId) &&
+          principal(r.realmId,r.rulerId,r.generation) && knownRealm(r.payeeRealmId) &&
+          Number.isSafeInteger(r.turn) && r.turn >= 0 && r.turn <= state.turn &&
+          ['submitted','resisted'].indexOf(r.disposition) >= 0 &&
+          r.gold === (r.disposition === 'submitted' ? d.submission.gold : 0) &&
+          r.supportLoss === (r.disposition === 'submitted' ? d.submission.supportLoss : 0) &&
+          Array.isArray(r.provinceIds) && r.provinceIds.length > 0 && new Set(r.provinceIds).size === r.provinceIds.length &&
+          r.provinceIds.every(function (pid) {return d.provinceIds.indexOf(pid) >= 0;}));
+      });
+    }
+    var c = state.greatHolyWar, marker = c ? c.cause : undefined;
+    if (marker !== undefined) {
+      need(!!marker && typeof marker === 'object' && !Array.isArray(marker));
+      need(Object.keys(marker).sort().join(',') === 'declaredRealmId,generation,id,protectorRealmId,rulerId,schema' && marker.schema === 1);
+      var d = causeDefinition(marker.id);
+      need(d && state.start.id === d.bookmarkId && c.callingReligion === d.religion && c.targetKingdom === d.kingdomId &&
+        d.protectorRealmIds.indexOf(marker.declaredRealmId) >= 0 &&
+        (marker.protectorRealmId === marker.declaredRealmId || marker.protectorRealmId === 'player' && state.start.rulerRealmId === marker.declaredRealmId) &&
+        principal(marker.protectorRealmId,marker.rulerId,marker.generation) &&
+        Array.isArray(c.objectiveCounties) && c.objectiveCounties.length > 0 && new Set(c.objectiveCounties).size === c.objectiveCounties.length &&
+        c.objectiveCounties.every(function (pid) {return d.provinceIds.indexOf(pid) >= 0;}) &&
+        Array.isArray(c.holyCounties) && c.holyCounties.length === 0);
+      var callDate = dateNumber(state.date) - (state.turn - c.calledTurn);
+      need(Number.isSafeInteger(c.calledTurn) && c.calledTurn >= 0 && c.calledTurn <= state.turn &&
+        callDate >= dateNumber(d.firstDate) && callDate <= dateNumber(d.lastDate));
+    }
+    return true;
+  };
 
   function realmName(state, rid) {
     if (rid === 'player') {
@@ -259,7 +507,7 @@ window.FB = window.FB || {};
     if (!state || !config(state, religionId) ||
         !callingGroup(state, religionId)) return [];
     var history = preview ? state.greatHolyWarHistory || {} : ensureHistory(state);
-    var conf = config(state, religionId), out = [];
+    var conf = config(state, religionId), out = causeTargets(state,religionId);
     if (FB.titleLevels.has('kingdom', conf.firstTarget) && !(history.firstLaunched || {})[religionId]) {
       var first = objectiveRecord(state, religionId, conf.firstTarget, true);
       if (first && first.holyCounties.length) out.push(first);
@@ -289,7 +537,7 @@ window.FB = window.FB || {};
   function targetById(state, religionId, kingdomId, preview) {
     var targets = FB.greatHolyWarTargets(state, religionId, preview);
     for (var i = 0; i < targets.length; i++) {
-      if (targets[i].kingdomId === kingdomId) return targets[i];
+      if ((targets[i].targetId || targets[i].kingdomId) === kingdomId) return targets[i];
     }
     return null;
   }
@@ -517,6 +765,7 @@ window.FB = window.FB || {};
       kind = neutralFallback ? 'neutral' : 'honor';
     }
     var id = desire.id || null;
+    if (campaign.cause && kind === 'sacred' && !campaign.holyCounties.length) kind = 'honor';
     if (kind === 'duchy' && objectiveDuchies(campaign).indexOf(id) < 0) {
       kind = neutralFallback ? 'neutral' : 'honor';
       id = null;
@@ -610,7 +859,7 @@ window.FB = window.FB || {};
     participant.vowSeasons = longVow
       ? (deterministic ? (hash % 3 ? 12 : 8) : (FB.chance(policy.longVowChance) ? 12 : 8))
       : (deterministic ? (hash % 2 ? 8 : 4) : (FB.chance(policy.shortVowChance) ? 8 : 4));
-    if (FB.traitMechanic(ruler, 'holyWarSacredDesire')) {
+    if (FB.traitMechanic(ruler, 'holyWarSacredDesire') && (!campaign.cause || campaign.holyCounties.length)) {
       participant.desire = { kind:'sacred', id:null };
     } else if (FB.traitMechanic(ruler, 'holyWarCrownDesire')) {
       participant.desire = { kind:'crown', id:null };
@@ -651,7 +900,7 @@ window.FB = window.FB || {};
   function aiAttackers(state, campaign) {
     var candidates = [], faith = campaign.callingReligion;
     for (var rid in state.realms) {
-      if (rid === 'player' || rid === campaign.callerRealm ||
+      if (rid === 'player' || rid === campaign.callerRealm || participantOf(campaign,'defenders',rid) ||
           !livingSovereign(state, rid)) continue;
       if (FB.mobile && FB.mobile.active(state, rid) && (!mobileBinding(state, rid, true) ||
           FB.mobile.row(state, rid).leaderId === state.player.charId)) continue;
@@ -680,10 +929,7 @@ window.FB = window.FB || {};
         }
         continue;
       }
-      addParticipant(campaign, 'attackers', participantRecord(state, campaign, {
-        realm:candidates[i], sovereign:true, mandatory:false, voluntary:true,
-        joinedTurn:state.turn
-      }, false));
+      FB.joinGreatHolyWar(state,'attackers',candidates[i]);
     }
   }
 
@@ -692,7 +938,7 @@ window.FB = window.FB || {};
     for (var i = 0; i < campaign.objectiveCounties.length; i++) {
       var rid = sovereignRealm(state, state.owner[campaign.objectiveCounties[i]]);
       if (!rid || seen[rid] ||
-          !countyLost(state, campaign.callingReligion,
+          !campaign.cause && !countyLost(state, campaign.callingReligion,
             campaign.objectiveCounties[i])) continue;
       seen[rid] = 1;
       addParticipant(campaign, 'defenders', {
@@ -739,10 +985,7 @@ window.FB = window.FB || {};
         }
         continue;
       }
-      addParticipant(campaign, 'defenders', {
-        realm:candidates[j], sovereign:true, mandatory:false, voluntary:true,
-        joinedTurn:state.turn
-      });
+      FB.joinGreatHolyWar(state,'defenders',candidates[j]);
     }
   }
 
@@ -777,17 +1020,20 @@ window.FB = window.FB || {};
       result:null,
       settlement:null
     };
+    if (target.causeId) campaign.cause = {schema:1,id:target.causeId,
+      declaredRealmId:target.declaredRealmId,protectorRealmId:target.protectorRealmId,
+      rulerId:target.rulerId,generation:target.generation};
     for (var i = 0; i < campaign.objectiveCounties.length; i++) {
       campaign.occupations[campaign.objectiveCounties[i]] = {
         occupied:false, progress:0, progressCamp:null, occupiedBy:null
       };
     }
     state.greatHolyWar = campaign;
-    history.firstCall[religionId] = true;
+    if (!campaign.cause) history.firstCall[religionId] = true;
     mandatoryDefenders(state, campaign);
     aiAttackers(state, campaign);
     aiDefenders(state, campaign);
-    var kingdom = FBDATA.kingdoms[kingdomId];
+    var kingdom = FBDATA.kingdoms[target.kingdomId];
     FB.news(state, FB.msg('news.holywar.called',
       '📯 {caller} calls the faithful to a {campaign} for {kingdom}. The banners have 180 days to gather.', {
         caller:realmName(state, head.id),
@@ -804,6 +1050,7 @@ window.FB = window.FB || {};
     if (!character || FB.ageOf(character, state.date.year) < 16 || !FB.station.isFree(state.player, state)) {
       return null;
     }
+    if (campaign.cause && participantOf(campaign,'defenders',FB.playerRealmId(state))) return 'defenders';
     if (papalFaith(state, character.religion) &&
         FB.playerExcommunicated && FB.playerExcommunicated(state)) return null;
     if (FB.faithInFold(state, campaign.callingReligion,
@@ -1082,6 +1329,7 @@ window.FB = window.FB || {};
     }
     var topRealm = sovereignRealm(state, realmId);
     if (topRealm !== realmId || !livingSovereign(state, realmId)) return false;
+    if (participantOf(campaign,camp === 'attackers' ? 'defenders' : 'attackers',realmId)) return false;
     var realmReligion = FB.realmReligionId(state, realmId);
     var joiningRuler = FB.realmRulerCharacter &&
       FB.realmRulerCharacter(state, realmId);
@@ -1320,6 +1568,12 @@ window.FB = window.FB || {};
   }
 
   function campaignTargetValid(state, campaign) {
+    if (campaign.cause) {
+      var target = protectorTarget(state,campaign.cause.id,campaign.cause.declaredRealmId,true);
+      return !!target && campaign.objectiveCounties.every(function (pid) {
+        return target.objectiveCounties.indexOf(pid) >= 0;
+      });
+    }
     var opposing = 0;
     for (var i = 0; i < campaign.holyCounties.length; i++) {
       if (!countyLost(state, campaign.callingReligion, campaign.holyCounties[i])) return false;
@@ -1457,7 +1711,7 @@ window.FB = window.FB || {};
     /* armyTick has already run on the launch day. Queue the second announcement
        on the following tick, after the newly active sovereign hosts have raised. */
     campaign.musterEventPending = true;
-    ensureHistory(state).firstLaunched[campaign.callingReligion] = true;
+    if (!campaign.cause) ensureHistory(state).firstLaunched[campaign.callingReligion] = true;
     breakCrossCampTies(state, campaign);
     var launchPledge = state.player.greatHolyWar;
     if (launchPledge && launchPledge.campaignId === campaign.id &&
@@ -3035,6 +3289,11 @@ window.FB = window.FB || {};
       }
     }
     cleanupDisplacedRealms(state, affected, protectedRealms);
+    // Commit each awarded court now, after installing any named beneficiary.
+    // Restoration must resume its ordinary people rather than first create them.
+    for (var awardedRealmId in protectedRealms) {
+      if (awardedRealmId !== 'player') FB.ensureRealmCourt(state, awardedRealmId);
+    }
 
     for (var s = 0; s < settlementCase.awards.length; s++) {
       var sacredAward = settlementCase.awards[s];
@@ -3257,11 +3516,33 @@ window.FB = window.FB || {};
   /* Called once at the new-year world tick. The scheduler makes at most one
      global call, uses the saved RNG, and leaves player-controlled heads to
      their explicit deed. */
+  function causeYearly(state) {
+    var ids = Object.keys(FBDATA.holyWarCauses || {}).sort();
+    for (var i = 0; i < ids.length; i++) {
+      var id = ids[i], d = causeDefinition(id);
+      if (!causeOpen(state,d) || !causeAuthority(state,d)) continue;
+      for (var j = 0; j < d.protectorRealmIds.length; j++) {
+        var declared = d.protectorRealmIds[j], rid = causeRealm(state,declared);
+        var review = FB.holyWarCauseReview(state,id,declared);
+        if (review && rid !== 'player' && !causeResponse(state,id,declared)) {
+          var submit = review.canSubmit && FB.chance(d.ai.submitChance);
+          FB.respondHolyWarCause(state,review,!!submit);
+        }
+        var target = protectorTarget(state,id,declared,false), head = causeAuthority(state,d);
+        if (state.greatHolyWar || !target || !head || head.id === 'player' ||
+            papalFaith(state,d.religion) && FB.playerPope && FB.playerPope(state)) continue;
+        if (FB.canCallGreatHolyWar(state,d.religion,target.targetId,head.id,true) && FB.chance(d.ai.callChance)) {
+          if (FB.callGreatHolyWar(state,d.religion,target.targetId,head.id)) return;
+        }
+      }
+    }
+  }
   FB.greatHolyWarYearly = function (state) {
     if (!FB.systemAvailable(state, 'great_holy_wars') ||
         state && state.greatHolyWar && !enabledCampaign(state)) return null;
     FB.ensureGreatHolyWar(state);
     if (FB.prepareOpeningHolyWarCalls) FB.prepareOpeningHolyWarCalls(state);
+    causeYearly(state);
     trackSacredLosses(state);
     if (state.greatHolyWar) return;
     var ids = FB.religionIds(state, false).filter(function (religionId) {
@@ -3279,7 +3560,7 @@ window.FB = window.FB || {};
           FB.playerPope(state)) continue;
       if (!head || head.id === 'player') continue;
       if ((history.cooldownUntil[religionId] || 0) > state.turn) continue;
-      var targets = FB.greatHolyWarTargets(state, religionId);
+      var targets = FB.greatHolyWarTargets(state, religionId).filter(function (target) {return !target.causeId;});
       if (!targets.length) continue;
       var forced = (!history.firstLaunched[religionId] && conf.firstByYear &&
         state.date.year >= conf.firstByYear) || guaranteedByLoss(state, religionId, conf);
@@ -3502,7 +3783,7 @@ window.FB = window.FB || {};
         var unlockEligible = !(papalFaith(state, unlockReligionId) && FB.playerPope && FB.playerPope(state)) &&
           unlockHead && unlockHead.id !== 'player' &&
           (history.cooldownUntil[unlockReligionId] || 0) <= state.turn;
-        var unlockTargets = unlockEligible ? FB.greatHolyWarTargets(state, unlockReligionId) : [];
+        var unlockTargets = unlockEligible ? FB.greatHolyWarTargets(state, unlockReligionId).filter(function (target) {return !target.causeId;}) : [];
         var unlockForced = (!history.firstLaunched[unlockReligionId] &&
           unlockConf.firstByYear && state.date.year >= unlockConf.firstByYear) ||
           guaranteedByLoss(state, unlockReligionId, unlockConf);
@@ -3536,7 +3817,7 @@ window.FB = window.FB || {};
           (history.cooldownUntil[religionId] || 0) <= state.turn &&
           !(papalFaith(state, religionId) && FB.playerPope && FB.playerPope(state)) &&
           head && head.id !== 'player';
-        var targets = launchEligible ? FB.greatHolyWarTargets(state, religionId) : [];
+        var targets = launchEligible ? FB.greatHolyWarTargets(state, religionId).filter(function (target) {return !target.causeId;}) : [];
         if (!(papalFaith(state, religionId) && FB.playerPope &&
               FB.playerPope(state)) &&
             head && head.id !== 'player' && targets.length &&
@@ -3644,12 +3925,12 @@ window.FB = window.FB || {};
       var hadServed = isFinite(repairAttacker.served);
       var hadMuster = repairAttacker.mustered !== undefined;
       participantRecord(state, campaign, repairAttacker, true);
-      if (!hadServed && campaign.phase !== 'preparation' &&
+      if (repairAttacker.realm !== 'player' && !hadServed && campaign.phase !== 'preparation' &&
           isFinite(campaign.launchedTurn)) {
         repairAttacker.served = Math.max(0,
           Math.floor((state.turn - campaign.launchedTurn) / 90));
       }
-      if (!hadMuster && campaign.phase !== 'preparation') {
+      if (repairAttacker.realm !== 'player' && !hadMuster && campaign.phase !== 'preparation') {
         repairAttacker.mustered = true;
       }
     }
@@ -3761,7 +4042,7 @@ window.FB = window.FB || {};
          objectiveIndex < campaign.objectiveCounties.length; objectiveIndex++) {
       objectiveMap[campaign.objectiveCounties[objectiveIndex]] = 1;
     }
-    var targetCounties = FB.kingdomCounties(campaign.targetKingdom);
+    var targetCounties = campaign.cause ? campaign.objectiveCounties : FB.kingdomCounties(campaign.targetKingdom);
     for (var targetIndex = 0; targetIndex < targetCounties.length; targetIndex++) {
       var targetPid = targetCounties[targetIndex];
       if (objectiveMap[targetPid]) continue;

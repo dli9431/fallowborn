@@ -1,3 +1,12 @@
+Existing religious-head court adoption
+
+Existing-ruler adoption preserves realm-bound religious head offices actually
+held by that court, remapping their existing assignment to the canonical player
+realm. It creates no appointment, claimant, religious standing or vacancy repair.
+Character-held offices and explicit vacancies retain their own facts. The ordinary
+Call holy war action therefore remains available to an adopted eligible head;
+matching restoration retains the assignment without replay.
+
 Autumn 634 core identities
 
 Autumn 634 now selects core_identities_v3. Its complete province and realm arrays

@@ -23,6 +23,7 @@ window.FBMODS = window.FBMODS || [];
   const authoredRoots = Object.create(null);
   authoringRoots.push('aiDecisionPolicies');
   authoringRoots.push('industryLaws');
+  authoringRoots.push('holyWarCauses');
   let baseCatalogues = null;
   let baseRootFingerprints = null;
   let installedCatalogues = null;
@@ -745,7 +746,7 @@ window.FBMODS = window.FBMODS || [];
     cultureTraditions:true, cultures:true, cultureDoctrineDefaults:true,
     doctrineCatalogs:true, religions:true, religiousPaths:true, religiousOfficeRanks:true,
     religiousAffiliations:true, religiousInstitutionProfiles:true, religiousActivities:true, religiousPatronage:true,
-    episcopalClaims:true,
+    episcopalClaims:true, holyWarCauses:true,
     religiousCases:true,
     traits:true, traitMechanics:true, aiDecisionPolicies:true,
     ailments:true, modifiers:true, buildings:true, forts:true, siteResourceProfiles:true,
@@ -2720,6 +2721,8 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod,'episcopalClaims') && !plainObject(mod.episcopalClaims)) fail('episcopalClaims','must be an object keyed by id.');
     var claimFaults = FB.episcopalClaims.catalogFaults(FBDATA);
     if (claimFaults.length) fail('episcopalClaims',claimFaults.join(' '));
+    var causeFaults = FB.holyWarCauseCatalogFaults(FBDATA);
+    if (causeFaults.length) fail('holyWarCauses',causeFaults.join(' '));
     if (own(mod,'religiousCases') && !plainObject(mod.religiousCases)) fail('religiousCases','must be an object keyed by id.');
     var religiousFaults = FB.religiousCases.catalogFaults(FBDATA);
     if (religiousFaults.length) fail('religiousCases',religiousFaults.join(' '));
@@ -2894,6 +2897,7 @@ window.FBMODS = window.FBMODS || [];
     });
     var live = FBDATA, staged = Object.assign({}, live), prepared;
     if (own(mod, 'industryLaws') && !plainObject(mod.industryLaws)) fail('industryLaws', 'must be an object keyed by id.');
+    if (own(mod, 'holyWarCauses') && !plainObject(mod.holyWarCauses)) fail('holyWarCauses', 'must be an object keyed by id.');
     ['positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','federateServiceStarts','federateMigrations','rankPrestigeYearly','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','eras','wardrobes','settlementLayouts','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','traitMechanics','authorityOffices','legitimacySources','customaryBases','storyPlacements'].forEach(function (key) {
       if (own(mod, key) && !plainObject(mod[key])) fail(key, 'must be an object keyed by id.');
     });
@@ -3314,6 +3318,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.religiousActivities) mergeTable(FBDATA.religiousActivities, mod.religiousActivities);
     if (mod.religiousPatronage) mergeTable(FBDATA.religiousPatronage, mod.religiousPatronage);
     if (mod.episcopalClaims) mergeTable(FBDATA.episcopalClaims, mod.episcopalClaims);
+    if (mod.holyWarCauses) mergeTable(FBDATA.holyWarCauses, mod.holyWarCauses);
     if (mod.religiousCases) mergeTable(FBDATA.religiousCases, mod.religiousCases);
     if (mod.fortProfiles) mergeTable(FBDATA.fortProfiles, mod.fortProfiles);
     if (mod.buildingProfiles) mergeTable(FBDATA.buildingProfiles, mod.buildingProfiles);
@@ -3631,13 +3636,13 @@ window.FBMODS = window.FBMODS || [];
   M.prepareUnmodded = function () {
     if (M.count()) throw new Error('Stored mods require complete catalogue preparation.');
     M.assertReady();
-    const faults = FB.aiDecisions.catalogFaults(FBDATA,null,{worlds:false});
+    const faults = FB.aiDecisions.catalogFaults(FBDATA,null,{worlds:false}).concat(FB.holyWarCauseCatalogFaults(FBDATA));
     if (faults.length) throw new Error(faults.join(' '));
     configureRuntime();
   };
   function finishConfiguration() {
     if (!modFailure) {
-      const faults = FB.aiDecisions.catalogFaults(FBDATA,null,{worlds:false});
+      const faults = FB.aiDecisions.catalogFaults(FBDATA,null,{worlds:false}).concat(FB.holyWarCauseCatalogFaults(FBDATA));
       if (faults.length) modFailure = faults.join(' ');
     }
     configureRuntime();

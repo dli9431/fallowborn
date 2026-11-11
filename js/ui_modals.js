@@ -5880,7 +5880,7 @@ window.FB = window.FB || {};
           return FB.world.byId[pid] ? FB.world.byId[pid].name : pid;
         });
         h += '<button class="actionbtn" data-ghw-religion="' + esc(religionId) +
-          '" data-ghw-kingdom="' + esc(target.kingdomId) + '">📯 ' +
+          '" data-ghw-kingdom="' + esc(target.targetId || target.kingdomId) + '">📯 ' +
           esc(FB.T('{campaign} for {kingdom}', {
             campaign:campaignName,
             kingdom:kingdom ? kingdom.name : target.kingdomId
@@ -5891,13 +5891,16 @@ window.FB = window.FB || {};
                 ? FB.T(' · mandatory holy places: {places}', {
                   places:holyNames.join(', ')
                 }) : ''
-            })) + '</span></button>';
+            })) + '</span>' + (target.causeId ? '<span class="adesc">' +
+              esc(FB.holyWarCauseText(s,target.causeId,'name')) + ' · ' +
+              esc(greatHolyWarRealmName(s,target.protectorRealmId)) + '</span><span class="adesc">' +
+              esc(FB.holyWarCauseText(s,target.causeId,'desc')) + '</span>' : '') + '</button>';
         count++;
       }
     }
     if (!count) h += '<div class="progressnote">' +
       esc(FB.T(
-        'No lost {term:kingdom} is currently eligible. Authority, schism, captivity, and the campaign cooldown can also prevent a call.')) +
+        'No sacred or regional cause is currently eligible. Authority, schism, captivity, and the campaign cooldown can also prevent a call.')) +
       '</div>';
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Not now')) + '</button>';
@@ -5913,8 +5916,9 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
-  UI.showGreatHolyWarJoin = function () {
+  UI.showGreatHolyWarJoin = function (skipCause) {
     const s = FB.state, campaign = s && s.greatHolyWar;
+    if (!skipCause && s && FB.holyWarCausePlayerOptions(s).length) { UI.showHolyWarCauseResponse(); return; }
     const camp = campaign && FB.playerGreatHolyWarJoinCamp(s);
     if (!campaign || campaign.phase !== 'preparation' || !camp) return;
     const sovereign = FB.isPlayerSovereign(s);
@@ -5964,7 +5968,7 @@ window.FB = window.FB || {};
     }
 
     function showDesire() {
-      const desires = camp === 'attackers' ? [
+      const desires = (camp === 'attackers' ? [
         { kind:'crown', label:FB.T('The target crown') },
         { kind:'sacred', label:FB.T('Custody of the sacred places') },
         { kind:'duchy', label:FB.T('An exact objective {term:duchy}…') },
@@ -5972,7 +5976,7 @@ window.FB = window.FB || {};
         { kind:'honor', label:FB.T('Honor rather than land') }
       ] : [
         { kind:'honor', label:FB.T('Defend the faith for honor') }
-      ];
+      ]).filter(function (d) {return !campaign.cause || d.kind !== 'sacred' || campaign.holyCounties.length;});
       let h = reviewFactsCard('', kv('Promised service', esc(FB.T('{seasons} seasons', { seasons:draft.seasons }))),
         ' data-ghw-join-summary') +
         panelh('Vow') + reviewActionsHtml(desires.map(function (desire) {
@@ -6082,6 +6086,52 @@ window.FB = window.FB || {};
     }
 
     showService();
+  };
+
+  UI.showHolyWarCauseResponse = function () {
+    const s = FB.state, choices = FB.holyWarCausePlayerOptions(s);
+    if (!choices.length) return;
+    let h = '<div class="gm-list">';
+    choices.forEach(function (q,index) {
+      const head = q.headRealmId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,q.headRealmId);
+      const source = q.accountKind === 'dynastic' ? FB.T('your combined dynastic account') : FB.T('the public treasury');
+      h += reviewFactsCard(FB.holyWarCauseText(s,q.causeId,'name'),
+        UI.charCardHtml(s,s.chars[q.rulerId],false) + (head ? UI.charCardHtml(s,head,false) : '') +
+        '<p>' + esc(FB.holyWarCauseText(s,q.causeId,'desc')) + '</p>' +
+        '<p>' + esc(FB.T('Submit for {money:cost} from {source} to {head}; lose {loss} popular support in {counties}. This court and its successors leave the cause. No territory is awarded.',
+          {cost:q.gold,source:source,head:greatHolyWarRealmName(s,q.headRealmId),loss:q.supportLoss,
+            counties:q.provinceIds.map(function (pid) {return FB.world.byId[pid].name;}).join(', ')})) + '</p>' +
+        reviewActionCardHtml({data:{causeSubmit:String(index)},label:FB.T('Submit to the religious demands'),
+          disabled:!q.canSubmit,detailsId:'cause-submit-' + index,
+          note:q.canSubmit ? FB.T('Ends or avoids this cause; payment and support loss are immediate.') : FB.T('Submission needs sufficient court funds and an available ruler.'),
+          details:'<p>' + esc(FB.T('Religious oversight is a public commitment. It changes no resident faith or private property. Existing unrelated wars continue.')) + '</p>'}) +
+        reviewActionCardHtml({data:{causeResist:String(index)},label:FB.T('Resist the demands'),disabled:!q.canResist,
+          detailsId:'cause-resist-' + index,note:FB.T('No immediate cost. The head may call a campaign and your court may have to defend. Voluntary service is reviewed separately.'),
+          details:'<p>' + esc(FB.T('Armies determine occupation. After an attacker victory, the settlement council weighs claims to occupied objectives only. You may still submit before the council opens.')) + '</p>'}));
+    });
+    if (FB.playerGreatHolyWarJoinCamp(s) === 'defenders' && !FB.playerGreatHolyWarCamp(s))
+      h += '<button class="actionbtn" id="cause-join-defense">' + esc(FB.T('Review a defending vow')) + '</button>';
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
+    openModal(FB.T('Answer the religious demands'),h);
+    FB.paintFaces($('gm-body'),s);
+    if ($('cause-join-defense')) $('cause-join-defense').addEventListener('click',function () {UI.showGreatHolyWarJoin(true);});
+    function answer(index,submit) {
+      const q = choices[index];
+      if (!FB.respondHolyWarCause(s,q,submit)) {UI.showHolyWarCauseResponse(); return;}
+      UI.refresh();
+      const outcome = UI.charCardHtml(s,s.chars[q.rulerId],false) + '<p>' + esc(submit ?
+        FB.T('Submission is recorded. The court paid {money:cost}; protected counties lost {loss} popular support. This cause against your court has ended without a territorial grant.',{cost:q.gold,loss:q.supportLoss}) :
+        FB.T('Resistance is recorded. The campaign remains possible and no land has changed hands.')) + '</p><button class="btn" id="cause-continue">' + esc(FB.T('Continue')) + '</button>';
+      openModal(FB.T('Religious demands'),outcome);
+      FB.paintFaces($('gm-body'),s);
+      $('cause-continue').addEventListener('click',UI.closeModal);
+    }
+    $('gm-body').querySelectorAll('[data-cause-submit]').forEach(function (b) {
+      b.addEventListener('click',function () {answer(Number(b.dataset.causeSubmit),true);});
+    });
+    $('gm-body').querySelectorAll('[data-cause-resist]').forEach(function (b) {
+      b.addEventListener('click',function () {answer(Number(b.dataset.causeResist),false);});
+    });
   };
 
   let holyWarCombatantSort = 'name';
@@ -6261,6 +6311,8 @@ window.FB = window.FB || {};
         phase:campaign.phase === 'preparation' ? FB.T('preparation')
           : campaign.phase === 'active' ? FB.T('active campaign') : FB.T('settlement')
       })) + '</p></div>';
+    if (campaign.cause) h += '<div class="gm-body-text"><p>' + esc(FB.holyWarCauseText(s,campaign.cause.id,'name')) +
+      '</p><p>' + esc(FB.holyWarCauseText(s,campaign.cause.id,'desc')) + '</p></div>';
     h += '<button type="button" class="actionbtn" id="ghw-panel-combatants">' + esc(FB.T('View all combatants')) + '</button>';
     h += kv('Caller', esc(greatHolyWarRealmName(s, campaign.callerRealm)));
     h += kv('Military leader', esc(greatHolyWarRealmName(s, campaign.leaderRealm)));

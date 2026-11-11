@@ -14,6 +14,12 @@ The generated English catalog is absent from an ordinary English boot; a transla
 
 js/story_history.js loads after js/stories.js and js/story_campaign.js, before js/stories.js registers data instances from FBDATA.storyInstances. It registers the reusable partition and holy_war factories. Historical declarations stay in the owning bookmark data; restore validates saved records without initializing new people, grants or historical campaign rows.
 
+`data/holy_war_causes.js` is an inert shared catalogue loaded after industry-law
+data, before the engine. Its bookmark references are reviewed through the complete
+candidate validator, deferring unloaded dates. It neither registers stories nor
+calls an engine at load time. `js/holywar.js` owns the typed cause, response and
+existing annual holy-war hook; no new daily phase or bookmark dispatch is added.
+
 Daily phase registration
 
 js/day_phases.js loads immediately after js/systems.js, before later system owners and main.js. It registers the existing daily sequence without invoking the hooks at load time. G.passDay delegates to FB.dayPhases.run and supplies its private activation, slot scheduling, yearly-life and birth helpers. System code remains synchronous; phase registration, inspection and dispatch introduce no RNG or UID calls and no saved fields.

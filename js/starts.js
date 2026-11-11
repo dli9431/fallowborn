@@ -536,6 +536,9 @@
       if (!options.deferSetup && FB.ensurePolitics) FB.ensurePolitics(s);
       return true;
     }
+    var heldHeadOffices = FB.religionsHeadedBy(s,id).filter(function (faithId) {
+      return FB.religionOf(faithId,s).head.holderKind !== 'character';
+    }).map(function (faithId) {return FB.faithOfficeId(faithId,s);});
     p.provs = FB.realmHeldCounties(s, id).slice();
     p.liege = realm.liege || null;
     var publicCrown = FB.electiveCrown && FB.electiveCrown(s, id);
@@ -551,6 +554,11 @@
     }
     if (!publicCrown && !preserved) delete realm.treasury;
     realm.id = 'player'; s.realms.player = realm; delete s.realms[id];
+    // Adoption preserves the same office holder; it is not a new appointment.
+    if (heldHeadOffices.length) {
+      s.religiousHeads = s.religiousHeads || {};
+      heldHeadOffices.forEach(function (officeId) {s.religiousHeads[officeId] = 'player';});
+    }
     /* Keep the opening genealogy as a settlement identity record. The player
        household owns every living person and its ordinary succession; the
        compact court is no longer advanced or aged by the world tick. */
