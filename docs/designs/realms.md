@@ -1420,6 +1420,15 @@ Each normalized incoming or outgoing record also carries a deterministic `contra
 derived from slot, start turn, and profession. Political plots use that id to distinguish
 the exact charter they began against from a later replacement in the same slot.
 
+Optional enforceable guild terms use the [industry-law owner](industry-laws.md#paid-ruler-grants).
+The granting realm must actually control the named county and have competent
+public authority. An existing local guildmaster pays real personal funds to its
+public account. Its monopoly slot links the single law and adds no financial
+multiplier. Institutional terms survive grantor succession; lost jurisdiction or
+all recorded local guild members suspend them. The current original ruler can
+revoke, or affected owners can petition that court. There is no refund or asset
+seizure. Existing unlinked financial charters retain the rules above.
+
 Local commons uprisings are separate bounded county disruptions, described in
 [parliament.md](parliament.md#local-commons-uprisings). An active local incident
 or its cooldown prevents the commons downfall chain from starting; existing

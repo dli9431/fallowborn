@@ -249,8 +249,14 @@ use the standard desktop tooltip or compact disclosure. This is a presentation-o
 the saved privilege schema and every mechanical source remain unchanged. Load-time
 institution repair discovers legacy modifier provenance; the normalized modifier APIs
 maintain it afterward, so the daily
-institution pass does not rescan every county merely to rediscover the same records. A
-refused demand or unlawful revocation stores organized pressure for that constituency from
+institution pass does not rescan every county merely to rediscover the same records.
+
+Ruler-issued guild operating terms remain in the industry-law ledger and open
+its own review from Network. Institution repair does not duplicate them as a
+financial charter's `term_only` privilege; unlinked financial-only charters keep
+their existing provenance and effects. See [industry-laws.md](industry-laws.md).
+
+A refused demand or unlawful revocation stores organized pressure for that constituency from
 one to five steps. Each step adds 10 points when currently eligible collective demands are
 ranked, so the highest-pressure eligible petition leads the next event; the pressure alone
 never creates a revolt or battle. Further refusals increase it to a +50 cap, while granting

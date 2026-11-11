@@ -3506,6 +3506,10 @@ window.FB = window.FB || {};
   { id: 'petition_monopoly',
     noConsume:true, deferCooldown:true,
     desc: function (s) {
+      if (s.player.guildMonopolies && s.player.guildMonopolies.incoming && s.player.guildMonopolies.incoming.lawId)
+        return FB.T('Review the linked guild operating law and its original grantor.');
+      if (FB.industryLaws.grantList(s).length)
+        return FB.T('Review paid guild operating rights, non-member licenses and exemptions from the actual county ruler.');
       const status = FB.guildMonopolyPetitionStatus(s, true);
       if (!status.ready) return status.reason;
       return FB.T(
@@ -3521,6 +3525,8 @@ window.FB = window.FB || {};
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
+      if (s.player.guildMonopolies && s.player.guildMonopolies.incoming && s.player.guildMonopolies.incoming.lawId) return true;
+      if (FB.industryLaws.grantList(s).length) return true;
       const status = FB.guildMonopolyPetitionStatus(s, true);
       return status.ready ? true : status.reason;
     },
@@ -3708,6 +3714,10 @@ window.FB = window.FB || {};
     } },
   { id: 'grant_monopoly', opensChoices:true, noConsume: true,
     desc: function (s) {
+      if (s.player.guildMonopolies && s.player.guildMonopolies.outgoing && s.player.guildMonopolies.outgoing.lawId)
+        return FB.T('Review or revoke the linked guild operating law. Revocation ends future restrictions without a refund.');
+      if (FB.industryLaws.grantList(s).length)
+        return FB.T('Choose enforceable guild operating rights and the actual consideration from an existing local guildmaster.');
       const status = FB.guildMonopolyIssueStatus(s);
       if (!status.ready) return status.reason;
       return FB.T(
@@ -3725,6 +3735,8 @@ window.FB = window.FB || {};
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
+      if (s.player.guildMonopolies && s.player.guildMonopolies.outgoing && s.player.guildMonopolies.outgoing.lawId) return true;
+      if (FB.industryLaws.grantList(s).length) return true;
       const status = FB.guildMonopolyIssueStatus(s);
       return status.ready ? true : status.reason;
     },

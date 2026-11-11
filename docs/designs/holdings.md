@@ -462,6 +462,14 @@ scheme. Exposing the grant ends the recorded monopoly and applies the ordinary
 exposed-contract consequences; taking compensation or defending the charter preserves
 that same contract.
 
+Optional ruler-granted operating terms instead link that charter to one canonical
+industry law. Guild members, qualifying households and explicitly named existing
+businesses can be exempt; other operators need the declared license or must stop.
+The business manager retains ordinary payment, petitions, pause, resumption and
+deliberate-violation choices. Court closure or suspension stops only operation,
+retaining property and worker contracts. These grants create no tax or profit
+bonus. See [industry-laws.md](industry-laws.md#paid-ruler-grants).
+
 Enterprises remain distinct from tier-3+ buildings. An enterprise belongs to the family
 even if it moves or rises in station; a building belongs to its county and follows
 political conquest.

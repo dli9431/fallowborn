@@ -1245,7 +1245,7 @@ window.FB = window.FB || {};
       for (var slotIndex = 0; slotIndex < 2; slotIndex++) {
         var slot = slotIndex ? 'outgoing' : 'incoming';
         var contract = FB.guildMonopolyActive(state, slot);
-        if (contract) upsertPrivilege(state,
+        if (contract && !contract.lawId) upsertPrivilege(state,
           monopolyPrivilegeRecord(state, slot, contract));
       }
     }

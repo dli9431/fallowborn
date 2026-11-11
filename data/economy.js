@@ -480,6 +480,14 @@ FBDATA.householdServiceRoles = {
    separate from the royal Council: the saved seat names one county and the
    motion definition supplies only the successful, time-bounded effect. */
 FBDATA.localCouncilMotions = {
+  london_guild_exclusive: {
+    name:'London craft guild exclusive right', icon:'📜', fx:{},
+    desc:'Optional reconstructed royal terms: one year of exclusive workshop operation for craft-guild members, with a 30-day transition. The existing guild representative pays {money:18} from personal funds to the granting realm. Named existing workshops may be exempted. This is a broad game abstraction of paid English guild privileges, not an attested 1204 workshop ordinance.'
+  },
+  london_guild_license: {
+    name:'London craft guild membership or license', icon:'📜', fx:{},
+    desc:'An optional alternative: craft-guild members operate freely; non-members pay {money:3} per 90 days for one year. Existing workshops receive 30 days to comply. The guild representative pays {money:12} to the granting realm. Named existing workshops may be exempted. The license alternative and amounts are simulation choices.'
+  },
   constantinople_workshop_permission: {
     name:'Constantinople workshop permissions', icon:'⚖', fx:{},
     desc:'An optional reconstruction informed by Byzantine trade regulation: workshops pay {money:3} for 60 days of operation; craft-guild members are exempt. Existing workshops have a 30-day transition. A court may suspend unauthorized operation for 30 days. The local council represents civic review, not a historical eparch appointment; the fee and term are simulation choices.'

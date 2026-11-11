@@ -547,6 +547,15 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+`guild-monopoly-laws.spec.js` covers paid ruler issuance and guildmaster petitions,
+exclusive and licensed operation, actual representative/public-account balances,
+guild and named-business exemptions, stale funds/authority/generation/terms,
+canonical actual-output evidence and custody/closure, revocation and succession,
+licensed acquisition, realm handover, jurisdiction and guild-membership suspension, current-content repeat restores,
+atomic malformed-receipt rejection, a real fictional press-guild JSON import,
+legacy financial-only charters, exact changed-owner content-id counts and retained
+mobile review/cancellation paths.
+
 `schema.spec.js` compares industry-law, production-good, recipe and physical-site
 acceptance with frozen pre-migration validators over a fixed boundary matrix.
 It checks identical law/catalogue diagnostics, compiled sites, candidate and

@@ -3614,6 +3614,46 @@ balance is authored event content rather than an additional schema requirement f
 
 ## Industry operating laws
 
+Optional `grant:{profession,payment}` declares a paid ruler issuance path instead
+of a council/Estates motion. `profession` names an existing guild-enabled
+craft/trading career (primary or secondary role). Membership reads the operator;
+it is independent of the enterprise's staffing career.
+`payment` is finite, greater than zero and at most 10000. It is the actual
+once-only consideration from the chosen existing local guildmaster's personal
+funds to the original granting realm's public account; payer and payee must be
+separate accounts. Definitions require
+`relief`, `offense` and a zero-fee, permission-granting exemption for that guild;
+they must omit `voting`. All existing fee, prohibition, term, transition, sanction
+and exemption rules still apply. The `motionId` remains the established localized
+display owner, with empty `fx`, but grants cannot pass through council voting.
+
+`quoteGrant(state,id,slot,sponsorId,exemptUids)` and `commitGrant(state,quote)` use
+the existing industry-law owner. Slot is `incoming` (a guildmaster petition) or
+`outgoing` (the actual ruling player's grant). Named exemptions are a unique
+subset of currently owned, affected business UIDs, at most 512; they are explicit
+grant facts, not new definitions or generated competitors. Ordinary exemption
+criteria describe qualifying households. Membership reads the operator, not a
+hired worker. Native London exclusive/license alternatives and
+`tests/e2e/fixtures/authoring/guild-monopoly-river.json` share these consumers.
+
+Ruler-issued law rows use `issuer.kind:"ruler_grant"` and additionally retain
+`grant:{contractId,slot,sponsorId,amount,exemptEnterpriseUids}`. `amount` exactly
+matches the definition's payment. `contractId` is `guild_monopoly:law:<law.id>`;
+the corresponding existing monopoly slot retains the same contractId and a
+`lawId`, zero tax/profit/opinion bonuses and the exact original paid fee and
+dates. Every live grant law requires its slot link. Missing or changed receipt
+facts reject, and validation never replays payment. Financial-only charters
+without a link retain their previous meanings without retroactive restrictions.
+
+Death or succession does not duplicate or cancel an institutional grant. Lost
+county control or absence of every recorded living, free local guild member
+suspends restrictions and enforcement; recovery resumes the remaining term and
+original payee. `quoteRevokeGrant`/`commitRevokeGrant` require the current competent
+original ruler and remove future restrictions without refund. Business-manager
+repeal petitions address the same original court; existing sanctions, ownership,
+historical evidence and liability remain canonical. See designs/industry-laws.md
+for the declared dissolution proxy and supported participant boundary.
+
 Optional `voting` opts a definition into affected-interest hearings through both
 the existing town council seat and the controlling court's Estates. Omission
 retains the simple seeded council motion. Both consumers use this law's exact

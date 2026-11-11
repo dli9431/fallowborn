@@ -1,6 +1,6 @@
 # Targeted operating laws
 
-Ordinary household enterprises can be subject to optional, council-approved
+Ordinary household enterprises can be subject to optional, council-approved or ruler-granted
 local operating terms.
 No campaign starts with an enacted law. In the 1204 London setting, a qualified
 local council member can open **Propose a council motion**, review London stall
@@ -22,6 +22,111 @@ existing county controller's public treasury represents the recipient; the game
 does not create a separate municipal treasury or a historical sheriff.
 
 ## Contract and transactions
+
+### Paid ruler grants
+
+**Grant a guild monopoly → Guild monopoly terms** and **Petition for a guild
+monopoly → Guild monopoly terms** offer optional paid terms in 1204 London.
+The ruler chooses an exclusive craft-guild workshop right (18 once) or membership
+or a non-member license (12 once, then 3 per 90 days from each non-member
+operator). Both last 360 days and give existing workshops thirty days to comply.
+Guild members operate freely; the grantor may explicitly exempt named existing
+workshop UIDs for the whole term. Existing residence and earned-office exemption
+criteria also work in imported grants. These are distinct from the retained
+financial-only charter path and add no tax or enterprise-profit multiplier.
+
+The selected guildmaster must already exist, live locally and have sufficient
+personal funds. A player representative pays from household money to another
+realm or a genuinely separate public account; payment into the same purse is
+unavailable. Another
+representative pays from their existing character wealth. The county ruler's
+actual public treasury (or its ordinary unified dynastic purse) receives the
+consideration once. The game neither creates
+a guild treasury nor projects future business revenue to fund the payment. A
+guildmaster petition needs 60 guild standing, 40 Standing with the actual ruling
+realm and an unused annual petition. Meeting those declared terms supplies the
+grantor's deterministic assent; there is no additional persuasion roll or waived
+consideration. A landed petitioner addresses only their direct liege, and that
+liege must directly control the declared county. A landless petitioner addresses
+the actual county ruler, rather than an unrelated local role character.
+
+The existing Guild Charters gate applies to new grants. The technology review
+`enforceable_guild_grants` is **hard** with `guild_charters`; ordinary enterprise
+ownership, careers and council operating-law proposals remain available as the
+ungated fallback. Existing grants and their enforcement, petitions and revocation
+do not acquire another technology gate.
+
+`FB.industryLaws.quoteGrant(state, definitionId, slot, sponsorId, exemptUids)` is
+pure; `commitGrant` rechecks the complete review before a transfer or UID change.
+`FB.issueGuildMonopoly` and `FB.receiveGuildMonopoly` accept these reviews as the
+two existing economic entry adapters. The canonical law has issuer kind
+`ruler_grant`, its actual original ruler/realm/county and the normal original
+public payee. Its `grant` receipt retains sponsor, actual amount, slot, named
+business exemptions and `contractId`. The monopoly slot's `lawId` points to that
+law; both share `guild_monopoly:law:<law.id>`. Terms live only in the existing
+law record. Council and Estates voting are unchanged and cannot enact these
+grant-only definitions. Stale authority, funds, generations, content, property or
+membership reject without money, RNG, receipts or identities changing.
+
+Institution repair keeps linked grants in this operating-law ledger rather than
+creating a financial charter's legacy `term_only` privilege mirror. Network
+opens the law's own review and revocation policy. Unlinked financial charters
+retain their existing privilege provenance and effects.
+
+The institution survives grantor death, ruler succession and the representative's
+death. No successor pays again or receives a refund. Loss of original county
+control suspends restrictions and enforcement; recovery resumes the original
+remaining term and original payee. There is no separate guild dissolution system:
+absence of all recorded living, free local members of the declared guild is the
+explicit supported dissolution proxy. It suspends the law and enforcement;
+admission or return of a member resumes the remaining original term without a
+new payment. A representative's departure alone does not dissolve a guild with
+other local members. No NPC businesses or autonomous guild-population pass are
+created. Supported business ownership remains the household inventory; NPC
+participation covers actual representatives, rulers and receiving accounts.
+
+A living realm handover rekeys the same issuing institution from the temporary
+player alias to its ordinary realm id. Law, permit and canonical case references
+follow that existing realm; original issuer/representative people, contract id,
+dates, paid amount and property do not change. The departed ruler cannot revoke
+the successor's institutional law. Ordinary unified-purse inheritance and
+separate-public-account rules remain with the existing treasury owner.
+
+`quoteRevokeGrant`/`commitRevokeGrant` let the current competent original ruling
+realm revoke its law without a day or fee. Affected owners use the existing
+business-manager exemption and repeal petitions; a granted repeal addresses
+that same grantor, records `ruler_grant` as repealer and clears the linked slot.
+Refusal spends the ordinary petition. Plot exposure also ends the exact linked
+law. Revocation and expiry remove future permission requirements and fees without
+refund, property transfer or erasure of imposed personal liabilities. Named
+exemptions follow the exact existing business UID, while membership and household
+criteria recheck the current operator. There is no supported external sale
+transaction. Closure and suspension retain property and worker contracts and
+use the existing actual-output evidence, custody and judgment owners unchanged.
+
+Matching saves retain the original paid consideration, grant-to-law link and
+named exemptions through load, re-save and reload. Present malformed receipts,
+missing live links and changed imported terms reject before adoption. The
+retention graph keeps every law referenced by a charter slot and keeps its
+original representative while the receipt remains. Released financial-only
+grants have no `lawId` or grant receipt and acquire no retroactive law, fee or
+restriction; their original frozen financial and lifecycle rules remain intact.
+
+Historical qualification: Henry II's London weavers' charter restricted practice
+to guild members, as transcribed in [Stow's 1598 Survey](https://mapoflondon.uvic.ca/stow_1598_BASI1.htm).
+John's 20 March 1202 charter records an annual guild payment
+and the citizens' petition for abolition, with a replacement payment to the
+Crown; see the [primary charter translation](https://sourcebooks.web.fordham.edu/source/1202Weavers1.asp)
+and [Magna Carta Project charter record](https://magnacarta.cmp.uea.ac.uk/read/newly_discovered_charters/Notification_of_the_King_s_prohibition_of_the_weaver_s_guild__assigning_responsibility_to_the_citizens_for_the_annual_rent_of_18_marks_previously_paid_by_the_guild_to_the_King).
+The 1204 options are new optional reconstructions, not an opening assertion that
+a particular historical monopoly survived or a transcription of an ordinance.
+The broad workshop/craft categories, one-off consideration in place of the
+historical annual farm, license alternative, exemptions, deadlines and penalties
+are disclosed game choices. The ordinary JSON `guild-monopoly-river.json` example
+independently configures fictional York press houses, a smaller payment, shorter
+license/term, household residence relief and a fifteen-day court suspension.
+
+### Shared permission contract
 
 Definitions may target any ordinary enterprise whose definition has a registered
 career, finite nonnegative purchase cost and positive finite seasonal yield.
