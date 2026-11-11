@@ -1828,6 +1828,18 @@ mandatory-defense status, territorial eligibility, `vowOutcome`, and
 `vowTerms:{seasons,desire,beneficiary,served,mustered}`. AI attacker participant
 records add `vowSeasons`, `desire`, `served`, `mustered`, and `vowOutcome`.
 
+Optional religious-campaign grounds retain a strict `greatHolyWar.cause` marker
+with the original declared protector, actual court, ruler and generation. The
+optional `holyWarCauseResponses` ledger preserves submission/resistance, original
+principals, payment, county support burden and turn. Detached validation checks
+the effective declaration, unique court responses, exact costs, regional objective
+scope and call window before adoption. Current-content restoration and repeated
+re-save do not issue demands, charge again, recruit, resolve a campaign or grant
+land. Old holy wars without these optional fields retain their meaning. This
+adds no save-envelope version or migration; see MODDING.md and war.md.
+Original protector ruler references retain their ordinary character records through
+death and succession, keeping the strict campaign and response principals valid.
+
 A new settlement is
 `settlement:{schema:2,case,captured,applied,pendingPlayer,awardRealms,mainRealmId?}`.
 The generic case is entirely serializable:
@@ -1837,6 +1849,9 @@ their extensible basis object and computed weight; awards retain asset, claimant
 optional terms/beneficiary, runner-up, and move. No map ownership changes while the case
 is open. A resolved beneficiary-free personal land award uses `pendingPlayer` for the
 final accept/decline; all collected awards then apply together.
+The award transaction eagerly commits surviving recipient courts through
+`FB.ensureRealmCourt`, after any named beneficiary is installed. Matching restore
+therefore retains the same ruler and bounded living household identities.
 
 Completed compact history adds locale-neutral `vowOutcome`, `desire`, attacker `vows`,
 `settlementContested`, objection count, and award summaries. Awarded realms may carry

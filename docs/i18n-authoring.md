@@ -144,6 +144,14 @@ Literal FBDATA.bookmarkRevisionContent_<suffix> objects in data/bookmark_*.js ma
 
 ## Route new text by where it lives
 
+Religious campaign causes render `name` and `desc` through the `holyWarCause`
+structured owner. The native shared title and explanation also have literal
+`FB.T` sources in the presentation adapter, so they remain extractable without a
+new catalogue command. Imported display fields retain their own English fallback.
+Submission and resistance save `news.holywar.cause_submission` and
+`news.holywar.cause_resistance` descriptors with court snapshots and numeric costs,
+never rendered prose.
+
 Episcopal claim display fields use `episcopalClaim.<id>.name/desc` through
 `FB.dataText`. The native declaration shares the exact English title and scope
 explanation used by the localized generic review, so existing source aliases

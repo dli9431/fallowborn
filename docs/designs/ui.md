@@ -3156,6 +3156,20 @@ inserting a duplicate character-card entry before its original source surface.
 
 ## Great holy-war presentation
 
+The existing Call holy war picker also lists eligible regional causes, their
+protector court and objective count. The campaign sheet repeats the cause and its
+settlement boundary. A targeted player court's Answer the holy war opens religious
+demands before or during a campaign: both living principals have ordinary character
+cards, and the payment's public or combined dynastic source/payee, affected counties,
+support loss and permanent court commitment appear before Submit. Resistance discloses its zero
+immediate cost and exposure to war. Close is costless; a later defending-vow
+review remains available after an earlier refusal where voluntary service is
+eligible. Regional vows omit sacred custody when no sacred objective exists.
+Submission and resistance show a settled acknowledgement with Continue. Existing modal keyboard, focus, history
+and compact controls apply. Cause-specific settlement uses the unchanged council.
+The transaction requests the ordinary interface refresh immediately, so Close or
+Escape from its acknowledgement shows the committed funds and deeds too.
+
 An active call adds a compact Deeds summary and a focusable campaign action. The
 full-sheet campaign dialog names caller, military leader, schedule, camp strengths,
 resolve, both participant lists, every frozen objective and occupation/siege state,

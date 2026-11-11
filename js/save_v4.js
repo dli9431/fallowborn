@@ -164,6 +164,7 @@
     if (FB.validateReligionInstitutionState) FB.validateReligionInstitutionState(state);
     if (FB.validateHistoricalHolyWarState) FB.validateHistoricalHolyWarState(state);
     if (FB.validateMobileHolyWarState) FB.validateMobileHolyWarState(state);
+    if (FB.validateHolyWarCauseState) FB.validateHolyWarCauseState(state);
     if (FB.governments.support) FB.governments.support.validate(state);
     if (FB.mobile) FB.mobile.validate(state);
     if (FB.ecclesiasticalGovernment) FB.ecclesiasticalGovernment.validate(state);

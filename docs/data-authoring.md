@@ -443,6 +443,17 @@ The optional typed mobile.opening.reserves memberId/count array partitions exist
 
 Existing ordinary campaign authoring
 
+Regional religious campaigns use the separate `holyWarCauses` catalogue rather
+than historical engine dispatch or an ordinary campaign story pretending a holy
+site was lost. `protector_heresy` selects actual same-fold holder hierarchies inside
+declared regional objectives and a finite window. The existing head, coalition,
+host and settlement owners remain authoritative. Native southern France and the
+ordinary `holywar-protector-lantern.json` import vary geography, head, timing,
+payment, support cost and AI response. Pure `FB.schema` validation checks complete
+candidate references before publication; exact imported fingerprints and detached
+saved-response validation protect commitments without replay. Full bounds and
+public APIs are in MODDING.md. Technology impact is none, as recorded in war.md.
+
 Conditional campaign stories may opt into the bounded ordinary_declaration
 admission policy documented in MODDING.md. Declare the real actor court, inhabited
 county objective, current owner constraints and finite offer/duration values.

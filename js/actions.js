@@ -3327,7 +3327,7 @@ window.FB = window.FB || {};
     } },
   { id: 'call_great_holy_war', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () {
-      return FB.T('Summon sovereigns of the faith to a 180-day gathering for a lost sacred {term:kingdom}.');
+      return FB.T('Summon sovereigns of the faith to a 180-day gathering for an eligible sacred or regional cause.');
     },
     show: function (s) {
       if (s.greatHolyWar || !FB.greatHolyWarsEnabled(s)) return false;
@@ -3348,12 +3348,14 @@ window.FB = window.FB || {};
       if (FB.ui && FB.ui.showGreatHolyWarTargets) FB.ui.showGreatHolyWarTargets();
     } },
   { id: 'join_great_holy_war', opensChoices:true, noConsume: true,
-    desc: function () {
+    desc: function (s) {
+      if (FB.holyWarCausePlayerOptions(s).length) return FB.T('Answer the religious demands: fund submission and accept its support cost, or resist and face a possible campaign.');
       return FB.T('Take the campaign vow before the gathering ends. Freeholders and greater ranks may serve.');
     },
     show: function (s) {
       const campaign = s.greatHolyWar;
       const pledge = s.player.greatHolyWar;
+      if (FB.holyWarCausePlayerOptions(s).length) return true;
       return !!(campaign && campaign.phase === 'preparation' &&
         (!pledge || pledge.campaignId !== campaign.id) &&
         FB.playerGreatHolyWarJoinCamp(s));
