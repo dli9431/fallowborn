@@ -99,12 +99,16 @@ function enumerateInPage() {
       const declared = FB.provinceCommunities(county).find(function (c) {
         return c.culture === scenario.startCulture && c.religion === scenario.startReligion;
       });
-      const family = scenario.familyPresets ? Object.keys(scenario.familyPresets)[0] : 'established';
-      const name = (scenario.characterName || 'Measure').replace(/[^A-Za-z0-9_]+/g, '_');
+      // The standard preset is always offered; a scenario's own presets name their first.
+      const family = scenario.familyPresets ? Object.keys(scenario.familyPresets)[0] : 'standard';
+      // The game's startCodeName: hyphens dropped, whitespace to underscores, letters kept.
+      const name = (scenario.characterName || 'Measure').replace(/-/g, '').replace(/\s+/g, '_');
       let code = 'MEASURE-' + bid + '-' + scenario.id + '-' + county.id + '-' +
-        (scenario.sex === 'f' ? 'f' : 'm') + '-' + name + '-' + family;
+        (scenario.sex === 'f' ? 'f' : 'm') + '-' + name;
       if (declared && (declared.culture !== county.culture || declared.religion !== county.religion)) {
-        code += '-0-' + declared.culture + '.' + declared.religion;
+        code += '-' + family + '-0-' + declared.culture + '.' + declared.religion;
+      } else if (family !== 'standard') {
+        code += '-' + family;
       }
       out.push({ id:bid + ':' + scenario.id, bookmark:bid, scenario:scenario.id,
         revision:bookmark.revision, county:county.id, code:code,
@@ -439,8 +443,20 @@ function analyze(merged, baseline) {
     }
     if (start.status === 'stalled') flags.push({ start:start.id, kind:'stalled', text:'fast-forward stalled' });
     const seasons = start.seasons;
+    if (start.status === 'dead') {
+      const last = seasons[seasons.length - 1];
+      flags.push({ start:start.id, kind:'dead', text:'the player died in season ' + (last ? last.index + ' (' + last.from + ')' : '1') +
+        ' with automation choosing the first option' });
+    }
     const typical = median(seasons.map(function (s) { return s.simulationMs; }));
     seasons.forEach(function (season, i) {
+      // Cost per simulated day that keeps rising means growing state or repeated work, not a seasonal pass.
+      if (i > 0 && season.msPerDay > 100 && seasons[0].msPerDay && season.msPerDay > 2 * seasons[0].msPerDay) {
+        flags.push({ start:start.id, kind:'growth', season:season.index,
+          text:'season ' + season.index + ' (' + season.from + ') cost ' + season.msPerDay + ' ms per day against ' +
+            seasons[0].msPerDay + ' in season 1',
+          growth:rowGrowth(seasons[0], season, 5) });
+      }
       if (season.simulationMs > FLAG_FLOOR_MS && typical && season.simulationMs > 2.5 * typical) {
         flags.push({ start:start.id, kind:'spike', season:season.index,
           text:'season ' + season.index + ' (' + season.from + ') took ' + round(season.simulationMs / 1000) +
