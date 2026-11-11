@@ -1,0 +1,28 @@
+{
+  "name": "River chapter discipline",
+  "religiousCases": {
+    "river_clerical_peace": {
+      "name": "River chapter peace",
+      "desc": "A fictional Spoleto discipline rule examining actual recorded violence against clergy, with restitution paid to the temporal treasury and no court fee.",
+      "cause": "clerical_violence",
+      "bookmarkId": "1204",
+      "provinceId": "spoleto",
+      "realmId": "papacy_1204",
+      "faiths": ["catholic"],
+      "yearMin": 1204,
+      "yearMax": 1220,
+      "fee": 0,
+      "settlementShare": 0.25,
+      "settlementMax": 40,
+      "settlementRecipient": "secular",
+      "offerDays": 12,
+      "penanceSentence": "penance",
+      "prisonSentence": "imprisonment",
+      "secularSentence": "imprisonment",
+      "allowFief": false,
+      "defendantPolicy": "submit",
+      "bishopPolicy": "imprison",
+      "enforcementPolicy": "reject"
+    }
+  }
+}

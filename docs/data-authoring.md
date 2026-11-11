@@ -149,6 +149,13 @@ people, grants, private accounts and institutional treasuries remain canonical.
 No declaration can manufacture property or debt. See docs/MODDING.md and
 docs/designs/episcopal-claims.md for exact identities and lifecycle rules.
 
+Named religiousCases use the shared declarative schema and the same ordinary
+JSON candidate/publication path. The Roman clerical-violence rule and fictional
+religious-river-court.json vary settlement amounts and recipient, deadlines,
+permitted fief remedy and participant responses. Both consume actual canonical
+evidence and current local jurisdiction; a declaration cannot infer guilt from
+identity, create assets or bypass custody. See designs/religious-cases.md.
+
 Trusted retained catalogue compatibility
 
 Native source authors may call bookmarkSources.retainCatalogueTransition before

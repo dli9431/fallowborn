@@ -1,5 +1,12 @@
 Episcopal civil rent claims
 
+Named discipline is a separate consumer of the pure `courtContext` and explicit
+`privateAccount/paymentReady/payReceipts` interfaces. These keep private household,
+barony and personal accounts separate from institutional and secular treasuries,
+and use unique ordinary authority receipts. The original rent quote/apply,
+recurring-dues and civil source identities retain their existing behavior. A
+civil rent dispute supplies no religious accusation. See religious-cases.md.
+
 The 1204 Roman declaration exposes one bounded civil experience over the ordinary
 rent of an actual delegated settlement in Rome. Begin with the ordinary Roman
 baron household, or use an existing private grant in the see's temporal territory.

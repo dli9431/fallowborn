@@ -3738,6 +3738,15 @@ The disabled action retains a focusable details wrapper. Other blockers stay inl
 
 ## Decision review layout
 
+Named ecclesiastical cases use the shared participant portraits, fact cards,
+action disclosures and retained confirmation/result flow. The docket names the
+actual accusation, evidence, private funds, custody, selected fief and each
+payment/property recipient before commitment. It distinguishes a proposed
+settlement, an accusation and an imposed judgment, and discloses political and
+popular costs. Back, Escape, Continue and civil-review returns retain focus,
+scroll and disclosures. Empty dockets explain that identity and wealth supply
+no cause. See religious-cases.md for the supported cause and jurisdiction.
+
 Guild monopoly entry sheets offer enforceable operating terms alongside the
 existing financial-only charter. A retained list leads to the existing local
 guildmaster's portrait and personal funds, then a fact-card review of county,
