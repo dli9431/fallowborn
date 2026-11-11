@@ -1,0 +1,34 @@
+{
+  "name": "River press guild terms",
+  "localCouncilMotions": {
+    "river_press_charter": {
+      "name": "River press guild license",
+      "icon": "📜",
+      "desc": "A fictional York press charter. An existing craft guildmaster pays 7 once. Guild members and households resident in London operate freely; other households pay 2 for 45 days. Named existing presses can be exempted. The term is 180 days, with a seven-day transition and a possible fifteen-day court suspension.",
+      "fx": {}
+    }
+  },
+  "industryLaws": {
+    "river_press_charter": {
+      "schema": 1,
+      "motionId": "river_press_charter",
+      "bookmarkId": "1204",
+      "provinceId": "york",
+      "enterpriseType": "press_business",
+      "minYear": 1204,
+      "maxYear": 1220,
+      "mode": "license",
+      "fee": 2,
+      "permitDays": 45,
+      "durationDays": 180,
+      "transitionDays": 7,
+      "exemptions": [
+        {"kind": "guild", "id": "craftsman", "fee": 0, "permission": true},
+        {"kind": "home_province", "id": "london", "fee": 0, "permission": true}
+      ],
+      "grant": {"profession": "craftsman", "payment": 7},
+      "relief": {"days": 20, "chance": 1},
+      "offense": {"id": "river_unlicensed_press", "penalty": "suspension", "amount": 0, "days": 15}
+    }
+  }
+}

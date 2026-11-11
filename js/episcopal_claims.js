@@ -96,6 +96,60 @@
   C.funds = function (s,cid) {
     return Math.max(0,cid === s.player.charId ? s.player.gold : FB.baronyAccount(s,cid).gold);
   };
+  /* Named proceedings share the claim owner's explicit private/public payment
+     boundary. A ruler's public treasury is never a defendant's private wealth. */
+  C.privateAccount = function (s,cid) {
+    var account = s.settlementLordships && s.settlementLordships.accounts && s.settlementLordships.accounts[cid];
+    var kind = cid === s.player.charId ? 'household' : account ? 'barony' : 'person';
+    var funds = kind === 'household' ? s.player.gold : kind === 'barony' ? account.gold : s.chars[cid] && s.chars[cid].wealth;
+    return { kind:kind, characterId:cid, gold:Math.max(0,Number.isFinite(funds) ? funds : 0),
+      balance:Number.isFinite(funds) ? funds : 0 };
+  };
+  function wallet(s,cid) {
+    var a = C.privateAccount(s,cid);
+    return { row:a.kind === 'household' ? s.player : a.kind === 'barony' ? s.settlementLordships.accounts[cid] : s.chars[cid],
+      key:a.kind === 'person' ? 'wealth' : 'gold', account:a };
+  }
+  C.paymentReady = function (s,payer,entries) {
+    var total = 0, seen = {};
+    if (!s.authority || !Array.isArray(s.authority.receipts) || !s.chars[payer] || s.chars[payer].dead ||
+        !Array.isArray(entries) || entries.length > 2) return false;
+    return entries.every(function (e) {
+      if (!e || typeof e.id !== 'string' || seen[e.id] || !number(e.amount,0,10000) || !e.recipient ||
+          s.authority.receipts.some(function (r) { return r.obligationId === e.id; })) return false;
+      seen[e.id] = true; total += e.amount;
+      var to = e.recipient, a = to.kind === 'realm' ? FB.treasuryPublicAccountSnapshot(s,to.id) :
+        to.kind === 'character' && s.chars[to.id] && !s.chars[to.id].dead && to.id !== payer ? C.privateAccount(s,to.id) : null;
+      return !!a && a.gold + total <= Number.MAX_SAFE_INTEGER;
+    }) && total <= C.privateAccount(s,payer).gold;
+  };
+  C.payReceipts = function (s,payer,provinceId,entries) {
+    if (!C.paymentReady(s,payer,entries)) return false;
+    var from = wallet(s,payer), total = 0;
+    entries.forEach(function (e) {
+      total += e.amount;
+      if (e.recipient.kind === 'realm') FB.treasuryTransfer(s,null,e.recipient.id,e.amount);
+      else { var to = wallet(s,e.recipient.id); to.row[to.key] = to.account.balance + e.amount; }
+      if (!e.amount) return;
+      var receipt = { id:e.id, obligationId:e.id, payerCharacterId:payer, provinceId:provinceId, amount:e.amount, turn:s.turn };
+      receipt[e.recipient.kind === 'realm' ? 'beneficiaryRealmId' : 'beneficiaryCharacterId'] = e.recipient.id;
+      s.authority.receipts.push(receipt);
+    });
+    if (total) from.row[from.key] = from.account.balance - total;
+    return true;
+  };
+  C.courtContext = function (s,p) {
+    var rid = realmId(s,p), E = FB.ecclesiasticalGovernment, bishop = E.incumbent(s,rid);
+    var court = FB.topRealm(s,FB.settlementCountyHolder(s,p.provinceId));
+    var judge = court && FB.realmRulerCharacterSnapshot(s,court);
+    return { realmId:rid, bishopId:bishop && bishop.id || null, courtRealmId:court || null,
+      courtId:judge && judge.id || null, bishopGeneration:FB.realmRulerGeneration(s,rid),
+      courtGeneration:court ? FB.realmRulerGeneration(s,court) : null,
+      allowed:!!(s.start && s.start.id === p.bookmarkId && E.row(s,rid) && E.active(s,rid) &&
+        E.controlled(s,rid,p.provinceId) && E.recognized(s,rid) && live(s,bishop) &&
+        E.decision(s,rid,'treaty',{provinceId:p.provinceId}).allowed &&
+        E.decision(s,rid,'revenue',{provinceId:p.provinceId}).allowed) };
+  };
   C.list = function (s,cid) {
     var out = []; if (!s || !s.player) return out;
     Object.keys(FBDATA.episcopalClaims || {}).sort().forEach(function (id) {

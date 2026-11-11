@@ -5880,7 +5880,7 @@ window.FB = window.FB || {};
           return FB.world.byId[pid] ? FB.world.byId[pid].name : pid;
         });
         h += '<button class="actionbtn" data-ghw-religion="' + esc(religionId) +
-          '" data-ghw-kingdom="' + esc(target.kingdomId) + '">📯 ' +
+          '" data-ghw-kingdom="' + esc(target.targetId || target.kingdomId) + '">📯 ' +
           esc(FB.T('{campaign} for {kingdom}', {
             campaign:campaignName,
             kingdom:kingdom ? kingdom.name : target.kingdomId
@@ -5891,13 +5891,16 @@ window.FB = window.FB || {};
                 ? FB.T(' · mandatory holy places: {places}', {
                   places:holyNames.join(', ')
                 }) : ''
-            })) + '</span></button>';
+            })) + '</span>' + (target.causeId ? '<span class="adesc">' +
+              esc(FB.holyWarCauseText(s,target.causeId,'name')) + ' · ' +
+              esc(greatHolyWarRealmName(s,target.protectorRealmId)) + '</span><span class="adesc">' +
+              esc(FB.holyWarCauseText(s,target.causeId,'desc')) + '</span>' : '') + '</button>';
         count++;
       }
     }
     if (!count) h += '<div class="progressnote">' +
       esc(FB.T(
-        'No lost {term:kingdom} is currently eligible. Authority, schism, captivity, and the campaign cooldown can also prevent a call.')) +
+        'No sacred or regional cause is currently eligible. Authority, schism, captivity, and the campaign cooldown can also prevent a call.')) +
       '</div>';
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Not now')) + '</button>';
@@ -5913,8 +5916,9 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
-  UI.showGreatHolyWarJoin = function () {
+  UI.showGreatHolyWarJoin = function (skipCause) {
     const s = FB.state, campaign = s && s.greatHolyWar;
+    if (!skipCause && s && FB.holyWarCausePlayerOptions(s).length) { UI.showHolyWarCauseResponse(); return; }
     const camp = campaign && FB.playerGreatHolyWarJoinCamp(s);
     if (!campaign || campaign.phase !== 'preparation' || !camp) return;
     const sovereign = FB.isPlayerSovereign(s);
@@ -5964,7 +5968,7 @@ window.FB = window.FB || {};
     }
 
     function showDesire() {
-      const desires = camp === 'attackers' ? [
+      const desires = (camp === 'attackers' ? [
         { kind:'crown', label:FB.T('The target crown') },
         { kind:'sacred', label:FB.T('Custody of the sacred places') },
         { kind:'duchy', label:FB.T('An exact objective {term:duchy}…') },
@@ -5972,7 +5976,7 @@ window.FB = window.FB || {};
         { kind:'honor', label:FB.T('Honor rather than land') }
       ] : [
         { kind:'honor', label:FB.T('Defend the faith for honor') }
-      ];
+      ]).filter(function (d) {return !campaign.cause || d.kind !== 'sacred' || campaign.holyCounties.length;});
       let h = reviewFactsCard('', kv('Promised service', esc(FB.T('{seasons} seasons', { seasons:draft.seasons }))),
         ' data-ghw-join-summary') +
         panelh('Vow') + reviewActionsHtml(desires.map(function (desire) {
@@ -6082,6 +6086,52 @@ window.FB = window.FB || {};
     }
 
     showService();
+  };
+
+  UI.showHolyWarCauseResponse = function () {
+    const s = FB.state, choices = FB.holyWarCausePlayerOptions(s);
+    if (!choices.length) return;
+    let h = '<div class="gm-list">';
+    choices.forEach(function (q,index) {
+      const head = q.headRealmId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,q.headRealmId);
+      const source = q.accountKind === 'dynastic' ? FB.T('your combined dynastic account') : FB.T('the public treasury');
+      h += reviewFactsCard(FB.holyWarCauseText(s,q.causeId,'name'),
+        UI.charCardHtml(s,s.chars[q.rulerId],false) + (head ? UI.charCardHtml(s,head,false) : '') +
+        '<p>' + esc(FB.holyWarCauseText(s,q.causeId,'desc')) + '</p>' +
+        '<p>' + esc(FB.T('Submit for {money:cost} from {source} to {head}; lose {loss} popular support in {counties}. This court and its successors leave the cause. No territory is awarded.',
+          {cost:q.gold,source:source,head:greatHolyWarRealmName(s,q.headRealmId),loss:q.supportLoss,
+            counties:q.provinceIds.map(function (pid) {return FB.world.byId[pid].name;}).join(', ')})) + '</p>' +
+        reviewActionCardHtml({data:{causeSubmit:String(index)},label:FB.T('Submit to the religious demands'),
+          disabled:!q.canSubmit,detailsId:'cause-submit-' + index,
+          note:q.canSubmit ? FB.T('Ends or avoids this cause; payment and support loss are immediate.') : FB.T('Submission needs sufficient court funds and an available ruler.'),
+          details:'<p>' + esc(FB.T('Religious oversight is a public commitment. It changes no resident faith or private property. Existing unrelated wars continue.')) + '</p>'}) +
+        reviewActionCardHtml({data:{causeResist:String(index)},label:FB.T('Resist the demands'),disabled:!q.canResist,
+          detailsId:'cause-resist-' + index,note:FB.T('No immediate cost. The head may call a campaign and your court may have to defend. Voluntary service is reviewed separately.'),
+          details:'<p>' + esc(FB.T('Armies determine occupation. After an attacker victory, the settlement council weighs claims to occupied objectives only. You may still submit before the council opens.')) + '</p>'}));
+    });
+    if (FB.playerGreatHolyWarJoinCamp(s) === 'defenders' && !FB.playerGreatHolyWarCamp(s))
+      h += '<button class="actionbtn" id="cause-join-defense">' + esc(FB.T('Review a defending vow')) + '</button>';
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
+    openModal(FB.T('Answer the religious demands'),h);
+    FB.paintFaces($('gm-body'),s);
+    if ($('cause-join-defense')) $('cause-join-defense').addEventListener('click',function () {UI.showGreatHolyWarJoin(true);});
+    function answer(index,submit) {
+      const q = choices[index];
+      if (!FB.respondHolyWarCause(s,q,submit)) {UI.showHolyWarCauseResponse(); return;}
+      UI.refresh();
+      const outcome = UI.charCardHtml(s,s.chars[q.rulerId],false) + '<p>' + esc(submit ?
+        FB.T('Submission is recorded. The court paid {money:cost}; protected counties lost {loss} popular support. This cause against your court has ended without a territorial grant.',{cost:q.gold,loss:q.supportLoss}) :
+        FB.T('Resistance is recorded. The campaign remains possible and no land has changed hands.')) + '</p><button class="btn" id="cause-continue">' + esc(FB.T('Continue')) + '</button>';
+      openModal(FB.T('Religious demands'),outcome);
+      FB.paintFaces($('gm-body'),s);
+      $('cause-continue').addEventListener('click',UI.closeModal);
+    }
+    $('gm-body').querySelectorAll('[data-cause-submit]').forEach(function (b) {
+      b.addEventListener('click',function () {answer(Number(b.dataset.causeSubmit),true);});
+    });
+    $('gm-body').querySelectorAll('[data-cause-resist]').forEach(function (b) {
+      b.addEventListener('click',function () {answer(Number(b.dataset.causeResist),false);});
+    });
   };
 
   let holyWarCombatantSort = 'name';
@@ -6261,6 +6311,8 @@ window.FB = window.FB || {};
         phase:campaign.phase === 'preparation' ? FB.T('preparation')
           : campaign.phase === 'active' ? FB.T('active campaign') : FB.T('settlement')
       })) + '</p></div>';
+    if (campaign.cause) h += '<div class="gm-body-text"><p>' + esc(FB.holyWarCauseText(s,campaign.cause.id,'name')) +
+      '</p><p>' + esc(FB.holyWarCauseText(s,campaign.cause.id,'desc')) + '</p></div>';
     h += '<button type="button" class="actionbtn" id="ghw-panel-combatants">' + esc(FB.T('View all combatants')) + '</button>';
     h += kv('Caller', esc(greatHolyWarRealmName(s, campaign.callerRealm)));
     h += kv('Military leader', esc(greatHolyWarRealmName(s, campaign.leaderRealm)));
@@ -13879,13 +13931,15 @@ window.FB = window.FB || {};
     return true;
   }
 
-  UI.showGuildMonopolyPetition = function () {
+  UI.showGuildMonopolyPetition = function (financialOnly) {
+    if (!financialOnly) { UI.showGuildLawGrants('incoming'); return; }
     const status = FB.guildMonopolyPetitionStatus(FB.state, true);
     if (!status.ready) { UI.toast(status.reason); return; }
     guildMonopolyScopePicker(status.career.profession, true);
   };
 
-  UI.showGuildMonopolyGrant = function (profession, spec) {
+  UI.showGuildMonopolyGrant = function (profession, spec, financialOnly) {
+    if (!profession && !financialOnly) { UI.showGuildLawGrants('outgoing'); return; }
     const s = FB.state;
     const status = FB.guildMonopolyIssueStatus(s);
     if (!status.ready) {
@@ -13993,6 +14047,115 @@ window.FB = window.FB || {};
     $('gm-back').addEventListener('click', function () {
       modalHistoryBack(function () { UI.showGuildMonopolyGrant(profession); });
     });
+  };
+
+  UI.showGuildLawGrants = function (slot, replaceView, restorePosition) {
+    const s = FB.state, L = FB.industryLaws, record = s.player.guildMonopolies && s.player.guildMonopolies[slot];
+    let h = '<p>' + esc(FB.T('Enforceable terms name one county and one business type. Membership, a declared exemption or a paid license supplies lawful access. Existing owners keep their property.')) + '</p>';
+    L.grantList(s).forEach(function (id) {
+      const d = FBDATA.industryLaws[id], def = FBDATA.localCouncilMotions[d.motionId];
+      h += reviewActionCardHtml({data:{guildLaw:id},label:dt(s,'localCouncilMotion',d.motionId,def,'name'),
+        note:FB.T('Guild payment: {money:amount} once · term {days} days · existing-business transition {transition} days',
+          {amount:d.grant.payment,days:d.durationDays,transition:d.transitionDays}),
+        details:'<p>' + esc(dt(s,'localCouncilMotion',d.motionId,def,'desc')) + '</p>'});
+    });
+    (s.industryLaws && s.industryLaws.laws || []).forEach(function (law) {
+      if (!law.grant || (slot === 'outgoing' ? law.issuer.realmId !== 'player' && (!record || record.lawId !== law.id) : law.grant.slot !== 'incoming')) return;
+      const d = law.terms, name = dt(s,'localCouncilMotion',d.motionId,FBDATA.localCouncilMotions[d.motionId],'name');
+      const states = {active:FB.T('Active'),suspended:FB.T('Suspended'),expired:FB.T('Expired'),repealed:FB.T('Revoked')};
+      h += reviewFactsCard(name,kv('Status',esc(states[L.lifecycle(s,law)])) +
+        kv('Original payee',esc(s.realms[law.payeeRealmId].name)) + kv('Guild payment received',esc(FB.money(law.grant.amount))) +
+        kv('Named business exemptions',esc(String(law.grant.exemptEnterpriseUids.length))));
+      const q = L.quoteRevokeGrant(s,law.id);
+      if (q && law.repealedTurn === null && s.turn < law.endTurn && law.issuer.realmId === 'player')
+        h += reviewActionCardHtml({id:'guild-revoke-' + law.id,data:{guildRevoke:law.id},label:FB.T('Review revocation'),
+          note:FB.T('No money or day cost. End future restrictions; retain payments and prior liabilities.'),disabled:!q.ready});
+    });
+    if (!record || !record.lawId) h += reviewActionCardHtml({id:'guild-financial-only',label:FB.T('Review financial-only charter'),
+      note:FB.T('The existing charter path changes financial benefits without restricting other businesses.')});
+    h += '<p>' + esc(FB.T('Affected owners can seek guild admission through Work & Enterprises, pay a license where offered, use a declared exemption, petition the original grantor, pause or change trade, or review deliberate unauthorized operation in the business manager. Wages continue while operation is paused.')) + '</p>' +
+      '<div class="gm-footer"><button type="button" class="btn" id="guild-law-close">' + esc(FB.T('Not now')) + '</button></div>';
+    openModal(FB.T('Guild monopoly terms'),h,{historyView:true,replaceView:!!replaceView});
+    document.querySelectorAll('[data-guild-law]').forEach(function (b) { b.addEventListener('click',function () {
+      UI.showGuildLawGrantReview(b.dataset.guildLaw,slot,slot === 'incoming' ? s.player.charId : null);
+    }); });
+    document.querySelectorAll('[data-guild-revoke]').forEach(function (b) { b.addEventListener('click',function () {
+      const q = L.quoteRevokeGrant(s,b.dataset.guildRevoke), position = industryHearingPosition(b);
+      openModal(FB.T('Revoke guild terms'),reviewFactsCard('',kv('Refund',esc(FB.money(0))) +
+        kv('Time',esc(FB.T('No day cost')))) + '<p>' + esc(FB.T('Revocation ends future fees and restrictions. Original receipts, property, worker contracts and imposed personal balances remain.')) + '</p>' +
+        reviewActionCardHtml({id:'guild-law-revoke-confirm',label:FB.T('Revoke the linked law'),note:FB.T('No refund; no duplicate payment.'),disabled:!q.ready}) +
+        '<div class="gm-footer"><button type="button" class="btn" id="guild-law-revoke-back">' + esc(FB.T('Cancel')) + '</button></div>',
+        {historyView:true,historyBackRender:function () { UI.showGuildLawGrants(slot,true,position); }});
+      $('guild-law-revoke-back').addEventListener('click',function () { modalHistoryBack(); });
+      $('guild-law-revoke-confirm').addEventListener('click',function () {
+        if (!L.commitRevokeGrant(s,q)) { UI.toast('Operating terms changed. Review the current terms.'); return; }
+        FB.invalidateGuildMonopolies(s); position.focusId = 'guild-law-close'; modalHistoryBack(); UI.refresh();
+      });
+    }); });
+    if ($('guild-financial-only')) $('guild-financial-only').addEventListener('click',function () {
+      if (slot === 'incoming') UI.showGuildMonopolyPetition(true); else UI.showGuildMonopolyGrant(null,null,true);
+    });
+    $('guild-law-close').addEventListener('click',function () { modalHistoryBack(UI.closeModal); });
+    restoreIndustryHearingPosition(restorePosition);
+  };
+  UI.showGuildLawGrantReview = function (id,slot,sponsorId) {
+    const s = FB.state, L = FB.industryLaws, d = FBDATA.industryLaws[id];
+    if (!d || !d.grant) return;
+    const def = FBDATA.localCouncilMotions[d.motionId];
+    if (!sponsorId) {
+      let h = '<p>' + esc(FB.T('Choose an existing local guildmaster to represent the guild and fund its payment. No new person, business or money is created.')) + '</p>';
+      const ids = L.guildRepresentatives(s,d).filter(function (cid) { return s.chars[cid].career.guildRank === 'guildmaster'; });
+      ids.forEach(function (cid) {
+        const c = s.chars[cid], funds = cid === s.player.charId ? s.player.gold : c.wealth;
+        h += reviewPersonHtml(c,FB.T('Guild representative'),null) + reviewActionCardHtml({data:{guildSponsor:cid},
+          label:FB.T('Review this representative'),note:FB.T('Personal funds: {money:funds} · required payment: {money:amount}',{funds:Number.isFinite(funds) ? funds : 0,amount:d.grant.payment})});
+      });
+      if (!ids.length) h += '<p>' + esc(FB.T('No existing local guildmaster can represent this guild. Seek the guild career path or choose another available charter.')) + '</p>';
+      h += '<div class="gm-footer"><button type="button" class="btn" id="guild-sponsor-back">' + esc(FB.T('Back')) + '</button></div>';
+      openModal(dt(s,'localCouncilMotion',d.motionId,def,'name'),h,{historyView:true});
+      document.querySelectorAll('[data-guild-sponsor]').forEach(function (b) { b.addEventListener('click',function () { UI.showGuildLawGrantReview(id,slot,b.dataset.guildSponsor); }); });
+      $('guild-sponsor-back').addEventListener('click',function () { modalHistoryBack(); });
+      FB.paintFaces($('gm-body'),s); return;
+    }
+    const sponsor = s.chars[sponsorId];
+    if (!sponsor) return;
+    let q = L.quoteGrant(s,id,slot,sponsorId,[]);
+    const ruler = s.chars[q.issuer.holderCharId];
+    let h = reviewPersonHtml(sponsor,FB.T('Guild representative and payer'),null) +
+      (ruler && ruler.id !== sponsor.id ? reviewPersonHtml(ruler,FB.T('Granting ruler'),null) : '') +
+      reviewFactsCard(FB.T('Charter terms'),kv('County',esc(FB.world.byId[d.provinceId].name)) +
+        kv('Business',esc(dt(s,'enterprise',d.enterpriseType,FBDATA.enterprises[d.enterpriseType],'name'))) +
+        kv('Operating rule',esc(d.mode === 'prohibition' ? FB.T('Guild membership required; named exemptions remain lawful') : FB.T('Guild membership or paid operating license'))) +
+        kv('Guild payment',esc(FB.T('{money:amount} once, from the representative’s personal funds',{amount:d.grant.payment}))) +
+        kv('Payee',esc(s.realms[q.issuer.realmId] ? s.realms[q.issuer.realmId].name : FB.T('No competent grantor'))) +
+        kv('Non-member license',esc(d.mode === 'prohibition' ? FB.T('Unavailable') : FB.T('{money:fee} per {days} days',{fee:d.fee,days:d.permitDays}))) +
+        kv('Duration',esc(FB.T('{days} days; existing businesses have {transition} days to comply',{days:d.durationDays,transition:d.transitionDays}))) +
+        kv('Time',esc(FB.T('1 day on issuance; review and cancellation are free')))) +
+      '<p>' + esc(dt(s,'localCouncilMotion',d.motionId,def,'desc')) + '</p>';
+    d.exemptions.forEach(function (x) { h += '<p>' + esc(industryExemptionText(s,x)) + '</p>'; });
+    h += '<p>' + esc(industryPenaltyText(d)) + '</p><p>' + esc(FB.T('The institution survives ruler succession and the representative’s death. Loss of jurisdiction or all recorded local guild members suspends the law; recovery resumes its remaining term without another payment. Revocation and expiry end future restrictions without refunds. Property and existing worker contracts remain.')) + '</p>';
+    const businesses = (s.player.enterprises || []).filter(function (e) { return e.type === d.enterpriseType && e.provinceId === d.provinceId; });
+    if (businesses.length) {
+      h += '<p>' + esc(FB.T('Explicitly exempt named existing businesses for this entire grant:')) + '</p>';
+      businesses.forEach(function (e,i) { h += '<label class="autorow actionbtn"><input type="checkbox" data-guild-exemption="' + esc(e.uid) + '"> ' +
+        esc(FB.T('{business} {number}',{business:dt(s,'enterprise',e.type,FBDATA.enterprises[e.type],'name'),number:i + 1})) + '</label>'; });
+    }
+    h += '<p id="guild-law-blocker">' + esc(q.reason) + '</p>' + reviewActionCardHtml({id:'guild-law-confirm',
+      label:slot === 'incoming' ? FB.T('Petition for these paid terms') : FB.T('Grant these paid terms'),
+      note:FB.T('Pay {money:amount} once; enact the disclosed law. No tax or profit bonus is created.',{amount:q.amount}),disabled:!q.ready}) +
+      '<div class="gm-footer"><button type="button" class="btn" id="guild-law-back">' + esc(FB.T('Cancel')) + '</button></div>';
+    openModal(dt(s,'localCouncilMotion',d.motionId,def,'name'),h,{historyView:true});
+    document.querySelectorAll('[data-guild-exemption]').forEach(function (b) { b.addEventListener('change',function () {
+      const ids = Array.from(document.querySelectorAll('[data-guild-exemption]:checked')).map(function (input) { return input.dataset.guildExemption; });
+      q = L.quoteGrant(s,id,slot,sponsorId,ids);
+      $('guild-law-confirm').disabled = !q.ready; $('guild-law-blocker').textContent = q.reason;
+    }); });
+    $('guild-law-back').addEventListener('click',function () { modalHistoryBack(); });
+    $('guild-law-confirm').addEventListener('click',function () {
+      if (!L.commitGrant(s,q)) { UI.toast('Operating terms changed. Review the current terms.'); return; }
+      UI.closeModal(); if (FB.game && FB.game.passDay) FB.game.passDay({skipFocus:true}); UI.refresh();
+    });
+    FB.paintFaces($('gm-body'),s);
   };
 
   UI.showLocalCouncilMotion = function () {
@@ -23080,6 +23243,10 @@ window.FB = window.FB || {};
     const s = FB.state;
     const me = s && s.chars[s.player.charId];
     const rentClaims = !!(FB.episcopalClaims && FB.episcopalClaims.entry(s,'bishopric'));
+    const namedCases = !!(FB.religiousCases && FB.religiousCases.entry(s));
+    if (namedCases && !(me && FB.bishopricSnapshot && FB.bishopricSnapshot(s,me))) {
+      UI.showReligiousCases(); return;
+    }
     if (rentClaims && !(me && FB.bishopricSnapshot && FB.bishopricSnapshot(s,me))) {
       UI.showEpiscopalClaims(); return;
     }
@@ -23150,6 +23317,8 @@ window.FB = window.FB || {};
 
     if (rentClaims) h += reviewActionsHtml(reviewActionCardHtml({ id:'bishop-rent-claims',
       label:FB.T('Review episcopal rent claims'), note:FB.T('No fee or day spent; review existing rights and the actual accounts.') }));
+    if (namedCases) h += reviewActionsHtml(reviewActionCardHtml({id:'bishop-named-cases',
+      label:FB.T('Review named ecclesiastical cases'),note:FB.T('No fee or day spent; review actual accusations, defendants and recipients.')}));
     const powerIds = [
       'visit_diocese', 'ecclesiastical_court',
       'convene_synod', 'extraordinary_tithe'
@@ -23166,7 +23335,8 @@ window.FB = window.FB || {};
         (item.can ? '' : ' disabled') + '>' +
         esc(actionLabel(s, item.a.id, item.a)) +
         '<span class="adesc">' + esc(item.can
-          ? rentClaims && ['visit_diocese','ecclesiastical_court'].indexOf(item.a.id) >= 0 ?
+          ? namedCases && item.a.id === 'ecclesiastical_court' ? FB.T('Free review of named accusations and lawful judgments.') :
+            rentClaims && ['visit_diocese','ecclesiastical_court'].indexOf(item.a.id) >= 0 ?
             FB.T('Free rent review; ordinary pastoral events remain available.') :
             FB.T('1 day · {days}-day cooldown', { days:item.a.cd }) : item.reason) +
         (item.a.id === 'convene_synod' ? ' · ' + esc(FB.T('Cost: {money:10}')) : '') +
@@ -23204,6 +23374,8 @@ window.FB = window.FB || {};
     });
     const cardinalButton = $('bishop-cardinal');
     const rentButton = $('bishop-rent-claims');
+    const casesButton = $('bishop-named-cases');
+    if (casesButton) casesButton.addEventListener('click',function () { UI.showReligiousCases({parentHistory:true}); });
     if (rentButton) rentButton.addEventListener('click', function () { UI.showEpiscopalClaims({ parentHistory:true }); });
     if (cardinalButton) cardinalButton.addEventListener('click', function () {
       submitCardinalPetition(me, 'bishopric');

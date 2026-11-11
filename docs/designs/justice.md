@@ -20,6 +20,19 @@ Existing justice technology reviews remain applicable; no new capability is adde
 
 # Ruler justice
 
+Named ecclesiastical discipline consumes contemporaneous clerical-victim facts
+captured by the ordinary offense writer for actual abduction and killing. Its
+case adapter restricts venue and sentences at the canonical projection and
+application boundaries, including player hearing responses and seasonal AI.
+An elected player incumbent resolves the canonical institutional realm, even
+when their personal station and household remain separate from that public
+office. Current recognition, control and Peace still determine eligibility.
+An explicit voluntary submission uses the same arrest projection. A separate
+justified settlement-fief adapter passes only the reviewed grant to its property
+owner; it cannot invoke broad title forfeiture. Ordinary unrelated cases retain
+their existing sentence, support and payment rules. See
+[named discipline](religious-cases.md) for causes, accounts and lifecycle.
+
 Industry-law complaints consume the existing offense, arrest, custody, hearing,
 defense and sentence boundaries. Actual unauthorized output supplies the original
 actor, issuing court, law and material evidence; a proposal or detection imposes

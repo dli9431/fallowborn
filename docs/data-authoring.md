@@ -133,6 +133,14 @@ London levy/restriction and ordinary `industry-law-assemblies.json` import use
 the same pure validator, projections, principal-bound ballots, approval owner
 and detached saved-state checks. See MODDING.md and designs/industry-laws.md.
 
+Industry-law `grant` declarations instead expose paid ruler issuance. Native
+London workshop exclusive/license alternatives and the ordinary
+`guild-monopoly-river.json` import vary real consideration, business, permission,
+household exemptions, term and sanction. Shared schema validates candidate
+references; quotes bind actual rulers, local guildmasters, personal money and
+named existing property before the shared law/payment transactions. No JSON
+declaration invents a guild account, business inventory or a second law store.
+
 Optional episcopalClaims declarations compose only actual settlement-charter
 remittances. The native Roman consumer and ordinary episcopal-river-rent.json
 import vary rates, finite term, compensation, offer deadline and NPC responses
@@ -140,6 +148,13 @@ through the same pure validator, reviews, justice gate and transactions. Existin
 people, grants, private accounts and institutional treasuries remain canonical.
 No declaration can manufacture property or debt. See docs/MODDING.md and
 docs/designs/episcopal-claims.md for exact identities and lifecycle rules.
+
+Named religiousCases use the shared declarative schema and the same ordinary
+JSON candidate/publication path. The Roman clerical-violence rule and fictional
+religious-river-court.json vary settlement amounts and recipient, deadlines,
+permitted fief remedy and participant responses. Both consume actual canonical
+evidence and current local jurisdiction; a declaration cannot infer guilt from
+identity, create assets or bypass custody. See designs/religious-cases.md.
 
 Trusted retained catalogue compatibility
 
@@ -442,6 +457,17 @@ Single-camp reserve authoring
 The optional typed mobile.opening.reserves memberId/count array partitions existing people after the ordinary muster through detached JSON validation and the shared fresh constructor. The complete independent mobile-opening-reserves-harbor.json and mobile-opening-reserves-dune.json Mods imports vary members, explicit zero and full remaining-member allocation, command authority, classes, supply and expedition routes. This option composes with real columns and expedition intent; it rejects civilianCamps and preparationId, whose existing source accounting remains separate. It adds no stock, host, equipment, executable callback or mod root. Strict optional matching-save provenance retains the original allocation while ordinary demographic and resource owners validate subsequent play. Exact fields, bounds and intrinsic exclusions are in docs/MODDING.md and docs/designs/mobile-confederation.md.
 
 Existing ordinary campaign authoring
+
+Regional religious campaigns use the separate `holyWarCauses` catalogue rather
+than historical engine dispatch or an ordinary campaign story pretending a holy
+site was lost. `protector_heresy` selects actual same-fold holder hierarchies inside
+declared regional objectives and a finite window. The existing head, coalition,
+host and settlement owners remain authoritative. Native southern France and the
+ordinary `holywar-protector-lantern.json` import vary geography, head, timing,
+payment, support cost and AI response. Pure `FB.schema` validation checks complete
+candidate references before publication; exact imported fingerprints and detached
+saved-response validation protect commitments without replay. Full bounds and
+public APIs are in MODDING.md. Technology impact is none, as recorded in war.md.
 
 Conditional campaign stories may opt into the bounded ordinary_declaration
 admission policy documented in MODDING.md. Declare the real actor court, inhabited

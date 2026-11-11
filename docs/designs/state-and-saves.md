@@ -274,6 +274,14 @@ approval, payment or acquisition. Settled history older than FBDATA.balance.ledg
 folds only at a season boundary into optional `industryLaws.retired` totals, and its
 limits count only live records. See [Targeted operating laws](industry-laws.md).
 
+Paid ruler grants optionally retain an exact `grant` receipt on that same law and
+a `lawId` on the existing monopoly slot, sharing `guild_monopoly:law:<law.id>`.
+The receipt binds actual consideration, original representative and named
+business exemptions. Every live grant requires its matching link; malformed or
+changed facts reject before adoption. Restore never pays, issues or refunds.
+Retention keeps linked laws and their original people. Existing financial-only
+charters omit both additions and gain no retroactive restrictions or fees.
+
 This frozen contract fixes which bookmark-platform facts a campaign saves and which it derives, so every system that adds saved state writes against one schema and v4 keeps a single migration. FB.save.v4.validatePlatform accepts the optional fields described here; the registries that resolve their ids arrive with the systems that use them.
 
 Envelope. platformSchema:2 sits beside authoritySchema:4 and requires state.start.revision. Supported schema 1, unstamped early v4 and v3 records without a world revision migrate to baseline and gain schema 2 on serialization. Present unknown schema numbers are rejected. A revision-bearing record cannot masquerade as schema 1 or as an unstamped legacy record. The World-revision compatibility section defines resolution and older-reader rejection. Changing saved-field meaning requires another explicit contract review and migration.
@@ -1828,6 +1836,18 @@ mandatory-defense status, territorial eligibility, `vowOutcome`, and
 `vowTerms:{seasons,desire,beneficiary,served,mustered}`. AI attacker participant
 records add `vowSeasons`, `desire`, `served`, `mustered`, and `vowOutcome`.
 
+Optional religious-campaign grounds retain a strict `greatHolyWar.cause` marker
+with the original declared protector, actual court, ruler and generation. The
+optional `holyWarCauseResponses` ledger preserves submission/resistance, original
+principals, payment, county support burden and turn. Detached validation checks
+the effective declaration, unique court responses, exact costs, regional objective
+scope and call window before adoption. Current-content restoration and repeated
+re-save do not issue demands, charge again, recruit, resolve a campaign or grant
+land. Old holy wars without these optional fields retain their meaning. This
+adds no save-envelope version or migration; see MODDING.md and war.md.
+Original protector ruler references retain their ordinary character records through
+death and succession, keeping the strict campaign and response principals valid.
+
 A new settlement is
 `settlement:{schema:2,case,captured,applied,pendingPlayer,awardRealms,mainRealmId?}`.
 The generic case is entirely serializable:
@@ -1837,6 +1857,9 @@ their extensible basis object and computed weight; awards retain asset, claimant
 optional terms/beneficiary, runner-up, and move. No map ownership changes while the case
 is open. A resolved beneficiary-free personal land award uses `pendingPlayer` for the
 final accept/decline; all collected awards then apply together.
+The award transaction eagerly commits surviving recipient courts through
+`FB.ensureRealmCourt`, after any named beneficiary is installed. Matching restore
+therefore retains the same ruler and bounded living household identities.
 
 Completed compact history adds locale-neutral `vowOutcome`, `desire`, attacker `vows`,
 `settlementContested`, objection count, and award summaries. Awarded realms may carry

@@ -235,6 +235,14 @@ Dated government rollout coverage is in tests/e2e/specs/government-rollout.spec.
 
 # Testing Fallowborn
 
+`named-religious-cases.spec.js` covers actual local clergy-violence evidence,
+peasant/noble eligibility, identity exclusion, pure reviews, real private money,
+institutional/victim/secular receipts, custody and canonical penance/prison,
+player hearing application, limited fief confiscation, secular acceptance/refusal,
+stale facts/death/vacancy/jurisdiction, repeated-source rejection, two current
+save round trips, malformed-state atomicity, an ordinary independent JSON import
+with exact fingerprints, and retained mobile review navigation.
+
 protected-scenery.spec.js covers a detached full-map configuration with 21
 protected scenic remnants and 506 unchanged inhabited declarations, and an
 independent valley.json import through the ordinary Mods file picker. It checks
@@ -602,6 +610,15 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+`guild-monopoly-laws.spec.js` covers paid ruler issuance and guildmaster petitions,
+exclusive and licensed operation, actual representative/public-account balances,
+guild and named-business exemptions, stale funds/authority/generation/terms,
+canonical actual-output evidence and custody/closure, revocation and succession,
+licensed acquisition, realm handover, jurisdiction and guild-membership suspension, current-content repeat restores,
+atomic malformed-receipt rejection, a real fictional press-guild JSON import,
+legacy financial-only charters, exact changed-owner content-id counts and retained
+mobile review/cancellation paths.
+
 `schema.spec.js` compares industry-law, production-good, recipe and physical-site
 acceptance with frozen pre-migration validators over a fixed boundary matrix.
 It checks identical law/catalogue diagnostics, compiled sites, candidate and
@@ -724,6 +741,28 @@ served project, while the initial determinism and simulation canaries run only o
 project.
 
 ## Shared support
+
+`holywar-protector-causes.spec.js` stages the 1209–1229 French opportunity and
+independently imports `holywar-protector-lantern.json` through Mods. It covers
+authority/window/holder gates, pure previews, costly conserved submission, stale
+and repeated responses, same-faith coalition separation, ordinary host service,
+occupied-only council assets/awards, active submission, player call/answer sheets,
+AI submission, exact changed-content fingerprints, detached malformed-definition
+and save rejection, preparation/active/completed load–re-save–load, and the existing
+Catholic sacred-target campaign without a cause marker. Boundaries are staged
+directly; no years of simulation or device acceptance are inferred.
+
+The same spec covers unrelated selected-date loading, combined versus separated
+player funding, and actual religious-head assignment preservation through court
+adoption, including an explicitly vacant office. Current player service remains
+on its canonical vow when loading rather than acquiring AI participant defaults.
+Regional and sacred-site council awards both commit their ordinary recipient
+courts before saving, retaining the same people and counters across restoration.
+Original response principals also survive ordinary ruler death, with the court's
+submission exemption inherited and no payment replay.
+Separate cold-page cases resume a live imported campaign and restore its spent
+submission resources; each keeps the normal per-test timeout and full repeated
+restore assertions.
 
 Specifications should import `test` and `expect` from `support/fixture.js`, not directly from
 `@playwright/test`. The shared fixture fails the test on page exceptions, console errors, failed

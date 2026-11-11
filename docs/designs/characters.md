@@ -208,6 +208,11 @@ office, an attention assignment, a journey under way to visit them, or a friend 
 rival contact clock. If not, the record is deleted and the member entry becomes the
 tombstone.
 
+Original protector rulers referenced by a religious-campaign cause or response
+receipt also remain retained. `FB.holyWarCauseReferencesCharacter` keeps those
+strict saved principals valid through death and succession without recreating them
+on restore; unrelated court characters retain the ordinary compaction rules.
+
 **Cultivation opinion alone deliberately does not count**, and the distinction is
 narrow: the *standing* a person earned lives in the realm-keyed store
 `FB.syncRealmRulerStanding` mirrors and survives compaction without them, but an

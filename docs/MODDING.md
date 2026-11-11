@@ -408,6 +408,44 @@ account owners, future-term boundaries and public interfaces are described in
 
 ## Ruler justice
 
+### Named ecclesiastical discipline
+
+`religiousCases` is an optional complete-record table merged by id (maximum 32,
+lowercase snake-case ids). Records require `name`, `desc`, `cause`, `bookmarkId`,
+`provinceId`, `realmId`, `faiths`, `yearMin`, `yearMax`, `fee`, `settlementShare`,
+`settlementMax`, `settlementRecipient`, `offerDays`, `penanceSentence`,
+`prisonSentence`, `secularSentence`, `allowFief`, `defendantPolicy`, `bishopPolicy`
+and `enforcementPolicy`. Unknown fields and reserved keys reject.
+
+The only supported `cause` is `clerical_violence`. References name an existing
+bookmark, inhabited county and ecclesiastical temporal realm. `faiths` is one to
+eight distinct existing Christian identities; it confers no authority over other
+faiths. Years are ordered integers, 1139–10000. `fee` is 0–100 to the institutional
+see, `settlementShare` is 0–0.5 of actual available private money,
+`settlementMax` is 0–1000, and `settlementRecipient` is `victim` or `secular`.
+`offerDays` is 1–90. Review/opening fees are zero; money moves on acceptance only.
+
+`penanceSentence` references a penance kind; `prisonSentence` references custody;
+`secularSentence` references custody. These sentences must close the selected
+case without forgiving unrelated cases. Current law, justification and
+actual custody further restrict them. `allowFief` permits only the named existing
+delegated settlement, subject to secular forfeiture law and its unchanged grant.
+It never permits private plots, businesses, clerical property or general title
+confiscation. `defendantPolicy` is `challenge`, `settlement`, `submit` or `refuse`;
+`bishopPolicy` is `penance`, `imprison`, `refer` or `dismiss`; `enforcementPolicy`
+is `accept` or `reject`. These select shared transactions, never callbacks.
+
+Eligibility requires an actual successful canonical abduction/killing source
+whose optional `clericalVictim:{faithId,provinceId}` facts were captured at the
+occurrence. Old offenses are not retroactively assigned clerical victims.
+Declarations cannot create suspects, guilt, wealth, property, custody or offices.
+The source cannot be prosecuted again under another profile. Display fields use
+`religiousCase.<id>.name/desc` with effective English fallback. Saved records pin
+the exact definition, canonical evidence, original principals and actual grant;
+payments cross-validate unique authority receipts. See
+[religious-cases.md](designs/religious-cases.md) and the independent ordinary JSON
+example `tests/e2e/fixtures/authoring/religious-river-court.json`.
+
 FBDATA.justiceSentences defines stable ids with display name/desc, kind, level (0-3), and unjust support penalty. Kind is custody, fine, penance, corporal, exile, death, pardon, ransom or forfeiture. Kind supplies mechanics; renamed or new ids have the same behavior. Fine and ransom transfer available funds; custody defaults to a 360-day term and 90-day extension window, overridable by termDays and extensionWindow. Penance defaults to costs of 40 piety and 20 prestige, overridable by pietyCost and prestigeCost. Exile may declare careerRole:cloister. A pardon with forgive:true closes all court cases; closesCase:false preserves the cause for release or ransom. The shipped money/exile/forfeit/maim/kill flags remain compatibility metadata, not dispatch. Runtime justiceSentences additions replace complete records by id.
 
 FBDATA.legalTraditions defines complete records keyed by tradition id. Each requires a display name, a nonempty unique sentences array of known sentence ids, procedures, justification and ai. Runtime legalTraditions additions replace complete records by id. Names and sentence display fields use the legalTradition and justiceSentence structured catalogs and normal lexicon labels, including labels.legalTradition.<id>.name and labels.justiceSentence.<id>.name/desc. Custom saved judgments retain a typed sentence data reference rather than rendered prose.
@@ -3614,6 +3652,46 @@ balance is authored event content rather than an additional schema requirement f
 
 ## Industry operating laws
 
+Optional `grant:{profession,payment}` declares a paid ruler issuance path instead
+of a council/Estates motion. `profession` names an existing guild-enabled
+craft/trading career (primary or secondary role). Membership reads the operator;
+it is independent of the enterprise's staffing career.
+`payment` is finite, greater than zero and at most 10000. It is the actual
+once-only consideration from the chosen existing local guildmaster's personal
+funds to the original granting realm's public account; payer and payee must be
+separate accounts. Definitions require
+`relief`, `offense` and a zero-fee, permission-granting exemption for that guild;
+they must omit `voting`. All existing fee, prohibition, term, transition, sanction
+and exemption rules still apply. The `motionId` remains the established localized
+display owner, with empty `fx`, but grants cannot pass through council voting.
+
+`quoteGrant(state,id,slot,sponsorId,exemptUids)` and `commitGrant(state,quote)` use
+the existing industry-law owner. Slot is `incoming` (a guildmaster petition) or
+`outgoing` (the actual ruling player's grant). Named exemptions are a unique
+subset of currently owned, affected business UIDs, at most 512; they are explicit
+grant facts, not new definitions or generated competitors. Ordinary exemption
+criteria describe qualifying households. Membership reads the operator, not a
+hired worker. Native London exclusive/license alternatives and
+`tests/e2e/fixtures/authoring/guild-monopoly-river.json` share these consumers.
+
+Ruler-issued law rows use `issuer.kind:"ruler_grant"` and additionally retain
+`grant:{contractId,slot,sponsorId,amount,exemptEnterpriseUids}`. `amount` exactly
+matches the definition's payment. `contractId` is `guild_monopoly:law:<law.id>`;
+the corresponding existing monopoly slot retains the same contractId and a
+`lawId`, zero tax/profit/opinion bonuses and the exact original paid fee and
+dates. Every live grant law requires its slot link. Missing or changed receipt
+facts reject, and validation never replays payment. Financial-only charters
+without a link retain their previous meanings without retroactive restrictions.
+
+Death or succession does not duplicate or cancel an institutional grant. Lost
+county control or absence of every recorded living, free local guild member
+suspends restrictions and enforcement; recovery resumes the remaining term and
+original payee. `quoteRevokeGrant`/`commitRevokeGrant` require the current competent
+original ruler and remove future restrictions without refund. Business-manager
+repeal petitions address the same original court; existing sanctions, ownership,
+historical evidence and liability remain canonical. See designs/industry-laws.md
+for the declared dissolution proxy and supported participant boundary.
+
 Optional `voting` opts a definition into affected-interest hearings through both
 the existing town council seat and the controlling court's Estates. Omission
 retains the simple seeded council motion. Both consumers use this law's exact
@@ -5183,6 +5261,97 @@ matters; generic code may continue to use `FB.religiousHeadOf`. Other religions 
 use `state.papacy`.
 
 ### Great holy-war definitions
+
+#### Regional protector causes
+
+`holyWarCauses` is an ordinary JSON merge-by-id table, bounded to 64 declarations.
+The trusted validator is `FB.holyWarCauseCatalogFaults(data)`, using `FB.schema`.
+Each declaration has exactly:
+
+```json
+{
+  "schema": 1,
+  "kind": "protector_heresy",
+  "bookmarkId": "harbor_world",
+  "religion": "harbor_belief",
+  "authorityOfficeId": "harbor_head",
+  "kingdomId": "harbor_country",
+  "name": "The Lantern ward demands",
+  "desc": "The keeper seeks public submission from the ward protecting dissident teachers. A campaign grants no possession before settlement.",
+  "firstDate": {"year":901,"season":0,"day":1},
+  "lastDate": {"year":901,"season":0,"day":7},
+  "protectorRealmIds": ["harbor_upland"],
+  "provinceIds": ["harbor_ridge"],
+  "submission": {"gold":23,"supportLoss":4},
+  "ai": {"submitChance":1,"callChance":1}
+}
+```
+
+Table/court/county/office ids are lowercase slugs beginning with a letter and at
+most 80 characters; bookmark ids also permit digits first. `religion` references
+the effective candidate faith catalogue. `name` and `desc` are nonblank display
+strings, limited to 160 and 2000 characters. Dates use years 1–9999, seasons 0–3
+and days 1–90, ordered inclusively. Protector lists contain 1–16 distinct courts;
+county lists contain 1–32 distinct inhabited counties in the declared kingdom.
+References must resolve together in a supported revision of the named bookmark,
+including same-import declarations. Unloaded native dates defer their world
+references until that date is reviewed. Unknown fields/kinds and reserved keys
+reject atomically. `gold` is an integer 1–100000, `supportLoss` an integer 1–50;
+both probabilities are finite numbers 0–1. There are no executable callbacks,
+population predicates, confiscation effects or chosen settlement winners.
+
+The effective faith must support great holy wars and have this exact active head
+office. A target must be a living same-fold court with a current ruler and actual
+direct or subordinate holders in the declared counties, outside the calling head's
+own sovereign bloc. The current sovereign
+bloc defends with its ordinary host. A submitted court is excluded, including
+after succession. `submitChance` chooses one annual AI response; an unaffordable
+submission becomes resistance. `callChance` is checked annually for remaining
+eligible targets, respecting the ordinary authority, captivity, cooldown and
+global-slot gates. Player heads choose explicitly. Neither probability supplies
+armies or a victory. Sacred recovery scheduling retains its separate policy.
+Regional calls leave sacred recovery first-call/first-launch markers intact while
+sharing the ordinary campaign sequence and cooldown.
+
+`FB.greatHolyWarTargets` adds records with `causeId`, `declaredRealmId`,
+`protectorRealmId`, `rulerId`, `generation` and `targetId`. Pass `targetId`, formatted
+`cause:<causeId>:<declaredRealmId>`, in the existing target argument of
+`canCallGreatHolyWar` / `callGreatHolyWar`. Legacy callers still pass a kingdom id.
+The actual `campaign.targetKingdom` remains the declared kingdom. Cause calls freeze
+the currently held regional objectives and add exactly
+`cause:{schema:1,id,declaredRealmId,protectorRealmId,rulerId,generation}`.
+
+`holyWarCauseReview(state,causeId,declaredRealmId)` returns a detached exact review
+or null. `respondHolyWarCause(state,review,submitBoolean)` rechecks it atomically.
+Submission transfers the declared amount between canonical court accounts and applies the
+support loss only in currently protected declared counties; it ends or avoids this
+cause without territorial awards. Resistance has no immediate cost and leaves
+ordinary war available. Responses retain their original court/ruler/generation,
+turn, disposition, paid amount, support loss, county ids and payee realm in optional
+`state.holyWarCauseResponses`. Each court has one response per cause, with resistance
+replaceable by submission. These facts load without replay; malformed fields,
+duplicate responses, unsupported costs, objective scope and call dates reject
+before adoption. Existing campaigns without these optional fields retain their
+saved meaning. The save envelope is unchanged and imported declarations enter exact
+mod fingerprints.
+
+Original protector rulers referenced by a cause marker or response receipt are
+retained through ordinary death and succession, so strict saved principals remain
+resolvable without creating historical people on load.
+
+The review identifies `accountKind` as `public` or `dynastic`: a traditional player
+ruler retains the existing combined account, while explicitly separated public
+treasuries keep their normal private-funds exclusion. The canonical treasury
+transfer serves player and AI payers and recipients alike; no account is created by
+review, submission or restoration.
+
+The complete import is `tests/e2e/fixtures/authoring/holywar-protector-lantern.json`.
+Native data lives in `data/holy_war_causes.js`. Display uses `holyWarCause.<id>.name/desc`
+through `FB.dataText`, with static native English sources routed through `FB.T`;
+imported English remains a fallback. See `designs/war.md` for the historical mapping,
+submission commitment, AI and ordinary settlement boundaries.
+
+#### Sacred-site recovery
 
 A centralized religious head may optionally authorize a global, two-camp campaign:
 

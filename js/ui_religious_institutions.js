@@ -281,8 +281,9 @@
     if (pastoral) ['visit_diocese','ecclesiastical_court'].forEach(function (id) {
       var status = FB.instantStatus(s,id,{ pastoralOnly:true });
       h += SH.reviewActionCardHtml({ id:'rent-pastoral-' + id,label:id === 'visit_diocese' ?
-        FB.T('Make the ordinary pastoral circuit') : FB.T('Hear the ordinary ecclesiastical court'),
-        disabled:!status.can, warn:!status.can, note:status.can ? FB.T('1 day; ordinary cooldown and event choices apply.') : status.reason,
+        FB.T('Make the ordinary pastoral circuit') : FB.religiousCases.entry(s) ? FB.T('Review named ecclesiastical cases') : FB.T('Hear the ordinary ecclesiastical court'),
+        disabled:!status.can, warn:!status.can, note:status.can ? id === 'ecclesiastical_court' && FB.religiousCases.entry(s) ?
+          FB.T('No fee or day spent; review actual accusations and lawful judgments.') : FB.T('1 day; ordinary cooldown and event choices apply.') : status.reason,
         data:{ rentPastoral:id } });
     });
     h += '</div>';
@@ -324,6 +325,153 @@
               FB.T('The review changed. Nothing was spent; review the current terms again.'))) +
             '<button class="actionbtn" type="button" id="rent-continue">' + esc(FB.T('Continue')) + '</button>',{ replaceView:true });
           SH.$('rent-continue').onclick = function () { SH.modalHistoryBack(back); };
+          if (SH.markActionsDirty) SH.markActionsDirty();
+        };
+      };
+    });
+  };
+})();
+
+/* Named proceedings use the same retained review components as civil claims. */
+(function () {
+  'use strict';
+  var UI = FB.ui, SH = UI._shared;
+  function esc(v) { return FB.esc(String(v)); }
+  function kv(k,v) { return SH.kv(k,esc(v)); }
+  function labels() {
+    return {charge:FB.T('Open a named prosecution'),dismiss:FB.T('Dismiss this matter'),challenge:FB.T('Challenge the evidence'),
+      defend:FB.T('Present a defense'),settlement:FB.T('Offer a financial settlement'),accept:FB.T('Accept the settlement'),
+      decline:FB.T('Decline the settlement'),refuse:FB.T('Refuse lawful process'),arrest:FB.T('Seek lawful custody'),
+      submit:FB.T('Submit to the court'),penance:FB.T('Impose public penance'),imprison:FB.T('Impose imprisonment'),
+      refer:FB.T('Refer to the secular authority'),accept_referral:FB.T('Accept secular enforcement'),
+      reject_referral:FB.T('Refuse secular enforcement'),confiscate:FB.T('Confiscate only the named {term:fief}'),
+      enforce:FB.T('Apply the secular sentence'),close_stale:FB.T('Close the interrupted proceeding')};
+  }
+  function statuses() {
+    return {charged:FB.T('Accused; no judgment'),offered:FB.T('Settlement offered'),referred:FB.T('Awaiting secular decision'),
+      accepted:FB.T('Secular enforcement accepted'),dismissed:FB.T('Dismissed without penalty'),vindicated:FB.T('Successful defense; no penalty'),
+      settled:FB.T('Settlement paid'),penance:FB.T('Penance imposed'),imprisoned:FB.T('Prison term imposed'),
+      confiscated:FB.T('Named fief confiscated'),enforced:FB.T('Secular sentence imposed'),interrupted:FB.T('Interrupted; no judgment')};
+  }
+  function recipient(s,p,snap) {
+    var id = p.settlementRecipient === 'victim' ? snap.victimId : snap.principals.courtRealmId;
+    return p.settlementRecipient === 'victim' ? s.chars[id] ? FB.fullName(s.chars[id]) : FB.T('The recorded victim is unavailable') :
+      s.realms[id] ? s.realms[id].name : FB.T('The competent secular treasury');
+  }
+  function facts(s,snap,chosen) {
+    var p = FBDATA.religiousCases[snap.profileId], r = snap.record, x = r ? r.principals : snap.principals;
+    var people = '', seen = {};
+    [[snap.defendantId,FB.T('Defendant')],[snap.victimId,FB.T('Recorded victim')],
+      [x.bishopId,FB.T('Canonical bishop')],[x.courtId,FB.T('Competent temporal ruler')]].forEach(function (entry) {
+      var c = s.chars[entry[0]];
+      if (c && !seen[c.id]) { people += SH.reviewPersonHtml(c,entry[1],null); seen[c.id] = true; }
+    });
+    var a = chosen || r && r.asset, site = a && FB.world.sitesByProv[a.provinceId] && FB.world.sitesByProv[a.provinceId].list[a.settlement];
+    var t = r && (r.offer || r.paid), custody = FB.justiceCustodyOf(s,snap.defendantId);
+    var body = SH.reviewPeopleHtml(people) + kv(FB.T('Cause'),FB.dataText(s,s.player.charId,'religiousCase',snap.profileId,p,'name',{})) +
+      kv(FB.T('Status'),r ? statuses()[r.status] : FB.T('Eligible recorded matter; no prosecution opened')) +
+      kv(FB.T('Accusation'),snap.accusation.kind === 'abduction' ? FB.T('A recorded abduction of the identified cleric') : FB.T('A recorded killing of the identified cleric')) +
+      kv(FB.T('Evidence'),snap.accusation.evidence === 'testimony' ? FB.T('Testimony') : snap.accusation.evidence === 'material' ? FB.T('Material evidence') : FB.T('Caught in the act')) +
+      kv(FB.T('Actual private funds'),FB.money(snap.account.gold,s)) +
+      kv(FB.T('Court fee on settlement'),FB.T('{money:fee} to the see’s institutional treasury',{fee:p.fee})) +
+      kv(FB.T('Settlement'),t ? FB.money(t.amount,s) : FB.T('{share}% of available private funds, capped at {money:cap}',{share:p.settlementShare * 100,cap:p.settlementMax})) +
+      kv(FB.T('Settlement recipient'),recipient(s,p,snap)) +
+      kv(FB.T('Bishop’s private purse'),FB.T('Receives nothing')) +
+      kv(FB.T('Selected property'),a ? site ? site.name : FB.world.byId[a.provinceId].name : FB.T('No asset selected; confiscation unavailable')) +
+      (a ? kv(FB.T('Property recipient'),s.realms[a.recipientRealmId].name) : '') +
+      kv(FB.T('Custody'),custody ? FB.T('Held by the identified court; sentence eligibility is checked separately') : FB.T('No actual custody; imprisonment and confiscation are unavailable')) +
+      kv(FB.T('Review and dismissal'),FB.T('No payment or day spent; dismissal leaves money, piety and property untouched'));
+    if (r && r.offer) body += kv(FB.T('Offer expires'),FB.T('In {days} days',{days:Math.max(0,r.offer.turn + p.offerDays - s.turn)}));
+    if (r) body += kv(FB.T('Popular support change'),FB.T('Last decision in this {term:county}: {amount}',{amount:r.lastSupport}));
+    if (snap.stale) body += kv(FB.T('Interrupted process'),FB.T('A principal, jurisdiction, local presence or recorded fact changed. Close this proceeding without a new penalty.'));
+    body += '<p>' + esc(FB.dataText(s,s.player.charId,'religiousCase',snap.profileId,p,'desc',{})) + '</p>';
+    return SH.reviewFactsCard(FB.T('Violence against clergy'),body);
+  }
+  function note(s,q,snap) {
+    if (!q.allowed) return {
+      actor:FB.T('This decision belongs to the other participant.'),custody:FB.T('The competent court does not hold this defendant.'),
+      funds:FB.T('The actual private funds or named receiving account cannot meet these terms.'),
+      asset:FB.T('The exact recorded delegated {term:fief} is unavailable.'),severity:FB.T('The applicable law does not justify this judgment.'),
+      spent:FB.T('This response has already been recorded.'),offer:FB.T('No current offer can be accepted.'),
+      stale:FB.T('The proceeding is closed or its reviewed facts have changed.'),jurisdiction:FB.T('The bishop or temporal court lacks current jurisdiction.'),
+      location:FB.T('The defendant is no longer local.'),cause:FB.T('No eligible unjudged matter supports this prosecution.')
+    }[q.reason] || FB.T('The current authority, custody or procedure prevents this decision.');
+    if (q.terms) return FB.T('{money:fee} to the see and {money:amount} to {recipient}, only on acceptance; no day spent.',
+      {fee:q.terms.fee,amount:q.terms.amount,recipient:recipient(s,FBDATA.religiousCases[q.profileId],snap)});
+    if (q.action === 'challenge' || q.action === 'defend') return FB.T('{chance}% chance of dismissal without penalty; one defense of this matter.',{chance:Math.round(q.chance * 100)});
+    if (q.action === 'arrest') return FB.T('{chance}% chance of actual custody. Existing authority, protection, truce and resistance rules apply.',{chance:Math.round(q.projection.chance * 100)});
+    if (q.action === 'penance') return FB.T('The recorded sentence removes {piety} piety and {prestige} prestige, releases custody and closes this matter. Popular support loss: 2.',
+      {piety:FBDATA.justiceSentences[q.projection.sentence].pietyCost || 40,prestige:FBDATA.justiceSentences[q.projection.sentence].prestigeCost || 20});
+    if (q.projection && ['imprison','enforce'].indexOf(q.action) >= 0) return FB.T('Apply {sentence}; custody ends in {days} days when a prison term applies. Popular support loss: 2.',
+      {sentence:FB.dataText(s,s.player.charId,'justiceSentence',q.projection.sentence,FBDATA.justiceSentences[q.projection.sentence],'name',{}),days:q.projection.endTurn === null ? 0 : q.projection.endTurn - s.turn});
+    return {charge:FB.T('Record only the identified accusation and selected asset; no payment, custody or guilt is imposed.'),
+      dismiss:FB.T('Close only this matter and release its provisional custody, without a penalty.'),
+      decline:FB.T('Reject the offer without payment; the accusation still requires resolution.'),
+      refuse:FB.T('Popular support loss: 3 in this {term:county}, with political standing loss. Refusal supplies no new finding of guilt.'),
+      submit:FB.T('Enter provisional custody through the canonical court. No sentence is imposed by submission.'),
+      refer:FB.T('The actual secular authority may accept or refuse; no property or money transfers on referral.'),
+      accept_referral:FB.T('Accept jurisdiction over the same matter. The enforcing court must obtain its own actual custody.'),
+      reject_referral:FB.T('Return the matter to the bishop. Popular support loss: 1; relations between distinct courts worsen by 5.'),
+      confiscate:FB.T('Return only this delegated {term:fief} to its named temporal realm, then release custody. Private plots, businesses and other grants remain untouched. Popular support loss: 2.'),
+      close_stale:FB.T('Close the interrupted matter without payment, confiscation or an inherited accusation.') }[q.action] || '';
+  }
+  UI.showReligiousCases = function (view) {
+    view = view || {};
+    var s = FB.state, R = FB.religiousCases, names = labels(), entries = [], snaps = R.list(s,s.player.charId);
+    FB.game.setPaused(true);
+    var h = '<div data-religious-cases data-modal-scroll>';
+    snaps.forEach(function (snap) {
+      var r = snap.record, choices = !r ? ['charge'] : snap.stale ? ['close_stale'] :
+        r.status === 'referred' ? ['accept_referral','reject_referral','dismiss'] :
+        r.status === 'accepted' ? ['arrest','submit','confiscate','enforce'] :
+        ['charged','offered'].indexOf(r.status) >= 0 ? ['dismiss','challenge','defend','settlement','accept','decline','refuse','arrest','submit','penance','imprison','refer'] : [];
+      var rowId = 'religious-' + snap.offenseId, actions = '';
+      function add(action,slot) {
+        var q = R.quote(s,snap.profileId,snap.offenseId,s.player.charId,action,slot);
+        if (!q || q.reason === 'actor' || !r && !q.allowed) return;
+        var index = entries.length, label = slot ? FB.T('Open a prosecution concerning this {term:fief}') : names[action];
+        var chosen = q.asset, site = chosen && FB.world.sitesByProv[chosen.provinceId].list[chosen.settlement];
+        entries.push({q:q,snap:snap,label:label,note:note(s,q,snap),rowId:rowId});
+        actions += SH.reviewActionCardHtml({id:rowId + '-' + action + (slot || ''),label:label,disabled:!q.allowed,warn:!q.allowed,
+          note:(site ? site.name + ' · ' : '') + note(s,q,snap),details:'<p>' + esc(note(s,q,snap)) + '</p>',data:{religiousReview:index}});
+      }
+      choices.forEach(function (action) { add(action,null); });
+      if (!r) snap.assets.forEach(function (a) { add('charge',a.settlement); });
+      h += '<section id="' + rowId + '" tabindex="-1">' + facts(s,snap) + SH.reviewActionsHtml(actions) + '</section>';
+    });
+    if (!snaps.length) h += '<p>' + esc(FB.T('No supported local accusation is recorded. Faith, wealth and rank alone establish no offense.')) + '</p>';
+    if (FB.episcopalClaims.entry(s,'ecclesiastical_court')) h += '<button class="actionbtn" id="religious-civil">' + esc(FB.T('Review separate civil rent claims')) + '</button>';
+    h += '</div>';
+    UI.openModal(FB.T('Named ecclesiastical cases'),h,{modalClass:'fullsheet-modal',historyView:!!view.parentHistory,historyBack:!!view.parentHistory,
+      titleDetailsHtml:'<p>' + esc(FB.T('Examine a recorded attack on a cleric. An accusation permits a hearing, not a presumption of guilt. Only the temporal court can enforce a secular sentence or recover the named delegated {term:fief}.')) + '</p><p>' + esc(FB.T('This discipline court examines recorded violence against Christian clergy. It grants no jurisdiction over every faith. Penance does not grant papal absolution. Heresy, other religious accusations and private-property confiscation are unsupported.')) + '</p>'});
+    var body = SH.$('gm-body'), list = body.querySelector('[data-religious-cases]');
+    function restore() {
+      if (!document.body.contains(list)) return;
+      body.scrollTop = view.bodyScroll || 0;
+      var focus = SH.$(view.focus || '') || SH.$(view.rowId || '');
+      if (focus) focus.focus({preventScroll:true});
+    }
+    (view.details || []).forEach(function (id) { var n = list.querySelector('[aria-controls="' + id + '"]'); if (n) n.click(); });
+    restore(); setTimeout(restore,0);
+    var civil = SH.$('religious-civil');
+    if (civil) civil.onclick = function () { UI.showEpiscopalClaims({parentHistory:true}); };
+    list.querySelectorAll('[data-religious-review]').forEach(function (button) {
+      button.onclick = function () {
+        var e = entries[Number(button.getAttribute('data-religious-review'))], q = e.q;
+        var pos = {bodyScroll:body.scrollTop,focus:button.id,rowId:e.rowId,
+          details:Array.from(list.querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (n) { return n.getAttribute('aria-controls'); })};
+        function back() { UI.showReligiousCases(pos); }
+        UI.openModal(e.label,facts(s,e.snap,q.asset) + SH.reviewActionsHtml(SH.reviewActionCardHtml({
+          id:'religious-confirm',label:FB.T('Confirm decision'),note:e.note,disabled:!q.allowed,warn:!q.allowed})),
+          {modalClass:'fullsheet-modal',historyView:true,historyBack:true,historyBackRender:back});
+        SH.$('religious-confirm').onclick = function () {
+          var ok = s === FB.state && R.apply(s,q);
+          if (ok) R.respond(s,q.profileId,q.offenseId);
+          var current = R.snapshot(s,q.profileId,q.offenseId);
+          UI.openModal(ok ? FB.T('Court decision recorded') : FB.T('Terms changed'),facts(s,current) +
+            '<p>' + esc(ok ? FB.T('The recorded result is shown above.') : FB.T('Nothing was spent. Review the current terms again.')) + '</p>' +
+            '<button class="actionbtn" id="religious-continue">' + esc(FB.T('Continue')) + '</button>',{replaceView:true});
+          SH.$('religious-continue').onclick = function () { SH.modalHistoryBack(back); };
           if (SH.markActionsDirty) SH.markActionsDirty();
         };
       };

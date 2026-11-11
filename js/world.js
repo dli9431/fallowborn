@@ -5809,6 +5809,7 @@ window.FB = window.FB || {};
     if (FB.expeditionPreparation && FB.expeditionPreparation.referencesCharacter(state, c && c.id)) return true;
     if (!state || !c || !state.player) return false;
     if (FB.religiousInstitutionReferencesCharacter && FB.religiousInstitutionReferencesCharacter(state,c.id)) return true;
+    if (FB.holyWarCauseReferencesCharacter && FB.holyWarCauseReferencesCharacter(state,c.id)) return true;
     if (FB.industryLaws && FB.industryLaws.referencesCharacter(state, c.id)) return true;
     if (FB.productionEconomy && FB.productionEconomy.referencesCharacter(state,c.id)) return true;
     if (FB.siegeSupport && FB.siegeSupport.referencesCharacter(state,c.id)) return true;
@@ -7387,7 +7388,7 @@ window.FB = window.FB || {};
   function capitalRelocationIncomingMonopoly(state, fromId) {
     var slots = state.player && state.player.guildMonopolies;
     var record = slots && slots.incoming;
-    if (!record || record.scope !== 'province' ||
+    if (!record || record.lawId || record.scope !== 'province' ||
         record.scopeId !== fromId) return null;
     var endTurn = Number(record.endTurn);
     if (!isFinite(endTurn) || state.turn >= endTurn) return null;
@@ -11602,6 +11603,7 @@ window.FB = window.FB || {};
       state.armyDownSurvival[rid] = state.armyDownSurvival.player;
       delete state.armyDownSurvival.player;
     }
+    if (FB.industryLaws) FB.industryLaws.rekeyGrantor(state,'player',rid);
     delete state.realms.player;
 
     /* The realm has been re-keyed under a new id with a new ruler root,
