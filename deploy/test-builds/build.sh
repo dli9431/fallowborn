@@ -13,7 +13,9 @@
 # (nginx falls back to /music/), so the site holds one copy of unchanged audio.
 # A branch whose js/util.js predates the storage scope would share the root
 # build's saves, so it is not published; /branches/ names it with the reason.
-# /branches/ lists every build. Used only by deploy/test-builds/Dockerfile.
+# /branches/ lists every build. TEST_UMAMI_WEBSITE_ID, when set, enables test
+# telemetry to that separate Umami website (see telemetry below). Used only by
+# deploy/test-builds/Dockerfile.
 set -eu
 
 repo="$1"
@@ -56,6 +58,121 @@ stamp() {
   grep -q "FB_BUILD_LABEL" "$1/index.html"
 }
 
+# Test telemetry. When TEST_UMAMI_WEBSITE_ID names a separate Umami website,
+# every build reports to it instead of the play website. The committed head
+# script stays silent off play.fallowborn.com; this injected script runs after
+# it and before the deferred game scripts, so it replaces FB.telemetry for the
+# exact test origin only. Pageviews and events carry the build path name as the
+# Umami tag, and events add the build's short commit as test_commit. Unset
+# means no test telemetry; a malformed id fails the build.
+test_site="${TEST_UMAMI_WEBSITE_ID:-}"
+telemetry_template=""
+if [ -n "$test_site" ]; then
+  printf '%s' "$test_site" |
+    grep -Eq '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' || {
+    echo "TEST_UMAMI_WEBSITE_ID is not a lowercase Umami website id" >&2
+    exit 1
+  }
+  telemetry_template="$work/telemetry.html"
+  cat > "$telemetry_template" <<'JS'
+    <script>
+      (function () {
+        "use strict";
+        var site = "__FB_TEST_SITE__";
+        var tag = "__FB_TEST_TAG__";
+        var commit = "__FB_TEST_COMMIT__";
+
+        function isTestSite(location) {
+          return !!location &&
+            location.protocol === "https:" &&
+            location.hostname === "test.fallowborn.com";
+        }
+
+        if (!isTestSite(window.location)) return;
+        var pending = [];
+
+        function withBuild(data) {
+          var copy = {};
+          for (var key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) copy[key] = data[key];
+          }
+          copy.test_commit = commit;
+          return copy;
+        }
+
+        window.FB = window.FB || {};
+        window.FB.telemetry = {
+          enabled: function () {
+            return isTestSite(window.location);
+          },
+          isOfficialPlay: function () {
+            return false;
+          },
+          track: function (name, data) {
+            if (!isTestSite(window.location) || !name) return false;
+            var payload = withBuild(data || {});
+            if (window.umami && typeof window.umami.track === "function") {
+              try {
+                window.umami.track(name, payload);
+                return true;
+              } catch (error) {
+                return false;
+              }
+            }
+            if (pending.length < 32) pending.push([name, payload]);
+            return false;
+          }
+        };
+
+        var tracker = document.createElement("script");
+        tracker.async = true;
+        tracker.src = "https://stats.fallowborn.com/fb-client.js";
+        tracker.setAttribute("data-website-id", site);
+        tracker.setAttribute("data-domains", "test.fallowborn.com");
+        tracker.setAttribute("data-do-not-track", "true");
+        tracker.setAttribute("data-auto-track", "true");
+        tracker.setAttribute("data-tag", tag);
+        tracker.addEventListener("load", function () {
+          while (pending.length && window.umami &&
+              typeof window.umami.track === "function") {
+            var event = pending.shift();
+            try {
+              window.umami.track(event[0], event[1]);
+            } catch (error) {
+              pending.unshift(event);
+              break;
+            }
+          }
+        });
+        document.head.appendChild(tracker);
+      })();
+    </script>
+JS
+fi
+
+# telemetry <dir> <tag> <short commit>: insert the test telemetry script
+# immediately before </head>. Tags are sanitized path names and commits are
+# hexadecimal, so neither needs escaping.
+telemetry() {
+  if [ -z "$telemetry_template" ]; then return 0; fi
+  sed -e "s@__FB_TEST_SITE__@$test_site@" -e "s@__FB_TEST_TAG__@$2@" \
+    -e "s@__FB_TEST_COMMIT__@$3@" "$telemetry_template" > "$work/telemetry-build.html"
+  awk -v snippet="$work/telemetry-build.html" '
+    !done && /<\/head>/ {
+      while ((getline line < snippet) > 0) print line
+      close(snippet)
+      done = 1
+    }
+    { print }
+  ' "$1/index.html" > "$work/index-telemetry.html"
+  mv "$work/index-telemetry.html" "$1/index.html"
+  grep -q '"data-tag", tag' "$1/index.html"
+  if grep -q "__FB_TEST_" "$1/index.html"; then
+    echo "Test telemetry placeholders remain in $1/index.html" >&2
+    exit 1
+  fi
+}
+
 json_entry() {
   printf '{"branch":"%s","path":"%s","commit":"%s","date":"%s","music":"%s"}' "$1" "$2" "$3" "$4" "$5"
 }
@@ -70,6 +187,7 @@ extract "$root_branch" "$out" yes
 python3 "$out/tools/music_catalog.py" build --root "$out"
 rm -rf "$out/tools"
 stamp "$out" "$root_sha" "" "$root_branch $root_short"
+telemetry "$out" "$(sanitize "$root_branch")" "$root_short"
 entries="$(json_entry "$root_branch" "/" "$root_sha" "$(date_of "$root_branch")" own)"
 seen=" "
 skipped=""
@@ -104,6 +222,7 @@ for branch in $(git --git-dir="$git" for-each-ref --format='%(refname:short)' re
   fi
   rm -rf "$dir/tools"
   stamp "$dir" "$key" "$name" "$name $short"
+  telemetry "$dir" "$name" "$short"
   entries="$entries,$(json_entry "$branch" "/$name/" "$sha" "$(date_of "$branch")" "$music")"
 done
 

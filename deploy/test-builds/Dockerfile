@@ -8,11 +8,14 @@ ARG REPOSITORY=https://github.com/dli9431/fallowborn.git
 ARG BRANCH_REFS=https://api.github.com/repos/dli9431/fallowborn/git/matching-refs/heads
 ARG ROOT_BRANCH=dev
 ARG SKIP_BRANCHES=main
+# The separate Umami website for test builds. Empty sends no test telemetry.
+ARG TEST_UMAMI_WEBSITE_ID=
 # The branch listing changes whenever any branch moves, so the clone below
 # never reuses a cached layer from an older set of branches.
 ADD ${BRANCH_REFS} /tmp/branch-refs.json
 COPY deploy/test-builds/build.sh /usr/local/bin/build-test-site
 RUN ROOT_BRANCH="$ROOT_BRANCH" SKIP_BRANCHES="$SKIP_BRANCHES" \
+    TEST_UMAMI_WEBSITE_ID="$TEST_UMAMI_WEBSITE_ID" \
     sh /usr/local/bin/build-test-site "$REPOSITORY" /site
 
 FROM nginx:alpine

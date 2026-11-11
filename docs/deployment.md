@@ -173,8 +173,19 @@ therefore never cross between builds. The root `dev` build sets no scope, so its
 saves stay where they were. Every other distribution leaves the flag unset and keeps the
 released keys exactly. `window.FB_BUILD_LABEL` (branch and short commit) is appended to the
 title-screen version. To move a life between builds, download its save file and load it in
-the other build. No test build registers the service worker or install manifest, sends
-telemetry, or is indexed by search engines (`X-Robots-Tag: noindex`).
+the other build. No test build registers the service worker or install manifest, or is
+indexed by search engines (`X-Robots-Tag: noindex`).
+
+Test telemetry is opt-in at build time. When the `TEST_UMAMI_WEBSITE_ID` build argument names
+a separate Umami website, `build.sh` inserts a script before `</head>` in every build. It runs
+after the committed telemetry script and before the deferred game scripts, and replaces
+`FB.telemetry` only when the page is served from exactly `https://test.fallowborn.com`. It
+loads the same tracker with that website id, `data-domains="test.fallowborn.com"`, Do Not
+Track respected, and the build's path name (`dev` for the root build) as the Umami tag.
+Events keep the play vocabulary and privacy rules above and add only `test_commit`, the
+build's short commit. Test data therefore never mixes with play statistics. An empty
+argument sends nothing, and a malformed id fails the build. The committed `index.html`
+remains silent on every origin except play.fallowborn.com.
 
 The test app is redeployed by hand from Coolify after pushing; nothing calls the Coolify API,
 so it can stay disabled. One redeploy rebuilds every branch, so new, updated and deleted
