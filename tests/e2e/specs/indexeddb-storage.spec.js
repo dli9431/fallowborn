@@ -157,6 +157,8 @@ test('a database that opens after the timeout is adopted and restores Continue',
       }
       return realSet.apply(this, arguments);
     };
+    // Drop page-close recovery copies so only the database holds these saves.
+    ['fb_auto', 'fb_slot1'].forEach(function (name) { localStorage.removeItem(name); });
     // Withhold the first save-database open answer until the test releases it.
     const open = IDBFactory.prototype.open;
     let delayed = false;
