@@ -2,8 +2,8 @@ Autumn 634 opening
 
 Implemented opening inventory
 
-The public fresh selection remains core_identities_v3; the complete
-core_courts_v4 revision is hidden. Both use the autumn season 2 day 1 calendar
+The public fresh selection is the complete core_courts_v4 revision; the earlier
+core_identities_v3 remains retained. Both use the autumn season 2 day 1 calendar
 convention, late_antique era and europe_regional_2 physical map. The assembled
 revision consumes all 527 anchors and all 122 authored courts, including the
 living Sasanian court and its minority stewardship. Its six local institutions
@@ -30,12 +30,11 @@ stationary or peaceful conclusion without an imposed conquest; ordinary starts
 need no authored opening outcome. The Christian Arab beginning remains civilian.
 Jabala/mobile-polity service, a paid-service extension and named battle sequences
 are omitted. The Sasanian world court remains present independently of its
-hidden player beginning, which belongs only to the assembled revision.
+player beginning, which belongs only to the assembled revision.
 
 The combined catalogue and restoration checks are described in docs/TESTS.md
 under autumn 634 coverage. These bounded checks do not establish historical,
-visual, device, performance or release acceptance, and do not activate the hidden
-revision.
+visual, device, performance or release acceptance.
 
 Optional ambitions and contact evidence
 
@@ -45,13 +44,13 @@ Contacts use only existing seeded people: Umar and Heraclius are reciprocal dist
 
 Ruler review scope
 
-The assembled court revision gives Umar four immediate reviews of mandate/accounts, the independent Syrian and Iraqi opportunities, and continued rule from Medina. Heraclius receives four reviews of the actual administrative court, eastern holdings/accounts, the existing Syrian defense or diplomacy choice, and continued rule from Constantinople. Review order and immediate availability are gameplay choices, not a recovered council agenda or itinerary. The capital-based Heraclius start remains an explicit reconstruction. Earlier world revisions keep their original personal agendas; both ruler starts and the expanded world retain their hidden visibility.
+The assembled court revision gives Umar four immediate reviews of mandate/accounts, the independent Syrian and Iraqi opportunities, and continued rule from Medina. Heraclius receives four reviews of the actual administrative court, eastern holdings/accounts, the existing Syrian defense or diplomacy choice, and continued rule from Constantinople. Review order and immediate availability are gameplay choices, not a recovered council agenda or itinerary. The capital-based Heraclius start remains an explicit reconstruction. Earlier world revisions keep their original personal agendas; both ruler starts are offered in the selected complete world.
 
 The priorities use the existing selection, administration, treasury, appointment and ordinary campaign systems. The assembled Eastern Roman realm uses the existing public-account preservation option at adoption; its private scenario purse is not the imperial treasury. This is an accounting configuration, not a researched amount of historical cash. Reviews create no historical officeholder, command, relative, payment or military result. Both frontier opportunities may be declined or left undecided; changed control is displayed and source conclusions are acknowledged without recasting an attacker's success as the defender's victory. The qualified county objectives and finite campaign intervals below remain simulation choices. Al-Baladhuri's retrospective [Damascus chronology](https://en.wikisource.org/wiki/Page:Baladhuri-Hitti1916.djvu/205) and [Hira agreements](https://en.wikisource.org/wiki/Page:Baladhuri-Hitti1916.djvu/407) are not evidence for exact county control or a mandatory sequence, so no historical conquest claim or timetable is added to these reviews.
 
 Conditional frontier opportunities
 
-The hidden core_courts_v4 world attaches syrian_front_634 and iraqi_front_634 as
+The selected core_courts_v4 world attaches syrian_front_634 and iraqi_front_634 as
 independent ordinary campaign opportunities. The original Medinan court acts
 against the current Roman controller of damascus or Sasanian controller of kufa.
 Current living incumbents and legitimate precommitment successors participate;
@@ -85,13 +84,13 @@ settlements, conversion, royal death or imperial destruction. Household work and
 conclusions remain independent. Matching saves resume current commitments without
 repeating history. Each frontier's technology-impact decision is none: political
 opportunity requires no discovery, while ordinary military gates remain binding.
-The selectable predecessor and full-world visibility remain unchanged.
+The retained predecessor keeps its own story list; fresh selection uses the complete world.
 
-Hidden assembled courts and institutions
+Assembled courts and institutions
 
 data/bookmark_634_courts.js contains complete Medinan, Eastern Roman and Sasanian
 court declarations for core_courts_v4. The assembler publishes this complete
-revision with hidden:true, alongside the selectable core_identities_v3. Its
+revision as the fresh selection, retaining core_identities_v3. Its
 separate bookmarkOpeningActors634 map supplies two generated
 adult principals at Qazvin and Isfahan, with fictional distinct dynasties. The
 Sasanian profile gives them weights 3/2, court-retained revenue 0.75 and levy
@@ -161,22 +160,23 @@ omitted institution is not evidence of an absent historical community.
 Matching current-build saves retain the actual named people, generated magnates,
 offices, minority stewardship, money and story commitments through repeated
 restoration. Changes to imported JSON still require their exact fingerprint;
-restore does not replay opening grants. The hidden revision is available for
-isolated review and matching loads, not ordinary fresh selection. Runtime and
+restore does not replay opening grants. Fresh creation and Observe select the
+full revision; matching loads select their recorded revision. Runtime and
 historical acceptance remain separate from publication.
 
 Scope
 
-The selectable autumn 634 bookmark, The Early Conquests, composes all four date-owned regional sources. Its 33 blocks cover 527 physical anchors, with 506 inhabited county or district presentations, 21 scenery cells and 122 unique courts. The opening is year 634, season 2, day 1 on europe_regional_2, using fresh revision core_identities_v3, retained revisions baseline, scenery_protected_v1 and ordinary_settlement_v2, and settlement layout 634_opening. The seasonal date is a game convention after Umar's accession, not an exact calendar conversion. The date is available in the ordinary picker, start codes and Observe for development review. This visibility does not establish release or runtime acceptance.
+The selectable autumn 634 bookmark, The Early Conquests, composes all four date-owned regional sources. Its 33 blocks cover 527 physical anchors, with 506 inhabited county or district presentations, 21 scenery cells and 122 unique courts. The opening is year 634, season 2, day 1 on europe_regional_2, using fresh revision core_courts_v4, retained revisions baseline, scenery_protected_v1, ordinary_settlement_v2 and core_identities_v3, and settlement layout 634_opening. The seasonal date is a game convention after Umar's accession, not an exact calendar conversion. The date is available in the ordinary picker, start codes and Observe for development review. This visibility does not establish release or runtime acceptance.
 
 Implemented beginnings
 
-With the existing development review switch enabled, setup offers all eight implemented beginnings through the shared Historical starts, Story starts and Open starts groups:
+Setup offers nine approved beginnings through the shared Historical starts, Story starts and Open starts groups, including when the development review switch is disabled:
 
 | Group | Start | Beginning |
 | --- | --- | --- |
 | Historical | umar_634 | Umar at Medina, adopting the existing Medinan court and four personal reviews. |
 | Historical | heraclius_634 | Heraclius at Constantinople, adopting the existing imperial court and four personal reviews. |
+| Historical | yazdegerd_634 | Yazdegerd III at the Ctesiphon site, adopting the existing child ruler, magnate court and minority stewardship. |
 | Story | ctesiphon_household_634 | Fictional Syriac/East Syriac farming household in the Ctesiphon district, at the baghdad county anchor. |
 | Story | damascus_household_634 | Fictional Syriac/Chalcedonian craft household in Damascus. |
 | Story | frontier_household_634 | Fictional Arabic/West Syriac lay craft household in Damascus, with regional frontier connections. |
@@ -184,9 +184,9 @@ With the existing development review switch enabled, setup offers all eight impl
 | Open | farmer_634 | Generated farming household, with an inhabited birthplace chosen on the map. |
 | Open | craftsman_634 | Generated craft household, with an inhabited birthplace chosen on the map. |
 
-The ruler declarations retain their authored hidden flags. The existing review switch offers eligible rulers during development; Yazdegerd additionally requires the complete court revision. Disabling that switch withholds ruler beginnings while leaving the household beginnings and Observe available. Matching saves continue to activate their recorded bookmark, revision and geography before restoring people, story decisions and spent resources; visibility never replays opening grants or track initialization.
+The three ruler declarations are visible without the development review switch; Yazdegerd additionally requires the complete court revision. The shared picker, codes and direct creation use that revision's approved list, while Observe creates the same world without a personal track. Unsupported starts remain unavailable. Matching saves continue to activate their recorded bookmark, revision and geography before restoring people, story decisions and spent resources; visibility never replays opening grants or track initialization.
 
-All sources are already ordered deferred scripts in index.html: identities precede the four regional scaffolds, ordinary starts and complete composer; the five additional start sources follow that composer. The ruler-agenda and four household-story sources load before data/bookmark_sources.js seals the native source manifest. The tracked data directory includes every source under the ordinary itch upload allowlist; no additional package entry or runtime dependency is needed.
+The date-owned sources load through data/bookmark_manifest.js in their original classic-script order: identities precede the four regional scaffolds, ordinary starts and complete composer; the five additional start sources follow that composer. The ruler-agenda and four household-story sources contribute before native publication. The tracked data directory includes every source under the ordinary itch upload allowlist; activation adds no loader, package entry or runtime dependency and does not change the explicit distribution flag.
 
 Composition
 
@@ -194,13 +194,13 @@ The ordinary-start source remains staged until the complete composer succeeds. P
 
 data/bookmark_634.js copies b01 through b29 in their numbered order, followed by scenery_a through scenery_d. County, court, title, layout, local climate and government records are detached from their source blocks. Duplicate declarations, missing physical anchors, unresolved courts and invalid capital ownership reject composition before live publication. Each block containing a court's capital supplies that court once; all other blocks reference it. Both climate and climates source spellings are consumed. The twenty-two physical sea crossings retain the earlier opening's explicit endpoints and classes, without a new campaign route or shortened land journey.
 
-The composer publishes seven dated faith records, unions fifteen source-faith bookmark selectors without removing their other restrictions, and publishes b24's medinan_selection_pf_634 form before engine compilation. Earlier worlds retain their identities and permissions. The selectable core_identities_v3 opening has explicit empty localInstitutions and religiousHeads maps, one independent Damascus local-authority observer, no scripted history, and empty actor, appointment, estate, claim and migration ledgers. Episcopal and civic institutions, papacy, excommunication, abbeys, feudal service, scutage, manorial tenure, crown blocs, tournaments and great holy wars are disabled. This reduced institutional model prevents older named officeholders from entering the opening; it does not claim that the historical offices or communities were absent.
+The composer publishes seven dated faith records, unions fifteen source-faith bookmark selectors without removing their other restrictions, and publishes b24's medinan_selection_pf_634 form before engine compilation. Earlier worlds retain their identities and permissions. The retained core_identities_v3 opening has explicit empty localInstitutions and religiousHeads maps, one independent Damascus local-authority observer, no scripted history, and empty actor, appointment, estate, claim and migration ledgers. Episcopal and civic institutions, papacy, excommunication, abbeys, feudal service, scutage, manorial tenure, crown blocs, tournaments and great holy wars are disabled. This reduced institutional model prevents older named officeholders from entering the opening; it does not claim that the historical offices or communities were absent.
 
 data/starts_634_ordinary.js supplies two ordinary map-chosen roles, farmer_634 and craftsman_634, across the inhabited counties through the existing resident-community rules. Their free household, generated family, initial money and optional farming plot use ordinary role defaults as simulation choices. These roles create no named historical person, fixed story household, religious entitlement or public mandate. Named ruler and fixed household beginnings have separate declarations. Matching current-build campaigns use their recorded world revision and opening identity on restore, preserving actual people, ownership and spent resources without repeating setup. The ordinary succession fallback may supply generated parentless successors where an empty court needs continuity. These are simulation people, not historical children, spouses or other relatives of the named incumbent. The composition adds no new gameplay capability, technology requirement or save field.
 
 Selectable opening identity decisions
 
-Umar's hidden existing-ruler start adopts the Medinan incumbent, court and public account once, using the authored Arabic / Early Islam community and the existing limited selection form. Tier 7 and rank 4 are simulation scales. Four personal reviews examine the opening mandate, actual Syrian and Iraqi borders and available resources independently, then conclude from Medina. All choices are costless priorities or conclusion; public actions keep their ordinary reviews. Accession is not replayed, no living nominee or separate religious-head office is offered, and no campaign or historical outcome is required. The court's existing working birth and incomplete family roster are retained without adding named relatives. Unfinished reviews archive on death or incumbent replacement; matching saves retain decisions without replay.
+Umar's existing-ruler start adopts the Medinan incumbent, court and public account once, using the authored Arabic / Early Islam community and the existing limited selection form. Tier 7 and rank 4 are simulation scales. Four personal reviews examine the opening mandate, actual Syrian and Iraqi borders and available resources independently, then conclude from Medina. All choices are costless priorities or conclusion; public actions keep their ordinary reviews. Accession is not replayed, no living nominee or separate religious-head office is offered, and no campaign or historical outcome is required. The court's existing working birth and incomplete family roster are retained without adding named relatives. Unfinished reviews archive on death or incumbent replacement; matching saves retain decisions without replay.
 
 early_islam_634 is a direct child of muslim. Its earliest eligible year is 622, its opening selector is 634, and it has no closing year. No Sunni school, Abbasid head or inherited religious career is selected. Muslim legal dispatch and spouse capacities remain disclosed simulation settings; optional divorce is withheld. A political ruler title is independent of a religious-head office.
 
@@ -216,7 +216,7 @@ Fresh core household and civil-policy scope
 
 core_identities_v3 changes only the existing Syriac Chalcedonian resident pair in Damascus (500) and the Syriac East Syriac pair at the Ctesiphon district anchor (1000) to chalcedonian_local_634 and east_syriac_local_634. Their corresponding fixed starts use those identities through revisionIdentities. Population shares and unrelated residents remain unchanged. These two lay adapters have null heads and specialist paths, disabled optional divorce and no ruler/institution admission. Their inherited Byzantine and Sasanian customary legal defaults are simulation compatibility choices, not newly reconstructed communal codes.
 
-The same fresh world assigns sasanian_civil_634 to the existing Sasanian court's civil governing identity. Its bounded sentence vocabulary, compensation cap and evidence categories use the shared public justice and intrigue-hearing consumers. It makes no claim to a complete lawbook, separate communal personal laws, exact tariffs or historical punishment frequency. Religious jurisdiction and the original three faith records remain unchanged. No caliphal office, clerical qualification, institution or incumbent is introduced. Earlier world definitions retain their prior meaning; matching current-build imported saves use the ordinary exact-content contract.
+The identity and full-court revisions assign sasanian_civil_634 to the existing Sasanian court's civil governing identity. Its bounded sentence vocabulary, compensation cap and evidence categories use the shared public justice and intrigue-hearing consumers. It makes no claim to a complete lawbook, separate communal personal laws, exact tariffs or historical punishment frequency. Religious jurisdiction and the original three faith records remain unchanged. No caliphal office, clerical qualification, institution or incumbent is introduced. Earlier world definitions retain their prior meaning; matching current-build imported saves use the ordinary exact-content contract.
 
 Source-faith availability
 
@@ -286,7 +286,7 @@ The county seeds, community shares, settlement-site memberships, development val
 
 b19 owns the sole byzantium_634 declaration, the Eastern Roman Empire at Constantinople. Heraclius replaces Justin II, with working birth year 575, Greek culture and Chalcedonian court faith. Walter E. Kaegi, Heraclius: Emperor of Byzantium (Cambridge University Press, 2003), p. 21, gives circa 575; the working integer and 570-580 tolerance are simulation choices around that approximation. https://assets.cambridge.org/97805218/14591/sample/9780521814591ws.pdf . Constantinople is the capital anchor, not a claim about his exact autumn residence. His authored court explicitly has no spouse or other members; no former imperial family is carried into this opening.
 
-The hidden heraclius_634 start adopts this existing incumbent and treasury funds once at Constantinople, retaining the authored empty family. The reduced roman_civic model transfers those funds into the ordinary unified player purse. Tier 7 and rank 4 are simulation scales. Its four attached personal reviews examine the reduced court model, actual eastern holdings and resources, lawful defense or diplomacy, and conclusion from the capital. All choices are costless priorities or conclusion; ordinary public actions keep their own gates. No Antioch itinerary, thematic mobilization, named battle or predetermined loss is supplied. Death or incumbent replacement archives unfinished reviews, and matching saves retain decisions without replay.
+The heraclius_634 start adopts this existing incumbent and treasury funds once at Constantinople, retaining the authored empty family. The reduced roman_civic model transfers those funds into the ordinary unified player purse. Tier 7 and rank 4 are simulation scales. Its four attached personal reviews examine the reduced court model, actual eastern holdings and resources, lawful defense or diplomacy, and conclusion from the capital. All choices are costless priorities or conclusion; ordinary public actions keep their own gates. No Antioch itinerary, thematic mobilization, named battle or predetermined loss is supplied. Death or incumbent replacement archives unfinished reviews, and matching saves retain decisions without replay.
 
 The imperial government reuses roman_civic as a reduced first-pass model for succession, direct administration and ordinary public actions. It does not reconstruct the later thematic system or a researched seventh-century administration. Imperial references throughout this quadrant point to the same court, including retained Balkan, Anatolian, Cypriot and Black Sea holdings. The broad Balkan partition is provisional and asserts no uninterrupted local access after 626. Derbent and Van retain their borrowed Sasanian dependencies through sasanian_634, whose declaration belongs to the block containing Baghdad; this file adds no second imperial court.
 
@@ -323,7 +323,7 @@ Medina holds one Medinan Caliphate under Umar, with 582 used as a working birth 
 
 Umar's accession and the broad consolidation draw on the standard-reference biographies and political overview at https://snl.no/Umar_ibn_al-Khattab and https://en.wikipedia.org/wiki/Rashidun_Caliphate . They do not establish household proportions, exact garrisons, subsidy rights or every locality's obligations. No historical companion, spouse or child is filled in through generated relatives. The explicitly empty royal household prevents invented historical consorts or children.
 
-The Sasanian world court retains Yazdegerd III, born 624 under the child chronology, with an explicitly empty royal household. Earlier revisions keep their basic dynastic form. The complete court revision supplies the existing aristocratic government and minority stewardship, also consumed by the hidden ruler beginning described below. The age, court location and public-authority reconstruction remain qualified simulation choices.
+The Sasanian world court retains Yazdegerd III, born 624 under the child chronology, with an explicitly empty royal household. Earlier revisions keep their basic dynastic form. The complete court revision supplies the existing aristocratic government and minority stewardship, also consumed by the ruler beginning described below. The age, court location and public-authority reconstruction remain qualified simulation choices.
 
 Yazdegerd's age, residence and minority government
 
@@ -333,7 +333,7 @@ Istakhr's accession site does not prove residence there in autumn 634. Morony al
 
 Public authority was mediated by court magnates and military leadership. Morony identifies Rostam Farrokhzad's coordination of the Sawad recovery and local elite resistance; this establishes influence, not a complete dated regency charter. Pourshariati's analysis emphasizes Pahlav and Parsig factions under Rustam and Firuzan, and divergent age traditions. No source inspected establishes one exact autumn-634 regent appointment, county jurisdiction and residence packet suitable for a named game actor. Simulation choice: retain the already represented Caspian and Spahan interests, their generated adult principals, and the declared first interest's steward. Neither principal impersonates Rostam or Firuzan, and neither receives royal ancestry. Their counties, weights, burdens, adulthood at sixteen and replacement rule are existing game abstractions, not an attested constitution. No new adult stand-in, historical magnate, relative or royal family is added. [Pourshariati, Decline and Fall of the Sasanian Empire, section 3.4](https://victoriaazad.com/pdf/Decline_and_Fall_of_the_Sasanian_Empire.pdf).
 
-The four immediate personal reviews cover current court/stewardship, actual provincial obligations, the live Iraqi frontier and stationary continuation. Costless priorities remain useful if recognition, interests or campaign conclusions are unavailable. Optional observations acknowledge only canonical positive recognition or a terminal source result. Actual provincial negotiations, reserved public acts and steward replacement use existing consent, treasury and reviewed transactions. An incapable steward blocks public decisions until replaced; majority ends stewardship without an accession or payment. Tier seven, rank four, nominal scenario parameters (100 money units, 120 prestige and 20 piety) and the four immediate autumn review dates are simulation settings. Ordinary adoption retains the actual court funds rather than granting the nominal starting money again. No battle, evacuation, collapse, conversion or death is forced. Current-content saves preserve decisions and public facts without replay; the full revision remains hidden.
+The four immediate personal reviews cover current court/stewardship, actual provincial obligations, the live Iraqi frontier and stationary continuation. Costless priorities remain useful if recognition, interests or campaign conclusions are unavailable. Optional observations acknowledge only canonical positive recognition or a terminal source result. Actual provincial negotiations, reserved public acts and steward replacement use existing consent, treasury and reviewed transactions. An incapable steward blocks public decisions until replaced; majority ends stewardship without an accession or payment. Tier seven, rank four, nominal scenario parameters (100 money units, 120 prestige and 20 piety) and the four immediate autumn review dates are simulation settings. Ordinary adoption retains the actual court funds rather than granting the nominal starting money again. No battle, evacuation, collapse, conversion or death is forced. Current-content saves preserve decisions and public facts without replay; the full revision is selected for fresh campaigns.
 
 The baghdad county anchor and baghdad_outer_476 settlement slot retain the existing Ctesiphon-district presentation. This reuses a map-scale district and physical site; it does not place ancient Ctesiphon at modern Baghdad's exact coordinates or establish the king's daily residence. Hira remains a mixed Lower Euphrates district under the Sasanian reference, with no surviving Lakhmid sovereign. Babylon of Egypt and the earlier district labels at Basra, Kufa, Wasit and Samarra remain period presentations rather than later urban foundations.
 
@@ -370,7 +370,7 @@ data/bookmark_634_scaffold_d.js, scenery_d: w_ural, w_taiga, w_north, w_lapland
 
 Ordinary settlement for fresh campaigns
 
-Fresh 634 campaigns select ordinary_settlement_v2, inheriting baseline settlement eligibility for the 21 scenic cells. Noble settlement and commoner frontier homesteading use the same ordinary rules as other bookmarks. Their map-scale results are simulation abstractions, not findings that these regions lacked inhabitants or prior rights. Existing baseline and scenery_protected_v1 campaigns keep their original worlds and saved facts. The protected revision remains available for matching saves; it is no longer the fresh default.
+Fresh 634 campaigns select core_courts_v4, inheriting ordinary settlement eligibility for the 21 scenic cells. Noble settlement and commoner frontier homesteading use the same ordinary rules as other bookmarks. Their map-scale results are simulation abstractions, not findings that these regions lacked inhabitants or prior rights. Existing baseline and scenery_protected_v1 campaigns keep their original worlds and saved facts. The protected revision remains available for matching saves; it is no longer the fresh default.
 
 The assembled Damascus household program uses the same fictional craft livelihood and resident community as the first playable beginning. Its seven stages and optional review of actual changed sovereignty are game-scale narrative choices, not evidence of a particular workshop, measured minority share, tax agreement or historical incident. It offers a complete stationary livelihood without a campaign. No authored journey is offered because this household program establishes no particular destination, purpose or later settlement; ordinary player travel remains available separately. Earlier offering revisions retain their original personal program.
 

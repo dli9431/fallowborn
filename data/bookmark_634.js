@@ -136,9 +136,9 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
     sasanianCourt.governingIdentity = {eliteCultureId:'persian',eliteFaithId:'zoroastrian_sasanian_634',
       legalIdentityId:'sasanian_civil_634',tolerance:'tolerant',taxation:'equal',justicePolicy:'elite'};
     b.revisions.core_identities_v3 = {provinces:identityRows,realms:identityCourts};
-    b.revision = 'core_identities_v3';
+    b.revision = 'core_courts_v4';
     /* Complete court inputs replace each scaffold owner once. Preserve the
-       selectable opening while the assembled revision remains hidden. */
+       earlier world layers and their revision-specific personal programs. */
     var replacements = {}, administrationProfiles = {}, aristocraticProfiles = {};
     var courtSources = ['core','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t'];
     courtSources.forEach(function (key) {
@@ -163,7 +163,7 @@ FB.bookmarkSources.stage({"source":"data/bookmark_634.js","bookmarks":["634"],"c
     var assembledOpenings = copy(world.openingRevisions);
     assembledOpenings.core_courts_v4 = copy(assembledOpening);
     b.revisions.core_courts_v4 = {
-      hidden:true,starts:[],provinces:copy(identityRows),
+      hidden:false,starts:[],provinces:copy(identityRows),
       realms:world.realms.map(function (row) { return replacements[row.id]; }),
       duchies:copy(world.duchies),kingdoms:copy(world.kingdoms),empires:copy(world.empires),
       settlementLayout:'634_opening',religiousHeads:{},
