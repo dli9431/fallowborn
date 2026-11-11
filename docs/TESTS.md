@@ -235,6 +235,14 @@ Dated government rollout coverage is in tests/e2e/specs/government-rollout.spec.
 
 # Testing Fallowborn
 
+`named-religious-cases.spec.js` covers actual local clergy-violence evidence,
+peasant/noble eligibility, identity exclusion, pure reviews, real private money,
+institutional/victim/secular receipts, custody and canonical penance/prison,
+player hearing application, limited fief confiscation, secular acceptance/refusal,
+stale facts/death/vacancy/jurisdiction, repeated-source rejection, two current
+save round trips, malformed-state atomicity, an ordinary independent JSON import
+with exact fingerprints, and retained mobile review navigation.
+
 protected-scenery.spec.js covers a detached full-map configuration with 21
 protected scenic remnants and 506 unchanged inhabited declarations, and an
 independent valley.json import through the ordinary Mods file picker. It checks

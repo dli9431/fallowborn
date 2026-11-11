@@ -3770,7 +3770,7 @@ window.FB = window.FB || {};
     } },
   { id: 'ecclesiastical_court', opensChoices:true,
     show: function (s) {
-      return !!(FB.episcopalClaims && FB.episcopalClaims.entry(s,'ecclesiastical_court') || FB.hasBishopric && FB.hasBishopric(s, me(s)));
+      return !!(FB.religiousCases && FB.religiousCases.entry(s) || FB.episcopalClaims && FB.episcopalClaims.entry(s,'ecclesiastical_court') || FB.hasBishopric && FB.hasBishopric(s, me(s)));
     } },
   { id: 'convene_synod',
     show: function (s) {
@@ -12845,6 +12845,7 @@ window.FB = window.FB || {};
   }
 
   function instantStatusReadyTurnForAction(state, action) {
+    if (action.id === 'ecclesiastical_court' && FB.religiousCases && FB.religiousCases.entry(state)) return null;
     if (FB.episcopalClaims && FB.episcopalClaims.entry(state,action.id)) return null;
     let readyTurn = null;
     if (action.cd !== undefined) {
@@ -12873,7 +12874,7 @@ window.FB = window.FB || {};
       can = false;
       reason = adultDeedReason();
     }
-    if (can && action.cd !== undefined && !(FB.episcopalClaims && !(options && options.pastoralOnly) && FB.episcopalClaims.entry(state,action.id))) {
+    if (can && action.cd !== undefined && !(action.id === 'ecclesiastical_court' && FB.religiousCases && FB.religiousCases.entry(state)) && !(FB.episcopalClaims && !(options && options.pastoralOnly) && FB.episcopalClaims.entry(state,action.id))) {
       const cooldownDays = actionCooldownDays(state, action);
       const cooldowns = state.player.cooldowns || {};
       const last = cooldowns[action.id];
@@ -13094,6 +13095,10 @@ window.FB = window.FB || {};
     if (options && options.pastoralOnly && !(FB.bishopricSnapshot && FB.bishopricSnapshot(state,me(state)))) return;
     const status = FB.instantStatus(state, id, options);
     if (!status.shown || !status.can) return;
+    if (id === 'ecclesiastical_court' && FB.religiousCases && FB.religiousCases.entry(state)) {
+      if (FB.ui && FB.ui.showReligiousCases) FB.ui.showReligiousCases();
+      return;
+    }
     if (id !== 'bishopric' && FB.episcopalClaims && FB.episcopalClaims.entry(state,id) && !(options && options.pastoralOnly)) {
       if (FB.ui && FB.ui.showEpiscopalClaims) FB.ui.showEpiscopalClaims();
       return;

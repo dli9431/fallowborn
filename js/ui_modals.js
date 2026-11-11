@@ -23191,6 +23191,10 @@ window.FB = window.FB || {};
     const s = FB.state;
     const me = s && s.chars[s.player.charId];
     const rentClaims = !!(FB.episcopalClaims && FB.episcopalClaims.entry(s,'bishopric'));
+    const namedCases = !!(FB.religiousCases && FB.religiousCases.entry(s));
+    if (namedCases && !(me && FB.bishopricSnapshot && FB.bishopricSnapshot(s,me))) {
+      UI.showReligiousCases(); return;
+    }
     if (rentClaims && !(me && FB.bishopricSnapshot && FB.bishopricSnapshot(s,me))) {
       UI.showEpiscopalClaims(); return;
     }
@@ -23261,6 +23265,8 @@ window.FB = window.FB || {};
 
     if (rentClaims) h += reviewActionsHtml(reviewActionCardHtml({ id:'bishop-rent-claims',
       label:FB.T('Review episcopal rent claims'), note:FB.T('No fee or day spent; review existing rights and the actual accounts.') }));
+    if (namedCases) h += reviewActionsHtml(reviewActionCardHtml({id:'bishop-named-cases',
+      label:FB.T('Review named ecclesiastical cases'),note:FB.T('No fee or day spent; review actual accusations, defendants and recipients.')}));
     const powerIds = [
       'visit_diocese', 'ecclesiastical_court',
       'convene_synod', 'extraordinary_tithe'
@@ -23277,7 +23283,8 @@ window.FB = window.FB || {};
         (item.can ? '' : ' disabled') + '>' +
         esc(actionLabel(s, item.a.id, item.a)) +
         '<span class="adesc">' + esc(item.can
-          ? rentClaims && ['visit_diocese','ecclesiastical_court'].indexOf(item.a.id) >= 0 ?
+          ? namedCases && item.a.id === 'ecclesiastical_court' ? FB.T('Free review of named accusations and lawful judgments.') :
+            rentClaims && ['visit_diocese','ecclesiastical_court'].indexOf(item.a.id) >= 0 ?
             FB.T('Free rent review; ordinary pastoral events remain available.') :
             FB.T('1 day · {days}-day cooldown', { days:item.a.cd }) : item.reason) +
         (item.a.id === 'convene_synod' ? ' · ' + esc(FB.T('Cost: {money:10}')) : '') +
@@ -23315,6 +23322,8 @@ window.FB = window.FB || {};
     });
     const cardinalButton = $('bishop-cardinal');
     const rentButton = $('bishop-rent-claims');
+    const casesButton = $('bishop-named-cases');
+    if (casesButton) casesButton.addEventListener('click',function () { UI.showReligiousCases({parentHistory:true}); });
     if (rentButton) rentButton.addEventListener('click', function () { UI.showEpiscopalClaims({ parentHistory:true }); });
     if (cardinalButton) cardinalButton.addEventListener('click', function () {
       submitCardinalPetition(me, 'bishopric');

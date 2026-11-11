@@ -280,7 +280,7 @@ FBDATA.deeds = [
   { id:'visit_diocese', systems:['papacy'], label:'🛤 Visit the diocese', order:54,
     desc:'Review an existing civil rent claim without spending a day, or make a pastoral circuit when no claim is available.', section:'faith', group:'faith', flow:'choices', cooldownDays:180, handler:'visit_diocese' },
   { id:'ecclesiastical_court', systems:['papacy'], label:'⚖ Hold ecclesiastical court', order:55,
-    desc:'Review existing rent claims and competent temporal enforcement. Without a claim, hear the ordinary ecclesiastical court.', section:'faith', group:'faith', flow:'choices', cooldownDays:90, handler:'ecclesiastical_court' },
+    desc:'Review named ecclesiastical accusations, actual defendants and lawful judgments where supported. Existing civil rent claims retain their separate review.', section:'faith', group:'faith', flow:'choices', cooldownDays:90, handler:'ecclesiastical_court' },
   { id:'convene_synod', systems:['papacy'], label:'📜 Convene a synod', order:56,
     desc:'Spend 10 gold to gather the clergy for reform, learning, or alms.', section:'faith', group:'faith', flow:'immediate', cooldownDays:360, handler:'convene_synod' },
   { id:'extraordinary_tithe', systems:['papacy'], label:'💰 Levy an extraordinary tithe', order:57,

@@ -1130,6 +1130,14 @@ window.FB = window.FB || {};
     FB.invalidateSettlementLordships(state, pid);
     return true;
   };
+  /* The justice owner supplies the sentence; this property owner rechecks the
+     exact delegated grant and recipient, for player and NPC courts alike. */
+  FB.forfeitSettlementLordship = function (state,pid,slot,expectedHolder,recipient,expectedGrant) {
+    const r = record(state,pid,slot);
+    if (!r || r.holderId !== expectedHolder || FB.settlementCountyHolder(state,pid) !== recipient ||
+        JSON.stringify(r) !== JSON.stringify(expectedGrant)) return false;
+    return FB.revertSettlementLordship(state,pid,slot);
+  };
   function entriesFor(state, holderId) {
     const root = table(state);
     if (!root) return [];
