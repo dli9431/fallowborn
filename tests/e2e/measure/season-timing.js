@@ -93,6 +93,9 @@ function enumerateInPage() {
           (b.provinces || []).some(function (p) { return FB.startProvinceAllowed(scenario, b, p.id); });
       });
       if (!bookmark) return;
+      // The seed input accepts only starts the date actually offers (main.js scenarioOffered).
+      const identity = FB.startIdentity ? FB.startIdentity(scenario, bookmark) : scenario;
+      if (FB.startRuntimeReport && !FB.startRuntimeReport(identity, bookmark).available) return;
       const county = bookmark.provinces.find(function (p) {
         return FB.startProvinceAllowed(scenario, bookmark, p.id);
       });
@@ -245,6 +248,12 @@ function workloadInPage() {
     return s.wars[id] && s.wars[id].status === 'active';
   }).length;
   out.dead = !!(s.player && s.player.dead);
+  // Serialized size of each top-level state part, so growth names what grows.
+  out.stateSizes = {};
+  Object.keys(s).forEach(function (key) {
+    try { out.stateSizes[key] = JSON.stringify(s[key] === undefined ? null : s[key]).length; }
+    catch (error) { out.stateSizes[key] = -1; }
+  });
   return out;
 }
 
@@ -281,7 +290,47 @@ function topCounters(counters, count) {
     .sort(function (a, b) { return b.count - a.count; }).slice(0, count);
 }
 
-async function measureStart(browser, url, start, seasons) {
+/* Self time per function from a V8 CPU profile, with each hot function's main callers. */
+function profileHotSpots(profile, count) {
+  const nodes = new Map(), parent = new Map(), self = new Map();
+  (profile.nodes || []).forEach(function (node) {
+    nodes.set(node.id, node);
+    (node.children || []).forEach(function (child) { parent.set(child, node.id); });
+  });
+  const samples = profile.samples || [], deltas = profile.timeDeltas || [];
+  for (let i = 0; i < samples.length; i++) {
+    self.set(samples[i], (self.get(samples[i]) || 0) + (deltas[i] || 0) / 1000);
+  }
+  function key(frame) {
+    const file = String(frame.url || '').replace(/^.*\/(js|data|mods)\//, '$1/').replace(/\?.*$/, '');
+    return (frame.functionName || '(anonymous)') + ' ' + (file || '(native)') +
+      (frame.url ? ':' + (frame.lineNumber + 1) : '');
+  }
+  const totals = new Map();
+  self.forEach(function (ms, id) {
+    const node = nodes.get(id);
+    if (!node) return;
+    const name = node.callFrame.functionName;
+    if (name === '(idle)' || name === '(program)' || name === '(root)') return;
+    const k = key(node.callFrame);
+    const row = totals.get(k) || { fn:k, selfMs:0, callers:new Map() };
+    row.selfMs += ms;
+    const up = nodes.get(parent.get(id));
+    if (up) {
+      const caller = key(up.callFrame);
+      row.callers.set(caller, (row.callers.get(caller) || 0) + ms);
+    }
+    totals.set(k, row);
+  });
+  return Array.from(totals.values()).sort(function (a, b) { return b.selfMs - a.selfMs; }).slice(0, count)
+    .map(function (row) {
+      return { fn:row.fn, selfMs:round(row.selfMs), callers:Array.from(row.callers.entries())
+        .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 3)
+        .map(function (entry) { return { fn:entry[0], selfMs:round(entry[1]) }; }) };
+    });
+}
+
+async function measureStart(browser, url, start, seasons, profileDir) {
   const context = await newContext(browser);
   const result = { id:start.id, bookmark:start.bookmark, scenario:start.scenario,
     ruler:start.ruler, code:start.code, status:'ok', seasons:[], pageErrors:[] };
@@ -293,10 +342,16 @@ async function measureStart(browser, url, start, seasons) {
     await openReady(page, url);
     if (!(await beginStart(page, start))) throw new Error('Profiler unavailable on this origin or build');
     result.start = await page.evaluate(workloadInPage);
+    const cdp = profileDir ? await context.newCDPSession(page) : null;
+    if (cdp) {
+      await cdp.send('Profiler.enable');
+      await cdp.send('Profiler.setSamplingInterval', { interval:500 });
+    }
     for (let index = 1; index <= seasons; index++) {
       const from = await page.evaluate(workloadInPage);
       const season = { index:index, from:from.date, days:0, bursts:0, elapsedMs:0,
         simulationMs:0, reasons:[], rows:{}, counters:{} };
+      if (cdp) await cdp.send('Profiler.start');
       let guard = 0, done = false;
       while (!done && guard++ < 16) {
         const burst = await page.evaluate(burstInPage, SEASON_MS_LIMIT);
@@ -322,6 +377,14 @@ async function measureStart(browser, url, start, seasons) {
         } else if (burst.dead) { result.status = 'dead'; done = true; }
         else if (report.reason === 'season' || report.reason === 'stopped') done = true;
         else if (report.days === 0 && season.bursts > 3) { result.status = 'stalled'; done = true; }
+      }
+      if (cdp) {
+        const profile = (await cdp.send('Profiler.stop')).profile;
+        const file = start.id.replace(/[^A-Za-z0-9_-]+/g, '-') + '-season' + index + '.cpuprofile';
+        fs.mkdirSync(profileDir, { recursive:true });
+        fs.writeFileSync(path.join(profileDir, file), JSON.stringify(profile));
+        season.cpuProfile = file;
+        season.cpuTop = profileHotSpots(profile, 15);
       }
       season.to = (await page.evaluate(workloadInPage));
       season.msPerDay = season.days ? round(season.simulationMs / season.days, 2) : null;
@@ -364,8 +427,9 @@ async function measure(args) {
     output.unsupported = catalogue.unsupported;
     let starts = catalogue.starts;
     if (args.only) {
-      const only = String(args.only).split(',');
+      const only = String(args.only).split(',').map(function (id) { return id.trim(); }).filter(Boolean);
       starts = starts.filter(function (s) { return only.indexOf(s.id) >= 0; });
+      output.notOffered = only.filter(function (id) { return !starts.some(function (s) { return s.id === id; }); });
     }
     output.catalogueSize = starts.length;
     if (args.shard) {
@@ -375,7 +439,9 @@ async function measure(args) {
     }
     for (const start of starts) {
       const began = Date.now();
-      const result = await measureStart(browser, url, start, seasons);
+      // --cpu-profile records a V8 CPU profile per season; pair it with --only for a few starts.
+      const profileDir = args['cpu-profile'] ? path.join(path.dirname(path.resolve(args.out)), 'cpuprofiles') : null;
+      const result = await measureStart(browser, url, start, seasons, profileDir);
       result.wallSeconds = round((Date.now() - began) / 1000);
       output.starts.push(result);
       console.log(start.id + ': ' + result.status + ' ' + result.seasons.map(function (s) {
@@ -406,6 +472,7 @@ function readMeasurements(input) {
     merged.versions[data.version] = true;
     merged.unsupported = merged.unsupported || !!data.unsupported;
     merged.starts = merged.starts.concat(data.starts);
+    if (data.notOffered) merged.notOffered = Array.from(new Set((merged.notOffered || []).concat(data.notOffered)));
   });
   merged.starts.sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; });
   return merged;
@@ -432,6 +499,16 @@ function rowGrowth(earlier, later, count) {
   return out.sort(function (a, b) { return b.deltaMsPerDay - a.deltaMsPerDay; }).slice(0, count);
 }
 
+/* State parts whose serialized size grew most between two workload snapshots. */
+function stateGrowth(earlier, later, count) {
+  const before = (earlier && earlier.stateSizes) || {}, after = (later && later.stateSizes) || {};
+  return Object.keys(after).map(function (key) {
+    return { key:key, beforeKb:round((before[key] || 0) / 1024), afterKb:round(after[key] / 1024),
+      deltaKb:round((after[key] - (before[key] || 0)) / 1024) };
+  }).filter(function (row) { return row.deltaKb > 0; })
+    .sort(function (a, b) { return b.deltaKb - a.deltaKb; }).slice(0, count);
+}
+
 function analyze(merged, baseline) {
   const flags = [];
   const base = {};
@@ -455,13 +532,15 @@ function analyze(merged, baseline) {
         flags.push({ start:start.id, kind:'growth', season:season.index,
           text:'season ' + season.index + ' (' + season.from + ') cost ' + season.msPerDay + ' ms per day against ' +
             seasons[0].msPerDay + ' in season 1',
-          growth:rowGrowth(seasons[0], season, 5) });
+          growth:rowGrowth(seasons[0], season, 5), state:stateGrowth(start.start, season.to, 5),
+          cpu:(season.cpuTop || []).slice(0, 5) });
       }
       if (season.simulationMs > FLAG_FLOOR_MS && typical && season.simulationMs > 2.5 * typical) {
         flags.push({ start:start.id, kind:'spike', season:season.index,
           text:'season ' + season.index + ' (' + season.from + ') took ' + round(season.simulationMs / 1000) +
             's against a typical ' + round(typical / 1000) + 's',
-          growth:rowGrowth(seasons[0], season, 5) });
+          growth:rowGrowth(seasons[0], season, 5), state:stateGrowth(start.start, season.to, 5),
+          cpu:(season.cpuTop || []).slice(0, 5) });
       }
       const yearBefore = seasons[i - 4];
       if (yearBefore && season.simulationMs > FLAG_FLOOR_MS &&
@@ -504,6 +583,9 @@ function markdown(merged, analysis) {
     ', FB.VERSION ' + Object.keys(merged.versions).join(', ') + ', ' + merged.seasons + ' seasons per start. ' +
     'Starts: ' + Object.keys(statuses).map(function (k) { return statuses[k] + ' ' + k; }).join(', ') + '.');
   if (merged.unsupported) lines.push('', 'This build lacks the start enumeration helpers; nothing was measured.');
+  if (merged.notOffered && merged.notOffered.length) {
+    lines.push('', 'Requested but not offered by this build: ' + merged.notOffered.join(', ') + '.');
+  }
   lines.push('');
   lines.push('### Flags');
   lines.push('');
@@ -512,6 +594,15 @@ function markdown(merged, analysis) {
     lines.push('- **' + flag.start + '** ' + flag.kind + ': ' + flag.text);
     (flag.growth || []).slice(0, 3).forEach(function (row) {
       lines.push('  - ' + row.label + ': ' + row.beforeMsPerDay + ' to ' + row.afterMsPerDay + ' ms/day');
+    });
+    if (flag.state && flag.state.length) {
+      lines.push('  - state grew: ' + flag.state.map(function (row) {
+        return row.key + ' ' + row.beforeKb + ' to ' + row.afterKb + ' KB';
+      }).join(', '));
+    }
+    (flag.cpu || []).slice(0, 3).forEach(function (row) {
+      lines.push('  - CPU ' + row.fn + ': ' + row.selfMs + ' ms self' + (row.callers.length ? ', from ' +
+        row.callers.map(function (c) { return c.fn + ' (' + c.selfMs + ')'; }).join(', ') : ''));
     });
   });
   lines.push('');
@@ -541,7 +632,29 @@ function markdown(merged, analysis) {
       lines.push('');
       lines.push('Counters: ' + season.topCounters.map(function (c) { return c.label + ' ' + c.count; }).join(', ') + '.');
     }
+    const grew = stateGrowth(slowest.start, season.to, 8);
+    if (grew.length) {
+      lines.push('');
+      lines.push('State growth since the start: ' + grew.map(function (row) {
+        return row.key + ' ' + row.beforeKb + ' to ' + row.afterKb + ' KB';
+      }).join(', ') + '.');
+    }
   }
+  const profiled = merged.starts.filter(function (s) { return (s.seasons || []).some(function (x) { return x.cpuTop; }); });
+  profiled.forEach(function (start) {
+    const season = start.seasons.filter(function (s) { return s.cpuTop; })
+      .reduce(function (a, b) { return b.simulationMs > a.simulationMs ? b : a; });
+    lines.push('');
+    lines.push('### CPU profile: ' + start.id + ' season ' + season.index + ' (' + season.from + ', ' +
+      round(season.simulationMs / 1000) + 's, file ' + season.cpuProfile + ')');
+    lines.push('');
+    lines.push('| function | self ms | main callers |');
+    lines.push('| --- | ---: | --- |');
+    season.cpuTop.forEach(function (row) {
+      lines.push('| ' + row.fn + ' | ' + row.selfMs + ' | ' +
+        row.callers.map(function (c) { return c.fn + ' (' + c.selfMs + ')'; }).join('; ') + ' |');
+    });
+  });
   return lines.join('\n') + '\n';
 }
 
