@@ -79,7 +79,8 @@ async function loadState(page) {
 // only loaded dates; ids of dates absent from the lazy session are removed.
 async function setupProjection(page,id,absent) {
   return page.evaluate(function (input) {
-    const report = FB.bookmarkSources.prepareSetup(input.id), data = FBDATA, world = data.bookmarks[input.id];
+    const report = FB.game.contentReady ? FB.bookmarkCompositions.sourceReports().find(function (r) { return r.bookmarkId === input.id; }) :
+      FB.bookmarkSources.prepareSetup(input.id), data = FBDATA, world = data.bookmarks[input.id];
     // Faith availability and activity openings are cross-date selector
     // lists; entries naming a date absent from the lazy session are removed.
     function normalize(root,value) {
@@ -107,6 +108,8 @@ async function setupProjection(page,id,absent) {
       rejected:report.starts.filter(function (row) { return !row.ready; }).map(function (row) { return row.id; }),
       world:FB.mods.fingerprint(world),revisions:FB.bookmarkRevisions(input.id).map(function (row) { return row.revision; }),
       revisionFaults:FB.bookmarkRevisions(input.id).map(function (row) { return FB.validateBookmark(row); }),
+      dateStarts:FB.mods.fingerprint(offered),
+      dateStories:FB.mods.fingerprint(Object.keys(data.storyInstances).filter(function (key) { return /634$/.test(key); }).map(function (key) { return [key,data.storyInstances[key]]; })),
       starts:data.startScenarios.map(function (row) { return row.id; }),startRows:FB.mods.fingerprint(data.startScenarios),
       stories:Object.keys(data.storyInstances),storyRows:FB.mods.fingerprint(data.storyInstances),
       registry:FB.stories.list().map(function (row) { return row.id; }),
@@ -245,6 +248,22 @@ for (const id of lazyDates) {
     const lazy = await setupProjection(page,id,absent);
     const eager = await withEager(browser,info,function (eagerPage) { return setupProjection(eagerPage,id,absent); });
     compareSetups(lazy,eager);
+    if (id === '634') {
+      expect(await page.evaluate(function () {
+        return Array.prototype.map.call(document.querySelectorAll('script[data-bookmark-source]'),function (script) {
+          return [script.getAttribute('data-bookmark-source'),script.async===false,script.type!=='module'];
+        });
+      })).toEqual(expected.map(function (file) { return [file,true,true]; }));
+      await prepareGameContent(page);
+      const complete = await setupProjection(page,id,absent);
+      ['published','worldFaults','world','revisions','revisionFaults','dateStarts','dateStories'].forEach(function (key) {
+        expect(complete[key],key).toEqual(lazy[key]);
+      });
+      expect(await page.evaluate(function () {
+        return {fresh:FB.bookmark('634').revision,hidden:FB.bookmark('634','core_courts_v4').hidden,
+          faults:FB.validateBookmark(FB.bookmark('634','core_courts_v4'))};
+      })).toEqual({fresh:'core_identities_v3',hidden:true,faults:[]});
+    }
   });
 }
 
@@ -370,7 +389,7 @@ test('overlapping requests serialize and preserve source fingerprints, RNG and U
 test('unloaded jurisdictions defer world references while complete mod candidates keep strict atomic validation',async function ({page},info) {
   await openTitle(page,info);
   expect(await page.evaluate(function () {
-    const candidate = Object.assign({},FBDATA,{bookmarks:{'1204':{id:'1204'}}});
+    const candidate = Object.assign({},FBDATA,{bookmarks:Object.assign({},FBDATA.bookmarks,{'1204':{id:'1204'}})});
     const claims = JSON.parse(JSON.stringify(FBDATA.episcopalClaims));
     claims.roman_temporal_rent.compensation = -1;
     return {unloaded:!FB.bookmarkSources.dateLoaded('1204'),

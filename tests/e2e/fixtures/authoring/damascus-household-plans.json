@@ -29,6 +29,16 @@
         "damascus_reserve_example": [
           "damascus"
         ]
+      },
+      "revisionIdentities": {
+        "634": {
+          "core_identities_v3": {
+            "startReligion": "chalcedonian_local_634"
+          },
+          "core_courts_v4": {
+            "startReligion": "chalcedonian_local_634"
+          }
+        }
       }
     }
   ],

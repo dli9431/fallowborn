@@ -7,7 +7,7 @@ const {mockCrazyGames} = require('../support/crazygames');
 const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/bookmark_manifest.js',
   'index.html','data/bookmark_634_courts_b.js','data/bookmark_634.js',
   'data/bookmark_634_scaffold_a.js','data/bookmark_634_scaffold_b.js',
   'data/bookmark_634_scaffold_c.js','data/bookmark_634_scaffold_d.js',
@@ -52,7 +52,7 @@ for (const crazy of [false,true]) {
     await prepareGameContent(page);
     expect(await page.evaluate(function () {
       return Object.prototype.hasOwnProperty.call(FBDATA,'bookmarkRevisionContent_634_courts_b');
-    })).toBe(false);
+    })).toBe(true);
     const before = await page.evaluate(activeSnapshot);
     await loadCourts(page);
     expect(await page.evaluate(activeSnapshot)).toBe(before);

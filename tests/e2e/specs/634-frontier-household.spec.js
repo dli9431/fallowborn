@@ -4,7 +4,7 @@ const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmark,beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/bookmark_manifest.js',
   'index.html','data/starts_634_frontier.js','data/story_households_634_frontier.js',
   'data/bookmark_634.js','data/starts_634_ordinary.js','data/bookmark_634_identities.js',
   'data/bookmark_634_scaffold_a.js','data/bookmark_634_scaffold_b.js',
@@ -30,7 +30,7 @@ async function connections(page) {
   expect(await choose(page,'decline')).toBe(true);
 }
 
-test('complete hidden frontier start preserves identity, layout and exclusions', async function ({page},info) {
+test('complete selectable frontier start preserves identity, layout and exclusions', async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
     const b = FB.bookmark('634');
@@ -39,7 +39,8 @@ test('complete hidden frontier start preserves identity, layout and exclusions',
     const data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
     const errors = FB.validateBookmark(b), p = b.provinces.find(function (p) { return p.id === 'damascus'; });
     const def = FBDATA.storyInstances.frontier_household_track_634;
-    return {errors:errors,hidden:b.hidden,available:FB.bookmarkAvailable('634'),
+    return {errors:errors,hidden:!!b.hidden,available:FB.bookmarkAvailable('634'),
+      fresh:b.revision,fullHidden:FB.bookmark('634','core_courts_v4').hidden,
       tracks:FB.startStoryTracks(sc,'damascus'),away:FB.startTracks(sc,'baghdad'),
       home:FB.startProvinceAllowed(sc,b,'damascus'),remote:FB.startProvinceAllowed(sc,b,'baghdad'),
       pair:p.communities.some(function (c) { return c.culture === sc.startCulture && c.religion === sc.startReligion && c.populationShare0 > 0; }),
@@ -48,7 +49,7 @@ test('complete hidden frontier start preserves identity, layout and exclusions',
       disabled:b.systems,independent:!def.requires && !def.jobs,
       beats:Object.keys(def.stages).filter(function (id) { return id !== 'left' && id !== 'interrupted'; }),
       pure:data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toMatchObject({errors:[],hidden:true,available:false,tracks:[ID],away:[],home:true,remote:false,pair:true,
+  })).toMatchObject({errors:[],hidden:false,available:true,fresh:'core_identities_v3',fullHidden:true,tracks:[ID],away:[],home:true,remote:false,pair:true,
     family:['established'],age:30,resources:[1,'craftsman',20,5,0],site:{site:'damascus_493',name:'Damascus',kind:'city'},
     heads:{},institutions:{},independent:true,pure:true,
     disabled:{disable:['episcopal_sees','civic_institutions','papacy','excommunication','abbeys',
@@ -269,11 +270,18 @@ test('departure, death and succession end only the protagonist plan and hidden r
     if (s.stories[id].phase !== 'interrupted') throw new Error('Successor inherited plan');
     delete opening.state.stories[id];
     delete opening.state.start.storyAttachments; delete opening.storyAttachmentSchema;
+    const before = JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]);
+    const wire = JSON.stringify(opening);
+    let rejected = false;
+    try { FB.save.restore(opening); } catch (error) { rejected = true; }
+    if (!rejected || wire !== JSON.stringify(opening) || before !== JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]))
+      throw new Error('A companion without its required household must reject atomically');
+    delete opening.state.stories.opening_frontier_634;
     FBDATA.bookmarks['634'].hidden = true;
     return JSON.stringify(opening);
   });
   await restoreBookmark(page,saved);
-  expect(await page.evaluate(function () { return {hidden:FB.bookmark('634').hidden,missing:!FB.state.stories.frontier_household_track_634}; })).toEqual({hidden:true,missing:true});
+  expect(await page.evaluate(function () { return {hidden:FB.bookmark('634').hidden,missing:!FB.state.stories.frontier_household_track_634,companion:!FB.state.stories.opening_frontier_634}; })).toEqual({hidden:true,missing:true,companion:true});
 });
 
 test('detached import validation is pure and an ordinary JSON replacement uses the same graph and save contract', async function ({page},info) {

@@ -7,7 +7,7 @@ const {useReleasedStartRules} = require('../support/game/released-starts');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/bookmark_manifest.js',
   'index.html','data/starts_634_rulers.js','data/story_ruler_agendas_634.js',
   'data/starts_634_ordinary.js','data/bookmark_634.js','data/bookmark_634_identities.js',
   'data/bookmark_634_scaffold_a.js','data/bookmark_634_scaffold_b.js',
@@ -72,7 +72,7 @@ test('634 keeps the complete Umar graph hidden and validation pure',async functi
       stages:FB.stories.get('umar_agenda_634').declaration.stages.map(function (st) { return [st.id,st.year,st.season]; }),
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
   })).toEqual({hidden:[undefined,true],available:true,faults:[],tracks:['umar_agenda_634'],locations:['medina'],
-    revision:'ordinary_settlement_v2',layout:'634_opening',isolated:true,held:true,
+    revision:'core_identities_v3',layout:'634_opening',isolated:true,held:true,
     stages:[['accession_review_634',634,2],['syrian_review_634',634,2],['iraqi_review_634',634,2],['mandate_conclusion_634',634,2]],pure:true});
 });
 
@@ -138,9 +138,17 @@ test('all four reviews conclude at Medina without time, rewards or replay',async
       if (JSON.stringify(s.stories[id]) !== record) throw new Error('Agenda restore changed its decisions');
     });
     const complete = s.stories[id].status;
-    const saved = JSON.parse(FB.save.serialize()); delete saved.state.stories[id];
+    const saved = JSON.parse(FB.save.serialize()), companion = 'opening_umar_634';
+    delete saved.state.stories[id];
     saved.state.start.storyAttachments.tracks = saved.state.start.storyAttachments.tracks.filter(function (track) { return track !== id; });
+    const before = JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]), wire = JSON.stringify(saved);
+    let rejected = false; try { FB.save.restore(saved); } catch (error) { rejected = true; }
+    if (!rejected || wire !== JSON.stringify(saved) || before !== JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]))
+      throw new Error('An incomplete ruler graph must reject atomically');
+    delete saved.state.stories[companion];
+    saved.state.start.storyAttachments.tracks = saved.state.start.storyAttachments.tracks.filter(function (track) { return track !== companion; });
     FB.save.restore(saved); FB.stories.day(FB.state);
+    if (FB.state.stories[companion]) throw new Error('Restore attached an absent opening companion');
     return {reviewPure:reviewPure,applied:applied,repeated:repeated,stages:stages,status:complete,
       unchanged:unchanged,absent:!FB.state.stories[id]};
   })).toEqual({reviewPure:true,applied:[true,true,true,true],repeated:[false,false,false,false],
@@ -191,6 +199,7 @@ test('a malformed Umar graph withholds the whole start while ordinary siblings r
 test('an ordinary JSON import can replace the personal reviews and restore its own decisions',async function ({page},info) {
   await useReleasedStartRules(page);
   await openGame(page,info);
+  expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },JSON.parse(fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/634-ruler-review.json'),'utf8')))).toEqual([]);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/634-ruler-review.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
@@ -262,7 +271,7 @@ test('634 keeps the complete Heraclius graph hidden and validation pure',async f
       stages:FB.stories.get('heraclius_agenda_634').declaration.stages.map(function (st) { return [st.id,st.year,st.season]; }),
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
   })).toEqual({hidden:[undefined,true],available:true,faults:[],tracks:['heraclius_agenda_634'],locations:['constantinople'],
-    revision:'ordinary_settlement_v2',layout:'634_opening',isolated:true,held:true,
+    revision:'core_identities_v3',layout:'634_opening',isolated:true,held:true,
     stages:[['imperial_court_review_634',634,2],['eastern_holdings_review_634',634,2],['defense_diplomacy_review_634',634,2],['imperial_conclusion_634',634,2]],pure:true});
 });
 
@@ -331,9 +340,17 @@ test('all four reviews conclude at Constantinople without time, rewards or repla
       if (JSON.stringify(s.stories[id]) !== record) throw new Error('Agenda restore changed its decisions');
     });
     const complete = s.stories[id].status;
-    const saved = JSON.parse(FB.save.serialize()); delete saved.state.stories[id];
+    const saved = JSON.parse(FB.save.serialize()), companion = 'opening_heraclius_634';
+    delete saved.state.stories[id];
     saved.state.start.storyAttachments.tracks = saved.state.start.storyAttachments.tracks.filter(function (track) { return track !== id; });
+    const before = JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]), wire = JSON.stringify(saved);
+    let rejected = false; try { FB.save.restore(saved); } catch (error) { rejected = true; }
+    if (!rejected || wire !== JSON.stringify(saved) || before !== JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]))
+      throw new Error('An incomplete ruler graph must reject atomically');
+    delete saved.state.stories[companion];
+    saved.state.start.storyAttachments.tracks = saved.state.start.storyAttachments.tracks.filter(function (track) { return track !== companion; });
     FB.save.restore(saved); FB.stories.day(FB.state);
+    if (FB.state.stories[companion]) throw new Error('Restore attached an absent opening companion');
     return {reviewPure:reviewPure,applied:applied,repeated:repeated,stages:stages,status:complete,
       unchanged:unchanged,absent:!FB.state.stories[id]};
   })).toEqual({reviewPure:true,applied:[true,true,true,true],repeated:[false,false,false,false],
@@ -350,6 +367,7 @@ for (const reason of ['death','generation','stop']) {
       if (reason === 'death') s.chars[s.player.charId].dead = true;
       else if (reason === 'generation') {
         s.realms.player.ruler.generation++;
+        if (s.realms.player.succession) s.realms.player.succession.rulerGeneration++;
       }
       else FB.stories.apply(s,id,'agenda_stop_program',FB.stories.quote(s,id,'agenda_stop_program'));
       const stale = FB.stories.apply(s,id,quote.id,quote);

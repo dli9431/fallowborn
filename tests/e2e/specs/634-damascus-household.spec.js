@@ -2,10 +2,11 @@
 const {test,expect} = require('../support/fixture');
 const path = require('path');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
-const {beginBookmark,beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {injectBrowserHarness} = require('../support/game/browser-harness');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/bookmark_manifest.js',
   'index.html','data/starts_634_damascus.js','data/story_households_634_damascus.js',
   'data/bookmark_634.js','data/starts_634_ordinary.js','data/bookmark_634_identities.js',
   'data/bookmark_634_scaffold_a.js','data/bookmark_634_scaffold_b.js',
@@ -21,6 +22,35 @@ dependsOnRuntime(__filename,[
 
 const ID = 'damascus_household_track_634';
 
+async function beginBookmarkFromTitle(page) {
+  await prepareGameContent(page);
+  const code = await page.evaluate(function () {
+    const b = FB.bookmark('634');
+    FBDATA.bookmarks['634'].hidden = false;
+    const raw = FBDATA.startScenarios.find(function (r) { return r.id === 'damascus_household_634'; });
+    const sc = FB.startIdentity(raw,b);
+    return 'BOOKMARKSMOKE-634-damascus_household_634-damascus-m-Review-established-0-' + sc.startCulture + '.' + sc.startReligion;
+  });
+  const full = page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill(code); await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+  await injectBrowserHarness(page);
+  await page.evaluate(function () {
+    FB.game.setPaused(true); FB.game.auto.all = true; FB.game.auto.style = 'first';
+    FB.game.uiPrefs.hideTips = true; FB.game.uiPrefs.hideBeginnerHints = true;
+    delete FB.state.player.flags.tutorial;
+  });
+}
+async function beginBookmark(page,info) {
+  await openGame(page,info);
+  await beginBookmarkFromTitle(page);
+}
+
 async function choose(page,choice) {
   return page.evaluate(function (choice) {
     const s = FB.state, id = 'damascus_household_track_634';
@@ -28,16 +58,18 @@ async function choose(page,choice) {
   },choice);
 }
 
-test('hidden 634 owns a complete Damascus household graph and actual resident identity', async function ({page},info) {
+test('selectable 634 owns a complete Damascus household graph and actual resident identity', async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
     const b = FB.bookmark('634');
     if (!b) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
-    const sc = FBDATA.startScenarios.find(function (r) { return r.id === 'damascus_household_634'; });
+    const raw = FBDATA.startScenarios.find(function (r) { return r.id === 'damascus_household_634'; });
     const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const sc = FB.startIdentity(raw,b);
     const errors = FB.validateBookmark(b), p = b.provinces.find(function (p) { return p.id === 'damascus'; });
     const slots = FBDATA.settlementLayouts[b.settlementLayout].damascus;
-    return {errors:errors,hidden:b.hidden,available:FB.bookmarkAvailable('634'),
+    return {errors:errors,hidden:!!b.hidden,available:FB.bookmarkAvailable('634'),
+      fresh:b.revision,fullHidden:FB.bookmark('634','core_courts_v4').hidden,
       tracks:FB.startTracks(sc,'damascus'),storyline:FB.startStoryTracks(sc,'damascus'),away:FB.startTracks(sc,'hira'),
       local:FB.startProvinceAllowed(sc,b,'damascus'),elsewhere:FB.startProvinceAllowed(sc,b,'hira'),
       resident:p.communities.some(function (c) { return c.culture === sc.startCulture && c.religion === sc.startReligion && c.populationShare0 > 0; }),
@@ -46,7 +78,7 @@ test('hidden 634 owns a complete Damascus household graph and actual resident id
       institutions:b.localInstitutions,heads:b.religiousHeads,
       independent:!FBDATA.storyInstances.damascus_household_track_634.requires,
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toMatchObject({errors:[],hidden:true,available:false,
+  })).toMatchObject({errors:[],hidden:false,available:true,fresh:'core_identities_v3',fullHidden:true,
     tracks:[ID,'opening_damascus_634'],storyline:[ID],away:[],local:true,elsewhere:false,resident:true,
     family:['established'],age:24,resources:[1,'craftsman',20,5,0],site:'damascus_493',
     coordinates:{x:36.29,y:33.51},institutions:{},heads:{},independent:true,pure:true});
@@ -57,7 +89,7 @@ test('hidden 634 owns a complete Damascus household graph and actual resident id
       home:s.player.provinceId,culture:c.culture,faith:c.religion,age:FB.ageOf(c,s.date.year),
       family:FB.householdMembers(s).length > 1,profession:s.player.profession,gold:s.player.gold,
       errors:FBTEST.checkInvariants()};
-  })).toEqual({phase:'household',actor:true,home:'damascus',culture:'syriac',faith:'chalcedonian',age:24,
+  })).toEqual({phase:'household',actor:true,home:'damascus',culture:'syriac',faith:'chalcedonian_local_634',age:24,
     family:true,profession:'craftsman',gold:20,errors:[]});
 });
 
@@ -245,6 +277,7 @@ test('a remote authority change and an unchanged local war create no local notic
 
 test('ordinary JSON import supplies an independent household configuration and exact save identity', async function ({page},info) {
   await openGame(page,info);
+  expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },require('../fixtures/authoring/damascus-household-plans.json'))).toEqual([]);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/damascus-household-plans.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
@@ -256,5 +289,5 @@ test('ordinary JSON import supplies an independent household configuration and e
     const saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
     return {gold:gold,unchanged:FB.state.player.gold === gold,applied:applied,phase:FB.state.stories[id].phase,
       original:!!FB.state.stories.damascus_household_track_634,identity:FB.state.chars[FB.state.player.charId].religion};
-  })).toEqual({gold:12,unchanged:true,applied:true,phase:'done',original:false,identity:'chalcedonian'});
+  })).toEqual({gold:12,unchanged:true,applied:true,phase:'done',original:false,identity:'chalcedonian_local_634'});
 });

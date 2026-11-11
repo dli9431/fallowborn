@@ -6,7 +6,7 @@ const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,['index.html','data/story_household_effects_634.js','data/story_campaigns_634.js',
+dependsOnRuntime(__filename,['data/bookmark_manifest.js','index.html','data/story_household_effects_634.js','data/story_campaigns_634.js',
   'data/bookmark_634.js','data/bookmark_634_courts.js','data/bookmark_634_scaffold_d.js',
   'data/starts_634_ordinary.js','data/starts_634_damascus.js','data/starts_634_frontier.js',
   'data/story_households_634_damascus.js','data/story_households_634_ctesiphon.js',

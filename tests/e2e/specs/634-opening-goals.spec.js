@@ -6,7 +6,7 @@ const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/bookmark_manifest.js',
   'index.html','data/start_ambitions_634.js','data/story_opening_goals_634.js',
   'data/bookmark_634.js','data/bookmark_634_courts.js','data/bookmark_sources.js',
   'data/starts_634_rulers.js','data/starts_634_medina.js','data/starts_634_frontier.js',

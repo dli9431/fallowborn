@@ -5,7 +5,7 @@ const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmark,beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/bookmark_manifest.js','js/day_phases.js',
   'index.html','data/starts_634_medina.js','data/story_households_634_medina.js',
   'data/bookmark_634.js','data/starts_634_ordinary.js','data/bookmark_634_identities.js',
   'data/bookmark_634_scaffold_a.js','data/bookmark_634_scaffold_b.js',
@@ -64,11 +64,14 @@ test('Medina remains offered in the selectable opening while the expanded courts
       local:FB.startProvinceAllowed(sc,b,'medina'),away:FB.startProvinceAllowed(sc,b,'mecca'),
       tracks:FB.startStoryTracks(sc,'medina'),pair:county.communities.some(function (c) { return c.culture === sc.startCulture && c.religion === sc.startReligion; }),
       unsupported:rejected.length > 0,excluded:!FB.startProvinceAllowed(sc,absent,'medina'),
-      noFronts:!FBDATA.storyInstances.syrian_front_634 && !FBDATA.storyInstances.iraqi_front_634,
+      fronts:['syrian_front_634','iraqi_front_634'].map(function (id) {
+        return [id,!!FBDATA.storyInstances[id],b.stories.indexOf(id)>=0,
+          FB.bookmark('634','core_courts_v4').stories.indexOf(id)>=0];
+      }),
       noSources:!FBDATA.storyInstances.medina_household_track_634.requires,
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
   })).toEqual({errors:[],hidden:true,available:true,fresh:'core_identities_v3',local:true,away:false,tracks:['medina_household_track_634'],
-    pair:true,unsupported:true,excluded:true,noFronts:true,noSources:true,pure:true});
+    pair:true,unsupported:true,excluded:true,fronts:[['syrian_front_634',true,false,true],['iraqi_front_634',true,false,true]],noSources:true,pure:true});
   await begin(page,info);
   expect(await page.evaluate(function () {
     const s = FB.state, c = s.chars[s.player.charId], t = s.stories.medina_household_track_634;
@@ -191,14 +194,20 @@ test('late review never replays accession and hidden restore leaves absent stori
     // Genuine legacy saves have neither provenance field; absence is not new opt-in.
     delete saved.state.start.storyAttachments;
     delete saved.storyAttachmentSchema;
+    const wire = JSON.stringify(saved), data = JSON.stringify(FBDATA), live = r.facts(), storage = JSON.stringify(localStorage);
+    rejected = false;
+    try { FB.save.restore(saved); } catch (error) { rejected = true; }
+    if (!rejected || wire !== JSON.stringify(saved) || live !== r.facts() || data !== JSON.stringify(FBDATA) || storage !== JSON.stringify(localStorage))
+      throw new Error('A companion without its required household must reject atomically');
+    delete saved.state.stories.opening_medina_634;
     FBDATA.bookmarks['634'].hidden = true;
     return JSON.stringify(saved);
   });
   await restoreBookmark(page,saved);
   expect(await page.evaluate(function () {
-    return {hidden:FB.bookmark('634').hidden,absent:!FB.state.stories.medina_household_track_634,
+    return {hidden:FB.bookmark('634').hidden,absent:!FB.state.stories.medina_household_track_634,companion:!FB.state.stories.opening_medina_634,
       fronts:!!FB.state.stories.syrian_front_634 || !!FB.state.stories.iraqi_front_634};
-  })).toEqual({hidden:true,absent:true,fronts:false});
+  })).toEqual({hidden:true,absent:true,companion:true,fronts:false});
 });
 
 test('court and community reviews conclude at home with private and public authority separate',async function ({page},info) {
