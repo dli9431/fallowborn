@@ -827,16 +827,39 @@ window.FB = window.FB || {};
     }
     let finished = false, request;
     function finish(database) {
-      if (finished) { if (database && database !== saveDatabase) database.close(); return; }
+      if (finished) return;
       finished = true;
       clearTimeout(timeout);
-      saveDatabase = database || null;
-      if (database) {
-        S.available = true;
-        database.onversionchange = function () { database.close(); saveDatabase = null; };
-      }
+      if (database) adopt(database);
       done();
     }
+    function adopt(database) {
+      saveDatabase = database;
+      S.available = true;
+      database.onversionchange = function () {
+        database.close();
+        if (saveDatabase === database) saveDatabase = null;
+      };
+      // Copy first, remove only after commit. Local recovery copies win on boot.
+      try {
+        const legacy = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const name = localStorage.key(i);
+          if (savedSlotKey(name)) legacy.push(name);
+        }
+        legacy.forEach(function (name) {
+          const raw = localSlot(name);
+          if (!raw) return;
+          let data;
+          try { data = JSON.parse(decodeStored(raw)); } catch (error) { return; }
+          if (!S.isSupported(data)) return;
+          databaseWrite(name, raw, function () {});
+        });
+      } catch (error) { /* legacy storage may be blocked independently */ }
+    }
+    /* The timeout guards only an open request that never answers. Reading
+       several large slots on a slow phone can take longer, and giving up then
+       would show an empty title over saves that still exist. */
     const timeout = setTimeout(function () { finish(null); }, 5000);
     try {
       if (!window.indexedDB) { finish(null); return; }
@@ -848,8 +871,10 @@ window.FB = window.FB || {};
       request.onblocked = function () { finish(null); };
       request.onsuccess = function () {
         const database = request.result;
-        if (finished) { database.close(); return; }
-        const transaction = database.transaction('slots', 'readonly');
+        clearTimeout(timeout);
+        let transaction;
+        try { transaction = database.transaction('slots', 'readonly'); }
+        catch (error) { database.close(); finish(null); return; }
         const cursor = transaction.objectStore('slots').openCursor();
         cursor.onsuccess = function () {
           const row = cursor.result;
@@ -860,28 +885,33 @@ window.FB = window.FB || {};
         };
         transaction.onabort = function () { database.close(); finish(null); };
         transaction.oncomplete = function () {
-          if (finished) { database.close(); return; }
-          saveDatabase = database;
-          // Copy first, remove only after commit. Local recovery copies win on boot.
-          try {
-            const legacy = [];
-            for (let i = 0; i < localStorage.length; i++) {
-              const name = localStorage.key(i);
-              if (savedSlotKey(name)) legacy.push(name);
-            }
-            legacy.forEach(function (name) {
-              const raw = localSlot(name);
-              if (!raw) return;
-              let data;
-              try { data = JSON.parse(decodeStored(raw)); } catch (error) { return; }
-              if (!S.isSupported(data)) return;
-              databaseWrite(name, raw, function () {});
-            });
-          } catch (error) { /* legacy storage may be blocked independently */ }
-          finish(database);
+          if (!finished) { finish(database); return; }
+          // A late answer after the open timeout: adopt the saves it holds
+          // instead of hiding them, and let the title show them.
+          if (saveDatabase) { database.close(); return; }
+          adopt(database);
+          if (typeof S.onLateStorage === 'function') {
+            try { S.onLateStorage(); } catch (error) { /* the slots remain readable */ }
+          }
         };
       };
     } catch (error) { finish(null); }
+  };
+  /* Ask the browser to keep saves through storage pressure. Best-effort data
+     is evicted whole on a full phone, so every slot would vanish together.
+     Chromium and WebKit decide silently; Firefox may ask the player once. */
+  let persistenceRequested = false;
+  S.requestPersistence = function () {
+    if (crazy || persistenceRequested) return;
+    persistenceRequested = true;
+    try {
+      const storage = navigator.storage;
+      if (!storage || typeof storage.persist !== 'function') return;
+      const ignore = function () {};
+      const ask = function (persisted) { if (!persisted) storage.persist().then(ignore, ignore); };
+      if (typeof storage.persisted === 'function') storage.persisted().then(ask, function () { ask(false); });
+      else ask(false);
+    } catch (error) { /* persistence is an enhancement; saves still work without it */ }
   };
   S.hasSlot = function (slot) {
     if (crazy) return slot === 'auto' && !!crazy.read();
@@ -1008,6 +1038,7 @@ window.FB = window.FB || {};
       } catch (error) { reportSaveError(error); if (done) done(false); return false; }
     }
     if (deletionBusy) { if (done) done(false); return false; }
+    S.requestPersistence();
     function fallback(json) {
       try {
         const packed = encodeStored(json);
@@ -1161,6 +1192,7 @@ window.FB = window.FB || {};
     if (options && options.background && deletedAutoState === FB.state &&
         FB.state && deletedAutoTurn === FB.state.turn) return;
     if (!FB.state || FB.state.player.dead || (FB.game && FB.game.observe)) return;
+    S.requestPersistence();
     deletedAutoState = null;
     try {
       const json = S.serialize();
