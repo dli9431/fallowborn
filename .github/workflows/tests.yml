@@ -60,5 +60,5 @@ jobs:
       specs: ${{ inputs.specs || '' }}
       base: ${{ inputs.base || github.event.before || github.event.pull_request.base.sha || '' }}
       projects: ${{ inputs.projects || 'all' }}
-      shards: ${{ inputs.shards || 4 }}
+      shards: ${{ fromJSON(format('{0}', inputs.shards || 4)) }}
       bounded: ${{ (inputs.mode || 'changed') == 'changed' }}
