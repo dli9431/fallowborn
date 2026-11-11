@@ -9,17 +9,24 @@ matching restoration retains the assignment without replay.
 
 Autumn 634 core identities
 
-Autumn 634 now selects core_identities_v3. Its complete province and realm arrays
+The retained core_identities_v3 revision's complete province and realm arrays
 change only two existing Syriac resident-pair faiths and the Sasanian court's
 civil governing identity. Baseline, scenery_protected_v1 and
 ordinary_settlement_v2 remain exact. Scenic cells retain ordinary behavior in the
 identity revision. The two fixed household starts project their local faith in
 core_identities_v3 and core_courts_v4; their default fields retain the older faiths.
 
-Hidden assembled autumn 634 revision
+Assembled autumn 634 selection
 
-core_courts_v4 is a complete hidden revision alongside the selectable
-core_identities_v3. The composer requires the core court source and all twenty
+Fresh autumn 634 campaigns select the complete core_courts_v4 revision. The
+picker, start codes, direct creation and Observe use this same effective world.
+Its approved beginnings are umar_634, heraclius_634, yazdegerd_634,
+ctesiphon_household_634, damascus_household_634, frontier_household_634,
+medina_household_634, farmer_634 and craftsman_634. All nine are available without
+the development review switch; no Jabala, mobile-polity or paid-service start is
+offered. Yazdegerd remains bound exclusively to the full court revision.
+
+The composer requires the core court source and all twenty
 regional court tables, rejects missing or duplicate owners, and replaces every
 one of the 122 scaffold courts exactly once in original world order. The
 province, title, climate, route and 634_opening layout inputs retain their dated
@@ -39,7 +46,7 @@ introduced; the existing institution and government gates remain authoritative.
 The mandatory world catalogue also supplies two independent conditional frontier
 campaigns on core_courts_v4 only. data/story_campaigns_634.js adds their declarations
 and world attachments after the complete revision is assembled, before source
-sealing; no engine-dependent work runs during loading. The selectable predecessor
+sealing; no engine-dependent work runs during loading. The retained predecessor
 and its story list retain their prior meanings. Native compilation and ordinary
 JSON mods use the same registered campaign type. See stories.md for admission,
 finite deadlines, adoption and the technology-impact decisions.
@@ -47,15 +54,18 @@ finite deadlines, adoption and the technology-impact decisions.
 The assembled world carries eight world-story declarations: the two frontier
 opportunities, the three fixed-household authority observers, the Syrian and
 Iraqi campaign notices, and the ordinary district-authority notice. Each of the
-six story or ruler starts adds one personal program and one optional goal
-profile; farmer and craftsman add neither. The native attachment ledger records
+six original story or ruler starts adds one personal program and one optional goal
+profile; Yazdegerd adds his own agenda without a goal profile, and farmer and
+craftsman add neither. The native attachment ledger records
 these actual selections once, independently of whether either frontier starts.
 The assembled Damascus program and both expanded court agendas replace their
 predecessor tracks only through the assembled revision's startTrackOverrides.
-The selectable predecessor retains its own world list and personal programs.
+The predecessor keeps its own world list and personal programs.
 634-catalogue-integration.spec.js covers the combined catalogue, quiet choices,
 interruption and current-content persistence alongside the feature-specific
-specifications. It introduces no visibility, saved-schema or technology change.
+specifications. 634-activation.spec.js covers the ordinary approved entry routes,
+effective hidden gates and repeated current-content restoration without fresh
+initialization. Activation adds no saved field or technology capability.
 
 The older raw world layers remain selectable by revision within the current
 catalogue. Current-build matching saves preserve people, offices, resources and
@@ -179,7 +189,7 @@ data/bookmark_634_identities.js and the four regional scaffolds remain inert lit
 
 Autumn 634 setup
 
-The Early Conquests is selectable in development setup at year 634, season 2, day 1, using core_identities_v3 and europe_regional_2 geography; core_courts_v4 remains hidden. The current review switch offers Umar and Heraclius as Historical starts, the Ctesiphon, Damascus, Christian Arab frontier and Medinan households as Story starts, and farmer_634 and craftsman_634 as Open starts. The ruler declarations retain their hidden flags for released-rule review; turning off reviewOpenStarts withholds those two starts without hiding the date or its households. Yazdegerd remains unavailable. Picker, start codes, direct creation and Observe use the shared visibility gate, and matching saves remain restorable if the bookmark is later hidden. Source loading, retained identities, opening records and technology eligibility are unchanged; this is presentation of existing content, with no new capability, technology gate or save field. Reconstruction limits and the implemented start inventory are in docs/research/634-bookmark.md. Development visibility is separate from release and owner runtime acceptance.
+The Early Conquests selects core_courts_v4 in development setup at year 634, season 2, day 1 on europe_regional_2. Umar, Heraclius and Yazdegerd are Historical starts, the Ctesiphon, Damascus, Christian Arab frontier and Medinan households are Story starts, and farmer_634 and craftsman_634 are Open starts. These nine approved beginnings are available with reviewOpenStarts disabled; unsupported beginnings are excluded by the effective start list. Picker, start codes, direct creation and Observe use the shared visibility gate, and matching saves remain restorable if the bookmark is later hidden. Source loading, retained identities, opening records and technology eligibility are unchanged; this is presentation of existing content, with no new capability, technology gate or save field. Reconstruction limits and the implemented start inventory are in docs/research/634-bookmark.md. Development visibility is separate from release and owner runtime acceptance.
 
 Logical source order
 
@@ -571,9 +581,9 @@ Autumn 634 composition
 
 data/bookmark_634_routes.js stages FBDATA.bookmarkRoutes634 after the four regional inputs. Its detached climate table preserves their exact assignments and northern_temperate fallback; its 22 straits and canonical crossingClasses retain the existing physical crossings. inheritedLandRoutes records the 33 unchanged europe_regional_2 edges and costs for reference checking only, not a bookmark override. The packet adds no county, start, story, capability or saved field and is not yet consumed by the complete composer. Future composition must copy only geography, climate, straits and crossingClasses once, preserving retained revisions and ordinary access/capacity rules. Physical connections assert no historical itinerary, market, garrison or guaranteed passage.
 
-data/bookmark_634.js registers The Early Conquests on europe_regional_2 at year 634, season 2, day 1, with scenery_protected_v1 fresh and baseline retained. It assembles numbered blocks then scenery, rejecting duplicate declarations, missing physical coverage, unresolved courts, invalid capitals and conflicting shared sites or forms before publication. The complete world and 634_opening layouts are detached from regional inputs. The explicit opening, local institution, religious head, story and scripted-history collections contain no inherited historical transaction. Bookmark-level system exclusions override faith and government enables for the reduced institutional opening. Its twenty-two physical sea crossings retain their explicit earlier endpoints and classes.
+data/bookmark_634.js registers The Early Conquests on europe_regional_2 at year 634, season 2, day 1, with core_courts_v4 fresh and all four earlier layers retained. It assembles numbered blocks then scenery, rejecting duplicate declarations, missing physical coverage, unresolved courts, invalid capitals and conflicting shared sites or forms before publication. The complete world and 634_opening layouts are detached from regional inputs. The explicit opening, local institution, religious head, story and scripted-history collections contain no inherited historical transaction. Bookmark-level system exclusions override faith and government enables for the reduced institutional opening. Its twenty-two physical sea crossings retain their explicit earlier endpoints and classes.
 
-data/starts_634_ordinary.js provides ordinary farmer_634 and craftsman_634 roles with inhabited-county startLocations; the shared medieval roles exclude this era. These generated households use existing resident selection and ordinary resources. The date is selectable in the picker, codes and Observe; individual held ruler starts retain their own hidden boundary. Saved campaigns retain baseline identity, their actual people and spent resources across active-world changes and later hiding, without replay. Named rulers and fixed household story starts remain independent declarations. This date composition reuses existing capabilities, adds no saved field and needs no additional technology impact entry.
+data/starts_634_ordinary.js provides ordinary farmer_634 and craftsman_634 roles with inhabited-county startLocations; the shared medieval roles exclude this era. These generated households use existing resident selection and ordinary resources. The date is selectable in the picker, codes and Observe; the three approved ruler starts are also visible without the review switch. Saved campaigns retain baseline identity, their actual people and spent resources across active-world changes and later hiding, without replay. Named rulers and fixed household story starts remain independent declarations. This date composition reuses existing capabilities, adds no saved field and needs no additional technology impact entry.
 
 Capital checks follow the shared bookmark contract: every court needs an inhabited on-map anchor, and territorial courts must own that county. A nonTerritorial court may use a foreign-owned anchor without claiming the county. The Aures court uses Constantine under Eastern Roman ownership. Rejecting that valid anchor would abort 634 publication after its ordinary starts have loaded, causing those starts to report an unknown bookmark during validation of every date.
 

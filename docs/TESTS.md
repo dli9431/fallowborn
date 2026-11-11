@@ -1,4 +1,16 @@
-Autumn 634 core identity coverage
+Autumn 634 selection and core identity coverage
+
+634-activation.spec.js checks the selected core_courts_v4 world through the
+ordinary picker with review enabled and disabled, all nine approved start codes
+and direct construction, and Observe without personal enrollment. It verifies
+the complete world inventory, exact personal/world attachment sets, resident or
+adopted court identities and peaceful first choices. Current-content campaigns
+retain spent money, people, property, public accounts, decisions, RNG and UID
+through activation from another date, load, re-save and second load; fresh story
+and aristocratic setup hooks are forbidden during restoration. Unsupported codes,
+foreign-date scenarios, stale hidden previews and an effective hidden world
+reject before campaign or random-state mutation. These focused standard-edition
+checks do not establish full-suite, historical, play, device or release acceptance.
 
 The 634 specifications register data/bookmark_manifest.js as a runtime input.
 The refreshed catalogue, identity and scenery inventories also register the
@@ -6,8 +18,8 @@ manifest's dated 634 source paths as focused runtime inputs.
 634-first-playable.spec.js checks the exact ordered dated source inventory in
 that manifest, its deferred shell boundary and the absence of eager 634 tags.
 bookmark-lazy-dates.spec.js compares selected-date 634 publication with both the
-eager reference and complete content preparation, including the hidden assembled
-revision. The selectable world remains core_identities_v3; core_courts_v4 alone
+eager reference and complete content preparation, including the assembled
+revision. The selected world is core_courts_v4; this revision alone
 attaches the Syrian and Iraqi front opportunities.
 
 634-catalogue-integration.spec.js checks the complete standard-edition loader
