@@ -2,6 +2,24 @@
 (function () {
   'use strict';
   FBDATA.industryLaws = {
+    london_guild_exclusive:{
+      schema:1, motionId:'london_guild_exclusive', bookmarkId:'1204',
+      provinceId:'london', enterpriseType:'workshop_business',
+      minYear:1204, maxYear:1215, mode:'prohibition', fee:0,
+      permitDays:90, durationDays:360, transitionDays:30,
+      exemptions:[{kind:'guild', id:'craftsman', fee:0, permission:true}],
+      grant:{profession:'craftsman', payment:18},
+      relief:{days:60, chance:0.5}, offense:{id:'guild_exclusive_workshop', penalty:'fine', amount:8, closure:true}
+    },
+    london_guild_license:{
+      schema:1, motionId:'london_guild_license', bookmarkId:'1204',
+      provinceId:'london', enterpriseType:'workshop_business',
+      minYear:1204, maxYear:1215, mode:'license', fee:3,
+      permitDays:90, durationDays:360, transitionDays:30,
+      exemptions:[{kind:'guild', id:'craftsman', fee:0, permission:true}],
+      grant:{profession:'craftsman', payment:12},
+      relief:{days:60, chance:0.5}, offense:{id:'guild_licensed_workshop', penalty:'fine', amount:6, closure:false}
+    },
     constantinople_workshop_permission:{
       schema:1, motionId:'constantinople_workshop_permission', bookmarkId:'1066',
       provinceId:'constantinople', enterpriseType:'workshop_business',

@@ -19,7 +19,7 @@
   function controller(s, pid) { return s.holder && s.holder[pid] || s.owner && s.owner[pid] || null; }
   function realm(s, rid) { return s.realms && s.realms[rid]; }
   function account(s, rid) {
-    return FB.treasuryPublicAccountSnapshot(s, rid);
+    return FB.treasuryPublicAccountSnapshot(s, rid, true);
   }
   /* Windowed retention through the shared ledger-retention graph. Live laws,
      pending hearings, current permits and every record of a live law are roots;
@@ -62,7 +62,7 @@
     durationDays:{type:'integer',min:1,max:3600},
     permitDays:{type:'integer',min:1,max:function (c) { return c.root.durationDays; }},
     transitionDays:{type:'integer',min:0,max:function (c) { return c.root.durationDays; }},
-    exemptions:{type:'array',maxItems:16}, offense:{optional:'absent'}, voting:{optional:'absent'}, relief:{optional:'absent'}
+    exemptions:{type:'array',maxItems:16}, offense:{optional:'absent'}, voting:{optional:'absent'}, relief:{optional:'absent'}, grant:{optional:'absent'}
   },test:function (d) { return d.mode !== 'prohibition' || d.fee === 0; }};
   const exemptionSpec = {type:'object',fields:{
     kind:{enum:['home_province','guild','office']}, id:{type:'string',minLength:1},
@@ -73,6 +73,19 @@
   }};
   const reliefSpec = {type:'object',fields:{
     days:{type:'integer',min:1,max:function (c) { return c.root.durationDays; }}, chance:{type:'number',min:0,max:1}
+  }};
+  const grantSpec = {type:'object',fields:{
+    profession:{type:'string',ref:{table:'careers'}}, payment:{type:'number',exclusiveMin:0,max:10000}
+  },test:function (g,c) {
+    const career = c.data.careers[g.profession];
+    return !!career && career.guild === true && ['craft','trading'].some(function (role) {
+      return career.role === role || Array.isArray(career.roles) && career.roles.indexOf(role) >= 0;
+    }) &&
+      (c.root.mode !== 'license' || c.root.fee > 0) &&
+      !own(c.root,'voting') && !!c.root.relief && !!c.root.offense &&
+      c.root.exemptions.some(function (x) {
+        return !!x && x.kind === 'guild' && x.id === g.profession && x.fee === 0 && x.permission === true;
+      });
   }};
   const offenseSpec = {type:'object',fields:{
     id:identifierSpec, penalty:{enum:['fine','closure','suspension']}, amount:moneySpec,
@@ -117,6 +130,8 @@
       const motion = data.localCouncilMotions[d.motionId];
       if (Object.keys(motion.fx || {}).length) errors.push('Industry-law motions cannot also grant ordinance effects: ' + id);
       if (own(d,'voting') && !S.valid(d.voting,votingSpec,context)) errors.push('Invalid industry-law voting rules: ' + id);
+      if (own(d,'grant') && (!supportedEnterprise(data,d.enterpriseType) || !S.valid(d.grant,grantSpec,context)))
+        errors.push('Invalid industry-law guild grant: ' + id);
     });
     return errors;
   };
@@ -130,6 +145,7 @@
     if (s.turn >= law.endTurn) return 'expired';
     const r = realm(s, law.issuer.realmId);
     if (!r || !r.alive || controller(s, law.terms.provinceId) !== law.issuer.realmId) return 'suspended';
+    if (law.grant && !guildPresent(s, law.terms)) return 'suspended';
     return 'active';
   };
   function applicable(s, d) {
@@ -168,7 +184,7 @@
       return e.type === d.enterpriseType && e.provinceId === d.provinceId;
     }).length;
     // Settled laws outside the live closure never count toward the law limit.
-    const ready = !d.voting && council(s, d) && (repealId ? !!target && target.repealedTurn === null :
+    const ready = !d.grant && !d.voting && council(s, d) && (repealId ? !!target && target.repealedTurn === null :
       !live && affected <= 512 && L.liveCounts(s).laws < LIMITS.laws);
     return {schema:1, kind:'industry_motion', definitionId:definitionId, repealId:repealId || null,
       ready:!!ready, actorId:s.player.charId, turn:s.turn, terms:copy(d),
@@ -190,6 +206,10 @@
       const law = rows.laws.filter(function (r) { return r.id === q.repealId; })[0];
       law.repealedTurn = s.turn;
       law.repealer = copy(q.issuer);
+      const slots = s.player.guildMonopolies || {};
+      ['incoming','outgoing'].forEach(function (slot) {
+        if (slots[slot] && slots[slot].lawId === law.id) slots[slot] = null;
+      });
       return law;
     }
     const row = {id:'industry_law_' + FB.uid(), definitionId:q.definitionId,
@@ -217,6 +237,167 @@
       '⚖ The local council adopts {motion}. Existing businesses retain ownership and a lawful transition.', {motion:FB.dataParam('localCouncilMotion', motionId)}));
     return {passed:result.passed, chance:result.chance, motionId:motionId,
       repealId:q.repealId, definitionId:definitionId};
+  };
+  // A ruler's paid charter is another issuer of the canonical law, not a
+  // parallel permission store. Previews never create guilds, rulers or funds.
+  function guildMember(s, id, d) {
+    const c = s.chars[id], career = c && c.career;
+    return !!(living(s,id) && !FB.justiceCustodyOf(s,id) && career && d.grant &&
+      career.profession === d.grant.profession &&
+      ['member','master','officer','guildmaster'].indexOf(career.guildRank) >= 0 &&
+      FB.characterResidence(s,c) === d.provinceId);
+  }
+  function guildPresent(s, d) {
+    return Object.keys(s.chars).some(function (id) { return guildMember(s,id,d); });
+  }
+  L.guildRepresentatives = function (s, d) {
+    return Object.keys(s.chars).sort().filter(function (id) { return guildMember(s,id,d); });
+  };
+  L.grantList = function (s) {
+    return Object.keys(FBDATA.industryLaws || {}).filter(function (id) {
+      const d = FBDATA.industryLaws[id];
+      return d.grant && applicable(s,d) && d.provinceId === s.player.provinceId;
+    });
+  };
+  function grantFunds(s, id) {
+    return id === s.player.charId ? s.player.gold : s.chars[id] && s.chars[id].wealth;
+  }
+  function grantRuler(s, rid) {
+    return rid === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid);
+  }
+  function grantAuthority(s, d, rid) {
+    const c = grantRuler(s,rid), r = realm(s,rid);
+    return !!(r && r.alive && c && living(s,c.id) && !FB.justiceCustodyOf(s,c.id) &&
+      controller(s,d.provinceId) === rid && account(s,rid) &&
+      FB.political.consent(s,{kind:'realm',id:rid},'industry_law',{provinceId:d.provinceId}).allowed);
+  }
+  L.quoteGrant = function (s, definitionId, slot, sponsorId, exemptUids) {
+    const d = FBDATA.industryLaws[definitionId];
+    if (!d || !d.grant || ['incoming','outgoing'].indexOf(slot) < 0) return null;
+    const rid = controller(s,d.provinceId), ruler = grantRuler(s,rid), actor = s.chars[s.player.charId];
+    const members = L.guildRepresentatives(s,d), sponsor = s.chars[sponsorId];
+    const exemptions = Array.isArray(exemptUids) ? exemptUids.slice() : [];
+    const businesses = (s.player.enterprises || []).filter(function (e) { return e.type === d.enterpriseType && e.provinceId === d.provinceId; });
+    const slots = s.player.guildMonopolies || {}, publicAccount = account(s,rid), funds = grantFunds(s,sponsorId);
+    const request = slot === 'incoming', career = actor && actor.career;
+    const actorReady = living(s,s.player.charId) && !s.player.dead && !FB.justiceCustodyOf(s,s.player.charId) &&
+      FB.hasCapability(s,'chartered_guilds');
+    const authority = grantAuthority(s,d,rid) && (request ? sponsorId === s.player.charId && career &&
+      career.profession === d.grant.profession && career.guildRank === 'guildmaster' && (career.guildStanding || 0) >= 60 &&
+      (FB.station.isLanded(s.player,s) ? s.player.liege === rid : s.player.provinceId === d.provinceId) &&
+      FB.standingOf(s,{kind:'realm',id:rid}) >= 40 &&
+      (!s.player.cooldowns || s.player.cooldowns.petition_monopoly === undefined ||
+        s.turn - s.player.cooldowns.petition_monopoly >= 360) :
+      rid === 'player' && FB.station.isLanded(s.player,s));
+    const validExemptions = (exemptUids === undefined || Array.isArray(exemptUids)) && exemptions.length <= 512 && exemptions.every(function (uid,i) {
+      return typeof uid === 'string' && exemptions.indexOf(uid) === i && businesses.some(function (e) { return e.uid === uid; });
+    });
+    const ready = !!(applicable(s,d) && actorReady && authority && !slots[slot] &&
+      sponsor && sponsor.career && sponsor.career.guildRank === 'guildmaster' && members.indexOf(sponsorId) >= 0 &&
+      (sponsorId !== s.player.charId || rid !== 'player' || FB.treasurySeparated(s,'player')) &&
+      Number.isFinite(funds) && funds >= d.grant.payment && publicAccount &&
+      Number.isFinite(publicAccount.gold + d.grant.payment) && publicAccount.gold + d.grant.payment <= Number.MAX_SAFE_INTEGER &&
+      validExemptions && businesses.length <= 512 && availableLaw(s,definitionId));
+    let reason = '';
+    if (!ready) {
+      if (!applicable(s,d)) reason = FB.T('These charter terms are unavailable in this campaign or date.');
+      else if (!actorReady) reason = FB.T('A free living adult and completed Guild Charters are required for a new grant.');
+      else if (!authority) reason = FB.T('The actual county ruler must have competent authority. A petition also needs the direct grantor relationship, 60 guild standing, 40 Standing with that realm and an unused annual petition.');
+      else if (slots[slot]) reason = FB.T('This charter slot is occupied. Review its existing terms before granting another.');
+      else if (!sponsor || members.indexOf(sponsorId) < 0) reason = FB.T('Choose an existing free local guildmaster as the guild representative.');
+      else if (sponsorId === s.player.charId && rid === 'player' && !FB.treasurySeparated(s,'player'))
+        reason = FB.T('The guild representative cannot pay into the same unified purse. Choose a representative with separate personal funds.');
+      else if (!Number.isFinite(funds) || funds < d.grant.payment)
+        reason = FB.T('The guild representative needs {money:required}; personal funds available: {money:available}.',{required:d.grant.payment,available:Number.isFinite(funds) ? funds : 0});
+      else if (!validExemptions) reason = FB.T('Named exemptions must identify distinct existing businesses in this trade and county.');
+      else reason = FB.T('The original account, an available law slot and a local guildmaster are required; an earlier unexpired grant cannot be duplicated.');
+    }
+    return {kind:'industry_grant', definitionId:definitionId, slot:slot, sponsorId:sponsorId,
+      exemptEnterpriseUids:exemptions, actorId:s.player.charId, turn:s.turn, ready:ready,
+      terms:copy(d), amount:d.grant.payment,
+      issuer:{kind:'ruler_grant',provinceId:d.provinceId,realmId:rid,holderCharId:ruler && ruler.id || null},
+      reason:reason,
+      signature:FB.mods.fingerprint({player:s.player, ledger:ledger(s), date:s.date, definition:d,
+        members:members, sponsor:sponsor || null, funds:funds === undefined ? null : funds, ruler:ruler || null,
+        generation:rid ? FB.realmRulerGeneration(s,rid) : null, publicAccount:publicAccount,
+        authority:!!authority, capability:!!actorReady})};
+  };
+  L.commitGrant = function (s, q) {
+    const fresh = q && q.kind === 'industry_grant' && L.quoteGrant(s,q.definitionId,q.slot,q.sponsorId,q.exemptEnterpriseUids);
+    if (!fresh || !fresh.ready || !same(q,fresh)) return false;
+    // Every transfer uses existing private funds and the recorded public payee.
+    if (q.sponsorId === s.player.charId) {
+      if (!FB.treasuryHouseholdPurchase(s,[{realmId:q.issuer.realmId,amount:q.amount}],0,true)) return false;
+    } else {
+      if (!FB.treasuryCredit(s,q.issuer.realmId,q.amount,true)) return false;
+      s.chars[q.sponsorId].wealth -= q.amount;
+    }
+    const law = applyApproved(s,q), contractId = 'guild_monopoly:law:' + law.id;
+    law.grant = {contractId:contractId,slot:q.slot,sponsorId:q.sponsorId,amount:q.amount,
+      exemptEnterpriseUids:q.exemptEnterpriseUids.slice()};
+    const ruler = s.chars[q.issuer.holderCharId];
+    const record = {contractId:contractId,lawId:law.id,profession:q.terms.grant.profession,
+      grantorKind:q.slot === 'outgoing' ? 'player' : 'realm',grantorId:q.issuer.realmId,
+      grantorName:'',grantorRulerName:ruler.name,recipientKind:q.slot === 'outgoing' ? 'local_guild' : 'household',
+      scope:q.slot === 'outgoing' ? 'landed' : 'province',scopeId:q.terms.provinceId,
+      tier:FB.realmRank.tier(s.realms[q.issuer.realmId],s,3),years:Math.max(1,Math.ceil(q.terms.durationDays / 360)),
+      startTurn:law.startTurn,endTurn:law.endTurn,durationDays:q.terms.durationDays,
+      enterpriseBonus:0,taxBonus:0,rulerFee:q.amount,popularOpinion:0};
+    if (!s.player.guildMonopolies) s.player.guildMonopolies = {incoming:null,outgoing:null};
+    s.player.guildMonopolies[q.slot] = record;
+    FB.ensureGuildMonopolies(s);
+    if (q.slot === 'incoming') {
+      if (!s.player.cooldowns) s.player.cooldowns = {};
+      s.player.cooldowns.petition_monopoly = s.turn;
+    }
+    FB.news(s,FB.msg('news.industry_law.guild_grant',
+      'The ruler grants {motion}. The guild representative pays {money:amount} to the original public treasury; operating terms now apply in the named county.',
+      {motion:FB.dataParam('localCouncilMotion',q.terms.motionId),amount:q.amount}));
+    return law;
+  };
+  L.quoteRevokeGrant = function (s, lawId) {
+    const law = lawById(s,lawId);
+    if (!law || !law.grant) return null;
+    const d = law.terms, rid = law.issuer.realmId, ruler = grantRuler(s,rid);
+    return {kind:'industry_grant_revoke',lawId:lawId,actorId:s.player.charId,
+      ready:rid === 'player' && living(s,s.player.charId) && !s.player.dead && grantAuthority(s,d,rid) && lawLive(s,law),
+      issuer:{kind:'ruler_grant',provinceId:d.provinceId,realmId:rid,holderCharId:ruler && ruler.id || null},
+      signature:FB.mods.fingerprint({player:s.player,ledger:ledger(s),date:s.date,ruler:ruler || null,
+        generation:FB.realmRulerGeneration(s,rid),authority:grantAuthority(s,d,rid)})};
+  };
+  L.commitRevokeGrant = function (s, q) {
+    const fresh = q && q.kind === 'industry_grant_revoke' && L.quoteRevokeGrant(s,q.lawId);
+    if (!fresh || !fresh.ready || !same(q,fresh)) return false;
+    const law = applyApproved(s,{repealId:q.lawId,issuer:q.issuer});
+    FB.news(s,FB.msg('news.industry_law.guild_revoked',
+      'The ruler revokes {motion}. Future restrictions end; original payments and imposed personal liabilities are retained without refund.',
+      {motion:FB.dataParam('localCouncilMotion',law.terms.motionId)}));
+    return law;
+  };
+  // Trusted exposure adapter; the plot owner has already resolved its case.
+  L.endExposedGrant = function (s, lawId) {
+    const law = lawById(s,lawId);
+    return law && law.grant && law.repealedTurn === null ? applyApproved(s,{repealId:law.id,issuer:law.issuer}) : false;
+  };
+  // Living abdication rekeys the same institution out of the player alias.
+  // Preserve original people, terms, receipts and contract identities.
+  L.rekeyGrantor = function (s, fromId, toId) {
+    if (!s.industryLaws) return;
+    const rows = ledger(s), ids = [], sources = [];
+    rows.laws.forEach(function (law) {
+      if (!law.grant || law.issuer.realmId !== fromId) return;
+      ids.push(law.id); law.issuer.realmId = toId; law.payeeRealmId = toId;
+      if (law.repealer && law.repealer.realmId === fromId) law.repealer.realmId = toId;
+    });
+    rows.permits.forEach(function (p) { if (ids.indexOf(p.lawId) >= 0) p.payeeRealmId = toId; });
+    (rows.violations || []).forEach(function (v) { if (ids.indexOf(v.lawId) >= 0) sources.push('industry:' + v.id); });
+    (s.justice && s.justice.offenses || []).forEach(function (o) {
+      if (o.kind === 'industry_violation' && sources.indexOf(o.sourceId) >= 0) o.authority = toId;
+    });
+    const slots = s.player.guildMonopolies || {};
+    ['incoming','outgoing'].forEach(function (slot) {
+      if (slots[slot] && ids.indexOf(slots[slot].lawId) >= 0) slots[slot].grantorId = toId;
+    });
   };
   // Assembly adapters retain commitments, never a second store of enacted laws.
   function votes(s) { return ledger(s).votes || []; }
@@ -456,6 +637,9 @@
       const d = law.terms;
       if (L.lifecycle(s, law) !== 'active' || d.provinceId !== e.provinceId || d.enterpriseType !== e.type) return;
       const x = exemption(s, d);
+      if (law.grant && law.grant.exemptEnterpriseUids.indexOf(e.uid) >= 0) {
+        x.fee = 0; x.permission = true; x.exempt = true;
+      }
       const relief = (rows.petitions || []).some(function (p) {
         return p.kind === 'exemption' && p.lawId === law.id && p.enterpriseUid === e.uid &&
           p.actorId === s.player.charId && p.granted && p.endTurn > s.turn;
@@ -550,7 +734,7 @@
     if (q.action === 'pay') {
       if (!FB.treasuryHouseholdPurchase(s, fresh.status.charges.map(function (c) {
         return {realmId:c.payeeRealmId, amount:c.amount};
-      }), 0)) return false;
+      }), 0, true)) return false;
       L.chargeAcquisition(s, e, fresh);
     }
     else {
@@ -583,7 +767,7 @@
     });
   }
   function court(s, law) {
-    return controller(s, law.terms.provinceId) === law.issuer.realmId ?
+    return (!law.grant || guildPresent(s,law.terms)) && controller(s, law.terms.provinceId) === law.issuer.realmId ?
       FB.justiceIndustryJurisdiction(s, law.issuer.realmId, law.terms.provinceId) : null;
   }
   L.quotePetition = function (s, uid, lawId, kind) {
@@ -613,7 +797,7 @@
       endTurn:Math.min(law.endTurn, s.turn + q.days)};
     rows.petitions.push(row);
     if (granted && q.petitionKind === 'repeal') applyApproved(s, {repealId:law.id,
-      issuer:{kind:'local_council', provinceId:law.terms.provinceId, realmId:law.issuer.realmId, holderCharId:court(s, law)}});
+      issuer:{kind:law.grant ? 'ruler_grant' : 'local_council', provinceId:law.terms.provinceId, realmId:law.issuer.realmId, holderCharId:court(s, law)}});
     FB.news(s, FB.msg('news.industry_law.petition',
       'Your operating-law petition for {motion} is {decision}. No property changes hands.',
       {motion:FB.dataParam('localCouncilMotion', law.terms.motionId), decision:granted ? FB.msg('news.industry_law.granted','granted',{}) : FB.msg('news.industry_law.refused','refused',{})}));
@@ -708,10 +892,10 @@
   L.payFine = function (s, offense, amount) {
     const v = L.caseRecord(s, offense), terms = L.sentenceTerms(s, offense), payee = terms && account(s, terms.payeeRealmId);
     if (!v || !payee || !money(amount) || payee.gold + amount > Number.MAX_SAFE_INTEGER) return false;
-    if (v.actorId === s.player.charId) return FB.treasuryHouseholdPurchase(s, [{realmId:terms.payeeRealmId, amount:amount}], 0);
+    if (v.actorId === s.player.charId) return FB.treasuryHouseholdPurchase(s, [{realmId:terms.payeeRealmId, amount:amount}], 0, true);
     const c = s.chars[v.actorId];
     if (!c || c.dead || !Number.isFinite(c.wealth) || c.wealth < amount) return amount === 0;
-    if (!FB.treasuryCredit(s, terms.payeeRealmId, amount)) return false;
+    if (!FB.treasuryCredit(s, terms.payeeRealmId, amount, true)) return false;
     c.wealth -= amount;
     return true;
   };
@@ -745,7 +929,7 @@
     const fresh = q && L.quoteDebt(s, q.violationId);
     if (!fresh || !fresh.ready || !same(q, fresh)) return false;
     const v = violationById(s, q.violationId), law = lawById(s, v.lawId);
-    if (!FB.treasuryHouseholdPurchase(s, [{realmId:law.payeeRealmId, amount:q.amount}], 0)) return false;
+    if (!FB.treasuryHouseholdPurchase(s, [{realmId:law.payeeRealmId, amount:q.amount}], 0, true)) return false;
     v.judgment.paid += q.amount;
     return true;
   };
@@ -761,7 +945,12 @@
     (s.justice && s.justice.offenses || []).forEach(function (o) { if (o && o.kind === 'industry_violation') cases[o.id] = true; });
     function live(id) { return !!laws[id] && lawLive(s, laws[id]); }
     function ended(id, turn) { return laws[id] ? Math.max(turn, lawEnded(laws[id])) : turn; }
-    list(rows.laws).forEach(function (r) { if (r) g.add('law:' + r.id, lawLive(s, r), lawEnded(r), approvals[r.id] || []); });
+    list(rows.laws).forEach(function (r) {
+      if (!r) return;
+      const slots = s.player.guildMonopolies || {};
+      const linked = ['incoming','outgoing'].some(function (slot) { return slots[slot] && slots[slot].lawId === r.id; });
+      if (r) g.add('law:' + r.id, lawLive(s, r) || linked, lawEnded(r), approvals[r.id] || []);
+    });
     list(rows.votes).forEach(function (v) {
       if (!v) return;
       g.add('vote:' + v.id, v.status === 'pending', v.endedTurn, [v.lawId, v.repealId].filter(function (id) { return !!id; }).map(function (id) { return 'law:' + id; }));
@@ -857,7 +1046,7 @@
   L.referencesCharacter = function (s, id) {
     if (!s.industryLaws) return false;
     const rows = ledger(s);
-    return rows.laws.some(function (r) { return r.issuer.holderCharId === id || r.repealer && r.repealer.holderCharId === id; }) ||
+    return rows.laws.some(function (r) { return r.issuer.holderCharId === id || r.grant && r.grant.sponsorId === id || r.repealer && r.repealer.holderCharId === id; }) ||
       votes(s).some(function (v) { return v.proposerId === id || v.result && v.result.members.some(function (m) { return m.actorId === id; }); }) ||
       (rows.petitions || []).some(function (p) { return p.actorId === id; }) ||
       (rows.violations || []).some(function (v) { return v.actorId === id; }) ||
@@ -865,6 +1054,8 @@
   };
   L.validate = function (s) {
     if (!own(s, 'industryLaws')) {
+      if (['incoming','outgoing'].some(function (slot) { return s.player.guildMonopolies && s.player.guildMonopolies[slot] && own(s.player.guildMonopolies[slot],'lawId'); }))
+        throw new Error(FB.T('Invalid industry-law record.'));
       if ((s.justice && s.justice.offenses || []).some(function (o) { return o.kind === 'industry_violation'; }))
         throw new Error(FB.T('Invalid industry-law record.'));
       return;
@@ -877,12 +1068,12 @@
         !Array.isArray(rows.choices) || rows.choices.length > LIMITS.choices) bad();
     function issuer(i, d) {
       return fields(i, ['kind','provinceId','realmId','holderCharId']) &&
-        (i.kind === 'local_council' || i.kind === 'estates' && !!d.voting) &&
+        (d.grant ? i.kind === 'ruler_grant' : i.kind === 'local_council' || i.kind === 'estates' && !!d.voting) &&
         i.provinceId === d.provinceId && own(s.realms, i.realmId) && own(s.chars, i.holderCharId);
     }
     rows.laws.forEach(function (r) {
       const d = r && FBDATA.industryLaws[r.definitionId];
-      if (!d || !fields(r, ['id','definitionId','terms','issuer','payeeRealmId','startTurn','endTurn','transitionEndTurn','repealedTurn','repealer','existingEnterpriseUids']) ||
+      if (!d || !fields(r, ['id','definitionId','terms','issuer','payeeRealmId','startTurn','endTurn','transitionEndTurn','repealedTurn','repealer','existingEnterpriseUids','grant']) ||
           typeof r.id !== 'string' || !/^industry_law_/.test(r.id) || ids[r.id] || !same(r.terms, d) ||
           !issuer(r.issuer, d) || r.payeeRealmId !== r.issuer.realmId || !s.start || s.start.id !== d.bookmarkId ||
           !integer(r.startTurn, 0, s.turn) || r.endTurn !== r.startTurn + d.durationDays ||
@@ -894,6 +1085,23 @@
           rows.laws.some(function (other) { return other !== r && other.definitionId === r.definitionId &&
             other.startTurn <= r.startTurn && Math.min(other.endTurn, other.repealedTurn === null ? other.endTurn : other.repealedTurn) > r.startTurn; })) bad();
       ids[r.id] = r;
+      if (d.grant) {
+        const g = r.grant;
+        if (!fields(g,['contractId','slot','sponsorId','amount','exemptEnterpriseUids']) ||
+            g.contractId !== 'guild_monopoly:law:' + r.id || ['incoming','outgoing'].indexOf(g.slot) < 0 ||
+            !own(s.chars,g.sponsorId) || g.amount !== d.grant.payment || !Array.isArray(g.exemptEnterpriseUids) ||
+            g.exemptEnterpriseUids.some(function (uid,i) { return g.exemptEnterpriseUids.indexOf(uid) !== i || r.existingEnterpriseUids.indexOf(uid) < 0; })) bad();
+        const slot = s.player.guildMonopolies && s.player.guildMonopolies[g.slot];
+        if (lawLive(s,r) && (!slot || slot.lawId !== r.id)) bad();
+      } else if (own(r,'grant')) bad();
+    });
+    ['incoming','outgoing'].forEach(function (slot) {
+      const r = s.player.guildMonopolies && s.player.guildMonopolies[slot];
+      if (!r || !own(r,'lawId')) return;
+      const law = ids[r.lawId], g = law && law.grant;
+      if (!g || g.slot !== slot || r.contractId !== g.contractId || r.profession !== law.terms.grant.profession ||
+          r.grantorId !== law.issuer.realmId || r.startTurn !== law.startTurn || r.endTurn !== law.endTurn ||
+          r.rulerFee !== g.amount || r.enterpriseBonus !== 0 || r.taxBonus !== 0 || r.popularOpinion !== 0) bad();
     });
     rows.permits.forEach(function (p) {
       const law = p && ids[p.lawId], d = law && law.terms;
@@ -1022,6 +1230,7 @@
             !integer(v.turn, law.startTurn, Math.min(s.turn, law.endTurn - 1)) ||
             law.repealedTurn !== null && v.turn > law.repealedTurn ||
             law.existingEnterpriseUids.indexOf(v.enterpriseUid) >= 0 && v.turn < law.transitionEndTurn ||
+            law.grant && law.grant.exemptEnterpriseUids.indexOf(v.enterpriseUid) >= 0 ||
             typeof v.output !== 'number' || !isFinite(v.output) || v.output <= 0 || v.output > Number.MAX_SAFE_INTEGER ||
             v.fee !== x.fee || x.permission && x.fee === 0 || v.evidence !== 'material' ||
             (permitsBy[v.lawId + ':' + v.enterpriseUid] || []).some(function (p) { return p.paidTurn < v.turn && p.endTurn > v.turn; }) ||

@@ -3508,6 +3508,10 @@ window.FB = window.FB || {};
   { id: 'petition_monopoly',
     noConsume:true, deferCooldown:true,
     desc: function (s) {
+      if (s.player.guildMonopolies && s.player.guildMonopolies.incoming && s.player.guildMonopolies.incoming.lawId)
+        return FB.T('Review the linked guild operating law and its original grantor.');
+      if (FB.industryLaws.grantList(s).length)
+        return FB.T('Review paid guild operating rights, non-member licenses and exemptions from the actual county ruler.');
       const status = FB.guildMonopolyPetitionStatus(s, true);
       if (!status.ready) return status.reason;
       return FB.T(
@@ -3523,6 +3527,8 @@ window.FB = window.FB || {};
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
+      if (s.player.guildMonopolies && s.player.guildMonopolies.incoming && s.player.guildMonopolies.incoming.lawId) return true;
+      if (FB.industryLaws.grantList(s).length) return true;
       const status = FB.guildMonopolyPetitionStatus(s, true);
       return status.ready ? true : status.reason;
     },
@@ -3710,6 +3716,10 @@ window.FB = window.FB || {};
     } },
   { id: 'grant_monopoly', opensChoices:true, noConsume: true,
     desc: function (s) {
+      if (s.player.guildMonopolies && s.player.guildMonopolies.outgoing && s.player.guildMonopolies.outgoing.lawId)
+        return FB.T('Review or revoke the linked guild operating law. Revocation ends future restrictions without a refund.');
+      if (FB.industryLaws.grantList(s).length)
+        return FB.T('Choose enforceable guild operating rights and the actual consideration from an existing local guildmaster.');
       const status = FB.guildMonopolyIssueStatus(s);
       if (!status.ready) return status.reason;
       return FB.T(
@@ -3727,6 +3737,8 @@ window.FB = window.FB || {};
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
+      if (s.player.guildMonopolies && s.player.guildMonopolies.outgoing && s.player.guildMonopolies.outgoing.lawId) return true;
+      if (FB.industryLaws.grantList(s).length) return true;
       const status = FB.guildMonopolyIssueStatus(s);
       return status.ready ? true : status.reason;
     },
@@ -3760,7 +3772,7 @@ window.FB = window.FB || {};
     } },
   { id: 'ecclesiastical_court', opensChoices:true,
     show: function (s) {
-      return !!(FB.episcopalClaims && FB.episcopalClaims.entry(s,'ecclesiastical_court') || FB.hasBishopric && FB.hasBishopric(s, me(s)));
+      return !!(FB.religiousCases && FB.religiousCases.entry(s) || FB.episcopalClaims && FB.episcopalClaims.entry(s,'ecclesiastical_court') || FB.hasBishopric && FB.hasBishopric(s, me(s)));
     } },
   { id: 'convene_synod',
     show: function (s) {
@@ -12835,6 +12847,7 @@ window.FB = window.FB || {};
   }
 
   function instantStatusReadyTurnForAction(state, action) {
+    if (action.id === 'ecclesiastical_court' && FB.religiousCases && FB.religiousCases.entry(state)) return null;
     if (FB.episcopalClaims && FB.episcopalClaims.entry(state,action.id)) return null;
     let readyTurn = null;
     if (action.cd !== undefined) {
@@ -12863,7 +12876,7 @@ window.FB = window.FB || {};
       can = false;
       reason = adultDeedReason();
     }
-    if (can && action.cd !== undefined && !(FB.episcopalClaims && !(options && options.pastoralOnly) && FB.episcopalClaims.entry(state,action.id))) {
+    if (can && action.cd !== undefined && !(action.id === 'ecclesiastical_court' && FB.religiousCases && FB.religiousCases.entry(state)) && !(FB.episcopalClaims && !(options && options.pastoralOnly) && FB.episcopalClaims.entry(state,action.id))) {
       const cooldownDays = actionCooldownDays(state, action);
       const cooldowns = state.player.cooldowns || {};
       const last = cooldowns[action.id];
@@ -13084,6 +13097,10 @@ window.FB = window.FB || {};
     if (options && options.pastoralOnly && !(FB.bishopricSnapshot && FB.bishopricSnapshot(state,me(state)))) return;
     const status = FB.instantStatus(state, id, options);
     if (!status.shown || !status.can) return;
+    if (id === 'ecclesiastical_court' && FB.religiousCases && FB.religiousCases.entry(state)) {
+      if (FB.ui && FB.ui.showReligiousCases) FB.ui.showReligiousCases();
+      return;
+    }
     if (id !== 'bishopric' && FB.episcopalClaims && FB.episcopalClaims.entry(state,id) && !(options && options.pastoralOnly)) {
       if (FB.ui && FB.ui.showEpiscopalClaims) FB.ui.showEpiscopalClaims();
       return;

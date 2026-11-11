@@ -143,10 +143,18 @@
     return row ? Math.max(0, numeric(row.gold) - positive(row.militaryAccrued)) : 0;
   };
   // Exact public accounts never fall back to an adopted ruler's private gold.
-  FB.treasuryPublicAccountSnapshot = function (state, rid) {
-    const row = state.treasuryAccounting && state.treasuryAccounting.mode === 'active' && account(state, rid);
-    return row && Number.isFinite(row.gold) && Number.isFinite(row.militaryAccrued) && row.militaryAccrued >= 0 ?
-      { realmId:rid, gold:row.gold, militaryAccrued:row.militaryAccrued,
+  // Operating laws may explicitly address the ordinary dynastic unified purse.
+  // This opt-in never substitutes private cash for a separated public account.
+  function receivingAccount(state, rid, unifiedRuler) {
+    return account(state,rid) || (unifiedRuler === true && rid === 'player' &&
+      !FB.treasurySeparated(state,rid) && state.realms.player && state.realms.player.alive &&
+      FB.station.isLanded(state.player,state) ? state.player : null);
+  }
+  FB.treasuryPublicAccountSnapshot = function (state, rid, unifiedRuler) {
+    const row = state.treasuryAccounting && state.treasuryAccounting.mode === 'active' && receivingAccount(state, rid, unifiedRuler);
+    const accrued = row === state.player ? 0 : row && row.militaryAccrued;
+    return row && Number.isFinite(row.gold) && Number.isFinite(accrued) && accrued >= 0 ?
+      { realmId:rid, gold:row.gold, militaryAccrued:accrued,
       available:FB.treasuryAvailable(state, rid) } : null;
   };
   // Low-level conserved transfer. The reviewed funding owner supplies consent.
@@ -617,32 +625,32 @@
     if (paid) count('optional purchases paid');
     return paid;
   };
-  FB.treasuryCredit = function (state, rid, amount) {
-    const row = account(state, rid);
-    if (!row || state.treasuryAccounting.mode !== 'active' || !isFinite(amount) || amount < 0) return false;
+  FB.treasuryCredit = function (state, rid, amount, unifiedRuler) {
+    const row = receivingAccount(state, rid, unifiedRuler);
+    if (!row || !state.treasuryAccounting || state.treasuryAccounting.mode !== 'active' || !isFinite(amount) || amount < 0) return false;
     row.gold += amount;
     return true;
   };
 
   // A household purchase can settle several original public payees. Preflight
   // every account and debit the combined price once, including fractional fees.
-  FB.treasuryHouseholdPurchase = function (state, payments, price) {
+  FB.treasuryHouseholdPurchase = function (state, payments, price, unifiedRuler) {
     if (!Array.isArray(payments) || !Number.isFinite(price) || price < 0) return false;
     const credits = Object.create(null);
     let total = price;
     for (const payment of payments) {
       if (!payment || typeof payment.realmId !== 'string' || !Number.isFinite(payment.amount) || payment.amount < 0 ||
-          !FB.treasuryPublicAccountSnapshot(state, payment.realmId)) return false;
+          !FB.treasuryPublicAccountSnapshot(state, payment.realmId, unifiedRuler)) return false;
       credits[payment.realmId] = (credits[payment.realmId] || 0) + payment.amount;
       total += payment.amount;
     }
     if (!Number.isFinite(total) || !Number.isFinite(state.player.gold) || total > state.player.gold ||
         Object.keys(credits).some(function (rid) {
-          const closing = account(state, rid).gold + credits[rid];
+          const closing = receivingAccount(state, rid, unifiedRuler).gold + credits[rid];
           return !Number.isFinite(closing) || Math.abs(closing) > Number.MAX_SAFE_INTEGER;
         })) return false;
     state.player.gold -= total;
-    Object.keys(credits).forEach(function (rid) { account(state, rid).gold += credits[rid]; });
+    Object.keys(credits).forEach(function (rid) { receivingAccount(state, rid, unifiedRuler).gold += credits[rid]; });
     if (payments.length) count('counterparty transfers', payments.length);
     return true;
   };

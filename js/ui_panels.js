@@ -5117,6 +5117,19 @@ window.FB = window.FB || {};
       } else if (active) {
         meta.push(FB.T('Valid while the dynasty retains landed authority.'));
       }
+      if (active && monopoly.lawId) {
+        const law = s.industryLaws.laws.filter(function (r) { return r.id === monopoly.lawId; })[0];
+        if (law) {
+          const d = law.terms;
+          meta.splice(0,meta.length,
+            dt(s,'localCouncilMotion',d.motionId,FBDATA.localCouncilMotions[d.motionId],'name'),
+            FB.T('County: {county}',{county:FB.world.byId[d.provinceId].name}),
+            FB.T('Guild consideration paid: {money:amount}',{amount:law.grant.amount}),
+            FB.T('{days} days remain',{days:Math.max(0,law.endTurn - s.turn)}),
+            FB.industryLaws.lifecycle(s,law) === 'suspended' ? FB.T('Suspended; original term retained') : FB.T('Enforceable operating terms'),
+            FB.T('The original ruling realm can revoke without a refund.'));
+        }
+      }
       const record = {
         attention:active,
         state:active ? 'commitment' : 'routine',
@@ -5131,8 +5144,9 @@ window.FB = window.FB || {};
       record.html = networkReadableStaticRow(record);
       tradeRows.push(record);
     }
-    const incomingMonopoly = FB.guildMonopolyActive(s, 'incoming');
-    const outgoingMonopoly = FB.guildMonopolyActive(s, 'outgoing');
+    const monopolySlots = s.player.guildMonopolies || {};
+    const incomingMonopoly = FB.guildMonopolyActive(s, 'incoming') || monopolySlots.incoming && monopolySlots.incoming.lawId && monopolySlots.incoming;
+    const outgoingMonopoly = FB.guildMonopolyActive(s, 'outgoing') || monopolySlots.outgoing && monopolySlots.outgoing.lawId && monopolySlots.outgoing;
     monopolyRow('incoming', incomingMonopoly);
     monopolyRow('outgoing', outgoingMonopoly);
     const financeCommitment = financeCommitmentText(s);
@@ -5335,8 +5349,11 @@ window.FB = window.FB || {};
     }
     if (incomingMonopoly || outgoingMonopoly) {
       tradeSummary += '<div class="hint">' + esc(FB.T(
-        'Active charters cannot be renewed, revoked, or replaced before they end. Matching incoming and outgoing enterprise bonuses add together, capped at +50%.')) +
+        'Financial-only charters cannot be renewed, revoked, or replaced before they end. Their matching enterprise bonuses add together, capped at +50%. Enforceable guild terms use the linked law and its revocation policy.')) +
         '</div>';
+      if (incomingMonopoly && incomingMonopoly.lawId || outgoingMonopoly && outgoingMonopoly.lawId)
+        tradeSummary += networkActionHtml('guild-law-review','id="network-guild-law-review" data-network-action',esc(FB.T('Review enforceable guild terms')),
+          esc(FB.T('Original consideration, operating rights, exemptions and revocation')));
     }
     if (!guildCount) {
       tradeSummary += '<div class="hint">' + esc(FB.T(
@@ -5864,6 +5881,10 @@ window.FB = window.FB || {};
         UI.showPrivileges();
       });
     }
+    const guildLawReview = $('network-guild-law-review');
+    if (guildLawReview) guildLawReview.addEventListener('click',function () {
+      UI.showGuildLawGrants(outgoingMonopoly && outgoingMonopoly.lawId ? 'outgoing' : 'incoming');
+    });
     box.querySelectorAll('[data-guild-favor]').forEach(function (button) {
       button.addEventListener('click', function () {
         if (!FB.callGuildFavor(s, button.dataset.guildFavor)) return;

@@ -235,6 +235,14 @@ Dated government rollout coverage is in tests/e2e/specs/government-rollout.spec.
 
 # Testing Fallowborn
 
+`named-religious-cases.spec.js` covers actual local clergy-violence evidence,
+peasant/noble eligibility, identity exclusion, pure reviews, real private money,
+institutional/victim/secular receipts, custody and canonical penance/prison,
+player hearing application, limited fief confiscation, secular acceptance/refusal,
+stale facts/death/vacancy/jurisdiction, repeated-source rejection, two current
+save round trips, malformed-state atomicity, an ordinary independent JSON import
+with exact fingerprints, and retained mobile review navigation.
+
 protected-scenery.spec.js covers a detached full-map configuration with 21
 protected scenic remnants and 506 unchanged inhabited declarations, and an
 independent valley.json import through the ordinary Mods file picker. It checks
@@ -546,6 +554,15 @@ Each test receives a fresh isolated browser context. The suite never assumes tha
 storage behaves like origin-backed storage.
 
 ## Current coverage
+
+`guild-monopoly-laws.spec.js` covers paid ruler issuance and guildmaster petitions,
+exclusive and licensed operation, actual representative/public-account balances,
+guild and named-business exemptions, stale funds/authority/generation/terms,
+canonical actual-output evidence and custody/closure, revocation and succession,
+licensed acquisition, realm handover, jurisdiction and guild-membership suspension, current-content repeat restores,
+atomic malformed-receipt rejection, a real fictional press-guild JSON import,
+legacy financial-only charters, exact changed-owner content-id counts and retained
+mobile review/cancellation paths.
 
 `schema.spec.js` compares industry-law, production-good, recipe and physical-site
 acceptance with frozen pre-migration validators over a fixed boundary matrix.

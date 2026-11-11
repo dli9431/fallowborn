@@ -261,7 +261,7 @@ window.FBMODS = window.FBMODS || [];
       if (roots && authoringRoots.indexOf(key) >= 0 && !roots[key]) return;
       // An optional new claim catalogue cannot restamp unchanged older mods.
       // Claims themselves pin their exact native definition on first review.
-      if (roots && key === 'episcopalClaims' && !roots[key]) return;
+      if (roots && (key === 'episcopalClaims' || key === 'religiousCases') && !roots[key]) return;
       if (own(data, key)) effective[key] = data[key];
     });
     return effective;
@@ -747,6 +747,7 @@ window.FBMODS = window.FBMODS || [];
     doctrineCatalogs:true, religions:true, religiousPaths:true, religiousOfficeRanks:true,
     religiousAffiliations:true, religiousInstitutionProfiles:true, religiousActivities:true, religiousPatronage:true,
     episcopalClaims:true, holyWarCauses:true,
+    religiousCases:true,
     traits:true, traitMechanics:true, aiDecisionPolicies:true,
     ailments:true, modifiers:true, buildings:true, forts:true, siteResourceProfiles:true,
     buildingInstitutionProfiles:true, buildingOperationProfiles:true, buildingProfiles:true, fortProfiles:true, productionGoods:true, productionRecipes:true, productionExchangeProfiles:true, productionProducerProfiles:true, siegeSupportProfiles:true, relayServiceProfiles:true,
@@ -2722,6 +2723,9 @@ window.FBMODS = window.FBMODS || [];
     if (claimFaults.length) fail('episcopalClaims',claimFaults.join(' '));
     var causeFaults = FB.holyWarCauseCatalogFaults(FBDATA);
     if (causeFaults.length) fail('holyWarCauses',causeFaults.join(' '));
+    if (own(mod,'religiousCases') && !plainObject(mod.religiousCases)) fail('religiousCases','must be an object keyed by id.');
+    var religiousFaults = FB.religiousCases.catalogFaults(FBDATA);
+    if (religiousFaults.length) fail('religiousCases',religiousFaults.join(' '));
     if (own(mod, 'councilSeats') || own(mod, 'councilRules') || own(mod, 'councilSeatRoles') || own(mod, 'elections') || own(mod, 'privileges') || own(mod, 'collectiveDemands')) {
       validateCouncilDefinitions(mod);
       validateInstitutionDefinitions();
@@ -3315,6 +3319,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.religiousPatronage) mergeTable(FBDATA.religiousPatronage, mod.religiousPatronage);
     if (mod.episcopalClaims) mergeTable(FBDATA.episcopalClaims, mod.episcopalClaims);
     if (mod.holyWarCauses) mergeTable(FBDATA.holyWarCauses, mod.holyWarCauses);
+    if (mod.religiousCases) mergeTable(FBDATA.religiousCases, mod.religiousCases);
     if (mod.fortProfiles) mergeTable(FBDATA.fortProfiles, mod.fortProfiles);
     if (mod.buildingProfiles) mergeTable(FBDATA.buildingProfiles, mod.buildingProfiles);
     if (mod.buildingInstitutionProfiles) mergeTable(FBDATA.buildingInstitutionProfiles, mod.buildingInstitutionProfiles);
@@ -3580,6 +3585,7 @@ window.FBMODS = window.FBMODS || [];
     FB.stories.publish(prepared.stories);
     authoringRoots.forEach(function (key) { if (own(mod, key)) authoredRoots[key] = true; });
     if (own(mod,'episcopalClaims')) authoredRoots.episcopalClaims = true;
+    if (own(mod,'religiousCases')) authoredRoots.religiousCases = true;
     // Newly exposed roots join the fingerprint only when authored. Otherwise
     // exposing an existing engine table would invalidate unchanged older mods.
     // Bind to the definitions actually installed, including inherited defaults

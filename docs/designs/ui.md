@@ -2946,8 +2946,10 @@ icons, levels, or translated names from collapsing into one-character columns.
 Trade & Guild begins with explicit incoming and outgoing monopoly slots. Active rows name
 the profession, issuer or abstract recipient, optional household advocate, grantor tier,
 enterprise strength, tax effect, scope, and exact days remaining; empty slots say None.
-The panel also states the +50% overlap cap and that active charters have no renewal or
-early-revocation control.
+The panel states the +50% overlap cap and the financial-only charters' existing
+renewal/revocation boundary. Linked operating-law charters instead show the county,
+actual paid consideration, suspension and remaining term, with a retained review
+entry for exemptions and revocation by the competent original ruler.
 
 Connections begins with the same personal-attention summary as Deeds. The item card's
 compatibility recipient picker still shows exact +Standing and disables a person for the
@@ -3749,6 +3751,28 @@ The disabled action retains a focusable details wrapper. Other blockers stay inl
 
 
 ## Decision review layout
+
+Named ecclesiastical cases use the shared participant portraits, fact cards,
+action disclosures and retained confirmation/result flow. The docket names the
+actual accusation, evidence, private funds, custody, selected fief and each
+payment/property recipient before commitment. It distinguishes a proposed
+settlement, an accusation and an imposed judgment, and discloses political and
+popular costs. Back, Escape, Continue and civil-review returns retain focus,
+scroll and disclosures. Empty dockets explain that identity and wealth supply
+no cause. See religious-cases.md for the supported cause and jurisdiction.
+
+Guild monopoly entry sheets offer enforceable operating terms alongside the
+existing financial-only charter. A retained list leads to the existing local
+guildmaster's portrait and personal funds, then a fact-card review of county,
+business, restriction, exact one-off consideration and public payee, license fee,
+term, transition, exemptions and court consequences. Named existing business
+exemptions use labeled native checkboxes. Guild membership and qualifying-household
+criteria remain explicit. The first blocker stays visible beside confirmation.
+Browsing and Cancel spend nothing; issuance spends one day. Revocation has its
+own free confirmation, discloses no refund and retains the original payment.
+Back, Escape and mobile Back retain list position and focus. Affected owners use
+the existing career and business-manager paths for admission, compliance,
+petitions, pause/change of trade and deliberate unauthorized operation.
 
 Operating-law hearing sheets are shared by the town and Estates entry points.
 They disclose county, public payee, business, exemptions, transition, costs,

@@ -274,6 +274,14 @@ approval, payment or acquisition. Settled history older than FBDATA.balance.ledg
 folds only at a season boundary into optional `industryLaws.retired` totals, and its
 limits count only live records. See [Targeted operating laws](industry-laws.md).
 
+Paid ruler grants optionally retain an exact `grant` receipt on that same law and
+a `lawId` on the existing monopoly slot, sharing `guild_monopoly:law:<law.id>`.
+The receipt binds actual consideration, original representative and named
+business exemptions. Every live grant requires its matching link; malformed or
+changed facts reject before adoption. Restore never pays, issues or refunds.
+Retention keeps linked laws and their original people. Existing financial-only
+charters omit both additions and gain no retroactive restrictions or fees.
+
 This frozen contract fixes which bookmark-platform facts a campaign saves and which it derives, so every system that adds saved state writes against one schema and v4 keeps a single migration. FB.save.v4.validatePlatform accepts the optional fields described here; the registries that resolve their ids arrive with the systems that use them.
 
 Envelope. platformSchema:2 sits beside authoritySchema:4 and requires state.start.revision. Supported schema 1, unstamped early v4 and v3 records without a world revision migrate to baseline and gain schema 2 on serialization. Present unknown schema numbers are rejected. A revision-bearing record cannot masquerade as schema 1 or as an unstamped legacy record. The World-revision compatibility section defines resolution and older-reader rejection. Changing saved-field meaning requires another explicit contract review and migration.

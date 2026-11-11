@@ -152,6 +152,13 @@ Submission and resistance save `news.holywar.cause_submission` and
 `news.holywar.cause_resistance` descriptors with court snapshots and numeric costs,
 never rendered prose.
 
+Named discipline definitions render `religiousCase.<id>.name/desc` through
+`FB.dataText` with imported English fallback. The native cause and scope text
+also have literal `FB.T` sources in the shared review. Status, account, judgment
+and blocker chrome use complete translated phrases; durable case news is a
+`news.religious.case` descriptor. Saved proceedings contain ids, dates, numbers
+and source facts, never rendered accusations or judgment prose.
+
 Episcopal claim display fields use `episcopalClaim.<id>.name/desc` through
 `FB.dataText`. The native declaration shares the exact English title and scope
 explanation used by the localized generic review, so existing source aliases

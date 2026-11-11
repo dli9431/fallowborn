@@ -133,6 +133,14 @@ London levy/restriction and ordinary `industry-law-assemblies.json` import use
 the same pure validator, projections, principal-bound ballots, approval owner
 and detached saved-state checks. See MODDING.md and designs/industry-laws.md.
 
+Industry-law `grant` declarations instead expose paid ruler issuance. Native
+London workshop exclusive/license alternatives and the ordinary
+`guild-monopoly-river.json` import vary real consideration, business, permission,
+household exemptions, term and sanction. Shared schema validates candidate
+references; quotes bind actual rulers, local guildmasters, personal money and
+named existing property before the shared law/payment transactions. No JSON
+declaration invents a guild account, business inventory or a second law store.
+
 Optional episcopalClaims declarations compose only actual settlement-charter
 remittances. The native Roman consumer and ordinary episcopal-river-rent.json
 import vary rates, finite term, compensation, offer deadline and NPC responses
@@ -140,6 +148,13 @@ through the same pure validator, reviews, justice gate and transactions. Existin
 people, grants, private accounts and institutional treasuries remain canonical.
 No declaration can manufacture property or debt. See docs/MODDING.md and
 docs/designs/episcopal-claims.md for exact identities and lifecycle rules.
+
+Named religiousCases use the shared declarative schema and the same ordinary
+JSON candidate/publication path. The Roman clerical-violence rule and fictional
+religious-river-court.json vary settlement amounts and recipient, deadlines,
+permitted fief remedy and participant responses. Both consume actual canonical
+evidence and current local jurisdiction; a declaration cannot infer guilt from
+identity, create assets or bypass custody. See designs/religious-cases.md.
 
 Trusted retained catalogue compatibility
 

@@ -4110,7 +4110,7 @@ window.FB = window.FB || {};
     if (industryQuote && !industryQuote.status.permitted) blockers.push({code:'industry_law',
       reason:FB.industryLaws.reason(industryQuote.status)});
     if (industryQuote && industryQuote.status.permitted && industryQuote.status.charges.some(function (charge) {
-      return !FB.treasuryPublicAccountSnapshot(state, charge.payeeRealmId);
+      return !FB.treasuryPublicAccountSnapshot(state, charge.payeeRealmId, true);
     })) blockers.push({code:'industry_payee', reason:FB.T('The original law payee has no available public account.')});
     if (industryQuote && !industryQuote.ready && p.gold >= cost && !blockers.length) {
       blockers.push({code:'industry_permission', reason:industryQuote.reason});
@@ -4317,7 +4317,7 @@ window.FB = window.FB || {};
     const payments = status.industryQuote ? status.industryQuote.status.charges.map(function (c) {
       return {realmId:c.payeeRealmId, amount:c.amount};
     }) : [];
-    if (!FB.treasuryHouseholdPurchase(state, payments, status.baseCost)) return false;
+    if (!FB.treasuryHouseholdPurchase(state, payments, status.baseCost, true)) return false;
     const e = {
       uid:'enterprise_' + FB.uid(), type:type, provinceId:provinceId,
       settlement:settlement, workerId:null
@@ -5832,7 +5832,7 @@ window.FB = window.FB || {};
     const originId = typed && typed.originId || null;
     const destinationId = typed && typed.destinationId || null;
     const route = typed && typed.route || null;
-    return {
+    const normalized = {
       contractId:String(record.contractId ||
         ('guild_monopoly:' + slot + ':' + startTurn + ':' + profession)),
       profession:profession,
@@ -5863,6 +5863,8 @@ window.FB = window.FB || {};
       destinationId:destinationId,
       route:route
     };
+    if (Object.prototype.hasOwnProperty.call(record, 'lawId')) normalized.lawId = record.lawId;
+    return normalized;
   }
 
   FB.ensureGuildMonopolies = function (state) {
@@ -5878,6 +5880,10 @@ window.FB = window.FB || {};
   function monopolyInvalidReason(state, slot, record) {
     if (!record) return null;
     if (state.turn >= record.endTurn) return 'expired';
+    if (record.lawId) {
+      const law = state.industryLaws && state.industryLaws.laws.filter(function (r) { return r.id === record.lawId; })[0];
+      return !law || law.repealedTurn !== null ? 'exposed' : null;
+    }
     if (slot === 'incoming' && record.scope === 'province' &&
         state.player.provinceId !== record.scopeId) return 'relocation';
     if (slot === 'incoming' && record.scope === 'liege' &&
@@ -5888,6 +5894,10 @@ window.FB = window.FB || {};
 
   FB.guildMonopolyActive = function (state, slot) {
     const record = FB.ensureGuildMonopolies(state)[slot];
+    if (record && record.lawId) {
+      const law = state.industryLaws && state.industryLaws.laws.filter(function (r) { return r.id === record.lawId; })[0];
+      return law && FB.industryLaws.lifecycle(state, law) === 'active' ? record : null;
+    }
     return record && !monopolyInvalidReason(state, slot, record) ? record : null;
   };
 
@@ -5977,6 +5987,7 @@ window.FB = window.FB || {};
   FB.endGuildMonopoly = function (state, contractId, reason) {
     const target = FB.guildMonopolyByContract(state, contractId);
     if (!target) return false;
+    if (target.record.lawId && !FB.industryLaws.endExposedGrant(state, target.record.lawId)) return false;
     FB.ensureGuildMonopolies(state)[target.slot] = null;
     monopolyEndNotice(state, target.slot, target.record, reason || 'exposed');
     return true;
@@ -6163,6 +6174,7 @@ window.FB = window.FB || {};
   }
 
   FB.receiveGuildMonopoly = function (state, ctx) {
+    if (ctx && ctx.kind === 'industry_grant') return ctx.slot === 'incoming' && FB.industryLaws.commitGrant(state, ctx);
     const slots = FB.ensureGuildMonopolies(state);
     const profession = monopolyProfession(ctx && ctx.profession);
     const terms = monopolyTermsFromContext(ctx || {});
@@ -6227,6 +6239,11 @@ window.FB = window.FB || {};
   };
 
   FB.issueGuildMonopoly = function (state, profession, options) {
+    if (options && options.kind === 'industry_grant') {
+      const d = FBDATA.industryLaws[options.definitionId];
+      return options.slot === 'outgoing' && d && d.grant && d.grant.profession === profession ?
+        FB.industryLaws.commitGrant(state, options) : false;
+    }
     profession = monopolyProfession(profession);
     const status = FB.guildMonopolyIssueStatus(state);
     if (!profession || !status.ready) return false;

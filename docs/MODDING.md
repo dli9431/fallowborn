@@ -408,6 +408,44 @@ account owners, future-term boundaries and public interfaces are described in
 
 ## Ruler justice
 
+### Named ecclesiastical discipline
+
+`religiousCases` is an optional complete-record table merged by id (maximum 32,
+lowercase snake-case ids). Records require `name`, `desc`, `cause`, `bookmarkId`,
+`provinceId`, `realmId`, `faiths`, `yearMin`, `yearMax`, `fee`, `settlementShare`,
+`settlementMax`, `settlementRecipient`, `offerDays`, `penanceSentence`,
+`prisonSentence`, `secularSentence`, `allowFief`, `defendantPolicy`, `bishopPolicy`
+and `enforcementPolicy`. Unknown fields and reserved keys reject.
+
+The only supported `cause` is `clerical_violence`. References name an existing
+bookmark, inhabited county and ecclesiastical temporal realm. `faiths` is one to
+eight distinct existing Christian identities; it confers no authority over other
+faiths. Years are ordered integers, 1139–10000. `fee` is 0–100 to the institutional
+see, `settlementShare` is 0–0.5 of actual available private money,
+`settlementMax` is 0–1000, and `settlementRecipient` is `victim` or `secular`.
+`offerDays` is 1–90. Review/opening fees are zero; money moves on acceptance only.
+
+`penanceSentence` references a penance kind; `prisonSentence` references custody;
+`secularSentence` references custody. These sentences must close the selected
+case without forgiving unrelated cases. Current law, justification and
+actual custody further restrict them. `allowFief` permits only the named existing
+delegated settlement, subject to secular forfeiture law and its unchanged grant.
+It never permits private plots, businesses, clerical property or general title
+confiscation. `defendantPolicy` is `challenge`, `settlement`, `submit` or `refuse`;
+`bishopPolicy` is `penance`, `imprison`, `refer` or `dismiss`; `enforcementPolicy`
+is `accept` or `reject`. These select shared transactions, never callbacks.
+
+Eligibility requires an actual successful canonical abduction/killing source
+whose optional `clericalVictim:{faithId,provinceId}` facts were captured at the
+occurrence. Old offenses are not retroactively assigned clerical victims.
+Declarations cannot create suspects, guilt, wealth, property, custody or offices.
+The source cannot be prosecuted again under another profile. Display fields use
+`religiousCase.<id>.name/desc` with effective English fallback. Saved records pin
+the exact definition, canonical evidence, original principals and actual grant;
+payments cross-validate unique authority receipts. See
+[religious-cases.md](designs/religious-cases.md) and the independent ordinary JSON
+example `tests/e2e/fixtures/authoring/religious-river-court.json`.
+
 FBDATA.justiceSentences defines stable ids with display name/desc, kind, level (0-3), and unjust support penalty. Kind is custody, fine, penance, corporal, exile, death, pardon, ransom or forfeiture. Kind supplies mechanics; renamed or new ids have the same behavior. Fine and ransom transfer available funds; custody defaults to a 360-day term and 90-day extension window, overridable by termDays and extensionWindow. Penance defaults to costs of 40 piety and 20 prestige, overridable by pietyCost and prestigeCost. Exile may declare careerRole:cloister. A pardon with forgive:true closes all court cases; closesCase:false preserves the cause for release or ransom. The shipped money/exile/forfeit/maim/kill flags remain compatibility metadata, not dispatch. Runtime justiceSentences additions replace complete records by id.
 
 FBDATA.legalTraditions defines complete records keyed by tradition id. Each requires a display name, a nonempty unique sentences array of known sentence ids, procedures, justification and ai. Runtime legalTraditions additions replace complete records by id. Names and sentence display fields use the legalTradition and justiceSentence structured catalogs and normal lexicon labels, including labels.legalTradition.<id>.name and labels.justiceSentence.<id>.name/desc. Custom saved judgments retain a typed sentence data reference rather than rendered prose.
@@ -3613,6 +3651,46 @@ then a 35% option whose only possible mechanical result is a single skill gain. 
 balance is authored event content rather than an additional schema requirement for mods.
 
 ## Industry operating laws
+
+Optional `grant:{profession,payment}` declares a paid ruler issuance path instead
+of a council/Estates motion. `profession` names an existing guild-enabled
+craft/trading career (primary or secondary role). Membership reads the operator;
+it is independent of the enterprise's staffing career.
+`payment` is finite, greater than zero and at most 10000. It is the actual
+once-only consideration from the chosen existing local guildmaster's personal
+funds to the original granting realm's public account; payer and payee must be
+separate accounts. Definitions require
+`relief`, `offense` and a zero-fee, permission-granting exemption for that guild;
+they must omit `voting`. All existing fee, prohibition, term, transition, sanction
+and exemption rules still apply. The `motionId` remains the established localized
+display owner, with empty `fx`, but grants cannot pass through council voting.
+
+`quoteGrant(state,id,slot,sponsorId,exemptUids)` and `commitGrant(state,quote)` use
+the existing industry-law owner. Slot is `incoming` (a guildmaster petition) or
+`outgoing` (the actual ruling player's grant). Named exemptions are a unique
+subset of currently owned, affected business UIDs, at most 512; they are explicit
+grant facts, not new definitions or generated competitors. Ordinary exemption
+criteria describe qualifying households. Membership reads the operator, not a
+hired worker. Native London exclusive/license alternatives and
+`tests/e2e/fixtures/authoring/guild-monopoly-river.json` share these consumers.
+
+Ruler-issued law rows use `issuer.kind:"ruler_grant"` and additionally retain
+`grant:{contractId,slot,sponsorId,amount,exemptEnterpriseUids}`. `amount` exactly
+matches the definition's payment. `contractId` is `guild_monopoly:law:<law.id>`;
+the corresponding existing monopoly slot retains the same contractId and a
+`lawId`, zero tax/profit/opinion bonuses and the exact original paid fee and
+dates. Every live grant law requires its slot link. Missing or changed receipt
+facts reject, and validation never replays payment. Financial-only charters
+without a link retain their previous meanings without retroactive restrictions.
+
+Death or succession does not duplicate or cancel an institutional grant. Lost
+county control or absence of every recorded living, free local guild member
+suspends restrictions and enforcement; recovery resumes the remaining term and
+original payee. `quoteRevokeGrant`/`commitRevokeGrant` require the current competent
+original ruler and remove future restrictions without refund. Business-manager
+repeal petitions address the same original court; existing sanctions, ownership,
+historical evidence and liability remain canonical. See designs/industry-laws.md
+for the declared dissolution proxy and supported participant boundary.
 
 Optional `voting` opts a definition into affected-interest hearings through both
 the existing town council seat and the controlling court's Estates. Omission
