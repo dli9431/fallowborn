@@ -384,7 +384,7 @@
           "realm": "dune_gate",
           "culture": "dune_folk",
           "religion": "dune_belief",
-          "dev": 16,
+          "dev": 10,
           "duchy": "dune_district",
           "population0": 12000,
           "communities": [
@@ -822,7 +822,7 @@
               "realm": "dune_gate",
               "culture": "dune_folk",
               "religion": "dune_belief",
-              "dev": 16,
+              "dev": 10,
               "duchy": "dune_district",
               "population0": 12000,
               "communities": [
