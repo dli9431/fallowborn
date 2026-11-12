@@ -1,0 +1,52 @@
+  let officeGraph = null, officeDefinitions = null;
+  function religiousOfficeDefinitions(state) {
+    const graph = compiledFaiths(requestedFaithState(state));
+    if (officeGraph === graph && officeDefinitions) return withLocalReligiousOffices(state, officeDefinitions);
+    const out = {};
+    const ids = FB.religionIds(state, false);
+    for (let i = 0; i < ids.length; i++) {
+      const religionId = ids[i];
+      const rel = FB.religionOf(religionId, state);
+      if (!rel || !rel.head || !rel.head.officeId) continue;
+      const officeId = rel.head.officeId;
+      const source = FB.faithValue(state, religionId, 'head.officeId').sourceId ||
+        religionId;
+      if (!out[officeId] || source === religionId) {
+        out[officeId] = { id:officeId, religionId:source, head:rel.head };
+      }
+    }
+    officeGraph = graph;
+    officeDefinitions = out;
+    return withLocalReligiousOffices(state, out);
+  }
+
+  function withLocalReligiousOffices(state, definitions) {
+    const out = Object.assign({}, definitions), local = FB.localInstitutionDefinitions(state);
+    for (const officeId in out) {
+      if (state && out[officeId].head.succession === 'political_incumbent' &&
+          !FB.politicalReligiousOfficeApplies(FB.campaignBookmark(state), officeId, state)) {
+        delete out[officeId];
+        continue;
+      }
+      if (out[officeId].head.system && (!FB.systemEnabled || !FB.systemEnabled(state, out[officeId].head.system,
+          { faith:out[officeId].religionId,realm:null }))) delete out[officeId];
+    }
+    if (!FB.systemEnabled) return out;
+    for (const id in local) {
+      const def = local[id];
+      // Fresh-only offices exist only after their institution was explicitly seeded.
+      if (def.freshOnly && !(state && state.localInstitutions && state.localInstitutions[id])) continue;
+      if (def.profileId) {
+        const office = def.officeId && FB.religiousInstitutionOffice && FB.religiousInstitutionOffice(state, id, def);
+        if (office && !out[def.officeId]) out[def.officeId] = office;
+        continue;
+      }
+      const system = def.officeSystem === undefined ? 'episcopal_sees' : def.officeSystem;
+      if (system && !FB.systemEnabled(state,system,{ faith:def.religion,realm:null })) continue;
+      if (!def.officeId || out[def.officeId]) continue;
+      out[def.officeId] = { id:def.officeId, religionId:def.religion,
+        head:Object.assign({ holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment', local:true }, def.officeProfile || {}) };
+    }
+    return out;
+  }
+
