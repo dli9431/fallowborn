@@ -31,7 +31,7 @@ for(const fixture of fixtures){
       const faults=FB.mods.validate(mod),bad=JSON.parse(JSON.stringify(mod));
       const start=bad.startScenarios.find(function(s){return !s.rulerRealmId;});
       if(start.fixedProvinceId)delete start.startCulture;
-      else start.birthplaces.counties=['missing_fixture_county'];
+      else start.birthplaces.counties=[];
       return {faults:faults,rejected:FB.mods.validate(bad).length>0,
         pure:before===JSON.stringify([FBDATA,FB.state])&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
     },fixture.mod);
