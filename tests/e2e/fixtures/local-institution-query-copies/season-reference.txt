@@ -1,0 +1,40 @@
+// Unchanged seasonal implementation from 93af2502f7e0471bc0b0dc4f624c1362c529d8d9:js/institutions.js.
+  FB.localInstitutionsSeason = function (s) {
+    if (FB.religiousInstitutionCompact) FB.religiousInstitutionCompact(s);
+    if (FB.religiousInstitutionAI) FB.religiousInstitutionAI(s);
+    if (FB.religiousActivityAI) FB.religiousActivityAI(s);
+    if (!s.localInstitutions || !FB.localInstitutionList(s).length) return;
+    var period = Math.floor(s.turn / 90);
+    if (period < 1) return;
+    if (s.localInstitutionPeriod === period) return;
+    s.localInstitutionPeriod = period;
+    FB.ensureLocalInstitutions(s);
+    FB.localInstitutionList(s).forEach(function (item) {
+      var def = item.def, r = row(s, item.id), owner = controller(s, def);
+      if (!owner || !FB.political.actor(s, { kind:'realm', id:owner })) return;
+      var subject = { kind:'realm', id:owner }, key = subjectKey(subject);
+      var p = r.petitions[key];
+      var policy = treatment(s, def.provinceId);
+      if (!def.officeId && !representative(s, def, r)) r.representativeId = makeRepresentative(s, def);
+      var exposure = (FB.isRealmAtWar(s, owner) ? -2 : 1) +
+        (FB.hasModifier(s, 'civic_provisioning', def.provinceId) ? 3 : 0) +
+        (FB.hasModifier(s, 'civic_guarantees', def.provinceId) ? 2 : 0) +
+        (FB.hasModifier(s, 'tax_concession', def.provinceId) ? 2 : 0) -
+        (policy.extraction ? 10 : 0) - (policy.persecution ? 8 : 0);
+      r.standing[key] = FB.clamp((r.standing[key] || 0) + exposure, -100, 100);
+      r.demands = ['courts','tolerance'];
+      if (FB.isRealmAtWar(s, owner)) r.demands.push('protection');
+      if (!FB.hasModifier(s, 'civic_provisioning', def.provinceId)) r.demands.push('provision');
+      if (policy.extraction) r.demands.push('taxRelief');
+      if (owner === 'player' || p && (FB.localInstitutionConsent(s, item.id, subject) || s.turn < p.retryTurn)) return;
+      if (!church(def) && FB.political.actor(s, subject).realmReligionId !== def.religion) {
+        FB.localInstitutionList(s, 'church').some(function (see) {
+          if (see.def.provinceId !== def.provinceId || see.def.religion !== def.religion) return false;
+          return !!FB.localInstitutionMediate(s, see.id, subject, def.provinceId);
+        });
+      }
+      FB.localInstitutionSettle(s, item.id, subject, { provision:FB.treasuryAvailable(s, owner) >= 5,
+        protection:true, courts:true, tolerance:!policy.persecution, taxRelief:!policy.extraction });
+    });
+  };
+
