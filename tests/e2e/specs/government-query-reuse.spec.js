@@ -8,6 +8,7 @@ const {mockCrazyGames} = require('../support/crazygames');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
+  'js/systems.js','js/politics.js','js/religion.js','data/eras.js','data/cultures.js',
   'index.html','data/aristocratic_courts.js','data/bookmark_476.js','data/bookmark_476_wider.js',
   'data/bookmark_1096.js','data/bookmark_1204.js','data/systems.js','data/assembly_polities.js','data/political_institutions.js',
   'js/government_aristocracy.js','js/government_recognition.js','js/government_administration.js',
@@ -369,3 +370,320 @@ test('ordinary JSON profile removal discards warmed constituency reads and resto
   expect(removed).toMatchObject({absent:true,count:0,signature:'',weight:profile.interests[0].weight});
   expect(removed.voices).toBeGreaterThan(1);
 });
+
+async function injectScalar(page) {
+  for (const file of ['scalar-reference.js','scalar-probe.js'])
+    await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/government-query-reuse/'+file)});
+}
+
+function scalarMod(enabled) {
+  return {name:'Scalar government rules',governmentForms:{scalar_court:{
+    holders:enabled ? 'direct' : 'feudal_vassals',succession:'dynastic',territory:'fixed',consent:'territorial',
+    legalTradition:{default:'faith'},systems:{royal_council:enabled}
+  }}};
+}
+async function openStoredScalarMod(page,info,enabled) {
+  // Stage the first stored configuration once; replacement and removal still
+  // use their normal public paths. Both configurations have separate file imports.
+  await page.addInitScript(function (mod) {
+    if (location.protocol==='about:' || sessionStorage.getItem('scalar_query_seeded')) return;
+    localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(mod)]));
+    sessionStorage.setItem('scalar_query_seeded','1');
+  },scalarMod(enabled));
+  await openGame(page,info);
+  expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+}
+async function scalarOpening(page,thorough) {
+  await beginBookmarkFromTitle(page,'476'); await injectScalar(page);
+  return page.evaluate(function (thorough) {
+    const H=GOV_SCALAR,Q=FB.political,s=FB.state;
+    const rid=Object.keys(s.realms).find(function (id) {
+      return id!=='player' && s.realms[id].alive && Q.governmentFormId(s,{kind:'realm',id:id})==='regnum';
+    });
+    if (!rid) throw new Error('No ordinary court for the imported form');
+    const ref={kind:'realm',id:rid};
+    const context={realm:rid,faith:null,bookmark:{}};
+    if (thorough) H.compare(s,[ref],[context],FB.systems.ids());
+    if (!FB.authoritySetGovernment(s,rid,'scalar_court')) throw new Error('Could not select imported form');
+    H.compare(s,[ref],[context],thorough ? FB.systems.ids() : ['royal_council']);
+    return {rid:rid,enabled:FB.systemEnabled(s,'royal_council',context),form:Q.governmentFormId(s,ref),
+      count:FB.mods.count(),signature:FB.mods.sig()};
+  },thorough);
+}
+async function scalarModFacts(page) {
+  const opening=await scalarOpening(page,true);
+  return page.evaluate(function (rid) {
+    const H=GOV_SCALAR,Q=FB.political,s=FB.state,ref={kind:'realm',id:rid};
+    const context={realm:rid,faith:null,bookmark:{}};
+    const envelope=JSON.parse(FB.save.serialize()),before=JSON.stringify(s),data=JSON.stringify(FBDATA);
+    const storage=JSON.stringify(localStorage),signature=FB.mods.sig(),rng=FB.getRngState(),uid=FB.getUidCounter();
+    const rejected=[function (form) { form.holders='absent'; },function (form) {
+      form.systems={enable:['royal_council'],disable:['royal_council']};
+    }].map(function (edit) {
+      const form=H.copy(FBDATA.governmentForms.scalar_court); edit(form);
+      const mod={name:'Invalid scalar rules',governmentForms:{scalar_court:form}};
+      return FB.mods.validate(mod).length>0 && FB.mods.store(JSON.stringify(mod))===false;
+    });
+    H.compare(s,[ref],[context],FB.systems.ids());
+    const pure=before===JSON.stringify(s) && data===JSON.stringify(FBDATA) && storage===JSON.stringify(localStorage) &&
+      signature===FB.mods.sig() && rng===FB.getRngState() && uid===FB.getUidCounter();
+    const enabled=FB.systemEnabled(s,'royal_council',context);
+    FB.save.restore(envelope);
+    H.compare(FB.state,[ref],[context],FB.systems.ids());
+    return {enabled:enabled,restored:FB.systemEnabled(FB.state,'royal_council',context)===enabled,
+      form:Q.governmentFormId(FB.state,ref),matching:!FB.save.otherWorld(envelope),count:FB.mods.count(),
+      signature:signature,rejected:rejected,pure:pure};
+  },opening.rid);
+}
+
+test('ordinary JSON government import preserves scalar parity, detached restore and pure rejection', async function ({page},info) {
+  await openGame(page,info); await importProfile(page,scalarMod(true));
+  expect(await scalarModFacts(page)).toMatchObject({enabled:true,restored:true,form:'scalar_court',
+    matching:true,count:1,rejected:[true,true],pure:true});
+});
+
+test('independent ordinary JSON government import preserves disabled rules, restore and pure rejection', async function ({page},info) {
+  await openGame(page,info); await importProfile(page,scalarMod(false));
+  expect(await scalarModFacts(page)).toMatchObject({enabled:false,restored:true,form:'scalar_court',
+    matching:true,count:1,rejected:[true,true],pure:true});
+});
+
+test('ordinary JSON government replacement exposes the independent configuration without stale results', async function ({page},info) {
+  await openStoredScalarMod(page,info,true);
+  const first=await page.evaluate(function () {
+    return {signature:FB.mods.sig(),enabled:FBDATA.governmentForms.scalar_court.systems.royal_council};
+  });
+  expect(first.enabled).toBe(true);
+  await importProfile(page,scalarMod(false));
+  const result=await scalarOpening(page,false);
+  expect(result).toMatchObject({enabled:false,form:'scalar_court',count:1});
+  expect(result.signature).not.toBe(first.signature);
+});
+
+test('ordinary JSON government removal discards warmed scalar answers and restores authored forms', async function ({page},info) {
+  await openStoredScalarMod(page,info,false);
+  expect(await scalarOpening(page,false)).toMatchObject({enabled:false,form:'scalar_court',count:1});
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.evaluate(function () { FB.mods.removeAt(0); })]);
+  await prepareGameContent(page); await beginBookmarkFromTitle(page,'476'); await injectScalar(page);
+  const result=await page.evaluate(function () {
+    const s=FB.state,ref={kind:'realm',id:'sasanian_476'};
+    GOV_SCALAR.compare(s,[ref],[undefined,{realm:ref.id,faith:null,bookmark:{}}],FB.systems.ids());
+    return {absent:!FBDATA.governmentForms.scalar_court,count:FB.mods.count(),signature:FB.mods.sig(),
+      form:FB.political.governmentFormId(s,ref)};
+  });
+  expect(result).toEqual({absent:true,count:0,signature:'',form:'aristocratic_monarchy'});
+});
+
+for (const family of ['rows','forms','defaults','actors','contexts']) {
+  for (const crazygames of [false,true]) {
+    test('scalar government '+family+' match detached queries through same-turn changes, distribution '+crazygames, async function ({page},info) {
+      await start(page,info,crazygames); await injectScalar(page);
+      const result=await page.evaluate(function (family) {
+        const H=GOV_SCALAR,Q=FB.political,s=FB.state,rid='sasanian_476',ref={kind:'realm',id:rid};
+        const baseline=H.copy(s),forms=H.copy(FBDATA.governmentForms),eras=H.copy(FBDATA.eras),labels=[];
+        const contexts=[undefined,{realm:rid,faith:null,bookmark:{}},{realm:ref,bookmark:{}},
+          {character:s.player.charId,bookmark:{}},{faith:'catholic',bookmark:{}},
+          {realm:'absent',faith:null,bookmark:{}},{realm:null,faith:null,bookmark:{}},
+          {character:'absent',bookmark:{}}];
+        const ids=['royal_council','papacy','abbeys','great_holy_wars','feudal_service'];
+        let currentFamily='rows';
+        function reset() {
+          Object.assign(s,H.copy(baseline)); FBDATA.governmentForms=H.copy(forms); FBDATA.eras=H.copy(eras);
+        }
+        function check(label,edit,expected) {
+          if (family!==currentFamily) return;
+          reset();
+          Q.governmentFormId(s,ref); FB.systemEnabled(s,'royal_council',contexts[1]);
+          edit();
+          H.compare(s,[ref],contexts,ids);
+          const actual=Q.governmentFormId(s,ref);
+          if (actual!==expected) throw new Error(label+': expected '+expected+', got '+actual);
+          labels.push(label);
+        }
+        const original=baseline.authority.governments[rid].formId,def=baseline.start.defaultGovernment;
+        check('explicit row',function () {},original);
+        check('same-turn form edit',function () { s.authority.governments[rid].formId='territorial'; },'territorial');
+        check('row replacement',function () { s.authority.governments[rid]={formId:'regnum'}; },'regnum');
+        check('missing own row',function () { delete s.authority.governments[rid]; },def);
+        check('inherited row is ignored',function () {
+          s.authority.governments=Object.create({sasanian_476:{formId:'territorial'}});
+        },def);
+        for (const value of [null,false,0,'',[],{},'malformed'])
+          check('malformed row '+JSON.stringify(value),function () { s.authority.governments[rid]=value; },def);
+        currentFamily='forms';
+        for (const value of [undefined,null,false,0,''])
+          check('falsy saved form '+String(value),function () { s.authority.governments[rid]={formId:value}; },def);
+        check('unknown saved form',function () { s.authority.governments[rid].formId='absent'; },null);
+        check('definition removed',function () { delete FBDATA.governmentForms[original]; },null);
+        check('falsy definition',function () { FBDATA.governmentForms[original]=null; },null);
+        check('recognized definition with invalid strategy',function () {
+          FBDATA.governmentForms.scalar_invalid_strategy=H.copy(forms.territorial);
+          FBDATA.governmentForms.scalar_invalid_strategy.holders='absent';
+          s.authority.governments[rid].formId='scalar_invalid_strategy';
+          if (FB.governments.forRealm(s,rid)!==null) throw new Error('Invalid strategy was accepted by dispatch');
+        },'scalar_invalid_strategy');
+        check('malformed recognized definition',function () { FBDATA.governmentForms[original]=true; },original);
+        check('government table replacement',function () { s.authority.governments={[rid]:{formId:'regnum'}}; },'regnum');
+        currentFamily='defaults';
+        for (const value of [null,[],false,'malformed'])
+          check('malformed authority '+JSON.stringify(value),function () { s.authority=value; },def);
+        check('missing authority',function () { delete s.authority; },def);
+        check('changed default',function () { delete s.authority.governments[rid]; s.start.defaultGovernment='territorial'; },'territorial');
+        check('unstamped default',function () { delete s.authority.governments[rid]; delete s.start.defaultGovernment; },'territorial');
+        check('missing start',function () { delete s.authority.governments[rid]; delete s.start; },'territorial');
+        check('unknown default',function () { delete s.authority.governments[rid]; s.start.defaultGovernment='absent'; },null);
+        currentFamily='actors';
+        check('dead realm',function () { s.realms[rid].alive=false; },null);
+        check('missing realm',function () { delete s.realms[rid]; },null);
+        check('missing player',function () { delete s.player; },null);
+        check('ruler generation replaced',function () { s.realms[rid].ruler.generation=FB.realmRulerGeneration(s,rid)+1; },original);
+        reset();
+        const sequence=[];
+        if (family==='actors') {
+          const invalidRefs=[null,{},ref.id,{kind:'character',id:s.player.charId},{kind:'realm',id:'absent'},
+            {kind:'realm',id:null},{kind:'realm',id:0},{kind:'realm',id:''}];
+          H.compare(s,invalidRefs,contexts,FB.systems.ids());
+          H.compare(null,[ref],contexts,ids);
+          labels.push('invalid typed references','absent state');
+        }
+        if (family==='contexts') {
+          // Consecutive reads keep both state and catalogue identity across edits.
+          for (const formId of ['regnum','territorial',original]) {
+            s.authority.governments[rid].formId=formId;
+            H.compare(s,[ref],contexts,ids); sequence.push(Q.governmentFormId(s,ref));
+            labels.push('current form '+formId);
+          }
+          const c=H.copy(s.chars[s.player.charId]);
+          c.id='scalar_resident'; c.role='contact'; delete c.royalLine;
+          c.homeProvinceId=s.player.provinceId; s.chars[c.id]=c;
+          const resident=[{character:c.id,bookmark:{}},{character:c,bookmark:{}}];
+          for (const holder of [rid,'byzantium',null]) {
+            s.holder[c.homeProvinceId]=holder; H.compare(s,[ref],resident,ids);
+            labels.push('residence holder '+holder);
+          }
+          c.homeProvinceId=s.realms[rid].capital; H.compare(s,[ref],resident,ids);
+          labels.push('changed residence');
+          c.dead=true; H.compare(s,[ref],resident,ids);
+          labels.push('dead character context');
+          s.realms.player=Object.assign(H.copy(s.realms[rid]),{id:'player',alive:false});
+          s.player.liege=rid; s.realms.player.alive=false; H.compare(s,[ref],contexts,ids);
+          labels.push('player liege context');
+          s.realms.player.alive=true; s.authority.governments.player={formId:'territorial'};
+          H.compare(s,[{kind:'realm',id:'player'}],contexts,ids);
+          labels.push('player realm context');
+        }
+        reset();
+        return {cases:labels.length,sequence:sequence,original:original,distribution:FB.platform.isCrazyGames};
+      },family);
+      expect(result.cases).toBe({rows:12,forms:11,defaults:9,actors:6,contexts:10}[family]);
+      if (family==='contexts') expect(result.sequence).toEqual(['regnum','territorial',result.original]);
+      expect(result.distribution).toBe(crazygames);
+    });
+  }
+}
+
+test('scalar system reads preserve layer precedence, fallback and immediate definition edits', async function ({page},info) {
+  await start(page,info); await injectScalar(page);
+  const result=await page.evaluate(function () {
+    const H=GOV_SCALAR,s=FB.state,rid='sasanian_476',ref={kind:'realm',id:rid};
+    const forms=FBDATA.governmentForms,era=FBDATA.eras[FB.campaignEra(s)],oldEra=H.copy(era);
+    const context={realm:rid,faith:null,bookmark:{}},answers=[];
+    FBDATA.governmentForms=H.copy(forms);
+    FBDATA.governmentForms.scalar_form=H.copy(forms.territorial);
+    s.authority.governments[rid].formId='scalar_form';
+    const form=FBDATA.governmentForms.scalar_form;
+    function read() {
+      H.compare(s,[ref],[context],['royal_council','great_holy_wars','scalar_unknown_system']);
+      return FB.systemEnabled(s,'royal_council',context);
+    }
+    try {
+      era.systems=null; form.systems=null; answers.push(read());
+      era.systems={disable:['royal_council']}; answers.push(read());
+      form.systems={enable:['royal_council']}; answers.push(read());
+      s.faiths=Object.assign({},s.faiths,{scalar_branch:{name:'Scalar branch',parent:'catholic',
+        properties:{systems:{disable:['royal_council']}}}});
+      if (!FB.faithExists('scalar_branch',s)) throw new Error('Layer fixture faith was not installed');
+      context.faith='scalar_branch'; answers.push(read());
+      context.bookmark={systems:{enable:['royal_council']}}; answers.push(read());
+      context.bookmark={}; context.faith=null;
+      form.systems.enable=[]; form.systems.disable=['royal_council']; answers.push(read());
+      FBDATA.governmentForms=H.copy(FBDATA.governmentForms);
+      FBDATA.governmentForms.scalar_form.systems={royal_council:true}; answers.push(read());
+      // A null scalar answer keeps the system scope's own default, then era fallback.
+      s.authority.governments[rid].formId='absent'; s.start.defaultGovernment='scalar_form'; answers.push(read());
+      delete s.start.defaultGovernment; era.defaultGovernment='scalar_form'; answers.push(read());
+      s.start.defaultGovernment='absent'; answers.push(read());
+      const overrides=[
+        {greatHolyWars:false},{greatHolyWars:true},
+        {greatHolyWars:false,systems:{enable:['great_holy_wars']}},
+        {greatHolyWars:true,systems:{disable:['great_holy_wars']}}
+      ].map(function (bookmark) {
+        const ctx={realm:rid,faith:null,bookmark:bookmark};
+        H.compare(s,[ref],[ctx],['great_holy_wars']);
+        return H.measure(function () { return FB.systemEnabled(s,'great_holy_wars',ctx); });
+      });
+      return {answers:answers,overrides:overrides};
+    } finally { FBDATA.governmentForms=forms; Object.assign(era,oldEra); }
+  });
+  expect(result.answers).toEqual([true,false,true,false,true,false,true,true,true,false]);
+  expect(result.overrides.map(function (r) { return r.value; })).toEqual([false,true,true,false]);
+  for (const row of result.overrides) expect(row.counts).toMatchObject({scalarQueries:0,publicQueries:0,actorQueries:0,rulesStringifies:0,rulesParses:0});
+});
+
+for (const bookmark of ['476','1096','1204']) {
+  test(bookmark+' system scopes eliminate only their rules copies and preserve detached queries and restore', async function ({page},info) {
+    await start(page,info,false,bookmark); await injectScalar(page);
+    const result=await page.evaluate(function () {
+      const H=GOV_SCALAR,R=GOV_SCALAR_REFERENCE,Q=FB.political,s=FB.state;
+      const refs=Object.keys(s.realms).filter(function (id) { return id!=='player' && s.realms[id].alive; }).slice(0,4)
+        .map(function (id) { return {kind:'realm',id:id}; });
+      const ids=['royal_council','papacy','abbeys'];
+      function systems(query) {
+        return refs.map(function (ref) {
+          return ids.map(function (id) { return query(s,id,{realm:ref.id,faith:null,bookmark:{}}); });
+        });
+      }
+      const before=JSON.stringify(s),data=JSON.stringify(FBDATA),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const reference=H.measure(function () { return systems(R.systemEnabled); });
+      const candidate=H.measure(function () { return systems(FB.systemEnabled); });
+      const scalar=H.measure(function () { return refs.map(function (ref) { return Q.governmentFormId(s,ref); }); });
+      const detached=H.measure(function () { return [Q.government(s,refs[0]),Q.government(s,refs[0])]; });
+      const a=detached.value[0],b=detached.value[1],original=JSON.stringify(b);
+      a.formId='changed';
+      const layer=a.rules.systems,key=Object.keys(layer)[0];
+      if (Array.isArray(layer[key])) layer[key].push('changed'); else layer[key]=!layer[key];
+      if (a.rules.legalTradition && typeof a.rules.legalTradition==='object') a.rules.legalTradition.default='changed';
+      const isolated=a!==b && a.rules!==b.rules && JSON.stringify(b)===original &&
+        JSON.stringify(Q.government(s,refs[0]))===original;
+      H.compare(s,refs,[undefined,{faith:null,realm:null,bookmark:{}}],FB.systems.ids());
+      const available=ids.map(function (id) { return [FB.systemAvailable(s,id),R.systemAvailable(s,id)]; });
+      const pure=before===JSON.stringify(s) && data===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter();
+      const envelope=JSON.parse(FB.save.serialize());
+      s.authority.governments[refs[0].id]={formId:'territorial'};
+      H.compare(s,refs,[{realm:refs[0].id,faith:null,bookmark:{}}],ids);
+      const restores=[];
+      for (let i=0;i<2;i++) {
+        FB.save.restore(H.copy(envelope));
+        H.compare(FB.state,refs,[undefined,{realm:refs[0].id,faith:null,bookmark:{}}],ids);
+        restores.push({different:FB.state!==s,turn:FB.state.turn===envelope.state.turn,
+          rng:(FB.getRngState()>>>0)===(envelope.rng>>>0),uid:FB.getUidCounter()===envelope.uid,
+          matching:!FB.save.otherWorld(envelope),form:Q.governmentFormId(FB.state,refs[0])===scalar.value[0]});
+      }
+      return {reference:reference,candidate:candidate,scalar:scalar.counts,public:detached.counts,
+        pure:pure,isolated:isolated,available:available,restores:restores};
+    });
+    expect(result.candidate.value).toEqual(result.reference.value);
+    expect(result.reference.counts).toMatchObject({publicQueries:12,scalarQueries:0,actorQueries:12,rulesStringifies:12,rulesParses:12});
+    expect(result.candidate.counts).toMatchObject({publicQueries:0,scalarQueries:12,actorQueries:12,rulesStringifies:0,rulesParses:0});
+    expect(result.candidate.counts.nestedRulesStringifies).toBe(result.reference.counts.nestedRulesStringifies);
+    expect(result.candidate.counts.nestedRulesParses).toBe(result.reference.counts.nestedRulesParses);
+    expect(result.scalar).toMatchObject({scalarQueries:4,actorQueries:4,rulesStringifies:0,rulesParses:0});
+    expect(result.public).toMatchObject({publicQueries:2,actorQueries:2,rulesStringifies:2,rulesParses:2});
+    expect(result.pure).toBe(true); expect(result.isolated).toBe(true);
+    for (const row of result.available) expect(row[0]).toBe(row[1]);
+    expect(result.restores).toEqual(Array(2).fill({different:true,turn:true,rng:true,uid:true,matching:true,form:true}));
+    const counts={reference:result.reference.counts,candidate:result.candidate.counts,scalar:result.scalar,public:result.public};
+    await info.attach('government-rules-copy-counts',{body:Buffer.from(JSON.stringify(counts,null,2)),contentType:'application/json'});
+    console.log(bookmark+' government rules copy counts: '+JSON.stringify(counts));
+  });
+}

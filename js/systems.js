@@ -125,9 +125,9 @@ window.FB = window.FB || {};
     var realm = rid && state && state.realms && state.realms[rid];
     var faith = context.faith !== undefined ? context.faith : c ? c.religion : realm && realm.religion;
     if (context.faith === undefined && !faith && state && rid && FB.realmReligionId) faith = FB.realmReligionId(state, rid);
-    var form = state && rid && FB.political && FB.political.government
-      ? FB.political.government(state, { kind:'realm', id:rid }) : null;
-    return { faith:faith, government:form && form.formId || state && state.start && state.start.defaultGovernment };
+    var formId = state && rid && FB.political && FB.political.governmentFormId
+      ? FB.political.governmentFormId(state, { kind:'realm', id:rid }) : null;
+    return { faith:faith, government:formId || state && state.start && state.start.defaultGovernment };
   }
   FB.systemEnabled = function (state, id, context) {
     requireId(id);
