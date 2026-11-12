@@ -192,7 +192,7 @@
     return !!fresh && JSON.stringify(fresh) === JSON.stringify(reviewed) &&
       FB.authoritySetIdentity(s, reviewed.realmId, reviewed.value);
   };
-  function validIssuer(s, issuer, source) {
+  function validIssuer(s, issuer, source, readOffices) {
     var definition = FBDATA.legitimacySources[source];
     if (!issuer || typeof issuer.id !== 'string' || !definition ||
         !Array.isArray(definition.issuerKinds) || definition.issuerKinds.indexOf(issuer.kind) < 0) return false;
@@ -209,10 +209,10 @@
     if (issuer.kind === 'county')
       return !!scope(s, issuer);
     if (issuer.kind === 'religious-office') {
-      var office = FB.religiousOffices(s)[issuer.id];
+      var offices = readOffices ? readOffices() : FB.religiousOffices(s), office = offices[issuer.id];
       if (!office) return false;
       if (office && office.head.succession === 'political_incumbent')
-        return !!FB.religiousOfficeSnapshot(s, issuer.id);
+        return !!FB.religiousOfficeSnapshot(s, issuer.id, readOffices && offices);
       var holder = s.religiousHeads && s.religiousHeads[issuer.id];
       var headId = typeof holder === 'string' ? holder : holder && holder.id;
       return !!(headId && (s.chars && s.chars[headId]
@@ -221,7 +221,7 @@
     }
     return false;
   }
-  function generation(s, issuer) {
+  function generation(s, issuer, readOffices) {
     if (issuer.kind === 'religious-institution') return FB.religiousInstitutionIssuerGeneration(s, issuer.id);
     if (issuer.kind === 'character') return issuer.id;
     if (issuer.kind === 'realm') return FB.realmRulerGeneration(s, issuer.id);
@@ -230,10 +230,10 @@
       return rid ? rid + ':' + FB.realmRulerGeneration(s, rid) : null;
     }
     if (issuer.kind === 'religious-office') {
-      var office = FB.religiousOffices(s)[issuer.id];
+      var offices = readOffices ? readOffices() : FB.religiousOffices(s), office = offices[issuer.id];
       if (!office) return null;
       if (office && office.head.succession === 'political_incumbent') {
-        var effective = FB.religiousOfficeSnapshot(s, issuer.id);
+        var effective = FB.religiousOfficeSnapshot(s, issuer.id, readOffices && offices);
         return effective ? effective.id : null;
       }
       var head = s.religiousHeads && s.religiousHeads[issuer.id];
@@ -244,14 +244,18 @@
     return issuer.kind === 'host' ? issuer.id : null;
   }
   function activeRecognition(s, row) {
+    // Only this pure row read shares definitions; independent queries validate
+    // again. Holder eligibility and generation are still read at each branch.
+    var offices;
+    function readOffices() { return offices || (offices = FB.religiousOffices(s)); }
     if (!row || row.status !== 'active' || row.endTurn !== null &&
-        row.endTurn <= s.turn || !validIssuer(s, row.issuer, row.source) ||
+        row.endTurn <= s.turn || !validIssuer(s, row.issuer, row.source, readOffices) ||
         !ref(s, row.subject)) return false;
     var def = FBDATA.legitimacySources[row.source];
     if (row.issuer.kind === 'religious-institution' && (!FB.religiousInstitutionRecognitionValid ||
         !FB.religiousInstitutionRecognitionValid(s, row))) return false;
     return !!def && (def.succession !== 'reaffirm' ||
-      row.issuerGeneration === generation(s, row.issuer));
+      row.issuerGeneration === generation(s, row.issuer, readOffices));
   }
   function recognition(s, id) {
     for (var row of list(s, 'recognitions')) if (row.id === id) return row;

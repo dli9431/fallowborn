@@ -21,7 +21,7 @@
       if (!office || !p) return null;
       if (p.source === 'papal_election') {
         var holder = FB.religiousOfficeSnapshot(s,r.officeId,offices);
-        return holder && holder.id === rid ? FB.papalOfficeIncumbentSnapshot(s,r.officeId) : null;
+        return holder && holder.id === rid ? FB.papalOfficeIncumbentSnapshot(s,r.officeId,offices) : null;
       }
       return FB.religiousOfficeSnapshot(s,r.officeId,offices);
     } finally { delete resolving[rid]; }
