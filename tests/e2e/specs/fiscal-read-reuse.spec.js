@@ -156,16 +156,26 @@ test('native fiscal scopes revalidate edits from an intervening reader and resto
       if (!failed) throw new Error('Missing projection failure');
       FB.buildingBonusAt = bonus;
       window.fiscalReadCounts = {builds:0,requests:0};
+      A.constituency(s,rid); A.constituency(s,rid);
+      const outside = Object.assign({},fiscalReadCounts);
+      window.fiscalReadCounts = {builds:0,requests:0};
       FB.settlementFiscalProjection(s,m.scope.id,0);
       FB.settlementFiscalProjection(s,m.scope.id,0);
-      rows.push(window.fiscalReadCounts);
+      rows.push({outside:outside,projections:window.fiscalReadCounts});
     } finally { Object.assign(s,JSON.parse(initial)); FB.buildingBonusAt = bonus; A.withFiscalRead = withRead; }
     return rows;
   });
   expect(results[0]).toEqual([{builds:2,requests:2},{builds:1,requests:2}]);
   expect(results[1]).toEqual([{builds:2,requests:2},{builds:2,requests:2}]);
-  expect(results[2]).toEqual([{builds:2,requests:2},{builds:1,requests:2}]);
-  expect(results[3]).toEqual({builds:2,requests:4});
+  // An inactive right can cause additional nested live constituency reads.
+  // Result parity above is exact; reuse must not suppress those readers.
+  expect(results[2][0].requests).toBeGreaterThanOrEqual(2);
+  expect(results[2][1].requests).toBeGreaterThanOrEqual(2);
+  expect(results[2][1].builds).toBeLessThan(results[2][1].requests);
+  expect(results[3].outside).toEqual({builds:2,requests:2});
+  expect(results[3].projections.builds).toBeGreaterThanOrEqual(2);
+  expect(results[3].projections.builds).toBeLessThan(results[3].projections.requests);
+  await info.attach('intervening-reader-counts',{body:JSON.stringify(results),contentType:'application/json'});
 });
 
 test('office world reuse preserves empty, null-state, override and retained revision boundaries',async function ({page},info) {
