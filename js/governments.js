@@ -148,14 +148,19 @@ window.FB = window.FB || {};
       { form:formId, slot:problem.slot, id:String(problem.id) });
   }
 
+  /* Construction immediately after validation, within the same read. */
+  function resolvedForm(formId) {
+    var ids = G.strategyIds(formId), use = {};
+    for (var slot in ids) if (own(ids, slot)) use[slot] = G.strategy(slot, ids[slot]);
+    return { id:formId, strategies:ids, use:use };
+  }
+
   /* The resolved rule set of one form. Throws a named error for an unknown
      form or an unregistered strategy. */
   G.resolve = function (formId) {
     var problems = G.problems(formId);
     if (problems.length) throw new Error(describe(formId, problems[0]));
-    var ids = G.strategyIds(formId), use = {};
-    for (var slot in ids) if (own(ids, slot)) use[slot] = G.strategy(slot, ids[slot]);
-    return { id:formId, strategies:ids, use:use };
+    return resolvedForm(formId);
   };
 
   /* A living realm's current form, read through the saved authority record
@@ -171,7 +176,7 @@ window.FB = window.FB || {};
     }
     var row = cache.realms[rid], definition = FBDATA.governmentForms[id];
     if (!row || row.id !== id || row.definition !== definition) {
-      var resolved = !G.problems(id).length ? G.resolve(id) : null;
+      var resolved = !G.problems(id).length ? resolvedForm(id) : null;
       row = cache.realms[rid] = { id:id, definition:definition, resolved:resolved };
       if (FB.game && FB.game._fastForwardTiming)
         FB.game._fastForwardTiming.count('Government strategy resolutions');

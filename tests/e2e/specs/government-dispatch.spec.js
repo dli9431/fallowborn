@@ -73,6 +73,74 @@ test('forms have complete named interfaces; legacy mods delegate and invalid for
   expect(fs.readFileSync(path.resolve(__dirname, '../../../index.html'), 'utf8')).not.toContain('fixtures/government-strategies');
 });
 
+test('public resolver keeps exact first faults, invalid miss nulls and dispatch errors', async function ({page},info) {
+  await openGame(page,info);
+  for (const file of ['resolver-reference.js','resolver-probe.js'])
+    await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/government-query-reuse/'+file)});
+  const rows=await page.evaluate(function () {
+    const G=FB.governments,H=GOV_RESOLVER,R=GOV_RESOLVER_REFERENCE,forms=FBDATA.governmentForms;
+    const s={turn:0,realms:{court:{alive:true}},authority:{governments:{court:{formId:'resolver_fault'}}}};
+    const out=[],base=H.copy(forms.territorial);
+    G.register('holders','resolver_incomplete',{assign:function () {}});
+    G.register('succession','resolver_missing_delegate',{delegate:'resolver_absent'});
+    G.register('succession','resolver_cycle',{delegate:'resolver_cycle'});
+    G.register('succession','resolver_chain',{delegate:'office'});
+    FBDATA.governmentForms=Object.assign({},forms);
+    function check(label,definition,first,message) {
+      FBDATA.governmentForms.resolver_fault=definition; G.invalidate(); R.invalidate();
+      H.equal(G.problems('resolver_fault')[0],first,label+' first fault');
+      const direct=H.measure(function () { return G.resolve('resolver_fault'); });
+      const miss=H.measure(function () { return G.forRealm(s,'court'); });
+      const hit=H.measure(function () { return G.forRealm(s,'court'); });
+      H.resolve('resolver_fault'); H.compare(s,'court');
+      H.equal(direct.result.error,{name:'Error',message:message},label+' named error');
+      H.equal(H.result(function () { return G.call(s,'court','territory','profile'); }).error,
+        direct.result.error,label+' dispatch error');
+      out.push({label:label,direct:direct.counts.problems,miss:miss.counts.problems,hit:hit.counts.problems,
+        nulls:miss.result.value===null && hit.result.value===null});
+    }
+    function patch(edit) { return Object.assign({},base,edit); }
+    function unregistered(slot,id) {
+      return 'Government form resolver_fault uses '+slot+' strategy '+String(id)+', which is not registered.';
+    }
+    const parameters='Invalid strategy parameters for government resolver_fault.';
+    try {
+      check('unknown definition',undefined,{kind:'unknown_form',id:'resolver_fault'},'Unknown government form resolver_fault.');
+      check('null definition',null,{kind:'unknown_form',id:'resolver_fault'},'Unknown government form resolver_fault.');
+      check('malformed definition',true,{kind:'missing',slot:'holders',id:null},'Government form resolver_fault names no holders strategy.');
+      const missing=patch({revenue:'absent'}); delete missing.holders;
+      check('required slot before later error',missing,{kind:'missing',slot:'holders',id:null},'Government form resolver_fault names no holders strategy.');
+      check('retired before missing strategy',patch({vocabulary:'engine_default',holders:null}),
+        {kind:'retired',slot:'vocabulary'},'Government form resolver_fault names the retired vocabulary slot. Use the government lexicon layer.');
+      for (const id of ['absent','',undefined,false,7,{},[]])
+        check('malformed strategy '+String(id),patch({holders:id}),{kind:'unregistered',slot:'holders',id:id},unregistered('holders',id));
+      check('null strategy',patch({holders:null}),{kind:'missing',slot:'holders',id:null},'Government form resolver_fault names no holders strategy.');
+      check('incomplete before parameters',patch({holders:'resolver_incomplete',strategyParameters:[]}),
+        {kind:'incomplete',slot:'holders',id:'resolver_incomplete'},'Government form resolver_fault uses incomplete holders strategy resolver_incomplete.');
+      for (const id of ['resolver_missing_delegate','resolver_cycle','resolver_chain'])
+        check(id,patch({succession:id}),{kind:'unregistered',slot:'succession',id:id},unregistered('succession',id));
+      const seat=Object.keys(FBDATA.councilSeats)[0];
+      for (const params of [null,[],false,{levy:{}},{ai:[]},{ai:{warChance:-1}},{ai:{warChance:2}},
+        {ai:{warChance:NaN}},{ai:{warChance:Infinity}},{ai:{warChance:'0.5'}},{ai:{warChance:0,extra:true}},
+        {council:{}},{council:{seats:['absent']}},{council:{seats:[seat,seat]}}])
+        check('parameters '+String(out.length),patch({strategyParameters:params}),{kind:'parameters'},parameters);
+      check('missing administration profile',patch({administrationProfileId:'resolver_absent'}),{kind:'parameters'},parameters);
+      check('missing aristocratic profile',patch({aristocraticProfileId:'resolver_absent'}),{kind:'parameters'},parameters);
+      for (const profile of [undefined,{}, {candidatePool:{},procedure:{}},
+        Object.assign({},H.copy(forms.elective_monarchy.selectionProfile),{quorum:0})])
+        check('selection profile '+String(out.length),Object.assign({},H.copy(forms.elective_monarchy),{selectionProfile:profile}),
+          {kind:'parameters'},parameters);
+      for (const id of [undefined,null,0,false,'resolver_absent']) {
+        const actual=H.resolve(id);
+        H.equal(actual.error,{name:'Error',message:'Unknown government form '+String(id)+'.'},'Unknown public id');
+      }
+      return out;
+    } finally { FBDATA.governmentForms=forms; G.invalidate(); R.invalidate(); }
+  });
+  expect(rows).toHaveLength(37);
+  for (const row of rows) expect(row).toMatchObject({direct:1,miss:1,hit:0,nulls:true});
+});
+
 test('alternate strategies change public consumers without changing pure-read state', async function ({ page }, testInfo) {
   await start(page, testInfo, '867');
   await page.addScriptTag({ path:fixture });
@@ -207,8 +275,8 @@ test('daily cache is bounded and same-day changes, definitions and restore inval
     const s = FB.state, G = FB.governments;
     const ids = Object.keys(s.realms).filter(function (id) { return s.realms[id].alive; });
     G.invalidate();
-    const resolve = G.resolve; let resolutions = 0;
-    G.resolve = function (id) { resolutions++; return resolve(id); };
+    const problems = G.problems; let resolutions = 0;
+    G.problems = function (id) { resolutions++; return problems(id); };
     const begin = performance.now(), before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
     try {
       ids.forEach(function (rid) { for (let i=0;i<50;i++) G.forRealm(s,rid); });
@@ -232,7 +300,7 @@ test('daily cache is bounded and same-day changes, definitions and restore inval
       return { pure:pure, realms:ids.length, first:first, second:second, changed:changed, restored:restored,
         replaced:replaced, milliseconds:performance.now()-begin,
         serializedCache:/governmentCache|realmCache/.test(JSON.stringify(saved.state)) };
-    } finally { G.resolve = resolve; G.invalidate(); }
+    } finally { G.problems = problems; G.invalidate(); }
   });
   expect(result.first).toBe(result.realms);
   expect(result.second).toBe(result.realms*2);
