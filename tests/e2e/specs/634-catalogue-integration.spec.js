@@ -205,11 +205,13 @@ test('complete catalogue has one loader position per source and no private or te
       }),
       valid:FB.bookmarkRevisions('634').every(function (r) { return FB.validateBookmark(r).length === 0; }),
       text:offered.every(function (r) { return !!r.name && !!r.desc && !!r.intro; }),
-      held:!offered.some(function (r) { return /yazdegerd|jabala/.test(r.id); }) && !FB.stories.get('yazdegerd_agenda_634')};
-  },{starts:starts})).toEqual({selected:'core_identities_v3',hidden:true,date:{year:634,season:2,day:1},era:'late_antique',
+      excluded:!offered.some(function (r) { return /jabala|mobile|paid_service/.test(r.id); }),
+      yazdegerd:FB.startTracks(offered.find(function (r) { return r.id === 'yazdegerd_634'; }),'baghdad',b)};
+  },{starts:starts})).toEqual({selected:'core_courts_v4',hidden:false,date:{year:634,season:2,day:1},era:'late_antique',
     geography:'europe_regional_2',counts:[527,506,122],regions:33,courts:true,institutions:6,
-    world:worldStories.slice().sort(),starts:starts.map(function (r) { return r.id; }).sort(),
-    tracks:starts.map(function (r) { return r.tracks.slice().sort(); }),once:true,older:true,valid:true,text:true,held:true});
+    world:worldStories.slice().sort(),starts:starts.map(function (r) { return r.id; }).concat(['yazdegerd_634']).sort(),
+    tracks:starts.map(function (r) { return r.tracks.slice().sort(); }),once:true,older:true,valid:true,text:true,
+    excluded:true,yazdegerd:['yazdegerd_agenda_634']});
 });
 
 for (const entry of starts) test(entry.id+' has a complete quiet opening, interruption and exact current-content restoration',async function ({page},info) {

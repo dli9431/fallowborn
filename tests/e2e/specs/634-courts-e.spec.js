@@ -49,8 +49,12 @@ test('six literal court replacements load inertly and preserve every accepted sc
 
 test('complete court replacement composes through JSON import and restores without reseeding',async function ({page},info) {
   await openGame(page,info);
+  const freshRealms = await page.evaluate(function () { return FB.bookmark('634').realms; });
   const mod = await page.evaluate(function (declaration) {
-    const world = JSON.parse(JSON.stringify(FB.bookmark('634')));
+    const world = JSON.parse(JSON.stringify(FB.bookmark('634',declaration.revision)));
+    const original = JSON.stringify(world.realms.filter(function (row) {
+      return !declaration.realms.some(function (r) { return r.id === row.id; });
+    }));
     const counts = {};
     declaration.realms.forEach(function (row) { counts[row.id] = 0; });
     world.realms = world.realms.map(function (row) {
@@ -60,7 +64,8 @@ test('complete court replacement composes through JSON import and restores witho
       return replacement;
     });
     if (Object.keys(counts).some(function (id) { return counts[id] !== 1; })) throw new Error('Court ownership must be unique');
-    if (JSON.stringify(world.realms) !== JSON.stringify(FB.bookmark('634').realms)) throw new Error('Unreviewed court change');
+    if (JSON.stringify(world.realms.filter(function (row) { return counts[row.id] === undefined; })) !== original)
+      throw new Error('Unreviewed court change');
     const complete = JSON.parse(JSON.stringify(FBDATA.bookmarks['634']));
     complete.revisions[declaration.revision].realms = world.realms;
     return {name:'Court replacement review',bookmarks:{'634':complete}};
@@ -74,7 +79,10 @@ test('complete court replacement composes through JSON import and restores witho
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
-  expect(await page.evaluate(function () { return FB.bookmark('634').realms; })).toEqual(mod.bookmarks['634'].revisions[declaration.revision].realms);
+  expect(await page.evaluate(function (revision) { return FB.bookmark('634',revision).realms; },declaration.revision))
+    .toEqual(mod.bookmarks['634'].revisions[declaration.revision].realms);
+  expect(await page.evaluate(function () { return FB.bookmark('634').realms; })).toEqual(freshRealms);
+  await page.evaluate(function (revision) { FBDATA.bookmarks['634'].revision = revision; },declaration.revision);
   await beginBookmarkFromTitle(page,'634','farmer_634');
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
   const facts = await page.evaluate(function (ids) {
