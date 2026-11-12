@@ -2,6 +2,7 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
@@ -16,14 +17,22 @@ async function boot(page,info,kind,ruler,custom) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function(id){return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[id];},'season_'+kind);
-  if (!ruler) return beginBookmark(page,info,'season_'+kind,'season_'+kind+'_household');
+  if (!ruler) await beginBookmark(page,info,'season_'+kind,'season_'+kind+'_household');
+  else {
   const full=page.locator('#btn-choose-beginning');
   if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill('SEASONREVIEW-season_dry-season_dry_ruler-resource_quay-m-Ivo_Reed-standard');
   await page.locator('#ng-seed').press('Enter');await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();await page.getByRole('button',{name:'Begin',exact:true}).click();
-  await page.evaluate(function(){FB.game.setPaused(true);});
+  }
+  await page.evaluate(function(){
+    FB.game.setPaused(true);
+    // Paid production, water service and sales preserve each real public account's reserves.
+    Object.keys(FB.state.realms).forEach(function(rid){
+      if(FB.state.realms[rid].treasury)FB.state.realms[rid].treasury.gold=10000;
+    });
+  });
 }
 for (const kind of ['dry','pasture']) {
   test(kind+' ordinary import uses its local kind, finite resource policy and pure reviews',async function({page},info){
@@ -44,7 +53,10 @@ for (const kind of ['dry','pasture']) {
       const s=FB.state,S=FB.buildingSeasons,P=FB.production,a=S.compile(FB.campaignBookmark(s)).assignments[0],who=FB.settlementHolder(s,a.countyId,a.slot);
       const before=JSON.stringify([s.population,s.buildings,s.chars]),q=S.quote(s,{operation:'open',assignmentId:a.id,actor:who,lotId:null});
       const opened=S.commit(s,q),repeat=S.commit(s,q),site=P.snapshot(s)[0].site;
-      const id=P.commit(s,P.aiQuote(s,site.id,'reserve',{recipeId:site.recipeIds[0],disposition:'store'}));
+      const reserve=P.aiQuote(s,site.id,'reserve',{recipeId:site.recipeIds[0],disposition:'store'});
+      if(!reserve.allowed)throw new Error('Rejected funded seasonal reserve: '+reserve.reason);
+      const id=P.commit(s,reserve);
+      if(!id)throw new Error('Allowed seasonal reserve failed to commit');
       const shift=P.commit(s,P.aiQuote(s,site.id,'work',{batchId:id}));s.turn++;s.date.day++;
       const finished=P.commit(s,P.aiQuote(s,site.id,'finish',{batchId:id})),lot=s.production.lots.find(function(l){return l.origin.kind==='batch';});
       const b=s.buildings[a.countyId].find(function(b){return b.id===a.buildingId;}),initial=FB.buildingOperations.effects(s,a.countyId,b).populationFamineProtection || 0;
