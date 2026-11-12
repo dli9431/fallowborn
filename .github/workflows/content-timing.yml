@@ -1,0 +1,45 @@
+name: Complete content timing
+on:
+  workflow_dispatch:
+    inputs:
+      timing_ref:
+        description: Revision to diagnose (use paired speed comparison for speed claims)
+        required: true
+        default: automation/v2
+        type: string
+permissions:
+  contents: read
+jobs:
+  content:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tooling
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.timing_ref }}
+          path: game
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tooling/tests/e2e/package-lock.json
+      - run: npm ci
+        working-directory: tooling/tests/e2e
+      - run: npx playwright install --with-deps chromium
+        working-directory: tooling/tests/e2e
+      - name: Profile complete preparation
+        env:
+          FB_CONTENT_GAME: ${{ github.workspace }}/game
+          FB_CONTENT_OUTPUT: ${{ github.workspace }}/content-timing
+          FB_CONTENT_PROFILE: 'true'
+        run: |
+          export GAME_COMMIT="$(git -C game rev-parse HEAD)"
+          node tooling/tests/e2e/measure/content.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: content-timing
+          path: content-timing/

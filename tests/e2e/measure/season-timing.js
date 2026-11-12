@@ -250,8 +250,17 @@ function workloadInPage() {
   out.dead = !!(s.player && s.player.dead);
   // Serialized size of each top-level state part, so growth names what grows.
   out.stateSizes = {};
+  out.stateBytes = {};
+  out.stateBytesUnit = 'UTF-8 bytes';
+  out.stateSizesUnit = 'UTF-16 code units';
+  out.rng = FB.getRngState();
+  out.uid = FB.getUidCounter();
   Object.keys(s).forEach(function (key) {
-    try { out.stateSizes[key] = JSON.stringify(s[key] === undefined ? null : s[key]).length; }
+    try {
+      const text = JSON.stringify(s[key] === undefined ? null : s[key]);
+      out.stateSizes[key] = text.length;
+      out.stateBytes[key] = new TextEncoder().encode(text).length;
+    }
     catch (error) { out.stateSizes[key] = -1; }
   });
   return out;
@@ -420,6 +429,7 @@ async function measure(args) {
   const browser = await chromium.launch();
   const output = { mode:'measure', generated:new Date().toISOString(), seasons:seasons,
     gameCommit:process.env.GAME_COMMIT || null, gameRef:process.env.GAME_REF || null,
+    browser:browser.version(), cpuProfile:!!args['cpu-profile'],
     starts:[] };
   try {
     const catalogue = await enumerate(browser, url);
@@ -674,15 +684,19 @@ function report(args) {
   if (merged.starts.length && failed === merged.starts.length) process.exitCode = 1;
 }
 
-const args = parseArgs(process.argv.slice(2));
-const mode = args._[0];
-if (mode === 'measure') {
-  if (!args.out) { console.error('measure needs --out'); process.exit(2); }
-  measure(args).catch(function (error) { console.error(error); process.exit(1); });
-} else if (mode === 'report') {
-  if (!args.in || !args.out) { console.error('report needs --in and --out'); process.exit(2); }
-  report(args);
-} else {
-  console.error('Usage: season-timing.js measure|report ...');
-  process.exit(2);
+module.exports = {serve:serve};
+
+if (require.main === module) {
+  const args = parseArgs(process.argv.slice(2));
+  const mode = args._[0];
+  if (mode === 'measure') {
+    if (!args.out) { console.error('measure needs --out'); process.exit(2); }
+    measure(args).catch(function (error) { console.error(error); process.exit(1); });
+  } else if (mode === 'report') {
+    if (!args.in || !args.out) { console.error('report needs --in and --out'); process.exit(2); }
+    report(args);
+  } else {
+    console.error('Usage: season-timing.js measure|report ...');
+    process.exit(2);
+  }
 }
