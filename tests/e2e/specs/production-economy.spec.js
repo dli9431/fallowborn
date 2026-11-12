@@ -2,12 +2,13 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/production-suppliers-harbor.json'),inland:require('../fixtures/authoring/production-suppliers-inland.json')};
 dependsOnRuntime(__filename,['data/relay_services.js','js/relay_services.js','data/building_profiles.js','js/building_profiles.js','index.html','data/production.js','data/production_economy.js','data/technology.js','data/economy.js',
   'js/production.js','js/production_economy.js','js/market.js','js/logistics.js','js/economy.js','js/lordships.js','js/treasury.js',
-  'js/world.js','js/mods.js','js/main.js','js/starts.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js','js/model.js']);
+  'js/world.js','js/mods.js','js/main.js','js/starts.js','js/save.js','js/save_v4.js','js/wars.js','js/util.js','js/ui_modals.js','js/ui_misc.js','js/model.js']);
 async function boot(page,info,kind) {
   await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/production-suppliers-'+kind+'.json'));
@@ -23,7 +24,11 @@ async function boot(page,info,kind) {
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
-  await page.evaluate(function(){FB.game.setPaused(true);});
+  await page.evaluate(function(kind){
+    FB.game.setPaused(true);
+    // Buyers and working suppliers must preserve their actual public reserves.
+    FB.state.realms[kind==='harbor'?'supplier_bank_court':'resource_fold_court'].treasury.gold=10000;
+  },kind);
 }
 for(const kind of ['harbor','inland']) {
   test(kind+' ordinary import exposes finite exact stock, independent demand and pure current quotes',async function({page},info){
@@ -43,7 +48,9 @@ for(const kind of ['harbor','inland']) {
       const s=FB.state,E=FB.productionEconomy,q=E.aiQuote(s,kind==='harbor'?'fish_market':'ore_market',1,'buy');
       function funds(who){return FB.production.account(s,who).funds.available;}
       const a=funds(q.seller),b=funds(q.buyer),total=s.production.lots.reduce(function(n,l){return n+l.remaining;},0);
+      if(!q.allowed)throw new Error('Rejected funded exchange: '+q.reason);
       const id=E.commit(s,q),repeat=E.commit(s,q);FB.production.validate(s);
+      if(!id)throw new Error('Allowed funded exchange failed to commit');
       const receipt=s.production.economy.receipts[0],l=s.production.lots.find(function(l){return l.id===receipt.lotId;});
       return {id:typeof id==='number',repeat:repeat,buyer:b-funds(q.buyer),seller:funds(q.seller)-a,cost:q.cost,
         total:total===s.production.lots.reduce(function(n,l){return n+l.remaining;},0),origin:l.origin,remaining:l.remaining};
@@ -54,12 +61,19 @@ for(const kind of ['harbor','inland']) {
   test(kind+' matching restore retains stock, receipts and cash without repeating a trade',async function({page},info){
     await boot(page,info,kind);
     const r=await page.evaluate(function(kind){
-      const s=FB.state,E=FB.productionEconomy,q=E.aiQuote(s,kind==='harbor'?'fish_market':'ore_market',1,'buy');E.commit(s,q);
-      const before=JSON.stringify([s.production,s.player.gold,s.realms]),saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
+      const s=FB.state,E=FB.productionEconomy,q=E.aiQuote(s,kind==='harbor'?'fish_market':'ore_market',1,'buy');
+      if(!E.commit(s,q))throw new Error('Restore requires a completed exchange: '+q.reason);
+      function facts(t){
+        const realms=JSON.parse(JSON.stringify(t.realms));
+        // The compact codec restores omitted peace as null; retain actual war values and the canonical registry.
+        Object.keys(realms).forEach(function(rid){realms[rid].war=t.realms[rid].war || null;});
+        return JSON.parse(JSON.stringify([t.production,t.player.gold,realms,t.wars,FB.getRngState()>>>0,FB.getUidCounter()]));
+      }
+      const before=facts(s),saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
       E.initialize(FB.state);FB.production.initialize(FB.state);
-      return {same:before===JSON.stringify([FB.state.production,FB.state.player.gold,FB.state.realms]),repeat:E.commit(FB.state,q)};
+      return {before:before,after:facts(FB.state),repeat:E.commit(FB.state,q)};
     },kind);
-    expect(r).toEqual({same:true,repeat:false});
+    expect(r.after).toEqual(r.before);expect(r.repeat).toBe(false);
   });
 }
 test('owner-provided materials move once without payment or a new source allocation',async function({page},info){
