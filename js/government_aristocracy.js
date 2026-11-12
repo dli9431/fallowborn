@@ -87,10 +87,55 @@
   function jurisdiction(s,m) { return rights(s).filter(function (row) { return m.rightIds.indexOf(row.id) >= 0; }); }
   function interest(s,rid,id) { var data = A.state(s,rid); return data && data.interests.filter(function (m) { return m.id === id; })[0]; }
   function rule(s,rid,id) { var p = A.profile(s,rid); return p && p.interests.filter(function (m) { return m.id === id; })[0]; }
+  function constituencyLookups(s,interests) {
+    // One interest cannot save a scan. Nonstandard inputs keep the original
+    // filters, including their strict matching and malformed-input failures.
+    if (!Array.isArray(interests) || interests.length < 2 || interests.map !== Array.prototype.map) return null;
+    var i, j, m, row, id, list, requested = Object.create(null), selected = [];
+    for (i = 0; i < interests.length; i++) {
+      if (!(i in interests)) continue;
+      m = interests[i];
+      if (!m || typeof m.appointmentId !== 'string' || !Array.isArray(m.rightIds) ||
+          m.rightIds.indexOf !== Array.prototype.indexOf) return null;
+      selected[i] = [];
+      for (j = 0; j < m.rightIds.length; j++) {
+        id = m.rightIds[j];
+        if (typeof id !== 'string') return null;
+        list = requested[id] || (requested[id] = []);
+        // Requests for one interest are contiguous. Only membership is unique;
+        // repeated ledger records will each be appended in the scan below.
+        if (list[list.length - 1] !== i) list.push(i);
+      }
+    }
+    var assigned = appointments(s), local = rights(s);
+    if (!Array.isArray(assigned) || !Array.isArray(local) || assigned.filter !== Array.prototype.filter ||
+        local.filter !== Array.prototype.filter) return null;
+    var first = Object.create(null);
+    for (i = 0; i < assigned.length; i++) {
+      if (!(i in assigned)) continue;
+      row = assigned[i];
+      if (!row) return null;
+      id = row.id;
+      if (typeof id !== 'string') return null;
+      if (!own(first,id)) first[id] = row;
+    }
+    for (i = 0; i < local.length; i++) {
+      if (!(i in local)) continue;
+      row = local[i];
+      if (!row) return null;
+      id = row.id;
+      if (typeof id !== 'string') return null;
+      list = requested[id];
+      if (list) for (j = 0; j < list.length; j++) selected[list[j]].push(row);
+    }
+    return {first:first,rights:selected};
+  }
   A.constituency = function (s,rid) {
     var data = A.state(s,rid), p = A.profile(s,rid);
-    return data && p ? data.interests.map(function (m) {
-      var row = assignment(s,m), c = row && s.chars[row.holder.id], local = jurisdiction(s,m);
+    var lookup = data && p && constituencyLookups(s,data.interests);
+    return data && p ? data.interests.map(function (m,i) {
+      var row = lookup ? lookup.first[m.appointmentId] : assignment(s,m), c = row && s.chars[row.holder.id];
+      var local = lookup ? lookup.rights[i] : jurisdiction(s,m);
       var active = !!row && row.status === 'active' && (row.endTurn === null || row.endTurn > s.turn) &&
         live(s,c) && c.dyn === m.dynasty && s.date.year - c.born >= p.minimumAge &&
         (s.holder[m.scope.id] || s.owner[m.scope.id]) === rid && local.length === 2 && local.every(function (r) {

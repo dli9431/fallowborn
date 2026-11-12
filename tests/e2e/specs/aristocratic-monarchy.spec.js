@@ -658,3 +658,35 @@ test('annual frontier passes retain one royal court, bounded family facts and a 
   const replay=await page.evaluate(function () { const d=JSON.parse(FB.save.serialize());return {state:d.state,rng:d.rng>>>0,uid:d.uid}; });
   expect(replay).toEqual(first);
 });
+
+for (const fictional of [false,true]) {
+  test('constituency reference stays detached through recognized restore for '+(fictional ? 'chartered court' : '476 court'), async function ({page},testInfo) {
+    await start(page,testInfo,{fictional:fictional});
+    for (const file of ['reference.js','probe.js'])
+      await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/government-query-reuse/'+file)});
+    const result=await page.evaluate(function () {
+      const A=FB.aristocracy,H=GOV_QUERY,rid=ARISTO.rid;
+      ARISTO.back(ARISTO.candidate().id);
+      const original=H.pair(FB.state,rid,H.consumers);
+      if (original.error) throw new Error(original.error.message);
+      const text=FB.save.serialize(),envelope=JSON.parse(text);
+      const content=FB.mods.fingerprint(FBDATA.aristocraticProfiles);
+      const warmed=A.constituency(FB.state,rid);
+      warmed[0].principal.id='changed'; warmed[0].rightIds.length=0; warmed[0].terms.levy=0;
+      const isolated=text===FB.save.serialize();
+      FB.save.restore(envelope);
+      const restored=H.pair(FB.state,rid,H.consumers);
+      if (restored.error) throw new Error(restored.error.message);
+      const saved=JSON.parse(FB.save.serialize());
+      return {ordered:JSON.stringify(original.value.voices)===JSON.stringify(restored.value.voices),
+        fiscal:JSON.stringify(original.value.fiscal)===JSON.stringify(restored.value.fiscal),
+        assent:JSON.stringify(original.value.assent)===JSON.stringify(restored.value.assent),
+        recognized:FB.governmentRecognition.accessionQuote(FB.state,rid,'abdication').allowed,
+        matching:!FB.save.otherWorld(envelope),mods:envelope.mods===saved.mods,
+        isolated:isolated,content:content===FB.mods.fingerprint(FBDATA.aristocraticProfiles),
+        world:envelope.state.start.id===saved.state.start.id && envelope.state.start.revision===saved.state.start.revision,
+        rng:(envelope.rng>>>0)===(saved.rng>>>0),uid:envelope.uid===saved.uid};
+    });
+    expect(result).toEqual({ordered:true,fiscal:true,assent:true,recognized:true,matching:true,mods:true,isolated:true,content:true,world:true,rng:true,uid:true});
+  });
+}
