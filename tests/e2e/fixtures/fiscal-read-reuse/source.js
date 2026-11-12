@@ -10,6 +10,8 @@ function source(file, text, reference) {
     text = text.replace(before,after);
   }
   if (file === files[0]) {
+    replace('  A.withFiscalRead = function (s,context,read,projection) {',
+      '  A.withFiscalRead = function (s,context,read,projection) {\n    if (window.fiscalReadCounts && window.fiscalReadCounts.fiscalReads !== undefined) window.fiscalReadCounts.fiscalReads++;');
     if (reference) replace('  A.withFiscalRead = function (s,context,read,projection) {',
       '  A.withFiscalRead = function (s,context,read,projection) {\n    return read();');
     replace('  function constituencyLookups(s,interests,track) {','  function constituencyLookups(s,interests,track) {\n    if (window.fiscalReadCounts) window.fiscalReadCounts.builds++;');

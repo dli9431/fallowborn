@@ -323,8 +323,13 @@ window.FB = window.FB || {};
         serviceRate:delegated ? charter.levyShare : 0, countyPenalty:countyPenalty,
         settlementPenalty:capacity.multiplier } };
   }
+  function aristocraticFiscalRealm(state, rid) {
+    const row = state && state.authority && state.authority.governments && state.authority.governments[rid];
+    return !!(row && row.aristocracy);
+  }
   FB.settlementFiscalProjection = function (state, pid, slot, context) {
-    return FB.aristocracy ? FB.aristocracy.withFiscalRead(state, context, function () {
+    const rid = state && ((state.holder && state.holder[pid]) || (state.owner && state.owner[pid]));
+    return FB.aristocracy && aristocraticFiscalRealm(state, rid) ? FB.aristocracy.withFiscalRead(state, context, function () {
       return settlementFiscalProjection(state, pid, slot, context);
     }, true) : settlementFiscalProjection(state, pid, slot, context);
   };
@@ -336,7 +341,6 @@ window.FB = window.FB || {};
         levy:fiscal.amounts.levyDues + fiscal.amounts.specialistDues }, integrated:true };
   };
   function settlementActorFiscal(state, actor, context) {
-    actor = actorRef(state, actor);
     const result = { tax:0, tolls:0, upkeep:0, duesIn:0, duesOut:0, levy:0, levyIn:0,
       countyLoss:0, settlementLoss:0, national:0 };
     context = context || {};
@@ -365,8 +369,9 @@ window.FB = window.FB || {};
     return result;
   }
   FB.settlementActorFiscal = function (state, actor, context) {
+    actor = actorRef(state, actor);
     context = context || {};
-    return FB.aristocracy ? FB.aristocracy.withFiscalRead(state, context, function () {
+    return FB.aristocracy && actor.kind === 'realm' && aristocraticFiscalRealm(state, actor.id) ? FB.aristocracy.withFiscalRead(state, context, function () {
       return settlementActorFiscal(state, actor, context);
     }) : settlementActorFiscal(state, actor, context);
   };

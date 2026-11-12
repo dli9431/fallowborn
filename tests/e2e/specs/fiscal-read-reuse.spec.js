@@ -17,7 +17,7 @@ for (const start of journey.starts) {
       await source.route(page,reference);
       await journey.begin(page,info,start);
       const result = await page.evaluate(async function () {
-        window.fiscalReadCounts = {builds:0,requests:0,leaders:0,slots:0,officeEntries:0};
+        window.fiscalReadCounts = {builds:0,requests:0,leaders:0,slots:0,officeEntries:0,fiscalReads:0};
         async function hash(text) {
           const bytes = await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));
           return Array.from(new Uint8Array(bytes)).map(function (n) { return n.toString(16).padStart(2,'0'); }).join('');
@@ -52,6 +52,7 @@ for (const start of journey.starts) {
     expect(counts[1].officeEntries).toBe(counts[0].officeEntries);
     expect(counts[1].slots).toBe(counts[0].slots);
     if (start.bookmark === '476') expect(counts[1].builds).toBeLessThan(counts[0].builds);
+    else expect(counts[1].fiscalReads).toBe(0);
     if (start.bookmark !== '1096') expect(counts[1].leaders).toBeLessThan(counts[0].leaders);
     await info.attach('read-reuse-counts',{body:JSON.stringify({start:start,reference:counts[0],candidate:counts[1]}),contentType:'application/json'});
   });
