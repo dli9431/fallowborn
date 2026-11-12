@@ -36,12 +36,29 @@ on:
         description: Record a CPU profile of every season (use with only)
         type: boolean
         default: false
+      comparison_baseline:
+        description: Optional baseline revision for paired comparisons against timing_ref
+        type: string
+        default: ''
+      comparison_repeats:
+        description: Paired comparison samples per workload (3 to 9)
+        type: number
+        default: 3
 
 permissions:
   contents: read
   actions: read
 
 jobs:
+  comparison:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.comparison_baseline != '' }}
+    uses: ./.github/workflows/speed-comparison.yml
+    with:
+      baseline: ${{ inputs.comparison_baseline }}
+      candidate: ${{ inputs.timing_ref }}
+      repeats: ${{ inputs.comparison_repeats }}
+      seasons: ${{ inputs.seasons }}
+
   suite:
     if: ${{ github.event_name == 'schedule' || inputs.suite }}
     strategy:

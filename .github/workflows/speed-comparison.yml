@@ -1,5 +1,22 @@
 name: Paired speed comparison
 on:
+  workflow_call:
+    inputs:
+      baseline:
+        required: true
+        type: string
+      candidate:
+        required: true
+        type: string
+      subjects:
+        type: string
+        default: '["content","476:mobile_household_476","476:peroz_sasanian_476","1096:yaghi_siyan_1096","1204:muhammad_1204"]'
+      repeats:
+        type: number
+        default: 3
+      seasons:
+        type: number
+        default: 4
   workflow_dispatch:
     inputs:
       baseline:
