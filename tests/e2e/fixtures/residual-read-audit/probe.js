@@ -183,7 +183,7 @@ function install() {
     };
     restore.push(function () { FB.mobile[name] = original; });
   }
-  for (const name of ['settlementActorFiscal','treasurySnapshot','playerTaxParts','vassalTaxContribution',
+  for (const name of ['settlementFiscalProjection','settlementActorFiscal','treasurySnapshot','playerTaxParts','vassalTaxContribution',
     'playerCivilianBudget','reliableGoldIncome','landGrantFiscalProjection','characterResidence','realmIdForRulerCharacter']) wrap(FB,name,name);
   for (const name of ['nominationQuote','supportQuote','accessionQuote']) wrap(FB.governmentRecognition,name,'recognition.' + name);
   wrap(FB.aristocracy,'constituency','constituency');
