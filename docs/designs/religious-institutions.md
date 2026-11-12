@@ -138,8 +138,14 @@ Within one ecclesiastical incumbent read, the papal personal snapshot borrows
 the already validated office table. Standalone papal snapshots still validate
 definitions. One active recognition evaluation acquires definitions lazily and
 shares them between issuer validity, generation and their political holder
-snapshots. Early guards do not acquire definitions. Other recognition entries
-and independent queries validate afresh, including nested incumbent queries.
+snapshots. Within one political legitimacy-list read, its reached recognition
+rows share that lazy definition getter. Every row still checks current issuer,
+subject, expiry, holder and generation at its original point. Early guards,
+empty lists and lists without reached religious-office issuers acquire nothing.
+Standalone recognition entries and independent or nested list queries validate
+afresh, including nested incumbent queries. The list never retains a holder,
+eligibility answer, recognition result or returned record. Its private getter
+ends on return or throw and does not cross a writer, restore or catalogue change.
 The same-realm recursion guard and its exception cleanup remain in force.
 
 Only definitions are shared for these synchronous reads. Papal canonical
