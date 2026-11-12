@@ -5,6 +5,18 @@
   'use strict';
   var M = FB.mobile = {}, G = FB.governments, S = FB.governmentSelection, Q = FB.political;
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
+  /* Planning shares the catalogue and untouched technology records. Only the
+     effective sovereign's record can be normalized by unit/supply queries.
+     Legacy ration queries may migrate the whole table, so retain their fully
+     detached projection until that migration has completed. No cache survives
+     this call or crosses a candidate/catalogue boundary. */
+  function planningTechnologies(s,rid,migrated) {
+    var table=s.realmTech || {};
+    if (!migrated && s.realmTechMigration!==2) return copy(table);
+    var projected=Object.assign({},table), effective=FB.techRealmId(s,rid);
+    if (table[effective]!==undefined) projected[effective]=copy(table[effective]);
+    return projected;
+  }
   function whole(n) { return Number.isSafeInteger(n) && n >= 0; }
   function availablePerson(s,c) {
     return !!c && !c.dead && !c.prisonerOf && !c.captive && !c.imprisoned && !c.exiled &&
@@ -141,7 +153,7 @@
     t.opening.muster.forEach(function (row) {units[row.unitId]=(units[row.unitId] || 0)+row.count;});
     var field=Object.keys(units).reduce(function (n,id) {return n+units[id];},0);
     if (field!==t.fighters || people<field) return null;
-    var projected=Object.assign({},s,{realmTech:copy(s.realmTech || {}),player:Object.assign({},s.player)});
+    var projected=Object.assign({},s,{realmTech:planningTechnologies(s,d.id,false),player:Object.assign({},s.player)});
     return {campPeople:people-field,units:units,
       provisionUse:FB.armyProvisionUse(projected,{realm:d.id,at:t.origin,warId:null}),
       drainBase:Math.max(0.1,FBDATA.balance.supplyDrainBase || 1.2),
@@ -823,7 +835,7 @@
       plan.bindings.push({memberId:memberDef.id,characterId:c.id,person:copy(ref)});
     }
     var leader=plan.bindings.filter(function (b) {return b.memberId===o.leaderMemberId;})[0];
-    var gates=Object.assign({},s,{realmTech:copy(s.realmTech || {}),realmTechMigration:2,realms:Object.assign({},s.realms)});
+    var gates=Object.assign({},s,{realmTech:planningTechnologies(s,d.id,true),realmTechMigration:2,realms:Object.assign({},s.realms)});
     gates.realms[d.id]=Object.assign({},s.realms[d.id],{ruler:Object.assign({},s.realms[d.id].ruler,
       {culture:s.chars[leader.characterId].culture})});
     for (var row of o.muster) {
