@@ -4,8 +4,11 @@ const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
+test.describe.configure({mode:'parallel'});
+
 dependsOnRuntime(__filename, ['index.html','data/map_data.js','data/cultures.js','data/economy.js','data/eras.js',
-  'js/mods.js','js/world.js','js/starts.js','js/governments.js','js/main.js','js/bookmark_setup.js']);
+  'js/mods.js','js/world.js','js/starts.js','js/governments.js','js/main.js','js/bookmark_setup.js',
+  'data/production.js','js/production.js','js/production_economy.js','js/site_resources.js']);
 
 const fixtures = [
   {file:'baths-headworks-river.json',mod:require('../fixtures/authoring/baths-headworks-river.json')},
@@ -81,10 +84,14 @@ for (const selection of importedRulers) {
       const scenario = FBDATA.startScenarios.find(function (row) { return row.id === selection.scenario; });
       const realm = bookmark.realms.find(function (row) { return row.id === scenario.rulerRealmId; });
       const ruler = FB.startRulerProfile(bookmark,realm,scenario.governmentForm);
-      return {name:ruler.name,scenarioName:scenario.characterName,sex:ruler.sex,scenarioSex:scenario.sex};
+      const production = FB.production.compile(bookmark);
+      return {name:ruler.name,scenarioName:scenario.characterName,sex:ruler.sex,scenarioSex:scenario.sex,
+        productionErrors:production.errors,productionSites:production.sites.map(function (site) { return site.id; })};
     },selection);
     expect(identity.name).toBe(identity.scenarioName);
     expect(identity.sex).toBe(selection.sex);
     expect(identity.scenarioSex).toBe(selection.sex);
+    expect(identity.productionErrors).toEqual([]);
+    expect(identity.productionSites.length).toBeGreaterThan(0);
   });
 }
