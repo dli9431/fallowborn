@@ -144,6 +144,7 @@
   // A fiscal lifetime shares only index storage. Validate its detached input
   // snapshot on every reuse, including edits by replaceable read callbacks.
   var fiscalReads = [];
+  A.fiscalReadActive = function () { return fiscalReads.length > 0; };
   A.withFiscalRead = function (s,context,read,projection) {
     var parent = fiscalReads[fiscalReads.length - 1];
     if (projection && parent && parent.actor && parent.state === s && parent.data === FBDATA && parent.context === context) return read();

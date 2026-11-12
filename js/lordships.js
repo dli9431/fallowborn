@@ -329,7 +329,7 @@ window.FB = window.FB || {};
   }
   FB.settlementFiscalProjection = function (state, pid, slot, context) {
     const rid = state && ((state.holder && state.holder[pid]) || (state.owner && state.owner[pid]));
-    return FB.aristocracy && aristocraticFiscalRealm(state, rid) ? FB.aristocracy.withFiscalRead(state, context, function () {
+    return FB.aristocracy && (aristocraticFiscalRealm(state, rid) || FB.aristocracy.fiscalReadActive()) ? FB.aristocracy.withFiscalRead(state, context, function () {
       return settlementFiscalProjection(state, pid, slot, context);
     }, true) : settlementFiscalProjection(state, pid, slot, context);
   };
@@ -371,7 +371,7 @@ window.FB = window.FB || {};
   FB.settlementActorFiscal = function (state, actor, context) {
     actor = actorRef(state, actor);
     context = context || {};
-    return FB.aristocracy && actor.kind === 'realm' && aristocraticFiscalRealm(state, actor.id) ? FB.aristocracy.withFiscalRead(state, context, function () {
+    return FB.aristocracy && (actor.kind === 'realm' && aristocraticFiscalRealm(state, actor.id) || FB.aristocracy.fiscalReadActive()) ? FB.aristocracy.withFiscalRead(state, context, function () {
       return settlementActorFiscal(state, actor, context);
     }) : settlementActorFiscal(state, actor, context);
   };
