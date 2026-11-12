@@ -183,6 +183,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Arno Stone",
             "culture": "frankish",
             "born": 918,
@@ -199,6 +200,7 @@
           "rank": 1,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 920,

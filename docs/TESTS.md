@@ -793,6 +793,8 @@ project.
 
 ## Shared support
 
+authoring-ruler-fixtures.spec.js checks the ordinary JSON admission of the resource, construction and production fixtures against the complete catalogue. Authored ruler profiles declare sex explicitly, including the female fish-drying ruler, so existing-ruler scenarios keep their declared identities. Two real file-picker imports exercise acceptance and preserve strict rejection when the ruler sex is omitted. Each fixture uses its own fresh browser context and the normal test timeout.
+
 `holywar-protector-causes.spec.js` stages the 1209–1229 French opportunity and
 independently imports `holywar-protector-lantern.json` through Mods. It covers
 authority/window/holder gates, pure previews, costly conserved submission, stale

@@ -54,7 +54,7 @@
           "settlements": [{"site": "inventory_plateau_hall", "name": "Plateau Hall", "kind": "village"}]}
       ],
       "realms": [{"id": "inventory_upland_court", "name": "Upland court", "capital": "inventory_vale", "color": "#aa7944", "aggression": 0, "rank": 3, "government": "territorial",
-        "ruler": {"name": "Arno Stone", "culture": "frankish", "born": 918, "mar": 6, "trait": "patient"}}],
+        "ruler": {"sex": "m", "name": "Arno Stone", "culture": "frankish", "born": 918, "mar": 6, "trait": "patient"}}],
       "duchies": {
         "inventory_home": {"name": "Home district", "kingdom": "inventory_country"},
         "inventory_marches": {"name": "Marches", "kingdom": "inventory_country"},

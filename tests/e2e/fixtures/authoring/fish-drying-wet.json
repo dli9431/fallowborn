@@ -189,6 +189,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "f",
             "name": "Edda Rain",
             "culture": "norse",
             "born": 887,
@@ -205,6 +206,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Kari Fell",
             "culture": "norse",
             "born": 884,
