@@ -111,6 +111,15 @@ cannot silently return an appointment belonging to a different actor.
 
 ## Read contract
 
+FB.political.governmentFormId returns the current form id or null for scalar
+consumers. It shares saved-row selection with government: both validate the
+realm through actor, prefer an own saved row, fall back to the stamped campaign
+default or territorial, and require an existing form definition. Strategy
+validation belongs to government dispatch rather than these identity reads.
+Each invocation reads current state and definitions without a cache.
+FB.political.government continues to return a fresh object with deeply detached
+rules; mutating its result cannot change saved records or authored definitions.
+
 Political religious offices retain their authorized religiousHeads pointer during
 recognition suspension. validIssuer, issuer generation and officeRecognitionMandates
 consult effective office validity for political_incumbent. Lost consent, political

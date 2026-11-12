@@ -65,11 +65,25 @@
     return s.start && s.start.defaultGovernment || 'territorial';
   }
   Q.defaultGovernmentForm = defaultForm;
+  function governmentRecord(s, realmRef) {
+    var a = records(s);
+    return a && a.governments && own(a.governments, realmRef.id)
+      ? a.governments[realmRef.id] : null;
+  }
+  function selectedForm(s, stored) {
+    return stored && stored.formId || defaultForm(s);
+  }
+  /* Scalar readers retain actor validation and definition existence without
+     allocating the detached rules required by the public government query. */
+  Q.governmentFormId = function (s, realmRef) {
+    if (!realmRef || realmRef.kind !== 'realm' || !Q.actor(s, realmRef)) return null;
+    var formId = selectedForm(s, governmentRecord(s, realmRef));
+    return FBDATA.governmentForms[formId] ? formId : null;
+  };
   Q.government = function (s, realmRef) {
     if (!realmRef || realmRef.kind !== 'realm' || !Q.actor(s, realmRef)) return null;
-    var a = records(s), stored = a && a.governments &&
-      own(a.governments, realmRef.id) ? a.governments[realmRef.id] : null;
-    var formId = stored && stored.formId || defaultForm(s);
+    var stored = governmentRecord(s, realmRef);
+    var formId = selectedForm(s, stored);
     var rules = FBDATA.governmentForms[formId];
     return rules ? { realmId:realmRef.id, formId:formId,
       eliteCultureId:stored && stored.eliteCultureId || null,
