@@ -1,0 +1,102 @@
+  let officeGraph = null, officeDefinitions = null, localOfficeCache = null;
+  function localOfficeInputs(state, graph) {
+    const local = FB.localInstitutionDefinitions(state);
+    const bookmark = state ? FB.campaignBookmark(state) : FB.activeBookmark;
+    const era = FBDATA.eras && FBDATA.eras[state ? FB.campaignEra(state) : bookmark && FB.bookmarkEra(bookmark)];
+    const formId = state && state.start && state.start.defaultGovernment || era && era.defaultGovernment;
+    const form = FBDATA.governmentForms && FBDATA.governmentForms[formId];
+    // Compare only definition inputs, never growing membership/history ledgers.
+    // Resolved worlds alias nested authoring records, so identity alone cannot
+    // detect an in-place edit to an institution or a bookmark system override.
+    const profiles = FBDATA.religiousInstitutionProfiles || {};
+    const localInputs = Object.keys(local).map(function (id) {
+      const def = local[id], profile = profiles[def.profileId];
+      const selection = profile && profile.selection;
+      const role = selection && profile.roles[selection.roleId];
+      return [id, def.officeId, def.religion, def.officeSystem, def.officeProfile,
+        def.profileId, !!def.freshOnly, !!(def.freshOnly && state && state.localInstitutions && state.localInstitutions[id]),
+        profile && [profile.period, profile.system, selection && selection.strategy, role && role.minAge]];
+    });
+    const key = JSON.stringify([state && state.turn, state && state.date, stateFaithRevision(requestedFaithState(state)),
+      FBDATA.systems, era && era.systems, form && form.systems, bookmark && bookmark.systems, bookmark && bookmark.greatHolyWars,
+      bookmark && Object.keys(bookmark.religiousHeads || {}),
+      bookmark && (bookmark.realms || []).concat(bookmark.provinces || []).map(function (row) { return row.religion; }),
+      localInputs]);
+    return { state:state, data:FBDATA, graph:graph, bookmark:bookmark, local:local,
+      systemEnabled:FB.systemEnabled, key:key };
+  }
+  function localOfficeTable(state, graph, definitions) {
+    const inputs = localOfficeInputs(state, graph), old = localOfficeCache;
+    if (old && old.state === inputs.state && old.data === inputs.data &&
+        old.graph === graph && old.bookmark === inputs.bookmark &&
+        old.local === inputs.local && old.systemEnabled === inputs.systemEnabled && old.key === inputs.key) return old.table;
+    inputs.table = withLocalReligiousOffices(state, definitions, inputs.local);
+    localOfficeCache = inputs;
+    return inputs.table;
+  }
+  function religiousOfficeDefinitions(state) {
+    const graph = compiledFaiths(requestedFaithState(state));
+    if (officeGraph === graph && officeDefinitions) return localOfficeTable(state, graph, officeDefinitions);
+    const out = {};
+    const ids = Object.keys(graph.resolved);
+    for (let i = 0; i < ids.length; i++) {
+      const religionId = ids[i];
+      const rel = graph.resolved[religionId];
+      if (!rel || !rel.head || !rel.head.officeId) continue;
+      const officeId = rel.head.officeId;
+      const source = FB.faithValue(state, religionId, 'head.officeId').sourceId ||
+        religionId;
+      if (!out[officeId] || source === religionId) {
+        out[officeId] = { id:officeId, religionId:source, head:rel.head };
+      }
+    }
+    officeGraph = graph;
+    officeDefinitions = out;
+    return localOfficeTable(state, graph, out);
+  }
+
+  function withLocalReligiousOffices(state, definitions, local) {
+    const out = Object.assign({}, definitions), systems = Object.create(null), profiles = Object.create(null), faiths = Object.create(null);
+    function enabled(system, faith) {
+      const key = JSON.stringify([system, faith]);
+      if (!own(systems, key)) systems[key] = FB.systemEnabled(state, system, { faith:faith, realm:null });
+      return systems[key];
+    }
+    function assignable(faith) {
+      if (!own(faiths, faith)) faiths[faith] = FB.faithAssignable(faith, state);
+      return faiths[faith];
+    }
+    const checks = { enabled:enabled, assignable:assignable };
+    for (const officeId in out) {
+      if (state && out[officeId].head.succession === 'political_incumbent' &&
+          !FB.politicalReligiousOfficeApplies(FB.campaignBookmark(state), officeId, state)) {
+        delete out[officeId];
+        continue;
+      }
+      if (out[officeId].head.system && (!FB.systemEnabled || !enabled(out[officeId].head.system, out[officeId].religionId))) delete out[officeId];
+    }
+    if (!FB.systemEnabled) return out;
+    for (const id in local) {
+      const def = local[id];
+      // Fresh-only offices exist only after their institution was explicitly seeded.
+      if (def.freshOnly && !(state && state.localInstitutions && state.localInstitutions[id])) continue;
+      if (def.profileId) {
+        if (!def.officeId) continue;
+        const profileKey = JSON.stringify([def.profileId, def.religion]);
+        if (!own(profiles, profileKey)) profiles[profileKey] = FB.religiousInstitutionOffice &&
+          FB.religiousInstitutionOffice(state, id, def, checks);
+        const prototype = profiles[profileKey];
+        const office = def.officeId && prototype && Object.assign({}, prototype, { id:def.officeId, institutionId:id });
+        if (office && !out[def.officeId]) out[def.officeId] = office;
+        continue;
+      }
+      const system = def.officeSystem === undefined ? 'episcopal_sees' : def.officeSystem;
+      if (system && !enabled(system, def.religion)) continue;
+      if (!def.officeId || out[def.officeId]) continue;
+      out[def.officeId] = { id:def.officeId, religionId:def.religion,
+        head:Object.assign({ holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment', local:true }, def.officeProfile || {}) };
+    }
+    Object.keys(out).forEach(function (id) { Object.freeze(out[id]); });
+    return Object.freeze(out);
+  }
+

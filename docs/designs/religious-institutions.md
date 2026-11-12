@@ -123,6 +123,8 @@ within a daily or seasonal pass. Switching a detached catalogue or state cannot
 reuse the installed table. Religion invalidation rebuilds the faith graph; direct
 faith-record edits retain the existing invalidateFaithState contract.
 
+Unchanged independent reads compare those ordered JSON inputs against a private detached dependency snapshot. They still inspect every relevant local definition, system layer and bookmark religion reference, but do not recreate the local-row arrays, concatenate/map the bookmark rows or serialize the complete key on a hit. A changed dependency uses the original key construction and table-build path. The snapshot preserves JSON null/omitted values and object insertion order, never aliases mutable source descendants, and lasts only with the existing single table cache. Non-JSON conversion objects fall back to the original serialization path. No mutation counters, global per-turn reuse or holder-result cache is introduced.
+
 Each build evaluates a distinct system/faith pair and profile/faith pair once.
 The optional checks argument of religiousInstitutionOffice shares those pure
 availability queries with the table builder. Holders, deaths, political incumbent
