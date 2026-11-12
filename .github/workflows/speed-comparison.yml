@@ -10,7 +10,7 @@ on:
         type: string
       subjects:
         type: string
-        default: '["content","476:mobile_household_476","476:peroz_sasanian_476","1096:yaghi_siyan_1096","1204:muhammad_1204"]'
+        default: '["content","476:mobile_household_476","476:peroz_sasanian_476","1096:yaghi_siyan_1096","1096:bohemond_1096","1204:muhammad_1204"]'
       repeats:
         type: number
         default: 3
@@ -30,7 +30,7 @@ on:
       subjects:
         description: JSON array of content or bookmark:scenario workloads
         type: string
-        default: '["content","476:mobile_household_476","476:peroz_sasanian_476","1096:yaghi_siyan_1096","1204:muhammad_1204"]'
+        default: '["content","476:mobile_household_476","476:peroz_sasanian_476","1096:yaghi_siyan_1096","1096:bohemond_1096","1204:muhammad_1204"]'
       repeats:
         description: Paired samples per workload (3 to 9)
         type: number
