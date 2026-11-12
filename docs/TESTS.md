@@ -1289,6 +1289,8 @@ community-retention.spec.js stages native Ctesiphon membership beyond 64 histori
 
 ## Controlled paired speed comparisons
 
+fiscal-read-reuse.spec.js compares the pre-reuse source paths with current fiscal, office and mobile reads over ordinary and directly staged season/year days in five established starts. It retains full state/save/catalogue digests, fingerprints, RNG and UID, counts actual index builds separately from live constituency calls and checks unchanged mobile scan counts. Focused cases cover same-read ledger and eligibility edits, intervening reader mutations, nested/foreign fiscal contexts, error cleanup, office null-state and reader overrides, retained revisions and fresh mobile eligibility. The source oracle and counters are routed into test pages only; these cases establish correctness and mechanical work counts, not speed gains.
+
 The paired comparison workflow uses one tooling revision and pins both game
 revisions before creating a separate hosted job for each workload. Each job
 runs 3 to 9 baseline/candidate pairs in alternating order on the same machine.

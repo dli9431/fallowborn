@@ -130,9 +130,74 @@
     }
     return {first:first,rights:selected};
   }
+  // A fiscal lifetime shares only index storage. Validate its detached input
+  // snapshot on every reuse, including edits by replaceable read callbacks.
+  var fiscalReads = [];
+  A.withFiscalRead = function (s,context,read,projection) {
+    var parent = fiscalReads[fiscalReads.length - 1];
+    if (projection && parent && parent.actor && parent.state === s && parent.data === FBDATA && parent.context === context) return read();
+    fiscalReads.push({state:s,data:FBDATA,context:context,actor:!projection,entries:null});
+    try { return read(); } finally { fiscalReads.pop(); }
+  };
+  function lookupSnapshot(s,interests,lookup) {
+    var assigned = appointments(s), local = rights(s), i, j, m, ids;
+    var snapshot = {interests:interests,assigned:assigned,local:local,lookup:lookup,map:interests.map,
+      assignedFilter:assigned.filter,localFilter:local.filter,
+      requests:new Array(interests.length),assignedRows:new Array(assigned.length),assignedIds:[],
+      localRows:new Array(local.length),localIds:[]};
+    for (i = 0; i < interests.length; i++) if (i in interests) {
+      m = interests[i]; ids = [];
+      for (j = 0; j < m.rightIds.length; j++) ids[j] = m.rightIds[j];
+      snapshot.requests[i] = [m.appointmentId,m.rightIds,ids,m.rightIds.indexOf];
+    }
+    for (i = 0; i < assigned.length; i++) if (i in assigned) {
+      snapshot.assignedRows[i] = assigned[i]; snapshot.assignedIds[i] = assigned[i].id;
+    }
+    for (i = 0; i < local.length; i++) if (i in local) {
+      snapshot.localRows[i] = local[i]; snapshot.localIds[i] = local[i].id;
+    }
+    return snapshot;
+  }
+  function sameLookupInputs(s,interests,old) {
+    var assigned = appointments(s), local = rights(s), i, j, m, request;
+    if (old.interests !== interests || !Array.isArray(interests) || interests.map !== old.map || interests.map !== Array.prototype.map ||
+        interests.length !== old.requests.length || assigned !== old.assigned || local !== old.local ||
+        assigned.filter !== old.assignedFilter || local.filter !== old.localFilter ||
+        assigned.filter !== Array.prototype.filter || local.filter !== Array.prototype.filter ||
+        assigned.length !== old.assignedRows.length || local.length !== old.localRows.length) return false;
+    for (i = 0; i < interests.length; i++) {
+      if ((i in interests) !== (i in old.requests)) return false;
+      if (!(i in interests)) continue;
+      m = interests[i]; request = old.requests[i];
+      if (!m || m.appointmentId !== request[0] || m.rightIds !== request[1] ||
+          m.rightIds.indexOf !== request[3] || m.rightIds.indexOf !== Array.prototype.indexOf || m.rightIds.length !== request[2].length) return false;
+      for (j = 0; j < m.rightIds.length; j++) if (m.rightIds[j] !== request[2][j]) return false;
+    }
+    for (i = 0; i < assigned.length; i++) {
+      if ((i in assigned) !== (i in old.assignedRows)) return false;
+      if (i in assigned && (assigned[i] !== old.assignedRows[i] || assigned[i].id !== old.assignedIds[i])) return false;
+    }
+    for (i = 0; i < local.length; i++) {
+      if ((i in local) !== (i in old.localRows)) return false;
+      if (i in local && (local[i] !== old.localRows[i] || local[i].id !== old.localIds[i])) return false;
+    }
+    return true;
+  }
+  function fiscalConstituencyLookups(s,rid,interests) {
+    var read = fiscalReads[fiscalReads.length - 1];
+    if (!read || read.state !== s || read.data !== FBDATA) return constituencyLookups(s,interests);
+    var old = read.entries && read.entries[rid];
+    if (old && sameLookupInputs(s,interests,old)) return old.lookup;
+    var lookup = constituencyLookups(s,interests);
+    if (lookup) {
+      if (!read.entries) read.entries = Object.create(null);
+      read.entries[rid] = lookupSnapshot(s,interests,lookup);
+    } else if (read.entries) delete read.entries[rid];
+    return lookup;
+  }
   A.constituency = function (s,rid) {
     var data = A.state(s,rid), p = A.profile(s,rid);
-    var lookup = data && p && constituencyLookups(s,data.interests);
+    var lookup = data && p && fiscalConstituencyLookups(s,rid,data.interests);
     return data && p ? data.interests.map(function (m,i) {
       var row = lookup ? lookup.first[m.appointmentId] : assignment(s,m), c = row && s.chars[row.holder.id];
       var local = lookup ? lookup.rights[i] : jurisdiction(s,m);

@@ -95,6 +95,7 @@
     var r = M.row(s, rid), c = r && s.chars[r.leaderId];
     return availablePerson(s,c) && (!r.command || M.commandValid && M.commandValid(s,rid)) ? c : null;
   };
+  var nativeLeader = M.leader;
   M.members = function (s, rid) {
     var r = M.row(s, rid);
     return r ? r.members.filter(function (m) {
@@ -1219,7 +1220,11 @@
     var cid = typeof value === 'string' ? value : value && value.id;
     // Only a realm with a coalition record can have a leader; skip the form lookup for the rest.
     var root = s.authority && s.authority.governments || {};
-    var rid = Object.keys(root).filter(function (id) { return !!(root[id] && root[id].mobile) && M.active(s,id) && M.leader(s,id) && M.leader(s,id).id === cid; })[0];
+    var rid = Object.keys(root).filter(function (id) {
+      if (!(root[id] && root[id].mobile) || !M.active(s,id)) return false;
+      var reader = M.leader, leader = M.leader(s,id);
+      return !!leader && (reader === nativeLeader && M.leader === reader ? leader : M.leader(s,id)).id === cid;
+    })[0];
     // An expedition is an additional office. Territorial lookup retains the
     // person's home crown even when its command was enumerated first.
     return rulerRealm(s,value) || M.landedHomeRealm && M.landedHomeRealm(s,cid) || rid;
