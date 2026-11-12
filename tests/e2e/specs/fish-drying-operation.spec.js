@@ -2,6 +2,7 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
@@ -95,13 +96,15 @@ test('real player work produces one conserved lot and allocation grants 0.03 onl
   await boot(page,info,'cool');
   const r=await page.evaluate(function(){
     const s=FB.state,S=FB.buildingSeasons,P=FB.production,made=FISH.finish(),before=FISH.effect();
+    const snapshot=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
     const q=S.quote(s,{operation:'allocate',assignmentId:'drying_window',actor:FISH.actor(),lotId:made.lot.id});
+    const reviewPure=snapshot===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
     const allocated=S.commit(s,q),again=S.commit(s,q),effect=FISH.effect(),sold=FB.productionEconomy.aiQuote(s,'provisions_sale',1,'sell').allowed;
     P.validate(s);S.validate(s);
-    return {direct:made.direct,worked:made.worked,finished:made.finished,before:before,allocated:allocated,again:again,effect:effect,sold:sold,
+    return {reviewAllowed:q.allowed,reviewPure:reviewPure,direct:made.direct,worked:made.worked,finished:made.finished,before:before,allocated:allocated,again:again,effect:effect,sold:sold,
       raw:s.production.lots.find(function(l){return l.origin.kind==='producer';}).remaining,output:made.lot.quantity,remaining:s.production.lots.find(function(l){return l.id===made.lot.id;}).remaining};
   });
-  expect(r).toEqual({direct:false,worked:true,finished:true,before:0,allocated:true,again:false,effect:0.03,sold:false,raw:0,output:1,remaining:0});
+  expect(r).toEqual({reviewAllowed:true,reviewPure:true,direct:false,worked:true,finished:true,before:0,allocated:true,again:false,effect:0.03,sold:false,raw:0,output:1,remaining:0});
 });
 test('local preserved-fish allocation remains useful when the declared buyer cannot pay',async function({page},info){
   await boot(page,info,'cool');

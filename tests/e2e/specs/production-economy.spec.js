@@ -180,7 +180,7 @@ for(const width of [390,1280])test(width+'px exchange confirmation retains scrol
   await page.setViewportSize({width:width,height:844});await boot(page,info,'harbor');
   await page.evaluate(function(){FB.ui.closeModal();FB.ui.showSettlement('resource_quay',0);});
   await page.locator('#settlement-production').click();await page.locator('#production-disposition-dry_fish').selectOption('use');
-  const action=page.getByRole('button',{name:'Sell one unit',exact:true});await action.click();
+  const action=page.getByRole('button',{name:/^Sell one unit\b/});await action.click();
   await expect(page.locator('#gm-body')).toContainText('Current price');await page.keyboard.press('Escape');
   await expect(page.locator('#production-disposition-dry_fish')).toHaveValue('use');await expect(action).toBeFocused();
   await action.click();await page.locator('#production-confirm').click();

@@ -76,9 +76,9 @@
       ],
       "realms": [
         {"id": "inventory_estuary_court", "name": "Estuary court", "capital": "inventory_quay", "color": "#458c96", "aggression": 0, "rank": 2, "government": "regnum",
-          "ruler": {"name": "Ivo Reed", "culture": "frankish", "born": 868, "mar": 6, "trait": "patient"}, "techSeed": {"complete": ["ringworks"]}},
+          "ruler": {"sex": "m", "name": "Ivo Reed", "culture": "frankish", "born": 868, "mar": 6, "trait": "patient"}, "techSeed": {"complete": ["ringworks"]}},
         {"id": "inventory_ridge_court", "name": "Ridge court", "capital": "inventory_ridge", "color": "#aa7944", "aggression": 0, "rank": 1, "government": "regnum", "liege": "inventory_estuary_court",
-          "ruler": {"name": "Odo Vale", "culture": "frankish", "born": 870, "mar": 5, "trait": "patient"}}
+          "ruler": {"sex": "m", "name": "Odo Vale", "culture": "frankish", "born": 870, "mar": 5, "trait": "patient"}}
       ],
       "duchies": {}, "kingdoms": {}, "empires": {},
       "revision": "inherited", "revisions": {

@@ -220,6 +220,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 868,
@@ -236,6 +237,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Mara Brook",
             "culture": "frankish",
             "born": 864,
