@@ -52,6 +52,10 @@ window.FB = window.FB || {};
     'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted','homeAuthorityPolicies','localPassagePolicies',
     'openingRevisions','openingLegacyRevision','startLocations','startTrackOverrides','openingInfrastructure','siteResourceAssignments',
     'buildingInstitutionAssignments','buildingOperationAssignments','productionSites','productionExchangeAssignments','productionProducerAssignments','buildingSeasonAssignments','maritimeWorkAssignments','relayServiceAssignments'];
+  function validRevisionCatalogue(catalogue, selected) {
+    return plainRecord(catalogue) && ownKey(catalogue, 'baseline') &&
+      ownKey(catalogue, selected) && plainRecord(catalogue.baseline) && plainRecord(catalogue[selected]);
+  }
   function resolveBookmarkRevision(base, revision) {
     if (!base) return null;
     var selected = revision === undefined ? base.revision || 'baseline' : revision;
@@ -69,8 +73,7 @@ window.FB = window.FB || {};
       }
       return base;
     }
-    if (!plainRecord(catalogue) || !ownKey(catalogue, 'baseline') ||
-        !ownKey(catalogue, selected) || !plainRecord(catalogue.baseline) || !plainRecord(catalogue[selected]))
+    if (!validRevisionCatalogue(catalogue, selected))
       throw new Error(FB.T('Unknown world revision: {revision}', {revision:selected}));
     var result = Object.assign({}, base);
     ['baseline', selected].forEach(function (key) {
@@ -94,8 +97,50 @@ window.FB = window.FB || {};
     var definition = bookmarkDefinition(id);
     return !!(definition && definition.revisions);
   };
+  var resolvedCatalogue = null, resolvedBookmarks = null, resolvedWorlds = new WeakMap();
+  function resolutionFields(value) {
+    var keys = Object.keys(value);
+    return {source:value, keys:keys, values:keys.map(function (key) { return value[key]; })};
+  }
+  function sameResolutionFields(snapshot, value) {
+    if (snapshot.source !== value) return false;
+    var count = 0;
+    for (var key in value) if (ownKey(value, key)) {
+      if (snapshot.keys[count] !== key || snapshot.values[count] !== value[key]) return false;
+      count++;
+    }
+    return count === snapshot.keys.length;
+  }
+  /* Only the public lookup shares resolved worlds. Detached validators keep
+     resolving their own declarations. Nested fields already alias authoring
+     data; observe the shallow inputs that resolution actually copies, plus
+     the opening alias it dereferences. Never retain a different data scope. */
+  function cachedBookmarkRevision(base, revision) {
+    if (resolvedCatalogue !== FBDATA || resolvedBookmarks !== FBDATA.bookmarks) {
+      resolvedCatalogue = FBDATA;
+      resolvedBookmarks = FBDATA.bookmarks;
+      resolvedWorlds = new WeakMap();
+    }
+    if (!base || !base.revisions) return resolveBookmarkRevision(base, revision);
+    var entries = resolvedWorlds.get(base), catalogue = base.revisions;
+    var entry = entries && entries.get(revision);
+    if (entry && entry.catalogue === catalogue && validRevisionCatalogue(catalogue, entry.selected) &&
+        sameResolutionFields(entry.base, base) &&
+        sameResolutionFields(entry.baseline, catalogue.baseline) &&
+        sameResolutionFields(entry.layer, catalogue[entry.selected]) &&
+        (entry.openingId === null || ownKey(entry.world.openingRevisions, entry.openingId) &&
+          entry.world.openingRevisions[entry.openingId] === entry.world.opening)) return entry.world;
+    var world = resolveBookmarkRevision(base, revision), selected = world.revision;
+    var opening = ownKey(catalogue[selected], 'opening') ? catalogue[selected].opening
+      : ownKey(catalogue.baseline, 'opening') ? catalogue.baseline.opening : base.opening;
+    if (!entries) { entries = new Map(); resolvedWorlds.set(base, entries); }
+    entries.set(revision, {selected:selected, catalogue:catalogue, base:resolutionFields(base),
+      baseline:resolutionFields(catalogue.baseline), layer:resolutionFields(catalogue[selected]),
+      openingId:typeof opening === 'string' ? opening : null, world:world});
+    return world;
+  }
   FB.bookmark = function (id, revision) {
-    return resolveBookmarkRevision(bookmarkDefinition(id === undefined || id === null
+    return cachedBookmarkRevision(bookmarkDefinition(id === undefined || id === null
       ? defaultBookmarkId() : String(id)), revision);
   };
   /* Catalogue validation must inspect retained and fresh definitions. The
