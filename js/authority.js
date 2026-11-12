@@ -257,11 +257,11 @@
     }
     return issuer.kind === 'host' ? issuer.id : null;
   }
-  function activeRecognition(s, row) {
-    // Only this pure row read shares definitions; independent queries validate
-    // again. Holder eligibility and generation are still read at each branch.
+  function activeRecognition(s, row, readOffices) {
+    // A pure list read may supply its definition getter. Standalone row reads
+    // retain their own lifetime; holder and generation checks remain live.
     var offices;
-    function readOffices() { return offices || (offices = FB.religiousOffices(s)); }
+    if (!readOffices) readOffices = function () { return offices || (offices = FB.religiousOffices(s)); };
     if (!row || row.status !== 'active' || row.endTurn !== null &&
         row.endTurn <= s.turn || !validIssuer(s, row.issuer, row.source, readOffices) ||
         !ref(s, row.subject)) return false;
@@ -277,10 +277,11 @@
   }
   Q.legitimacy = function (s, subject, place, sourceId) {
     if (!ref(s, subject)) return [];
-    var at = place && scope(s, place), out = [];
+    var at = place && scope(s, place), out = [], offices;
     if (place && !at) return out;
+    function readOffices() { return offices || (offices = FB.religiousOffices(s)); }
     for (var row of list(s, 'recognitions')) {
-      if (!same(row.subject, subject) || !activeRecognition(s, row) ||
+      if (!same(row.subject, subject) || !activeRecognition(s, row, readOffices) ||
           sourceId && row.source !== sourceId ||
           at && row.scope && !same(row.scope, at)) continue;
       out.push(copy(row));
