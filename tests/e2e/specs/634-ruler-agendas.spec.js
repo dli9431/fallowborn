@@ -98,7 +98,7 @@ async function roundTrip(page) {
   }
 }
 
-test('assembled courts select exactly two four-review agendas without changing earlier worlds or visibility',async function ({page},info) {
+test('assembled courts select three four-review agendas while preserving retained tracks',async function ({page},info) {
   await load(page,info);
   expect(await page.evaluate(function () {
     const b = FB.bookmark('634','core_courts_v4'), fresh = FB.bookmark('634');
@@ -108,6 +108,7 @@ test('assembled courts select exactly two four-review agendas without changing e
       const tracks = FB.startStoryTracks(r,r.fixedProvinceId,null,b), def = FB.stories.get(tracks[0]).declaration;
       const offered = FB.startSelectorReport(r,b);
       return {id:r.id,hidden:r.hidden,offered:offered.valid && offered.matches,tracks:tracks,
+        attachments:FB.startTracks(r,r.fixedProvinceId,b),
         dates:def.stages.map(function (st) { return [st.year,st.season]; }),
         alternatives:def.stages.every(function (st) { return st.choices.some(function (c) { return c.operation === 'agenda_priority'; }); }),
         earlier:FB.bookmarkRevisions('634').filter(function (w) { return w.revision !== b.revision; }).every(function (w) {
@@ -116,12 +117,14 @@ test('assembled courts select exactly two four-review agendas without changing e
     });
     const faults = FB.validateBookmark(b);
     return {fresh:fresh.revision,hidden:b.hidden,rows:rows,faults:faults,
-      excluded:!FB.stories.get('yazdegerd_agenda_634') && !FBDATA.startScenarios.some(function (r) { return /yazdegerd/.test(r.id); }),
+      isolated:FB.bookmarkRevisions('634').filter(function (w) { return w.revision !== b.revision; })
+        .every(function (w) { return (w.starts || []).indexOf('yazdegerd_634') < 0; }),
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toEqual({fresh:'core_identities_v3',hidden:true,rows:[
-    {id:'umar_634',hidden:true,offered:true,tracks:['umar_court_agenda_634'],dates:Array(4).fill([634,2]),alternatives:true,earlier:true,identity:'medinan_selection_634'},
-    {id:'heraclius_634',hidden:true,offered:true,tracks:['heraclius_court_agenda_634'],dates:Array(4).fill([634,2]),alternatives:true,earlier:true,identity:'administrative_monarchy'}
-  ],faults:[],excluded:true,pure:true});
+  })).toEqual({fresh:'core_courts_v4',hidden:false,rows:[
+    {id:'umar_634',hidden:false,offered:true,tracks:['umar_court_agenda_634'],attachments:['umar_court_agenda_634','opening_umar_court_634'],dates:Array(4).fill([634,2]),alternatives:true,earlier:true,identity:'medinan_selection_634'},
+    {id:'heraclius_634',hidden:false,offered:true,tracks:['heraclius_court_agenda_634'],attachments:['heraclius_court_agenda_634','opening_heraclius_court_634'],dates:Array(4).fill([634,2]),alternatives:true,earlier:true,identity:'administrative_monarchy'},
+    {id:'yazdegerd_634',hidden:false,offered:true,tracks:['yazdegerd_agenda_634'],attachments:['yazdegerd_agenda_634'],dates:Array(4).fill([634,2]),alternatives:true,earlier:true,identity:'aristocratic_monarchy'}
+  ],faults:[],isolated:true,pure:true});
 });
 
 for (const who of ['umar','heraclius']) {

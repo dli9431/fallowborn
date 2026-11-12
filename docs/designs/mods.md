@@ -26,6 +26,11 @@ or catalogue id. JSON conversion retains the prior undefined, sparse-array,
 nonfinite-number and `toJSON` semantics. Effective signatures keep their existing
 format and inputs; no save field or compatibility exception is introduced.
 
+SHA-256 allocates its UTF-8 byte storage once and reuses one 64-word schedule
+for every block in a fingerprint. Only the actual encoded length is padded and
+hashed; unused capacity never enters the digest. This avoids per-block arrays
+and growing boxed-byte buffers without changing canonical JSON or UTF-8 rules.
+
 Whole-import bookmark review now shares catalogue-only checks across the one
 synchronous candidate batch. Repeated references to one definition share a
 detached fault result within that batch. The first faulty bookmark still stops

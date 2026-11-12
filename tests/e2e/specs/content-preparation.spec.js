@@ -126,6 +126,12 @@ test('shared values retain exact JSON semantics and invalidate every edited desc
     const sparse = []; sparse.length = 2;
     const cases = [value,{b:undefined,a:NaN,c:[undefined,Infinity,,null]},sparse,
       {toJSON:function () { return {z:1,a:2}; }},JSON.parse('{"__proto__":{"x":1}}')];
+    // JSON quotes add two bytes: exercise both sides of the SHA padding and
+    // block boundaries, plus all UTF-8 widths across many reused work blocks.
+    [0,1,53,54,55,61,62,63,64,65,127,128].forEach(function (size) {
+      cases.push(new Array(size + 1).join('a'));
+    });
+    cases.push(new Array(8193).join('aé\u0800\ud83d\ude00'));
     const leaf = new Array(600).fill(1), expanded = new Array(600).fill(leaf);
     let deep = leaf;
     for (let i = 0; i < 65; i++) deep = {child:deep};

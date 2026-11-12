@@ -72,24 +72,27 @@ window.FBMODS = window.FBMODS || [];
     var normalized = FB.contentValues.jsonSnapshot(value);
     var retained = normalized && typeof normalized === 'object';
     if (retained && valueFingerprints.has(normalized)) return valueFingerprints.get(normalized);
-    var text = FB.contentValues.canonical(normalized), bytes = [];
+    var text = FB.contentValues.canonical(normalized);
+    // UTF-8 needs at most three bytes per UTF-16 code unit. Reserve padding
+    // once; avoid growing boxed byte arrays for complete world catalogues.
+    var bytes = new Uint8Array(Math.ceil((text.length * 3 + 9) / 64) * 64), length = 0;
     for (var i = 0; i < text.length; i++) {
       var c = text.charCodeAt(i);
       if (c >= 0xd800 && c <= 0xdbff && i + 1 < text.length &&
           text.charCodeAt(i + 1) >= 0xdc00 && text.charCodeAt(i + 1) <= 0xdfff)
         c = 0x10000 + ((c - 0xd800) << 10) + text.charCodeAt(++i) - 0xdc00;
       else if (c >= 0xd800 && c <= 0xdfff) c = 0xfffd;
-      if (c < 128) bytes.push(c);
-      else if (c < 2048) bytes.push(192 | c >> 6, 128 | c & 63);
-      else if (c < 65536) bytes.push(224 | c >> 12, 128 | c >> 6 & 63, 128 | c & 63);
-      else bytes.push(240 | c >> 18, 128 | c >> 12 & 63, 128 | c >> 6 & 63, 128 | c & 63);
+      if (c < 128) bytes[length++] = c;
+      else if (c < 2048) { bytes[length++] = 192 | c >> 6; bytes[length++] = 128 | c & 63; }
+      else if (c < 65536) { bytes[length++] = 224 | c >> 12; bytes[length++] = 128 | c >> 6 & 63; bytes[length++] = 128 | c & 63; }
+      else { bytes[length++] = 240 | c >> 18; bytes[length++] = 128 | c >> 12 & 63; bytes[length++] = 128 | c >> 6 & 63; bytes[length++] = 128 | c & 63; }
     }
-    var bits = bytes.length * 8;
-    bytes.push(128);
-    while (bytes.length % 64 !== 56) bytes.push(0);
+    var bits = length * 8;
+    bytes[length++] = 128;
+    while (length % 64 !== 56) length++;
     var high = Math.floor(bits / 4294967296), low = bits >>> 0;
-    for (i = 3; i >= 0; i--) bytes.push(high >>> (i * 8) & 255);
-    for (i = 3; i >= 0; i--) bytes.push(low >>> (i * 8) & 255);
+    for (i = 3; i >= 0; i--) bytes[length++] = high >>> (i * 8) & 255;
+    for (i = 3; i >= 0; i--) bytes[length++] = low >>> (i * 8) & 255;
     var h = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
     var k = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
       0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
@@ -100,8 +103,9 @@ window.FBMODS = window.FBMODS || [];
       0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
       0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
     function rotate(n, by) { return n >>> by | n << (32 - by); }
-    for (var offset = 0; offset < bytes.length; offset += 64) {
-      var w = [], a = h[0], b = h[1], c0 = h[2], d = h[3], e = h[4], f = h[5], g = h[6], h0 = h[7];
+    var w = new Int32Array(64);
+    for (var offset = 0; offset < length; offset += 64) {
+      var a = h[0], b = h[1], c0 = h[2], d = h[3], e = h[4], f = h[5], g = h[6], h0 = h[7];
       for (i = 0; i < 64; i++) {
         if (i < 16) {
           var j = offset + i * 4;
@@ -116,7 +120,10 @@ window.FBMODS = window.FBMODS || [];
         var t2 = ((rotate(a,2) ^ rotate(a,13) ^ rotate(a,22)) + ((a & b) ^ (a & c0) ^ (b & c0))) | 0;
         h0 = g; g = f; f = e; e = (d + t1) | 0; d = c0; c0 = b; b = a; a = (t1 + t2) | 0;
       }
-      [a,b,c0,d,e,f,g,h0].forEach(function (n, index) { h[index] = (h[index] + n) | 0; });
+      h[0] = (h[0] + a) | 0; h[1] = (h[1] + b) | 0;
+      h[2] = (h[2] + c0) | 0; h[3] = (h[3] + d) | 0;
+      h[4] = (h[4] + e) | 0; h[5] = (h[5] + f) | 0;
+      h[6] = (h[6] + g) | 0; h[7] = (h[7] + h0) | 0;
     }
     var fingerprint = h.map(function (n) { return ('00000000' + (n >>> 0).toString(16)).slice(-8); }).join('');
     if (retained) valueFingerprints.set(normalized,fingerprint);

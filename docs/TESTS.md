@@ -885,6 +885,14 @@ Reviewed structural collisions include retained baseline revisions, paid-exchang
 
 ## Profiling a reported save
 
+The 634 catalogue, identity, court and ruler-agenda regressions distinguish the
+current visible `core_courts_v4` opening from retained `core_identities_v3`
+behavior. Court replacement imports use the declaration's own revision and
+assert that the fresh roster is unchanged. Retained-start setup restores the
+original selector and visibility exactly before comparing catalogue snapshots.
+The default 60-second budgets, complete save comparisons, malformed-save purity
+checks and ordinary JSON import paths remain in force.
+
 Complete content preparation has a separate owner-run diagnostic:
 `node tests/e2e/measure/content.js` from the repository root. It opens a fresh
 title with load timing enabled for each of two cases: no mods and the ordinary
