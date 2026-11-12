@@ -11,6 +11,15 @@ function instrument(source) {
   replace('  function localOfficeInputs(state, graph) {',
     '  function localOfficeInputs(state, graph) {\n' +
     '    const probe = window.__officeLookupProbe, ticket = probe && probe.beginInput();');
+  if (source.indexOf('  function sameOfficeInputs(') >= 0) {
+    replace('      key = JSON.stringify([state && state.turn,',
+      '      if (window.__officeLookupProbe) window.__officeLookupProbe.serializeKey();\n' +
+      '      key = JSON.stringify([state && state.turn,');
+  } else {
+    replace('    const key = JSON.stringify([state && state.turn,',
+      '    if (window.__officeLookupProbe) window.__officeLookupProbe.serializeKey();\n' +
+      '    const key = JSON.stringify([state && state.turn,');
+  }
   replace('    return { state:state, data:FBDATA, graph:graph, bookmark:bookmark, local:local,',
     '    if (probe) probe.endInput(ticket, {state:state, data:FBDATA, graph:graph, bookmark:bookmark, local:local, systemEnabled:FB.systemEnabled, key:key}, Object.keys(local).length, bookmark ? (bookmark.realms || []).length + (bookmark.provinces || []).length : 0);\n' +
     '    return { state:state, data:FBDATA, graph:graph, bookmark:bookmark, local:local,');
@@ -29,7 +38,7 @@ function install() {
   const frames = [], incumbents = [];
   let report;
   function blank() {
-    return {keyBuilds:0, hits:0, misses:0, localRows:0, faithRows:0, keyChars:0,
+    return {keyBuilds:0, keySerializations:0, hits:0, misses:0, localRows:0, faithRows:0, keyChars:0,
       inputMs:0, incumbentCalls:0, guardedVisits:0, maxIncumbentDepth:0, maxQueryDepth:0,
       unscopedBuilds:0, byKind:{}};
   }
@@ -91,6 +100,7 @@ function install() {
       } else frame.first = inputs;
     },
     table:function (hit) { report[hit ? 'hits' : 'misses']++; },
+    serializeKey:function () { report.keySerializations++; },
     measure:function (label, fn) { return query(label, fn); },
     reset:function () {
       if (frames.length || incumbents.length) throw new Error('Cannot reset an active office probe');

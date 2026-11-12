@@ -1588,31 +1588,113 @@ window.FB = window.FB || {};
   };
 
   let officeGraph = null, officeDefinitions = null, localOfficeCache = null;
+  // A detached description retains JSON's ordered values without allocating
+  // the arrays and serialized key again on every unchanged independent read.
+  function officeInputSnapshot(value) {
+    if (!value || typeof value !== 'object') return value;
+    const keys = Object.keys(value), values = [];
+    for (let i = 0; i < keys.length; i++) values.push(officeInputSnapshot(value[keys[i]]));
+    return { array:Array.isArray(value), keys:keys, values:values };
+  }
+  function sameOfficeInput(value, snapshot) {
+    const type = typeof value;
+    if (value === undefined || type === 'function' || type === 'symbol' ||
+        type === 'number' && !isFinite(value)) value = null;
+    if (!value || typeof value !== 'object') return value === snapshot;
+    // Non-JSON authoring objects keep the original serialization path, including
+    // its conversions and errors. Supported definitions are ordinary JSON.
+    if (!snapshot || typeof snapshot !== 'object' || typeof value.toJSON === 'function' ||
+        Array.isArray(value) !== snapshot.array) return false;
+    if (snapshot.array) {
+      if (value.length !== snapshot.values.length) return false;
+      for (let i = 0; i < value.length; i++) {
+        if (!sameOfficeInput(value[i], snapshot.values[i])) return false;
+      }
+      return true;
+    }
+    let index = 0;
+    for (const key in value) if (own(value, key)) {
+      const item = value[key], itemType = typeof item;
+      if (item === undefined || itemType === 'function' || itemType === 'symbol') continue;
+      if (key !== snapshot.keys[index] || !sameOfficeInput(item, snapshot.values[index])) return false;
+      index++;
+    }
+    return index === snapshot.keys.length;
+  }
+  function sameOfficeInputs(state, local, bookmark, era, form, snapshot) {
+    const parts = snapshot.values, profiles = FBDATA.religiousInstitutionProfiles || {};
+    const rows = parts[10].values;
+    let index = 0;
+    for (const id in local) if (own(local, id)) {
+      const def = local[id], profile = profiles[def.profileId];
+      const selection = profile && profile.selection;
+      const role = selection && profile.roles[selection.roleId];
+      const saved = rows[index++], row = saved && saved.values;
+      if (!row || id !== row[0] || !sameOfficeInput(def.officeId, row[1]) ||
+          !sameOfficeInput(def.religion, row[2]) || !sameOfficeInput(def.officeSystem, row[3]) ||
+          !sameOfficeInput(def.officeProfile, row[4]) || !sameOfficeInput(def.profileId, row[5]) ||
+          !!def.freshOnly !== row[6] ||
+          !!(def.freshOnly && state && state.localInstitutions && state.localInstitutions[id]) !== row[7]) return false;
+      const prior = row[8];
+      if (!profile) { if (!sameOfficeInput(profile, prior)) return false; }
+      else if (!prior || !sameOfficeInput(profile.period, prior.values[0]) ||
+          !sameOfficeInput(profile.system, prior.values[1]) ||
+          !sameOfficeInput(selection && selection.strategy, prior.values[2]) ||
+          !sameOfficeInput(role && role.minAge, prior.values[3])) return false;
+    }
+    if (index !== rows.length) return false;
+    if (!sameOfficeInput(state && state.turn, parts[0]) || !sameOfficeInput(state && state.date, parts[1]) ||
+        !sameOfficeInput(stateFaithRevision(requestedFaithState(state)), parts[2]) ||
+        !sameOfficeInput(FBDATA.systems, parts[3]) || !sameOfficeInput(era && era.systems, parts[4]) ||
+        !sameOfficeInput(form && form.systems, parts[5]) || !sameOfficeInput(bookmark && bookmark.systems, parts[6]) ||
+        !sameOfficeInput(bookmark && bookmark.greatHolyWars, parts[7])) return false;
+    if (!bookmark) return sameOfficeInput(bookmark, parts[8]) && sameOfficeInput(bookmark, parts[9]);
+    const heads = Object.keys(bookmark.religiousHeads || {}), priorHeads = parts[8].values;
+    if (heads.length !== priorHeads.length) return false;
+    for (let i = 0; i < heads.length; i++) if (heads[i] !== priorHeads[i]) return false;
+    const realms = bookmark.realms || [], provinces = bookmark.provinces || [], faiths = parts[9].values;
+    if (realms.length + provinces.length !== faiths.length) return false;
+    for (let i = 0; i < realms.length; i++) {
+      if (!sameOfficeInput(i in realms ? realms[i].religion : undefined, faiths[i])) return false;
+    }
+    for (let i = 0; i < provinces.length; i++) {
+      if (!sameOfficeInput(i in provinces ? provinces[i].religion : undefined, faiths[realms.length + i])) return false;
+    }
+    return true;
+  }
   function localOfficeInputs(state, graph) {
     const local = FB.localInstitutionDefinitions(state);
     const bookmark = state ? FB.campaignBookmark(state) : FB.activeBookmark;
     const era = FBDATA.eras && FBDATA.eras[state ? FB.campaignEra(state) : bookmark && FB.bookmarkEra(bookmark)];
     const formId = state && state.start && state.start.defaultGovernment || era && era.defaultGovernment;
     const form = FBDATA.governmentForms && FBDATA.governmentForms[formId];
-    // Compare only definition inputs, never growing membership/history ledgers.
-    // Resolved worlds alias nested authoring records, so identity alone cannot
-    // detect an in-place edit to an institution or a bookmark system override.
-    const profiles = FBDATA.religiousInstitutionProfiles || {};
-    const localInputs = Object.keys(local).map(function (id) {
-      const def = local[id], profile = profiles[def.profileId];
-      const selection = profile && profile.selection;
-      const role = selection && profile.roles[selection.roleId];
-      return [id, def.officeId, def.religion, def.officeSystem, def.officeProfile,
-        def.profileId, !!def.freshOnly, !!(def.freshOnly && state && state.localInstitutions && state.localInstitutions[id]),
-        profile && [profile.period, profile.system, selection && selection.strategy, role && role.minAge]];
-    });
-    const key = JSON.stringify([state && state.turn, state && state.date, stateFaithRevision(requestedFaithState(state)),
-      FBDATA.systems, era && era.systems, form && form.systems, bookmark && bookmark.systems, bookmark && bookmark.greatHolyWars,
-      bookmark && Object.keys(bookmark.religiousHeads || {}),
-      bookmark && (bookmark.realms || []).concat(bookmark.provinces || []).map(function (row) { return row.religion; }),
-      localInputs]);
+    const old = localOfficeCache;
+    const unchanged = old && old.state === state && old.data === FBDATA && old.graph === graph &&
+      old.bookmark === bookmark && old.local === local && old.systemEnabled === FB.systemEnabled &&
+      sameOfficeInputs(state, local, bookmark, era, form, old.snapshot);
+    let key = unchanged && old.key;
+    if (!unchanged) {
+      // Compare only definition inputs, never growing membership/history ledgers.
+      // Resolved worlds alias nested authoring records, so identity alone cannot
+      // detect an in-place edit to an institution or a bookmark system override.
+      const profiles = FBDATA.religiousInstitutionProfiles || {};
+      const localInputs = Object.keys(local).map(function (id) {
+        const def = local[id], profile = profiles[def.profileId];
+        const selection = profile && profile.selection;
+        const role = selection && profile.roles[selection.roleId];
+        return [id, def.officeId, def.religion, def.officeSystem, def.officeProfile,
+          def.profileId, !!def.freshOnly, !!(def.freshOnly && state && state.localInstitutions && state.localInstitutions[id]),
+          profile && [profile.period, profile.system, selection && selection.strategy, role && role.minAge]];
+      });
+      key = JSON.stringify([state && state.turn, state && state.date, stateFaithRevision(requestedFaithState(state)),
+        FBDATA.systems, era && era.systems, form && form.systems, bookmark && bookmark.systems, bookmark && bookmark.greatHolyWars,
+        bookmark && Object.keys(bookmark.religiousHeads || {}),
+        bookmark && (bookmark.realms || []).concat(bookmark.provinces || []).map(function (row) { return row.religion; }),
+        localInputs]);
+    }
     return { state:state, data:FBDATA, graph:graph, bookmark:bookmark, local:local,
-      systemEnabled:FB.systemEnabled, key:key };
+      systemEnabled:FB.systemEnabled, key:key,
+      snapshot:old && old.key === key ? old.snapshot : officeInputSnapshot(JSON.parse(key)) };
   }
   function localOfficeTable(state, graph, definitions) {
     const inputs = localOfficeInputs(state, graph), old = localOfficeCache;
