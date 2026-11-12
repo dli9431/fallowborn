@@ -140,6 +140,10 @@ test('office validation observes nested edits, JSON key ordering, identity switc
       edit('nonfinite-array-value', def.officeProfile.nested.items, 1, NaN);
       edit('undefined-object-value', def.officeProfile.nested, 'omitted', undefined);
       edit('json-conversion', def.officeProfile.nested, 'conversion', {toJSON:function () { return {value:2}; }});
+      const converted = function () {};
+      converted.toJSON = function () { return {value:3}; };
+      edit('function-json-conversion', def.officeProfile.nested, 'conversion', converted);
+      edit('function-array-conversion', def.officeProfile.nested.items, 1, converted);
       const cycle = {}; cycle.self = cycle;
       edit('cyclic-error', def.officeProfile.nested, 'cycle', cycle);
       compare('after-error');

@@ -1598,7 +1598,8 @@ window.FB = window.FB || {};
   }
   function sameOfficeInput(value, snapshot) {
     const type = typeof value;
-    if (value === undefined || type === 'function' || type === 'symbol' ||
+    if (type === 'function') return false;
+    if (value === undefined || type === 'symbol' ||
         type === 'number' && !isFinite(value)) value = null;
     if (!value || typeof value !== 'object') return value === snapshot;
     // Non-JSON authoring objects keep the original serialization path, including
@@ -1615,7 +1616,8 @@ window.FB = window.FB || {};
     let index = 0;
     for (const key in value) if (own(value, key)) {
       const item = value[key], itemType = typeof item;
-      if (item === undefined || itemType === 'function' || itemType === 'symbol') continue;
+      if (itemType === 'function') return false;
+      if (item === undefined || itemType === 'symbol') continue;
       if (key !== snapshot.keys[index] || !sameOfficeInput(item, snapshot.values[index])) return false;
       index++;
     }
