@@ -1401,7 +1401,38 @@
 
   /* One season is settled once. A failed payment breaches service and never
      creates an unpaid credit; renewal requires both current rulers' consent. */
+  var CUSTOM_TOTALS = ['possession','disputed','abandoned'];
+  FB.authorityCustomTotalsValid = function (row) {
+    return row.retiredHistory === undefined || FB.ledgerRetention.totals(row.retiredHistory, CUSTOM_TOTALS);
+  };
+  /* Evidence-bearing history is a permanent duplicate guard. Only unreferenced
+     turn-local observations can retire; strength is already the exact outcome
+     of their ordered, clamped changes and must never be recomputed. */
+  FB.authorityCompact = function (s) {
+    var R = FB.ledgerRetention;
+    if (!R || !R.due(s) || !records(s)) return false;
+    var graph = R.graph(R.cutoff(s));
+    list(s, 'rights').forEach(function (row, ri) {
+      row.history.forEach(function (entry, hi) {
+        var permanent = CUSTOM_TOTALS.indexOf(entry.event) < 0 || !!entry.evidence || entry.turn >= s.turn;
+        graph.add(ri + ':' + hi, permanent, entry.turn);
+      });
+    });
+    var keep = graph.keep();
+    if (!R.folds(graph, keep)) return false;
+    return R.stage(s, ['authority'], function (t) {
+      t.authority.rights.forEach(function (row, ri) {
+        var parts = R.split(row.history, function (entry, hi) { return ri + ':' + hi; }, keep);
+        if (!parts.folded.length) return;
+        if (!row.retiredHistory) row.retiredHistory = R.blank(CUSTOM_TOTALS);
+        parts.folded.forEach(function (entry) { R.add(row.retiredHistory, entry.event, 1); });
+        row.history = parts.kept;
+      });
+      return true;
+    }, function (t) { FB.save.v4.validateAuthority(t.authority, t); });
+  };
   FB.authoritySeason = function (s) {
+    FB.authorityCompact(s);
     var period = Math.floor(s.turn / 90);
     for (var row of list(s, 'contracts')) {
       if (row.status === 'offered') {
