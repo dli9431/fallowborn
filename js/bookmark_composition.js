@@ -17,6 +17,98 @@ window.FB = window.FB || {};
     return !!value && typeof value === 'object' && !Array.isArray(value) &&
       (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
   }
+  /* Immutable internal values share exact canonical text. Mutable callers are
+     inspected recursively on every snapshot, including key order and aliases;
+     a changed descendant produces a new snapshot all the way to its root. */
+  var valueSnapshots = new WeakMap(), immutableValues = new WeakMap();
+  function snapshot(value) {
+    var visited = new WeakMap(), visiting = new WeakSet();
+    function visit(row) {
+      if (!row || typeof row !== 'object') return row;
+      if (immutableValues.has(row)) return row;
+      if (visiting.has(row)) throw new Error('Content snapshot contains a cycle.');
+      if (visited.has(row)) return visited.get(row);
+      if (!Array.isArray(row) && !plain(row)) throw new Error('Content snapshot requires plain data.');
+      visiting.add(row);
+      var keys = Object.keys(row), previous = valueSnapshots.get(row), values = [];
+      var same = !!previous && keys.length === previous.keys.length;
+      keys.forEach(function (key, index) {
+        values[index] = visit(row[key]);
+        if (same && (key !== previous.keys[index] || values[index] !== previous.values[index])) same = false;
+      });
+      if (same && Array.isArray(row) && row.length !== previous.value.length) same = false;
+      var result = same ? previous.value : Array.isArray(row) ? new Array(row.length) : {};
+      if (!same) {
+        keys.forEach(function (key, index) {
+          if (key === '__proto__') Object.defineProperty(result,key,{value:values[index],enumerable:true});
+          else result[key] = values[index];
+        });
+        Object.freeze(result);
+        immutableValues.set(result,{});
+        valueSnapshots.set(row,{keys:keys,values:values,value:result});
+      }
+      visiting.delete(row); visited.set(row,result); return result;
+    }
+    return visit(value);
+  }
+  function canonical(value) {
+    var memo = new WeakMap();
+    function encode(row) {
+      if (!row || typeof row !== 'object') return JSON.stringify(row);
+      var retained = immutableValues.get(row);
+      if (retained && retained.canonical !== undefined) return retained.canonical;
+      if (memo.has(row)) return memo.get(row);
+      var text = Array.isArray(row) ? '[' + row.map(encode).join(',') + ']' :
+        '{' + Object.keys(row).sort().map(function (key) { return JSON.stringify(key) + ':' + encode(row[key]); }).join(',') + '}';
+      memo.set(row,text);
+      if (retained) retained.canonical = text;
+      return text;
+    }
+    return encode(value);
+  }
+  function jsonSnapshot(value) {
+    function safe(row) {
+      if (row === null || typeof row === 'string' || typeof row === 'boolean') return true;
+      if (typeof row === 'number') return isFinite(row);
+      if (!row || typeof row !== 'object') return false;
+      var retained = immutableValues.get(row);
+      if (retained.jsonSafe !== undefined) return retained.jsonSafe;
+      var keys = Object.keys(row);
+      retained.jsonSafe = (!Array.isArray(row) || keys.length === row.length && keys.every(function (key, i) {
+        return key === String(i);
+      })) && keys.every(function (key) { return key !== 'toJSON' && safe(row[key]); });
+      return retained.jsonSafe;
+    }
+    var result;
+    try { result = snapshot(value); if (safe(result)) return result; }
+    catch (error) { /* Preserve ordinary JSON conversion and its errors below. */ }
+    return snapshot(JSON.parse(JSON.stringify(value)));
+  }
+  function copied(source, target) {
+    if (!immutableValues.has(source)) return;
+    if (Array.isArray(source) !== Array.isArray(target) || Array.isArray(source) && source.length !== target.length) return;
+    var keys = Object.keys(source), targetKeys = Object.keys(target), values = [], matches = keys.length === targetKeys.length;
+    keys.forEach(function (key,index) {
+      var row = target[key], prior = row && typeof row === 'object' && valueSnapshots.get(row);
+      if (key !== targetKeys[index]) matches = false;
+      if (row && typeof row === 'object') {
+        if (!prior || immutableValues.get(prior.value).copiedFrom !== source[key]) matches = false;
+        values[index] = prior && prior.value;
+      } else { values[index] = row; if (row !== source[key]) matches = false; }
+    });
+    if (!matches) return;
+    // Keep the copy's own graph: interning it with its source would introduce
+    // new aliases when both later appear in a mutable publication.
+    var value = Array.isArray(target) ? new Array(target.length) : {};
+    keys.forEach(function (key,index) {
+      if (key === '__proto__') Object.defineProperty(value,key,{value:values[index],enumerable:true});
+      else value[key] = values[index];
+    });
+    Object.freeze(value);
+    immutableValues.set(value,Object.assign({},immutableValues.get(source),{copiedFrom:source}));
+    valueSnapshots.set(target,{keys:keys,values:values,value:value});
+  }
+  FB.contentValues = {snapshot:snapshot,jsonSnapshot:jsonSnapshot,canonical:canonical,copied:copied};
   function copy(value) {
     var memo = new WeakMap();
     function clone(row) {
@@ -25,16 +117,13 @@ window.FB = window.FB || {};
       var result = Array.isArray(row) ? [] : {};
       memo.set(row,result);
       Object.keys(row).forEach(function (key) { result[key] = clone(row[key]); });
+      copied(row,result);
       return result;
     }
     return clone(value);
   }
   function stable(value) {
-    if (Array.isArray(value)) return '[' + value.map(stable).join(',') + ']';
-    if (plain(value)) return '{' + Object.keys(value).sort().map(function (key) {
-      return JSON.stringify(key) + ':' + stable(value[key]);
-    }).join(',') + '}';
-    return JSON.stringify(value);
+    return canonical(value);
   }
   function equal(a, b) { return stable(a) === stable(b); }
   function fields(value, allowed, label) {
@@ -44,13 +133,20 @@ window.FB = window.FB || {};
     });
   }
   function data(value,limit) {
-    var count = 0, ancestors = [];
+    var count = 0, ancestors = [], reviewed = new WeakMap();
     function walk(row, depth) {
       if (++count > (limit || 250000) || depth > 64) throw new Error('Composition exceeds its data limits.');
-      if (row === null || typeof row === 'string' || typeof row === 'boolean') return;
-      if (typeof row === 'number' && isFinite(row)) return;
+      if (row === null || typeof row === 'string' || typeof row === 'boolean') return 0;
+      if (typeof row === 'number' && isFinite(row)) return 0;
       if (!Array.isArray(row) && !plain(row)) throw new Error('Composition must contain plain JSON data.');
       if (ancestors.indexOf(row) >= 0) throw new Error('Composition data contains a cycle.');
+      var prior = reviewed.get(row);
+      if (prior) {
+        count += prior.count - 1;
+        if (count > (limit || 250000) || depth + prior.height > 64) throw new Error('Composition exceeds its data limits.');
+        return prior.height;
+      }
+      var started = count, height = 0;
       if (Object.getOwnPropertySymbols && Object.getOwnPropertySymbols(row).length)
         throw new Error('Composition data contains symbol fields.');
       ancestors.push(row);
@@ -60,13 +156,15 @@ window.FB = window.FB || {};
         var descriptor = Object.getOwnPropertyDescriptor(row, key);
         if (!descriptor.enumerable) throw new Error('Composition data contains a hidden field.');
         if (descriptor.get || descriptor.set) throw new Error('Composition data contains an accessor.');
-        walk(row[key], depth + 1);
+        height = Math.max(height,1 + walk(row[key], depth + 1));
       });
       if (Array.isArray(row) && (Object.keys(row).length !== row.length || Object.keys(row).some(function (key) {
         return !/^(0|[1-9][0-9]*)$/.test(key) || Number(key) >= row.length;
       })))
         throw new Error('Composition lists must be dense plain arrays.');
       ancestors.pop();
+      reviewed.set(row,{count:count - started + 1,height:height});
+      return height;
     }
     walk(value, 0);
   }
@@ -272,7 +370,7 @@ window.FB = window.FB || {};
     }
     // Normalize for proof only. Bundled publication retains authored title
     // spellings so conversion cannot silently change mod fingerprints.
-    return {payload:copy(payload), prepared:FB.mods.prepareComposition(normalized, worldId, reviewBase, complete)};
+    return {payload:payload, prepared:FB.mods.prepareComposition(normalized, worldId, reviewBase, complete)};
   }
   function addStart(world, unit) {
     var id = unit.definition.id;
@@ -368,7 +466,7 @@ window.FB = window.FB || {};
   }
   function build(input, live, native, authored) {
     data(input,native ? 8000000 : 250000);
-    var spec = copy(input);
+    var spec = snapshot(input);
     fields(spec, ['id','source','bookmark','catalogs','availability','starts','startAfter'], 'composition');
     if (typeof spec.id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(spec.id) || !plain(spec.bookmark))
       throw new Error('Composition needs an owner id and a complete bookmark.');
@@ -490,7 +588,9 @@ window.FB = window.FB || {};
       }
     }
     /* Validation may follow dependencies, but publication keeps authored order. */
-    var finalPayload = copy(base.payload), world = finalPayload.bookmarks[worldId];
+    var finalPayload = Object.assign({},base.payload,{bookmarks:{}});
+    var world = finalPayload.bookmarks[worldId] = bindingCopy(base.payload.bookmarks[worldId]);
+    if (base.payload.storyInstances) finalPayload.storyInstances = Object.assign({},base.payload.storyInstances);
     units.forEach(function (unit) {
       if (!accepted[unit.definition.id]) return;
       addStart(world, unit);

@@ -6147,14 +6147,20 @@ window.FB = window.FB || {};
     const knownBookmarks = FBDATA.bookmarks ? Object.keys(FBDATA.bookmarks) : [];
     const knownCultures = FBDATA.cultures ? Object.keys(FBDATA.cultures) : [];
     const knownProvinceIds = [];
+    const seenProvinceIds = new Set(), seenProvinceTables = new WeakSet();
     for (let b = 0; b < knownBookmarks.length; b++) {
       FB.bookmarkRevisions(knownBookmarks[b]).forEach(function (bookmark) {
         const provinces = (bookmark && bookmark.provinces) || {};
+        if (typeof provinces === 'object') {
+          if (seenProvinceTables.has(provinces)) return;
+          seenProvinceTables.add(provinces);
+        }
         for (const provinceKey in provinces) {
           if (!Object.prototype.hasOwnProperty.call(provinces, provinceKey)) continue;
           const province = provinces[provinceKey];
           const provinceId = province && province.id || provinceKey;
-          if (provinceId && knownProvinceIds.indexOf(provinceId) < 0) {
+          if (provinceId && !seenProvinceIds.has(provinceId)) {
+            seenProvinceIds.add(provinceId);
             knownProvinceIds.push(provinceId);
           }
         }

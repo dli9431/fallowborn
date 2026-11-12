@@ -313,8 +313,6 @@ for (const who of ['umar','heraclius']) {
 }
 
 test('independent ordinary JSON reviews retain exact commitments, reject malformed sources purely and keep a future stop route',async function ({page},info) {
-  // The import and reload each prepare the complete catalogue (8 to 17 s on a hosted runner); no simulation days run.
-  test.setTimeout(120 * 1000);
   await load(page,info);
   const fixturePath = path.resolve(__dirname,'../fixtures/authoring/634-court-agenda.json');
   const mod = JSON.parse(fs.readFileSync(fixturePath,'utf8'));

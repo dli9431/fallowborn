@@ -813,8 +813,9 @@ npx playwright show-trace test-results/<case>/trace.zip
 
 ## Runtime manifest verification
 
-The repository has no GitHub Actions workflow. Test execution and runtime-manifest verification
-are both owner-initiated local operations.
+Runtime-manifest verification remains an owner-initiated operation. The optional
+Complete content timing workflow measures preparation only; it does not run the
+regression suite or verify a distribution package.
 
 The verifier can check a stamped local staging directory:
 
@@ -883,6 +884,30 @@ The current file-count review covers deferred content and exact retained-catalog
 Reviewed structural collisions include retained baseline revisions, paid-exchange receipt and inventory kinds, household carrier/recovery fields, expedition carrier-loss reasons and the mobile-column split action. Their exact file counts remain separate from the content records sharing those spellings. DOM, primitive-type and other spellings absent from the complete collected content tables have no hook; a future content declaration using such a spelling requires a fresh review. protocolFiles names only registered reusable type files; ordinary bookmark and building modules keep their bounded uses without a reusable-type designation.
 
 ## Profiling a reported save
+
+Complete content preparation has a separate owner-run diagnostic:
+`node tests/e2e/measure/content.js` from the repository root. It opens a fresh
+title with load timing enabled for each of two cases: no mods and the ordinary
+634 household reserve JSON overlay. CDP sampling covers only `prepareContent`,
+including lazy script loading. Output includes each CPU profile, elapsed time,
+loadTiming phases and the top sampled functions with self milliseconds and
+source locations. Reports default to `tests/e2e/test-results/content-timing/`;
+`FB_CONTENT_OUTPUT` selects another output directory.
+
+The manual Complete content timing workflow accepts `timing_ref`. It retains
+the workflow revision's measurement driver when checking out the measured ref,
+so the same driver can compare revisions predating the diagnostic. Compare both
+cases on the same hosted runner class, with the same instrumentation; profiles
+add overhead. These runs do not simulate days or establish device acceptance.
+
+`content-preparation.spec.js` reverses only the changed implementation sections
+using the pinned public-source reference fixture and compares exact serialized
+data digests, retained revisions, signatures, fingerprints, fixed-seed saves,
+RNG and UID. It covers no mod, the household overlay, pure malformed and
+complete-world replacement rejection,
+snapshot descendant invalidation, JSON conversion edge cases, duplicate
+bookmark review and fresh validation after failures. The reference remains a
+test-only source oracle, never a runtime dependency.
 
 `save-season-profile.spec.js` is an opt-in Chromium diagnostic. It imports the
 file named by `FB_PROFILE_SAVE` through the game's ordinary save loader, then

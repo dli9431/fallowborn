@@ -1,3 +1,25 @@
+Complete content preparation
+
+Composition keeps a read-only immutable source specification during review and
+retains the already-owned payload instead of cloning it again after title
+normalization. Mutable world bindings and published records still receive their
+own copies. Sources, composition and mod fingerprints use the same canonical
+encoder, with exact text retained only for internal immutable snapshots. Source
+ordering, lazy date loading, retryable download failures, retained revisions and
+full-catalogue baseline capture are unchanged.
+
+Plain-data validation reviews each shared object once per input walk, retaining
+its expanded node count and subtree height. Repeated references still consume
+the original node budget and obey the original maximum depth; cycles, accessors,
+hidden fields and malformed arrays retain the same rejection gates.
+
+Bookmark batches review repeated references to one definition once and return
+independent fault arrays. All shared validation state is synchronous and scoped
+to the current candidate; changes between calls always receive fresh validation.
+Tenure validation collects province identities once per shared province table
+and uses a set for duplicate membership, preserving first-seen order and all
+selector checks without retaining a cross-candidate index.
+
 Existing religious-head court adoption
 
 Existing-ruler adoption preserves realm-bound religious head offices actually
