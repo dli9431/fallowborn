@@ -19,12 +19,12 @@ async function boot(page,info,kind,ruler,custom) {
   await page.waitForFunction(function(id){return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[id];},'season_'+kind);
   if (!ruler) await beginBookmark(page,info,'season_'+kind,'season_'+kind+'_household');
   else {
-  const full=page.locator('#btn-choose-beginning');
-  if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
-  await page.locator('#btn-bm-seed').click();
-  await page.locator('#ng-seed').fill('SEASONREVIEW-season_dry-season_dry_ruler-resource_quay-m-Ivo_Reed-standard');
-  await page.locator('#ng-seed').press('Enter');await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
-  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();await page.getByRole('button',{name:'Begin',exact:true}).click();
+    const full=page.locator('#btn-choose-beginning');
+    if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('SEASONREVIEW-season_dry-season_dry_ruler-resource_quay-m-Ivo_Reed-standard');
+    await page.locator('#ng-seed').press('Enter');await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();await page.getByRole('button',{name:'Begin',exact:true}).click();
   }
   await page.evaluate(function(){
     FB.game.setPaused(true);
@@ -32,6 +32,19 @@ async function boot(page,info,kind,ruler,custom) {
     Object.keys(FB.state.realms).forEach(function(rid){
       if(FB.state.realms[rid].treasury)FB.state.realms[rid].treasury.gold=10000;
     });
+  });
+}
+async function bootWaterService(page,info) {
+  const custom=JSON.parse(JSON.stringify(examples.dry));
+  // A base opening placement is legacy property. Paid construction binds a service asset.
+  custom.bookmarks.season_dry.revisions.supplied.openingInfrastructure.placements=
+    custom.bookmarks.season_dry.revisions.supplied.openingInfrastructure.placements.filter(function(p){return p.buildingId!=='coast_service_works';});
+  await boot(page,info,'dry',false,custom);
+  await page.evaluate(function(){
+    const s=FB.state,a=FB.buildingSeasons.compile(FB.campaignBookmark(s)).assignments[1],who=FB.settlementHolder(s,a.countyId,a.slot);
+    if(!FB.buildRealm(s,who.id,a.countyId,a.slot,a.buildingId))throw new Error('Seasonal service requires actual funded construction');
+    const b=s.buildings[a.countyId].find(function(b){return b.id===a.buildingId && b.s===a.slot;});
+    if(!b.waterOperation)throw new Error('Constructed water service must retain its bound identity');
   });
 }
 for (const kind of ['dry','pasture']) {
@@ -51,7 +64,7 @@ for (const kind of ['dry','pasture']) {
     await boot(page,info,kind);
     const r=await page.evaluate(function(){
       const s=FB.state,S=FB.buildingSeasons,P=FB.production,a=S.compile(FB.campaignBookmark(s)).assignments[0],who=FB.settlementHolder(s,a.countyId,a.slot);
-      const before=JSON.stringify([s.population,s.buildings,s.chars]),q=S.quote(s,{operation:'open',assignmentId:a.id,actor:who,lotId:null});
+      const before=JSON.parse(JSON.stringify([s.population,s.buildings,s.chars])),q=S.quote(s,{operation:'open',assignmentId:a.id,actor:who,lotId:null});
       const opened=S.commit(s,q),repeat=S.commit(s,q),site=P.snapshot(s)[0].site;
       const reserve=P.aiQuote(s,site.id,'reserve',{recipeId:site.recipeIds[0],disposition:'store'});
       if(!reserve.allowed)throw new Error('Rejected funded seasonal reserve: '+reserve.reason);
@@ -68,9 +81,10 @@ for (const kind of ['dry','pasture']) {
       t.turn=allocation.untilTurn;t.date.day=t.turn+1;S.boundary(t);S.boundary(t);P.validate(t);S.validate(t);
       return {opened:opened,repeat:repeat,shift:shift,finished:finished,initial:initial,allocated:allocated,twice:twice,effect:effect,available:available,restore:restore,
         expired:FB.buildingOperations.effects(t,a.countyId,t.buildings[a.countyId][0]).populationFamineProtection || 0,
-        retained:before===JSON.stringify([t.population,t.buildings,t.chars]),stock:t.production.lots.find(function(l){return l.id===lot.id;}).remaining};
+        retained:{before:before,after:JSON.parse(JSON.stringify([t.population,t.buildings,t.chars]))},stock:t.production.lots.find(function(l){return l.id===lot.id;}).remaining};
     });
-    expect(r).toEqual({opened:true,repeat:false,shift:true,finished:true,initial:0,allocated:true,twice:false,effect:kind==='dry'?0.03:0.02,available:0,restore:true,expired:0,retained:true,stock:0});
+    expect(r.retained.after).toEqual(r.retained.before);delete r.retained;
+    expect(r).toEqual({opened:true,repeat:false,shift:true,finished:true,initial:0,allocated:true,twice:false,effect:kind==='dry'?0.03:0.02,available:0,restore:true,expired:0,stock:0});
   });
   test(kind+' input lifetime closes reserved work once, retains paid work and cannot restart expired stock',async function({page},info){
     await boot(page,info,kind);
@@ -104,7 +118,7 @@ for (const kind of ['dry','pasture']) {
 }
 
 test('a partially funded water term prorates upkeep and ends once at the actual local season boundary',async function({page},info){
-  await boot(page,info,'dry');
+  await bootWaterService(page,info);
   const r=await page.evaluate(function(){
     const s=FB.state,S=FB.buildingSeasons,O=FB.buildingOperations,a=S.compile(FB.campaignBookmark(s)).assignments[1],who=FB.settlementHolder(s,a.countyId,a.slot);
     s.date.day=89;
@@ -169,7 +183,7 @@ test('unallocated output expires once from its actual batch date and a pending m
 });
 
 test('seasonal AI dispatch funds actual water service without manufacturing extra stock or repeating the period',async function({page},info){
-  await boot(page,info,'dry');
+  await bootWaterService(page,info);
   const r=await page.evaluate(function(){
     const s=FB.state,S=FB.buildingSeasons,O=FB.buildingOperations,a=S.compile(FB.campaignBookmark(s)).assignments[1],who=FB.settlementHolder(s,a.countyId,a.slot);
     s.realms[who.id].treasury.gold=10000;
@@ -261,7 +275,7 @@ test('real owned delivery and funded sale preserve the earliest declared stock e
     const unavailable=E.aiQuote(s,'fish_market',1,'sell').allowed,first=S.boundary(s),again=S.boundary(s);P.validate(s);S.validate(s);
     const saved=JSON.stringify([s.production,s.buildingSeasons]);FB.save.restore(JSON.parse(FB.save.serialize()));
     return {moved:!!moved,sold:!!sold,childDue:childDue,boughtDue:boughtDue,paid:buyerPaid===q.cost&&sellerPaid===q.cost,unavailable:unavailable,again:again,
-      child:child.remaining,bought:bought.remaining,first:first,restore:saved===JSON.stringify([FB.state.production,FB.state.buildingSeasons])};
+      child:s.production.lots.find(function(l){return l.id===child.id;}).remaining,bought:bought.remaining,first:first,restore:saved===JSON.stringify([FB.state.production,FB.state.buildingSeasons])};
   });
   expect(r).toMatchObject({moved:true,sold:true,childDue:4,boughtDue:4,paid:true,unavailable:false,again:0,child:0,bought:0,restore:true});expect(r.first).toBeGreaterThan(0);
 });
