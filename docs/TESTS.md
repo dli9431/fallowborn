@@ -793,7 +793,7 @@ project.
 
 ## Shared support
 
-Fish-preservation rejection cases stage calendar changes with the matching turn and day, retaining the original seasonal term's valid opening history. Spent-stock restore coverage compares every material, seasonal, technology and building value structurally across two matching round trips, allowing object key order to follow the existing compact codec while preserving array order, identities, quantities, terms, RNG and UID counters.
+Fish-preservation rejection cases stage calendar changes with the matching turn and day, retaining the original seasonal term's valid opening history. Spent-stock restore coverage compares every material, seasonal, technology and building value structurally across two matching round trips. Only the technology exposure set is compared in sorted order: the existing codec stores uncompleted exposures and appends completed knowledge during expansion. Every exposure id and all other array order, identities, quantities, terms, RNG and UID counters remain exact.
 
 authoring-ruler-fixtures.spec.js checks the ordinary JSON admission of the resource, construction and production fixtures against the complete catalogue. Authored ruler profiles declare sex explicitly, including the female fish-drying ruler, so existing-ruler scenarios keep their declared identities. Two real file-picker imports exercise acceptance and preserve strict rejection when the ruler sex is omitted. Each fixture uses its own fresh browser context and the normal test timeout.
 

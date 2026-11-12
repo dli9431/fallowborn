@@ -234,7 +234,13 @@ test('matching spent-stock saves restore without reseeding, renewed terms or new
   await boot(page,info,'cool');
   const r=await page.evaluate(function(){
     const s=FB.state,S=FB.buildingSeasons,P=FB.production,made=FISH.finish();S.commit(s,S.quote(s,{operation:'allocate',assignmentId:'drying_window',actor:FISH.actor(),lotId:made.lot.id}));
-    function snapshot(t){return JSON.parse(JSON.stringify([t.production,t.buildingSeasons,t.realmTech,t.buildings]));}
+    function snapshot(t){
+      const copy=JSON.parse(JSON.stringify([t.production,t.buildingSeasons,t.realmTech,t.buildings]));
+      // The codec stores uncompleted exposures and appends completed knowledge on expansion.
+      // Exposure is a set; preserve every id while leaving all other array order exact.
+      Object.keys(copy[2]).forEach(function(id){copy[2][id].exposed.sort();});
+      return copy;
+    }
     const before=snapshot(s),rng=FB.getRngState(),uid=FB.getUidCounter();
     FB.save.restore(JSON.parse(FB.save.serialize()));P.initialize(FB.state);FB.productionEconomy.initialize(FB.state);
     const first=snapshot(FB.state);
