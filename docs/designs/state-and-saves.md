@@ -2754,6 +2754,14 @@ The save envelope and released v1 migration contract are unchanged.
 
 Capped ledger inventory
 
+Customary rights retain optional exact `retiredHistory` counts for possession,
+disputed and abandoned observations. Only old entries without evidence fold at
+the season boundary using the shared retention window; current-turn duplicate
+guards, evidence, strength, status and original right identities remain intact.
+Absent legacy summaries remain absent until folding. Detached authority
+validation rejects malformed summaries without changing the save envelope.
+See [authority](authority.md#customary-observation-retention).
+
 The following saved owners distinguish renewable history from permanent facts. Production-family and industry-law retention are documented separately in their owning sections. Pure definition validation, transient caches and scalar revisions do not allocate a saved record for each transaction.
 
 | Owner / ledger | Bound and disposition |

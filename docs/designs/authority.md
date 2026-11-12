@@ -328,6 +328,51 @@ possession/dispute updates have a year stamp, and revocation or lapse is
 explicit. This is the underlying authority model; contextual sources and
 outcomes arrive with the 476 scenario.
 
+## Customary observation retention
+
+The [staged retention survey](../research/customary-history-retention.md) records
+per-kind counts, UTF-8 bytes, growth shares and focused regression evidence.
+
+At the season boundary, `authorityCompact` uses the shared ledger retention
+graph and `ledgerRetentionDays` window (default 3600 days). Old possession,
+dispute and abandonment observations without evidence fold into each right's
+optional `retiredHistory:{possession,disputed,abandoned}` exact nonnegative
+safe-integer counts. Entries at the cutoff may fold. Current-turn entries,
+evidence-bearing duplicate guards, establishment, revocation, tenure, judgment,
+recognition and unknown event kinds remain. Strength and status are the original
+ordered, clamped outcomes; folding never recomputes them or allocates identities.
+
+The right itself remains live political state. Appointments (including ended
+imperial succession evidence), recognitions, contracts and obligation receipts
+remain intact. A payment receipt is a permanent duplicate guard, not disposable
+news. Existing local institution and government support rolling histories and
+tournament close-boundary pruning keep their existing policies.
+
+Compaction stages a detached authority root and validates it before adoption.
+Malformed totals reject on restore; legacy rights without totals remain valid
+and are not rewritten merely by loading. The save envelope, fingerprints and
+definition contracts are unchanged. New possession rights are live grants and
+are not reduced by this history policy. A fresh campaign's first-year
+observations remain inside the window; the size benefit begins when
+observations exceed the retention window.
+
+### Saved growth owners
+
+| Record kind | Consumer and disposition |
+| --- | --- |
+| Authority rights | Live scoped jurisdiction, including lapsed/revoked political facts; retained with original identity, status and strength. Annual possession creates missing county/power grants, then adds one observation per eligible right. |
+| Possession, disputed and abandoned observations | Evidence-free entries guard duplicate writes only at the same turn. Older entries outside the shared window fold into exact event totals. |
+| Establishment, revocation, tenure, judgment, recognition and evidence-bearing observations | Retained provenance and duplicate evidence guards. |
+| Appointments, recognitions, contracts and receipts | Live political authority or settled succession, recognition and payment evidence. Retained; no arbitrary lifetime cap. |
+| Local institution standing, petitions and right ids | Current counterparty relationships and scoped grants. Petitions replace by subject; history already rolls at 24 entries. Profile-owned membership and assent retain their existing shared-window folding. |
+| Government support members, mandates, selections and dues | Current constituencies and commitments. Sixteen members/candidates and replacing mandate/selection slots; decisions/history/agreements retain their twelve-entry policy. |
+| Tournament events, annual commitments, samples, starts and summaries | Events remain through closure and return travel. Daily cleanup prunes ended events four days after closure; each eligible person's samples retain four seasons. Summaries and contacts use their existing declared caps. |
+| Chronicle entries, strings and protagonist heads | Settled history still read by the complete journal, filters and portable Chronicle export. Retained; the separate 300-entry log is only a presentation window. |
+
+Nested observation and per-field measurements are subsets of their parent
+ledger's serialized size, not additional independent bytes. Counts from staged
+annual/seasonal hooks describe those hooks, not a simulated campaign year.
+
 ## Spring 476 situation
 
 The first playable client of these records is the [spring 476 prototype](situation-476.md). The western and eastern imperial offices are realm-scoped ceremonial appointments with no Ban, Peace, Revenue or Consent power. Orestes, the federate commander and the Ravenna civic delegate hold distinct scoped offices. The Ravenna contract and its Classis award use the shared consent and grant quotes; Basiliscus and Zeno recognition follows the issuer generation. The bishop of Rome is a living character issuer whose support lapses on death.

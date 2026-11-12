@@ -495,7 +495,8 @@
           ['peace','revenue','consent'].indexOf(value.power) < 0 ||
           !['active','lapsed','revoked'].includes(value.status) ||
           !Number.isFinite(value.strength) || value.strength < 0 ||
-          value.strength > 100 || !Array.isArray(value.history)) invalid(where);
+          value.strength > 100 || !Array.isArray(value.history) ||
+          !FB.authorityCustomTotalsValid(value)) invalid(where);
       ref(value.issuer, ['realm'], where + '.issuer');
       ref(value.beneficiary, ['realm','character'], where + '.beneficiary');
       ref(value.scope, ['county'], where + '.scope');
