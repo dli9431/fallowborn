@@ -2,6 +2,7 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
@@ -49,7 +50,10 @@ for(const kind of ['paper','metal']){
       if(kind==='paper')move('fiber_delivery',2,'transfer');else {move('ore_purchase',2,'buy');move('fuel_purchase',1,'buy');}
       const recipeId=kind==='paper'?'workshop_papermaking':'bloomery_smelting',site=kind+'_plant',recipe=FBDATA.productionRecipes[recipeId];
       const q=P.aiQuote(s,site,'reserve',{recipeId:recipeId,disposition:'store'}),payerBefore=P.account(s,q.request.actor).funds.available;
+      if(!q.allowed)throw new Error('Rejected funded reserve: '+JSON.stringify({reason:q.reason,short:q.short,funds:q.funds,water:q.water,missingTech:q.missingTech,
+        outlets:E.compilePrepared(FB.campaignBookmark(s),P.compile(FB.campaignBookmark(s)).sites).routes.filter(function(r){return r.fromSiteId===site;}).map(function(r){const sale=E.aiQuote(s,r.id,1,'sell');return {route:r.id,reason:sale.reason,cost:sale.cost,demand:sale.remainingDemand,budget:sale.remainingBudget,buyer:sale.buyer,sellerIdentity:sale.sellerIdentity,buyerIdentity:sale.buyerIdentity,funds:sale.buyer && P.account(s,sale.buyer).funds};})}));
       const batch=P.commit(s,q),paid=payerBefore-P.account(s,q.request.actor).funds.available,again=P.commit(s,q);
+      if(!batch)throw new Error('Allowed funded reserve failed to commit');
       const noEarlyFinish=P.commit(s,P.aiQuote(s,site,'finish',{batchId:batch}));
       const shifts=[];for(let i=0;i<recipe.workDays;i++)shifts.push(P.perform(s,P.aiQuote(s,site,'work',{batchId:batch})));
       const finish=P.commit(s,P.aiQuote(s,site,'finish',{batchId:batch}));
