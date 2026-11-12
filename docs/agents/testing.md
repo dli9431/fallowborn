@@ -18,7 +18,7 @@ GitHub Actions runs all tests; nothing runs on the owner's machine unless the ow
 
 Trigger and read runs with the GitHub CLI, for example: gh workflow run tests.yml --ref 476 -f mode=all; gh workflow run tests.yml --ref main -f target=476 -f mode=specs -f specs="specs/boot.spec.js"; gh workflow run nightly.yml -f suite=false -f timing_ref=476; gh run list --workflow tests.yml --branch 476 --limit 5; gh run view <run-id> for job results and the summary; gh run view <run-id> --log-failed for failing step logs; gh run download <run-id> -n report-tests -D ci-report for the merged HTML/JSON report.
 
-Only pushed branches can be tested. A non-deploying branch may be pushed to test it; never push main, dev or 476 solely to test them unless the owner asked. A passing run is evidence, not owner acceptance; visual, device, and play acceptance remain the owner's.
+Only pushed branches can be tested. To test work, create a new branch and push that; agents never push main or dev. A passing run is evidence, not owner acceptance; visual, device, and play acceptance remain the owner's.
 
 Local load measurements
 

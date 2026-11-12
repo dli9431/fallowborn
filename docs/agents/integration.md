@@ -40,4 +40,4 @@ On the branch, describe the change in the commit message and route any new playe
 
 Commit authorization is scoped to the changes currently in view when the owner asks. After that commit is complete, leave any later fixes, follow-ups, or newly produced changes uncommitted unless the owner explicitly asks for another commit; an earlier commit request is never standing permission to keep committing subsequent work.
 
-Pushing is a separate step  -  commit when asked to commit. main, dev and 476 are deploying branches: push to them only when asked (a push to main auto-deploys play.fallowborn.com). Other branches, such as an agent's own worktree or automation branch, may be pushed without asking.
+Pushing is a separate step  -  commit when asked to commit. Agents never push main or dev (a push to main auto-deploys play.fallowborn.com). To run CI on work, create a new branch and push that.
