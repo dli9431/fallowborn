@@ -133,6 +133,14 @@ openingStewardActorId; no strategy or historical-id dispatch is added.
 
 government_aristocracy.js composes mixed_provincial holders, royal_recognition succession, fixed territory, provincial_assent consent, provincial_obligations levy, provincial_receipts revenue, magnate_council, territorial_diplomacy, aristocratic_court AI and aristocratic_careers. The common recognition module accepts a declared policy provider for permanent seats, ancestry, commitments, costs and stewardship while retaining its transaction and vacancy owner. The lineage adapter excludes these policy-managed courts from kin-selection interception. Numerical policy, provincial roles and historical names belong to profiles in data/aristocratic_courts.js. See docs/designs/aristocratic-monarchy.md.
 
+Each aristocratic constituency read may index string-id appointments and rights
+within that invocation. Appointment selection retains the first matching row;
+rights selection retains every matching row, including repeated record ids, in
+ledger order. Repeated requested ids only affect membership. Every interest and
+its live eligibility checks still run, and results remain detached. Single-interest
+reads and nonstandard input shapes use the original filters. No lookup survives
+the call or crosses fiscal projections, actions, content changes or restore.
+
 Mobile coalition dispatch
 
 mobile_confederation composes coalition_holders, coalition_leadership, coalition_court, coalition_consent, following_levy, coalition_receipts, member_council, coalition_diplomacy, coalition_decisions and local_service. FB.mobile is the bounded canonical membership and stock owner; its coalition_leadership adapter uses the shared selection review boundary. Countyless continuity, actual following recruitment, finite provisions, outside consent and partial/final settlement are documented in docs/designs/mobile-confederation.md. Historical identities remain in data declarations.
