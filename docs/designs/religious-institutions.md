@@ -109,3 +109,27 @@ The dated Islamic study profiles demonstrate legal and theological affiliations 
 The complete 1096 table adds separate Cologne, Mainz, Worms and Speyer groups using jewish_local_congregation_later. Its existing free lay admission and withdrawal rules retain household faith, marriage and work. Town-locality anchors identify the groups without declaring synagogue buildings, specialist staff, communal courts or refuge. Worms and Speyer use separate sites and rows within one county; ordinary membership remains county-residence based and establishes no exact-site presence or protective permission. These dated placements reuse the none technology decision jewish_samaritan_dated_communities.
 
 Durham's independently evidenced Spring vacancy uses the existing legacy see contract and the separate durham_bishop office with officeSystem:null. It grants no representative, protection, landed jurisdiction or resources. All five declarations are freshOnly, so missing old rows remain absent on restore and saved members and vacancies retain their canonical owners. Other unaccepted local heads, administrative appointments and staff remain unplaced. Sources, public-office boundaries and the full absence disposition are in docs/research/institutions-1096.md. This is content composition with no new capability, save schema or UI flow.
+
+Religious office read tables
+
+Office definitions share a transient read-only table for the current state and
+turn. The cache also compares the compiled faith graph and faith revision,
+FBDATA identity, resolved bookmark and local-definition identities, date, system
+registry, era and default-government system layers, bookmark system overrides
+and political-office faith references, relevant institution/profile fields and
+the presence of fresh-only institution records. Nested definition inputs are
+compared structurally because resolved worlds alias their authoring records. A changed input rebuilds the table immediately, including
+within a daily or seasonal pass. Switching a detached catalogue or state cannot
+reuse the installed table. Religion invalidation rebuilds the faith graph; direct
+faith-record edits retain the existing invalidateFaithState contract.
+
+Each build evaluates a distinct system/faith pair and profile/faith pair once.
+The optional checks argument of religiousInstitutionOffice shares those pure
+availability queries with the table builder. Holders, deaths, political incumbent
+eligibility, memberships and qualifications remain live reads, never cached.
+Opening correspondence builds after fresh institution seeding; political office
+scans and institution facts pass their table to holder snapshots. Callers must
+copy a definition before editing it. No cache fields enter saves or fingerprints.
+Focused coverage in religious-office-tables.spec.js compares the prior table
+builder with 476, 1096 and 1204 seeded snapshots and daily saves, and exercises
+same-day invalidation and live holder changes.

@@ -3078,8 +3078,8 @@ window.FB = window.FB || {};
     return subject.kind === 'realm' ? FB.realmRulerGeneration(s, subject.id) : subject.id;
   }
   function controller(s, def) { return def.provinceId && FB.settlementCountyHolder(s, def.provinceId) || null; }
-  function representative(s, def, record) {
-    if (def.officeId) return FB.religiousOfficeSnapshot(s, def.officeId);
+  function representative(s, def, record, offices) {
+    if (def.officeId) return FB.religiousOfficeSnapshot(s, def.officeId, offices);
     var c = record && s.chars[record.representativeId];
     return c && !c.dead ? c : null;
   }
@@ -3171,11 +3171,12 @@ window.FB = window.FB || {};
       }
     }
     // Opening letters recognize these people, not every later successor or ruler.
+    var offices = creating && options && options.fresh ? FB.religiousOffices(s) : null;
     if (creating && options && options.fresh) Object.keys(defs).forEach(function (id) {
-      var def = defs[id], issuer = def.officeId && FB.religiousOfficeSnapshot(s, def.officeId);
+      var def = defs[id], issuer = def.officeId && FB.religiousOfficeSnapshot(s, def.officeId, offices);
       if (!row(s, id) || !issuer) return;
       (def.communionWith || []).forEach(function (targetId) {
-        var target = defs[targetId], holder = target && FB.religiousOfficeSnapshot(s, target.officeId);
+        var target = defs[targetId], holder = target && FB.religiousOfficeSnapshot(s, target.officeId, offices);
         if (row(s, targetId) && holder) FB.authorityRecognize(s, {
           source:FB.legitimacySourceFor(s,'religious_head',{kind:'religious-office',id:def.officeId}), issuer:{kind:'religious-office',id:def.officeId},
           subject:{kind:'character',id:holder.id}
@@ -3229,11 +3230,11 @@ window.FB = window.FB || {};
       persecution:!!pid && !FB.political.worshipProtected(s, pid) };
   }
   function facts(s, id, subject) {
-    var def = FB.localInstitutionDefinitions(s)[id], record = row(s, id), rep = representative(s, def, record);
+    var offices = FB.religiousOffices(s);
+    var def = FB.localInstitutionDefinitions(s)[id], record = row(s, id), rep = representative(s, def, record, offices);
     var owner = controller(s, def);
     var actor = FB.political.actor(s, subject);
     var pending = record.petitions[subjectKey(subject)] || null;
-    var offices = FB.religiousOffices(s);
     var mediationIds = FB.legitimacyByMandate(s, subject, county(def), 'religious_head').filter(function (rec) {
       return offices[rec.issuer.id] && offices[rec.issuer.id].religionId === def.religion;
     }).map(function (rec) { return rec.id; });

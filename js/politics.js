@@ -1400,7 +1400,7 @@ window.FB = window.FB || {};
     for (var headOfficeId in characterOffices) {
       var headOffice = characterOffices[headOfficeId];
       if (headOffice.head.holderKind !== 'character') continue;
-      var characterHead = FB.religiousOfficeSnapshot(state, headOfficeId);
+      var characterHead = FB.religiousOfficeSnapshot(state, headOfficeId, characterOffices);
       if (characterHead && characterHead.id === c.id) {
         add('religion:' + headOfficeId, headOfficeId, holder,
           { kind:'religious-office', id:headOfficeId }, 'religiousHeads', null, 'active');

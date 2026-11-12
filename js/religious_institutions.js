@@ -204,14 +204,15 @@
     return !!(a && place && place.kind === 'county' && a.def.jurisdictionIds.indexOf(place.id) >= 0 &&
       (!a.profile.recognition.protectedWorship || FB.political.worshipProtected(s, place.id)));
   };
-  FB.religiousInstitutionEnabled = function (s, def) {
+  FB.religiousInstitutionEnabled = function (s, def, checks) {
     var p = def && catalogs().profiles[def.profileId];
-    return !!(p && period(p.period, s.date.year) && FB.faithAssignable(def.religion, s) &&
-      (!p.system || FB.systemEnabled(s, p.system, { faith:def.religion, realm:null })));
+    return !!(p && period(p.period, s.date.year) &&
+      (checks ? checks.assignable(def.religion) : FB.faithAssignable(def.religion, s)) &&
+      (!p.system || (checks ? checks.enabled(p.system, def.religion) : FB.systemEnabled(s, p.system, { faith:def.religion, realm:null }))));
   };
-  FB.religiousInstitutionOffice = function (s, institutionId, def) {
+  FB.religiousInstitutionOffice = function (s, institutionId, def, checks) {
     var p = catalogs().profiles[def.profileId];
-    return p && p.selection && FB.religiousInstitutionEnabled(s, def) ? {
+    return p && p.selection && FB.religiousInstitutionEnabled(s, def, checks) ? {
       id:def.officeId, religionId:def.religion, institutionId:institutionId,
       head:{ holderKind:'character', holderSex:null, holderRole:null,
         minAge:p.roles[p.selection.roleId].minAge, succession:p.selection.strategy, local:true }
