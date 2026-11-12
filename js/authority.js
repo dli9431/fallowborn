@@ -65,11 +65,25 @@
     return s.start && s.start.defaultGovernment || 'territorial';
   }
   Q.defaultGovernmentForm = defaultForm;
+  function governmentRecord(s, realmRef) {
+    var a = records(s);
+    return a && a.governments && own(a.governments, realmRef.id)
+      ? a.governments[realmRef.id] : null;
+  }
+  function selectedForm(s, stored) {
+    return stored && stored.formId || defaultForm(s);
+  }
+  /* Scalar readers retain actor validation and definition existence without
+     allocating the detached rules required by the public government query. */
+  Q.governmentFormId = function (s, realmRef) {
+    if (!realmRef || realmRef.kind !== 'realm' || !Q.actor(s, realmRef)) return null;
+    var formId = selectedForm(s, governmentRecord(s, realmRef));
+    return FBDATA.governmentForms[formId] ? formId : null;
+  };
   Q.government = function (s, realmRef) {
     if (!realmRef || realmRef.kind !== 'realm' || !Q.actor(s, realmRef)) return null;
-    var a = records(s), stored = a && a.governments &&
-      own(a.governments, realmRef.id) ? a.governments[realmRef.id] : null;
-    var formId = stored && stored.formId || defaultForm(s);
+    var stored = governmentRecord(s, realmRef);
+    var formId = selectedForm(s, stored);
     var rules = FBDATA.governmentForms[formId];
     return rules ? { realmId:realmRef.id, formId:formId,
       eliteCultureId:stored && stored.eliteCultureId || null,
@@ -192,7 +206,7 @@
     return !!fresh && JSON.stringify(fresh) === JSON.stringify(reviewed) &&
       FB.authoritySetIdentity(s, reviewed.realmId, reviewed.value);
   };
-  function validIssuer(s, issuer, source) {
+  function validIssuer(s, issuer, source, readOffices) {
     var definition = FBDATA.legitimacySources[source];
     if (!issuer || typeof issuer.id !== 'string' || !definition ||
         !Array.isArray(definition.issuerKinds) || definition.issuerKinds.indexOf(issuer.kind) < 0) return false;
@@ -209,10 +223,10 @@
     if (issuer.kind === 'county')
       return !!scope(s, issuer);
     if (issuer.kind === 'religious-office') {
-      var office = FB.religiousOffices(s)[issuer.id];
+      var offices = readOffices ? readOffices() : FB.religiousOffices(s), office = offices[issuer.id];
       if (!office) return false;
       if (office && office.head.succession === 'political_incumbent')
-        return !!FB.religiousOfficeSnapshot(s, issuer.id);
+        return !!FB.religiousOfficeSnapshot(s, issuer.id, readOffices && offices);
       var holder = s.religiousHeads && s.religiousHeads[issuer.id];
       var headId = typeof holder === 'string' ? holder : holder && holder.id;
       return !!(headId && (s.chars && s.chars[headId]
@@ -221,7 +235,7 @@
     }
     return false;
   }
-  function generation(s, issuer) {
+  function generation(s, issuer, readOffices) {
     if (issuer.kind === 'religious-institution') return FB.religiousInstitutionIssuerGeneration(s, issuer.id);
     if (issuer.kind === 'character') return issuer.id;
     if (issuer.kind === 'realm') return FB.realmRulerGeneration(s, issuer.id);
@@ -230,10 +244,10 @@
       return rid ? rid + ':' + FB.realmRulerGeneration(s, rid) : null;
     }
     if (issuer.kind === 'religious-office') {
-      var office = FB.religiousOffices(s)[issuer.id];
+      var offices = readOffices ? readOffices() : FB.religiousOffices(s), office = offices[issuer.id];
       if (!office) return null;
       if (office && office.head.succession === 'political_incumbent') {
-        var effective = FB.religiousOfficeSnapshot(s, issuer.id);
+        var effective = FB.religiousOfficeSnapshot(s, issuer.id, readOffices && offices);
         return effective ? effective.id : null;
       }
       var head = s.religiousHeads && s.religiousHeads[issuer.id];
@@ -243,15 +257,19 @@
     }
     return issuer.kind === 'host' ? issuer.id : null;
   }
-  function activeRecognition(s, row) {
+  function activeRecognition(s, row, readOffices) {
+    // A pure list read may supply its definition getter. Standalone row reads
+    // retain their own lifetime; holder and generation checks remain live.
+    var offices;
+    if (!readOffices) readOffices = function () { return offices || (offices = FB.religiousOffices(s)); };
     if (!row || row.status !== 'active' || row.endTurn !== null &&
-        row.endTurn <= s.turn || !validIssuer(s, row.issuer, row.source) ||
+        row.endTurn <= s.turn || !validIssuer(s, row.issuer, row.source, readOffices) ||
         !ref(s, row.subject)) return false;
     var def = FBDATA.legitimacySources[row.source];
     if (row.issuer.kind === 'religious-institution' && (!FB.religiousInstitutionRecognitionValid ||
         !FB.religiousInstitutionRecognitionValid(s, row))) return false;
     return !!def && (def.succession !== 'reaffirm' ||
-      row.issuerGeneration === generation(s, row.issuer));
+      row.issuerGeneration === generation(s, row.issuer, readOffices));
   }
   function recognition(s, id) {
     for (var row of list(s, 'recognitions')) if (row.id === id) return row;
@@ -259,10 +277,11 @@
   }
   Q.legitimacy = function (s, subject, place, sourceId) {
     if (!ref(s, subject)) return [];
-    var at = place && scope(s, place), out = [];
+    var at = place && scope(s, place), out = [], offices;
     if (place && !at) return out;
+    function readOffices() { return offices || (offices = FB.religiousOffices(s)); }
     for (var row of list(s, 'recognitions')) {
-      if (!same(row.subject, subject) || !activeRecognition(s, row) ||
+      if (!same(row.subject, subject) || !activeRecognition(s, row, readOffices) ||
           sourceId && row.source !== sourceId ||
           at && row.scope && !same(row.scope, at)) continue;
       out.push(copy(row));

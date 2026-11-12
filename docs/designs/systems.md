@@ -16,7 +16,22 @@ FB.systemEnabled(state, systemId, context) resolves the registry default, campai
 
 Context can identify a realm, faith or character. A character supplies their faith and their own realm, liege or residence holder for the government rule. Without context the protagonist supplies the scope. Explicit faith:null omits that layer. A campaign uses its stamped era, so passing a date boundary never changes institutional membership. An explicit bookmark override is final and can be answered without evaluating lower layers. The compatibility FB.faithHasSystem query uses this same resolver for the named faith; greatHolyWars bookmark booleans remain a final great_holy_wars override below explicit systems declarations.
 
+Government scoping reads FB.political.governmentFormId without copying rules.
+It retains the detached government query's actor, own-row, default and definition
+selection. A null result still falls back to the campaign defaultGovernment,
+then the era default. The systems layer reads the current authored definition
+on every query, including same-turn edits and catalogue replacement; it does not
+use government dispatch's strategy validation or retain a derived answer.
+
 FB.systemAvailable is the world-hook query. It checks the unscoped rule, static and generated faiths and living realms for potential availability. A non-Catholic protagonist therefore does not stop the medieval world's papal elections. Personal content and scoped mutations still use FB.systemEnabled. Both queries are read-only and consume no RNG or ids; their answers are never saved.
+
+Availability resolves the campaign world at entry and passes that reference in
+fresh contexts to its directly nested enabled checks for this synchronous read.
+The unscoped context still uses faith:null and realm:null; faith-only and realm-only
+visits retain their existing scope inference, order and short circuits. A missing
+world retains the ordinary lookup fallback. Each later public query resolves
+again, so same-turn catalogue edits, changed saved revisions, restores and mod
+replacement remain visible. No system answer or context survives the call.
 
 Character residence reads saved abbey holders and residents directly through FB.abbeyResidenceHouse. Physical residence remains recorded when abbeys are disabled. This read never asks whether abbeys are available, so government scoping cannot recurse through institution eligibility.
 

@@ -125,9 +125,9 @@ window.FB = window.FB || {};
     var realm = rid && state && state.realms && state.realms[rid];
     var faith = context.faith !== undefined ? context.faith : c ? c.religion : realm && realm.religion;
     if (context.faith === undefined && !faith && state && rid && FB.realmReligionId) faith = FB.realmReligionId(state, rid);
-    var form = state && rid && FB.political && FB.political.government
-      ? FB.political.government(state, { kind:'realm', id:rid }) : null;
-    return { faith:faith, government:form && form.formId || state && state.start && state.start.defaultGovernment };
+    var formId = state && rid && FB.political && FB.political.governmentFormId
+      ? FB.political.governmentFormId(state, { kind:'realm', id:rid }) : null;
+    return { faith:faith, government:formId || state && state.start && state.start.defaultGovernment };
   }
   FB.systemEnabled = function (state, id, context) {
     requireId(id);
@@ -155,14 +155,16 @@ window.FB = window.FB || {};
     var final = override(bm && bm.systems, id, null);
     if (final !== null) return final;
     if (id === 'great_holy_wars' && bm && typeof bm.greatHolyWars === 'boolean') return bm.greatHolyWars;
-    if (FB.systemEnabled(state, id, { faith:null, realm:null })) return true;
+    if (FB.systemEnabled(state, id, bm ? { faith:null, realm:null, bookmark:bm } : { faith:null, realm:null })) return true;
     var faiths = FBDATA.religions || {};
-    for (var faith in faiths) if (own(faiths, faith) && FB.systemEnabled(state, id, { faith:faith })) return true;
+    for (var faith in faiths) if (own(faiths, faith) &&
+        FB.systemEnabled(state, id, bm ? { faith:faith, bookmark:bm } : { faith:faith })) return true;
     for (var generated in state && state.faiths || {}) {
-      if (FB.systemEnabled(state, id, { faith:generated })) return true;
+      if (FB.systemEnabled(state, id, bm ? { faith:generated, bookmark:bm } : { faith:generated })) return true;
     }
     for (var rid in state && state.realms || {}) {
-      if (state.realms[rid] && state.realms[rid].alive && FB.systemEnabled(state, id, { realm:rid })) return true;
+      if (state.realms[rid] && state.realms[rid].alive &&
+          FB.systemEnabled(state, id, bm ? { realm:rid, bookmark:bm } : { realm:rid })) return true;
     }
     return false;
   };

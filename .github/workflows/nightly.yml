@@ -45,6 +45,11 @@ on:
         type: number
         default: 3
 
+      comparison_subjects:
+        description: JSON array of paired workloads (content or bookmark:scenario)
+        type: string
+        default: '["content","476:mobile_household_476","476:peroz_sasanian_476","1096:yaghi_siyan_1096","1096:bohemond_1096","1204:muhammad_1204"]'
+
 permissions:
   contents: read
   actions: read
@@ -56,8 +61,9 @@ jobs:
     with:
       baseline: ${{ inputs.comparison_baseline }}
       candidate: ${{ inputs.timing_ref }}
-      repeats: ${{ inputs.comparison_repeats }}
-      seasons: ${{ inputs.seasons }}
+      repeats: ${{ fromJSON(format('{0}', inputs.comparison_repeats || 3)) }}
+      seasons: ${{ fromJSON(format('{0}', inputs.seasons || 4)) }}
+      subjects: ${{ inputs.comparison_subjects || '["content","476:mobile_household_476","476:peroz_sasanian_476","1096:yaghi_siyan_1096","1096:bohemond_1096","1204:muhammad_1204"]' }}
 
   suite:
     if: ${{ github.event_name == 'schedule' || inputs.suite }}

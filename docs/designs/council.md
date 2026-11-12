@@ -26,6 +26,15 @@ Provisioning costs five gold only on a passed vote. The 360-day Civic Provisioni
 
 Consent lasts 360 days and follows the original representative, applicant, controlling generation and optional contract. Persecution suspends a promised worship guarantee; emergency extraction suspends promised tax relief. A different-faith applicant needs a living bishop of the city's faith before civic ratification. Church support grants no land, command or judicial office. Civic representatives may be replaced at a seasonal boundary; episcopal vacancies follow their head-office rules.
 
+The daily local-institution visit runs religious compaction, institution AI and
+activity AI in that order before checking the local ledger and settlement period.
+Before the first 90-day period, or after the current period has been processed,
+it returns without constructing a local-institution list. A due period still
+requires a nonempty current list before recording its period, repairing the
+ledger and settling institutions. Both boundary lists and public list results
+remain detached; no roster is retained between queries. Same-period additions
+are visible to public queries immediately and settle at the next due period.
+
 Technology impact: local_institution_bargains and episcopal_institution_mediation are each none. Living offices, existing courts and supplies, resources and political consent govern these baseline capabilities; no research prerequisite belongs here.
 
 Council casket gifts debit the selected councillor's treasury and credit the player

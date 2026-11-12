@@ -19,18 +19,26 @@ function stats(values) {
 function comparePairs(pairs) {
   if (pairs.length < 3) throw new Error('At least three complete pairs are required');
   const rows = new Map(), rejected = [];
+  const keys = new Set();
+  pairs.forEach(function (pair) {
+    Object.keys(pair.baseline || {}).concat(Object.keys(pair.candidate || {})).forEach(function (key) { keys.add(key); });
+  });
   pairs.forEach(function (pair, index) {
-    const left = pair.baseline, right = pair.candidate;
-    const keys = new Set(Object.keys(left).concat(Object.keys(right)));
+    const left = pair.baseline || {}, right = pair.candidate || {};
     keys.forEach(function (key) {
       const a = left[key], b = right[key];
-      if (!a || !b || !a.browser || !b.browser || a.workload !== b.workload || a.browser !== b.browser ||
+      if (!a || !b || !a.browser || !b.browser || !a.workload || !b.workload || a.workload !== b.workload || a.browser !== b.browser ||
           !(a.value > 0) || !(b.value > 0) || !Number.isFinite(a.value) || !Number.isFinite(b.value)) {
         rejected.push({pair:index+1, metric:key, reason:'Missing, invalid or mismatched workload/browser'});
         return;
       }
       if (!rows.has(key)) rows.set(key, {baseline:[], candidate:[], gains:[]});
       const row = rows.get(key);
+      if (row.browser && (row.browser !== a.browser || row.workload !== a.workload)) {
+        rejected.push({pair:index+1, metric:key, reason:'Workload/browser changed between repetitions'});
+        return;
+      }
+      row.browser = a.browser; row.workload = a.workload;
       row.baseline.push(a.value); row.candidate.push(b.value);
       row.gains.push(100 * (1 - b.value / a.value));
     });
@@ -38,7 +46,7 @@ function comparePairs(pairs) {
   const metrics = [];
   rows.forEach(function (row, key) {
     if (row.gains.length !== pairs.length) return; // Never silently drop failed samples.
-    metrics.push({metric:key, baseline:stats(row.baseline), candidate:stats(row.candidate),
+    metrics.push({metric:key, browser:row.browser, workload:row.workload, baseline:stats(row.baseline), candidate:stats(row.candidate),
       improvementPercent:stats(row.gains), fasterPairs:row.gains.filter(function (n) { return n > 0; }).length,
       pairs:pairs.length});
   });
@@ -53,30 +61,43 @@ function extract(data, subject, seasons) {
       if (row.cpuProfile !== false || !row.browser || !['unmodded','household-overlay'].includes(row.mode) || out[row.mode]) {
         throw new Error('Invalid or profiled content sample');
       }
+      if (row.modCount !== (row.mode === 'unmodded' ? 0 : 1) ||
+          (row.mode === 'unmodded' ? row.signature !== '' : !/^effective-1-[a-f0-9]{64}$/.test(row.signature))) {
+        throw new Error('Invalid content mod workload');
+      }
       out[row.mode] = {value:row.elapsedMs, browser:row.browser,
         workload:JSON.stringify([row.mode, row.modCount, row.signature])};
     });
   } else {
-    if (data.cpuProfile !== false || !data.browser || data.unsupported || (data.notOffered || []).length || data.starts.length !== 1) {
+    if (data.cpuProfile !== false || !data.browser || data.unsupported || (data.notOffered || []).length || !Array.isArray(data.starts) || data.starts.length !== 1) {
       throw new Error('Missing or profiled season workload');
     }
     const start = data.starts[0];
-    if (start.id !== subject || start.status !== 'ok' || start.pageErrors.length || start.seasons.length !== seasons) {
+    if (start.id !== subject || !start.code || start.status !== 'ok' || !Array.isArray(start.pageErrors) || start.pageErrors.length ||
+        !Array.isArray(start.seasons) || start.seasons.length !== seasons) {
       throw new Error('Incomplete or failed season workload');
     }
     start.seasons.forEach(function (row, index) {
-      if (row.index !== index+1 || row.days <= 0 || row.to.dead || row.to.rng == null || row.to.uid == null) {
+      if (row.index !== index+1 || !Number.isInteger(row.days) || row.days <= 0 || row.days > 90 || !row.from || !row.to ||
+          row.to.dead !== false || !row.to.date || !Number.isInteger(row.to.rng) || !Number.isInteger(row.to.uid) ||
+          ['turn','characters','realms','armies','activeWars','heldCounties','directSettlements','settlementLimit'].some(function (key) {
+            return !Number.isFinite(row.to[key]) || row.to[key] < 0;
+          })) {
         throw new Error('Invalid season progress');
       }
       const workload = JSON.stringify([start.code, row.index, row.from, row.to.date, row.days,
         row.to.turn, row.to.rng, row.to.uid, row.to.characters, row.to.realms,
-        row.to.armies, row.to.activeWars, row.to.heldCounties]);
+        row.to.armies, row.to.activeWars, row.to.heldCounties, row.to.directSettlements, row.to.settlementLimit]);
       ['simulationMs','elapsedMs'].forEach(function (field) {
         out['season-' + row.index + '/' + field] = {value:row[field], browser:data.browser, workload:workload};
       });
     });
   }
   return out;
+}
+
+function pairOrder(index) {
+  return index % 2 ? ['candidate','baseline'] : ['baseline','candidate'];
 }
 
 function summary(report) {
@@ -100,30 +121,37 @@ function summary(report) {
   return lines.join('\n') + '\n';
 }
 
-function run() {
-  const subject = process.env.SUBJECT || 'content';
-  const repeats = Number(process.env.REPEATS || 3), seasons = Number(process.env.SEASONS || 4);
-  if (!Number.isInteger(repeats) || repeats < 3 || repeats > 9 ||
-      !Number.isInteger(seasons) || seasons < 1 || seasons > 8) throw new Error('Invalid repeats or seasons');
-  const output = path.resolve(process.env.COMPARISON_OUTPUT || 'speed-results');
+function run(options) {
+  options = options || {};
+  const environment = options.env || process.env, execute = options.execute || execFileSync;
+  const subject = environment.SUBJECT || 'content';
+  const repeats = Number(environment.REPEATS || 3), seasons = Number(environment.SEASONS || 4);
+  const output = path.resolve(environment.COMPARISON_OUTPUT || 'speed-results');
   fs.mkdirSync(output, {recursive:true});
-  const roots = {baseline:path.resolve(process.env.BASELINE_GAME), candidate:path.resolve(process.env.CANDIDATE_GAME)};
-  const revision = function (root) { return execFileSync('git', ['-C',root,'rev-parse','HEAD'], {encoding:'utf8'}).trim(); };
-  const report = {schema:1, subject:subject, baseline:revision(roots.baseline), candidate:revision(roots.candidate),
-    driver:revision(path.resolve(__dirname, '../../..')), generated:new Date().toISOString(),
+  const revision = function (root) { return execute('git', ['-C',root,'rev-parse','HEAD'], {encoding:'utf8'}).trim(); };
+  const report = {schema:1, subject:subject, baseline:null, candidate:null,
+    driver:null, generated:new Date().toISOString(),
     repeats:repeats, seasons:seasons, valid:false, metrics:[], rejected:[], order:[],
     environment:{node:process.version, platform:process.platform, arch:process.arch, release:os.release(),
       cpu:os.cpus()[0].model, cpuCount:os.cpus().length, runnerImage:process.env.ImageVersion || null,
       run:process.env.GITHUB_RUN_ID || null, attempt:process.env.GITHUB_RUN_ATTEMPT || null}};
   const pairs = [];
   try {
+    if (!Number.isInteger(repeats) || repeats < 3 || repeats > 9 ||
+        !Number.isInteger(seasons) || seasons < 1 || seasons > 8) throw new Error('Invalid repeats or seasons');
+    const roots = {baseline:path.resolve(environment.BASELINE_GAME), candidate:path.resolve(environment.CANDIDATE_GAME)};
+    report.baseline = revision(roots.baseline); report.candidate = revision(roots.candidate);
+    report.driver = revision(path.resolve(__dirname, '../../..'));
+    if (![report.baseline,report.candidate,report.driver].every(function (sha) { return /^[a-f0-9]{40}$/.test(sha); })) {
+      throw new Error('Expected exact game and tooling revisions');
+    }
     for (let index = 0; index < repeats; index++) {
-      const pair = {}, order = index % 2 ? ['candidate','baseline'] : ['baseline','candidate'];
+      const pair = {}, order = pairOrder(index);
       report.order.push(order);
       for (const side of order) {
         const directory = path.join(output, 'pair-' + (index+1), side);
         fs.mkdirSync(directory, {recursive:true});
-        const env = Object.assign({}, process.env, {GAME_COMMIT:report[side], GAME_REF:report[side]});
+        const env = Object.assign({}, environment, {GAME_COMMIT:report[side], GAME_REF:report[side]});
         let args, file;
         if (subject === 'content') {
           env.FB_CONTENT_GAME = roots[side]; env.FB_CONTENT_OUTPUT = directory; env.FB_CONTENT_PROFILE = 'false';
@@ -133,7 +161,7 @@ function run() {
           args = [path.join(__dirname,'season-timing.js'),'measure','--game',roots[side],
             '--only',subject,'--seasons',String(seasons),'--out',file];
         }
-        execFileSync(process.execPath, args, {env:env, stdio:'inherit', timeout:60*60*1000});
+        execute(process.execPath, args, {env:env, stdio:'inherit', timeout:60*60*1000});
         const data = JSON.parse(fs.readFileSync(file,'utf8'));
         if (subject === 'content' ? data.some(function (row) { return row.gameCommit !== report[side]; }) :
             data.gameCommit !== report[side]) throw new Error('Measurement revision mismatch');
@@ -147,10 +175,10 @@ function run() {
   } finally {
     fs.writeFileSync(path.join(output,'comparison.json'), JSON.stringify(report,null,2) + '\n');
     fs.writeFileSync(path.join(output,'summary.txt'), summary(report));
-    console.log(summary(report));
+    if (!options.quiet) console.log(summary(report));
   }
-  if (!report.valid) process.exitCode = 1;
+  return report;
 }
 
-module.exports = {stats:stats, comparePairs:comparePairs, extract:extract};
-if (require.main === module) run();
+module.exports = {stats:stats, comparePairs:comparePairs, extract:extract, pairOrder:pairOrder, run:run};
+if (require.main === module && !run().valid) process.exitCode = 1;

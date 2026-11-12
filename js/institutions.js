@@ -3423,10 +3423,11 @@ window.FB = window.FB || {};
     if (FB.religiousInstitutionCompact) FB.religiousInstitutionCompact(s);
     if (FB.religiousInstitutionAI) FB.religiousInstitutionAI(s);
     if (FB.religiousActivityAI) FB.religiousActivityAI(s);
-    if (!s.localInstitutions || !FB.localInstitutionList(s).length) return;
+    if (!s.localInstitutions) return;
     var period = Math.floor(s.turn / 90);
     if (period < 1) return;
     if (s.localInstitutionPeriod === period) return;
+    if (!FB.localInstitutionList(s).length) return;
     s.localInstitutionPeriod = period;
     FB.ensureLocalInstitutions(s);
     FB.localInstitutionList(s).forEach(function (item) {
