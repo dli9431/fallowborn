@@ -432,6 +432,38 @@ window.FB = window.FB || {};
     return inflateState(JSON.parse(JSON.stringify(state)));
   };
 
+  // Internal platform-validation lifetime. Only the audited expedition semantic
+  // tails borrow this read-only view; public snapshots keep their fresh ownership.
+  let validationContext = null;
+  function validationInput(state) {
+    return validationContext && validationContext.catalogue === FBDATA &&
+      validationContext.inputs.indexOf(state) >= 0;
+  }
+  S._registerValidationAlias = function (raw, partial) {
+    // Called only where validatePlatform constructs omitted codec defaults.
+    // Similar objects and caller-supplied flags never establish equivalence.
+    if (validationInput(raw)) validationContext.inputs.push(partial);
+    return partial;
+  };
+  S._validationSnapshot = function (state) {
+    if (!validationInput(state)) return S.expandedSnapshot(state);
+    if (!validationContext.view) {
+      validationContext.view = S.expandedSnapshot(validationContext.root);
+    }
+    return validationContext.view;
+  };
+  S._validatePlatform = function (state) {
+    const previous = validationContext;
+    validationContext = { root:state, catalogue:FBDATA, inputs:[state], view:null };
+    try {
+      return S.v4.validatePlatform(state);
+    } finally {
+      // Restore an enclosing transaction after reentrant candidate validation;
+      // release this graph before pruning, migration stamps or state adoption.
+      validationContext = previous;
+    }
+  };
+
   /* ---------- storage compression ----------
      A serialized life is ~1.5 MB of JSON; localStorage quotas are ~5 MB on
      WebKit and ~10 MB elsewhere, and the quota is shared by the autosave and
@@ -708,7 +740,7 @@ window.FB = window.FB || {};
       throw new Error(FB.T('This campaign has no saved world revision.'));
     S.v4.validateIdentity({ rng:FB.getRngState(), uid:FB.getUidCounter() });
     S.v4.validateAuthority(s.authority, s);
-    S.v4.validatePlatform(s);
+    S._validatePlatform(s);
     if (FB.pruneChronicle) FB.pruneChronicle(s);
     serializingBuildingRecords = new WeakSet();
     serializingCompletedTech = new WeakMap();

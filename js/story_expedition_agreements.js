@@ -231,7 +231,7 @@
       // Validate the original record without filling any optional story data.
       // Resolve every omitted core relationship on the canonical detached
       // codec view, even when a caller has already supplied ids/alive.
-      var current=FB.save.expandedSnapshot(s);
+      var current=FB.save._validationSnapshot(s);
       var p=parties(current),g=generations(current);
       r.partyIds.forEach(function (id,i) {
         need(r.generations[i] <= g[i]);

@@ -463,7 +463,7 @@
       // Keep the raw optional record strict, then resolve relationships on
       // the complete detached codec view. Earlier platform validators may
       // already supply ids/alive while royal-member links remain compact.
-      s=FB.save.expandedSnapshot(s);
+      s=FB.save._validationSnapshot(s);
       var e={def:def,t:t,d:declaration(s,def.realmId)}, d=e.d, r=M.row(s,def.realmId), bm=FB.campaignBookmark(s),
         presentProvider=provider(s,def);
       need(!!d && (bm.stories || []).indexOf(def.id)>=0 && t.definitionKey===definitionKey(def,d) && same(t.bindings,bindings(s,d)) &&
