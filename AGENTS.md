@@ -32,7 +32,7 @@ Before test authoring or profiling-related changes, read docs/agents/testing.md 
 
 Git, versions and generated artifacts
 
-Read docs/agents/integration.md before committing, merging, deployment changes or catalog work. Default work in the primary checkout commits directly to main only when the owner requests a commit; do not invent a branch or PR. An assigned branch/worktree workflow takes precedence. Commit authorization covers the changes then in view, not later follow-ups. Agents never push main or dev (main pushes auto-deploy play.fallowborn.com). To run CI on work, create a new branch and push that.
+Read docs/agents/integration.md before committing, merging, deployment changes or catalog work. Default work in the primary checkout commits directly to main only when the owner requests a commit; do not invent a branch or PR. An assigned branch/worktree workflow takes precedence. Commit authorization covers the changes then in view, not later follow-ups. Agents push main or dev only when the owner asks (main pushes auto-deploy play.fallowborn.com). To run CI on work, create a new branch and push that.
 
 On a feature or automatic-integration branch, leave FB.VERSION, FB.CHANGELOG and generated language catalogs unchanged. Assign a fresh FB.VERSION when shipped changes land directly on main or through a branch merge into main/dev. Include that exact version in the integration subject as vMAJOR.MINOR.PATCH: description. Add only uncovered player-facing changelog changes; preserve dev entries once on promotion to main. Docs-only changes need no version. Never add committed index.html cache query strings because file:// must work. Save-format changes require explicit owner review and are separate from cache versioning. Full policy: docs/VERSIONS.md.
 
