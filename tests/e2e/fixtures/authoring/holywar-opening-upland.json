@@ -170,7 +170,6 @@
       "eras": [
         "early_medieval"
       ],
-      "fixedProvinceId": "dune_well",
       "alwaysUnlocked": true,
       "startAge": 24,
       "familyPresets": {
@@ -178,6 +177,11 @@
           "name": "Free household",
           "diff": "age 24"
         }
+      },
+      "birthplaces": {
+        "counties": [
+          "dune_well"
+        ]
       }
     }
   ],

@@ -23,7 +23,7 @@
     }
   },
   "startScenarios": [
-    {"id": "bench_work_example_start", "name": "Bench household", "desc": "An invented artisan.", "intro": "Work at home.", "bookmarkIds": ["867"], "fixedProvinceId": "paris", "alwaysUnlocked": true, "tier": 1, "profession": "craftsman", "gold": 15, "prestige": 5, "piety": 0, "tracks": ["bench_work_example"], "trackLocations": {"bench_work_example": ["paris"]}},
-    {"id": "field_work_example_start", "name": "Field household", "desc": "An invented farmer.", "intro": "Work the fields.", "bookmarkIds": ["867"], "fixedProvinceId": "aachen", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 15, "prestige": 5, "piety": 0, "tracks": ["field_work_example"], "trackLocations": {"field_work_example": ["aachen"]}}
+    {"id": "bench_work_example_start", "name": "Bench household", "desc": "An invented artisan.", "intro": "Work at home.", "bookmarkIds": ["867"], "fixedProvinceId": "paris", "startCulture": "frankish", "startReligion": "catholic", "alwaysUnlocked": true, "tier": 1, "profession": "craftsman", "gold": 15, "prestige": 5, "piety": 0, "tracks": ["bench_work_example"], "trackLocations": {"bench_work_example": ["paris"]}},
+    {"id": "field_work_example_start", "name": "Field household", "desc": "An invented farmer.", "intro": "Work the fields.", "bookmarkIds": ["867"], "fixedProvinceId": "aachen", "startCulture": "frankish", "startReligion": "catholic", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 15, "prestige": 5, "piety": 0, "tracks": ["field_work_example"], "trackLocations": {"field_work_example": ["aachen"]}}
   ]
 }

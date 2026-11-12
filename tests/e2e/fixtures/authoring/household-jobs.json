@@ -40,7 +40,7 @@
     }
   },
   "startScenarios": [
-    {"id": "quay_work_example_start", "name": "Delivery household", "desc": "A finite paid-work example.", "intro": "Consider a delivery.", "bookmarkIds": ["867"], "fixedProvinceId": "paris", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["quay_work_example"], "trackLocations": {"quay_work_example": ["paris"]}},
-    {"id": "hill_work_example_start", "name": "Maintenance household", "desc": "An independent paid-work example.", "intro": "Consider maintenance.", "bookmarkIds": ["867"], "fixedProvinceId": "aachen", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["hill_work_example"], "trackLocations": {"hill_work_example": ["aachen"]}}
+    {"id": "quay_work_example_start", "name": "Delivery household", "desc": "A finite paid-work example.", "intro": "Consider a delivery.", "bookmarkIds": ["867"], "fixedProvinceId": "paris", "startCulture": "frankish", "startReligion": "catholic", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["quay_work_example"], "trackLocations": {"quay_work_example": ["paris"]}},
+    {"id": "hill_work_example_start", "name": "Maintenance household", "desc": "An independent paid-work example.", "intro": "Consider maintenance.", "bookmarkIds": ["867"], "fixedProvinceId": "aachen", "startCulture": "frankish", "startReligion": "catholic", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["hill_work_example"], "trackLocations": {"hill_work_example": ["aachen"]}}
   ]
 }

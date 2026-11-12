@@ -125,12 +125,16 @@
           "diff": "Spouse and young children"
         }
       },
-      "fixedProvinceId": "shelter_hill_quay",
       "tracks": [
         "hill_party"
       ],
       "trackLocations": {
         "hill_party": [
+          "shelter_hill_quay"
+        ]
+      },
+      "birthplaces": {
+        "counties": [
           "shelter_hill_quay"
         ]
       }

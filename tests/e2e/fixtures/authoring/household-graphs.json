@@ -39,7 +39,7 @@
     }
   },
   "startScenarios": [
-    { "id": "quay_household_example_start", "name": "Quay household", "desc": "An invented household graph example.", "intro": "Begin a private household.", "bookmarkIds": ["867"], "fixedProvinceId": "paris", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["quay_household_example"], "trackLocations": {"quay_household_example": ["paris"]} },
-    { "id": "hill_household_example_start", "name": "Hill household", "desc": "A different dated household graph.", "intro": "Begin a household near the hills.", "bookmarkIds": ["867"], "fixedProvinceId": "aachen", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["hill_household_example"], "trackLocations": {"hill_household_example": ["aachen"]} }
+    { "id": "quay_household_example_start", "name": "Quay household", "desc": "An invented household graph example.", "intro": "Begin a private household.", "bookmarkIds": ["867"], "fixedProvinceId": "paris", "startCulture": "frankish", "startReligion": "catholic", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["quay_household_example"], "trackLocations": {"quay_household_example": ["paris"]} },
+    { "id": "hill_household_example_start", "name": "Hill household", "desc": "A different dated household graph.", "intro": "Begin a household near the hills.", "bookmarkIds": ["867"], "fixedProvinceId": "aachen", "startCulture": "frankish", "startReligion": "catholic", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["hill_household_example"], "trackLocations": {"hill_household_example": ["aachen"]} }
   ]
 }

@@ -104,7 +104,6 @@
         "711"
       ],
       "alwaysUnlocked": true,
-      "fixedProvinceId": "toledo",
       "startCulture": "hispano_roman",
       "startReligion": "catholic",
       "name": "Private goal example",
@@ -117,7 +116,12 @@
       "tracks": [
         "proof_private_goals"
       ],
-      "intro": "Review the optional goals in Deeds."
+      "intro": "Review the optional goals in Deeds.",
+      "birthplaces": {
+        "counties": [
+          "toledo"
+        ]
+      }
     },
     {
       "id": "siwa_delegate_1204",

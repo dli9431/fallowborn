@@ -116,7 +116,11 @@
           "diff": "age 24"
         }
       },
-      "fixedProvinceId": "resource_fold"
+      "birthplaces": {
+        "counties": [
+          "resource_fold"
+        ]
+      }
     }
   ],
   "bookmarks": {

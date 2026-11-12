@@ -125,12 +125,16 @@
           "diff": "Spouse and young children"
         }
       },
-      "fixedProvinceId": "inventory_quay",
       "tracks": [
         "river_party"
       ],
       "trackLocations": {
         "river_party": [
+          "inventory_quay"
+        ]
+      },
+      "birthplaces": {
+        "counties": [
           "inventory_quay"
         ]
       }
