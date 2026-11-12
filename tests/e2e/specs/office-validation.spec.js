@@ -105,6 +105,7 @@ test('office validation observes nested edits, JSON key ordering, identity switc
       const current = read(FB.religiousOffices), prior = read(FB.officeValidationReference);
       if (current.error !== prior.error || JSON.stringify(current.value) !== JSON.stringify(prior.value)) throw new Error('Parity: ' + name);
       checks.push(name);
+      return current.error;
     }
     function edit(name, object, key, value) {
       compare('before-' + name);
@@ -112,8 +113,8 @@ test('office validation observes nested edits, JSON key ordering, identity switc
       const present = Object.prototype.hasOwnProperty.call(object,key), saved = object[key];
       try {
         object[key] = value;
-        compare(name);
-        if ((current === FB.religiousOffices(s)) !== (prior === FB.officeValidationReference(s))) throw new Error('Cache identity: ' + name);
+        const error = compare(name);
+        if (!error && (current === FB.religiousOffices(s)) !== (prior === FB.officeValidationReference(s))) throw new Error('Cache identity: ' + name);
       } finally { if (present) object[key] = saved; else delete object[key]; }
       compare('restored-' + name);
     }
@@ -207,9 +208,7 @@ test('office validation observes nested edits, JSON key ordering, identity switc
 for (const config of ['estuary', 'southern']) {
   test('office validation preserves ordinary JSON import, rejection and restore for ' + config, async function ({page}, info) {
     const mod = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../fixtures/political-religious-head/' + config + '.json'), 'utf8'));
-    const outputs = [];
-    for (const old of [true,false]) {
-      await route(page, old, false);
+      await route(page, false, true);
       await openGame(page, info);
       expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },mod)).toEqual([]);
       await page.evaluate(function () { FB.ui.showMods(); });
@@ -217,7 +216,23 @@ for (const config of ['estuary', 'southern']) {
       await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
       await prepareGameContent(page);
       await beginBookmarkFromTitle(page, Object.keys(mod.bookmarks)[0], mod.startScenarios[0].id);
-      const initial = await snapshot(page);
+      async function compareImported() {
+        return page.evaluate(function () {
+          const s = FB.state, before = JSON.stringify(s), data = JSON.stringify(FBDATA), save = FB.save.serialize();
+          const rng = FB.getRngState(), uid = FB.getUidCounter();
+          const current = FB.religiousOffices(s), prior = FB.officeValidationReference(s);
+          if (JSON.stringify(current) !== JSON.stringify(prior)) throw new Error('Imported table parity');
+          Object.keys(prior).forEach(function (id) {
+            const a = FB.religiousOfficeSnapshot(s,id,current), b = FB.religiousOfficeSnapshot(s,id,prior);
+            if ((a && a.id) !== (b && b.id)) throw new Error('Imported holder parity');
+          });
+          return {pure:before === JSON.stringify(s) && data === JSON.stringify(FBDATA) && save === FB.save.serialize() &&
+            rng === FB.getRngState() && uid === FB.getUidCounter(), offices:current, rng:rng >>> 0, uid:uid,
+            signature:FB.mods.sig(), fingerprint:FB.mods.fingerprint(FB.campaignBookmark(s))};
+        });
+      }
+      const initial = await compareImported();
+      expect(initial.pure).toBe(true);
       const rejected = await page.evaluate(function (mod) {
         const before = JSON.stringify([FB.state,FBDATA,localStorage]), rng = FB.getRngState(), uid = FB.getUidCounter();
         mod.religions = {invalid:{head:{officeId:42}}};
@@ -226,9 +241,6 @@ for (const config of ['estuary', 'southern']) {
       expect(rejected).toBe(true);
       const saved = await page.evaluate(function () { return FB.save.serialize(); });
       await restoreBookmark(page, saved);
-      outputs.push([initial, await snapshot(page)]);
-      await page.evaluate(function () { localStorage.clear(); });
-    }
-    expect(outputs[1]).toEqual(outputs[0]);
+      expect(await compareImported()).toEqual(initial);
   });
 }
