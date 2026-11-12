@@ -133,3 +133,20 @@ copy a definition before editing it. No cache fields enter saves or fingerprints
 Focused coverage in religious-office-tables.spec.js compares the prior table
 builder with 476, 1096 and 1204 seeded snapshots and daily saves, and exercises
 same-day invalidation and live holder changes.
+
+Within one ecclesiastical incumbent read, the papal personal snapshot borrows
+the already validated office table. Standalone papal snapshots still validate
+definitions. One active recognition evaluation acquires definitions lazily and
+shares them between issuer validity, generation and their political holder
+snapshots. Early guards do not acquire definitions. Other recognition entries
+and independent queries validate afresh, including nested incumbent queries.
+The same-realm recursion guard and its exception cleanup remain in force.
+
+Only definitions are shared for these synchronous reads. Papal canonical
+obedience and living claimant, political qualification and recognition, and
+current holder/generation are checked at their original points. Ordinary office
+recognition retains its life-only issuer check rather than adopting political
+holder qualification. Borrowed tables and heads are never edited or exposed by
+these reads; legitimacy results remain detached copies. No query context
+survives return, restore or a catalogue change. Focused reference and structural
+validation-count coverage lives in religious-office-tables.spec.js.

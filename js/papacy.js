@@ -271,8 +271,8 @@ window.FB = window.FB || {};
 
   /* Pure canonical personal result, including alternate configured offices.
      It never normalizes an office or follows a viewer's rival obedience. */
-  FB.papalOfficeIncumbentSnapshot = function (state,id) {
-    var def = FB.religiousOffices(state)[id];
+  FB.papalOfficeIncumbentSnapshot = function (state,id,offices) {
+    var def = (offices || FB.religiousOffices(state))[id];
     if (!def || def.head.succession !== 'papal_election') return null;
     var store = id === FBDATA.faithDefaults.offices.papal_election ? state : state.religiousOfficeStates && state.religiousOfficeStates[id];
     var p = store && store.papacy, o = p && p.obediences && p.obediences[p.romanObedience];
