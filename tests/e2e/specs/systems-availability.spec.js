@@ -1,8 +1,10 @@
 'use strict';
+const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/systems.js', 'data/eras.js', 'data/bookmarks.js',
   'data/bookmark_476.js',
+  'data/bookmark_1096.js', 'data/bookmark_1204.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/cultures.js', 'data/political_institutions.js',
   'data/political_blocs.js', 'data/policies.js', 'data/actions.js', 'data/economy.js',
@@ -14,6 +16,7 @@ dependsOnRuntime(__filename, [
   'js/institutions.js', 'js/religion.js', 'js/council.js', 'js/parliament.js', 'js/papacy.js',
   'js/holywar.js', 'js/abbeys.js', 'js/tournaments.js', 'js/save.js',
   'js/travel.js', 'js/wars.js', 'js/rebellions.js',
+  'js/crazygames.js', 'data/distribution_crazygames.js', 'js/save_v4.js',
   'js/mods.js', 'js/ui_panels.js', 'js/ui_modals.js', 'js/ui_topbar.js',
   'js/ui_misc.js', 'js/ui_tournaments.js', 'js/mapview.js'
 ]);
@@ -21,7 +24,237 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { startParityGame } = require('../support/game/parity');
+const { openCrazyGame } = require('../support/game/crazygames-title');
+const { mockCrazyGames } = require('../support/crazygames');
 const baseline476 = require('../fixtures/systems-476.json');
+
+async function installAvailabilityReference(page) {
+  await page.evaluate(function () {
+    // Bounded availability oracle from 9ce6727e2bc7882a95e0c6c8984c22d96a074df0.
+    function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
+    function plain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+    function requireId(id) {
+      if (!(typeof id === 'string' && own(FBDATA.systems, id))) throw new Error('Unknown system ' + String(id) + '.');
+    }
+    function override(layer, id, previous) {
+      if (!plain(layer)) return previous;
+      if (own(layer, id) && typeof layer[id] === 'boolean') return layer[id];
+      if (Array.isArray(layer.enable) && layer.enable.indexOf(id) >= 0) return true;
+      if (Array.isArray(layer.disable) && layer.disable.indexOf(id) >= 0) return false;
+      return previous;
+    }
+    function bookmark(state, context) {
+      if (context && context.bookmark) return context.bookmark;
+      var start = state && state.start;
+      return start && start.id !== undefined && FB.bookmark ? FB.campaignBookmark(state) : FB.activeBookmark;
+    }
+    window.referenceSystemAvailable = function (state, id) {
+      requireId(id);
+      var bm = bookmark(state);
+      var final = override(bm && bm.systems, id, null);
+      if (final !== null) return final;
+      if (id === 'great_holy_wars' && bm && typeof bm.greatHolyWars === 'boolean') return bm.greatHolyWars;
+      if (FB.systemEnabled(state, id, { faith:null, realm:null })) return true;
+      var faiths = FBDATA.religions || {};
+      for (var faith in faiths) if (own(faiths, faith) && FB.systemEnabled(state, id, { faith:faith })) return true;
+      for (var generated in state && state.faiths || {}) {
+        if (FB.systemEnabled(state, id, { faith:generated })) return true;
+      }
+      for (var rid in state && state.realms || {}) {
+        if (state.realms[rid] && state.realms[rid].alive && FB.systemEnabled(state, id, { realm:rid })) return true;
+      }
+      return false;
+    };
+  });
+}
+
+test('availability retains every scoped evaluation and short circuit while resolving its world once',
+  async function ({ page }, info) {
+    await openGame(page, info);
+    await installAvailabilityReference(page);
+    const rows = await page.evaluate(function () {
+      const live = FBDATA, active = FB.activeBookmark, lookup = FB.bookmark;
+      const enabled = FB.systemEnabled, government = FB.political.governmentFormId;
+      const rows = [], id = 'royal_council';
+      function run(stage, reference, missing, independent) {
+        const base = {id:'e2e_availability', era:'early_medieval', revision:'fresh',
+          revisions:{baseline:{}, fresh:{}}};
+        const first = {name:'First', properties:{systems:{}}};
+        const second = {name:'Second', properties:{systems:{}}};
+        const s = {start:{id:base.id, revision:'baseline', era:base.era, defaultGovernment:'e2e_default'},
+          faiths:{e2e_branch_a:{name:'Branch A', parent:'e2e_first', properties:{systems:{}}},
+            e2e_branch_b:{name:'Branch B', parent:'e2e_second', properties:{systems:{}}}},
+          realms:{dead:{alive:false}, absent:null, first:{alive:true, religion:'e2e_first'},
+            second:{alive:true, religion:'e2e_second'}}};
+        const era = Object.assign({}, live.eras.early_medieval, {systems:{}});
+        const forms = {e2e_default:{systems:{}}, e2e_first:{systems:{}}, e2e_second:{systems:{}}};
+        const defs = Object.assign({}, live.systems, {royal_council:Object.assign({}, live.systems[id], {defaultEnabled:false})});
+        window.FBDATA = Object.assign({}, live, {systems:defs, eras:Object.assign({}, live.eras, {early_medieval:era}),
+          bookmarks:{e2e_availability:base, e2e_other:{id:'e2e_other', systems:{royal_council:true}}},
+          religions:{e2e_first:first, e2e_second:second}, governmentForms:forms});
+        FB.activeBookmark = {id:'another_date', systems:{royal_council:true}};
+        if (stage === 'default') defs[id].defaultEnabled = true;
+        if (stage === 'era') era.systems = {enable:[id]};
+        if (stage === 'government') forms.e2e_default.systems = {enable:[id]};
+        if (stage === 'static first') first.properties.systems[id] = true;
+        if (stage === 'static second') second.properties.systems[id] = true;
+        if (stage === 'generated first') s.faiths.e2e_branch_a.properties.systems[id] = true;
+        if (stage === 'generated second') s.faiths.e2e_branch_b.properties.systems[id] = true;
+        if (stage === 'realm first') forms.e2e_first.systems[id] = true;
+        if (stage === 'realm second') forms.e2e_second.systems[id] = true;
+        if (stage === 'bookmark enable') base.systems = {enable:[id]};
+        if (stage === 'bookmark disable') { base.systems = {disable:[id]}; defs[id].defaultEnabled = true; }
+        let system = id;
+        if (stage === 'legacy') { system = 'great_holy_wars'; base.greatHolyWars = false; }
+        if (stage === 'legacy overridden') {
+          system = 'great_holy_wars'; base.greatHolyWars = false; base.systems = {great_holy_wars:true};
+        }
+        if (missing) delete FBDATA.bookmarks[base.id];
+        const before = JSON.stringify([s, FBDATA]), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const visits = [], contexts = [], worlds = [];
+        let lookups = 0, independentLookups = 0, inIndependent = false;
+        FB.bookmark = function (bid, revision) {
+          if (inIndependent) independentLookups++; else lookups++;
+          return lookup(bid, revision);
+        };
+        FB.political.governmentFormId = function (state, ref) {
+          if (independent) {
+            inIndependent = true;
+            try {
+              const answer = enabled({start:{id:'e2e_other'}}, id, {faith:null, realm:null});
+              if (!answer) throw new Error('Independent query reused the outer world');
+            }
+            finally { inIndependent = false; }
+          }
+          return 'e2e_' + ref.id;
+        };
+        FB.systemEnabled = function (state, sid, context) {
+          contexts.push(context);
+          worlds.push(context.bookmark);
+          const shape = {};
+          Object.keys(context).forEach(function (key) { if (key !== 'bookmark') shape[key] = context[key]; });
+          visits.push(shape);
+          Object.freeze(context);
+          return enabled(state, sid, context);
+        };
+        const caller = Object.freeze({faith:'caller', realm:'caller'});
+        const value = (reference ? referenceSystemAvailable : FB.systemAvailable)(s, system, caller);
+        const sample = {value:value, visits:visits.slice(), lookups:lookups, independentLookups:independentLookups,
+          fresh:new Set(contexts).size === contexts.length,
+          borrowed:worlds.every(function (world) { return reference || missing ? world === undefined : world === lookup(base.id, 'baseline'); }),
+          pure:before === JSON.stringify([s, FBDATA]) && rng === FB.getRngState() && uid === FB.getUidCounter() &&
+            caller.faith === 'caller' && caller.realm === 'caller'};
+        // These mutations occur between complete public reads, in the same turn.
+        if (stage === 'negative' && !reference && !missing && !independent) {
+          function compare(expected) {
+            const actual = FB.systemAvailable(s, id), original = referenceSystemAvailable(s, id);
+            if (actual !== original || actual !== expected) throw new Error('Same-turn scope mutation was not observed');
+          }
+          s.faiths.e2e_branch_a.properties.systems[id] = true; FB.invalidateFaithState(s); compare(true);
+          s.faiths.e2e_branch_a.properties.systems[id] = false; FB.invalidateFaithState(s); compare(false);
+          first.properties.systems[id] = true; FB.invalidateReligionData(); compare(true);
+          delete first.properties.systems[id]; FB.invalidateReligionData(); compare(false);
+          forms.e2e_first.systems[id] = true; compare(true);
+          // The realm-only check must infer faith and let it override government.
+          s.realms.first.religion = 'e2e_branch_a'; compare(false);
+          s.realms.first.religion = 'e2e_first'; compare(true);
+          forms.e2e_first.systems[id] = false; compare(false);
+        }
+        return sample;
+      }
+      try {
+        const stages = ['negative','default','era','government','static first','static second',
+          'generated first','generated second','realm first','realm second',
+          'bookmark enable','bookmark disable','legacy','legacy overridden'];
+        stages.forEach(function (stage) {
+          rows.push({stage:stage, candidate:run(stage, false), reference:run(stage, true)});
+        });
+        rows.push({stage:'missing world', candidate:run('negative', false, true), reference:run('negative', true, true)});
+        rows.push({stage:'independent queries', candidate:run('negative', false, false, true),
+          reference:run('negative', true, false, true)});
+        return rows;
+      } finally {
+        window.FBDATA = live; FB.activeBookmark = active; FB.bookmark = lookup;
+        FB.systemEnabled = enabled; FB.political.governmentFormId = government;
+      }
+    });
+    const allVisits = [{faith:null, realm:null}, {faith:'e2e_first'}, {faith:'e2e_second'},
+      {faith:'e2e_branch_a'}, {faith:'e2e_branch_b'}, {realm:'first'}, {realm:'second'}];
+    const lengths = [7,1,1,1,2,3,4,5,6,7,0,0,0,0,7,7];
+    rows.forEach(function (row, index) {
+      const c = row.candidate, r = row.reference;
+      expect(c.visits, row.stage).toEqual(allVisits.slice(0, lengths[index]));
+      expect(c.visits, row.stage).toEqual(r.visits);
+      expect(c.value, row.stage).toBe(r.value);
+      expect(c.value, row.stage).toBe(['negative','bookmark disable','legacy','missing world','independent queries'].indexOf(row.stage) < 0);
+      expect(c.lookups, row.stage).toBe(row.stage === 'missing world' ? 1 + lengths[index] : 1);
+      expect(r.lookups, row.stage).toBe(1 + lengths[index]);
+      expect(c.independentLookups, row.stage).toBe(row.stage === 'independent queries' ? 2 : 0);
+      expect(c.independentLookups, row.stage).toBe(r.independentLookups);
+      expect(c.fresh && c.borrowed && c.pure && r.fresh && r.borrowed && r.pure, row.stage).toBe(true);
+    });
+  });
+
+for (const crazygames of [false, true]) {
+test('availability matches the original search for retained campaigns, active dates and restored states, distribution ' + crazygames,
+  async function ({ page }, info) {
+    if (crazygames) {
+      await mockCrazyGames(page);
+      await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage'; });
+      await openCrazyGame(page, info);
+    } else await openGame(page, info);
+    await installAvailabilityReference(page);
+    await page.addScriptTag({path:path.resolve(__dirname, '../fixtures/resolved-world-cache/uncached-bookmark.js')});
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const lookup = FB.bookmark, active = FB.activeBookmark, rows = [];
+      function compare(s, label) {
+        const before = JSON.stringify([s, FBDATA]), rng = FB.getRngState(), uid = FB.getUidCounter();
+        FB.systems.ids().forEach(function (id) {
+          const actual = FB.systemAvailable(s, id);
+          FB.bookmark = uncachedBookmark;
+          let expected;
+          try { expected = referenceSystemAvailable(s, id); }
+          finally { FB.bookmark = lookup; }
+          if (actual !== expected) throw new Error(label + ': ' + id);
+        });
+        if (before !== JSON.stringify([s, FBDATA]) || rng !== FB.getRngState() || uid !== FB.getUidCounter())
+          throw new Error(label + ': mutated query inputs');
+        rows.push(label);
+      }
+      try {
+        ['476','1096','1204'].forEach(function (id) {
+          const base = FBDATA.bookmarks[id];
+          FB.activeBookmark = FB.bookmark(id === '476' ? '1204' : '476');
+          [undefined, 'baseline', base.revision].forEach(function (revision) {
+            const s = {start:{id:id, revision:revision}, faiths:{e2e_branch:{name:'Branch', parent:'catholic',
+              properties:{systems:{enable:['royal_council']}}}}, realms:{dead:{alive:false},
+              live:{alive:true, religion:'e2e_branch'}}};
+            compare(s, id + ':' + String(revision));
+          });
+        });
+        compare(null, 'no state'); compare({}, 'no start');
+        compare({start:{}}, 'missing start id'); compare({start:{id:null}}, 'null start id');
+        FB.activeBookmark = null;
+        compare(null, 'no active world');
+        compare({start:{id:'e2e_missing_world', revision:'INVALID'}}, 'missing campaign world');
+        FB.activeBookmark = active;
+        compare(FB.state, 'before restore');
+        const saved = FB.save.parseExport(FB.save.exportState());
+        const fingerprint = FB.mods.fingerprint(FB.campaignBookmark(FB.state)), signature = FB.mods.sig();
+        FB.activeBookmark = FB.bookmark('1204');
+        compare(FB.state, 'campaign with another active date');
+        FB.activeBookmark = active;
+        FB.save.restore(saved);
+        compare(FB.state, 'after restore');
+        return {rows:rows, fingerprint:fingerprint === FB.mods.fingerprint(FB.campaignBookmark(FB.state)),
+          signature:signature === FB.mods.sig(), restored:FB.state.start.id === saved.state.start.id};
+      } finally { FB.bookmark = lookup; FB.activeBookmark = active; }
+    });
+    expect(result.rows).toHaveLength(18);
+    expect(result).toMatchObject({fingerprint:true, signature:true, restored:true});
+  });
+}
 
 test('system rules resolve default, era, government, faith, then bookmark without mutation',
   async function ({ page }, testInfo) {
