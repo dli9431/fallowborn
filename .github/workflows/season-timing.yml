@@ -1,0 +1,145 @@
+# Reusable season timing: tests/e2e/measure/season-timing.js from the calling
+# commit measures every start of the game checked out at inputs.ref, sharded,
+# then compares the merged result with the previous nightly measurement.
+name: Season timing
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+      seasons:
+        type: number
+        default: 4
+      shards:
+        type: number
+        default: 12
+      only:
+        type: string
+        default: ''
+      profile:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+      label: ${{ steps.plan.outputs.label }}
+    steps:
+      - id: plan
+        env:
+          SHARDS: ${{ inputs.shards }}
+          REF: ${{ inputs.ref }}
+        run: |
+          list=""; i=1
+          while [ "$i" -le "$SHARDS" ]; do list="$list${list:+,}$i"; i=$((i + 1)); done
+          echo "shards=[$list]" >> "$GITHUB_OUTPUT"
+          echo "label=$(printf '%s' "$REF" | tr -c 'A-Za-z0-9-' '-')" >> "$GITHUB_OUTPUT"
+
+  measure:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: tooling
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          path: game
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tooling/tests/e2e/package-lock.json
+      - run: npm ci
+        working-directory: tooling/tests/e2e
+      - id: pw
+        working-directory: tooling/tests/e2e
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Install Chromium
+        working-directory: tooling/tests/e2e
+        run: npx playwright install --with-deps chromium
+      - name: Measure
+        working-directory: tooling/tests/e2e
+        env:
+          GAME_REF: ${{ inputs.ref }}
+          SEASONS: ${{ inputs.seasons }}
+          ONLY: ${{ inputs.only }}
+          PROFILE: ${{ inputs.profile }}
+          SHARD: ${{ matrix.shard }}/${{ inputs.shards }}
+        run: |
+          export GAME_COMMIT="$(git -C "$GITHUB_WORKSPACE/game" rev-parse HEAD)"
+          set -- measure --game "$GITHUB_WORKSPACE/game" --seasons "$SEASONS" --shard "$SHARD" \
+            --out "$GITHUB_WORKSPACE/timing/shard-${{ matrix.shard }}.json"
+          if [ -n "$ONLY" ]; then set -- "$@" --only "$ONLY"; fi
+          if [ "$PROFILE" = true ]; then set -- "$@" --cpu-profile; fi
+          node measure/season-timing.js "$@"
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: timing-${{ needs.plan.outputs.label }}-${{ matrix.shard }}
+          path: timing
+          retention-days: 5
+          if-no-files-found: ignore
+
+  report:
+    needs: [plan, measure]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: tooling
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: timing-${{ needs.plan.outputs.label }}-*
+          path: timing
+          merge-multiple: true
+      - name: Previous measurement
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LABEL: ${{ needs.plan.outputs.label }}
+          CURRENT: ${{ github.run_id }}
+        run: |
+          for id in $(gh run list --repo "$GITHUB_REPOSITORY" --workflow nightly.yml --limit 15 \
+              --json databaseId,status --jq '.[] | select(.status == "completed") | .databaseId'); do
+            [ "$id" = "$CURRENT" ] && continue
+            if gh run download "$id" --repo "$GITHUB_REPOSITORY" -n "season-timing-$LABEL" -D baseline 2>/dev/null; then
+              echo "Baseline: run $id"
+              rm -f baseline/report.json
+              break
+            fi
+          done
+      - name: Report
+        run: |
+          set -- report --in timing --out report.json --summary summary.md
+          if [ -d baseline ]; then set -- "$@" --baseline baseline; fi
+          node tooling/tests/e2e/measure/season-timing.js "$@"
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          mv report.json summary.md timing/
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: season-timing-${{ needs.plan.outputs.label }}
+          path: timing
+          retention-days: 30

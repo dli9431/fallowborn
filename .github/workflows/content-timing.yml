@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       timing_ref:
-        description: Revision to measure
+        description: Revision to diagnose (use paired speed comparison for speed claims)
         required: true
         default: automation/v2
         type: string
@@ -15,26 +15,31 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Retain measurement driver
-        run: cp tests/e2e/measure/content.js "$RUNNER_TEMP/content-measure.js"
+        with:
+          path: tooling
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.timing_ref }}
-      - name: Install measurement driver
-        run: mkdir -p tests/e2e/measure && cp "$RUNNER_TEMP/content-measure.js" tests/e2e/measure/content.js
+          path: game
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: tests/e2e/package-lock.json
+          cache-dependency-path: tooling/tests/e2e/package-lock.json
       - run: npm ci
-        working-directory: tests/e2e
+        working-directory: tooling/tests/e2e
       - run: npx playwright install --with-deps chromium
-        working-directory: tests/e2e
+        working-directory: tooling/tests/e2e
       - name: Profile complete preparation
-        run: node tests/e2e/measure/content.js
+        env:
+          FB_CONTENT_GAME: ${{ github.workspace }}/game
+          FB_CONTENT_OUTPUT: ${{ github.workspace }}/content-timing
+          FB_CONTENT_PROFILE: 'true'
+        run: |
+          export GAME_COMMIT="$(git -C game rev-parse HEAD)"
+          node tooling/tests/e2e/measure/content.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: content-timing
-          path: tests/e2e/test-results/content-timing/
+          path: content-timing/

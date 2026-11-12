@@ -2058,6 +2058,16 @@ copies migrate copy-first and are removed only after a successful transaction,
 and only if the local bytes still match. A local recovery copy takes precedence
 on the next boot. No save wrapper version changes.
 
+The five-second boot timeout covers only an open request that never answers. Once
+the database opens, boot waits for every slot to load however long that takes, so
+a slow phone never shows an empty title over existing saves. If the open answers
+after the timeout, the late database is adopted, its slots become readable and the
+title refreshes Continue; writes made meanwhile used the localStorage fallback and
+migrate as recovery copies. The first autosave or manual save of a page asks the
+browser for persistent storage (navigator.storage.persist), so storage pressure on
+a full device does not evict every slot at once. The request is best-effort and
+skipped on CrazyGames, whose saves use its own storage.
+
 IndexedDB stores the synchronous JSON snapshot without main-thread compression.
 Manual save success and hosted-update reload wait for transaction completion.
 Unsupported or denied IndexedDB and failed writes retain verified localStorage

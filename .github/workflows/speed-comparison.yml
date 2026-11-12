@@ -1,0 +1,119 @@
+name: Paired speed comparison
+on:
+  workflow_call:
+    inputs:
+      baseline:
+        required: true
+        type: string
+      candidate:
+        required: true
+        type: string
+      subjects:
+        type: string
+        default: '["content","476:mobile_household_476","476:peroz_sasanian_476","1096:yaghi_siyan_1096","1204:muhammad_1204"]'
+      repeats:
+        type: number
+        default: 3
+      seasons:
+        type: number
+        default: 4
+  workflow_dispatch:
+    inputs:
+      baseline:
+        description: Baseline game revision
+        required: true
+        type: string
+      candidate:
+        description: Candidate game revision
+        required: true
+        type: string
+      subjects:
+        description: JSON array of content or bookmark:scenario workloads
+        type: string
+        default: '["content","476:mobile_household_476","476:peroz_sasanian_476","1096:yaghi_siyan_1096","1204:muhammad_1204"]'
+      repeats:
+        description: Paired samples per workload (3 to 9)
+        type: number
+        default: 3
+      seasons:
+        description: Seasons per simulation sample (1 to 8)
+        type: number
+        default: 4
+permissions:
+  contents: read
+jobs:
+  revisions:
+    runs-on: ubuntu-latest
+    outputs:
+      baseline: ${{ steps.pin.outputs.baseline }}
+      candidate: ${{ steps.pin.outputs.candidate }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.baseline }}
+          path: baseline
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate }}
+          path: candidate
+      - id: pin
+        run: |
+          echo "baseline=$(git -C baseline rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "candidate=$(git -C candidate rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+  compare:
+    needs: revisions
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        subject: ${{ fromJSON(inputs.subjects) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tooling
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.revisions.outputs.baseline }}
+          path: baseline
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.revisions.outputs.candidate }}
+          path: candidate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tooling/tests/e2e/package-lock.json
+      - run: npm ci
+        working-directory: tooling/tests/e2e
+      - run: npx playwright install --with-deps chromium
+        working-directory: tooling/tests/e2e
+      - name: Check measurement calculations
+        working-directory: tooling/tests/e2e
+        run: |
+          node --check measure/content.js
+          node --check measure/season-timing.js
+          node --check measure/speed-comparison.js
+          npx playwright test specs/speed-comparison.spec.js --project=chromium-served --workers=1
+      - name: Measure alternating pairs on this runner
+        env:
+          BASELINE_GAME: ${{ github.workspace }}/baseline
+          CANDIDATE_GAME: ${{ github.workspace }}/candidate
+          COMPARISON_OUTPUT: ${{ github.workspace }}/results
+          SUBJECT: ${{ matrix.subject }}
+          REPEATS: ${{ inputs.repeats }}
+          SEASONS: ${{ inputs.seasons }}
+        run: node tooling/tests/e2e/measure/speed-comparison.js
+      - name: Publish summary
+        if: always()
+        run: |
+          if [ -f results/summary.txt ]; then
+            cat results/summary.txt >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: speed-comparison-${{ strategy.job-index }}
+          path: results/
+          retention-days: 30

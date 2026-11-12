@@ -354,9 +354,11 @@ not included in either deployment artifact.
 
 ## Running the tests
 
-All test execution is owner-controlled. AI coding agents add or update relevant tests but never
-execute the harness, install its dependencies or browsers, or start its server. Agents must
-report which tests changed and state that they were not run.
+Tests run in GitHub Actions (see [Continuous integration](#continuous-integration)) or when the
+owner starts them locally. AI coding agents add or update relevant tests but never execute the
+harness on the local machine, install its dependencies or browsers, or start its server. They may
+trigger the CI workflows and read their results. Agents report which tests changed and whether
+and where they ran.
 
 For an owner-initiated manual run from `tests/e2e/`:
 
@@ -554,12 +556,65 @@ has the same test-authoring requirement:
 3. Add or update automated tests that exercise the expected behavior and would catch its
    regression. Keep those tests in the same commit or branch as the implementation.
 4. Do not run any focused test, syntax gate, browser matrix, runtime verifier, or manual browser
-   check. Do not install Playwright dependencies or browsers.
-5. In the handoff, list the test files added or updated and state that the tests were not run.
+   check locally. Do not install Playwright dependencies or browsers.
+5. In the handoff, list the test files added or updated and state whether and where they ran.
 
-The owner decides when to use the commands in [Running the tests](#running-the-tests), including
-before commits, merges, releases, or deployments. A documentation-only change does not need an
-artificial gameplay test.
+Pushes to `main`, `dev`, and `476` run the changed tests in GitHub Actions. The owner decides when
+to use the local commands in [Running the tests](#running-the-tests). A documentation-only change
+does not need an artificial gameplay test.
+
+## Continuous integration
+
+Workflows live in `.github/workflows/`:
+
+- `tests.yml`: every push to `main`, `dev`, and `476`, pull requests, and manual runs. It runs
+  `npm run check` and `npm run test:server`, then Playwright with `--only-changed` against the
+  pushed range's base and the bounded runtime dependencies of `test:changed`, across all four
+  projects in 4 shards. A manual run accepts `target` (any pushed branch or commit; default the
+  ref the run was started on), `mode` (`changed`, `all`, or `specs` with a space-separated `specs`
+  list relative to `tests/e2e`), `base`, `projects`, `shards`, and `request_id`, which names the
+  run (`Tests <id>`) and keeps concurrent manual runs from cancelling each other. Failing shards
+  also upload their `test-results` folders (error contexts, screenshots, traces) as
+  `results-<label>-<shard>`. Example: `gh workflow run tests.yml --ref main -f target=476
+  -f mode=specs -f specs="specs/boot.spec.js specs/determinism.spec.js"`.
+- `nightly.yml`: daily from `main` and by hand. The full suite on `476` and `dev` in 16 shards,
+  then season timing on `476`.
+- `e2e.yml`: the reusable check, sharded Playwright run (blob reporter), and merge job. The merge
+  job writes a job summary with totals, failures and their first error line, flaky tests, and the
+  slowest spec files, and uploads the merged HTML and JSON report as `report-<label>`.
+- `season-timing.yml`: runs `tests/e2e/measure/season-timing.js` from the calling commit against
+  the game at the requested branch, sharded across starts, then compares the merged measurement
+  with the previous nightly one and uploads `season-timing-<branch>`.
+
+Read results with `gh run list`, `gh run view <id>`, `gh run view <id> --log-failed`, and
+`gh run download <id> -n <artifact>`. Only pushed branches can run in CI.
+
+### Season timing
+
+`tests/e2e/measure/season-timing.js` measures simulation cost; it is not a regression spec and
+the one-season journey bound does not apply. `measure` serves a game checkout on 127.0.0.1,
+enumerates every scenario on every bookmark it may start in (the same start-code construction as
+the parity journey), and for each start opens a fresh context, enters the code through the
+ordinary seed input, enables `FB.game.fastForwardTiming`, and fast-forwards season by season with
+automation set to resolve every event. Per season it records days, wall and simulation time,
+milliseconds per simulated day, the slowest profiler rows by self time, the largest counters, and
+workload: the player's directly held settlements against their limit, held counties, armies,
+characters, living realms, and active wars. `report` merges shard files, flags spikes (more than
+2.5 times the start's median season), year-over-year growth and regressions against a baseline
+(more than 1.5 times, ignoring seasons under two seconds), and lists the profiler rows whose
+per-day self time grew most. Builds without the start enumeration helpers report that nothing was
+measured. Only starts the date actually offers are enumerated. Each season's workload also records the
+serialized size of every top-level `FB.state` part, so growth and spike flags name the state that grew.
+It also flags per-day cost that more than doubles within a run and a player who dies. With
+`--cpu-profile` (the nightly `profile` input, best combined with `only`), every season also writes a V8
+`.cpuprofile` under `cpuprofiles/` (open it in Chrome DevTools, Performance panel) and the report lists
+the top functions by self time with their main callers.
+
+```sh
+node measure/season-timing.js measure --game .. --seasons 4 --out timing/all.json
+node measure/season-timing.js measure --game .. --only 1204:muhammad_1204 --seasons 8 --cpu-profile --out timing/one.json
+node measure/season-timing.js report --in timing --out report.json --summary summary.md --baseline previous
+```
 
 ## The two browser targets
 
@@ -813,9 +868,9 @@ npx playwright show-trace test-results/<case>/trace.zip
 
 ## Runtime manifest verification
 
-Runtime-manifest verification remains an owner-initiated operation. The optional
-Complete content timing workflow measures preparation only; it does not run the
-regression suite or verify a distribution package.
+Runtime-manifest verification is an owner-initiated local operation; CI does not run it.
+The optional Complete content timing workflow measures preparation only; it does
+not run the regression suite or verify a distribution package.
 
 The verifier can check a stamped local staging directory:
 
@@ -1228,3 +1283,18 @@ industry-law-retention.spec.js stages long 1204 London campaigns directly. With 
 Community ledger retention
 
 community-retention.spec.js stages native Ctesiphon membership beyond 64 historical people and an ordinary JSON community beyond sixteen ended assent targets. It covers exact shared-window folding, pending and temporarily ineligible voters, original-reference retention, live limits, deterministic/idempotent adoption, stale reviews, resource and RNG/UID preservation, repeated save/load/re-save and atomic malformed-save rejection. Its source-only check pins reviewed quoted-id counts for the membership engine whose quoted ids changed. Long campaign dates are staged directly; no multi-year daily loop is used.
+
+
+Paired speed comparisons
+
+.github/workflows/speed-comparison.yml measures an explicit baseline and candidate using one fixed measurement driver. It pins both revisions once, then runs each selected workload on its own hosted machine, alternating baseline/candidate order for 3 to 9 paired samples on that same machine. The default workloads are complete content preparation plus mobile household 476, Peroz 476, Yaghi Siyan 1096 and Muhammad 1204 over four seasons. Each content mode uses a fresh browser context; each simulation sample starts a fresh browser and the same ordinary MEASURE start code. Filesystem and OS caches are not flushed. Alternation reduces order bias but does not remove hosted-machine noise.
+
+Dispatch after the workflow and both game revisions have been pushed: gh workflow run speed-comparison.yml --ref <tooling-ref> -f baseline=<baseline-sha> -f candidate=<candidate-sha> -f repeats=3 -f seasons=4. The subjects input accepts a JSON array of content or bookmark:scenario values. Before the standalone workflow is registered on the default branch, dispatch the same comparison through Nightly on the tooling branch: gh workflow run nightly.yml --ref <tooling-ref> -f suite=false -f timing=false -f timing_ref=<candidate-sha> -f comparison_baseline=<baseline-sha> -f comparison_repeats=3 -f seasons=4. The workflow first runs speed-comparison.spec.js against synthetic measurements to check its calculations and rejection behavior. This does not execute a long simulation as a regression spec.
+
+Each speed-comparison-<job-index> artifact contains comparison.json, summary.txt and all raw pair-N/baseline and pair-N/candidate measurements. JSON records exact game and driver commits, browser version, runner hardware/image metadata, sample order, every measured value, median/min/max, paired percentage gains and the count of faster pairs. Positive gain means the candidate is faster: 100 * (1 - candidate / baseline). Ranges are observed variability, not confidence intervals. Invalid or incomplete workloads fail the comparison; a valid slowdown remains a reported negative gain, not a failed correctness test. Inspect comparison.json subject rather than inferring a workload from the artifact index.
+
+Content preparation checks the expected mod count/signature and refuses already-prepared content. Comparisons reject changed mod signatures. Season comparisons reject absent starts, failures, death, page errors, missing seasons, changed start codes, day counts, dates, RNG/UID or major workload counts. These checks prevent obvious workload mismatches but do not replace deterministic outcome and save compatibility tests. CPU profiling is disabled for speed samples; the existing opt-in season operation timers remain enabled identically on both revisions. Use content-timing.yml or nightly.yml profile=true separately to diagnose hot functions, never mix those profiled times into speed samples. Content preparation and simulation have separate metrics and should not be combined into one speedup.
+
+Season raw workloads retain legacy stateSizes in UTF-16 code units for nightly compatibility and add stateBytes with explicit UTF-8 byte counts for each state part. These are serialized JSON sizes, not compressed save sizes or browser quota consumption. Samples stage no retention history automatically; long-history compaction needs its own staged correctness/size evidence.
+
+A convincing performance claim needs matching workloads, passing correctness coverage, repeated positive gains larger than the observed spread and an appropriate baseline. Record both SHAs and the CI run link. Use more repetitions or independent repeated jobs if gains are noisy; do not declare a target met from a passing spec, one fast run, or reduced work caused by a failed journey.

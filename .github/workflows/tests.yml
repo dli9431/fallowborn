@@ -1,0 +1,64 @@
+# Tests for every push to main, dev and 476, pull requests, and manual runs.
+# Pushes run the changed specs plus the boot and determinism canaries, the
+# same selection as the local test:changed. A manual run can test any pushed
+# branch or commit (target), choose the full suite, a base commit, projects
+# and shard count, or run an exact list of specs. request_id names the run so
+# a caller can find it, and keeps concurrent manual runs from cancelling each
+# other.
+name: Tests
+run-name: ${{ inputs.request_id && format('Tests {0}', inputs.request_id) || github.event.head_commit.message || github.event.pull_request.title || 'Tests' }}
+
+on:
+  push:
+    branches: [main, dev, '476']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Branch or commit to test (default the ref the run was started on)
+        type: string
+        default: ''
+      mode:
+        description: changed, all, or specs
+        type: choice
+        options: [changed, all, specs]
+        default: changed
+      specs:
+        description: Space-separated spec paths relative to tests/e2e, for specs mode
+        type: string
+        default: ''
+      base:
+        description: Base commit for changed mode (default the parent commit)
+        type: string
+        default: ''
+      projects:
+        description: Space-separated Playwright projects, or all
+        type: string
+        default: all
+      shards:
+        type: number
+        default: 4
+      request_id:
+        description: Caller's id, shown in the run name
+        type: string
+        default: ''
+
+concurrency:
+  group: tests-${{ inputs.request_id || github.ref }}
+  cancel-in-progress: ${{ !inputs.request_id }}
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    uses: ./.github/workflows/e2e.yml
+    with:
+      ref: ${{ inputs.target || github.sha }}
+      label: tests
+      mode: ${{ inputs.mode || 'changed' }}
+      specs: ${{ inputs.specs || '' }}
+      base: ${{ inputs.base || github.event.before || github.event.pull_request.base.sha || '' }}
+      projects: ${{ inputs.projects || 'all' }}
+      shards: ${{ fromJSON(format('{0}', inputs.shards || 4)) }}
+      bounded: ${{ (inputs.mode || 'changed') == 'changed' }}

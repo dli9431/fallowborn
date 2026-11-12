@@ -11,8 +11,11 @@ window.FB = window.FB || {};
   G.contentReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.194.7';
+FB.VERSION = '1.194.8';
 FB.CHANGELOG = [
+  { v: '1.194.8', date: '2026-11-11', changes: [
+    'Saves no longer appear missing after a slow start on phones, and the game asks the browser to keep saves when the device runs low on space.'
+  ] },
   { v: '1.194.7', date: '2026-10-31', changes: [
     'Fix bookmark loading when the hidden 634 opening includes a nonterritorial court.'
   ] },
@@ -2857,6 +2860,8 @@ FB.CHANGELOG = [
     FB.ui.wire();
     wireMenus();
     refreshTitle();
+    // Saves that finish loading after the title opened must still offer Continue.
+    FB.save.onLateStorage = function () { if (!FB.state) refreshTitle(); };
     FB.ui.showScreen('title');
     document.documentElement.classList.remove('boot-loading');
     $('title').setAttribute('aria-busy', 'false');

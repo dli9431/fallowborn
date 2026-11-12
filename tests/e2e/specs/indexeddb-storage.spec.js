@@ -155,6 +155,122 @@ test('aborted database writes fall back to verified localStorage', async functio
   expect(await page.evaluate(function () { return FB.save.read(2).state.player.gold; })).toBe(5432);
 });
 
+async function saveSlotAndAutosave(page) {
+  await page.evaluate(function () {
+    FB.state.player.gold = 6789;
+    return new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
+  });
+  await page.evaluate(function () { FB.save.autosave(); });
+  await expect.poll(function () { return storedGold(page, 'fb_auto'); }).toBe(6789);
+}
+async function titleOffersContinue(page) {
+  return page.evaluate(function () {
+    return !FB.state && !document.getElementById('btn-continue').classList.contains('hidden');
+  });
+}
+
+test('a slot read that outlasts the open timeout still shows existing saves', async function ({ page }, testInfo) {
+  await start(page, testInfo);
+  await saveSlotAndAutosave(page);
+  await page.addInitScript(function () {
+    // Hold the storage open timeout, then let it elapse while slots are still being read.
+    const realSet = window.setTimeout, realClear = window.clearTimeout, held = Object.create(null);
+    let next = 1;
+    window.setTimeout = function (callback, delay) {
+      if (delay === 5000 && typeof callback === 'function' && /finish\(null\)/.test(String(callback))) {
+        const id = 'held' + next++;
+        held[id] = callback;
+        return id;
+      }
+      return realSet.apply(this, arguments);
+    };
+    window.clearTimeout = function (id) {
+      if (typeof id === 'string' && held[id]) { delete held[id]; return; }
+      return realClear.apply(this, arguments);
+    };
+    const openCursor = IDBObjectStore.prototype.openCursor;
+    IDBObjectStore.prototype.openCursor = function () {
+      const request = openCursor.apply(this, arguments);
+      Object.keys(held).forEach(function (id) { const callback = held[id]; delete held[id]; callback(); });
+      return request;
+    };
+  });
+  await page.reload();
+  await page.waitForFunction(function () { return FB.game.bootReady; });
+  expect(await page.evaluate(function () { return FB.save.storageBackend(); })).toBe('indexeddb');
+  expect(await titleOffersContinue(page)).toBe(true);
+  expect(await page.evaluate(function () { return FB.save.read(1).state.player.gold; })).toBe(6789);
+});
+
+test('a database that opens after the timeout is adopted and restores Continue', async function ({ page }, testInfo) {
+  await start(page, testInfo);
+  await saveSlotAndAutosave(page);
+  await page.addInitScript(function () {
+    const realSet = window.setTimeout;
+    window.setTimeout = function (callback, delay) {
+      if (delay === 5000 && typeof callback === 'function' && /finish\(null\)/.test(String(callback))) {
+        return realSet.call(this, callback, 0);
+      }
+      return realSet.apply(this, arguments);
+    };
+    // Drop page-close recovery copies so only the database holds these saves.
+    ['fb_auto', 'fb_slot1'].forEach(function (name) { localStorage.removeItem(name); });
+    // Withhold the first save-database open answer until the test releases it.
+    const open = IDBFactory.prototype.open;
+    let delayed = false;
+    IDBFactory.prototype.open = function (name) {
+      const request = open.apply(this, arguments);
+      if (delayed || name !== 'fallowborn-saves') return request;
+      delayed = true;
+      let handler = null, answered = null;
+      Object.defineProperty(request, 'onsuccess', {
+        configurable:true,
+        get:function () { return handler; },
+        set:function (value) { handler = value; }
+      });
+      request.addEventListener('success', function (event) { answered = event; });
+      window.releaseSaveOpen = function () {
+        return new Promise(function (resolve, reject) {
+          (function wait() {
+            if (!answered) { realSet(wait, 10); return; }
+            try { handler.call(request, answered); resolve(); } catch (error) { reject(error); }
+          })();
+        });
+      };
+      return request;
+    };
+  });
+  await page.reload();
+  await page.waitForFunction(function () { return FB.game.bootReady; });
+  expect(await page.evaluate(function () { return FB.save.storageBackend(); })).toBe('localstorage');
+  expect(await titleOffersContinue(page)).toBe(false);
+  await page.evaluate(function () { return window.releaseSaveOpen(); });
+  await expect.poll(function () { return page.evaluate(function () { return FB.save.storageBackend(); }); }).toBe('indexeddb');
+  await expect.poll(function () { return titleOffersContinue(page); }).toBe(true);
+  expect(await page.evaluate(function () { return FB.save.read(1).state.player.gold; })).toBe(6789);
+});
+
+test('saving asks the browser once to keep save storage persistent', async function ({ page }, testInfo) {
+  await page.addInitScript(function () {
+    window.persistCalls = 0;
+    const storage = {
+      persisted:function () { return Promise.resolve(false); },
+      persist:function () { window.persistCalls++; return Promise.resolve(true); },
+      estimate:function () { return Promise.resolve({ usage:0, quota:0 }); }
+    };
+    Object.defineProperty(navigator, 'storage', { configurable:true, get:function () { return storage; } });
+  });
+  await start(page, testInfo);
+  await page.evaluate(function () {
+    FB.save.autosave();
+    return new Promise(function (resolve) { FB.save.toSlot(3, resolve); });
+  });
+  await expect.poll(function () { return page.evaluate(function () { return window.persistCalls; }); }).toBe(1);
+  await page.evaluate(function () {
+    return new Promise(function (resolve) { FB.save.toSlot(2, resolve); });
+  });
+  expect(await page.evaluate(function () { return window.persistCalls; })).toBe(1);
+});
 
 test('save sheet waits for commit and leaves a replacement sheet open', async function ({ page }, testInfo) {
   await start(page, testInfo);

@@ -62,6 +62,9 @@ saves/
 notes/
 saves/
 
+# Agent and owner git worktrees (see docs/agents/integration.md, Git worktrees).
+/.worktrees/
+
 # Owner-derived local stress exports; root placement makes manual import easy.
 /logistics-stress-save*.txt
 /logistics-stress-save*.json

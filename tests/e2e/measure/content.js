@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('@playwright/test');
-const server = require('../support/static-server');
+const {serve} = require('./season-timing');
 
 function topFunctions(profile) {
   const nodes = new Map(profile.nodes.map(function (node) { return [node.id, node]; }));
@@ -25,7 +25,8 @@ async function run() {
   const output = path.resolve(process.env.FB_CONTENT_OUTPUT || path.join(__dirname, '../test-results/content-timing'));
   const mod = fs.readFileSync(path.resolve(__dirname, '../fixtures/634-core-identities/household-overlay.json'), 'utf8');
   fs.mkdirSync(output, {recursive:true});
-  const hosted = await server.start({port:0});
+  const hosted = await serve(path.resolve(process.env.FB_CONTENT_GAME || path.join(__dirname, '../../..')), 0);
+  const profiled = process.env.FB_CONTENT_PROFILE === 'true';
   let browser;
   try {
     browser = await chromium.launch();
@@ -41,11 +42,12 @@ async function run() {
           localStorage.setItem(FB.storageKey('fb_mods'), JSON.stringify([text]));
         }, mod);
         const cdp = await context.newCDPSession(page);
-        await cdp.send('Profiler.enable');
-        await cdp.send('Profiler.start');
+        if (profiled) { await cdp.send('Profiler.enable'); await cdp.send('Profiler.start'); }
         let elapsedMs, profile;
         try {
           elapsedMs = await page.evaluate(function () {
+            if (FB.game.contentReady) throw new Error('Content already prepared before measurement');
+            FB.seedRng(634); FB.setUidCounter(0);
             FB.game.loadTiming.begin('complete-content');
             const started = performance.now();
             return new Promise(function (resolve, reject) {
@@ -57,23 +59,31 @@ async function run() {
             });
           });
         } finally {
-          profile = (await cdp.send('Profiler.stop')).profile;
-          fs.writeFileSync(path.join(output, mode + '.cpuprofile'), JSON.stringify(profile));
+          if (profiled) {
+            profile = (await cdp.send('Profiler.stop')).profile;
+            fs.writeFileSync(path.join(output, mode + '.cpuprofile'), JSON.stringify(profile));
+          }
           await cdp.detach();
         }
         await page.waitForFunction(function () { return FB.game.loadTiming.reports().length > 1; });
         const report = await page.evaluate(function () {
           FB.mods.assertReady();
-          return {loadTiming:FB.game.loadTiming.reports(), signature:FB.mods.sig()};
+          return {loadTiming:FB.game.loadTiming.reports(), signature:FB.mods.sig(), modCount:FB.mods.count()};
         });
-        results.push(Object.assign({mode:mode, elapsedMs:elapsedMs, topFunctions:topFunctions(profile)}, report));
+        if (report.modCount !== (mode === 'unmodded' ? 0 : 1) ||
+            (mode === 'unmodded' ? report.signature !== '' : !/^effective-1-[a-f0-9]{64}$/.test(report.signature))) {
+          throw new Error('Unexpected mod workload: ' + mode);
+        }
+        results.push(Object.assign({mode:mode, elapsedMs:elapsedMs, cpuProfile:profiled,
+          browser:browser.version(), gameCommit:process.env.GAME_COMMIT || null,
+          topFunctions:profile ? topFunctions(profile) : []}, report));
       } finally { await context.close(); }
     }
     fs.writeFileSync(path.join(output, 'content-timing.json'), JSON.stringify(results, null, 2));
     process.stdout.write(JSON.stringify(results, null, 2) + '\n');
   } finally {
     if (browser) await browser.close();
-    await server.close(hosted);
+    await new Promise(function (resolve) { hosted.close(resolve); });
   }
 }
 
