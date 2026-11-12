@@ -188,7 +188,7 @@ window.FB = window.FB || {};
 
   /* Definitions follow the campaign even while another bookmark is active.
      An explicit table replaces the legacy catalogue, including an empty table. */
-  var nativeCampaignBookmark = FB.campaignBookmark;
+  var nativeCampaignBookmark = FB.campaignBookmark, nativeBookmark = FB.bookmark;
   var nativeLocalInstitutionDefinitions = FB.localInstitutionDefinitions = function (state) {
     state = state || FB.state;
     var definition = state && state.start && state.start.id
@@ -198,7 +198,7 @@ window.FB = window.FB || {};
   };
 
   FB.localInstitutionOfficeInputs = function (state) {
-    if (state && state.start && state.start.id && FB.campaignBookmark === nativeCampaignBookmark &&
+    if (state && state.start && state.start.id && FB.campaignBookmark === nativeCampaignBookmark && FB.bookmark === nativeBookmark &&
         FB.localInstitutionDefinitions === nativeLocalInstitutionDefinitions) {
       var definition = FB.campaignBookmark(state);
       return {local:definition && definition.localInstitutions !== undefined

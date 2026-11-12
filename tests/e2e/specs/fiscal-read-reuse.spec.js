@@ -169,12 +169,12 @@ test('native fiscal scopes revalidate edits from an intervening reader and resto
 });
 
 test('office world reuse preserves empty, null-state, override and retained revision boundaries',async function ({page},info) {
+  await source.route(page,false);
   await journey.begin(page,info,journey.starts[0]);
   const result = await page.evaluate(function () {
     const s = FB.state, active = FB.activeBookmark, definitions = FB.localInstitutionDefinitions;
     const campaign = FB.campaignBookmark, bookmark = FB.bookmark, originalRevision = s.start.revision;
-    let calls = 0;
-    FB.bookmark = function () { calls++; return bookmark.apply(this,arguments); };
+    window.fiscalReadCounts = {worlds:0};
     function prior(state) {
       const local = FB.localInstitutionDefinitions(state);
       return {local:local,bookmark:state ? FB.campaignBookmark(state) : FB.activeBookmark};
@@ -187,8 +187,8 @@ test('office world reuse preserves empty, null-state, override and retained revi
       checks.push(label);
     }
     try {
-      calls = 0; FB.localInstitutionOfficeInputs(s); const nativeCalls = calls;
-      calls = 0; prior(s); const priorCalls = calls;
+      fiscalReadCounts.worlds = 0; FB.localInstitutionOfficeInputs(s); const nativeCalls = fiscalReadCounts.worlds;
+      fiscalReadCounts.worlds = 0; prior(s); const priorCalls = fiscalReadCounts.worlds;
       check('native',s);
       FB.activeBookmark = {id:'different-active',localInstitutions:{}};
       check('null uses current state for definitions',null);
@@ -209,10 +209,15 @@ test('office world reuse preserves empty, null-state, override and retained revi
       const data = FBDATA;
       try { window.FBDATA = Object.assign({},data,{bookmarks:Object.assign({},data.bookmarks)}); check('detached catalogue',s); }
       finally { window.FBDATA = data; }
+      let sequence = 0;
+      FB.bookmark = function () { return {id:String(++sequence),localInstitutions:{}}; };
+      const replaced = FB.localInstitutionOfficeInputs(s); sequence = 0;
+      if (JSON.stringify(replaced) !== JSON.stringify(prior(s))) throw new Error('Replaced bookmark lookup order');
+      checks.push('replaced bookmark lookup');
       return {nativeCalls:nativeCalls,priorCalls:priorCalls,checks:checks.length,ordering:ordering};
     } finally { FB.activeBookmark = active; FB.localInstitutionDefinitions = definitions; FB.campaignBookmark = campaign; FB.bookmark = bookmark; s.start.revision = originalRevision; }
   });
-  expect(result).toEqual({nativeCalls:1,priorCalls:2,checks:9,ordering:['definitions','bookmark']});
+  expect(result).toEqual({nativeCalls:1,priorCalls:2,checks:10,ordering:['definitions','bookmark']});
 });
 
 for (const start of [journey.starts[0],journey.starts[4]]) {
