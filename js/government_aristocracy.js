@@ -87,20 +87,23 @@
   function jurisdiction(s,m) { return rights(s).filter(function (row) { return m.rightIds.indexOf(row.id) >= 0; }); }
   function interest(s,rid,id) { var data = A.state(s,rid); return data && data.interests.filter(function (m) { return m.id === id; })[0]; }
   function rule(s,rid,id) { var p = A.profile(s,rid); return p && p.interests.filter(function (m) { return m.id === id; })[0]; }
-  function constituencyLookups(s,interests) {
+  function constituencyLookups(s,interests,track) {
     // One interest cannot save a scan. Nonstandard inputs keep the original
     // filters, including their strict matching and malformed-input failures.
     if (!Array.isArray(interests) || interests.length < 2 || interests.map !== Array.prototype.map) return null;
     var i, j, m, row, id, list, requested = Object.create(null), selected = [];
+    var snapshot = track ? {interests:interests,map:interests.map,requests:new Array(interests.length)} : null;
     for (i = 0; i < interests.length; i++) {
       if (!(i in interests)) continue;
       m = interests[i];
       if (!m || typeof m.appointmentId !== 'string' || !Array.isArray(m.rightIds) ||
           m.rightIds.indexOf !== Array.prototype.indexOf) return null;
       selected[i] = [];
+      if (snapshot) snapshot.requests[i] = [m.appointmentId,m.rightIds,[],m.rightIds.indexOf];
       for (j = 0; j < m.rightIds.length; j++) {
         id = m.rightIds[j];
         if (typeof id !== 'string') return null;
+        if (snapshot) snapshot.requests[i][2][j] = id;
         list = requested[id] || (requested[id] = []);
         // Requests for one interest are contiguous. Only membership is unique;
         // repeated ledger records will each be appended in the scan below.
@@ -110,6 +113,12 @@
     var assigned = appointments(s), local = rights(s);
     if (!Array.isArray(assigned) || !Array.isArray(local) || assigned.filter !== Array.prototype.filter ||
         local.filter !== Array.prototype.filter) return null;
+    if (snapshot) {
+      snapshot.assigned = assigned; snapshot.local = local;
+      snapshot.assignedFilter = assigned.filter; snapshot.localFilter = local.filter;
+      snapshot.assignedRows = new Array(assigned.length); snapshot.assignedIds = [];
+      snapshot.localRows = new Array(local.length); snapshot.localIds = [];
+    }
     var first = Object.create(null);
     for (i = 0; i < assigned.length; i++) {
       if (!(i in assigned)) continue;
@@ -117,6 +126,7 @@
       if (!row) return null;
       id = row.id;
       if (typeof id !== 'string') return null;
+      if (snapshot) { snapshot.assignedRows[i] = row; snapshot.assignedIds[i] = id; }
       if (!own(first,id)) first[id] = row;
     }
     for (i = 0; i < local.length; i++) {
@@ -125,10 +135,11 @@
       if (!row) return null;
       id = row.id;
       if (typeof id !== 'string') return null;
+      if (snapshot) { snapshot.localRows[i] = row; snapshot.localIds[i] = id; }
       list = requested[id];
       if (list) for (j = 0; j < list.length; j++) selected[list[j]].push(row);
     }
-    return {first:first,rights:selected};
+    return {first:first,rights:selected,snapshot:snapshot};
   }
   // A fiscal lifetime shares only index storage. Validate its detached input
   // snapshot on every reuse, including edits by replaceable read callbacks.
@@ -139,25 +150,6 @@
     fiscalReads.push({state:s,data:FBDATA,context:context,actor:!projection,entries:null});
     try { return read(); } finally { fiscalReads.pop(); }
   };
-  function lookupSnapshot(s,interests,lookup) {
-    var assigned = appointments(s), local = rights(s), i, j, m, ids;
-    var snapshot = {interests:interests,assigned:assigned,local:local,lookup:lookup,map:interests.map,
-      assignedFilter:assigned.filter,localFilter:local.filter,
-      requests:new Array(interests.length),assignedRows:new Array(assigned.length),assignedIds:[],
-      localRows:new Array(local.length),localIds:[]};
-    for (i = 0; i < interests.length; i++) if (i in interests) {
-      m = interests[i]; ids = [];
-      for (j = 0; j < m.rightIds.length; j++) ids[j] = m.rightIds[j];
-      snapshot.requests[i] = [m.appointmentId,m.rightIds,ids,m.rightIds.indexOf];
-    }
-    for (i = 0; i < assigned.length; i++) if (i in assigned) {
-      snapshot.assignedRows[i] = assigned[i]; snapshot.assignedIds[i] = assigned[i].id;
-    }
-    for (i = 0; i < local.length; i++) if (i in local) {
-      snapshot.localRows[i] = local[i]; snapshot.localIds[i] = local[i].id;
-    }
-    return snapshot;
-  }
   function sameLookupInputs(s,interests,old) {
     var assigned = appointments(s), local = rights(s), i, j, m, request;
     if (old.interests !== interests || !Array.isArray(interests) || interests.map !== old.map || interests.map !== Array.prototype.map ||
@@ -187,11 +179,11 @@
     var read = fiscalReads[fiscalReads.length - 1];
     if (!read || read.state !== s || read.data !== FBDATA) return constituencyLookups(s,interests);
     var old = read.entries && read.entries[rid];
-    if (old && sameLookupInputs(s,interests,old)) return old.lookup;
-    var lookup = constituencyLookups(s,interests);
+    if (old && sameLookupInputs(s,interests,old.snapshot)) return old;
+    var lookup = constituencyLookups(s,interests,true);
     if (lookup) {
       if (!read.entries) read.entries = Object.create(null);
-      read.entries[rid] = lookupSnapshot(s,interests,lookup);
+      read.entries[rid] = lookup;
     } else if (read.entries) delete read.entries[rid];
     return lookup;
   }

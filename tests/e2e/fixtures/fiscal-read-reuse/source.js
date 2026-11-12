@@ -12,7 +12,7 @@ function source(file, text, reference) {
   if (file === files[0]) {
     if (reference) replace('  A.withFiscalRead = function (s,context,read,projection) {',
       '  A.withFiscalRead = function (s,context,read,projection) {\n    return read();');
-    replace('  function constituencyLookups(s,interests) {','  function constituencyLookups(s,interests) {\n    if (window.fiscalReadCounts) window.fiscalReadCounts.builds++;');
+    replace('  function constituencyLookups(s,interests,track) {','  function constituencyLookups(s,interests,track) {\n    if (window.fiscalReadCounts) window.fiscalReadCounts.builds++;');
     replace('  function fiscalConstituencyLookups(s,rid,interests) {','  function fiscalConstituencyLookups(s,rid,interests) {\n    if (window.fiscalReadCounts) window.fiscalReadCounts.requests++;');
   } else if (file === files[1]) {
     if (reference) replace('    const world = FB.localInstitutionOfficeInputs(state), local = world.local, bookmark = world.bookmark;',
