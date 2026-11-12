@@ -30,7 +30,11 @@ async function boot(page,info,kind,options) {
     await page.locator('#ng-seed').press('Enter');await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();await page.getByRole('button',{name:'Begin',exact:true}).click();
   }
-  await page.evaluate(function(){FB.game.setPaused(true);});
+  await page.evaluate(function(kind){
+    FB.game.setPaused(true);
+    // Paid output needs a real buyer with cash above its current public reserves.
+    FB.state.realms[kind==='paper'?'supplier_bank_court':'resource_fold_court'].treasury.gold=10000;
+  },kind);
 }
 for(const kind of ['paper','metal']){
   test(kind+' real import retains exact catalogue costs and scope with no passive awards or invented stock',async function({page},info){
@@ -50,8 +54,7 @@ for(const kind of ['paper','metal']){
       if(kind==='paper')move('fiber_delivery',2,'transfer');else {move('ore_purchase',2,'buy');move('fuel_purchase',1,'buy');}
       const recipeId=kind==='paper'?'workshop_papermaking':'bloomery_smelting',site=kind+'_plant',recipe=FBDATA.productionRecipes[recipeId];
       const q=P.aiQuote(s,site,'reserve',{recipeId:recipeId,disposition:'store'}),payerBefore=P.account(s,q.request.actor).funds.available;
-      if(!q.allowed)throw new Error('Rejected funded reserve: '+JSON.stringify({reason:q.reason,short:q.short,funds:q.funds,water:q.water,missingTech:q.missingTech,
-        outlets:E.compilePrepared(FB.campaignBookmark(s),P.compile(FB.campaignBookmark(s)).sites).routes.filter(function(r){return r.fromSiteId===site;}).map(function(r){const sale=E.aiQuote(s,r.id,1,'sell');return {route:r.id,reason:sale.reason,cost:sale.cost,demand:sale.remainingDemand,budget:sale.remainingBudget,buyer:sale.buyer,sellerIdentity:sale.sellerIdentity,buyerIdentity:sale.buyerIdentity,funds:sale.buyer && P.account(s,sale.buyer).funds};})}));
+      if(!q.allowed)throw new Error('Rejected funded reserve: '+q.reason);
       const batch=P.commit(s,q),paid=payerBefore-P.account(s,q.request.actor).funds.available,again=P.commit(s,q);
       if(!batch)throw new Error('Allowed funded reserve failed to commit');
       const noEarlyFinish=P.commit(s,P.aiQuote(s,site,'finish',{batchId:batch}));
