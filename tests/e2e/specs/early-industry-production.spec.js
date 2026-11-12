@@ -178,7 +178,7 @@ for(const width of [390,1280])test(width+'px shared production and technology re
   await page.setViewportSize({width:width,height:844});await boot(page,info,'paper');
   await page.evaluate(function(){FB.ui.closeModal();FB.ui.showSettlement('baghdad',0);});await page.locator('#settlement-production').click();
   await expect(page.locator('#gm-body')).toContainText('Make a paper lot');
-  const button=page.getByRole('button',{name:'Move one owned unit',exact:true});
+  const button=page.getByRole('button',{name:/^Move one owned unit\b/});
   await button.click();await page.keyboard.press('Escape');await expect(button).toBeFocused();
   expect(await page.locator('#gm-body').evaluate(function(el){return el.scrollWidth>el.clientWidth+1;})).toBe(false);
   await page.evaluate(function(){FB.ui.showTech();});const row=page.locator('.tech-entry[data-tech-open="paper_making"]');await row.click();
