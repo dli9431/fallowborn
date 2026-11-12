@@ -196,11 +196,12 @@ test('completed paper sale and depleted sources restore exactly without cash or 
   await boot(page,info,'paper');const r=await page.evaluate(function(){const s=FB.state,P=FB.production,E=FB.productionEconomy;s.player.gold=10000;
     E.commit(s,E.aiQuote(s,'fiber_delivery',2,'transfer'));const id=P.commit(s,P.aiQuote(s,'paper_plant','reserve',{recipeId:'workshop_papermaking',disposition:'store'}));
     P.perform(s,P.aiQuote(s,'paper_plant','work',{batchId:id}));P.perform(s,P.aiQuote(s,'paper_plant','work',{batchId:id}));
-    P.commit(s,P.aiQuote(s,'paper_plant','finish',{batchId:id}));const q=E.aiQuote(s,'paper_sale',1,'sell');E.commit(s,q);
-    const before=JSON.stringify([s.production,s.siteResources,s.player.gold,s.realms]),saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
+    P.commit(s,P.aiQuote(s,'paper_plant','finish',{batchId:id}));const q=E.aiQuote(s,'paper_sale',1,'sell');
+    if(!E.commit(s,q))throw new Error('Restore requires a completed paper sale: '+q.reason);
+    const before=JSON.parse(JSON.stringify([s.production,s.siteResources,s.player.gold,s.realms])),saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
     P.initialize(FB.state);E.initialize(FB.state);P.validate(FB.state);
-    return {same:before===JSON.stringify([FB.state.production,FB.state.siteResources,FB.state.player.gold,FB.state.realms]),repeat:E.commit(FB.state,q)};});
-  expect(r).toEqual({same:true,repeat:false});
+    return {before:before,after:JSON.parse(JSON.stringify([FB.state.production,FB.state.siteResources,FB.state.player.gold,FB.state.realms])),repeat:E.commit(FB.state,q)};});
+  expect(r.after).toEqual(r.before);expect(r.repeat).toBe(false);
 });
 test('funded metal work survives an expired construction window and a lost research gate',async function({page},info){
   await boot(page,info,'metal');const r=await page.evaluate(function(){const s=FB.state,P=FB.production,E=FB.productionEconomy;s.player.gold=10000;
