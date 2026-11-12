@@ -10,7 +10,7 @@
 
    Modes:
      node measure/season-timing.js measure --game <dir> --out <file>
-       [--seasons 4] [--shard 1/8] [--only <id,id>] [--port 4180]
+       [--seasons 4] [--shard 1/8] [--only <id,id>] [--port 4180] [--read-audit]
      node measure/season-timing.js report --in <dir-or-file> --out <file>
        [--summary <file.md>] [--baseline <file>]
 
@@ -339,18 +339,27 @@ function profileHotSpots(profile, count) {
     });
 }
 
-async function measureStart(browser, url, start, seasons, profileDir) {
+async function measureStart(browser, url, start, seasons, profileDir, auditGame) {
   const context = await newContext(browser);
+  let page;
   const result = { id:start.id, bookmark:start.bookmark, scenario:start.scenario,
     ruler:start.ruler, code:start.code, status:'ok', seasons:[], pageErrors:[] };
   try {
-    const page = await context.newPage();
+    page = await context.newPage();
+    if (auditGame) {
+      const audit = require('../fixtures/residual-read-audit/probe');
+      for (const file of audit.paths) {
+        const body = audit.instrument(file,fs.readFileSync(path.join(auditGame,file),'utf8'));
+        await page.route('**/' + file,function (route) { return route.fulfill({contentType:'application/javascript',body:body}); });
+      }
+    }
     page.on('pageerror', function (error) {
       if (result.pageErrors.length < 5) result.pageErrors.push(String(error && error.message || error));
     });
     await openReady(page, url);
     if (!(await beginStart(page, start))) throw new Error('Profiler unavailable on this origin or build');
     result.start = await page.evaluate(workloadInPage);
+    if (auditGame) await page.evaluate(require('../fixtures/residual-read-audit/probe').install);
     const cdp = profileDir ? await context.newCDPSession(page) : null;
     if (cdp) {
       await cdp.send('Profiler.enable');
@@ -360,6 +369,7 @@ async function measureStart(browser, url, start, seasons, profileDir) {
       const from = await page.evaluate(workloadInPage);
       const season = { index:index, from:from.date, days:0, bursts:0, elapsedMs:0,
         simulationMs:0, reasons:[], rows:{}, counters:{} };
+      if (auditGame) await page.evaluate(function () { window.__residualReadAudit.reset(); });
       if (cdp) await cdp.send('Profiler.start');
       let guard = 0, done = false;
       while (!done && guard++ < 16) {
@@ -395,6 +405,7 @@ async function measureStart(browser, url, start, seasons, profileDir) {
         season.cpuProfile = file;
         season.cpuTop = profileHotSpots(profile, 15);
       }
+      if (auditGame) season.readAudit = await page.evaluate(function () { return window.__residualReadAudit.snapshot(); });
       season.to = (await page.evaluate(workloadInPage));
       season.msPerDay = season.days ? round(season.simulationMs / season.days, 2) : null;
       season.elapsedMs = round(season.elapsedMs);
@@ -414,12 +425,17 @@ async function measureStart(browser, url, start, seasons, profileDir) {
     result.status = 'failed';
     result.error = String(error && error.message || error).split('\n')[0];
   } finally {
+    if (auditGame && page) {
+      try { await page.evaluate(function () { if (window.__residualReadAudit) window.__residualReadAudit.stop(); }); }
+      catch (error) { result.status = 'failed'; result.error = 'Read audit cleanup: ' + String(error.message || error).split('\n')[0]; }
+    }
     await context.close();
   }
   return result;
 }
 
 async function measure(args) {
+  if (args['read-audit'] && args['cpu-profile']) throw new Error('Read counters and CPU profiles require separate captures');
   const { chromium } = require('@playwright/test');
   const game = path.resolve(args.game || path.join(__dirname, '..', '..', '..'));
   const port = Number(args.port) || 4180;
@@ -429,7 +445,7 @@ async function measure(args) {
   const browser = await chromium.launch();
   const output = { mode:'measure', generated:new Date().toISOString(), seasons:seasons,
     gameCommit:process.env.GAME_COMMIT || null, gameRef:process.env.GAME_REF || null,
-    browser:browser.version(), cpuProfile:!!args['cpu-profile'],
+    browser:browser.version(), cpuProfile:!!args['cpu-profile'], readAudit:!!args['read-audit'],
     starts:[] };
   try {
     const catalogue = await enumerate(browser, url);
@@ -451,7 +467,7 @@ async function measure(args) {
       const began = Date.now();
       // --cpu-profile records a V8 CPU profile per season; pair it with --only for a few starts.
       const profileDir = args['cpu-profile'] ? path.join(path.dirname(path.resolve(args.out)), 'cpuprofiles') : null;
-      const result = await measureStart(browser, url, start, seasons, profileDir);
+      const result = await measureStart(browser, url, start, seasons, profileDir,args['read-audit'] ? game : null);
       result.wallSeconds = round((Date.now() - began) / 1000);
       output.starts.push(result);
       console.log(start.id + ': ' + result.status + ' ' + result.seasons.map(function (s) {
@@ -479,6 +495,7 @@ function readMeasurements(input) {
     merged.seasons = data.seasons;
     merged.gameCommit = data.gameCommit;
     merged.gameRef = data.gameRef;
+    merged.readAudit = merged.readAudit || !!data.readAudit;
     merged.versions[data.version] = true;
     merged.unsupported = merged.unsupported || !!data.unsupported;
     merged.starts = merged.starts.concat(data.starts);
@@ -596,6 +613,9 @@ function markdown(merged, analysis) {
   if (merged.notOffered && merged.notOffered.length) {
     lines.push('', 'Requested but not offered by this build: ' + merged.notOffered.join(', ') + '.');
   }
+  if (merged.readAudit) return lines.concat('',
+    'Read-audit counter capture. Instrumented times are diagnostic only; speed rankings and comparisons are disabled.',
+    'Each season retains its readAudit counters in report.json.').join('\n') + '\n';
   lines.push('');
   lines.push('### Flags');
   lines.push('');
@@ -671,7 +691,7 @@ function markdown(merged, analysis) {
 function report(args) {
   const merged = readMeasurements(args.in);
   const baseline = args.baseline && fs.existsSync(args.baseline) ? readMeasurements(args.baseline) : null;
-  const analysis = analyze(merged, baseline);
+  const analysis = merged.readAudit ? {flags:[],ranked:[]} : analyze(merged, baseline);
   const output = Object.assign({ mode:'report' }, merged, { flags:analysis.flags, ranked:analysis.ranked });
   delete output.versions;
   output.versions = Object.keys(merged.versions);
