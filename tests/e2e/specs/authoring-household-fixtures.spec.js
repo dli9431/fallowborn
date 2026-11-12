@@ -1,11 +1,13 @@
 'use strict';
 const {test,expect}=require('../support/fixture');
+const path=require('path');
 const {openGame}=require('../support/game/navigation');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
 test.describe.configure({mode:'parallel'});
 dependsOnRuntime(__filename,['index.html','data/counties.js','data/bookmarks.js','data/starts.js',
-  'js/mods.js','js/starts.js','js/stories.js','js/story_household.js','js/world.js','js/main.js']);
+  'js/mods.js','js/starts.js','js/stories.js','js/story_household.js','js/world.js','js/main.js','js/ui_misc.js','js/ui_modals.js']);
 
 const fixtures=[
   {file:'baths-headworks-upland.json',mod:require('../fixtures/authoring/baths-headworks-upland.json')},
@@ -26,9 +28,28 @@ for(const fixture of fixtures){
     await openGame(page,info);
     const result=await page.evaluate(function(mod){
       const before=JSON.stringify([FBDATA,FB.state]),rng=FB.getRngState(),uid=FB.getUidCounter();
-      const faults=FB.mods.validate(mod);
-      return {faults:faults,pure:before===JSON.stringify([FBDATA,FB.state])&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
+      const faults=FB.mods.validate(mod),bad=JSON.parse(JSON.stringify(mod));
+      const start=bad.startScenarios.find(function(s){return !s.rulerRealmId;});
+      if(start.fixedProvinceId)delete start.startCulture;
+      else start.birthplaces.counties=['missing_fixture_county'];
+      return {faults:faults,rejected:FB.mods.validate(bad).length>0,
+        pure:before===JSON.stringify([FBDATA,FB.state])&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
     },fixture.mod);
-    expect(result.faults,fixture.file).toEqual([]);expect(result.pure).toBe(true);
+    expect(result.faults,fixture.file).toEqual([]);expect(result.rejected).toBe(true);expect(result.pure).toBe(true);
+  });
+}
+
+for(const selection of [
+  {file:'household-work.json',bookmark:'867',scenario:'bench_work_example_start',county:'paris'},
+  {file:'baths-headworks-upland.json',bookmark:'resource_upland',scenario:'resource_upland_household',county:'resource_fold'}
+]){
+  test(selection.file+' imports a real household at its intended county',async function({page},info){
+    await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
+    await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+selection.file));
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
+    await beginBookmarkFromTitle(page,selection.bookmark,selection.scenario);
+    expect(await page.evaluate(function(){return {scenario:FB.state.start.scenarioId,county:FB.state.player.provinceId};}))
+      .toEqual({scenario:selection.scenario,county:selection.county});
   });
 }

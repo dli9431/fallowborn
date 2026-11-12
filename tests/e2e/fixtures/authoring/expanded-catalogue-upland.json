@@ -2151,6 +2151,7 @@
           "rank": 1,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Arno Stone",
             "culture": "frankish",
             "born": 918,
@@ -2176,6 +2177,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 918,
@@ -2200,6 +2202,7 @@
           "rank": 3,
           "government": "territorial",
           "ruler": {
+            "sex": "m",
             "name": "Arno Stone",
             "culture": "frankish",
             "born": 918,
@@ -2216,6 +2219,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Arno Stone",
             "culture": "frankish",
             "born": 918,
@@ -2238,6 +2242,7 @@
           "rank": 1,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 918,
@@ -2260,6 +2265,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Arno Stone",
             "culture": "frankish",
             "born": 918,
@@ -2276,6 +2282,7 @@
           "rank": 1,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 918,
@@ -2292,6 +2299,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "norse",
             "born": 918,
@@ -2311,6 +2319,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "f",
             "name": "Edda Rain",
             "culture": "norse",
             "born": 918,
@@ -2327,6 +2336,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Kari Fell",
             "culture": "norse",
             "born": 918,
@@ -2343,6 +2353,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 918,
@@ -2359,6 +2370,7 @@
           "rank": 1,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 918,
@@ -2375,6 +2387,7 @@
           "rank": 3,
           "government": "territorial",
           "ruler": {
+            "sex": "m",
             "name": "Arno Stone",
             "culture": "frankish",
             "born": 918,
@@ -2391,6 +2404,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Arno Stone",
             "culture": "frankish",
             "born": 918,
@@ -2407,6 +2421,7 @@
           "rank": 1,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 918,
@@ -2423,6 +2438,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Arno Stone",
             "culture": "frankish",
             "born": 918,
@@ -2439,6 +2455,7 @@
           "rank": 1,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 918,
