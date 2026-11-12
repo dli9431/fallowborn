@@ -1597,6 +1597,7 @@ window.FB = window.FB || {};
     return { array:Array.isArray(value), keys:keys, values:values };
   }
   function sameOfficeInput(value, snapshot) {
+    if (value === snapshot || value === undefined && snapshot === null) return true;
     const type = typeof value;
     if (type === 'function') return false;
     if (value === undefined || type === 'symbol' ||
