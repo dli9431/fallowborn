@@ -418,6 +418,36 @@ The 800 opening retains Byzantine possession of Palermo, Messina and Syracuse wi
 The fresh 476 opening uses wider_v1, which adds the Sasanian aristocratic court households to balkans_v1. balkans_v1 stays in the catalogue and core_v1 remains the legacy revision for unversioned openings. data/aristocratic_courts.js clones the current 476 opening and revises the Sasanian realm declaration, leaving the regional sources and other dated bookmarks intact. Opening validation requires the declared compact royal court, adult local households, owned family scopes and any declared governor actor. Restore uses the saved revision and saved form; it never calls aristocratic seeding to repair an earlier life. See docs/designs/aristocratic-monarchy.md.
 Revision catalogue compatibility
 
+Public world lookup reuse
+
+FB.bookmark and FB.campaignBookmark share a resolved revision while its resolution
+inputs are unchanged. The session cache is scoped to the exact FBDATA root and
+bookmark table, keyed by definition object and requested revision (including an
+omitted request). It observes the selected revision, revision-table identity,
+own enumerable fields of the root, baseline and selected layer, and the selected
+opening alias target. Added, removed, reordered or replaced fields invalidate the entry;
+nested records remain the same shared catalogue references as before. Invalid
+requests still pass through the original resolver and errors are never cached.
+
+Composition publication, catalogue reload, mod installation/removal and
+distribution content profiles replace those roots or definitions; in-place
+revision registration and field edits are detected on the next lookup. Switching
+FBDATA for detached mod validation discards the previous scope on lookup, including
+when returning to the installed catalogue. Direct revision validation and
+bookmarkRevisions remain uncached. No signature, fingerprint or saved field changes.
+
+Consumers treat returned worlds as read-only. Activation's title normalization
+and geography preparation produce their own wrapper before installing
+FB.activeBookmark; simulation writes campaign records, not world declarations.
+The lookup caller audit covers system and balance queries, starts, activation,
+save validation, story readers, institutions, mobile and production readers.
+Those consumers already read declarations or copy records before changing them.
+The focused resolved-world-cache specification freezes lookup wrappers during
+creation and effective worlds during a bounded season, comparing the original
+uncached resolver's saves, catalogues, revisions, signatures, fingerprints, RNG
+and UID at opening, day 30 and day 90. It also checks revision errors, direct
+catalogue edits, detached scopes and JSON mod installation/removal.
+
 A revision may use opening as a string naming an entry in its effective openingRevisions catalogue. Resolution installs that retained declaration and sets openingRevision to the same id. Existing object-valued openings remain supported. This gives data authors whole-field replacement without an engine patch language. Unknown opening aliases fail before activation.
 
 Released baseline hashes are checked independently of the current fresh revision. Era government defaults stay frozen, and revised courts declare their forms per realm. Retained saves continue selecting their own revision and form records. Fresh faith assignment rejects legacy profiles; retained revisions still validate against them. No government retrofit or world regeneration is performed on restore.
