@@ -341,13 +341,13 @@ test('generated-provider proof cannot escape its exact field or effective revisi
     wrongRevision.revisions={baseline:{provinces:provinces},current:{provinces:base.provinces}};
     const retained=FB.validateBookmark(wrongRevision),
       wrongReference=JSON.parse(JSON.stringify(FBDATA.storyInstances));
-    wrongReference.harbor_offices.realmId='c_harbor_meadow';
+    wrongReference.harbor_preparation.realmId='c_harbor_meadow';
     const context=FB.stories.compile(wrongReference),unrelated=FB.validateBookmark(base,false,context);
     const required=JSON.parse(JSON.stringify(FBDATA.storyInstances));
-    required.harbor_candidacy.requirements.realms.push('c_harbor_meadow');
+    required.harbor_preparation.requirements={realms:['c_harbor_meadow']};
     const requirements=FB.validateBookmark(base,false,FB.stories.compile(required));
     return {retained:retained.some(function(e){return e.indexOf('opening direct-holder jurisdiction')>=0;}),
-      unrelated:unrelated.some(function(e){return e.indexOf('story harbor_offices: realmId references unknown id c_harbor_meadow')>=0;}),
+      unrelated:unrelated.some(function(e){return e.indexOf('story harbor_preparation: realmId references unknown id c_harbor_meadow')>=0;}),
       requirements:requirements.some(function(e){return e.indexOf('unknown realms requirement c_harbor_meadow')>=0;}),
       pure:before===JSON.stringify([FB.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter()};
   });
