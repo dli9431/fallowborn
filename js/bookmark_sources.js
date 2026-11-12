@@ -123,15 +123,14 @@
       var result = Array.isArray(row) ? [] : {};
       memo.set(row,result);
       Object.keys(row).forEach(function (key) { result[key] = clone(row[key]); });
+      FB.contentValues.copied(row,result);
       return result;
     }
     return clone(o);
   }
   function list(o) { return Array.isArray(o) ? o : []; }
   function canonical(o) {
-    if (Array.isArray(o)) return '[' + o.map(canonical).join(',') + ']';
-    if (o && typeof o === 'object') return '{' + Object.keys(o).sort().map(function (key) { return JSON.stringify(key) + ':' + canonical(o[key]); }).join(',') + '}';
-    return JSON.stringify(o);
+    return FB.contentValues.canonical(o);
   }
   function error(source,ids,message) {
     faults.push({source:source,bookmarks:ids.slice(),message:message});

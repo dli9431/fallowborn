@@ -52,8 +52,9 @@ window.FBMODS = window.FBMODS || [];
     });
     var serialized = null;
     try {
-      serialized = JSON.stringify(definitions);
-      baseCatalogues = Object.assign({}, FBDATA, JSON.parse(serialized));
+      var snapshot = FB.contentValues.jsonSnapshot(definitions);
+      if (started !== null) serialized = JSON.stringify(snapshot);
+      baseCatalogues = Object.assign({}, FBDATA, snapshot);
     } finally {
       timeEnd('base_snapshot', started, { roots:Object.keys(definitions).length,
         jsonCodeUnits:serialized === null ? 0 : serialized.length, accepted:!!baseCatalogues });
@@ -66,15 +67,12 @@ window.FBMODS = window.FBMODS || [];
 
   /* Canonical JSON and synchronous SHA-256 keep file:// saves independent of
      WebCrypto availability. This runs at mod installation, never per tick. */
+  var valueFingerprints = new WeakMap();
   M.fingerprint = function (value) {
-    function canonical(row) {
-      if (Array.isArray(row)) return '[' + row.map(canonical).join(',') + ']';
-      if (row && typeof row === 'object') return '{' + Object.keys(row).sort().map(function (key) {
-        return JSON.stringify(key) + ':' + canonical(row[key]);
-      }).join(',') + '}';
-      return JSON.stringify(row);
-    }
-    var text = canonical(JSON.parse(JSON.stringify(value))), bytes = [];
+    var normalized = FB.contentValues.jsonSnapshot(value);
+    var retained = normalized && typeof normalized === 'object';
+    if (retained && valueFingerprints.has(normalized)) return valueFingerprints.get(normalized);
+    var text = FB.contentValues.canonical(normalized), bytes = [];
     for (var i = 0; i < text.length; i++) {
       var c = text.charCodeAt(i);
       if (c >= 0xd800 && c <= 0xdbff && i + 1 < text.length &&
@@ -120,7 +118,9 @@ window.FBMODS = window.FBMODS || [];
       }
       [a,b,c0,d,e,f,g,h0].forEach(function (n, index) { h[index] = (h[index] + n) | 0; });
     }
-    return h.map(function (n) { return ('00000000' + (n >>> 0).toString(16)).slice(-8); }).join('');
+    var fingerprint = h.map(function (n) { return ('00000000' + (n >>> 0).toString(16)).slice(-8); }).join('');
+    if (retained) valueFingerprints.set(normalized,fingerprint);
+    return fingerprint;
   };
 
   function own(obj, key) {
@@ -3042,9 +3042,10 @@ window.FBMODS = window.FBMODS || [];
       // The complete gate below includes world checks for every revision.
       // Mandatory-only reviews still run the world gate before adding starts.
       var ids = composition ? (composition.complete ? [] : [composition.worldId]) : Object.keys(staged.bookmarks);
+      var bookmarkErrors = composition ? null : FB.validateBookmarks(ids.map(function (id) { return staged.bookmarks[id]; }), stories, false, true);
       for (var i = 0; i < ids.length; i++) {
         var errors = composition ? [].concat.apply([], FB.validateBookmarkWorlds(FB.bookmarkRevisions(ids[i], staged.bookmarks[ids[i]]), stories))
-          : FB.validateBookmark(staged.bookmarks[ids[i]], false, stories);
+          : bookmarkErrors[i];
         if (errors.length) fail('requirements', errors.join(' '));
       }
       var compositionStarts = composition && mod.startScenarios || [];

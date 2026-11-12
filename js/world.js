@@ -2566,10 +2566,27 @@ window.FB = window.FB || {};
     catch (error) { return [error.message]; }
     return FB.validateBookmark(definition, true, storyContext, true);
   };
-  FB.validateBookmarkWorlds = function (definitions, storyContext) {
+  // One candidate owns this synchronous batch. Repeated definition references
+  // share their result, but no proof escapes to a later candidate or call.
+  FB.validateBookmarks = function (definitions, storyContext, worldOnly, stopOnFaults) {
     return withValidationCatalogues(function () {
-      return definitions.map(function (definition) { return FB.validateBookmarkWorld(definition,storyContext); });
+      var reviewed = new WeakMap(), results = [];
+      for (var i = 0; i < definitions.length; i++) {
+        var definition = definitions[i], cacheable = definition && typeof definition === 'object';
+        var faults = cacheable && reviewed.get(definition);
+        if (!faults) {
+          faults = worldOnly ? FB.validateBookmarkWorld(definition,storyContext)
+            : FB.validateBookmark(definition,false,storyContext);
+          if (cacheable) reviewed.set(definition,faults);
+        }
+        results.push(faults.slice());
+        if (stopOnFaults && faults.length) break;
+      }
+      return results;
     });
+  };
+  FB.validateBookmarkWorlds = function (definitions, storyContext) {
+    return FB.validateBookmarks(definitions,storyContext,true);
   };
 
   /* Raster results are cached per bookmark and geography base. */

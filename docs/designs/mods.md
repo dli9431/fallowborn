@@ -13,6 +13,25 @@ The strict schema and bounds are in docs/MODDING.md.
 
 # Mods
 
+Complete preparation values
+
+`FB.contentValues` owns immutable internal snapshots and their canonical text.
+Snapshot reuse checks every mutable descendant and ordered own key on every
+request; edits, deletions, replacements, array length changes and reordered keys
+create new values. Only internal frozen snapshots bypass that inspection.
+The complete mod baseline retains these read-only definitions, while candidate
+tables and installed public data remain separate. Canonical text and SHA-256
+results attach to exact immutable values through weak maps, never to a mod name
+or catalogue id. JSON conversion retains the prior undefined, sparse-array,
+nonfinite-number and `toJSON` semantics. Effective signatures keep their existing
+format and inputs; no save field or compatibility exception is introduced.
+
+Whole-import bookmark review now shares catalogue-only checks across the one
+synchronous candidate batch. Repeated references to one definition share a
+detached fault result within that batch. The first faulty bookmark still stops
+an import in source order. No validation result survives the batch, an exception,
+an in-place edit between calls or a switch to another candidate catalogue.
+
 Native legal catalogue parity
 
 Trusted composition accepts legalTraditions through the existing ordinary JSON
