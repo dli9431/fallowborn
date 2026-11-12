@@ -85,6 +85,14 @@ Register with FB.governments.register(slot, id, implementation). An empty regist
 
 Runtime cache and saved state
 
+Public FB.governments.resolve validates each invocation and throws the named
+error for its first problem. A forRealm cache miss validates once, returning
+null for an invalid form or constructing the resolved rule set immediately
+after successful validation. Both paths share private construction without an
+intervening action, yield or strategy callback. Cache hits do not revalidate.
+Editing a definition in place still requires explicit invalidation; replacing
+the definition or its table is detected by identity.
+
 FB.governments.forRealm reads authority.governments[realmId].formId, otherwise start.defaultGovernment, otherwise the legacy territorial default. A transient WeakMap caches the resolved strategy set per state and day. A changed saved form id, replaced definition, changed definitions table, explicit invalidation or new state forces resolution. Mod application invalidates after changing a form in place. Same-day changes are visible immediately. County settlement batches retain their resolved form within the synchronous projection. No resolution, cache or parameter copy is serialized, and reads never create authority records. A missing/dead realm uses the named shared fallback at legacy household and invalid-input boundaries; an invalid named form on a living realm fails closed. Profiling counts Government strategy resolutions through the existing opt-in profiler.
 
 Consumer inventory and interfaces

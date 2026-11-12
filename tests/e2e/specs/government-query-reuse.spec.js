@@ -8,6 +8,11 @@ const {mockCrazyGames} = require('../support/crazygames');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
+  'js/government_selection.js','js/government_continuity.js','js/government_collective.js',
+  'js/government_levy.js','js/government_revenue.js','js/government_council.js','js/government_diplomacy.js',
+  'js/government_ai.js','js/government_support.js','js/government_lineage.js','js/government_elective.js',
+  'js/government_assembly.js','js/mobile_confederations.js','js/civic_strategies.js','js/ecclesiastical_strategies.js',
+  'data/mobile_confederations.js','data/civic_profiles.js','data/ecclesiastical_profiles.js',
   'js/systems.js','js/politics.js','js/religion.js','data/eras.js','data/cultures.js',
   'index.html','data/aristocratic_courts.js','data/bookmark_476.js','data/bookmark_476_wider.js',
   'data/bookmark_1096.js','data/bookmark_1204.js','data/systems.js','data/assembly_polities.js','data/political_institutions.js',
@@ -374,6 +379,7 @@ test('ordinary JSON profile removal discards warmed constituency reads and resto
 async function injectScalar(page) {
   for (const file of ['scalar-reference.js','scalar-probe.js'])
     await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/government-query-reuse/'+file)});
+  await injectResolver(page);
 }
 
 function scalarMod(enabled) {
@@ -406,6 +412,7 @@ async function scalarOpening(page,thorough) {
     if (thorough) H.compare(s,[ref],[context],FB.systems.ids());
     if (!FB.authoritySetGovernment(s,rid,'scalar_court')) throw new Error('Could not select imported form');
     H.compare(s,[ref],[context],thorough ? FB.systems.ids() : ['royal_council']);
+    GOV_RESOLVER.pure(s,function () { GOV_RESOLVER.compare(s,rid); });
     return {rid:rid,enabled:FB.systemEnabled(s,'royal_council',context),form:Q.governmentFormId(s,ref),
       count:FB.mods.count(),signature:FB.mods.sig()};
   },thorough);
@@ -430,6 +437,7 @@ async function scalarModFacts(page) {
     const enabled=FB.systemEnabled(s,'royal_council',context);
     FB.save.restore(envelope);
     H.compare(FB.state,[ref],[context],FB.systems.ids());
+    GOV_RESOLVER.pure(FB.state,function () { GOV_RESOLVER.compare(FB.state,rid); });
     return {enabled:enabled,restored:FB.systemEnabled(FB.state,'royal_council',context)===enabled,
       form:Q.governmentFormId(FB.state,ref),matching:!FB.save.otherWorld(envelope),count:FB.mods.count(),
       signature:signature,rejected:rejected,pure:pure};
@@ -468,6 +476,7 @@ test('ordinary JSON government removal discards warmed scalar answers and restor
   const result=await page.evaluate(function () {
     const s=FB.state,ref={kind:'realm',id:'sasanian_476'};
     GOV_SCALAR.compare(s,[ref],[undefined,{realm:ref.id,faith:null,bookmark:{}}],FB.systems.ids());
+    GOV_RESOLVER.pure(s,function () { GOV_RESOLVER.compare(s,ref.id); });
     return {absent:!FBDATA.governmentForms.scalar_court,count:FB.mods.count(),signature:FB.mods.sig(),
       form:FB.political.governmentFormId(s,ref)};
   });
@@ -582,6 +591,72 @@ for (const family of ['rows','forms','defaults','actors','contexts']) {
   }
 }
 
+async function injectResolver(page) {
+  for (const file of ['resolver-reference.js','resolver-probe.js'])
+    await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/government-query-reuse/'+file)});
+}
+
+for (const bookmark of ['476','1096','1204']) {
+  for (const crazygames of [false,true]) {
+    test(bookmark+' resolver misses validate once with reference parity and matching restore, distribution '+crazygames, async function ({page},info) {
+      await start(page,info,crazygames,bookmark); await injectResolver(page);
+      const result=await page.evaluate(function () {
+        const H=GOV_RESOLVER,R=GOV_RESOLVER_REFERENCE,G=FB.governments,s=FB.state;
+        const ids=Object.keys(s.realms).filter(function (rid) { return s.realms[rid].alive; });
+        const saved=FB.save.serialize(),envelope=JSON.parse(saved);
+        const rows=H.pure(s,function () {
+          G.invalidate(); R.invalidate();
+          const reference=H.measure(function () { return ids.map(function (rid) { return R.forRealm(s,rid); }); });
+          const candidate=H.measure(function () { return ids.map(function (rid) { return G.forRealm(s,rid); }); });
+          if (reference.result.error || candidate.result.error) throw new Error('Valid opening resolution failed');
+          candidate.result.value.forEach(function (form,i) {
+            if (!form) throw new Error('Living realm has no valid form: '+ids[i]);
+            H.resolved(form,reference.result.value[i]);
+          });
+          const hits=H.measure(function () {
+            return ids.every(function (rid,i) { return G.forRealm(s,rid)===candidate.result.value[i]; });
+          });
+          const referenceHits=H.measure(function () {
+            return ids.every(function (rid,i) { return R.forRealm(s,rid)===reference.result.value[i]; });
+          });
+          ids.forEach(function (rid) { H.compare(s,rid); });
+          Object.keys(FBDATA.governmentForms).forEach(function (id) {
+            if (H.resolve(id).error) throw new Error('Native form failed: '+id);
+          });
+          const direct=H.measure(function () { return G.resolve(candidate.result.value[0].id); });
+          return {reference:reference.counts,candidate:candidate.counts,hits:hits.counts,
+            referenceHits:referenceHits.counts,hitIdentity:hits.result.value && referenceHits.result.value,
+            direct:direct.counts};
+        });
+        const serialized=saved===FB.save.serialize(),restores=[];
+        for (let i=0;i<2;i++) {
+          FB.save.restore(H.copy(envelope));
+          H.pure(FB.state,function () { ids.forEach(function (rid) { H.compare(FB.state,rid); }); });
+          restores.push({different:FB.state!==s,matching:!FB.save.otherWorld(envelope),
+            rng:(FB.getRngState()>>>0)===(envelope.rng>>>0),uid:FB.getUidCounter()===envelope.uid,
+            stamp:FB.state.start.revision===envelope.state.start.revision});
+        }
+        return {realms:ids.length,rows:rows,serialized:serialized,restores:restores,distribution:FB.platform.isCrazyGames};
+      });
+      expect(result.realms).toBeGreaterThan(0);
+      expect(result.rows.reference.problems).toBe(result.realms*2);
+      expect(result.rows.candidate.problems).toBe(result.realms);
+      expect(result.rows.reference.strategyIds).toBe(result.realms*3);
+      expect(result.rows.candidate.strategyIds).toBe(result.realms*2);
+      expect(result.rows.reference.profiles).toBe(result.rows.candidate.profiles*2);
+      expect(result.rows.hits).toEqual({problems:0,strategyIds:0,profiles:0});
+      expect(result.rows.referenceHits).toEqual(result.rows.hits);
+      expect(result.rows.hitIdentity).toBe(true);
+      expect(result.rows.direct).toMatchObject({problems:1,strategyIds:2});
+      expect(result.serialized).toBe(true);
+      expect(result.restores).toEqual(Array(2).fill({different:true,matching:true,rng:true,uid:true,stamp:true}));
+      expect(result.distribution).toBe(crazygames);
+      await info.attach('government-validation-counts',{body:Buffer.from(JSON.stringify(result,null,2)),contentType:'application/json'});
+      console.log(bookmark+' distribution '+crazygames+' government validation counts: '+JSON.stringify(result.rows));
+    });
+  }
+}
+
 test('scalar system reads preserve layer precedence, fallback and immediate definition edits', async function ({page},info) {
   await start(page,info); await injectScalar(page);
   const result=await page.evaluate(function () {
@@ -687,3 +762,172 @@ for (const bookmark of ['476','1096','1204']) {
     console.log(bookmark+' government rules copy counts: '+JSON.stringify(counts));
   });
 }
+
+test('resolver cache matches fallback stamps, same-turn changes and existing in-place edit behavior', async function ({page},info) {
+  await openGame(page,info); await injectResolver(page);
+  const result=await page.evaluate(function () {
+    const H=GOV_RESOLVER,R=GOV_RESOLVER_REFERENCE,G=FB.governments,forms=FBDATA.governmentForms;
+    const initial={turn:0,realms:{court:{alive:true},dead:{alive:false}},start:{defaultGovernment:'regnum'},
+      authority:{governments:{court:{formId:'resolver_court'}}}};
+    const s=H.copy(initial),labels=[];
+    function reset() {
+      Object.assign(s,H.copy(initial));
+      FBDATA.governmentForms=Object.assign({},forms,{resolver_court:H.copy(forms.territorial)});
+      G.invalidate(); R.invalidate();
+    }
+    function check(label,edit,id) {
+      reset(); H.compare(s,'court'); edit();
+      const actual=H.pure(s,function () { return H.compare(s,'court'); });
+      if (actual.error || (actual.value && actual.value.id)!==id) throw new Error(label+': wrong form');
+      labels.push(label);
+    }
+    try {
+      check('same-turn form id',function () { s.authority.governments.court.formId='regnum'; },'regnum');
+      check('row replaced',function () { s.authority.governments.court={formId:'regnum'}; },'regnum');
+      check('authority replaced',function () { s.authority={governments:{court:{formId:'regnum'}}}; },'regnum');
+      check('missing authority',function () { delete s.authority; },'regnum');
+      check('missing row',function () { delete s.authority.governments.court; },'regnum');
+      for (const id of [undefined,null,false,0,''])
+        check('falsy stamp '+String(id),function () { s.authority.governments.court.formId=id; },'regnum');
+      check('unstamped default',function () { delete s.authority; delete s.start.defaultGovernment; },'territorial');
+      check('missing start',function () { delete s.authority; delete s.start; },'territorial');
+      check('unknown default',function () { delete s.authority; s.start.defaultGovernment='absent'; },null);
+      check('invalid saved stamp does not fall back',function () { s.authority.governments.court.formId='absent'; },null);
+      check('dead realm',function () { s.realms.court.alive=false; },null);
+      check('missing realm',function () { delete s.realms.court; },null);
+      check('replaced definition',function () {
+        FBDATA.governmentForms.resolver_court=Object.assign({},forms.regnum);
+      },'resolver_court');
+      check('replaced catalogue',function () {
+        FBDATA.governmentForms=Object.assign({},FBDATA.governmentForms,{resolver_court:H.copy(forms.regnum)});
+      },'resolver_court');
+      check('removed definition',function () { delete FBDATA.governmentForms.resolver_court; },null);
+      const boundaries=[];
+      for (const turn of [89,359]) {
+        reset(); const warm=G.forRealm(s,'court'); R.forRealm(s,'court');
+        s.turn=turn; s.date={year:476,season:turn===89 ? 0 : 3,day:89};
+        const measured=H.measure(function () { return G.forRealm(s,'court'); }); H.compare(s,'court');
+        boundaries.push({turn:turn,problems:measured.counts.problems,newResult:measured.result.value!==warm});
+      }
+      reset(); const warm=G.forRealm(s,'court'),reference=R.forRealm(s,'court');
+      FBDATA.governmentForms.resolver_court.holders='absent';
+      H.compare(s,'court');
+      const stale=H.measure(function () { return G.forRealm(s,'court'); });
+      const inPlace=stale.result.value===warm && R.forRealm(s,'court')===reference &&
+        warm.strategies.holders===forms.territorial.holders && !!H.resolve('resolver_court').error;
+      G.invalidate(); R.invalidate(); const invalidated=H.compare(s,'court').value===null;
+      // A cached null remains null after an in-place repair until invalidation.
+      FBDATA.governmentForms.resolver_court.holders='direct';
+      const nullHit=H.compare(s,'court').value===null && !H.resolve('resolver_court').error;
+      G.invalidate(); R.invalidate(); const repaired=!!H.compare(s,'court').value;
+      const cached=G.forRealm(s,'court'),cachedReference=R.forRealm(s,'court');
+      cached.strategies.holders='caller_changed'; cachedReference.strategies.holders='caller_changed';
+      H.compare(s,'court');
+      const returnedMutation=G.forRealm(s,'court')===cached && cached.strategies.holders==='caller_changed';
+      const other=H.copy(s); H.compare(other,'court');
+      const stateIdentity=G.forRealm(other,'court')!==cached && G.forRealm(other,'court').strategies.holders==='direct';
+      const missing=H.pure(s,function () {
+        return [null,{}, {realms:{}}].every(function (state) {
+          return H.compare(state,'court').value===null;
+        }) && H.compare(s,'absent').value===null && H.compare(s,'dead').value===null;
+      });
+      const early=H.measure(function () {
+        return [G.forRealm(null,'court'),G.forRealm({},'court'),G.forRealm(s,'absent'),G.forRealm(s,'dead')];
+      });
+      return {cases:labels.length,boundaries:boundaries,inPlace:inPlace,staleValidations:stale.counts.problems,
+        invalidated:invalidated,nullHit:nullHit,repaired:repaired,returnedMutation:returnedMutation,
+        stateIdentity:stateIdentity,missing:missing,early:early.counts};
+    } finally { FBDATA.governmentForms=forms; G.invalidate(); R.invalidate(); }
+  });
+  expect(result.cases).toBe(19);
+  expect(result.boundaries).toEqual([{turn:89,problems:1,newResult:true},{turn:359,problems:1,newResult:true}]);
+  expect(result).toMatchObject({inPlace:true,staleValidations:0,invalidated:true,nullHit:true,repaired:true,
+    returnedMutation:true,stateIdentity:true,missing:true});
+  expect(result.early).toEqual({problems:0,strategyIds:0,profiles:0});
+});
+
+test('resolver keeps delegated references, registry contracts, callback order and exception recovery', async function ({page},info) {
+  await openGame(page,info); await injectResolver(page);
+  const result=await page.evaluate(function () {
+    const H=GOV_RESOLVER,R=GOV_RESOLVER_REFERENCE,G=FB.governments,forms=FBDATA.governmentForms;
+    const contracts=G.interfaces(),profileFaults=FB.governmentSelection.profileFaults,log=[];
+    const s={turn:0,realms:{court:{alive:true}},authority:{governments:{court:{formId:'resolver_court'}}}};
+    const territory=Object.assign({},G.strategy('territory','fixed'),{profile:function (state,rid,context) {
+      log.push(rid+':'+context.marker); return {realm:rid,marker:context.marker,movingCourt:false};
+    }});
+    G.register('territory','resolver_target',territory);
+    G.register('territory','resolver_delegate',{delegate:'resolver_target',allowsTitleGrowth:false});
+    FBDATA.governmentForms=Object.assign({},forms,{resolver_court:Object.assign({},H.copy(forms.territorial),
+      {territory:'resolver_delegate',succession:'office',holders:'resolver_late'})});
+    try {
+      const beforeRegister=H.compare(s,'court').value===null;
+      const holder=Object.assign({},G.strategy('holders','direct'));
+      G.register('holders','resolver_late',holder); R.invalidate();
+      const registered=H.compare(s,'court').value;
+      const delegated=registered.use.territory!==territory && registered.use.territory.profile===territory.profile &&
+        registered.use.territory.allowsTitleGrowth===false && registered.use.succession.eligible===G.strategy('succession','dynastic').eligible;
+      log.length=0; H.compare(s,'court'); const callbackOrder=log.slice();
+      const outer=G.forRealm(s,'court');
+      holder.marker={live:true}; H.compare(s,'court');
+      const liveReference=G.forRealm(s,'court')===outer && outer.use.holders===holder && outer.use.holders.marker.live;
+      G.contract('holders',contracts.holders.concat(['resolverRequired'])); R.invalidate();
+      const incomplete=H.compare(s,'court').value===null;
+      const first=G.problems('resolver_court')[0];
+      holder.resolverRequired=function () { return true; };
+      const repairHit=H.compare(s,'court').value===null && !H.resolve('resolver_court').error;
+      G.invalidate(); R.invalidate(); const repaired=!!H.compare(s,'court').value;
+      G.contract('holders',contracts.holders); R.invalidate();
+      // Public-crown validation runs its real profile validator, once per miss.
+      FBDATA.governmentForms.resolver_court=H.copy(forms.elective_monarchy);
+      FBDATA.governmentForms.resolver_court.strategyParameters={ai:{warChance:0},council:{seats:[]}};
+      const candidate=H.measure(function () { return G.forRealm(s,'court'); });
+      const reference=H.measure(function () { return R.forRealm(s,'court'); });
+      H.resolved(candidate.result.value,reference.result.value);
+      const direct=H.measure(function () { return G.resolve('resolver_court'); });
+      G.invalidate(); R.invalidate();
+      FB.governmentSelection.profileFaults=function () { throw new Error('Resolver profile fixture failure'); };
+      const failed=H.compare(s,'court'); H.resolve('resolver_court');
+      FB.governmentSelection.profileFaults=profileFaults;
+      const recovered=H.measure(function () { return G.forRealm(s,'court'); }); H.compare(s,'court');
+      return {beforeRegister:beforeRegister,delegated:delegated,callbackOrder:callbackOrder,liveReference:liveReference,
+        incomplete:incomplete,first:first,repairHit:repairHit,repaired:repaired,candidate:candidate.counts,
+        reference:reference.counts,direct:direct.counts,failed:failed.error,recovered:recovered.counts};
+    } finally {
+      FB.governmentSelection.profileFaults=profileFaults; G.contract('holders',contracts.holders);
+      FBDATA.governmentForms=forms; G.invalidate(); R.invalidate();
+    }
+  });
+  expect(result).toMatchObject({beforeRegister:true,delegated:true,liveReference:true,incomplete:true,repairHit:true,repaired:true});
+  expect(result.callbackOrder).toEqual(['court:query','court:query']);
+  expect(result.first).toEqual({kind:'incomplete',slot:'holders',id:'resolver_late'});
+  expect(result.candidate).toEqual({problems:1,strategyIds:2,profiles:1});
+  expect(result.reference).toEqual({problems:2,strategyIds:3,profiles:2});
+  expect(result.direct).toEqual(result.candidate);
+  expect(result.failed).toEqual({name:'Error',message:'Resolver profile fixture failure'});
+  expect(result.recovered).toEqual(result.candidate);
+});
+
+test('same-turn government mod replacement invalidates warmed construction and preserves JSON dispatch parity', async function ({page},info) {
+  await openGame(page,info); await injectResolver(page);
+  const result=await page.evaluate(function (configs) {
+    const H=GOV_RESOLVER,R=GOV_RESOLVER_REFERENCE,G=FB.governments;
+    const s={turn:0,realms:{court:{alive:true}},authority:{governments:{court:{formId:'scalar_court'}}}};
+    const rows=[];
+    for (const config of configs) {
+      const previous=G.forRealm(s,'court');
+      FB.mods.apply(JSON.parse(JSON.stringify(config))); R.invalidate();
+      const measured=H.measure(function () { return G.forRealm(s,'court'); });
+      const actual=H.pure(s,function () { return H.compare(s,'court'); });
+      if (actual.error || !actual.value) throw new Error('Replacement form failed');
+      H.resolve('scalar_court');
+      rows.push({holders:actual.value.strategies.holders,changed:actual.value!==previous,
+        sameTurn:s.turn===0,validations:measured.counts.problems});
+    }
+    return rows;
+  },[scalarMod(true),scalarMod(false),scalarMod(true)]);
+  expect(result).toEqual([
+    {holders:'direct',changed:true,sameTurn:true,validations:1},
+    {holders:'feudal_vassals',changed:true,sameTurn:true,validations:1},
+    {holders:'direct',changed:true,sameTurn:true,validations:1}
+  ]);
+});
