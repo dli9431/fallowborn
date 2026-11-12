@@ -190,6 +190,7 @@ function install() {
   wrap(FB.aristocracy,'readiness','readiness');
   wrap(FB.political,'actor','actor');
   wrap(FB.political,'legitimacy','legitimacy');
+  wrap(FB,'systemEnabled','systemEnabled');
   const passDay = FB.game.passDay;
   FB.game.passDay = function () {
     const previous = cadence, s = FB.state;
