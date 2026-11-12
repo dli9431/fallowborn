@@ -96,7 +96,7 @@
       if (!chars) chars = Object.assign({}, state.chars);
       chars[id] = Object.assign({}, c, {id:id});
     });
-    if (chars) state = Object.assign({}, state, {chars:chars});
+    if (chars) state = FB.save._registerValidationAlias(state, Object.assign({}, state, {chars:chars}));
     // A live realm's true flag is omitted by the same wire codec. Supply
     // only that default before treasury and platform provenance checks;
     // explicit invalid flags and the caller's compact records stay untouched.
@@ -108,7 +108,7 @@
       if (!realms) realms = Object.assign({}, state.realms);
       realms[id] = Object.assign({}, r, {alive:true});
     });
-    if (realms) state = Object.assign({}, state, {realms:realms});
+    if (realms) state = FB.save._registerValidationAlias(state, Object.assign({}, state, {realms:realms}));
     // The wire codec omits settlement zero on physical building records.
     // All building validators must see that default, without expanding other
     // saved identities or mutating the caller's compact input.
@@ -121,7 +121,7 @@
         return plain(r) && !own(r, 's') ? Object.assign({}, r, {s:0}) : r;
       });
     });
-    if (buildings) state = Object.assign({}, state, {buildings:buildings});
+    if (buildings) state = FB.save._registerValidationAlias(state, Object.assign({}, state, {buildings:buildings}));
     if (FB.homeAuthority) FB.homeAuthority.validate(state);
     if (FB.industryLaws) FB.industryLaws.validate(state);
     if (FB.expeditionPrograms) FB.expeditionPrograms.validatePassagePolicies(state);
@@ -626,7 +626,7 @@
        this detached copy before validation (state-and-saves.md). */
     if (FB.stories) FB.stories.migrate(state);
     P.validateAuthority(state.authority, state);
-    P.validatePlatform(state);
+    FB.save._validatePlatform(state);
     if (state.authority) state.authority.schema = FB.save.FORMAT.authoritySchema;
     return Object.assign({}, data, FB.save.FORMAT, { state:state });
   };

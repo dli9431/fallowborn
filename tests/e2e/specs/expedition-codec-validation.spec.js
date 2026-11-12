@@ -8,19 +8,22 @@ const examples={harbor:require('../fixtures/authoring/adopted-public-treasury-ha
 
 dependsOnRuntime(__filename,['index.html','js/save.js','js/save_v4.js','js/world.js','js/model.js',
   'js/story_expedition_preparation.js','js/story_expedition_agreements.js','js/stories.js',
-  'js/bookmark_setup.js','js/starts.js','js/home_authority.js','js/treasury.js',
+  'js/bookmark_setup.js','js/starts.js','js/station.js','data/eras.js','js/home_authority.js','js/treasury.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/market.js','js/governments.js',
   'js/government_lineage.js','js/authority.js','js/population.js','js/expedition_programs.js']);
 
 async function start(page,info,prefix) {
   const mod=JSON.parse(JSON.stringify(examples[prefix])),b=mod.bookmarks[prefix+'_world'];
+  // Match the existing rank-two territorial court to the current ducal band.
+  mod.startScenarios.find(function (s) {return s.id===prefix+'_home_start';}).tier=5;
+  if (prefix==='dune') b.provinces.find(function (p) {return p.id==='dune_pass';}).dev=10;
   const id=prefix+'_codec_terms',prep=mod.storyInstances[prefix+'_preparation'];
   const declaration=b.revisions.local_policy.realms.find(function (r) {return r.id===prep.realmId;});
   mod.storyInstances[id]={id:id,type:'expedition_undertaking',name:'Independent records review',
     desc:'A fictional review retains its original people without granting passage or money.',
     requires:[prep.id],registrationAfter:prep.id,
     actor:{kind:'realm_ruler',realmId:prep.realmId},
-    source:{kind:'realm_ruler',realmId:prep.provider.realmId},
+    source:{kind:'realm_ruler',realmId:prefix==='harbor' ? 'harbor_commune' : 'dune_oasis'},
     kind:'limited_assurance',mode:'records_only',firstTurn:0,endTurn:prep.termDays+20,countyIds:[],
     waitForFormation:{preparationId:prep.id,commandId:declaration.mobile.command.id}};
   b.revisions.local_policy.stories.push(id);
@@ -53,6 +56,17 @@ async function start(page,info,prefix) {
 }
 
 async function checkpoint(page) {
+  expect(await page.evaluate(function () {
+    const S=FB.save,snapshot=S._validationSnapshot,expand=S.expandedSnapshot;
+    let requests=0,builds=0,reading=false;
+    S._validationSnapshot=function (s) {
+      requests++;reading=true;
+      try {return snapshot(s);} finally {reading=false;}
+    };
+    S.expandedSnapshot=function (s) {if (reading) builds++;return expand(s);};
+    try {S.serialize();return {requests:requests,builds:builds};}
+    finally {S._validationSnapshot=snapshot;S.expandedSnapshot=expand;}
+  })).toEqual({requests:3,builds:1});
   const result=await page.evaluate(function () {
     const C=codecCase,source=FB.save.serialize(),wire=JSON.parse(source),p=C.provider(wire.state);
     if (Object.prototype.hasOwnProperty.call(p.member,'charId') ||
