@@ -11,7 +11,7 @@ dependsOnRuntime(__filename,['index.html','data/buildings_early_industry.js','da
   'data/production.js','data/production_economy.js','data/site_resources.js','data/technology.js','data/technology_transmission.js',
   'js/production.js','js/production_economy.js','js/site_resources.js','js/actions.js','js/world.js','js/fortifications.js',
   'js/building_profiles.js','js/building_operations.js','js/building_seasons.js','js/market.js','js/economy.js','js/lordships.js','js/treasury.js',
-  'js/technology.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js','js/main.js','js/model.js']);
+  'js/technology.js','js/mods.js','js/save.js','js/save_v4.js','js/wars.js','js/util.js','js/ui_modals.js','js/ui_misc.js','js/main.js','js/model.js']);
 async function boot(page,info,kind,options) {
   options=options || {};await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
   if(options.revision){const m=JSON.parse(JSON.stringify(examples[kind]));m.bookmarks['early_industry_'+kind].revision=options.revision;
@@ -198,9 +198,15 @@ test('completed paper sale and depleted sources restore exactly without cash or 
     P.perform(s,P.aiQuote(s,'paper_plant','work',{batchId:id}));P.perform(s,P.aiQuote(s,'paper_plant','work',{batchId:id}));
     P.commit(s,P.aiQuote(s,'paper_plant','finish',{batchId:id}));const q=E.aiQuote(s,'paper_sale',1,'sell');
     if(!E.commit(s,q))throw new Error('Restore requires a completed paper sale: '+q.reason);
-    const before=JSON.parse(JSON.stringify([s.production,s.siteResources,s.player.gold,s.realms])),saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
+    function facts(t){
+      const realms=JSON.parse(JSON.stringify(t.realms));
+      // The compact codec restores omitted peace as null; retain actual war values and the canonical registry.
+      Object.keys(realms).forEach(function(rid){realms[rid].war=t.realms[rid].war || null;});
+      return JSON.parse(JSON.stringify([t.production,t.siteResources,t.player.gold,realms,t.wars,FB.getRngState()>>>0,FB.getUidCounter()]));
+    }
+    const before=facts(s),saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
     P.initialize(FB.state);E.initialize(FB.state);P.validate(FB.state);
-    return {before:before,after:JSON.parse(JSON.stringify([FB.state.production,FB.state.siteResources,FB.state.player.gold,FB.state.realms])),repeat:E.commit(FB.state,q)};});
+    return {before:before,after:facts(FB.state),repeat:E.commit(FB.state,q)};});
   expect(r.after).toEqual(r.before);expect(r.repeat).toBe(false);
 });
 test('funded metal work survives an expired construction window and a lost research gate',async function({page},info){

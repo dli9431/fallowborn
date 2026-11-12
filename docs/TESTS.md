@@ -1399,3 +1399,5 @@ Samples stage no retention history automatically; long-history compaction needs
 its own staged correctness and size evidence. Require repeated gains beyond
 observed variability with correctness coverage and an appropriate baseline;
 use more repetitions or independent jobs when results are noisy.
+
+Finite exchange and early industry regressions in production-economy.spec.js and early-industry-production.spec.js fund the actual public counterparties before paid scenarios; rejection cases still exhaust funds or demand explicitly. Successful reservations and exchanges are required before their output lots or receipts are inspected. Matching transaction restores compare complete structured production, cash and realm facts, retain ordered ledgers, include canonical wars, RNG and uid, and project omitted peaceful realm war aliases as the codec's documented null default. Each scenario keeps its own browser context and can shard independently.
