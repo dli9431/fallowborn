@@ -1,0 +1,64 @@
+/* Original pure projections retained as inert browser-source comparison input. */
+  M.preformationRations = function (s,d) {
+    var t=d && d.mobile, p=t && FBDATA.mobileProfiles[t.profileId];
+    if (!p || !t.opening || !Array.isArray(t.opening.muster)) return null;
+    var units={}, people=p.members.reduce(function (n,m) {return n+m.population;},0);
+    t.opening.muster.forEach(function (row) {units[row.unitId]=(units[row.unitId] || 0)+row.count;});
+    var field=Object.keys(units).reduce(function (n,id) {return n+units[id];},0);
+    if (field!==t.fighters || people<field) return null;
+    var projected=Object.assign({},s,{realmTech:copy(s.realmTech || {}),player:Object.assign({},s.player)});
+    return {campPeople:people-field,units:units,
+      provisionUse:FB.armyProvisionUse(projected,{realm:d.id,at:t.origin,warId:null}),
+      drainBase:Math.max(0.1,FBDATA.balance.supplyDrainBase || 1.2),
+      carryDays:p.supplyPolicy ? p.supplyPolicy.carryDays : 30};
+  };
+
+  M.openingPlan = function (s, d) {
+    var t=d.mobile, p=t && FBDATA.mobileProfiles[t.profileId], o=t && t.opening;
+    var plan={allowed:false,bindings:[],units:{},muster:[]}, used=Object.create(null);
+    if (!p || !o || !s.realms[d.id] || !s.realms[d.id].alive || !M.active(s,d.id)) return plan;
+    var bm=FB.campaignBookmark(s), realms={};
+    (bm.realms || []).forEach(function (r) {realms[r.id]=r;});
+    if (M.definitionFaults(d,G.forRealm(s,d.id).id,bm.provinces,realms,null,bm).length ||
+        !M.independent(t) && (!s.realms[t.patronRealmId] || !s.realms[t.patronRealmId].alive) ||
+        !s.owner[t.origin] || !s.owner[t.target] || FB.realmTerritory(s,d.id).length ||
+        (s.armies || []).some(function (a) {return a.id==='following_'+d.id;}) ||
+        (s.authority.migrations || []).some(function (m) {return m.realmId===d.id && m.status!=='settled' && m.status!=='failed';})) return plan;
+    var declared=realms[d.id], original=declared && declared.mobile && declared.mobile.opening;
+    if ((o.reserves!==undefined || original && original.reserves!==undefined) &&
+        (s.turn!==0 || !declared || JSON.stringify(d.mobile)!==JSON.stringify(declared.mobile))) return plan;
+    var occupied={};
+    Object.keys(s.authority.governments).forEach(function (rid) {
+      var row=M.row(s,rid);
+      if (row && row.status==='active') row.members.forEach(function (m) {occupied[m.principal.id]=true;});
+    });
+    for (var binding of o.principals) {
+      var ref=binding.person, c=FB.bookmarkActor(s,ref.actorId);
+      var memberDef=p.members.filter(function (m) {return m.id===binding.memberId;})[0];
+      var landed=M.landedOpeningMatches && M.landedOpeningMatches(s,d,binding,c);
+      if (!availablePerson(s,c) || s.date.year-c.born<p.minAge ||
+          location(s,{kind:'character',id:c.id})!==t.origin && !landed &&
+            !(M.guardedOpeningBinding && M.guardedOpeningBinding(d,binding)) ||
+          used[c.id] || occupied[c.id] ||
+          ref.kind==='realm_ruler' && !landed && (FB.realmRulerGeneration(s,d.id)!==ref.generation ||
+            c.name!==s.realms[d.id].ruler.name || c.born!==s.realms[d.id].ruler.born ||
+            c.sex!==s.realms[d.id].ruler.sex || c.culture!==s.realms[d.id].ruler.culture || c.religion!==d.religion) ||
+          FB.isReigningRealmRuler(s,c) && FB.realmIdForRulerCharacter(s,c)!==d.id && !landed) return plan;
+      used[c.id]=true;
+      plan.bindings.push({memberId:memberDef.id,characterId:c.id,person:copy(ref)});
+    }
+    var leader=plan.bindings.filter(function (b) {return b.memberId===o.leaderMemberId;})[0];
+    var gates=Object.assign({},s,{realmTech:copy(s.realmTech || {}),realmTechMigration:2,realms:Object.assign({},s.realms)});
+    gates.realms[d.id]=Object.assign({},s.realms[d.id],{ruler:Object.assign({},s.realms[d.id].ruler,
+      {culture:s.chars[leader.characterId].culture})});
+    for (var row of o.muster) {
+      if (!FB.unitClassUnlocked(gates,row.unitId,d.id)) return plan;
+      plan.units[row.unitId]=(plan.units[row.unitId] || 0)+row.count;
+      plan.muster.push(copy(row));
+    }
+    if (o.reserves!==undefined) {
+      plan.reserves=copy(o.reserves);
+    }
+    plan.allowed=true;
+    return plan;
+  };
