@@ -1,0 +1,208 @@
+# Nightly: the full Playwright suite on each listed branch, and season timing
+# for every start on the timing branch. Runs from main on a schedule or by
+# hand; each job checks out the branch it measures.
+name: Nightly
+
+on:
+  schedule:
+    - cron: '23 7 * * *'
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Run the full Playwright suite
+        type: boolean
+        default: true
+      refs:
+        description: JSON list of branches for the full suite
+        type: string
+        default: '["476", "dev"]'
+      timing:
+        description: Run season timing
+        type: boolean
+        default: true
+      timing_ref:
+        description: Branch for season timing
+        type: string
+        default: '476'
+      seasons:
+        description: Seasons per start
+        type: number
+        default: 4
+      only:
+        description: Comma-separated start ids (bookmark:scenario), empty for every start
+        type: string
+        default: ''
+      profile:
+        description: Record a CPU profile of every season (use with only)
+        type: boolean
+        default: false
+      comparison_baseline:
+        description: Optional baseline revision for paired comparisons against timing_ref
+        type: string
+        default: ''
+      comparison_repeats:
+        description: Paired comparison samples per workload (3 to 9)
+        type: number
+        default: 3
+
+      comparison_subjects:
+        description: JSON array of paired workloads (content or bookmark:scenario)
+        type: string
+        default: '["content","476:mobile_household_476","476:peroz_sasanian_476","1096:yaghi_siyan_1096","1096:bohemond_1096","1204:muhammad_1204"]'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  comparison:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.comparison_baseline != '' }}
+    uses: ./.github/workflows/speed-comparison.yml
+    with:
+      baseline: ${{ inputs.comparison_baseline }}
+      candidate: ${{ inputs.timing_ref }}
+      repeats: ${{ fromJSON(format('{0}', inputs.comparison_repeats || 3)) }}
+      seasons: ${{ fromJSON(format('{0}', inputs.seasons || 4)) }}
+      subjects: ${{ inputs.comparison_subjects || '["content","476:mobile_household_476","476:peroz_sasanian_476","1096:yaghi_siyan_1096","1096:bohemond_1096","1204:muhammad_1204"]' }}
+
+  suite-check:
+    if: ${{ github.event_name == 'schedule' || inputs.suite }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: ${{ fromJSON(inputs.refs || '["476", "dev"]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+      - run: npm ci
+        working-directory: tests/e2e
+      - name: Syntax check
+        run: npm run check
+        working-directory: tests/e2e
+      - name: Server and runner support tests
+        run: npm run test:server
+        working-directory: tests/e2e
+
+  suite:
+    if: ${{ github.event_name == 'schedule' || inputs.suite }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: ${{ fromJSON(inputs.refs || '["476", "dev"]') }}
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+      - run: npm ci
+        working-directory: tests/e2e
+      - id: pw
+        working-directory: tests/e2e
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Install browsers
+        working-directory: tests/e2e
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Run Playwright
+        working-directory: tests/e2e
+        env:
+          FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES: '0'
+        run: >-
+          npx playwright test
+          --shard=${{ matrix.shard }}/16
+          --workers=2
+          --reporter=blob
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: blob-suite-${{ matrix.ref }}-${{ matrix.shard }}
+          path: tests/e2e/blob-report
+          retention-days: 5
+          if-no-files-found: ignore
+      # Failure contexts (error-context.md, screenshots, traces) for test-fix triage.
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: results-suite-${{ matrix.ref }}-${{ matrix.shard }}
+          path: tests/e2e/test-results
+          retention-days: 14
+          if-no-files-found: ignore
+
+  suite-report:
+    needs: suite
+    if: ${{ !cancelled() && (github.event_name == 'schedule' || inputs.suite) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: ${{ fromJSON(inputs.refs || '["476", "dev"]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: e022f0b7dfb749df037df8f69f46ef3f549d0d94
+          path: tooling
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tooling/tests/e2e/package-lock.json
+      - run: npm ci
+        working-directory: tooling/tests/e2e
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: blob-suite-${{ matrix.ref }}-*
+          path: blobs
+          merge-multiple: true
+      - name: Merge reports
+        env:
+          FB_CI_REPORT_FILE: ${{ github.workspace }}/merged/results.json
+          PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ github.workspace }}/merged/html
+          REF: ${{ matrix.ref }}
+          MODE: all
+        run: |
+          mkdir -p merged
+          if ls blobs/*.zip >/dev/null 2>&1; then
+            (cd tooling/tests/e2e && npx playwright merge-reports --reporter="html,$GITHUB_WORKSPACE/tooling/tests/e2e/support/ci-report.js" "$GITHUB_WORKSPACE/blobs")
+            if [ ! -d merged/html ] && [ -d tooling/tests/e2e/playwright-report ]; then
+              cp -r tooling/tests/e2e/playwright-report merged/html
+            fi
+            node tooling/tests/e2e/support/ci-summary.js merged/results.json "$REF" "$MODE" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No Playwright reports were produced for $REF." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: report-suite-${{ matrix.ref }}
+          path: merged
+          retention-days: 14
+          if-no-files-found: ignore
+
+
+  timing:
+    if: ${{ github.event_name == 'schedule' || inputs.timing }}
+    uses: ./.github/workflows/season-timing.yml
+    with:
+      ref: ${{ inputs.timing_ref || '476' }}
+      seasons: ${{ fromJSON(format('{0}', inputs.seasons || 4)) }}
+      only: ${{ inputs.only || '' }}
+      profile: ${{ inputs.profile == true }}
+      shards: 12

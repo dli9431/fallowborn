@@ -35,3 +35,17 @@ Reports include elapsed time, simulated days, batch count, simulation time, time
 Army phases and operations cover muster/disband, orders, movement, reinforcement, supply, battles, and sieges/rebellions. Counters expose repeated projections, failed musters, cache hits, source scans, and invalidations. Annual worldTick rows break down population, rulers, succession, religion, diplomacy, and building work. Population rows include capacity/attraction, enterprise upgrade snapshots, migration, settlement changes, and community projects. Annual rows appear only when the burst crosses the year boundary; confirm worldTick.calls is present before comparing annual work with an ordinary season.
 
 Compare the same starting save and season with comparable browser conditions; changing war counts, annual work, or a warmed cache can change the workload. Use counters and self time to identify repeated work before optimizing. Preserve simulation ordering, seeded RNG, and cache invalidation behavior. New timers must remain opt-in and transient, balance enter/leave in finally, and restore wrapped functions after the burst, including errors. Relevant coverage lives in tests/e2e/specs/time-controls.spec.js, annual-world-profiling.spec.js, and army-daily-performance.spec.js. Agents may inspect owner-provided reports and saved traces, but must not run profiling or the harness themselves under the owner-controlled testing policy above.
+
+
+Controlled CI comparisons
+
+The public paired measurement drivers and Nightly dispatch recipe are documented
+in docs/TESTS.md#controlled-paired-speed-comparisons. Keep game revisions separate
+from the exact tooling revision. The focused speed-comparison.spec.js uses
+synthetic measurements and child-process responses only; it must not run long
+campaigns or invoke measurement drivers. Preserve every sample, fail incomplete
+pairs and workload/browser mismatches, and publish available raw data and error
+reports even when comparison fails. Numeric workflow-call inputs from dispatch
+must be explicitly converted at the reusable call boundary. Tooling checks do
+not satisfy performance targets; actual matched CI comparisons and separate
+profile evidence remain owner-controlled acceptance.

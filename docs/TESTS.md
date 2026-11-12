@@ -896,14 +896,16 @@ checks and ordinary JSON import paths remain in force.
 Complete content preparation has a separate owner-run diagnostic:
 `node tests/e2e/measure/content.js` from the repository root. It opens a fresh
 title with load timing enabled for each of two cases: no mods and the ordinary
-634 household reserve JSON overlay. CDP sampling covers only `prepareContent`,
+634 household reserve JSON overlay. With `FB_CONTENT_PROFILE=true`, CDP sampling covers only `prepareContent`,
 including lazy script loading. Output includes each CPU profile, elapsed time,
 loadTiming phases and the top sampled functions with self milliseconds and
 source locations. Reports default to `tests/e2e/test-results/content-timing/`;
 `FB_CONTENT_OUTPUT` selects another output directory.
+`FB_CONTENT_GAME` selects a separate game checkout. CPU sampling is off by
+default for comparable timings; the content-timing workflow enables it explicitly.
 
 The manual Complete content timing workflow accepts `timing_ref`. It retains
-the workflow revision's measurement driver when checking out the measured ref,
+the workflow revision's measurement driver in a separate checkout from the measured ref,
 so the same driver can compare revisions predating the diagnostic. Compare both
 cases on the same hosted runner class, with the same instrumentation; profiles
 add overhead. These runs do not simulate days or establish device acceptance.
@@ -1228,3 +1230,110 @@ industry-law-retention.spec.js stages long 1204 London campaigns directly. With 
 Community ledger retention
 
 community-retention.spec.js stages native Ctesiphon membership beyond 64 historical people and an ordinary JSON community beyond sixteen ended assent targets. It covers exact shared-window folding, pending and temporarily ineligible voters, original-reference retention, live limits, deterministic/idempotent adoption, stale reviews, resource and RNG/UID preservation, repeated save/load/re-save and atomic malformed-save rejection. Its source-only check pins reviewed quoted-id counts for the membership engine whose quoted ids changed. Long campaign dates are staged directly; no multi-year daily loop is used.
+
+
+## Controlled paired speed comparisons
+
+The paired comparison workflow uses one tooling revision and pins both game
+revisions before creating a separate hosted job for each workload. Each job
+runs 3 to 9 baseline/candidate pairs in alternating order on the same machine.
+Defaults cover complete content preparation and five simulation starts: mobile
+household 476, Peroz 476, Yaghi Siyan 1096, Bohemond 1096 and Muhammad 1204.
+Each simulation sample starts a fresh browser; each content mode uses a fresh
+context. OS and filesystem caches are not flushed. Four seasons per start are
+measurement workloads, not regression-test journeys.
+
+Nightly is the registered dispatch route even before the standalone comparison
+workflow is registered on the default branch. Its optional comparison inputs
+leave ordinary scheduled suite and timing behavior intact. The full-suite jobs
+retain the existing public E2E workflow’s syntax/support checks, sixteen browser
+shards per branch and merged reports. Report tooling is checked out at the
+recorded public E2E commit because its reporter files are absent from this
+measurement tree; season and comparison drivers come from the dispatched
+tooling commit. Publish the
+intended public tooling revision before dispatch; game and tooling revisions
+are separate. No default-branch workflow edit is needed.
+
+Run 43164685075 failed before creating comparison jobs or artifacts. Its
+[workflow annotations](https://github.com/dli9431/fallowborn/actions/runs/43164685075)
+reported `evaluate reusable workflow inputs` and `Unexpected value '3'` /
+`Unexpected value '4'` at Nightly lines 59 and 60. The exact called workflow was
+speed-comparison.yml at e022f0b7dfb749df037df8f69f46ef3f549d0d94, whose repeats
+and seasons inputs are numeric. Nightly now converts the dispatched values
+with `fromJSON(format(...))` at that call boundary, as its ordinary timing call
+already did. Synthetic source checks protect this conversion; only a completed
+Actions dispatch can establish that the remote call and measurements succeed.
+
+For the recorded first comparison, after authorized publication, run these
+PowerShell commands from a directory where downloaded public artifacts may be
+stored. The default subject list selects content and all five starts. The
+tooling SHA is resolved once from the published integration branch:
+
+```powershell
+$toolingSha = gh api repos/dli9431/fallowborn/git/ref/heads/automation/v2 --jq '.object.sha'
+gh workflow run nightly.yml --repo dli9431/fallowborn --ref $toolingSha -f suite=false -f timing=false -f timing_ref=978f2f8a1d44acb66f60908423bb92762bfa229d -f comparison_baseline=9aa049dccfa2488b14a5efccfc5bab7ac2264bfb -f comparison_repeats=3 -f seasons=4
+gh run list --repo dli9431/fallowborn --workflow nightly.yml --commit $toolingSha --event workflow_dispatch --limit 5
+```
+
+Select the resulting run id, then read its status and every artifact:
+
+```powershell
+$runId = '<comparison-run-id>'
+gh run view $runId --repo dli9431/fallowborn
+gh api "repos/dli9431/fallowborn/actions/runs/$runId/artifacts" --jq '.artifacts[] | {name,expired,size_in_bytes}'
+gh run download $runId --repo dli9431/fallowborn --pattern 'speed-comparison-*' --dir "speed-results/$runId"
+Get-ChildItem "speed-results/$runId" -Recurse -Filter summary.txt | ForEach-Object { Get-Content -LiteralPath $_.FullName }
+Get-ChildItem "speed-results/$runId" -Recurse -Filter comparison.json | ForEach-Object { Get-Content -Raw -LiteralPath $_.FullName | ConvertFrom-Json | Format-List subject,baseline,candidate,driver,valid,error,order,metrics,rejected }
+```
+
+If a separate fresh CPU diagnosis is needed, dispatch it independently of the
+unprofiled comparison and select its resulting run id before downloading:
+
+```powershell
+gh workflow run nightly.yml --repo dli9431/fallowborn --ref $toolingSha -f suite=false -f timing=true -f timing_ref=978f2f8a1d44acb66f60908423bb92762bfa229d -f seasons=4 -f only=476:mobile_household_476,476:peroz_sasanian_476,1096:yaghi_siyan_1096,1096:bohemond_1096,1204:muhammad_1204 -f profile=true
+$profileRunId = '<profile-run-id>'
+gh run download $profileRunId --repo dli9431/fallowborn --pattern 'season-timing-*' --dir "profile-results/$profileRunId"
+```
+
+The standalone route, once registered, is `gh workflow run speed-comparison.yml
+--repo dli9431/fallowborn --ref <tooling-sha> -f baseline=<baseline-sha>
+-f candidate=<candidate-sha> -f repeats=3 -f seasons=4`. Its `subjects` input
+accepts the same JSON array. Nightly uses `comparison_subjects`; `only` remains
+the ordinary season-timing filter. Future optimization comparisons use the
+pre-optimization game SHA as baseline rather than changing the first-batch base.
+
+Every speed-comparison-<job-index> artifact retains comparison.json, summary.txt
+and raw pair-N/baseline and pair-N/candidate files. Read the JSON subject rather
+than treating artifact indices as stable workload identifiers. Reports record
+exact game/tooling SHAs, browser versions, runner environment, sample order,
+every value, median/min/max and faster-pair counts. Positive paired gain is
+`100 * (1 - candidate / baseline)`; a slowdown remains a negative gain. Ranges
+are descriptive, not confidence intervals. simulationMs and elapsedMs remain
+separate. Raw season rows retain serialization/autosave operation timings and
+legacy stateSizes in UTF-16 code units alongside stateBytes in UTF-8 bytes;
+these are JSON sizes, not compressed storage sizes. Compare milliseconds per
+day and actual day counts, especially for a short first season.
+
+Both content modes (unmodded and household-overlay) must be present with the
+expected mod count/signature. Already-prepared content and profiled speed
+samples are rejected. Season guards reject absent starts, failures, page errors,
+death, missing seasons, invalid days or missing workload counters. Matching
+includes start code, dates, day counts, RNG, UID, turn and major workload counts.
+A metric missing from both sides of any pair now invalidates that comparison
+instead of silently disappearing. Browser/workload changes between repetitions
+also invalidate it, even when both sides changed together. Partial raw artifacts
+and error reports remain available after a measurement failure, and the command
+exits unsuccessfully. Artifact upload and summary publication run even after
+preceding failures; infrastructure failure can still leave artifacts incomplete.
+Inspect the run conclusion and error fields as well as any retained metrics.
+
+speed-comparison.spec.js retains the original calculation and rejection tests
+and adds synthetic coverage for paired omissions, repetition drift, both content
+modes, deterministic season fields, alternating execution, exact revision guards
+and success/failure artifact publication. It never invokes a real measurement
+child process. The comparison workflow runs these focused checks before sampling.
+These checks do not establish runtime performance. Full paired CI measurements,
+correctness/save parity and separate profiles remain required evidence; no
+content or season-speed target is established by tooling completion. Use the
+content-timing workflow or Nightly profile=true separately for CPU diagnosis,
+never mix sampled CPU profiles into unprofiled comparison results.
