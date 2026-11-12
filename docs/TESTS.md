@@ -1395,3 +1395,7 @@ Samples stage no retention history automatically; long-history compaction needs
 its own staged correctness and size evidence. Require repeated gains beyond
 observed variability with correctness coverage and an appropriate baseline;
 use more repetitions or independent jobs when results are noisy.
+
+Office lookup diagnostics
+
+office-lookup-probe.spec.js routes temporary model-source counters only inside its browser pages and compares them with untouched source for the five paired measurement starts. It records dependency-key builds, table hits and misses, local and faith row visits, key lengths, incumbent recursion and repeated equal direct inputs within one ruler-realm or legitimacy read. It stages ordinary, season-boundary and year-boundary days directly, compares full-state/save/catalogue digests plus RNG and UID, checks edit detection and exception cleanup, and attaches the raw counts. Its inputMs values include instrumentation overhead and are diagnostic only. Use the separate unprofiled paired workflow for speed claims. No probe fields enter game state or shipped scripts.
