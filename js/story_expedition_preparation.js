@@ -499,7 +499,7 @@
             retained=court && court.members && court.members[court.rulerMemberId],
             person=retained && retained.charId && s.chars[retained.charId];
           need(!!incumbent && incumbent.id===t.provider.characterId ||
-            !!person && person.dead && retained.alive===false && person.id===t.provider.characterId);
+            !incumbent && !!person && person.dead && retained.alive===false && person.id===t.provider.characterId);
         }
       }
       var superior=d.mobile.command.superior, issuer=t.issuer;

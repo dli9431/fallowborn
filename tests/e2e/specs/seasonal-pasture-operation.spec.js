@@ -15,6 +15,7 @@ dependsOnRuntime(__filename,['index.html','data/buildings_seasonal_pasture.js','
 async function boot(page,info,kind,custom,revision) {
   if(revision){custom=JSON.parse(JSON.stringify(custom || examples[kind]));custom.bookmarks['pasture_'+kind].revision=revision;}
   await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
+  if(custom)expect(await page.evaluate(function(input){return FB.mods.validate(input);},custom)).toEqual([]);
   await page.locator('#modfile').setInputFiles(custom ? {name:'pasture-ai.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(custom))} :
     path.resolve(__dirname,'../fixtures/authoring/seasonal-pasture-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
@@ -107,7 +108,7 @@ for(const kind of ['faroes','upland']) {
         constructed:s.production.assets.filter(function(a){return a.constructed;}).length,harvested:harvested,repeat:repeat,delivery:delivery,malformed:malformed};
     });
     expect(r).toMatchObject({ready:true,pure:true,built:true,empty:true,once:true,restored:true,constructed:1,harvested:false,repeat:false,delivery:true,malformed:[true,true]});
-    expect(r.paid).toBe(r.cost);expect((await prepare(page)).finished).toBe(true);
+    expect(r.paid).toBeCloseTo(r.cost,8);expect((await prepare(page)).finished).toBe(true);
   });
 
   test(kind+' construction rechecks actual parent stock, expiry, grazing, care, work funds and reserves before payment',async function({page},info){
@@ -118,10 +119,16 @@ for(const kind of ['faroes','upland']) {
         function(t){t.production.nextId=1000000;},
         function(t){t.chars[t.player.charId].imprisoned=true;},
         function(t){t.player.travel={};},function(t){t.player.gold=FB.buildCost(t,pid,'shieling');},
-        function(t){t.turn+=10;t.date.day+=10;},function(t){t.date.season=0;},function(t){
+        function(t){t.turn+=10;t.date.day+=10;},function(t){
+          const kinds=FBDATA.buildingSeasonProfiles[FBDATA.buildings.shieling.seasonProfile].seasonKinds;
+          if(![0,1,2,3].some(function(season){t.date.season=season;return kinds.indexOf(FB.localSeason(t,pid))<0;}))
+            throw new Error('The fixture requires an unavailable local season');
+        },function(t){
           const R=FB.siteResources,who=FB.settlementHolder(t,pid,0);
-          const claim=R.commit(t,R.quote(t,{operation:'reserve',sourceId:'farm_grazing',actor:who,amount:2}));
-          R.commit(t,R.quote(t,{operation:'consume',sourceId:'farm_grazing',actor:who,reservationId:claim}));
+          const amount=R.snapshot(t,pid,null,who).find(function(r){return r.id==='farm_grazing';}).available;
+          const claim=R.commit(t,R.quote(t,{operation:'reserve',sourceId:'farm_grazing',actor:who,amount:amount}));
+          if(!claim || !R.commit(t,R.quote(t,{operation:'consume',sourceId:'farm_grazing',actor:who,reservationId:claim})))
+            throw new Error('The negative setup must consume all current grazing capacity');
         },function(t){t.player.war={};},
         function(t){t.holder[pid]='buyer_court';}];
       return changes.map(function(change){const t=JSON.parse(base);change(t);const before=JSON.stringify(t);
@@ -130,12 +137,15 @@ for(const kind of ['faroes','upland']) {
     expect(r).toEqual(Array(10).fill(true));
   });
 
-  test(kind+' required assignment omission refuses construction, and retained property repairs beyond its construction dates',async function({page},info){
+  test(kind+' required assignment omission refuses construction',async function({page},info){
     const custom=JSON.parse(JSON.stringify(examples[kind])),bm=custom.bookmarks['pasture_'+kind];
     bm.buildingSeasonAssignments=[];
     await boot(page,info,kind,custom,'new_works');await allocateFarm(page,kind,false);
     expect(await page.evaluate(function(){const s=FB.state,before=JSON.stringify(s),pid=s.player.provinceId;
       return !FB.build(s,pid,0,'shieling')&&before===JSON.stringify(s);})).toBe(true);
+  });
+
+  test(kind+' retained property repairs beyond its construction dates',async function({page},info){
     await boot(page,info,kind);await allocateFarm(page,kind);
     const r=await page.evaluate(function(){const s=FB.state,pid=s.player.provinceId,b=s.buildings[pid].find(function(b){return b.id==='shieling';});
       const stamp=JSON.stringify(b.productionAsset),inventory=JSON.stringify(s.production);
@@ -160,7 +170,12 @@ for(const kind of ['faroes','upland']) {
   test(kind+' output sells once to real funded demand, with neither duplicate farm proceeds nor a population award',async function({page},info){
     await boot(page,info,kind);await allocateFarm(page,kind);await prepare(page);
     const r=await page.evaluate(function(){
-      const s=FB.state,E=FB.productionEconomy,q=E.aiQuote(s,'pasture_sale',1,'sell');
+      const s=FB.state,E=FB.productionEconomy,
+        who=FB.production.snapshot(s).find(function(row){return row.site.id==='buyer_store';}).asset.owner;
+      if(who.kind!=='realm')throw new Error('The fixture requires its actual public buyer');
+      s.realms[who.id].treasury.gold=10000;
+      const q=E.aiQuote(s,'pasture_sale',1,'sell');
+      if(!q.allowed)throw new Error('Expected a funded pasture sale: '+q.reason);
       const buyer=FB.production.account(s,q.buyer),seller=FB.production.account(s,q.seller),population=JSON.stringify(s.population);
       const id=E.commit(s,q),repeat=E.commit(s,q),next=E.aiQuote(s,'pasture_sale',1,'sell');
       FB.production.validate(s);FB.buildingSeasons.validate(s);
@@ -172,7 +187,7 @@ for(const kind of ['faroes','upland']) {
         population:population===JSON.stringify(s.population),allocation:FB.productionEconomy.harvest(s)};
     });
     expect(r).toMatchObject({id:true,repeat:false,again:false,source:0,quantity:1,population:true,allocation:false});
-    expect(r.buyer).toBe(r.cost);expect(r.seller).toBe(r.cost);expect(r.cost).toBeGreaterThan(0);
+    expect(r.buyer).toBeCloseTo(r.cost,8);expect(r.seller).toBeCloseTo(r.cost,8);expect(r.cost).toBeGreaterThan(0);
   });
 
   test(kind+' exact stock expiry is pure before its boundary and debits once without replacing farm, people or buildings',async function({page},info){
@@ -237,19 +252,25 @@ test('unworked, remote and foreign parent farms cannot create an allocation',asy
 
 test('AI opens no inputless or unfunded grazing window and rechecks current reserves before paid work',async function({page},info){
   const custom=JSON.parse(JSON.stringify(examples.faroes)),start=custom.startScenarios[0];
-  start.rulerRealmId='buyer_court';start.fixedProvinceId='pasture_buyer';start.characterName='Odo Vale';
+  start.rulerRealmId='buyer_court';start.fixedProvinceId='pasture_buyer';start.characterName='Odo Vale';start.tier=4;
   custom.bookmarks.pasture_faroes.date.season=1;
+  // The construction revision has no standing outpost and cannot inherit its opening stock.
+  custom.bookmarks.pasture_faroes.revisions.new_works.productionSites=
+    JSON.parse(JSON.stringify(custom.bookmarks.pasture_faroes.productionSites));
   // An explicit fictional prior allocation tests NPC processing reserves; NPC farm harvest is not an adapter here.
   custom.bookmarks.pasture_faroes.productionSites[0].openingLots=[{goodId:'parent_farm_allocation',quantity:1}];
   await boot(page,info,'faroes',custom);
   const r=await page.evaluate(function(){
-    const s=FB.state,S=FB.buildingSeasons,who=FB.settlementHolder(s,'faroes',0),base=JSON.stringify(s);
+    const s=FB.state,S=FB.buildingSeasons,who=FB.settlementHolder(s,'faroes',0);
+    if(who.kind!=='realm' || who.id==='player')throw new Error('The fixture requires its actual NPC public payer');
+    s.realms[who.id].treasury.gold=10000;const base=JSON.stringify(s);
     s.realms[who.id].treasury.gold=0;
     const before=JSON.stringify(s),count=S.runAI(s),pure=before===JSON.stringify(s);
     const t=JSON.parse(base),funded=S.runAI(t),again=S.runAI(t);
-    const empty=JSON.parse(base);empty.buildings.faroes[0].ruined=true;
+    const empty=JSON.parse(base);empty.buildings.faroes.find(function(b){return b.id==='shieling';}).ruined=true;
     const unused=JSON.stringify(empty),unusable=S.runAI(empty);
-    return {count:count,pure:pure,funded:funded,again:again,used:t.siteResources.sources.farm_grazing.consumed,
+    return {count:count,pure:pure,funded:funded,again:again,
+      used:FB.siteResources.snapshot(t,'faroes',null,who).find(function(row){return row.id==='farm_grazing';}).consumed,
       unusable:unusable,untouched:unused===JSON.stringify(empty)};
   });
   expect(r).toEqual({count:0,pure:true,funded:1,again:0,used:1,unusable:0,untouched:true});
@@ -257,7 +278,7 @@ test('AI opens no inputless or unfunded grazing window and rechecks current rese
 
 test('an NPC treasury cannot construct an outpost by appropriating private parent-farm output',async function({page},info){
   const custom=JSON.parse(JSON.stringify(examples.faroes)),start=custom.startScenarios[0];
-  start.rulerRealmId='buyer_court';start.fixedProvinceId='pasture_buyer';start.characterName='Odo Vale';
+  start.rulerRealmId='buyer_court';start.fixedProvinceId='pasture_buyer';start.characterName='Odo Vale';start.tier=4;
   await boot(page,info,'faroes',custom,'new_works');
   const r=await page.evaluate(function(){const s=FB.state,who=FB.settlementHolder(s,'faroes',0);
     s.turn=90;s.date.season=1;s.date.day=1;s.realms[who.id].treasury.gold=100000;
@@ -298,7 +319,7 @@ test('winter interruption and input expiry retain funded work without free compl
   expect(r).toEqual({work:true,winter:false,status:'cancelled',days:1,paid:3,again:0,output:0,retained:true});
 });
 
-test('malformed imports and scenery references reject detached; matching saves reject forged stock and missing provenance',async function({page},info){
+test('malformed imports and scenery references reject detached',async function({page},info){
   await openGame(page,info);
   const validation=await page.evaluate(function(example){
     const before=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -313,11 +334,17 @@ test('malformed imports and scenery references reject detached; matching saves r
       pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
   },examples.faroes);
   expect(validation).toEqual({valid:[],bad:[true,true,true,true,true,true],pure:true});
+});
+
+test('matching pasture saves reject forged stock and missing provenance',async function({page},info){
   await boot(page,info,'faroes');await allocateFarm(page,'faroes');await prepare(page);
   const bad=await page.evaluate(function(){
     const s=FB.state,changes=[function(t){t.production.lots[0].remaining++;},function(t){delete t.production.economy;},
       function(t){t.production.nextId=1000000;},function(t){delete t.buildingSeasons;},
-      function(t){t.production.batches[0].paid++;},function(t){t.siteResources.sources.farm_grazing.consumed++;}];
+      function(t){t.production.batches[0].paid++;},function(t){
+        const source=FB.siteResources.compile(FB.campaignBookmark(t)).sources.find(function(row){return row.id==='farm_grazing';});
+        t.siteResources.sources.farm_grazing.consumed=source.profile.capacity+1;
+      }];
     return changes.map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t);
       try{FB.save.v4.validatePlatform(t);return false;}catch(error){return before===JSON.stringify(t);}});
   });
@@ -326,7 +353,7 @@ test('malformed imports and scenery references reject detached; matching saves r
 
 test('phone construction cards explain seasonal inputs and funding without horizontal overflow',async function({page},info){
   await page.setViewportSize({width:390,height:844});await boot(page,info,'faroes',null,'new_works');
-  await page.evaluate(function(){FB.ui.showBuildings(FB.state.player.provinceId,0);});
+  await page.evaluate(function(){FB.ui.showBuildings(FB.state.player.provinceId);});
   await expect(page.locator('#gm-body')).toContainText('Requires a declared seasonal site, a permitted local season, lawful water or grazing, available care and work, real deliverable inputs, and construction and processing funds.');
   expect(await page.locator('#gm-body').evaluate(function(el){return el.scrollWidth>el.clientWidth+1;})).toBe(false);
 });

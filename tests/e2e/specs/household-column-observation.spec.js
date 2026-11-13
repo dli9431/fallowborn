@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {
   harbor:require('../fixtures/authoring/expedition-dispatch-harbor.json'),
@@ -23,6 +23,7 @@ dependsOnRuntime(__filename, ['index.html','data/mobile_confederations.js','data
 function declaration(prefix) {
   const input = JSON.parse(JSON.stringify(examples[prefix])), b = input.bookmarks[prefix + '_world'];
   const following = b.realms.find(function (r) { return r.mobile; });
+  if(following.mobile.command.operations.indexOf('war')<0)following.mobile.command.operations.push('war');
   const home = input.startScenarios[0].fixedProvinceId;
   const target = following.mobile.expeditionProgram.steps.find(function (step) { return step.adapter === 'war'; }).terms.causes[0].target;
   const sourceId = prefix + '_column_campaign', noticeId = prefix + '_column_notice';
@@ -56,7 +57,7 @@ async function imported(page, info, prefix, input) {
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(prefix + '_column_notice');
   },prefix);
-  await beginBookmark(page,info,prefix + '_world',prefix + '_household');
+  await beginBookmarkFromTitle(page,prefix + '_world',prefix + '_household');
   await page.evaluate(function (prefix) {
     const s = FB.state, b = FB.campaignBookmark(s), d = b.realms.find(function (r) { return r.mobile; });
     const sourceId = prefix + '_column_campaign', id = prefix + '_column_notice';
@@ -70,11 +71,19 @@ async function imported(page, info, prefix, input) {
       start:function () {
         // Stage bounded county positions, then use the canonical campaign and
         // host-assignment owners. Arrival/movement itself is covered elsewhere.
-        s.turn = 5; s.date.year = 901;
+        s.turn = 5; s.date=FB.dateAtTurn(s,5);
         this.hosts().forEach(function (a) { this.place(a,this.remote); },this);
-        FB.stories.get(sourceId).day(s,s.stories[sourceId]);
-        const r = s.stories[sourceId];
-        if (r.phase !== 'started' || !FB.ordinaryWarById(s,r.warId)) throw new Error('Expected a real campaign.');
+        const M=FB.mobile,row=M.row(s,d.id),source=FB.stories.get(sourceId),def=source.declaration,
+          cause={type:'aggression',enemy:s.owner[def.target.provinceId],target:def.target.provinceId},
+          review=M.reviewColumns(s,{realmId:d.id,action:'war',terms:{columnId:row.columns.entries[0].id,causes:[cause]},
+            actor:{kind:'character',id:row.leaderId}});
+        if(!M.commit(s,review))throw new Error('Expected a reviewed column war: '+review.review.reason);
+        const war=FB.ordinaryWarBetween(s,d.id,cause.enemy),r=s.stories[sourceId];
+        // Observer coverage stages only the matching source checkpoint. The
+        // real declaration and column assignments use their canonical owners.
+        Object.assign(r,{phase:'started',startedTurn:war.startedTurn,deadline:war.startedTurn+def.durationDays,
+          actorId:row.leaderId,actorGeneration:FB.realmRulerGeneration(s,d.id),targetOwnerId:cause.enemy,warId:war.id});
+        source.validate(r,s);
         this.hosts().forEach(function (a) {
           if (!FB.assignHostCampaign(s,a.id,r.warId)) throw new Error('Expected canonical column assignment.');
         });
@@ -187,12 +196,18 @@ test('county notice expiry, matching saves and aliases preserve one shared respo
     [C.id,C.alias].forEach(function (id) { FB.stories.get(id).day(s,s.stories[id]); });
     const replay = FB.stories.status(s,C.id) || FB.stories.status(s,C.alias);
     const receipts = [Object.keys(s.stories[C.id].householdReceipts).length,Object.keys(s.stories[C.alias].householdReceipts).length];
-    delete saved.state.stories[C.id]; FB.save.restore(saved);
+    delete saved.state.stories[C.id];
+    const live=FB.state,bytes=JSON.stringify(live),rng=FB.getRngState(),uid=FB.getUidCounter();
+    let requiredRejected=false;try{FB.save.restore(saved);}catch(error){requiredRejected=true;}
+    const rejectionPure=live===FB.state && bytes===JSON.stringify(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();
+    // Only genuinely older saves without paired attachment provenance may omit an original record.
+    delete saved.state.start.storyAttachments;delete saved.storyAttachmentSchema;
+    FB.save.restore(saved);
     return {stale:stale,quiet:quiet,before:before,restored:restored,aliases:aliases,accepted:accepted,repeat:repeat,replay:replay,
-      receipts:receipts,missing:!FB.state.stories[C.id]};
+      receipts:receipts,requiredRejected:requiredRejected,rejectionPure:rejectionPure,missing:!FB.state.stories[C.id]};
   });
   expect(result.restored).toEqual(result.before);
-  expect(result).toMatchObject({stale:false,quiet:null,aliases:true,accepted:true,repeat:false,replay:null,receipts:[1,0],missing:true});
+  expect(result).toMatchObject({stale:false,quiet:null,aliases:true,accepted:true,repeat:false,replay:null,receipts:[1,0],requiredRejected:true,rejectionPure:true,missing:true});
 });
 
 test('campaign battle, field-path and exact-site claims reject on the detached ordinary JSON path', async function ({page},info) {
