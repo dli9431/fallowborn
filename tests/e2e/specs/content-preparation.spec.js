@@ -9,6 +9,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {installPageGuards} = require('../support/page-contract');
 const reference = require('../fixtures/content-preparation/reference.json');
 const physicalReference = require('../fixtures/content-preparation/physical-sites-reference.json');
+const copyReference = require('../fixtures/content-preparation/copy-traversal-reference.json');
 const overlay = fs.readFileSync(path.resolve(__dirname,'../fixtures/634-core-identities/household-overlay.json'),'utf8');
 const malformed = fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/ctesiphon-household-plans.json'),'utf8');
 dependsOnRuntime(__filename,['js/bookmark_composition.js','js/bookmark_sources.js','js/mods.js',
@@ -161,6 +162,8 @@ for (const pair of [1,2,3]) for (const modded of [false,true]) {
         expect(base[0].accepted).toBe(true);
         expect(base[0].jsonCodeUnits).toBeGreaterThan(0);
         const facts = await snapshot(page);
+        expect(facts).toEqual(copyReference.facts[modded ? 'household-overlay' : 'unmodded']);
+        expect(report.copies).toEqual(copyReference.copies);
         const result = {baseline:baseline,mode:modded ? 'household-overlay' : 'unmodded',browser:browser.version(),
           titleTiming:titleTiming,elapsedMs:elapsedMs,report:report,facts:facts};
         samples.push(result);
@@ -418,3 +421,139 @@ test('content measurement reports sampled self time without adding ancestor time
     {name:'prepare',url:'http://127.0.0.1/js/main.js',line:10,selfMs:1,samples:1}
   ]);
 });
+
+for (const earlyReaders of [false,true]) {
+  test('copy traversal preserves live reads, graphs and reader overrides ' + (earlyReaders ? 'installed before owners' : 'with native owners'),async function ({page},info) {
+    test.skip(!info.project.name.endsWith('-served'),'Private copy probes use served source interception.');
+    if (earlyReaders) await page.addInitScript(function () {
+      const keys = Object.keys, each = Array.prototype.forEach;
+      Object.keys = function (row) { return keys(row); };
+      Array.prototype.forEach = function (callback,receiver) { return each.call(this,callback,receiver); };
+    });
+    for (const row of copyReference.files) {
+      let source = fs.readFileSync(path.resolve(__dirname,'../../..',row.path),'utf8').replace(/\r\n/g,'\n');
+      const end = '    return clone(' + row.parameter + ');\n  }';
+      expect(source.split(end).length).toBe(2);
+      const prior = row.reference.replace('function copy(','function priorCopy(');
+      source = source.replace(end,end + '\n' + prior + '\n' +
+        '  window.__copyTraversals = window.__copyTraversals || {};\n' +
+        '  window.__copyTraversals[' + JSON.stringify(row.path) + '] = {current:copy,prior:priorCopy};');
+      await page.route('**/' + row.path,function (route) {
+        return route.fulfill({contentType:'application/javascript',body:source});
+      });
+    }
+    await openTitle(page,info);
+    const results = await page.evaluate(function () {
+      function exercise(copy) {
+        const checks = [], events = [], values = FB.contentValues;
+        const shared = {n:1}, sparse = []; sparse.length = 5; sparse[2] = shared;
+        const input = {first:shared,second:shared,list:sparse}; input.self = input;
+        Object.defineProperty(input,'hidden',{value:'ignored'});
+        const graph = copy(input), independent = copy(input);
+        checks.push(graph !== input,graph.first !== shared,graph.first === graph.second,
+          graph.first === graph.list[2],graph.self === graph,independent.first !== graph.first,
+          graph.list.length === 3,!(0 in graph.list),!(1 in graph.list),!('hidden' in graph));
+        graph.first.n = 8;
+        checks.push(shared.n === 1,independent.first.n === 1);
+        const live = {first:null,deleted:2,last:3};
+        Object.defineProperty(live,'first',{enumerable:true,get:function () {
+          events.push('first'); delete live.deleted; live.last = 9; live.added = 4;
+          checks.push(copy({nested:shared}).nested.n === 1);
+          return shared;
+        }});
+        const edited = copy(live);
+        checks.push(Object.keys(edited).join(',') === 'first,deleted,last',
+          edited.deleted === undefined,edited.last === 9,!('added' in edited));
+        const frozen = values.snapshot({first:shared,second:shared}), mutable = copy(frozen);
+        const retained = values.snapshot(mutable);
+        checks.push(mutable.first === mutable.second,retained.first === retained.second,
+          retained !== frozen,values.canonical(retained) === values.canonical(frozen));
+        mutable.first.n = 7;
+        checks.push(values.snapshot(mutable) !== retained,retained.first.n === 1,frozen.first.n === 1);
+        let fail = true;
+        const throwing = {first:1};
+        Object.defineProperty(throwing,'last',{enumerable:true,get:function () {
+          events.push('last'); if (fail) throw new Error('copy getter failure'); return shared;
+        }});
+        try { copy(throwing); checks.push(false); } catch (error) { checks.push(error.message === 'copy getter failure'); }
+        fail = false; checks.push(copy(throwing).last.n === 1);
+
+        const nativeKeys = Object.keys, nativeEach = Array.prototype.forEach;
+        try {
+          // Preserve the returned list's receiver, getter count, holes and
+          // initial length, even when its method shadows Function.call.
+          let returned, readerGets = 0;
+          const watched = {first:null,skipped:2,last:3};
+          Object.defineProperty(watched,'first',{enumerable:true,get:function () {
+            events.push('watched'); delete returned[1]; returned.push('appended'); return 5;
+          }});
+          Object.keys = function (row) {
+            const keys = nativeKeys(row);
+            if (row !== watched) return keys;
+            returned = keys;
+            Object.defineProperty(keys,'forEach',{get:function () {
+              readerGets++;
+              const each = function (callback) {
+                checks.push(this === keys); return nativeEach.call(this,callback);
+              };
+              each.call = function () { throw new Error('shadowed call'); };
+              return each;
+            }});
+            return keys;
+          };
+          const overridden = copy(watched);
+          checks.push(readerGets === 1,nativeKeys(overridden).join(',') === 'first,last',overridden.first === 5);
+          Object.keys = nativeKeys;
+          // Accessor readers must be fetched once with the original receiver.
+          // A forEach getter can expose even a native Object.keys result.
+          let keyGets = 0, eachGets = 0, exposed;
+          const keysDescriptor = Object.getOwnPropertyDescriptor(Object,'keys');
+          const eachDescriptor = Object.getOwnPropertyDescriptor(Array.prototype,'forEach');
+          const accessorInput = {first:null,skipped:2,last:3};
+          Object.defineProperty(accessorInput,'first',{enumerable:true,get:function () {
+            delete exposed[1]; exposed.push('extra'); return 4;
+          }});
+          try {
+            Object.defineProperty(Object,'keys',{configurable:true,get:function () {
+              keyGets++; checks.push(this === Object); return nativeKeys;
+            }});
+            Object.defineProperty(Array.prototype,'forEach',{configurable:true,get:function () {
+              eachGets++; exposed = this; return nativeEach;
+            }});
+            const accessorCopy = copy(accessorInput);
+            checks.push(keyGets === 1,eachGets === 1,nativeKeys(accessorCopy).join(',') === 'first,last',
+              accessorCopy.first === 4);
+          } finally {
+            Object.defineProperty(Object,'keys',keysDescriptor);
+            Object.defineProperty(Array.prototype,'forEach',eachDescriptor);
+          }
+          const order = [];
+          const ordered = {};
+          ['first','last'].forEach(function (key) {
+            Object.defineProperty(ordered,key,{enumerable:true,get:function () { order.push(key); return key; }});
+          });
+          Array.prototype.forEach = function (callback) {
+            for (let i = this.length - 1; i >= 0; i--) if (i in this) callback(this[i],i,this);
+          };
+          const reversed = copy(ordered);
+          checks.push(order.join(',') === 'last,first',nativeKeys(reversed).join(',') === 'last,first');
+          Array.prototype.forEach = nativeEach;
+          Object.keys = function (row) { if (row === watched) throw new Error('copy keys failure'); return nativeKeys(row); };
+          try { copy(watched); checks.push(false); } catch (error) { checks.push(error.message === 'copy keys failure'); }
+        } finally { Object.keys = nativeKeys; Array.prototype.forEach = nativeEach; }
+        checks.push(copy({after:{n:6}}).after.n === 6);
+        return {checks:checks,events:events};
+      }
+      return Object.keys(window.__copyTraversals).map(function (path) {
+        const readers = window.__copyTraversals[path];
+        return {path:path,current:exercise(readers.current),prior:exercise(readers.prior)};
+      });
+    });
+    expect(results).toHaveLength(2);
+    for (const row of results) {
+      expect(row.current,row.path).toEqual(row.prior);
+      expect(row.current.checks.every(Boolean),row.path).toBe(true);
+      expect(row.current.events).toEqual(['first','last','last','watched']);
+    }
+  });
+}
