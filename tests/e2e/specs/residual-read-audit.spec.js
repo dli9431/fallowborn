@@ -9,6 +9,7 @@ const sources = probe.paths.map(function (file) { return fs.readFileSync(path.re
 
 dependsOnRuntime(__filename, ['js/model.js','js/world.js','js/government_aristocracy.js','js/government_recognition.js',
   'js/mobile_command.js','js/mobile_guard.js','js/justice.js',
+  'js/religion.js','js/religious_institutions.js','js/papacy.js','js/lordships.js','js/wars.js',
   'js/government_selection.js','js/mobile_confederations.js','js/governments.js','js/government_support.js',
   'js/government_ecclesiastical.js','js/ecclesiastical_strategies.js','js/authority.js','js/actions.js',
   'js/treasury.js','js/lordships.js','js/main.js','js/politics.js','js/systems.js','js/save.js','js/save_v4.js','js/mods.js']);
@@ -326,4 +327,121 @@ test('mobile boundary audit records guard reads and complete owner sizes', async
   }
   expect(await page.evaluate(function () { return !window.__residualReadAudit; })).toBe(true);
   await info.attach('mobile-boundary-owners',{body:JSON.stringify(result),contentType:'application/json'});
+});
+
+test('Muhammad autumn audit preserves staged days and attributes native read owners', async function ({page},info) {
+  const office = require('../fixtures/religious-office-tables/lookup-probe');
+  const structure = require('../fixtures/office-lookup-probe/structure');
+  const parity = [], samples = [];
+  for (const enabled of [false,true]) {
+    for (let i = 0; i < probe.paths.length; i++) {
+      const file = probe.paths[i];
+      await page.unroute('**/' + file);
+      if (enabled) {
+        let body = probe.instrument(file,sources[i]);
+        if (file === 'js/model.js') body = structure.instrument(office.instrument(body));
+        await page.route('**/' + file,function (request) {
+          return request.fulfill({contentType:'application/javascript',body:body});
+        });
+      }
+    }
+    await begin(page,info,starts[4]);
+    if (enabled) {
+      await page.evaluate(probe.install);
+      await page.evaluate(office.install);
+      await page.evaluate(structure.install);
+    }
+    const result = await page.evaluate(async function () {
+      async function hash(text) {
+        const bytes = await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));
+        return Array.from(new Uint8Array(bytes)).map(function (n) { return n.toString(16).padStart(2,'0'); }).join('');
+      }
+      const s = FB.state, p = window.__residualReadAudit, o = window.__officeLookupProbe;
+      const scans = window.__officeStructureProbe, fiscal = FB.aristocracy.withFiscalRead;
+      const leader = FB.mobile.leader, campaign = FB.campaignBookmark;
+      const outputs = [], readings = [];
+      let fiscalScopes = 0;
+      function facts() {
+        const a = s.authority || {}, governments = a.governments || {};
+        const owners = {state:s,characters:s.chars,realms:s.realms,governments:governments,
+          appointments:a.appointments || [],rights:a.rights || [],recognitions:a.recognitions || [],
+          institutions:s.localInstitutions || {},armies:s.armies || [],
+          migrations:a.migrations || [],captives:s.intrigue && s.intrigue.captives || []};
+        const bytes = {};
+        for (const name of Object.keys(owners)) bytes[name] = new TextEncoder().encode(JSON.stringify(owners[name])).length;
+        const bookmark = FB.campaignBookmark(s), local = FB.localInstitutionDefinitions(s);
+        return {turn:s.turn,date:JSON.parse(JSON.stringify(s.date)),rng:FB.getRngState(),uid:FB.getUidCounter(),
+          characters:Object.keys(s.chars).length,livingCharacters:Object.keys(s.chars).filter(function (id) { return !s.chars[id].dead; }).length,
+          realms:Object.keys(s.realms).length,governments:Object.keys(governments).length,
+          mobile:JSON.parse(JSON.stringify(Object.keys(governments).filter(function (id) { return governments[id].mobile; }).map(function (id) {
+            const row = governments[id].mobile;
+            return {realm:id,leader:row.leaderId,status:row.status,members:row.members.length,
+              command:row.command || null,guard:row.guardedParty || null};
+          }))),appointments:owners.appointments.length,rights:owners.rights.length,recognitions:owners.recognitions.length,
+          institutions:Object.keys(owners.institutions).length,armies:owners.armies.length,migrations:owners.migrations.length,
+          captives:owners.captives.length,activeWars:Object.keys(s.wars || {}).filter(function (id) {
+            return s.wars[id] && s.wars[id].status === 'active';
+          }).length,
+          localDefinitions:Object.keys(local).length,openingRealms:bookmark.realms.length,
+          openingProvinces:bookmark.provinces.length,openingHeadKeys:Object.keys(bookmark.religiousHeads || {}).length,bytes:bytes};
+      }
+      if (p) FB.aristocracy.withFiscalRead = function () { fiscalScopes++; return fiscal.apply(this,arguments); };
+      try {
+        const identity = {version:FB.VERSION,start:JSON.parse(JSON.stringify(s.start)),seed:s.seed,
+          signature:FB.mods.sig(),fingerprint:FB.mods.fingerprint(FB.campaignBookmark(s)),userAgent:navigator.userAgent};
+        // Stage dates directly; the intervening days and campaign growth are not simulated.
+        for (const stage of [{name:'autumn-entry',season:1,day:90},{name:'autumn-ordinary',season:2,day:45},
+          {name:'autumn-exit',season:2,day:90}]) {
+          s.turn += (stage.season-s.date.season)*90+stage.day-s.date.day;
+          s.date.season = stage.season; s.date.day = stage.day;
+          const before = facts();
+          if (p) { p.reset(); o.reset(); scans.reset(); fiscalScopes = 0; }
+          const started = performance.now();
+          FB.game.passDay({deferUi:true});
+          const diagnosticMs = performance.now()-started;
+          if (p) readings.push({stage:stage.name,diagnosticMs:diagnosticMs,fiscalScopes:fiscalScopes,
+            residual:p.snapshot(),office:o.snapshot(),structure:scans.snapshot()});
+          const offices = FB.religiousOffices(s), holders = {};
+          for (const id of Object.keys(offices)) {
+            const holder = FB.religiousOfficeSnapshot(s,id,offices); holders[id] = holder && holder.id || null;
+          }
+          outputs.push({stage:stage.name,before:before,after:facts(),state:await hash(JSON.stringify(s)),
+            save:await hash(FB.save.serialize()),catalogue:await hash(JSON.stringify(FBDATA)),
+            offices:await hash(JSON.stringify(offices)),holders:await hash(JSON.stringify(holders)),officeCount:Object.keys(offices).length});
+        }
+        return {identity:identity,outputs:outputs,readings:readings,nativeReaders:leader === FB.mobile.leader && campaign === FB.campaignBookmark};
+      } finally {
+        FB.aristocracy.withFiscalRead = fiscal;
+        if (scans) scans.stop();
+        if (o) o.stop();
+        if (p) p.stop();
+      }
+    });
+    expect(result.nativeReaders).toBe(true);
+    expect(await page.evaluate(function () {
+      return !window.__residualReadAudit && !window.__officeLookupProbe && !window.__officeStructureProbe;
+    })).toBe(true);
+    parity.push(result.outputs);
+    if (enabled) samples.push(result);
+  }
+  expect(parity[1]).toEqual(parity[0]);
+  expect(parity[1].map(function (row) { return row.after.date; })).toEqual([
+    {year:1204,season:2,day:1},{year:1204,season:2,day:46},{year:1204,season:3,day:1}
+  ]);
+  for (let i = 0; i < samples[0].readings.length; i++) {
+    const row = samples[0].readings[i], facts = parity[1][i], c = row.residual.total;
+    expect(facts.after.turn).toBe(facts.before.turn+1);
+    expect(c.officeEntries).toBe(row.office.keyBuilds);
+    expect(c.officeWorldReads).toBe(c.officeEntries);
+    expect(c.officeWorldRepeats).toBe(0);
+    expect(c.mobileSlots).toBe(c.mobileEntries*facts.before.governments);
+    expect(c.mobileFilterArrays).toBe(0);
+    expect(row.office.keyBuilds).toBe(row.office.hits+row.office.misses);
+    expect(row.structure.tableBuilds).toBe(row.office.misses);
+    expect(row.structure.localComparisonRows).toBeGreaterThan(0);
+    expect(row.fiscalScopes).toBe(0);
+    expect(c.indexCalls).toBe(0);
+  }
+  await info.attach('muhammad-autumn-owners',{body:JSON.stringify({start:starts[4],browser:page.context().browser().version(),
+    parity:parity,samples:samples}),contentType:'application/json'});
 });
