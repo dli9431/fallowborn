@@ -53,6 +53,14 @@ The initial title reads stored mod names and display declarations without applyi
 
 Composition preparation reviews mandatory retained worlds through validateBookmarkWorlds so shared catalogue checks run once within that synchronous candidate batch. Complete revision validation uses the same short-lived scope. Per-world validators and complete start checks still run. No catalogue proof survives a later review, publication or import, including after an exception or an in-place data edit.
 
+Physical settlement-site ids and coordinates are reviewed once per exact table
+within that same candidate batch. Global and geography-owned tables keep separate
+results when their objects differ. Each world still receives its own ordered,
+bookmark-labelled faults and checks its county presentations, site references,
+duplicate membership, names and kinds. Standalone reviews remain fresh; nested
+reviews under another data root isolate their results, and batch exit releases
+the table results even after an exception.
+
 AI decision policies
 
 aiDecisionPolicies is a typed, whole-record replacement catalogue. Ordinary detached preparation validates every effective policy, trait/aim reference and selection layer before live installation or storage. The catalogue participates in authored-root fingerprints when a mod supplies it; balance policy references use the existing scalar-layer order. Import validation never compiles against or publishes the live candidate, consumes RNG or changes a decision. Applying or reloading mods invalidates transient AI policy compilation. Removal and same-name replacement recompose from the bundled baseline through the existing stack validator. Exact fields, live consumers and pure report versus simulation-choice boundaries are documented in docs/MODDING.md and docs/designs/ai-decisions.md.

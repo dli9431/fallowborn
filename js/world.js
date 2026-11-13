@@ -1856,7 +1856,7 @@ window.FB = window.FB || {};
   function withValidationCatalogues(work) {
     var previous = validationCatalogues;
     if (!previous || previous.data !== FBDATA)
-      validationCatalogues = {data:FBDATA,faults:Object.create(null)};
+      validationCatalogues = {data:FBDATA,faults:Object.create(null),siteFaults:new WeakMap()};
     try { return work(); }
     finally { validationCatalogues = previous; }
   }
@@ -1865,6 +1865,27 @@ window.FB = window.FB || {};
     if (batch && ownKey(batch.faults,key)) return batch.faults[key];
     var faults = FB.loadTiming ? FB.loadTiming.measure('Validate shared catalogues',work) : work();
     if (batch) batch.faults[key] = faults;
+    return faults;
+  }
+
+  // Physical coordinates belong to the shared candidate table. County
+  // presentations and their world-specific diagnostics are still checked below.
+  function physicalSiteFaults(siteTable) {
+    var batch = validationCatalogues && validationCatalogues.data === FBDATA ? validationCatalogues : null;
+    var faults = batch && batch.siteFaults.get(siteTable);
+    if (faults) return faults;
+    faults = [];
+    var siteSlug = /^[a-z0-9]+(_[a-z0-9]+)*$/;
+    for (var siteId in siteTable) {
+      if (!Object.prototype.hasOwnProperty.call(siteTable, siteId)) continue;
+      if (!siteSlug.test(siteId)) faults.push('invalid settlement site id ' + siteId + '.');
+      var siteRec = siteTable[siteId] || {};
+      if (!isFinite(siteRec.x) || siteRec.x < -180 || siteRec.x > 180 ||
+          !isFinite(siteRec.y) || siteRec.y < -90 || siteRec.y > 90) {
+        faults.push('settlement site ' + siteId + ' has invalid coordinates.');
+      }
+    }
+    if (batch) batch.siteFaults.set(siteTable,faults);
     return faults;
   }
 
@@ -2316,15 +2337,7 @@ window.FB = window.FB || {};
           ' must be an object keyed by site id.');
         siteTable = null;
       } else {
-        for (var siteId in siteTable) {
-          if (!Object.prototype.hasOwnProperty.call(siteTable, siteId)) continue;
-          if (!siteSlug.test(siteId)) fault('invalid settlement site id ' + siteId + '.');
-          var siteRec = siteTable[siteId] || {};
-          if (!isFinite(siteRec.x) || siteRec.x < -180 || siteRec.x > 180 ||
-              !isFinite(siteRec.y) || siteRec.y < -90 || siteRec.y > 90) {
-            fault('settlement site ' + siteId + ' has invalid coordinates.');
-          }
-        }
+        physicalSiteFaults(siteTable).forEach(fault);
       }
     }
     var supportedKinds = { village:1, town:1, city:1 };

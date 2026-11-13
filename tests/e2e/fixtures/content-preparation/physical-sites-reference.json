@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "555bb22104c34b007ecb58059edbbf79f7232a4d",
+  "sourceSha256": "ae7b5a2e96e46c971949f839989525234c2b4f3010af35641a5590c9be06b6d6",
+  "patches": [
+    {
+      "current": "  function withValidationCatalogues(work) {\n    var previous = validationCatalogues;\n    if (!previous || previous.data !== FBDATA)\n      validationCatalogues = {data:FBDATA,faults:Object.create(null),siteFaults:new WeakMap()};\n    try { return work(); }\n    finally { validationCatalogues = previous; }\n  }\n",
+      "reference": "  function withValidationCatalogues(work) {\n    var previous = validationCatalogues;\n    if (!previous || previous.data !== FBDATA)\n      validationCatalogues = {data:FBDATA,faults:Object.create(null)};\n    try { return work(); }\n    finally { validationCatalogues = previous; }\n  }\n"
+    },
+    {
+      "current": "    if (batch && ownKey(batch.faults,key)) return batch.faults[key];\n    var faults = FB.loadTiming ? FB.loadTiming.measure('Validate shared catalogues',work) : work();\n    if (batch) batch.faults[key] = faults;\n    return faults;\n  }\n\n  // Physical coordinates belong to the shared candidate table. County\n  // presentations and their world-specific diagnostics are still checked below.\n  function physicalSiteFaults(siteTable) {\n    var batch = validationCatalogues && validationCatalogues.data === FBDATA ? validationCatalogues : null;\n    var faults = batch && batch.siteFaults.get(siteTable);\n    if (faults) return faults;\n    faults = [];\n    var siteSlug = /^[a-z0-9]+(_[a-z0-9]+)*$/;\n    for (var siteId in siteTable) {\n      if (!Object.prototype.hasOwnProperty.call(siteTable, siteId)) continue;\n      if (!siteSlug.test(siteId)) faults.push('invalid settlement site id ' + siteId + '.');\n      var siteRec = siteTable[siteId] || {};\n      if (!isFinite(siteRec.x) || siteRec.x < -180 || siteRec.x > 180 ||\n          !isFinite(siteRec.y) || siteRec.y < -90 || siteRec.y > 90) {\n        faults.push('settlement site ' + siteId + ' has invalid coordinates.');\n      }\n    }\n    if (batch) batch.siteFaults.set(siteTable,faults);\n    return faults;\n  }\n\n",
+      "reference": "    if (batch && ownKey(batch.faults,key)) return batch.faults[key];\n    var faults = FB.loadTiming ? FB.loadTiming.measure('Validate shared catalogues',work) : work();\n    if (batch) batch.faults[key] = faults;\n    return faults;\n  }\n\n"
+    },
+    {
+      "current": "          ' must be an object keyed by site id.');\n        siteTable = null;\n      } else {\n        physicalSiteFaults(siteTable).forEach(fault);\n      }\n    }\n    var supportedKinds = { village:1, town:1, city:1 };\n",
+      "reference": "          ' must be an object keyed by site id.');\n        siteTable = null;\n      } else {\n        for (var siteId in siteTable) {\n          if (!Object.prototype.hasOwnProperty.call(siteTable, siteId)) continue;\n          if (!siteSlug.test(siteId)) fault('invalid settlement site id ' + siteId + '.');\n          var siteRec = siteTable[siteId] || {};\n          if (!isFinite(siteRec.x) || siteRec.x < -180 || siteRec.x > 180 ||\n              !isFinite(siteRec.y) || siteRec.y < -90 || siteRec.y > 90) {\n            fault('settlement site ' + siteId + ' has invalid coordinates.');\n          }\n        }\n      }\n    }\n    var supportedKinds = { village:1, town:1, city:1 };\n"
+    }
+  ]
+}
