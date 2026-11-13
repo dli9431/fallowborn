@@ -30,6 +30,8 @@ const fixtures = [
   {file:'fish-drying-wet.json',mod:require('../fixtures/authoring/fish-drying-wet.json')},
   {file:'fort-profiles-masonry.json',mod:require('../fixtures/authoring/fort-profiles-masonry.json')},
   {file:'fort-profiles-timber.json',mod:require('../fixtures/authoring/fort-profiles-timber.json')},
+  {file:'maritime-work-river.json',mod:require('../fixtures/authoring/maritime-work-river.json')},
+  {file:'maritime-work-shore.json',mod:require('../fixtures/authoring/maritime-work-shore.json')},
   {file:'opening-infrastructure-estuary.json',mod:require('../fixtures/authoring/opening-infrastructure-estuary.json')},
   {file:'opening-infrastructure-uplands.json',mod:require('../fixtures/authoring/opening-infrastructure-uplands.json')},
   {file:'production-construction.json',mod:require('../fixtures/authoring/production-construction.json')},
@@ -58,6 +60,8 @@ for (const fixture of fixtures) {
 }
 
 const importedRulers = [
+  {file:'maritime-work-shore.json',bookmark:'maritime_shore',scenario:'maritime_shore_ruler',sex:'m'},
+  {file:'maritime-work-river.json',bookmark:'maritime_river',scenario:'maritime_river_ruler',sex:'m'},
   {file:'production-suppliers-inland.json',bookmark:'production_suppliers_inland',
     scenario:'production_suppliers_inland_ruler',sex:'m'},
   {file:'fish-drying-wet.json',bookmark:'fish_wet',scenario:'fish_wet_ruler',sex:'f'}

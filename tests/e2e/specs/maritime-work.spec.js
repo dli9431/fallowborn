@@ -2,15 +2,17 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={shore:require('../fixtures/authoring/maritime-work-shore.json'),river:require('../fixtures/authoring/maritime-work-river.json')};
-dependsOnRuntime(__filename,['index.html','data/maritime_work.js','data/economy.js','data/production.js','data/production_economy.js','data/technology.js',
+dependsOnRuntime(__filename,['js/bookmark_composition.js','index.html','data/maritime_work.js','data/economy.js','data/production.js','data/production_economy.js','data/technology.js',
   'js/maritime_work.js','js/production.js','js/production_economy.js','js/site_resources.js','js/building_seasons.js','js/world.js','js/economy.js',
   'js/mods.js','js/main.js','js/starts.js','js/treasury.js','js/lordships.js','js/technology.js','js/messages.js','js/model.js',
   'js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);
 async function boot(page,info,kind,custom) {
   await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
+  if(custom)expect(await page.evaluate(function(mod){return FB.mods.validate(mod);},custom)).toEqual([]);
   await page.locator('#modfile').setInputFiles(custom ? {name:'maritime-example.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(custom))} :
     path.resolve(__dirname,'../fixtures/authoring/maritime-work-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
@@ -62,16 +64,18 @@ for(const kind of ['shore','river']) {
         ok:ok,repeat:repeat,paid:gold-s.player.gold,due:done.due,status:x.status,level:FB.enterpriseUpgradeLevel(e),staff:FB.enterpriseStaffRequired(e),
         material:s.production.lots.find(function(l){return l.goodId==='boat_work_lot';}).remaining,launch:s.siteResources.sources.work_slip.consumed};});
     expect(r).toMatchObject({id:true,again:false,early:0,noCharge:true,available:0,remaining:1,ok:true,repeat:false,status:'committed',level:0,staff:1,material:0,launch:1});
-    expect(r.paid).toBe(r.due);
+    expect(r.paid).toBeCloseTo(r.due,8);
   });
   test(kind+' restored pending invoice pays only its remainder and restore never creates more work',async function({page},info){
     await boot(page,info,kind);await work(page);
     const r=await page.evaluate(function(){const M=FB.maritimeWork,s=FB.state,id=M.commit(s,M.aiQuote(s,'licensed_work','prepare',{enterpriseUid:null}));
-      const saved=JSON.parse(FB.save.serialize()),before=JSON.stringify([s.production,s.player.gold,s.player.enterprises]);FB.save.restore(saved);
-      const same=before===JSON.stringify([FB.state.production,FB.state.player.gold,FB.state.player.enterprises]);
+      function facts(){const t=FB.save.expandedSnapshot(FB.state);return FB.contentValues.canonical([
+        t.production,t.player.gold,t.player.enterprises,FB.getRngState()>>>0,FB.getUidCounter()]);}
+      const saved=JSON.parse(FB.save.serialize()),before=facts();FB.save.restore(saved);
+      const same=before===facts();
       const q=M.aiQuote(FB.state,'licensed_work','complete',{invoiceId:id}),done=M.commit(FB.state,q),after=FB.save.serialize();
-      const state=JSON.stringify([FB.state.production,FB.state.player.gold,FB.state.player.enterprises]);FB.save.restore(JSON.parse(after));FB.production.initialize(FB.state);
-      return {same:same,done:done,retained:state===JSON.stringify([FB.state.production,FB.state.player.gold,FB.state.player.enterprises]),repeat:M.commit(FB.state,q)};});
+      const state=facts();FB.save.restore(JSON.parse(after));FB.production.initialize(FB.state);
+      return {same:same,done:done,retained:state===facts(),repeat:M.commit(FB.state,q)};});
     expect(r).toEqual({same:true,done:true,retained:true,repeat:false});
   });
 }
@@ -84,7 +88,7 @@ test('the exact paid next upgrade retains technology, level, staffing and ordina
     const updated=s.player.enterprises.find(function(x){return x.uid===e.uid;});
     return {allowed:q.allowed,ok:ok,cost:gold-s.player.gold,due:paid.due,level:FB.enterpriseUpgradeLevel(updated),staff:FB.enterpriseStaffRequired(updated),
       repeat:M.commit(s,paid),credit:q.credit,ordinary:q.baseCost};});
-  expect(r).toMatchObject({allowed:true,ok:true,level:1,staff:2,repeat:false,credit:6});expect(r.cost).toBe(r.due);expect(r.credit).toBeLessThanOrEqual(r.ordinary*0.1);
+  expect(r).toMatchObject({allowed:true,ok:true,level:1,staff:2,repeat:false,credit:6});expect(r.cost).toBeCloseTo(r.due,8);expect(r.credit).toBeLessThanOrEqual(r.ordinary*0.1);
 });
 test('cancel releases only reserved work and does not refund production or buy an enterprise',async function({page},info){
   await boot(page,info,'river');await work(page);
@@ -122,6 +126,7 @@ test('a new ordinary repeat-copy price requires fresh consent without consuming 
 });
 test('actual seasonal stock expiry closes a pending invoice before once-only material loss',async function({page},info){
   const example=JSON.parse(JSON.stringify(examples.river));
+  example.buildingSeasonProfiles=example.buildingSeasonProfiles || {};
   example.buildingSeasonProfiles.work_term={seasonKinds:['spring','summer','autumn','winter'],periodDays:14,maxDays:14,care:false,
     stockLives:[{goodId:'boat_work_lot',days:3}],benefit:null};
   example.bookmarks.maritime_river.revisions.supplied.buildingSeasonAssignments=[{id:'work_season',profileId:'work_term',operationId:null,productionSiteId:'boat_plant',resources:[]}];

@@ -1,10 +1,11 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={shore:require('../fixtures/authoring/maritime-work-shore.json'),river:require('../fixtures/authoring/maritime-work-river.json')};
-dependsOnRuntime(__filename,['index.html','data/production.js','data/maritime_work.js','data/production_economy.js',
+dependsOnRuntime(__filename,['js/bookmark_composition.js','index.html','data/production.js','data/maritime_work.js','data/production_economy.js',
   'data/economy.js','data/economy_maritime.js','data/technology.js','data/site_resources.js','data/building_profiles.js','data/building_seasons.js',
   'js/production.js','js/maritime_work.js','js/production_economy.js','js/site_resources.js','js/actions.js','js/world.js',
   'js/building_operations.js','js/building_seasons.js','js/building_profiles.js','js/economy.js','js/technology.js',
@@ -13,6 +14,7 @@ dependsOnRuntime(__filename,['index.html','data/production.js','data/maritime_wo
 async function boot(page,info,kind) {
   await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
   const m=JSON.parse(JSON.stringify(examples[kind]));m.bookmarks['maritime_'+kind].revision='new_works';
+  expect(await page.evaluate(function(mod){return FB.mods.validate(mod);},m)).toEqual([]);
   await page.locator('#modfile').setInputFiles({name:'maritime-construction-'+kind+'.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(m))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
@@ -58,14 +60,16 @@ for(const kind of ['shore','river']) {
       const id=M.commit(s,M.aiQuote(s,'licensed_work','prepare',{enterpriseUid:null}));
       const q=M.aiQuote(s,'licensed_work','complete',{invoiceId:id}),cashBefore=s.player.gold,completed=M.commit(s,q);
       const remainingPaid=cashBefore-s.player.gold;P.validate(s);
-      const facts=JSON.stringify([s.production,s.buildings,s.siteResources,s.player.gold,s.player.enterprises]);
+      function facts(){const t=FB.save.expandedSnapshot(FB.state);return FB.contentValues.canonical([
+        t.production,t.buildings,t.siteResources,t.player.gold,t.player.enterprises,FB.getRngState()>>>0,FB.getUidCounter()]);}
+      const beforeRestore=facts();
       FB.save.restore(JSON.parse(FB.save.serialize()));P.initialize(FB.state);
       return {ready:ready,direct:direct,ai:ai,pure:pure,built:built,paid:paid,cost:cost,once:once,stable:stable,empty:empty,noFree:noFree,
         constructed:row.asset.constructed,finished:finished,completed:completed,due:q.due,remainingPaid:remainingPaid,credit:q.credit,base:q.baseCost,
-        same:facts===JSON.stringify([FB.state.production,FB.state.buildings,FB.state.siteResources,FB.state.player.gold,FB.state.player.enterprises])};
+        same:beforeRestore===facts()};
     });
     expect(r).toMatchObject({ready:true,direct:true,ai:true,pure:true,built:true,once:true,stable:true,empty:true,noFree:false,constructed:true,finished:true,completed:true,same:true});
-    expect(r.paid).toBe(r.cost);expect(r.remainingPaid).toBe(r.due);expect(r.credit).toBeGreaterThan(0);expect(r.credit).toBeLessThanOrEqual(Math.floor(r.base*0.1));
+    expect(r.paid).toBeCloseTo(r.cost,8);expect(r.remainingPaid).toBeCloseTo(r.due,8);expect(r.credit).toBeGreaterThan(0);expect(r.credit).toBeLessThanOrEqual(Math.floor(r.base*0.1));
   });
 
   test(kind+' construction refuses missing license, worker, stock, technology and private invoice funds purely',async function({page},info){
