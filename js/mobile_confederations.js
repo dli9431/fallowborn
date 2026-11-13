@@ -1215,16 +1215,32 @@
     return markDead(s,rid,opts);
   };
   var snapshot = FB.realmRulerCharacterSnapshot, rulerRealm = FB.realmIdForRulerCharacter, advance = FB.advanceRealmSuccession, died = FB.royalCharDied;
+  var rulerFilter = Array.prototype.filter;
   FB.realmRulerCharacterSnapshot = function (s,rid) { return M.active(s,rid) ? M.leader(s,rid) : snapshot(s,rid); };
   FB.realmIdForRulerCharacter = function (s,value) {
     var cid = typeof value === 'string' ? value : value && value.id;
     // Only a realm with a coalition record can have a leader; skip the form lookup for the rest.
     var root = s.authority && s.authority.governments || {};
-    var rid = Object.keys(root).filter(function (id) {
-      if (!(root[id] && root[id].mobile) || !M.active(s,id)) return false;
-      var reader = M.leader, leader = M.leader(s,id);
-      return !!leader && (reader === nativeLeader && M.leader === reader ? leader : M.leader(s,id)).id === cid;
-    })[0];
+    var ids = Object.keys(root), rid, found = false;
+    if (ids.filter !== rulerFilter) {
+      rid = ids.filter(function (id) {
+        if (!(root[id] && root[id].mobile) || !M.active(s,id)) return false;
+        var reader = M.leader, leader = M.leader(s,id);
+        return !!leader && (reader === nativeLeader && M.leader === reader ? leader : M.leader(s,id)).id === cid;
+      })[0];
+    } else {
+      // Retain the complete scan and live reads, including errors after a match.
+      // Only the first match is consumed; no filtered array or closure is needed.
+      for (var i = 0, length = ids.length; i < length; i++) {
+        if (!(i in ids)) continue;
+        var id = ids[i];
+        if (!(root[id] && root[id].mobile) || !M.active(s,id)) continue;
+        var reader = M.leader, leader = M.leader(s,id);
+        if (!!leader && (reader === nativeLeader && M.leader === reader ? leader : M.leader(s,id)).id === cid && !found) {
+          rid = id; found = true;
+        }
+      }
+    }
     // An expedition is an additional office. Territorial lookup retains the
     // person's home crown even when its command was enumerated first.
     return rulerRealm(s,value) || M.landedHomeRealm && M.landedHomeRealm(s,cid) || rid;
