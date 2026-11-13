@@ -69,7 +69,7 @@ function extract(data, subject, seasons) {
         workload:JSON.stringify([row.mode, row.modCount, row.signature])};
     });
   } else {
-    if (data.cpuProfile !== false || !data.browser || data.unsupported || (data.notOffered || []).length || !Array.isArray(data.starts) || data.starts.length !== 1) {
+    if (data.cpuProfile !== false || data.readAudit || !data.browser || data.unsupported || (data.notOffered || []).length || !Array.isArray(data.starts) || data.starts.length !== 1) {
       throw new Error('Missing or profiled season workload');
     }
     const start = data.starts[0];
@@ -78,7 +78,7 @@ function extract(data, subject, seasons) {
       throw new Error('Incomplete or failed season workload');
     }
     start.seasons.forEach(function (row, index) {
-      if (row.index !== index+1 || !Number.isInteger(row.days) || row.days <= 0 || row.days > 90 || !row.from || !row.to ||
+      if (row.readAudit || row.index !== index+1 || !Number.isInteger(row.days) || row.days <= 0 || row.days > 90 || !row.from || !row.to ||
           row.to.dead !== false || !row.to.date || !Number.isInteger(row.to.rng) || !Number.isInteger(row.to.uid) ||
           ['turn','characters','realms','armies','activeWars','heldCounties','directSettlements','settlementLimit'].some(function (key) {
             return !Number.isFinite(row.to[key]) || row.to[key] < 0;
