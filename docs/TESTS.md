@@ -994,6 +994,15 @@ stage attribution, not unprofiled speed comparisons. Ordered source, story,
 bookmark and start ids and exact catalogue facts must still agree with the
 preceding physical-site implementation.
 
+The preparation cases also pin complete catalogue digests and copied-container
+counts to the source/composition traversal reference. Direct served probes
+compare both private copy owners with their preceding traversal for aliases,
+cycles, detached graphs, sparse arrays, snapshot metadata, live getter edits,
+recursive calls and exception recovery. Reader replacements before owner loading
+and during a copy retain callback order, receiver, key-list holes and length.
+Only current-source anchors in the older preparation oracle change; its
+preceding implementation and all campaign/save parity assertions remain intact.
+
 `save-season-profile.spec.js` is an opt-in Chromium diagnostic. It imports the
 file named by `FB_PROFILE_SAVE` through the game's ordinary save loader, then
 profiles one real fast-forward. It attaches a Chrome CPU profile and JSON with

@@ -26,6 +26,13 @@ or catalogue id. JSON conversion retains the prior undefined, sparse-array,
 nonfinite-number and `toJSON` semantics. Effective signatures keep their existing
 format and inputs; no save field or compatibility exception is introduced.
 
+Source and composition copies traverse native ordered key snapshots directly,
+avoiding a callback for every copied container. Each copy still owns a fresh
+memoized graph, preserves internal aliases and reads values in key order.
+Replaced key or traversal readers use their original callback path, including
+readers installed before the source owners load. Immutable snapshot metadata
+and recursive inspection of mutable copies keep their existing owners.
+
 SHA-256 allocates its UTF-8 byte storage once and reuses one 64-word schedule
 for every block in a fingerprint. Only the actual encoded length is padded and
 hashed; unused capacity never enters the digest. This avoids per-block arrays
