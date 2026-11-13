@@ -356,6 +356,25 @@ test('a fractional ordinary river invoice restores exactly while malformed price
   expect(r.base).toBe(r.ordinary);expect(r.saved).toBe(r.ordinary);expect(r.current).toBe(r.ordinary);
 });
 
+test('an ordinary price beyond the supported invoice bound cannot create a malformed reservation',async function({page},info){
+  await boot(page,info,'river');await work(page);
+  const r=await page.evaluate(function(){
+    const s=FB.state,M=FB.maritimeWork,type='river_fishing_business',def=FBDATA.enterprises[type],originalCost=def.cost;
+    s.player.gold=100000000;def.cost=10000000;
+    try {
+      const ordinary=FB.enterprisePurchaseStatus(s,type,'resource_quay',0,{checkFunds:false}).cost;
+      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),
+        q=M.aiQuote(s,'licensed_work','prepare',{enterpriseUid:null}),committed=M.commit(s,q);
+      const pure=before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
+      const cash=s.player.gold,fullPrice=FB.acquireEnterprise(s,type,'resource_quay',0);
+      return {over:ordinary>1000000,allowed:q.allowed,committed:committed,pure:pure,
+        noInvoice:s.production.maritime===undefined,ordinary:ordinary,fullPrice:!!fullPrice,paid:cash-s.player.gold};
+    } finally {def.cost=originalCost;}
+  });
+  expect(r).toMatchObject({over:true,allowed:false,committed:false,pure:true,noInvoice:true,fullPrice:true});
+  expect(r.paid).toBeCloseTo(r.ordinary,7);
+});
+
 test('direct and AI invoice callers consume the same paid work and launching claim deterministically',async function({page},info){
   await boot(page,info,'river');await work(page);
   const r=await page.evaluate(function(){

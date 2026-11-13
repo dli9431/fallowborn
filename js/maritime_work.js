@@ -156,6 +156,7 @@
       finally {FB.setUidCounter(savedUid);FB.setRngState(savedRng);}
       q.reason='enterprise';if(!selected || selected.blocked)return q;
       q.baseCost=selected.cost;q.level=selected.level;
+      if(!num(q.baseCost,1,1000000))return q;
       q.launch=FB.siteResources.quote(s,{operation:'reserve',sourceId:a.launchSourceId,actor:request.actor,amount:1});
       q.reason='launch';if(!q.launch.allowed)return q;
       if (invoice) {
