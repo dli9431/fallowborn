@@ -207,10 +207,14 @@ jobs:
         run: |
           shopt -s nullglob
           report_files=(blobs/*.zip)
+          echo "shards=${#report_files[@]}" >> "$GITHUB_OUTPUT"
           if [ "${#report_files[@]}" -ne "$EXPECTED_SHARDS" ]; then
-            echo "Expected $EXPECTED_SHARDS shard reports, found ${#report_files[@]}." >&2
-            exit 1
+            echo "complete=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Expected $EXPECTED_SHARDS shard reports, found ${#report_files[@]}. Available results are incomplete."
+          else
+            echo "complete=true" >> "$GITHUB_OUTPUT"
           fi
+          if [ "${#report_files[@]}" -eq 0 ]; then exit 1; fi
           total_bytes=$(du -cb "${report_files[@]}" | tail -1 | cut -f1)
           if [ "$total_bytes" -le 1073741824 ]; then
             echo "html=true" >> "$GITHUB_OUTPUT"
@@ -222,6 +226,9 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=6144
           FB_CI_REPORT_FILE: ${{ github.workspace }}/merged/results.json
+          FB_CI_REPORT_EXPECTED_SHARDS: ${{ inputs.shards }}
+          FB_CI_REPORT_RECEIVED_SHARDS: ${{ steps.reports.outputs.shards }}
+          FB_CI_REPORT_SOURCE_RUN: ${{ inputs.report_source_run || github.run_id }}
           REF: ${{ inputs.ref }}
           MODE: ${{ inputs.mode }}
         run: |
@@ -245,6 +252,11 @@ jobs:
         run: |
           echo "::warning::HTML rendering failed; complete compact results and per-shard artifacts remain available."
           echo "HTML rendering failed. Complete compact results and per-shard failure artifacts remain available." >> "$GITHUB_STEP_SUMMARY"
+      - name: Require complete shard coverage
+        if: ${{ !cancelled() && steps.reports.outputs.complete != 'true' }}
+        run: |
+          echo "::error::Shard coverage is incomplete. Available compact results are diagnostic only."
+          exit 1
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
