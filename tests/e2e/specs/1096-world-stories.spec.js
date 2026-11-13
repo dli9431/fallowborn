@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts}=require('../support/game/restore-facts');
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
@@ -12,7 +13,7 @@ const callId='eastern_undertaking_1096', observerId='eastern_undertaking_househo
 test.describe.configure({mode:'parallel'});
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_1096.js','data/bookmark_1096_campaigns.js',
+  'index.html','js/bookmark_composition.js','data/bookmark_1096.js','data/bookmark_1096_campaigns.js',
   'data/bookmark_1096_mainz.js','data/bookmark_1096_western_expeditions.js','data/bookmark_1096_pilgrim.js',
   'data/story_western_rulers_1096.js','data/story_pilgrim_1096.js',
   'data/story_household_effects_1096.js','data/story_world_1096.js','data/expeditions_1096.js',
@@ -31,6 +32,7 @@ dependsOnRuntime(__filename,[
 
 async function historical(page,info) {
   await beginBookmark(page,info,'1096','pilgrim_household_1096');
+  await installRestoreFacts(page);
   await page.evaluate(function (ids) {
     window.worldCase={id:ids[0],observer:ids[1],
       // A detached, player-pending opening permits direct boundary checks.
@@ -256,6 +258,7 @@ async function imported(page,info,label,withPersonal) {
   await prepareGameContent(page);
   await page.waitForFunction(function (id) {return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(id);},id);
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
   return {id:id,notice:notice,county:county,rid:label==='harbor' ? 'harbor_following' : 'dune_coalition',
     head:prefix+(label==='harbor' ? '_commune' : '_oasis')};
 }
@@ -314,8 +317,10 @@ for (const label of ['harbor','upland']) {
       const settled=FB.resolveGreatHolyWar(s,'attackers','objectives');FB.game.observe=original;
       story.day(s,rec);
       const archive=s.greatHolyWarHistory.campaigns.find(function (x) {return x.id===c.id;});
-      const saved=JSON.parse(FB.save.serialize()),before=JSON.stringify([s.owner,s.holder,s.realms,s.armies,
-        s.greatHolyWarHistory,s.stories]),rng=FB.getRngState(),uid=FB.getUidCounter();
+      function facts(state){return restoreFacts(state,function (v) {
+        return [v.owner,v.holder,v.realms,v.armies,v.greatHolyWarHistory,v.stories];
+      });}
+      const before=facts(s),saved=JSON.parse(FB.save.serialize()),rng=FB.getRngState(),uid=FB.getUidCounter();
       const repeat=FB.resolveGreatHolyWar(s,'attackers','objectives');
       FB.save.restore(saved);story.day(FB.state,FB.state.stories[ids.id]);FB.stories.restore(FB.state);
       const x=FB.state;
@@ -323,7 +328,7 @@ for (const label of ['harbor','upland']) {
         noPlayerCredit:noPlayerCredit,settled:settled,result:rec.result,captured:c.settlement.captured,
         awards:archive.awards.length>0,once:x.greatHolyWarHistory.campaigns.filter(function (r) {return r.id===c.id;}).length,
         repeat:repeat,camp:M.migration(x,ids.rid).at===camp,
-        exact:before===JSON.stringify([x.owner,x.holder,x.realms,x.armies,x.greatHolyWarHistory,x.stories]),
+        exact:before===facts(x),
         random:(rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter()};
     },ids);
     expect(result).toEqual({initial:label==='harbor' ? 'started' : 'pending',noMarch:true,mustered:true,one:true,
