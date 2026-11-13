@@ -149,6 +149,8 @@ ruler-start-restoration.spec.js uses real Godfrey, Raymond, Bohemond and Kilij A
 
 1096-world-stories.spec.js asserts the exact composed story list and five separately authored mobile declarations, while retaining the original call's empty seeded-host ledger, once-only behavior and no involuntary vow. It separately pins the retained baseline to its two world stories and no mobile declarations.
 
+Its current-save control retains the original campaign, required stories and attachment ledger. Current and legacy restores use the detached codec-expanded comparison with canonical object keys, exact values and ordered arrays. Missing current records or either paired provenance field reject before adoption without changing the input, live state, RNG or UID. The legacy control omits both storyAttachmentSchema and state.start.storyAttachments: a retained observer still requires its source call, while an older save lacking both optional records restores and re-saves twice with exact campaign, history, ownership, people, armies, cash, RNG and UID. Neither missing story nor attachment provenance is reconstructed. Independent imported muster, battle-credit and canonical-award checks retain their exact restore and once-only assertions.
+
 political-religious-head.spec.js covers native and ordinary JSON political office
 configurations with distinct age/sex, constituency, polity and seat rules. It checks
 fresh identity binding, pure reads, refused generic writers, independent offices,
