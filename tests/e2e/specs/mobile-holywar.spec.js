@@ -75,6 +75,9 @@ for (const label of ['harbor','upland']) {
       const q=FB.mobileGreatHolyWarReview(s,t.rid,r.leaderId,'join');
       const pure=before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
       const strength=FB.greatHolyWarStrength(s,'attackers'),joined=FB.commitMobileGreatHolyWar(s,q);
+      if(!q.allowed || !joined)throw new Error('Mobile enrollment rejected: '+JSON.stringify({review:q,joined:joined,
+        command:M.commandSnapshot(s,t.rid),host:h,migration:M.migration(s,t.rid),
+        topRealm:FB.topRealm(s,t.rid),realm:s.realms[t.rid],ordinaryWar:FB.realmInOrdinaryWar(s,t.rid)}));
       const delta=FB.greatHolyWarStrength(s,'attackers')-strength;
       return {pure:pure,allowed:q.allowed,joined:joined,repeat:FB.commitMobileGreatHolyWar(s,q),
         unchanged:old===JSON.stringify([s.armies,r.members,r.accounting,r.food,s.owner,s.holder,s.player.gold]),
@@ -93,6 +96,9 @@ for (const label of ['harbor','upland']) {
       const s=FB.state,t=vowTest,M=FB.mobile,host=M.host(s,t.rid),migration=M.migration(s,t.rid),camp=migration.at;
       t.call(false);
       const part=t.part(s),id=host.id,count=s.armies.filter(function (h) {return h.realm===t.rid;}).length;
+      if(!part)throw new Error('Automatic mobile enrollment absent: '+JSON.stringify({
+        review:FB.mobileGreatHolyWarReview(s,t.rid,M.row(s,t.rid).leaderId,'join'),
+        command:M.commandSnapshot(s,t.rid),host:host,ordinaryWar:FB.realmInOrdinaryWar(s,t.rid)}));
       t.launch();
       const before=JSON.stringify([s.armies,part,s.greatHolyWar.contribution]);
       FB.greatHolyWarTick(s);FB.greatHolyWarMarkMuster(s,t.rid);
@@ -173,7 +179,10 @@ for (const label of ['harbor','upland']) {
     await begin(page,info,label);
     const result=await page.evaluate(function () {
       const s=FB.state,t=vowTest,P=FB.expeditionParticipants,rec=s.stories[t.story],module=FB.stories.get(t.story);
-      P.commit(s,P.review(s,t.story,'request',s.player.charId,module.declaration.roles[0].id));module.day(s,rec);
+      const request=P.review(s,t.story,'request',s.player.charId,module.declaration.roles[0].id),requested=P.commit(s,request);
+      if(!requested)throw new Error('Personal admission rejected: '+JSON.stringify({request:request,record:rec,
+        player:s.player,migration:FB.mobile.migration(s,t.rid),host:FB.mobile.host(s,t.rid)}));
+      module.day(s,rec);
       if(rec.status!=='active') throw new Error('Expected real individual admission');
       const noVow=!s.player.greatHolyWar;t.call(true);t.join();
       const old=JSON.stringify([s.armies,FB.mobile.row(s,t.rid),s.player.gold]);
