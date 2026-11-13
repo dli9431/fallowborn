@@ -23,7 +23,15 @@ function action(page,label) {return page.locator('#mobile-list').getByRole('butt
 function back(page) {return page.locator('.gm-footer').getByRole('button',{name:'Back',exact:true}).click();}
 function close(page) {return page.locator('.gm-footer').getByRole('button',{name:'Close',exact:true}).click();}
 async function deed(page) {
-  await page.evaluate(function () {FB.ui._shared.markActionsDirty();FB.ui._shared.renderActions();});
+  const revealed=await page.evaluate(function () {
+    const s=FB.state,before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+    FB.ui._shared.markActionsDirty();FB.ui._shared.renderActions();
+    // Ruler starts need not have a waiting story opening this accordion.
+    const found=FB.ui.revealDeedAction('mobile_coalition');
+    return {found:found,unchanged:before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
+  });
+  expect(revealed).toEqual({found:true,unchanged:true});
+  await expect(page.locator('[data-action-id="mobile_coalition"]')).toBeVisible();
   await page.locator('[data-action-id="mobile_coalition"]').click();
 }
 async function start(page,info,prefix,home) {
@@ -57,6 +65,16 @@ async function accounts(page,prefix) {
       FB.treasuryAvailable(s,prefix+'_second_following')];
   },prefix);
 }
+async function treasuries(page) {
+  return page.evaluate(function () {
+    const s=FB.state,publicAccounts={};
+    Object.keys(s.realms).forEach(function (rid) {
+      if (s.realms[rid].treasury) publicAccounts[rid]=s.realms[rid].treasury;
+    });
+    return {privateGold:s.player.gold,separated:FB.treasurySeparated(s,'player'),
+      playerPublic:FB.treasuryPublicAccountSnapshot(s,'player'),publicAccounts:publicAccounts};
+  });
+}
 async function localAtHome(page,prefix) {
   await page.evaluate(function (prefix) {
     const s=FB.state;
@@ -88,13 +106,22 @@ for (const prefix of ['harbor','dune']) {
     await expect(page.locator('[data-action-id="mobile_coalition"]')).toBeFocused();
   });
 
-  test(prefix+' private funding confirms the chosen recipient and preserves exact conservation',async function ({page},info) {
-    await start(page,info,prefix);
+  for (const home of [false,true]) {
+  test(prefix+' private funding confirms the chosen recipient and preserves exact conservation'+(home?' with a separate home treasury':''),async function ({page},info) {
+    await start(page,info,prefix,home);
+    if (home) await localAtHome(page,prefix);
     await deed(page);
     await choice(page,secondId(prefix)).click();
     await page.locator('#mobile-funding').fill('7');
     await page.locator('#mobile-funding').dispatchEvent('change');
     const before=await accounts(page,prefix);
+    const exact=await treasuries(page);
+    expect(exact.separated).toBe(home);
+    if (home) expect(exact.playerPublic).not.toBeNull();
+    else {
+      expect(exact.playerPublic).toBeNull();
+      expect(before[1]).toBe(before[0]);
+    }
     await action(page,'Contribute private funds').click();
     await expect(page.locator('#gm-body')).toContainText(prefix==='harbor'?'Willow Company':'Copper Caravan');
     await expect(page.locator('#gm-body')).toContainText('Your private purse');
@@ -106,14 +133,29 @@ for (const prefix of ['harbor','dune']) {
     await page.locator('#mobile-confirm').click();
     await expect(page.locator('#gm-title')).toHaveText('Decision recorded');
     const after=await accounts(page,prefix);
-    expect(after).toEqual([before[0]-7,before[1],before[2],before[3]+7]);
+    // Without a separate public account, the player quote aliases private cash.
+    expect(after).toEqual([before[0]-7,before[1]-(home?0:7),before[2],before[3]+7]);
+    exact.privateGold-=7;
+    exact.publicAccounts[secondId(prefix)].gold+=7;
+    expect(await treasuries(page)).toEqual(exact);
     await page.locator('#mobile-continue').click();
     await expect(page.locator('#mobile-funding')).toHaveValue('7');
-    await expect(action(page,'Contribute private funds')).toBeFocused();
+    const contribution=action(page,'Contribute private funds');
+    if (home) {
+      // Six private coins remain; public funds cannot finance a repeat gift.
+      await expect(contribution).toBeDisabled();
+      const card=page.locator('#mobile-list .review-action-card').filter({has:page.getByRole('button',{name:'Contribute private funds'})});
+      await expect(card).toHaveAttribute('tabindex','0');
+      await expect(card).toBeFocused();
+    } else {
+      await expect(contribution).toBeEnabled();
+      await expect(contribution).toBeFocused();
+    }
     await back(page);
     await choice(page,firstId(prefix)).click();
     await expect(action(page,'Contribute private funds')).toHaveCount(prefix==='harbor'?1:0);
   });
+  }
 
   test(prefix+' public grants use the selected command and lawful separate home account',async function ({page},info) {
     await start(page,info,prefix,true);
@@ -124,39 +166,77 @@ for (const prefix of ['harbor','dune']) {
     await page.locator('#mobile-funding').fill('3');
     await page.locator('#mobile-funding').dispatchEvent('change');
     const before=await accounts(page,prefix);
+    const exact=await treasuries(page);
+    expect(exact.separated).toBe(true);
+    expect(exact.playerPublic).not.toBeNull();
     await action(page,'Grant public funds').click();
     await expect(page.locator('#gm-body')).toContainText('Public treasury of');
+    await expect(page.locator('#gm-body')).toContainText(prefix==='harbor'?'Willow Company':'Copper Caravan');
     await page.locator('#mobile-confirm').click();
     await expect(page.locator('#gm-title')).toHaveText('Decision recorded');
     const after=await accounts(page,prefix);
     expect(after).toEqual([before[0],before[1]-3,before[2],before[3]+3]);
+    exact.publicAccounts.player.gold-=3;
+    exact.playerPublic.gold-=3;exact.playerPublic.available-=3;
+    exact.publicAccounts[secondId(prefix)].gold+=3;
+    expect(await treasuries(page)).toEqual(exact);
   });
 
   test(prefix+' outside ruler selects the second offer and consents only to its exact payment',async function ({page},info) {
     await start(page,info,prefix,true);
     await localAtHome(page,prefix);
+    const unconsented=await treasuries(page);
     const offers=await page.evaluate(function (prefix) {
       const s=FB.state,M=FB.mobile;
-      return [prefix==='harbor'?'harbor_following':'dune_coalition',prefix+'_second_following'].map(function (rid) {
+      return [prefix==='harbor'?'harbor_following':'dune_coalition',prefix+'_second_following'].map(function (rid,index) {
         const actor={kind:'character',id:M.leader(s,rid).id};
         return M.commit(s,M.review(s,{realmId:rid,action:'offer',actor:actor,
-          terms:{kind:'access',partnerId:'player',countyIds:[s.player.provinceId],capacity:40,allowRecruit:false,price:2,duration:20}}));
+          terms:{kind:'access',partnerId:'player',countyIds:[s.player.provinceId],capacity:40,allowRecruit:false,price:index+1,duration:20}}));
       });
     },prefix);
     expect(offers).toEqual([true,true]);
+    expect(await treasuries(page)).toEqual(unconsented);
     const before=await accounts(page,prefix);
+    const exact=await treasuries(page);
+    expect(exact.separated).toBe(true);
+    expect(exact.playerPublic).not.toBeNull();
     await deed(page);
     await choice(page,secondId(prefix)).click();
     await action(page,'Accept as the outside court').click();
+    await expect(page.locator('#gm-body')).toContainText(prefix==='harbor'?'Willow Company':'Copper Caravan');
+    const offered=await page.evaluate(function (prefix) {
+      const s=FB.state,M=FB.mobile;
+      return {turn:s.turn,agreements:[prefix==='harbor'?'harbor_following':'dune_coalition',prefix+'_second_following'].map(function (rid) {
+        return M.row(s,rid).agreements;
+      })};
+    },prefix);
     await page.locator('#mobile-confirm').click();
     await expect(page.locator('#gm-title')).toHaveText('Decision recorded');
     expect(await accounts(page,prefix)).toEqual([before[0],before[1]+2,before[2],before[3]-2]);
+    exact.publicAccounts.player.gold+=2;
+    exact.playerPublic.gold+=2;exact.playerPublic.available+=2;
+    exact.publicAccounts[secondId(prefix)].gold-=2;
+    expect(await treasuries(page)).toEqual(exact);
     expect(await page.evaluate(function (prefix) {
       const s=FB.state,M=FB.mobile;
       return [prefix==='harbor'?'harbor_following':'dune_coalition',prefix+'_second_following'].map(function (rid) {
         return M.row(s,rid).agreements.slice(-1)[0].status;
       });
     },prefix)).toEqual(['offered','active']);
+    const accepted=offered.agreements[1][offered.agreements[1].length-1];
+    accepted.status='active';accepted.startTurn=offered.turn;accepted.endTurn=offered.turn+accepted.duration;
+    expect(await page.evaluate(function (prefix) {
+      const s=FB.state,M=FB.mobile;
+      return [prefix==='harbor'?'harbor_following':'dune_coalition',prefix+'_second_following'].map(function (rid) {
+        return M.row(s,rid).agreements;
+      });
+    },prefix)).toEqual(offered.agreements);
+    await page.locator('#mobile-continue').click();
+    await expect(action(page,'Accept as the outside court')).toHaveCount(0);
+    await back(page);
+    await expect(choice(page,secondId(prefix))).toBeFocused();
+    await close(page);
+    await expect(page.locator('[data-action-id="mobile_coalition"]')).toBeFocused();
   });
 }
 
@@ -285,9 +365,16 @@ test('a changed outside offer cannot be accepted through the selected stale conf
   await deed(page);
   await choice(page,secondId('harbor')).click();
   await action(page,'Accept as the outside court').click();
+  await expect(page.locator('#gm-body')).toContainText('Willow Company');
   await page.evaluate(function () {FB.mobile.row(FB.state,'harbor_second_following').agreements.slice(-1)[0].price=5;});
   const before=await page.evaluate(function () {return JSON.stringify(FB.state);});
   await page.locator('#mobile-confirm').click();
   await expect(page.locator('#gm-title')).toHaveText('Terms changed');
   expect(await page.evaluate(function () {return JSON.stringify(FB.state);})).toBe(before);
+  await page.locator('#mobile-continue').click();
+  await expect(action(page,'Accept as the outside court')).toBeFocused();
+  await back(page);
+  await expect(choice(page,secondId('harbor'))).toBeFocused();
+  await close(page);
+  await expect(page.locator('[data-action-id="mobile_coalition"]')).toBeFocused();
 });
