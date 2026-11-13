@@ -186,7 +186,7 @@
           "maxPerReview": 30,
           "unitIds": [
             "arch",
-            "inf"
+            "levy"
           ]
         }
       }
