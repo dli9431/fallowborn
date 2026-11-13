@@ -10,7 +10,7 @@ const examples = {
   harbor:require('../fixtures/authoring/adopted-public-treasury-harbor.json'),
   dune:require('../fixtures/authoring/adopted-public-treasury-dune.json')
 };
-dependsOnRuntime(__filename,['index.html','data/technology.js','data/political_institutions.js','data/units.js','data/markets.js',
+dependsOnRuntime(__filename,['js/bookmark_composition.js','js/util.js','index.html','data/technology.js','data/political_institutions.js','data/units.js','data/markets.js',
   'js/treasury.js','js/starts.js','js/world.js','js/main.js','js/actions.js','js/save.js','js/save_v4.js',
   'js/mods.js','js/model.js','js/lordships.js','js/market.js','js/logistics.js','js/armies.js',
   'js/home_authority.js','js/mobile_confederations.js','js/mobile_command.js','js/story_expedition_preparation.js',
@@ -261,10 +261,11 @@ for(const prefix of ['harbor','dune']) {
     await importWorld(page,info,prefix);await begin(page,prefix,'code');
     const result=await page.evaluate(function(prefix){
       const P=FB.expeditionPreparation,id=prefix+'_preparation';
-      function facts(s){return JSON.stringify([s.start.publicTreasury,s.realms,s.player.gold,s.stories,s.population,s.market,s.armies]);}
-      function restore(){const before=facts(FB.state),save=FB.save.serialize(),rng=FB.getRngState(),uid=FB.getUidCounter();
+      function facts(s){const t=FB.save.expandedSnapshot(s);
+        return FB.contentValues.canonical([t.start.publicTreasury,t.realms,t.player.gold,t.stories,t.population,t.market,t.armies]);}
+      function restore(){const before=facts(FB.state),save=FB.save.serialize(),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
         FB.save.restore(JSON.parse(save));FB.save.restore(JSON.parse(save));
-        return before===facts(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();}
+        return before===facts(FB.state) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter();}
       FB.state.realms.player.treasury.gold=200;
       const pending=restore(),pendingSave=FB.save.serialize(),s=FB.state,actor=s.player.charId,
         paid=P.commit(s,P.review(s,id,'grant',actor)),authorized=P.commit(s,P.review(s,id,'authorize',actor)),

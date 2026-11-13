@@ -8,7 +8,7 @@ const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/subordinate-formation-harbor.json'),
   dune:require('../fixtures/authoring/subordinate-formation-dune.json')};
-dependsOnRuntime(__filename,['index.html','data/technology.js','data/eras.js','data/political_institutions.js',
+dependsOnRuntime(__filename,['js/bookmark_composition.js','js/util.js','index.html','data/technology.js','data/eras.js','data/political_institutions.js',
   'js/world.js','js/starts.js','js/model.js','js/bookmark_setup.js','js/stories.js','js/mods.js','js/main.js',
   'js/governments.js','js/government_continuity.js','js/government_lineage.js','js/government_selection.js',
   'js/authority.js','js/politics.js','js/home_authority.js','js/mobile_confederations.js','js/mobile_command.js',
@@ -164,9 +164,11 @@ for(const prefix of ['harbor','dune']) {
     await begin(page,info,prefix);
     const result=await page.evaluate(function(){
       const C=subordinateCase;
-      function restore(){const before=JSON.stringify([C.record(FB.state),FB.state.realms,FB.state.player.gold,FB.state.market,FB.state.population,FB.state.armies]),
+      function facts(s){const t=FB.save.expandedSnapshot(s);
+        return FB.contentValues.canonical([C.record(t),t.realms,t.player.gold,t.market,t.population,t.armies]);}
+      function restore(){const before=facts(FB.state),rng=FB.getRngState()>>>0,uid=FB.getUidCounter(),
         save=JSON.parse(FB.save.serialize());FB.save.restore(save);FB.save.restore(JSON.parse(JSON.stringify(save)));
-        return before===JSON.stringify([C.record(FB.state),FB.state.realms,FB.state.player.gold,FB.state.market,FB.state.population,FB.state.armies]);}
+        return before===facts(FB.state) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter();}
       const pending=restore(),funded=C.localGift(FB.state),paid=restore(),authorized=C.authorize(FB.state),consent=restore(),
         formed=C.form(FB.state),saved=formed && restore();
       const s=FB.state,t=C.record(s),old=JSON.stringify(t.openingJurisdiction);s.realms[t.provider.realmId].liege=null;
@@ -231,8 +233,9 @@ for(const prefix of ['harbor','dune']) {
       const s=FB.state,C=subordinateCase,P=FB.expeditionPreparation,t=C.record(s),story=FB.stories.get(C.id),
         funded=C.localGift(s),authorized=C.authorize(s),q=P.review(s,C.id,'form',C.leader(s)),
         owners=JSON.stringify([s.owner,s.holder]),sovereign=s.owner[C.origin],
-        enemy=prefix==='harbor' ? 'harbor_commune' : 'dune_oasis',
+        enemy=prefix==='harbor' ? 'harbor_upland' : 'player',
         war=FB.registerOrdinaryWar(s,enemy,{enemy:sovereign,target:C.origin,legacy:false,occupations:{}});
+      if(!war)throw new Error('Occupation requires distinct actual war parties');
       war.occupations[C.origin]={occupied:true,progress:100,homeRealm:sovereign};
       const before=JSON.stringify(s),rejected=!P.commit(s,q),fresh=!P.review(s,C.id,'form',C.leader(s)).allowed,
         pure=before===JSON.stringify(s);story.day(s,t);
@@ -372,9 +375,10 @@ test('unopted retained ruler world restores without jurisdiction preparation pub
   const mod=JSON.parse(JSON.stringify(examples.dune));mod.bookmarks.dune_world.revision='baseline';
   await begin(page,info,'dune',mod);
   const result=await page.evaluate(function(){
-    const s=FB.state,save=JSON.parse(FB.save.serialize()),before=JSON.stringify([s.realms,s.player.gold,s.stories]);FB.save.restore(save);
+    function facts(s){const t=FB.save.expandedSnapshot(s);return FB.contentValues.canonical([t.realms,t.player.gold,t.stories]);}
+    const s=FB.state,save=JSON.parse(FB.save.serialize()),before=facts(s);FB.save.restore(save);
     return {absent:!FB.state.stories.dune_preparation && !FB.state.start.publicTreasury && !FB.mobile.row(FB.state,'dune_coalition'),
-      same:before===JSON.stringify([FB.state.realms,FB.state.player.gold,FB.state.stories]),form:FB.governments.forRealm(FB.state,'player').id};
+      same:before===facts(FB.state),form:FB.governments.forRealm(FB.state,'player').id};
   });
   expect(result).toEqual({absent:true,same:true,form:'territorial'});
 });
@@ -488,9 +492,15 @@ test('a supported court release changes live account aliases while preserving or
   const result=await page.evaluate(function(){
     const s=FB.state,C=subordinateCase,t=C.record(s),old=JSON.stringify([t.bindings,t.openingJurisdiction]),
       cash=FB.treasuryPublicAccountSnapshot(s,'player').gold,me=s.chars[s.player.charId],
-      released=FB.governmentSelection.releasePlayerCourt(s,me,true);
+      released=FB.governmentSelection.releasePlayerCourt(s,me,true),afterRelease=FB.treasuryPublicAccountSnapshot(s,released).gold;
     FB.stories.get(C.id).day(s,t);const original=old===JSON.stringify([t.bindings,t.openingJurisdiction]),
       save=JSON.parse(FB.save.serialize());FB.save.restore(save);
+    if(cash!==FB.treasuryPublicAccountSnapshot(FB.state,released).gold || C.record(FB.state).reason!=='interrupted')
+      throw new Error('Released jurisdiction facts: '+JSON.stringify({before:cash,afterRelease:afterRelease,
+        afterBoundary:FB.treasuryPublicAccountSnapshot(FB.state,released).gold,status:C.record(FB.state).status,
+        reason:C.record(FB.state).reason,provider:C.record(FB.state).provider,
+        currentRuler:(FB.realmRulerCharacterSnapshot(FB.state,released)||{}).id,
+        selection:FB.state.authority.governments[released].selection}));
     return {released:released,original:original,saved:old===JSON.stringify([C.record(FB.state).bindings,C.record(FB.state).openingJurisdiction]),
       provider:C.record(FB.state).provider.realmId,alias:FB.state.start.publicTreasury.realmId,
       cash:cash===FB.treasuryPublicAccountSnapshot(FB.state,'dune_gate').gold,

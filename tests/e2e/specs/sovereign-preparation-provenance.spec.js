@@ -7,7 +7,7 @@ const {openGame}=require('../support/game/navigation');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/sovereign-preparation-harbor.json'),
   dune:require('../fixtures/authoring/sovereign-preparation-dune.json')};
-dependsOnRuntime(__filename,['index.html','data/technology.js','data/political_institutions.js','data/units.js',
+dependsOnRuntime(__filename,['js/bookmark_composition.js','js/util.js','index.html','data/technology.js','data/political_institutions.js','data/units.js',
   'js/starts.js','js/main.js','js/world.js','js/mods.js','js/stories.js','js/bookmark_setup.js',
   'js/government_lineage.js','js/government_selection.js','js/governments.js','js/model.js','js/authority.js',
   'js/home_authority.js','js/mobile_confederations.js','js/mobile_command.js','js/treasury.js','js/market.js',
@@ -32,10 +32,11 @@ async function importWorld(page,info,prefix,modified,revision) {
       leader:function(s){const d=FB.campaignBookmark(s).realms.find(function(d){return d.id===this.rid;},this);
         return this.record(s).bindings.find(function(b){return b.memberId===d.mobile.opening.leaderMemberId;}).characterId;},
       apply:function(s,action){return FB.expeditionPreparation.commit(s,FB.expeditionPreparation.review(s,this.id,action,this.leader(s)));},
-      facts:function(s){return JSON.stringify([s.start,s.stories,s.realms,s.player.gold,s.market,s.population,s.armies]);},
-      restore:function(){const before=this.facts(FB.state),save=JSON.parse(FB.save.serialize()),rng=FB.getRngState(),uid=FB.getUidCounter();
+      facts:function(s){const t=FB.save.expandedSnapshot(s);
+        return FB.contentValues.canonical([t.start,t.stories,t.realms,t.player.gold,t.market,t.population,t.armies]);},
+      restore:function(){const before=this.facts(FB.state),save=JSON.parse(FB.save.serialize()),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
         FB.save.restore(save);FB.save.restore(JSON.parse(JSON.stringify(save)));
-        return before===this.facts(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();}};
+        return before===this.facts(FB.state) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter();}};
     const adopt=FB.adoptStartingRealm;
     FB.adoptStartingRealm=function(s,sc,options){
       const t=s.stories && s.stories[sovereignCase.id],old=t && JSON.stringify(t.bindings),person=s.player.charId;
@@ -255,8 +256,14 @@ for(const formed of [false,true]) {
       const C=sovereignCase,s=FB.state;s.realms.player.treasury.gold=500;
       const ready=!formed || C.apply(s,'grant') && C.apply(s,'authorize') && C.apply(s,'form'),
         original=JSON.stringify(C.record(s).bindings),cash=FB.treasuryPublicAccountSnapshot(s,'player').gold,
-        released=FB.governmentSelection.releasePlayerCourt(s,s.chars[s.player.charId],true);
+        released=FB.governmentSelection.releasePlayerCourt(s,s.chars[s.player.charId],true),
+        afterRelease=FB.treasuryPublicAccountSnapshot(s,released).gold;
       FB.stories.get(C.id).day(s,C.record(s));
+      if(cash!==FB.treasuryPublicAccountSnapshot(s,released).gold || !formed && C.record(s).reason!=='interrupted')
+        throw new Error('Released preparation facts: '+JSON.stringify({formed:formed,before:cash,afterRelease:afterRelease,
+          afterBoundary:FB.treasuryPublicAccountSnapshot(s,released).gold,status:C.record(s).status,reason:C.record(s).reason,
+          provider:C.record(s).provider,currentRuler:(FB.realmRulerCharacterSnapshot(s,released)||{}).id,
+          selection:s.authority.governments[released].selection}));
       return {ready:ready,released:released,alias:C.record(s).provider.realmId,
         publicAlias:s.start.publicTreasury.realmId,original:original===JSON.stringify(C.record(s).bindings),
         mobile:!formed || original===JSON.stringify(FB.mobile.row(s,C.rid).openingBindings),
