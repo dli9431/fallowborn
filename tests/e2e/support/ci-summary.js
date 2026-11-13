@@ -21,7 +21,10 @@ function firstLine(text) {
 }
 
 function cell(text) {
-  return String(text).replace(/\|/g, '\\|').slice(0, 240);
+  return String(text).slice(0, 240).replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\\/g, '&#92;').replace(/\|/g, '&#124;')
+    .replace(/[\r\n]+/g, ' ');
 }
 
 function walk(suite, titles) {
@@ -63,7 +66,7 @@ if (failures.length) {
   lines.push('| project | test | error |');
   lines.push('| --- | --- | --- |');
   failures.slice(0, 60).forEach(function (row) {
-    lines.push('| ' + row.project + ' | ' + cell(row.file + ':' + row.line + ' ' + row.title) +
+    lines.push('| ' + cell(row.project) + ' | ' + cell(row.file + ':' + row.line + ' ' + row.title) +
       ' | ' + cell(row.error || '') + ' |');
   });
   if (failures.length > 60) lines.push('', (failures.length - 60) + ' more failures are in the HTML report artifact.');
@@ -82,6 +85,6 @@ if (slow.length) {
   lines.push('');
   lines.push('| spec | minutes |');
   lines.push('| --- | ---: |');
-  slow.forEach(function (row) { lines.push('| ' + row.file + ' | ' + (row.ms / 60000).toFixed(1) + ' |'); });
+  slow.forEach(function (row) { lines.push('| ' + cell(row.file) + ' | ' + (row.ms / 60000).toFixed(1) + ' |'); });
 }
 process.stdout.write(lines.join('\n') + '\n');

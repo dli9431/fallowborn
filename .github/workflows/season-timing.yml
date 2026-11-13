@@ -44,6 +44,7 @@ jobs:
           echo "label=$(printf '%s' "$REF" | tr -c 'A-Za-z0-9-' '-')" >> "$GITHUB_OUTPUT"
 
   measure:
+    # Arbitrary game refs must not populate shared dependency or browser caches.
     needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 240
@@ -56,24 +57,17 @@ jobs:
         with:
           ref: ${{ github.sha }}
           path: tooling
+          persist-credentials: false
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
           path: game
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: tooling/tests/e2e/package-lock.json
       - run: npm ci
         working-directory: tooling/tests/e2e
-      - id: pw
-        working-directory: tooling/tests/e2e
-        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
       - name: Install Chromium
         working-directory: tooling/tests/e2e
         run: npx playwright install --with-deps chromium
