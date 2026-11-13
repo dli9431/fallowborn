@@ -577,7 +577,7 @@ Workflows live in `.github/workflows/`:
   also upload their `test-results` folders (error contexts, screenshots, traces) as
   `results-<label>-<shard>`. Example: `gh workflow run tests.yml --ref main -f target=476
   -f mode=specs -f specs="specs/boot.spec.js specs/determinism.spec.js"`.
-- `nightly.yml`: daily from `main` and by hand. The full suite on `476` and `dev` in 16 shards,
+- `nightly.yml`: daily from `main` and by hand. The full suite on `476` and `dev` in 32 shards,
   then season timing on `476`.
 - `e2e.yml`: the reusable check, sharded Playwright run (blob reporter), and merge job. The merge
   job writes a job summary with totals, failures and their first error line, flaky tests, and the
@@ -1307,7 +1307,7 @@ measurement workloads, not regression-test journeys.
 Nightly is the registered dispatch route even before the standalone comparison
 workflow is registered on the default branch. Its optional comparison inputs
 leave ordinary scheduled suite and timing behavior intact. The full-suite job
-uses the shared E2E workflow with syntax/support checks, sixteen browser
+uses the shared E2E workflow with syntax/support checks, thirty-two browser
 shards per branch and merged reports. Report tooling, season and comparison
 drivers come from the dispatched tooling commit. Publish the
 intended public tooling revision before dispatch; game and tooling revisions
@@ -1424,3 +1424,5 @@ Mobile consumer regressions compare exact decoded state with ordered arrays, com
 Imported mobile scenarios reuse the already prepared Mods title through beginBookmarkFromTitle instead of booting the catalogue again. Exact entry replay compares fresh boots with matching browser onboarding preferences. Current saves require every original story attachment; missing-record compatibility controls remove both provenance fields to represent genuinely older saves. Opening production stock is declared only in revisions with its standing physical asset, and grazing rejection consumes the actual available capacity through the ordinary resource owner.
 
 The two maritime-work examples declare the same explicit male ruler identity as their existing ruler starts. Shared admission coverage checks both ordinary imports and rejection when that sex is erased. Core maritime and construction consumers compare complete decoded receipt/property facts with unchanged array order, unsigned RNG bits and uid, and keep exact invoice prices while allowing only floating-point subtraction tolerance in calculated cash differences. Technology refusal removes the actual declared purchase requirement. Review selectors include accessible card notes while retaining exact focus checks. The optional stock-expiry variation creates its season-profile table before extending it. Independent consumer cases shard without increasing their timeout.
+
+Nightly full-suite runs use 32 shards to reduce the work assigned to each job within its existing 150-minute limit. This preserves all selected browser cases, the normal per-case timeout and two workers per shard. Season timing retains its separate 12-shard workload; paired measurements and report coverage checks are unchanged. A complete shard report remains necessary for full-suite evidence.
