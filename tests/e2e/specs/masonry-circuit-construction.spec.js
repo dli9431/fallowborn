@@ -208,36 +208,50 @@ test('imported timber levels use different requirements and scope without hardco
     const req={countyId:pid,settlement:0,profileId:'upland_timber_circuit',targetLevel:1,realmId:'player',repair:false};
     const q=FB.fortProfiles.quote(s,req);FB.fortProfiles.commit(s,q);const b=FB.fortAt(s,pid);s.turn=b.completeTurn;FB.fortificationDay(s);
     const missing=FB.fortProfiles.quote(s,Object.assign({},req,{targetLevel:2}));
-    const dates=[749,750,850,851].map(function (year) {s.date.year=year;return FB.fortProfiles.status(s,pid,0,req.profileId,1,'player',false).ready;});
-    s.date.year=800;
+    // Isolate the construction window from the builder's age at each staged date.
+    const dates=[749,750,850,851].map(function (year) {
+      s.date.year=year;s.chars[s.player.charId].born=year-50;
+      return FB.fortProfiles.status(s,pid,0,req.profileId,1,'player',false).ready;
+    });
+    s.date.year=800;s.chars[s.player.charId].born=750;
     return {first:q.allowed,missing:missing.allowed,reason:missing.reason,requirements:missing.requirements,dates,
+      rightCounty:FB.fortProfiles.status(s,pid,0,req.profileId,1,'player',false).ready,
       wrongCounty:FB.fortProfiles.status(s,'inventory_pass',0,req.profileId,1,'player',false).ready,
       material:FB.fortProfiles.get(req.profileId).material};
   });
   expect(r).toMatchObject({first:true,missing:false,requirements:['fortified_camps','lime_mortar'],
-    dates:[false,true,true,false],wrongCounty:false,material:'timber'});expect(r.reason).toContain('Lime Mortar');
+    dates:[false,true,true,false],rightCounty:true,wrongCounty:false,material:'timber'});expect(r.reason).toContain('Lime Mortar');
 });
 
 test('wrong site, authority, competing ruins, insufficient funds and stale terms never pay or create another fort',async function ({page},info) {
   await start(page,info,'river');await hold(page,'river');
   const r=await page.evaluate(function () {
     const s=FB.state,pid=s.player.provinceId,req={countyId:pid,settlement:0,profileId:'urban_circuit',targetLevel:1,realmId:'player',repair:false};
-    const q=FB.fortProfiles.quote(s,req),checks=[];
+    const q=FB.fortProfiles.quote(s,req),checks=[],reasons=[];
+    const sites=FB.world.sitesByProv[pid].list;
     function fails(request) {
       const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
       const quote=FB.fortProfiles.quote(s,request),paid=FB.fortProfiles.commit(s,quote);
+      reasons.push(FB.fortProjectStatus(s,request.countyId,request.settlement,request.targetLevel,
+        {realm:request.realmId,repair:request.repair,profileId:request.profileId}).reason);
       return !quote.allowed&&!paid&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
     }
-    checks.push(fails(Object.assign({},req,{settlement:7})));
+    // All eight canonical slots exist, including generated sites beyond the authored pair.
+    checks.push(fails(Object.assign({},req,{settlement:8})));
     s.holder[pid]='inventory_ridge_court';FB.invalidateSettlementLordships(s);checks.push(fails(req));
     s.holder[pid]='player';FB.invalidateSettlementLordships(s);
     s.player.gold=0;checks.push(fails(req));s.player.gold=10000;
     s.buildings[pid].push({id:'walls',s:1,level:0,ruined:true,ruinedLevel:1});FB.invalidateFortIndex();checks.push(fails(req));
     s.buildings[pid]=[];FB.invalidateFortIndex();
-    s.turn++;const before=JSON.stringify(s);checks.push(!FB.fortProfiles.commit(s,q)&&before===JSON.stringify(s));
-    return {checks,gold:s.player.gold,buildings:s.buildings[pid]};
+    const fresh=FB.fortProfiles.quote(s,req);
+    s.turn++;const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+    checks.push(!FB.fortProfiles.commit(s,q)&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter());
+    return {checks,reasons,initial:q.allowed,fresh:fresh.allowed,lastSite:!!sites[7],missingSite:!!sites[8],
+      gold:s.player.gold,buildings:s.buildings[pid]};
   });
-  expect(r).toEqual({checks:[true,true,true,true,true],gold:10000,buildings:[]});
+  expect(r).toEqual({checks:[true,true,true,true,true],
+    reasons:['settlement','ownership','gold','other_settlement'],
+    initial:true,fresh:true,lastSite:true,missingSite:false,gold:10000,buildings:[]});
 });
 
 test('annual AI spends the same finite work budget and retains one selected strategic fort',async function ({page},info) {
