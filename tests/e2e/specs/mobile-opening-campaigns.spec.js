@@ -14,7 +14,7 @@ test.describe.configure({mode:'parallel'});
 dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/mobile_confederations.js','data/technology.js','data/units.js',
   'js/mobile_columns.js','js/mobile_confederations.js','js/mobile_command.js','js/mobile_guard.js','js/mobile_camps.js',
   'js/expedition_programs.js','js/governments.js','js/government_selection.js','js/government_support.js',
-  'js/government_continuity.js','js/government_assembly.js','js/government_civic.js','js/civic_strategies.js',
+  'js/government_continuity.js','js/government_assembly.js','js/government_civic.js','js/civic_strategies.js','js/civic_transactions.js',
   'js/ecclesiastical_strategies.js','js/home_authority.js','js/authority.js','js/wars.js','js/armies.js','js/federates.js',
   'js/logistics.js','js/treasury.js','js/population.js','js/settlement.js','js/technology.js','js/bookmark_setup.js',
   'js/starts.js','js/world.js','js/main.js','js/model.js','js/station.js','js/util.js','js/justice.js',
@@ -287,9 +287,16 @@ test('peace, cancelled intent, actual losses, dead original people and moved or 
     const cancel=E.reviewControl(s,{realmId:C.rid,action:'cancel',stepId:null,actor:{kind:'character',id:r.leaderId}});
     if (!cancel.review.allowed || !M.commit(s,cancel)) throw new Error('Intent cancellation failed');
     r.openingCampaigns.entries.forEach(function (e) {
-      // A preceding settlement may already have ended a related campaign.
-      if(FB.ordinaryWarById(s,e.warId) && !FB.settleOrdinaryWar(s,e.warId,'white_peace'))
-        throw new Error('Opening peace must settle: '+e.warId);
+      const war=FB.ordinaryWarById(s,e.warId),V=FB.civicGovernment;
+      if(war) {
+        // Stage the ordinary peace-willingness boundary without advancing days.
+        war.seasons=4;
+        const civic=[war.attacker,war.defender].find(function (id) {return V.active(s,id);});
+        if(civic && FB.settleOrdinaryWar(s,e.warId,'white_peace'))throw new Error('Civic peace requires review');
+        const review=civic && V.peaceQuote(s,civic,{warId:e.warId});
+        if(!(civic ? V.makePeace(s,review) : FB.settleOrdinaryWar(s,e.warId,'white_peace')))
+          throw new Error('Opening peace must settle: '+e.warId+' '+JSON.stringify(review));
+      }
       if(!s.wars[e.warId] || s.wars[e.warId].status!=='ended')
         throw new Error('Opening campaign must be ended: '+e.warId);
     });
