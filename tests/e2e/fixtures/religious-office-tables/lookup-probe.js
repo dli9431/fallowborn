@@ -20,9 +20,21 @@ function instrument(source) {
       '    if (window.__officeLookupProbe) window.__officeLookupProbe.serializeKey();\n' +
       '    const key = JSON.stringify([state && state.turn,');
   }
-  replace('    return { state:state, data:FBDATA, graph:graph, bookmark:bookmark, local:local,',
-    '    if (probe) probe.endInput(ticket, {state:state, data:FBDATA, graph:graph, bookmark:bookmark, local:local, systemEnabled:FB.systemEnabled, key:key}, Object.keys(local).length, bookmark ? (bookmark.realms || []).length + (bookmark.provinces || []).length : 0);\n' +
-    '    return { state:state, data:FBDATA, graph:graph, bookmark:bookmark, local:local,');
+  const captured = source.indexOf('    const data = FBDATA, systemEnabled = FB.systemEnabled;') >= 0;
+  const inputReturn = '    return { state:state, data:' + (captured ? 'data' : 'FBDATA') + ', graph:graph, bookmark:bookmark, local:local,';
+  const reusedReturn = '    if (unchanged && localOfficeCache === old && old.data === data && old.systemEnabled === systemEnabled) return old;';
+  const inputEnd = source.indexOf(reusedReturn) >= 0 ? reusedReturn : inputReturn;
+  replace(inputEnd,
+    '    if (probe) probe.endInput(ticket, {state:state, data:' + (captured ? 'data' : 'FBDATA') + ', graph:graph, bookmark:bookmark, local:local, systemEnabled:' + (captured ? 'systemEnabled' : 'FB.systemEnabled') + ', key:key}, Object.keys(local).length, bookmark ? (bookmark.realms || []).length + (bookmark.provinces || []).length : 0);\n' +
+    inputEnd);
+  replace(inputReturn, '    if (probe) probe.inputRecord();\n' + inputReturn);
+  replace('    if (old && old.state === inputs.state && old.data === inputs.data &&',
+    '    if (window.__officeLookupProbe) window.__officeLookupProbe.tableComparison();\n' +
+    '    if (old && old.state === inputs.state && old.data === inputs.data &&');
+  if (inputEnd === reusedReturn) replace(reusedReturn,
+    reusedReturn.replace('return old;', '{ if (probe) probe.reusedInputRecord(); return old; }'));
+  if (source.indexOf('    if (inputs === old) return old.table;') >= 0) replace('    if (inputs === old) return old.table;',
+    '    if (inputs === old) { if (window.__officeLookupProbe) window.__officeLookupProbe.table(true); return old.table; }');
   replace('old.key === inputs.key) return old.table;',
     'old.key === inputs.key) { if (window.__officeLookupProbe) window.__officeLookupProbe.table(true); return old.table; }');
   replace('    inputs.table = withLocalReligiousOffices(state, definitions, inputs.local);',
@@ -39,6 +51,7 @@ function install() {
   let report;
   function blank() {
     return {keyBuilds:0, keySerializations:0, hits:0, misses:0, localRows:0, faithRows:0, keyChars:0,
+      inputRecords:0, reusedInputRecords:0, tableComparisons:0,
       inputMs:0, incumbentCalls:0, guardedVisits:0, maxIncumbentDepth:0, maxQueryDepth:0,
       unscopedBuilds:0, byKind:{}};
   }
@@ -100,6 +113,9 @@ function install() {
       } else frame.first = inputs;
     },
     table:function (hit) { report[hit ? 'hits' : 'misses']++; },
+    inputRecord:function () { report.inputRecords++; },
+    reusedInputRecord:function () { report.reusedInputRecords++; },
+    tableComparison:function () { report.tableComparisons++; },
     serializeKey:function () { report.keySerializations++; },
     measure:function (label, fn) { return query(label, fn); },
     reset:function () {
