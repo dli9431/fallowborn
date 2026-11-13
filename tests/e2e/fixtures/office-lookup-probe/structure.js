@@ -11,7 +11,20 @@ function instrument(source) {
   add('  function sameOfficeInput(value, snapshot) {', 'valueComparisons');
   add('  function sameOfficeInputs(state, local, bookmark, era, form, snapshot) {', 'comparisons');
   add('\n      const def = local[id], profile = profiles[def.profileId];', 'localComparisonRows');
-  add('    const heads = Object.keys(bookmark.religiousHeads || {}), priorHeads = parts[8].values;', 'headKeyArrays');
+  const fusedHeads = source.indexOf('    if (nativeOfficeHeadKeys && readKeys === officeHeadKeys) {') >= 0;
+  if (fusedHeads) {
+    add('      const heads = Function.prototype.call.call(readKeys, Object, headInputs);', 'headKeyArrays');
+    add('      for (const key in headInputs) if (own(headInputs, key)) {', 'headKeyComparisons');
+  } else {
+    add('    const heads = Object.keys(bookmark.religiousHeads || {}), priorHeads = parts[8].values;', 'headKeyArrays');
+  }
+  const headLoop = 'for (let i = 0; i < heads.length; i++) if (heads[i] !== priorHeads[i]) return false;';
+  if (source.indexOf(headLoop) < 0 || source.indexOf(headLoop) !== source.lastIndexOf(headLoop)) {
+    throw new Error('Office structure probe head comparison marker changed');
+  }
+  source = source.replace(headLoop, 'for (let i = 0; i < heads.length; i++) {\n' +
+    '      if (window.__officeStructureProbe) window.__officeStructureProbe.count("headKeyComparisons");\n' +
+    '      if (heads[i] !== priorHeads[i]) return false;\n    }');
   add('    for (let i = 0; i < realms.length; i++) {', 'realmComparisonRows');
   add('    for (let i = 0; i < provinces.length; i++) {', 'provinceComparisonRows');
   add('      const localInputs = Object.keys(local).map(function (id) {', 'serializedLocalRows');
@@ -27,7 +40,7 @@ function install() {
   window.__officeStructureProbe = {
     count:function (key) { counts[key]++; },
     reset:function () {
-      counts = {comparisons:0, valueComparisons:0, localComparisonRows:0, headKeyArrays:0,
+      counts = {comparisons:0, valueComparisons:0, localComparisonRows:0, headKeyArrays:0, headKeyComparisons:0,
         realmComparisonRows:0, provinceComparisonRows:0, serializedLocalRows:0,
         tableBuilds:0, tableLocalRows:0, holderEvaluations:0};
     },

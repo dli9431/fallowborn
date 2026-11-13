@@ -129,6 +129,8 @@ Unchanged independent reads compare those ordered JSON inputs against a private 
 
 After a successful comparison, validation returns the existing private dependency record when it is still current and its catalogue and system reader identities still match. This avoids a replacement record and the caller's repeated identity/key guard within that same read. Reentrant validation or identity changes during comparison retain the original record-construction and table checks. Every independent entry still resolves and compares all inputs. Office lookup diagnostics count record allocations and repeated table guards separately from validations, while office-validation.spec.js covers reentry, reader/catalogue changes during comparison and exception recovery.
 
+Within that comparison, native opening-head keys are compared in their own enumerable order during enumeration. This avoids a temporary key array and its separate traversal; every local definition and opening realm/province faith reference is still checked. Numeric key order, string reinsertion, inherited and nonenumerable exclusion, accessor reads and reentry retain their existing meaning. A replaced Object.keys reader uses the original array comparison with its original receiver and evaluation order. The serialized rebuild path and live holder reads remain independent of this loop.
+
 Each build evaluates a distinct system/faith pair and profile/faith pair once.
 The optional checks argument of religiousInstitutionOffice shares those pure
 availability queries with the table builder. Holders, deaths, political incumbent

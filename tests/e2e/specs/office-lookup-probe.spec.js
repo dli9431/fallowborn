@@ -8,6 +8,7 @@ const probe = require('../fixtures/religious-office-tables/lookup-probe');
 const structure = require('../fixtures/office-lookup-probe/structure');
 const source = fs.readFileSync(path.resolve(__dirname, '../../../js/model.js'), 'utf8');
 const instrumented = structure.instrument(probe.instrument(source));
+const fusedHeads = source.indexOf('    if (nativeOfficeHeadKeys && readKeys === officeHeadKeys) {') >= 0;
 
 dependsOnRuntime(__filename, ['js/model.js', 'js/ecclesiastical_strategies.js',
   'js/government_ecclesiastical.js', 'js/authority.js', 'js/religious_institutions.js',
@@ -130,7 +131,10 @@ for (const start of starts) {
       expect(phase.counts.keyBuilds).toBeGreaterThan(0);
       expect(phase.scans.comparisons).toBeGreaterThan(0);
       expect(phase.scans.localComparisonRows).toBeGreaterThan(0);
-      expect(phase.scans.headKeyArrays).toBeGreaterThan(0);
+      if (fusedHeads) expect(phase.scans.headKeyArrays).toBe(0);
+      else expect(phase.scans.headKeyArrays).toBeGreaterThan(0);
+      const facts = parity[1].find(function (row) { return row.phase === phase.phase; });
+      expect(phase.scans.headKeyComparisons).toBe(phase.counts.reusedInputRecords * facts.workloadBefore.openingHeadKeys);
       expect(phase.scans.localComparisonRows).toBeLessThanOrEqual(phase.counts.localRows);
       expect(phase.scans.realmComparisonRows + phase.scans.provinceComparisonRows).toBeLessThanOrEqual(phase.counts.faithRows);
       expect(phase.scans.tableBuilds).toBe(phase.counts.misses);
@@ -236,11 +240,13 @@ test('office structure counters distinguish full comparisons, early rejection an
   expect(result.warm.localComparisonRows).toBe(result.localRows);
   expect(result.warm.realmComparisonRows).toBe(result.realmRows);
   expect(result.warm.provinceComparisonRows).toBe(result.provinceRows);
-  expect(result.warm.headKeyArrays).toBe(1);
+  expect(result.warm.headKeyArrays).toBe(fusedHeads ? 0 : 1);
+  expect(result.warm.headKeyComparisons).toBe(2);
   expect(result.warm.tableBuilds).toBe(0);
   expect(result.edit.localComparisonRows).toBe(1);
   expect(result.edit.realmComparisonRows + result.edit.provinceComparisonRows).toBe(0);
   expect(result.edit.headKeyArrays).toBe(0);
+  expect(result.edit.headKeyComparisons).toBe(0);
   expect(result.edit.serializedLocalRows).toBe(result.localRows);
   expect(result.edit.tableBuilds).toBe(1);
   expect(result.live.holderEvaluations).toBeGreaterThan(0);
