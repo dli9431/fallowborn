@@ -48,11 +48,11 @@ jobs:
       baseline: ${{ steps.pin.outputs.baseline }}
       candidate: ${{ steps.pin.outputs.candidate }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.baseline }}
           path: baseline
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.candidate }}
           path: candidate
@@ -69,20 +69,20 @@ jobs:
       matrix:
         subject: ${{ fromJSON(inputs.subjects) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: tooling
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.revisions.outputs.baseline }}
           path: baseline
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.revisions.outputs.candidate }}
           path: candidate
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: tooling/tests/e2e/package-lock.json
       - run: npm ci
@@ -111,7 +111,7 @@ jobs:
           if [ -f results/summary.txt ]; then
             cat results/summary.txt >> "$GITHUB_STEP_SUMMARY"
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: speed-comparison-${{ strategy.job-index }}

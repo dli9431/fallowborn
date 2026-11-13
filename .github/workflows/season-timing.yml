@@ -56,19 +56,20 @@ jobs:
       matrix:
         shard: ${{ fromJSON(needs.plan.outputs.shards) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           path: tooling
           persist-credentials: false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
           path: game
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
+          package-manager-cache: false
       - run: npm ci
         working-directory: tooling/tests/e2e
       - name: Install Chromium
@@ -91,7 +92,7 @@ jobs:
           if [ "$PROFILE" = true ]; then set -- "$@" --cpu-profile; fi
           if [ "$READ_AUDIT" = true ]; then set -- "$@" --read-audit; fi
           node measure/season-timing.js "$@"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: timing-${{ needs.plan.outputs.label }}-${{ matrix.shard }}
@@ -105,11 +106,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           path: tooling
-      - uses: actions/download-artifact@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v8
         with:
           pattern: timing-${{ needs.plan.outputs.label }}-*
           path: timing
@@ -136,7 +140,7 @@ jobs:
           node tooling/tests/e2e/measure/season-timing.js "$@"
           cat summary.md >> "$GITHUB_STEP_SUMMARY"
           mv report.json summary.md timing/
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: season-timing-${{ needs.plan.outputs.label }}
