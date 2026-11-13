@@ -984,6 +984,16 @@ snapshot descendant invalidation, JSON conversion edge cases, duplicate
 bookmark review and fresh validation after failures. The reference remains a
 test-only source oracle, never a runtime dependency.
 
+The three paired preparation cases in each mode also retain title readiness
+separately from complete catalogue readiness. Served source probes count copied
+objects and arrays in the source and composition owners, while load timing
+separates their copy work, JSON snapshots, canonical text and fingerprints.
+The existing mod diagnostic records baseline root count and JSON size in UTF-16
+code units. These instrumented samples include diagnostic overhead; they are
+stage attribution, not unprofiled speed comparisons. Ordered source, story,
+bookmark and start ids and exact catalogue facts must still agree with the
+preceding physical-site implementation.
+
 `save-season-profile.spec.js` is an opt-in Chromium diagnostic. It imports the
 file named by `FB_PROFILE_SAVE` through the game's ordinary save loader, then
 profiles one real fast-forward. It attaches a Chrome CPU profile and JSON with
