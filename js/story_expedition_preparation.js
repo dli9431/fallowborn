@@ -493,8 +493,14 @@
           a.startTurn===0 && FBDATA.authorityOffices[a.officeId] &&
           (FBDATA.authorityOffices[a.officeId].homePowers || []).indexOf('levy')>=0 &&
           (a.scope.kind==='county' && a.scope.id===d.mobile.origin || a.scope.kind==='realm' && a.scope.id===t.provider.realmId));
-        else if (t.provider.characterId!==null && t.provider.generation===FB.realmRulerGeneration(s,t.provider.realmId))
-          need(!!incumbent && incumbent.id===t.provider.characterId);
+        else if (t.provider.characterId!==null && t.provider.generation===FB.realmRulerGeneration(s,t.provider.realmId)) {
+          // A contested vacancy retains its dead original member until accession.
+          var court=s.realms[t.provider.realmId] && s.realms[t.provider.realmId].succession,
+            retained=court && court.members && court.members[court.rulerMemberId],
+            person=retained && retained.charId && s.chars[retained.charId];
+          need(!!incumbent && incumbent.id===t.provider.characterId ||
+            !!person && person.dead && retained.alive===false && person.id===t.provider.characterId);
+        }
       }
       var superior=d.mobile.command.superior, issuer=t.issuer;
       if (!superior) need(issuer===null);

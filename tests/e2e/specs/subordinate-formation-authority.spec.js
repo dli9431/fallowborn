@@ -516,7 +516,12 @@ test('a supported court release changes live account aliases while preserving or
     const retainedPending=t.status==='preparing' && t.reason===null;
     FB.courtMemberDied(s,s.realms[released].succession.members[me.royalLine.memberId],me);story.day(s,t);
     const original=old===JSON.stringify([t.bindings,t.openingJurisdiction]),
-      save=JSON.parse(FB.save.serialize());FB.save.restore(save);
+      save=JSON.parse(FB.save.serialize()),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
+    const forged=JSON.parse(JSON.stringify(save));forged.state.stories[C.id].provider.characterId=Object.keys(s.chars).find(function(id){return id!==me.id;});
+    const before=JSON.stringify([FB.state,forged]);let rejected=false;
+    try{FB.save.v4.migrate(forged);}catch(error){rejected=true;}
+    const pure=before===JSON.stringify([FB.state,forged]) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter();
+    FB.save.restore(save);FB.save.restore(save);
     if((FB.realmRulerCharacterSnapshot(FB.state,released)||{}).id===C.record(FB.state).provider.characterId ||
         cash!==FB.treasuryPublicAccountSnapshot(FB.state,released).gold || C.record(FB.state).reason!=='interrupted')
       throw new Error('Released jurisdiction facts: '+JSON.stringify({before:cash,afterRelease:afterRelease,
@@ -524,12 +529,15 @@ test('a supported court release changes live account aliases while preserving or
         reason:C.record(FB.state).reason,provider:C.record(FB.state).provider,
         currentRuler:(FB.realmRulerCharacterSnapshot(FB.state,released)||{}).id,
         selection:FB.state.authority.governments[released].selection}));
-    return {released:released,retainedPending:retainedPending,original:original,saved:old===JSON.stringify([C.record(FB.state).bindings,C.record(FB.state).openingJurisdiction]),
+    return {released:released,retainedPending:retainedPending,original:original,rejected:rejected,pure:pure,
+      deterministic:rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter(),
+      saved:old===JSON.stringify([C.record(FB.state).bindings,C.record(FB.state).openingJurisdiction]),
       provider:C.record(FB.state).provider.realmId,alias:FB.state.start.publicTreasury.realmId,
       cash:cash===FB.treasuryPublicAccountSnapshot(FB.state,'dune_gate').gold,
       closed:C.record(FB.state).reason==='interrupted',noHost:!FB.mobile.row(FB.state,C.rid)};
   });
-  expect(result).toEqual({released:'dune_gate',retainedPending:true,original:true,saved:true,provider:'dune_gate',alias:'dune_gate',cash:true,closed:true,noHost:true});
+  expect(result).toEqual({released:'dune_gate',retainedPending:true,original:true,rejected:true,pure:true,deterministic:true,
+    saved:true,provider:'dune_gate',alias:'dune_gate',cash:true,closed:true,noHost:true});
 });
 
 test('original command issuer succession invalidates consent without granting the sovereign local authority',async function({page},info){
