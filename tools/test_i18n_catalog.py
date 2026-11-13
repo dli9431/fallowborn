@@ -235,6 +235,24 @@ class StaticHtmlExtractionTests(unittest.TestCase):
         self.assertEqual(selections.entries['governmentSelection.regnum.transformation.aristocratic_monarchy.name.default']['text'],
                          'Review return to royal recognition')
 
+    def test_closing_tag_whitespace_and_case_do_not_leak_code(self):
+        for tag in ('script', 'style'):
+            for suffix in (' ', '\t', '\n', '\r\n', '\f'):
+                with self.subTest(tag=tag, suffix=suffix):
+                    source = (f'<{tag}>Hidden text\n</{tag.upper()}{suffix}>'
+                              '<p>Visible text</p>')
+                    stripped = i18n_catalog.strip_non_display_html(source)
+                    self.assertNotIn('Hidden text', stripped)
+                    self.assertIn('<p>Visible text</p>', stripped)
+                    self.assertEqual(len(stripped), len(source))
+                    self.assertEqual(stripped.count('\n'), source.count('\n'))
+
+    def test_unrelated_end_tag_does_not_end_a_non_display_block(self):
+        source = '<script>Hidden </style> still hidden</script ><p>Visible</p>'
+        stripped = i18n_catalog.strip_non_display_html(source)
+        self.assertNotIn('hidden', stripped.lower())
+        self.assertIn('<p>Visible</p>', stripped)
+
     def test_non_display_blocks_are_blank_without_shifting_source_lines(self):
         source = (
             '<script>\nwindow.telemetry = "title=\\"Private code\\"";\n</script>\n'

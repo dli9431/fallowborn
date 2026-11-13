@@ -731,7 +731,7 @@ def looks_translatable(text: str) -> bool:
 
 
 NON_DISPLAY_HTML_RE = re.compile(
-    r"<(?:script|style)\b[^>]*>.*?</(?:script|style)>",
+    r"<(script|style)\b[^>]*>.*?</\1\s*>",
     flags=re.I | re.S,
 )
 

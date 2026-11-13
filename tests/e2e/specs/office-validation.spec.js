@@ -56,40 +56,34 @@ async function snapshot(page) {
   });
 }
 
-for (const bookmark of ['476', '1096', '1204']) {
-  test('office validation preserves parent state and removes repeated key serialization in ' + bookmark, async function ({page}, info) {
+for (const bookmark of ['476', '1096', '1204']) for (const phase of ['ordinary', 'season', 'year']) {
+  test('office validation preserves parent state and removes repeated key serialization in ' + bookmark + ' / ' + phase, async function ({page}, info) {
     const outputs = [], evidence = [];
     for (const old of [true, false]) {
       await route(page, old, false);
       await beginBookmark(page, info, bookmark);
       await page.evaluate(installCounts);
-      const states = [], counts = [];
-      for (const phase of ['ordinary', 'season', 'year']) {
-        const result = await page.evaluate(function (phase) {
-          const s = FB.state;
-          if (phase !== 'ordinary') {
-            const season = phase === 'year' ? 3 : s.date.season;
-            s.turn += (season - s.date.season) * 90 + 90 - s.date.day;
-            s.date.season = season; s.date.day = 90;
-          }
-          const turn = s.turn;
-          const result = measureOfficeKeys(function () { FB.game.passDay({deferUi:true}); });
-          result.days = s.turn - turn;
-          return result;
-        }, phase);
-        expect(result.error, phase).toBe(null);
-        expect(result.days, phase).toBe(1);
-        counts.push(result.counts); states.push(await snapshot(page));
-      }
-      outputs.push(states); evidence.push(counts);
+      const result = await page.evaluate(function (phase) {
+        const s = FB.state;
+        if (phase !== 'ordinary') {
+          const season = phase === 'year' ? 3 : s.date.season;
+          s.turn += (season - s.date.season) * 90 + 90 - s.date.day;
+          s.date.season = season; s.date.day = 90;
+        }
+        const turn = s.turn;
+        const result = measureOfficeKeys(function () { FB.game.passDay({deferUi:true}); });
+        result.days = s.turn - turn;
+        return result;
+      }, phase);
+      expect(result.error, phase).toBe(null);
+      expect(result.days, phase).toBe(1);
+      outputs.push(await snapshot(page)); evidence.push(result.counts);
     }
     expect(outputs[1]).toEqual(outputs[0]);
-    for (let i = 0; i < 3; i++) {
-      expect(evidence[1][i].builds).toBeLessThan(evidence[0][i].builds);
-      expect(evidence[1][i].chars).toBeLessThan(evidence[0][i].chars);
-    }
-    console.log('OFFICE_VALIDATION_KEYS ' + JSON.stringify({bookmark:bookmark, reference:evidence[0], candidate:evidence[1]}));
-    await info.attach('office-key-counts', {body:JSON.stringify({bookmark:bookmark, reference:evidence[0], candidate:evidence[1]}), contentType:'application/json'});
+    expect(evidence[1].builds).toBeLessThan(evidence[0].builds);
+    expect(evidence[1].chars).toBeLessThan(evidence[0].chars);
+    console.log('OFFICE_VALIDATION_KEYS ' + JSON.stringify({bookmark:bookmark, phase:phase, reference:evidence[0], candidate:evidence[1]}));
+    await info.attach('office-key-counts', {body:JSON.stringify({bookmark:bookmark, phase:phase, reference:evidence[0], candidate:evidence[1]}), contentType:'application/json'});
   });
 }
 

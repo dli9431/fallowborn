@@ -609,6 +609,7 @@ window.FB = window.FB || {};
     if (plainObject(value)) {
       const out = {};
       for (const key in value) if (own(value, key)) {
+        if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
         out[key] = cloneFaithValue(value[key]);
       }
       return out;
@@ -643,6 +644,7 @@ window.FB = window.FB || {};
     if (!plainObject(additions)) return target;
     for (const key in additions) {
       if (!own(additions, key)) continue;
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
       const path = prefix ? prefix + '.' + key : key;
       const value = additions[key];
       if (plainObject(value)) {
@@ -1666,8 +1668,7 @@ window.FB = window.FB || {};
     return true;
   }
   function localOfficeInputs(state, graph) {
-    const local = FB.localInstitutionDefinitions(state);
-    const bookmark = state ? FB.campaignBookmark(state) : FB.activeBookmark;
+    const world = FB.localInstitutionOfficeInputs(state), local = world.local, bookmark = world.bookmark;
     const era = FBDATA.eras && FBDATA.eras[state ? FB.campaignEra(state) : bookmark && FB.bookmarkEra(bookmark)];
     const formId = state && state.start && state.start.defaultGovernment || era && era.defaultGovernment;
     const form = FBDATA.governmentForms && FBDATA.governmentForms[formId];
