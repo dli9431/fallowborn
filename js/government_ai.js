@@ -23,7 +23,7 @@
   G.bind('ai', 'realm_decisions', 'raid', 'aiRaidTick', ['realmId','realm','balance','knownPeaceful'], 'realmId');
   G.bind('ai', 'realm_decisions', 'breakawayChance', 'vassalBreakawayChance', ['realmId'], 'realmId');
   G.bind('ai', 'realm_decisions', 'motionScore', 'governmentMotionScore', ['bloc','motionId','courtEconomicPowerAverage'], function (state) { var court = FB.politicalCourt(state); return court && court.polityId; });
-  G.bind('ai', 'realm_decisions', 'construction', 'aiCanBuildAt', ['actor','provinceId','settlement','buildingId'], function (state,c) { return typeof c.actor === 'string' ? c.actor : c.actor && c.actor.kind === 'realm' ? c.actor.id : null; });
+  G.bind('ai', 'realm_decisions', 'construction', 'aiCanBuildAt', ['actor','provinceId','settlement','buildingId','profileId'], function (state,c) { return typeof c.actor === 'string' ? c.actor : c.actor && c.actor.kind === 'realm' ? c.actor.id : null; });
   ['federate_contracts','roman_offices'].forEach(function (id) {
     var specific = G.strategy('ai', id);
     specific.canNegotiate = function () { return true; };
