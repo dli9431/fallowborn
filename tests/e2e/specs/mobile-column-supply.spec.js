@@ -277,7 +277,7 @@ for (const width of [1280,390]) {
     });
     const second=await page.locator('#mobile-column option').nth(1).getAttribute('value');
     await page.locator('#mobile-column').selectOption(second);
-    const load=page.getByRole('button',{name:'Load selected column from camp',exact:true});
+    const load=page.getByRole('button',{name:/^Load selected column from camp\s+Immediate cost:/});
     await load.click();await expect(page.locator('#mobile-confirm')).toBeVisible();
     await page.keyboard.press('Escape');await expect(page.locator('#mobile-column')).toHaveValue(second);await expect(load).toBeFocused();
   });
