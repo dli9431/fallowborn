@@ -29,7 +29,10 @@ for(const fixture of fixtures){
     const result=await page.evaluate(function(input){
       const before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),
         faults=FB.mods.validate(input.mod),bad=JSON.parse(JSON.stringify(input.mod));
-      if(input.kind==='career')bad.startScenarios.find(function(s){return s.sex==='f';}).profession='soldier';
+      if(input.kind==='career'){
+        const start=bad.startScenarios.find(function(s){return s.sex==='f';}) || bad.startScenarios[0];
+        start.sex='f';start.profession='soldier';
+      }
       else if(input.kind==='unit')Object.values(bad.mobileProfiles)[0].supplyPolicy.replacement.unitIds[0]='missing_replacement';
       else delete Object.values(bad.bookmarks)[0].revisions.baseline;
       const rejected=FB.mods.validate(bad).length>0;
