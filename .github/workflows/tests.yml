@@ -42,6 +42,14 @@ on:
         description: Caller's id, shown in the run name
         type: string
         default: ''
+      report_source_run:
+        description: Existing run id to merge again without running tests (empty runs tests)
+        type: string
+        default: ''
+      report_label:
+        description: Source artifact label when replaying reports (for example suite-476)
+        type: string
+        default: ''
 
 concurrency:
   group: tests-${{ inputs.request_id || github.ref }}
@@ -49,16 +57,18 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   tests:
     uses: ./.github/workflows/e2e.yml
     with:
       ref: ${{ inputs.target || github.sha }}
-      label: tests
+      label: ${{ inputs.report_source_run != '' && inputs.report_label || 'tests' }}
       mode: ${{ inputs.mode || 'changed' }}
       specs: ${{ inputs.specs || '' }}
       base: ${{ inputs.base || github.event.before || github.event.pull_request.base.sha || '' }}
       projects: ${{ inputs.projects || 'all' }}
       shards: ${{ fromJSON(format('{0}', inputs.shards || 4)) }}
       bounded: ${{ (inputs.mode || 'changed') == 'changed' }}
+      report_source_run: ${{ inputs.report_source_run || '' }}
