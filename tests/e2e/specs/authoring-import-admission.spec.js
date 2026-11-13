@@ -1,4 +1,5 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame,prepareGameContent}=require('../support/game/navigation');
@@ -81,7 +82,7 @@ for(const prefix of ['harbor','dune']){
     const fixture=fixtures.find(function(f){return f.file==='local-following-reviews-'+prefix+'.json';}),
       start=fixture.mod.startScenarios.find(function(row){return !!row.rulerRealmId;});
     await openGame(page,info);
-    expect(await page.evaluate(function(mod){return FB.mods.validate(mod);},fixture.mod)).toEqual([]);
+    await expectModAdmission(page,fixture.mod);
     await page.evaluate(function(){FB.ui.showMods();});
     await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+fixture.file));
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);

@@ -1,13 +1,16 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-expedition-harbor.json'),
   dune:require('../fixtures/authoring/mobile-expedition-dune.json')};
 const sponsored=require('../fixtures/authoring/mobile-command-dune.json');
+test.describe.configure({mode:'parallel'});
+
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js','js/federates.js','js/government_continuity.js',
   'js/governments.js','js/government_selection.js','js/government_support.js','js/bookmark_setup.js','js/world.js','js/mods.js',
@@ -17,13 +20,14 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 async function start(page,info,prefix,input) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
+  await expectModAdmission(page,input || examples[prefix]);
   await page.locator('#modfile').setInputFiles(input ? {
     name:'expedition-example.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))
   } : path.resolve(__dirname,'../fixtures/authoring/mobile-expedition-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
 }
 
 for (const prefix of ['harbor','dune']) {

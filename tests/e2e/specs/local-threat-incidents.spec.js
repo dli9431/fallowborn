@@ -1,11 +1,14 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle, beginBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const river = require('../fixtures/authoring/local-threat-river.json');
+test.describe.configure({mode:'parallel'});
+
 dependsOnRuntime(__filename, ['index.html','js/story_local_threat.js','js/story_household.js',
   'js/story_household_observer.js','js/stories.js','js/localfolk.js','js/model.js','js/modifiers.js',
   'js/world.js','js/starts.js','js/bookmark_setup.js','js/mods.js','js/save.js','js/save_v4.js',
@@ -14,12 +17,13 @@ dependsOnRuntime(__filename, ['index.html','js/story_local_threat.js','js/story_
 async function imported(page, info, which) {
   await openGame(page, info);
   await page.evaluate(function () { FB.ui.showMods(); });
+  await expectModAdmission(page,require('../fixtures/authoring/local-threat-'+which+'.json'));
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
     '../fixtures/authoring/local-threat-' + which + '.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
-  await beginBookmark(page, info, which === 'river' ? 'harbor_world' : 'dune_world',
+  await beginBookmarkFromTitle(page,which === 'river' ? 'harbor_world' : 'dune_world',
     which === 'river' ? 'harbor_household' : 'dune_household');
   await page.evaluate(function () {
     FB.state.player.homeSettlement = 0;

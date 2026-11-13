@@ -1,12 +1,15 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-column-supply-harbor.json'),
   dune:require('../fixtures/authoring/mobile-column-supply-dune.json')};
+test.describe.configure({mode:'parallel'});
+
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
   'js/expedition_programs.js','js/mobile_columns.js','js/mobile_confederations.js','js/mobile_command.js','js/government_selection.js',
   'js/governments.js','js/authority.js','js/government_support.js','js/population.js','js/market.js',
@@ -17,12 +20,13 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 async function start(page,info,prefix,input) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
+  await expectModAdmission(page,input || examples[prefix]);
   if (input) await page.locator('#modfile').setInputFiles({name:'column-supply.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))});
   else await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/mobile-column-supply-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await page.evaluate(function (prefix) {
     const s=FB.state,d=FB.campaignBookmark(s).realms.find(function (r) {return r.mobile;});
     window.columnSupplyCase={rid:FB.startRealmId(s,d.id),remote:prefix==='harbor' ? 'harbor_gardens' : 'dune_flats',

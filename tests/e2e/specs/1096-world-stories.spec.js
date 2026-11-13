@@ -1,12 +1,15 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const imports={harbor:require('../fixtures/authoring/mobile-vow-harbor.json'),
   upland:require('../fixtures/authoring/mobile-vow-upland.json')};
 const callId='eastern_undertaking_1096', observerId='eastern_undertaking_households_1096';
+
+test.describe.configure({mode:'parallel'});
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1096.js','data/bookmark_1096_campaigns.js',
@@ -246,12 +249,13 @@ async function imported(page,info,label,withPersonal) {
     scenario.tracks.push(track);scenario.trackLocations[track]=[scenario.fixedProvinceId];
   }
   await page.evaluate(function () {FB.ui.showMods();});
+  await expectModAdmission(page,source);
   await page.locator('#modfile').setInputFiles({name:'world-'+label+'.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(source))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (id) {return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(id);},id);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   return {id:id,notice:notice,county:county,rid:label==='harbor' ? 'harbor_following' : 'dune_coalition',
     head:prefix+(label==='harbor' ? '_commune' : '_oasis')};
 }

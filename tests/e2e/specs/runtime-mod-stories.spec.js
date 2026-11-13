@@ -1,18 +1,22 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const harbor = require('../fixtures/authoring/harbor-contracts.json');
 const dune = require('../fixtures/authoring/dune-contracts.json');
+test.describe.configure({mode:'parallel'});
+
 dependsOnRuntime(__filename, ['data/markets.js','js/story_government_selection.js','data/actions.js','data/ambitions.js','data/policies.js','data/economy.js','data/papacy.js','data/travel.js','data/tournaments.js','data/traits.js','data/starts.js','data/political_institutions.js','index.html','data/story_instances.js','data/story_courts_476.js',
   'data/civic_profiles.js','js/stories.js','js/story_courts.js','js/story_track.js',
   'js/story_campaign.js','js/story_history.js','js/story_settlements.js','js/story_polity_foundation.js',
   'js/mods.js','js/world.js','js/main.js','js/messages.js','js/save.js','js/save_v4.js']);
 
 async function storeAndReload(page, mod, storyId) {
+  await expectModAdmission(page,mod);
   await Promise.all([
     page.waitForNavigation({waitUntil:'domcontentloaded'}),
     page.evaluate(function (input) {
@@ -29,6 +33,7 @@ test('ordinary file import creates new stories and branching tracks, reloads and
   await openGame(page, info);
   const base = await page.evaluate(function () { return FB.stories.list().map(function (d) { return d.id; }); });
   await page.evaluate(function () { FB.ui.showMods(); });
+  await expectModAdmission(page,harbor);
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/harbor-contracts.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
@@ -41,7 +46,7 @@ test('ordinary file import creates new stories and branching tracks, reloads and
   expect(imported.order.filter(function (id) { return base.includes(id); })).toEqual(base);
   expect(imported.faults).toEqual([]);
   expect(imported.messages).toBe(true);
-  await beginBookmark(page, info, 'harbor_courts_900', 'harbor_court_household');
+  await beginBookmarkFromTitle(page,'harbor_courts_900', 'harbor_court_household');
   const journey = await page.evaluate(function () {
     const s = FB.state, id = 'harbor_service';
     const pending = JSON.parse(FB.save.serialize());
@@ -133,7 +138,7 @@ test('prospective stored stacks honor import order and reject a dangling same-na
 test('changing imported graph content rejects the old save before state adoption', async function ({ page },info) {
   await openGame(page,info);
   await storeAndReload(page,harbor,'harbor_court');
-  await beginBookmark(page,info,'harbor_courts_900','harbor_court_household');
+  await beginBookmarkFromTitle(page,'harbor_courts_900','harbor_court_household');
   const result = await page.evaluate(function () {
     const saved = JSON.parse(FB.save.serialize());
     const next = JSON.parse(JSON.stringify(FBDATA.storyInstances.harbor_court)); next.parameters.seasonalPay++;
