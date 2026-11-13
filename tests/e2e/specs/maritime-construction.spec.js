@@ -39,10 +39,10 @@ for(const kind of ['shore','river']) {
     await boot(page,info,kind);
     const r=await page.evaluate(function(){
       const s=FB.state,P=FB.production,E=FB.productionEconomy,M=FB.maritimeWork,who=FB.settlementHolder(s,'resource_quay',0);
-      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const before=JSON.stringify(s),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
       const ready=P.industrialConstructionReady(s,'resource_quay',0,'boat_workshop',who);
       const direct=FB.canBuildAt(s,'resource_quay',0,'boat_workshop'),ai=FB.aiCanBuildAt(s,who.id,'resource_quay',0,'boat_workshop');
-      const pure=before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+      const pure=before===JSON.stringify(s)&&rng===(FB.getRngState()>>>0)&&uid===FB.getUidCounter();
       const revision=s.production.revision,next=s.production.nextId,cash=s.player.gold,cost=FB.buildCost(s,'resource_quay','boat_workshop');
       const built=FB.build(s,'resource_quay',0,'boat_workshop'),paid=cash-s.player.gold;
       const row=P.snapshot(s).find(function(x){return x.site.id==='boat_plant';});
@@ -84,8 +84,8 @@ for(const kind of ['shore','river']) {
           if(remaining)FB.siteResources.commit(t,FB.siteResources.quote(t,{operation:'reserve',sourceId:'work_slip',actor:actor,amount:remaining}));},
         function(t){FB.realmTechRecord(t,FB.techRealmId(t)).completed=[];},
         function(t){t.chars[t.player.charId].dead=true;}];
-      const blocked=changes.map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t),rng=FB.getRngState(),uid=FB.getUidCounter();
-        return !P.industrialConstructionReady(t,'resource_quay',0,'boat_workshop',actor)&&before===JSON.stringify(t)&&rng===FB.getRngState()&&uid===FB.getUidCounter();});
+      const blocked=changes.map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
+        return !P.industrialConstructionReady(t,'resource_quay',0,'boat_workshop',actor)&&before===JSON.stringify(t)&&rng===(FB.getRngState()>>>0)&&uid===FB.getUidCounter();});
       const form=Object.keys(FBDATA.governmentForms).find(function(key){return FB.governments.resolve(key).use.succession.publicCrown;});
       const t=JSON.parse(JSON.stringify(s));t.authority.governments.player.formId=form;t.realms.player.treasury={version:1,gold:5000,militaryAccrued:0};t.treasuryAccounting.mode='active';
       const before=JSON.stringify(t),publicBlocked=!P.industrialConstructionReady(t,'resource_quay',0,'boat_workshop',actor);
@@ -98,12 +98,12 @@ for(const kind of ['shore','river']) {
 test('ordinary maritime construction metadata rejects mismatched consumers without publishing',async function({page},info){
   await openGame(page,info);
   const r=await page.evaluate(function(example){
-    const before=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState(),uid=FB.getUidCounter();
+    const before=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
     const changes=[function(m){m.buildings.boat_workshop.maritimeWorkProfileId='absent';},
       function(m){delete m.buildings.boat_workshop.productionRecipeIds;},function(m){m.productionRecipes.prepare_boat_work.requiresSale=true;},
       function(m){m.maritimeWorkProfiles.maintained_river.quantity=2;},function(m){m.buildings.boat_workshop.maritimeWorkProfileId={};}];
     const valid=FB.mods.validate(example),bad=changes.map(function(change){const m=JSON.parse(JSON.stringify(example));change(m);return FB.mods.validate(m).length>0;});
-    return {valid:valid,bad:bad,pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
+    return {valid:valid,bad:bad,pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===(FB.getRngState()>>>0)&&uid===FB.getUidCounter()};
   },examples.river);
   expect(r).toEqual({valid:[],bad:Array(5).fill(true),pure:true});
 });

@@ -46,9 +46,9 @@ for(const kind of ['shore','river']) {
     await boot(page,info,kind);
     expect(await page.evaluate(function(){return FB.maritimeWork.aiQuote(FB.state,'licensed_work','prepare',{enterpriseUid:null}).allowed;})).toBe(false);
     await work(page);
-    const r=await page.evaluate(function(){const s=FB.state,M=FB.maritimeWork,before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+    const r=await page.evaluate(function(){const s=FB.state,M=FB.maritimeWork,before=JSON.stringify(s),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
       const q=M.aiQuote(s,'licensed_work','prepare',{enterpriseUid:null});FB.production.validate(s);
-      return {allowed:q.allowed,credit:q.credit,base:q.baseCost,due:q.due,pure:before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter(),
+      return {allowed:q.allowed,credit:q.credit,base:q.baseCost,due:q.due,pure:before===JSON.stringify(s)&&rng===(FB.getRngState()>>>0)&&uid===FB.getUidCounter(),
         review:FBDATA.techImpactReviews.features.maintained_maritime_work.mode,enterprises:s.player.enterprises.length};});
     expect(r).toMatchObject({allowed:true,pure:true,review:'none',enterprises:0});
     expect(r.credit).toBeGreaterThan(0);expect(r.credit).toBeLessThanOrEqual(Math.floor(r.base*(kind==='shore'?0.1:0.05)));expect(r.due+r.credit).toBe(r.base);
@@ -103,10 +103,13 @@ test('expired or changed invoices, dead principals, blocked launches and lost fa
   const r=await page.evaluate(function(){const M=FB.maritimeWork,s=FB.state,id=M.commit(s,M.aiQuote(s,'licensed_work','prepare',{enterpriseUid:null})),q=M.aiQuote(s,'licensed_work','complete',{invoiceId:id});
     const changes=[function(t){t.player.gold=0;},function(t){t.buildings.resource_quay[0].ruined=true;},function(t){t.holder.resource_quay='missing';},
       function(t){t.chars[t.player.charId].dead=true;},function(t){t.turn+=7;t.date.day+=7;},
-      function(t){const row=FB.realmTechRecord(t,FB.techRealmId(t));row.completed=row.completed.filter(function(x){return x!=='knarrs';});},
+      function(t){const row=FB.realmTechRecord(t,FB.techRealmId(t)),
+        required=FBDATA.enterprises[FBDATA.maritimeWorkProfiles.maintained_shore.enterpriseType].requiresTech;
+        if(!required)throw new Error('The fixture requires an actual purchase requirement');
+        row.completed=row.completed.filter(function(x){return x!==required;});FB.invalidateTechBonuses();},
       function(t){FB.siteResources.commit(t,FB.siteResources.quote(t,{operation:'reserve',sourceId:'work_slip',actor:q.request.actor,amount:1}));}];
-    return changes.map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t),rng=FB.getRngState(),uid=FB.getUidCounter();
-      return M.commit(t,q)===false && before===JSON.stringify(t) && rng===FB.getRngState() && uid===FB.getUidCounter();});});
+    return changes.map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
+      return M.commit(t,q)===false && before===JSON.stringify(t) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter();});});
   expect(r).toEqual(Array(7).fill(true));
 });
 test('an ordinary purchase makes a pending construction invoice obsolete and a stale confirmation cannot upgrade it',async function({page},info){
@@ -163,7 +166,7 @@ test('direct enterprise credit options cannot bypass the maritime transaction',a
 test('AI and direct reviews use the same exact pending terms and deterministic canonical payment',async function({page},info){
   await boot(page,info,'river');await work(page);
   const r=await page.evaluate(function(){const M=FB.maritimeWork,a=JSON.parse(JSON.stringify(FB.state)),b=JSON.parse(JSON.stringify(FB.state));
-    const qa=M.aiQuote(a,'licensed_work','prepare',{enterpriseUid:null}),qb=M.quote(b,qa.request),rng=FB.getRngState(),uid=FB.getUidCounter();
+    const qa=M.aiQuote(a,'licensed_work','prepare',{enterpriseUid:null}),qb=M.quote(b,qa.request),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
     const one=M.commit(a,qa),two=M.commit(b,qb),pending=JSON.stringify(a)===JSON.stringify(b);
     const first=M.commit(a,M.aiQuote(a,'licensed_work','complete',{invoiceId:one}));FB.setUidCounter(uid);FB.setRngState(rng);
     const second=M.commit(b,M.quote(b,{operation:'complete',assignmentId:'licensed_work',actor:qa.request.actor,invoiceId:two}));
@@ -182,14 +185,14 @@ test('strict saved contributions reject missing provenance, forged value, units,
 });
 test('ordinary JSON validation rejects unsupported, unlicensed, overvalued and wrong-output configurations without publishing them',async function({page},info){
   await openGame(page,info);
-  const r=await page.evaluate(function(example){const before=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState(),uid=FB.getUidCounter();
+  const r=await page.evaluate(function(example){const before=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
     const changes=[function(m){m.maritimeWorkProfiles.maintained_shore.invoiceShare=0.11;},function(m){m.maritimeWorkProfiles.maintained_shore.statePath='player.gold';},
       function(m){m.maritimeWorkProfiles.maintained_shore.goodId='wood_lot';},function(m){m.maritimeWorkProfiles.maintained_shore.enterpriseType='field_strip';},
       function(m){m.bookmarks.maritime_shore.revisions.supplied.maritimeWorkAssignments[0].launchSourceId='absent';},
       function(m){m.bookmarks.maritime_shore.revisions.supplied.maritimeWorkAssignments.push(JSON.parse(JSON.stringify(m.bookmarks.maritime_shore.revisions.supplied.maritimeWorkAssignments[0])));},
       function(m){m.maritimeWorkProfiles.maintained_shore.termDays=Infinity;}];
     const rejected=changes.map(function(change){const m=JSON.parse(JSON.stringify(example));change(m);return FB.mods.validate(m).length>0;});
-    return {valid:FB.mods.validate(example),rejected:rejected,pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
+    return {valid:FB.mods.validate(example),rejected:rejected,pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===(FB.getRngState()>>>0)&&uid===FB.getUidCounter()};
   },examples.shore);
   expect(r).toEqual({valid:[],rejected:Array(7).fill(true),pure:true});
 });
@@ -202,10 +205,10 @@ test('unopted released worlds retain no assigned facility or material declaratio
 for(const width of [390,1280])test(width+'px invoice review retains keyboard focus and settlement position through Back, Escape and confirmation',async function({page},info){
   await page.setViewportSize({width:width,height:844});await boot(page,info,'river');await work(page);
   await page.evaluate(function(){FB.ui.closeModal();FB.ui.showSettlement('resource_quay',0);});await page.locator('#settlement-maritime').click();
-  const prepare=page.getByRole('button',{name:'Review construction contribution',exact:true});await prepare.click();
+  const prepare=page.getByRole('button',{name:/^Review construction contribution\b/});await prepare.click();
   await expect(page.locator('#gm-body')).toContainText('Remaining payment');await page.keyboard.press('Escape');await expect(prepare).toBeFocused();
   await prepare.click();await page.locator('#gm-cancel').click();await expect(prepare).toBeFocused();
-  await prepare.click();await page.locator('#maritime-confirm').click();await expect(page.getByRole('button',{name:'Complete paid enterprise invoice',exact:true})).toBeFocused();
+  await prepare.click();await page.locator('#maritime-confirm').click();await expect(page.getByRole('button',{name:/^Complete paid enterprise invoice\b/})).toBeFocused();
   expect(await page.locator('#gm-body').evaluate(function(el){return el.scrollWidth>el.clientWidth+1;})).toBe(false);
   await page.keyboard.press('Escape');await expect(page.locator('#settlement-maritime')).toBeFocused();
 });
