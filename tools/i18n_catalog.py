@@ -147,7 +147,9 @@ def lex_js(text: str) -> list[Token]:
     i = 0
     line = 1
     n = len(text)
-    punct = set("{}[]():,.;=?!+-*/<>")
+    punct = set("{}[]():,.;=?!+-*/<>&|%^~")
+    regex_words = {"return", "throw", "case", "typeof", "void", "delete",
+                   "new", "in", "instanceof", "yield", "else", "do", "of"}
     while i < n:
         c = text[i]
         if c in " \t\r":
@@ -170,6 +172,33 @@ def lex_js(text: str) -> list[Token]:
                 i += 1
             i = min(n, i + 2)
             continue
+        previous = tokens[-1] if tokens else None
+        if c == "/" and (previous is None or
+                previous.kind == "ident" and previous.value in regex_words or
+                previous.kind == "punct" and previous.value in "(,=:[!&|?{};+-*/%<>~^"):
+            # A regex is opaque source, including quotes and apparent calls.
+            end = i + 1
+            in_class = False
+            while end < n and text[end] not in "\r\n":
+                if text[end] == "\\":
+                    end += 2
+                    continue
+                if text[end] == "[":
+                    in_class = True
+                elif text[end] == "]":
+                    in_class = False
+                elif text[end] == "/" and not in_class:
+                    end += 1
+                    while end < n and text[end].isalpha():
+                        end += 1
+                    tokens.append(Token("regex", text[i:end], line, i))
+                    i = end
+                    break
+                end += 1
+            else:
+                end = None
+            if end is not None:
+                continue
         if c in ("'", '"'):
             quote = c
             start_line = line

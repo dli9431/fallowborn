@@ -90,7 +90,7 @@ jobs:
         run: npm run test:server
         working-directory: tests/e2e
       - name: Static HTML extraction tests
-        run: python -m unittest test_i18n_catalog.StaticHtmlExtractionTests
+        run: python -m unittest test_i18n_catalog.JavascriptLexerTests test_i18n_catalog.StaticHtmlExtractionTests
         working-directory: tools
 
   e2e:

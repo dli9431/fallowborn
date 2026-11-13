@@ -270,6 +270,37 @@ class StaticHtmlExtractionTests(unittest.TestCase):
 
 
 class JavascriptLexerTests(unittest.TestCase):
+    def test_html_escape_regexes_do_not_hide_following_display_strings(self):
+        source = ("const safe = value.replace(/\"/g, '&quot;')"
+                  ".replace(/'/g, '&#39;');\nFB.T('Visible after escapes');")
+        strings = [token for token in i18n_catalog.lex_js(source)
+                   if token.kind == 'string']
+        self.assertEqual([token.value for token in strings],
+                         ['&quot;', '&#39;', 'Visible after escapes'])
+        self.assertEqual(strings[-1].line, 2)
+
+    def test_regex_classes_escapes_and_call_text_remain_opaque(self):
+        source = r'''const quotes = /["'/]/g;
+const slash = /\//;
+function pattern() { return /FB.T('Not a label')/; }
+FB.T('Real label');'''
+        strings = [token.value for token in i18n_catalog.lex_js(source)
+                   if token.kind == 'string']
+        self.assertEqual(strings, ['Real label'])
+
+    def test_division_and_boolean_operands_preserve_display_strings(self):
+        source = r'''const ratio = total / count / 2;
+const half = 12 / 3;
+const matched = ready && /["']/.test(text);
+const divided = ratio / /['"]/.test(text);
+FB.T('After division');'''
+        tokens = i18n_catalog.lex_js(source)
+        self.assertEqual([token.value for token in tokens if token.kind == 'string'],
+                         ['After division'])
+        self.assertEqual(len([token for token in tokens if token.kind == 'regex']), 2)
+        self.assertEqual(len([token for token in tokens
+                              if token.kind == 'punct' and token.value == '/']), 4)
+
     def test_unterminated_string_cannot_consume_following_source(self):
         source = "const broken = 'unterminated\nFB.T('Visible text');"
 
