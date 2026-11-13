@@ -2,11 +2,12 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={shore:require('../fixtures/authoring/boathouse-work-shore.json'),river:require('../fixtures/authoring/boathouse-work-river.json')};
 dependsOnRuntime(__filename,[
-  'index.html','data/buildings_boathouses.js','data/production.js','data/maritime_work.js',
+  'js/bookmark_composition.js','index.html','data/buildings_boathouses.js','data/production.js','data/maritime_work.js',
   'data/economy.js','data/economy_maritime.js','data/technology.js','data/site_resources.js',
   'data/building_profiles.js','data/building_seasons.js','data/production_economy.js',
   'js/production.js','js/maritime_work.js','js/site_resources.js','js/production_economy.js',
@@ -125,7 +126,7 @@ for(const kind of ['shore','river']) {
         required:required,idle:idle,hired:hired,working:working,noFleet:military===JSON.stringify([s.armies,s.wars,s.player.retinue,s.player.levy])};
     });
     expect(r).toMatchObject({ok:true,repeat:false,noCharge:true,available:0,status:'committed',remaining:0,launch:1,count:1,level:0,required:1,idle:0,hired:true,noFleet:true});
-    expect(r.paid).toBe(r.due);expect(r.credit).toBeGreaterThan(0);expect(r.working).toBeGreaterThan(0);
+    expect(r.paid).toBeCloseTo(r.due,8);expect(r.credit).toBeGreaterThan(0);expect(r.working).toBeGreaterThan(0);
   });
 
   test(kind+' cancelled and stale reviews preserve the spent work and require fresh consent',async function({page},info){
@@ -146,7 +147,8 @@ for(const kind of ['shore','river']) {
     await boot(page,info,kind);await work(page);
     const r=await page.evaluate(function(){
       const M=FB.maritimeWork,id=M.commit(FB.state,M.aiQuote(FB.state,'licensed_work','prepare',{enterpriseUid:null}));
-      function facts(){const s=FB.state;return JSON.stringify([s.production,s.siteResources,s.buildings,s.player.gold,s.player.enterprises]);}
+      function facts(){const s=FB.save.expandedSnapshot(FB.state);return FB.contentValues.canonical([
+        s.production,s.siteResources,s.buildings,s.player.gold,s.player.enterprises,FB.getRngState()>>>0,FB.getUidCounter()]);}
       const pending=facts();FB.save.restore(JSON.parse(FB.save.serialize()));
       const pendingSame=pending===facts(),review=M.aiQuote(FB.state,'licensed_work','complete',{invoiceId:id}),paid=M.commit(FB.state,review);
       const complete=facts();FB.save.restore(JSON.parse(FB.save.serialize()));FB.production.initialize(FB.state);
@@ -169,7 +171,7 @@ test('new construction respects inclusive Nordic scope, coastal siting, price an
       dev:s.dev[pid]-dev,count:s.buildings[pid].filter(function(b){return b.id===id;}).length};
   });
   expect(r).toMatchObject({rows:[false,true,true,false],wrong:false,inland:false,coastal:true,ok:true,again:false,dev:0,count:1});
-  expect(r.paid).toBe(r.price);
+  expect(r.paid).toBeCloseTo(r.price,8);
 });
 
 for(const kind of ['shore','river']) {
@@ -191,7 +193,7 @@ for(const kind of ['shore','river']) {
         empty:row.lots.length===0,constructed:row.asset.constructed,opened:row.asset.openedTurn,turn:s.turn};
     });
     expect(built).toMatchObject({direct:true,ai:true,pure:true,ok:true,again:false,once:true,noFree:true,empty:true,constructed:true});
-    expect(built.paid).toBe(built.cost);expect(built.opened).toBe(built.turn);
+    expect(built.paid).toBeCloseTo(built.cost,8);expect(built.opened).toBe(built.turn);
     const delivered=await page.evaluate(function(){
       const s=FB.state,P=FB.production,E=FB.productionEconomy,recipe=FBDATA.productionRecipes.prepare_boathouse_work;
       const source=P.snapshot(s).find(function(x){return x.site.id==='boat_supplier';}),cash=s.player.gold;
@@ -206,10 +208,12 @@ for(const kind of ['shore','river']) {
     await work(page);
     const r=await page.evaluate(function(){
       const s=FB.state,M=FB.maritimeWork,P=FB.production,id=M.commit(s,M.aiQuote(s,'licensed_work','prepare',{enterpriseUid:null}));
-      function facts(t){return JSON.stringify([t.production,t.buildings,t.siteResources,t.player.gold,t.player.enterprises]);}
+      function facts(state){const t=FB.save.expandedSnapshot(state);return FB.contentValues.canonical([
+        t.production,t.buildings,t.siteResources,t.player.gold,t.player.enterprises,FB.getRngState()>>>0,FB.getUidCounter()]);}
+      function militaryFacts(state){const t=FB.save.expandedSnapshot(state);return FB.contentValues.canonical([t.armies,t.wars,t.player.retinue,t.player.levy]);}
       const pending=facts(s);FB.save.restore(JSON.parse(FB.save.serialize()));const pendingSame=pending===facts(FB.state);
       const t=FB.state,q=M.aiQuote(t,'licensed_work','complete',{invoiceId:id}),cash=t.player.gold;
-      const military=JSON.stringify([t.armies,t.wars,t.player.retinue,t.player.levy]),ok=M.commit(t,q),repeat=M.commit(t,q);
+      const military=militaryFacts(t),ok=M.commit(t,q),repeat=M.commit(t,q);
       const paid=cash-t.player.gold,e=t.player.enterprises[0];FB.assignEnterprise(t,e.uid,null);
       const idle=FB.enterpriseYield(t,e),staff=FB.enterpriseStaffRequired(e);P.validate(t);
       const forged=[function(a){a.constructed=false;},function(a){a.openedTurn=t.turn+1;},function(a){delete a.constructed;}].map(function(change){
@@ -219,10 +223,10 @@ for(const kind of ['shore','river']) {
       });
       const complete=facts(t);FB.save.restore(JSON.parse(FB.save.serialize()));P.initialize(FB.state);
       return {pendingSame:pendingSame,ok:ok,repeat:repeat,paid:paid,due:q.due,credit:q.credit,base:q.baseCost,idle:idle,staff:staff,forged:forged,
-        same:complete===facts(FB.state),noFleet:military===JSON.stringify([FB.state.armies,FB.state.wars,FB.state.player.retinue,FB.state.player.levy])};
+        same:complete===facts(FB.state),noFleet:military===militaryFacts(FB.state)};
     });
     expect(r).toMatchObject({pendingSame:true,ok:true,repeat:false,idle:0,staff:1,forged:[true,true,true],same:true,noFleet:true});
-    expect(r.paid).toBe(r.due);expect(r.credit).toBeGreaterThan(0);expect(r.credit).toBeLessThanOrEqual(Math.floor(r.base*0.1));
+    expect(r.paid).toBeCloseTo(r.due,8);expect(r.credit).toBeGreaterThan(0);expect(r.credit).toBeLessThanOrEqual(Math.floor(r.base*0.1));
   });
 }
 
@@ -275,7 +279,7 @@ test('the original decked and flotilla stages retain technology, staffing and or
     const paid=cash-s.player.gold;FB.assignEnterprise(s,e.uid,null);
     return {purchase:purchase,paid:paid,price:price,decked:FB.enterpriseUpgradeStatus(s,e).missingTech,invoice:M.aiQuote(s,'licensed_work','prepare',{enterpriseUid:e.uid}).allowed};
   });
-  expect(r).toMatchObject({purchase:['coastal_piloting'],decked:['harbor_works'],invoice:false});expect(r.paid).toBe(r.price);
+  expect(r).toMatchObject({purchase:['coastal_piloting'],decked:['harbor_works'],invoice:false});expect(r.paid).toBeCloseTo(r.price,8);
   await work(page);
   const after=await page.evaluate(function(){
     const s=FB.state,M=FB.maritimeWork,e=s.player.enterprises[0],record=FB.realmTechRecord(s,FB.techRealmId(s));
@@ -289,7 +293,7 @@ test('the original decked and flotilla stages retain technology, staffing and or
       finalLevel:FB.enterpriseUpgradeLevel(updated),finalStaff:FB.enterpriseStaffRequired(updated),invoices:s.production.maritime.invoices.length};
   });
   expect(after).toMatchObject({ok:true,locked:['naval_levies'],level:1,staff:2,idle:0,ordinary:true,finalLevel:2,finalStaff:3,invoices:1});
-  expect(after.paid).toBe(after.due);expect(after.normalPaid).toBe(after.normal);
+  expect(after.paid).toBeCloseTo(after.due,8);expect(after.normalPaid).toBeCloseTo(after.normal,8);
 });
 
 test('a separate public account cannot contribute private work and direct credit cannot bypass the receipt',async function({page},info){
@@ -323,6 +327,33 @@ test('a changed ordinary repeat-copy price needs cancellation and a newly review
       count:s.player.enterprises.length,old:s.production.maritime.invoices[0].status,latest:s.production.maritime.invoices[1].status};
   });
   expect(r).toEqual({rejected:true,cancelled:true,retry:true,done:true,changed:true,count:2,old:'cancelled',latest:'committed'});
+});
+
+test('a fractional ordinary river invoice restores exactly while malformed price bounds remain rejected',async function({page},info){
+  await boot(page,info,'river');await work(page);
+  const r=await page.evaluate(function(){
+    const s=FB.state,M=FB.maritimeWork,q=M.aiQuote(s,'licensed_work','prepare',{enterpriseUid:null}),
+      ordinary=FB.enterprisePurchaseStatus(s,'river_fishing_business','resource_quay',0,{checkFunds:false}).cost;
+    if(!q.allowed)throw new Error('Expected a real paid river work contribution: '+q.reason);
+    const id=M.commit(s,q),invoice=s.production.maritime.invoices.find(function(x){return x.id===id;});
+    M.validate(s);
+    const original=JSON.stringify(s),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
+    const rejected=[NaN,Infinity,-Infinity,0,-1,1000001,'60'].map(function(price){
+      const t=JSON.parse(original);t.production.maritime.invoices[0].baseCost=price;
+      const before=JSON.stringify(t);let bad=false;try{M.validate(t);}catch(error){bad=true;}
+      return bad && before===JSON.stringify(t);
+    });
+    const pure=original===JSON.stringify(s) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter();
+    const before=FB.contentValues.canonical(FB.save.expandedSnapshot(s).production);
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    const restored=FB.state,again=M.aiQuote(restored,'licensed_work','complete',{invoiceId:id});
+    return {fractional:!Number.isInteger(ordinary),ordinary:ordinary,base:q.baseCost,saved:invoice.baseCost,
+      current:again.baseCost,ready:again.allowed,creditWhole:Number.isInteger(invoice.credit),rejected:rejected,pure:pure,
+      exact:before===FB.contentValues.canonical(FB.save.expandedSnapshot(restored).production),
+      deterministic:rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter()};
+  });
+  expect(r).toMatchObject({fractional:true,ready:true,creditWhole:true,rejected:Array(7).fill(true),pure:true,exact:true,deterministic:true});
+  expect(r.base).toBe(r.ordinary);expect(r.saved).toBe(r.ordinary);expect(r.current).toBe(r.ordinary);
 });
 
 test('direct and AI invoice callers consume the same paid work and launching claim deterministically',async function({page},info){
