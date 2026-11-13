@@ -652,6 +652,15 @@ storage behaves like origin-backed storage.
 
 ## Current coverage
 
+`local-formation-authority.spec.js` stages expiry at the declared deadline and
+records an incumbent provider's death through the court owner before preparation
+dispatch. Both ordinary JSON configurations cover zero-funded waiting, refusal,
+expiry and interruption with exact population, market, public/private money and
+accounting conservation, retained provider provenance, released reserves and no
+host or replay. Malformed deadlines, future closure turns, premature expiry and
+inconsistent character/court death facts still reject without mutation. Pending,
+contributed and formed restore/replay coverage remains in the same specification.
+
 `guild-monopoly-laws.spec.js` covers paid ruler issuance and guildmaster petitions,
 exclusive and licensed operation, actual representative/public-account balances,
 guild and named-business exemptions, stale funds/authority/generation/terms,
