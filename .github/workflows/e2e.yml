@@ -72,12 +72,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: tests/e2e/package-lock.json
       - run: npm ci
@@ -99,14 +99,14 @@ jobs:
       matrix:
         shard: ${{ fromJSON(needs.plan.outputs.shards) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
           # Only the changed-test selection needs history.
           fetch-depth: ${{ inputs.mode == 'changed' && '0' || '1' }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: tests/e2e/package-lock.json
       - run: npm ci
@@ -114,7 +114,7 @@ jobs:
       - id: pw
         working-directory: tests/e2e
         run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
@@ -159,7 +159,7 @@ jobs:
           --shard=${{ matrix.shard }}/${{ inputs.shards }}
           --workers=${{ inputs.workers }}
           --reporter=blob
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: blob-${{ inputs.label }}-${{ matrix.shard }}
@@ -167,7 +167,7 @@ jobs:
           retention-days: 5
           if-no-files-found: ignore
       # Failure contexts (error-context.md, screenshots, traces) for test-fix triage.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
           name: results-${{ inputs.label }}-${{ matrix.shard }}
@@ -181,18 +181,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           path: tooling
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: tooling/tests/e2e/package-lock.json
       - run: npm ci
         working-directory: tooling/tests/e2e
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: blob-${{ inputs.label }}-*
           path: blobs
@@ -257,7 +257,7 @@ jobs:
         run: |
           echo "::error::Shard coverage is incomplete. Available compact results are diagnostic only."
           exit 1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: report-${{ inputs.label }}

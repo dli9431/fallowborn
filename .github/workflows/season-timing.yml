@@ -52,17 +52,17 @@ jobs:
       matrix:
         shard: ${{ fromJSON(needs.plan.outputs.shards) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           path: tooling
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
           path: game
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: tooling/tests/e2e/package-lock.json
       - run: npm ci
@@ -70,7 +70,7 @@ jobs:
       - id: pw
         working-directory: tooling/tests/e2e
         run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
@@ -92,7 +92,7 @@ jobs:
           if [ -n "$ONLY" ]; then set -- "$@" --only "$ONLY"; fi
           if [ "$PROFILE" = true ]; then set -- "$@" --cpu-profile; fi
           node measure/season-timing.js "$@"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: timing-${{ needs.plan.outputs.label }}-${{ matrix.shard }}
@@ -106,11 +106,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           path: tooling
-      - uses: actions/download-artifact@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v8
         with:
           pattern: timing-${{ needs.plan.outputs.label }}-*
           path: timing
@@ -137,7 +140,7 @@ jobs:
           node tooling/tests/e2e/measure/season-timing.js "$@"
           cat summary.md >> "$GITHUB_STEP_SUMMARY"
           mv report.json summary.md timing/
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: season-timing-${{ needs.plan.outputs.label }}
