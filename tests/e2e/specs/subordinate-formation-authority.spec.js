@@ -14,7 +14,7 @@ dependsOnRuntime(__filename,['js/bookmark_composition.js','js/util.js','index.ht
   'js/authority.js','js/politics.js','js/home_authority.js','js/mobile_confederations.js','js/mobile_command.js',
   'js/mobile_columns.js','js/mobile_guard.js','js/mobile_camps.js','js/story_expedition_preparation.js',
   'js/treasury.js','js/market.js','js/population.js','js/armies.js','js/wars.js','js/holywar.js','js/rebellions.js',
-  'js/fortifications.js','js/logistics.js','js/federates.js',
+  'js/fortifications.js','js/logistics.js','js/federates.js','js/government_civic.js','js/civic_transactions.js','js/civic_strategies.js',
   'js/travel.js','js/justice.js','js/intrigue.js','js/events.js','js/save.js','js/save_v4.js']);
 
 function generatedDuke() {
@@ -233,9 +233,15 @@ for(const prefix of ['harbor','dune']) {
       const s=FB.state,C=subordinateCase,P=FB.expeditionPreparation,t=C.record(s),story=FB.stories.get(C.id),
         funded=C.localGift(s),authorized=C.authorize(s),q=P.review(s,C.id,'form',C.leader(s)),
         owners=JSON.stringify([s.owner,s.holder]),sovereign=s.owner[C.origin],
-        enemy=Object.keys(s.realms).find(function(rid){return rid!==sovereign && rid!==C.rid && s.realms[rid].alive;}),
-        attacker=prefix==='dune'?sovereign:enemy,defender=attacker===sovereign?enemy:sovereign,
-        war=FB.registerOrdinaryWar(s,attacker,{enemy:defender,target:s.realms[defender].capital,legacy:false,occupations:{}});
+        enemy=Object.keys(s.realms).find(function(rid){return rid!==sovereign && rid!==C.rid && s.realms[rid].alive;});
+      let war;
+      if(FB.civicGovernment.active(s,enemy)) {
+        s.realms[enemy].treasury.gold=10000;
+        const cause={type:'aggression',enemy:sovereign,target:C.origin},
+          declaration=FB.civicGovernment.warQuote(s,enemy,{causes:[cause]});
+        if(!FB.civicGovernment.launchWar(s,declaration))throw new Error('Civic occupation declaration refused: '+JSON.stringify(declaration));
+        war=FB.ordinaryWarBetween(s,enemy,sovereign);
+      } else war=FB.registerOrdinaryWar(s,enemy,{enemy:sovereign,target:C.origin,legacy:false,occupations:{}});
       if(!war)throw new Error('Occupation requires distinct actual war parties');
       war.occupations[C.origin]={occupied:true,progress:100,homeRealm:sovereign};
       const before=JSON.stringify(s),rejected=!P.commit(s,q),fresh=!P.review(s,C.id,'form',C.leader(s)).allowed,
