@@ -261,13 +261,16 @@ test('AI opens no inputless or unfunded grazing window and rechecks current rese
   custom.bookmarks.pasture_faroes.productionSites[0].openingLots=[{goodId:'parent_farm_allocation',quantity:1}];
   await boot(page,info,'faroes',custom);
   const r=await page.evaluate(function(){
-    const s=FB.state,S=FB.buildingSeasons,who=FB.settlementHolder(s,'faroes',0),base=JSON.stringify(s);
+    const s=FB.state,S=FB.buildingSeasons,who=FB.settlementHolder(s,'faroes',0);
+    if(who.kind!=='realm' || who.id==='player')throw new Error('The fixture requires its actual NPC public payer');
+    s.realms[who.id].treasury.gold=10000;const base=JSON.stringify(s);
     s.realms[who.id].treasury.gold=0;
     const before=JSON.stringify(s),count=S.runAI(s),pure=before===JSON.stringify(s);
     const t=JSON.parse(base),funded=S.runAI(t),again=S.runAI(t);
-    const empty=JSON.parse(base);empty.buildings.faroes[0].ruined=true;
+    const empty=JSON.parse(base);empty.buildings.faroes.find(function(b){return b.id==='shieling';}).ruined=true;
     const unused=JSON.stringify(empty),unusable=S.runAI(empty);
-    return {count:count,pure:pure,funded:funded,again:again,used:t.siteResources.sources.farm_grazing.consumed,
+    return {count:count,pure:pure,funded:funded,again:again,
+      used:FB.siteResources.snapshot(t,'faroes',null,who).find(function(row){return row.id==='farm_grazing';}).consumed,
       unusable:unusable,untouched:unused===JSON.stringify(empty)};
   });
   expect(r).toEqual({count:0,pure:true,funded:1,again:0,used:1,unusable:0,untouched:true});
