@@ -203,6 +203,51 @@ test('office validation observes nested edits, JSON key ordering, identity switc
   await info.attach('office-validation-mutations', {body:JSON.stringify(result),contentType:'application/json'});
 });
 
+test('office input records preserve reentrant validation and reader or catalogue changes during comparison', async function ({page}, info) {
+  await route(page, false, true);
+  await beginBookmark(page, info, '476');
+  const result = await page.evaluate(function () {
+    const s = FB.state, data = FBDATA, systemEnabled = FB.systemEnabled;
+    const before = JSON.stringify(s), dataBefore = JSON.stringify(data), save = FB.save.serialize();
+    const rng = FB.getRngState(), uid = FB.getUidCounter();
+    const local = FB.localInstitutionDefinitions(s), detached = JSON.parse(before);
+    const id = Object.keys(local).find(function (id) { return !!local[id].officeId; });
+    const row = local[id], descriptor = Object.getOwnPropertyDescriptor(row, 'officeId'), checks = [];
+    function run(reader, action) {
+      const warm = reader(s);
+      let entered = false, calls = 0, value = null, error = null;
+      Object.defineProperty(row, 'officeId', {enumerable:true, configurable:true, get:function () {
+        if (!entered) {
+          entered = true;
+          if (action === 'nested') reader(detached);
+          if (action === 'catalogue') window.FBDATA = Object.assign({}, data);
+          if (action === 'reader') FB.systemEnabled = function () { calls++; return systemEnabled.apply(this, arguments); };
+          if (action === 'error') throw new Error('input-record-sentinel');
+        }
+        return descriptor.value;
+      }});
+      try { value = reader(s); } catch (e) { error = e.message; }
+      finally {
+        Object.defineProperty(row, 'officeId', descriptor);
+        window.FBDATA = data; FB.systemEnabled = systemEnabled;
+      }
+      return {value:value, error:error, changed:value !== warm, entered:entered, readerUsed:calls > 0};
+    }
+    ['nested', 'catalogue', 'reader', 'error'].forEach(function (action) {
+      const current = run(FB.religiousOffices, action), prior = run(FB.officeValidationReference, action);
+      if (JSON.stringify(current) !== JSON.stringify(prior)) throw new Error('Input record parity: ' + action);
+      if (!current.entered || !current.changed || (action === 'reader' && !current.readerUsed)) throw new Error('Missing input transition: ' + action);
+      if (current.error !== (action === 'error' ? 'input-record-sentinel' : null)) throw new Error('Input record error: ' + action);
+      if (JSON.stringify(FB.religiousOffices(s)) !== JSON.stringify(FB.officeValidationReference(s))) throw new Error('Input record recovery: ' + action);
+      checks.push(action);
+    });
+    return {checks:checks, pure:before === JSON.stringify(s) && dataBefore === JSON.stringify(FBDATA) && save === FB.save.serialize() &&
+      rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result.checks).toEqual(['nested', 'catalogue', 'reader', 'error']);
+  expect(result.pure).toBe(true);
+});
+
 for (const config of ['estuary', 'southern']) {
   test('office validation preserves ordinary JSON import, rejection and restore for ' + config, async function ({page}, info) {
     const mod = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../fixtures/political-religious-head/' + config + '.json'), 'utf8'));

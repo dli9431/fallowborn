@@ -1696,12 +1696,17 @@ window.FB = window.FB || {};
         bookmark && (bookmark.realms || []).concat(bookmark.provinces || []).map(function (row) { return row.religion; }),
         localInputs]);
     }
-    return { state:state, data:FBDATA, graph:graph, bookmark:bookmark, local:local,
-      systemEnabled:FB.systemEnabled, key:key,
+    const data = FBDATA, systemEnabled = FB.systemEnabled;
+    // A hit has already checked every dependency. Keep the record only if a
+    // reentrant read or an authoring getter did not replace its live inputs.
+    if (unchanged && localOfficeCache === old && old.data === data && old.systemEnabled === systemEnabled) return old;
+    return { state:state, data:data, graph:graph, bookmark:bookmark, local:local,
+      systemEnabled:systemEnabled, key:key,
       snapshot:old && old.key === key ? old.snapshot : officeInputSnapshot(JSON.parse(key)) };
   }
   function localOfficeTable(state, graph, definitions) {
     const inputs = localOfficeInputs(state, graph), old = localOfficeCache;
+    if (inputs === old) return old.table;
     if (old && old.state === inputs.state && old.data === inputs.data &&
         old.graph === graph && old.bookmark === inputs.bookmark &&
         old.local === inputs.local && old.systemEnabled === inputs.systemEnabled && old.key === inputs.key) return old.table;

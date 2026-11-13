@@ -127,6 +127,8 @@ faith-record edits retain the existing invalidateFaithState contract.
 
 Unchanged independent reads compare those ordered JSON inputs against a private detached dependency snapshot. They still inspect every relevant local definition, system layer and bookmark religion reference, but do not recreate the local-row arrays, concatenate/map the bookmark rows or serialize the complete key on a hit. A changed dependency uses the original key construction and table-build path. The snapshot preserves JSON null/omitted values and object insertion order, never aliases mutable source descendants, and lasts only with the existing single table cache. Non-JSON conversion objects fall back to the original serialization path. No mutation counters, global per-turn reuse or holder-result cache is introduced.
 
+After a successful comparison, validation returns the existing private dependency record when it is still current and its catalogue and system reader identities still match. This avoids a replacement record and the caller's repeated identity/key guard within that same read. Reentrant validation or identity changes during comparison retain the original record-construction and table checks. Every independent entry still resolves and compares all inputs. Office lookup diagnostics count record allocations and repeated table guards separately from validations, while office-validation.spec.js covers reentry, reader/catalogue changes during comparison and exception recovery.
+
 Each build evaluates a distinct system/faith pair and profile/faith pair once.
 The optional checks argument of religiousInstitutionOffice shares those pure
 availability queries with the table builder. Holders, deaths, political incumbent

@@ -99,7 +99,14 @@ for (const start of starts) {
     for (const phase of evidence[1]) {
       expect(phase.counts.keyBuilds).toBe(phase.counts.hits + phase.counts.misses);
       expect(phase.counts.keyBuilds).toBeGreaterThan(0);
+      expect(phase.counts.inputRecords + phase.counts.reusedInputRecords).toBe(phase.counts.keyBuilds);
+      expect(phase.counts.tableComparisons + phase.counts.reusedInputRecords).toBe(phase.counts.keyBuilds);
+      if (source.indexOf('    if (inputs === old) return old.table;') >= 0) {
+        expect(phase.counts.reusedInputRecords).toBeGreaterThan(0);
+        expect(phase.counts.inputRecords).toBeLessThan(phase.counts.keyBuilds);
+      }
     }
+    console.log('OFFICE_LOOKUP_FACTS ' + JSON.stringify({start:start.scenario, phases:parity[1]}));
     console.log('OFFICE_LOOKUP_PROBE ' + JSON.stringify({start:start.scenario, code:start.code, phases:evidence[1]}));
     await info.attach('office-lookup-counts', {body:JSON.stringify({start:start, phases:evidence[1]}), contentType:'application/json'});
   });
