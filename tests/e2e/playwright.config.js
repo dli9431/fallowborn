@@ -2,6 +2,7 @@ const { defineConfig } = require('@playwright/test');
 
 const servedOrigin = 'http://127.0.0.1:4173';
 const fileProjectTests = [
+  '**/security-helpers.spec.js',
   '**/boot.spec.js',
   '**/determinism.spec.js',
   '**/eager-courts.spec.js',
@@ -20,6 +21,7 @@ const fileProjectTests = [
   '**/time-controls.spec.js'
 ];
 const compatibilityProjectTests = [
+  '**/security-helpers.spec.js',
   '**/boot.spec.js',
   '**/holywar-accessibility.spec.js',
   '**/journeys.spec.js'

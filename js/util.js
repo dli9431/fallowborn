@@ -252,7 +252,7 @@ window.FB = window.FB || {};
 
   FB.esc = function (s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').split('"').join('&quot;');
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   };
 
   /* color helpers for map tinting */

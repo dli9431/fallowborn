@@ -271,6 +271,10 @@ Workflows live in `.github/workflows/`:
 Read results with `gh run list`, `gh run view <id>`, `gh run view <id> --log-failed`, and
 `gh run download <id> -n <artifact>`. Only pushed branches can run in CI.
 
+Jobs that check out an arbitrary game ref do not retain Git credentials or save npm or Playwright browser caches. Report-only tooling jobs may cache their trusted dependency installation. CI summary table cells encode literal backslashes, pipes and HTML and flatten line breaks before rendering report data. The check job also runs the bounded static HTML extraction regressions without regenerating language catalogs.
+
+Security helper coverage in tests/e2e/specs/security-helpers.spec.js checks text and both quoted attribute boundaries, crest seed markup and recursive faith-property prototype protection on the file and served targets and compatibility browsers. tests/e2e/support/ci-summary.test.js covers report table boundaries. tools/test_i18n_catalog.py covers non-display closing tags and source-position preservation.
+
 ### Season timing
 
 `tests/e2e/measure/season-timing.js` measures simulation cost; it is not a regression spec and
