@@ -10,7 +10,7 @@ const examples={harbor:require('../fixtures/authoring/subordinate-formation-harb
   dune:require('../fixtures/authoring/subordinate-formation-dune.json')};
 dependsOnRuntime(__filename,['js/bookmark_composition.js','js/util.js','index.html','data/technology.js','data/eras.js','data/political_institutions.js',
   'js/world.js','js/starts.js','js/model.js','js/bookmark_setup.js','js/stories.js','js/mods.js','js/main.js',
-  'js/governments.js','js/government_continuity.js','js/government_lineage.js','js/government_selection.js',
+  'js/governments.js','js/government_continuity.js','js/government_lineage.js','js/government_selection.js','js/story_government_selection.js',
   'js/authority.js','js/politics.js','js/home_authority.js','js/mobile_confederations.js','js/mobile_command.js',
   'js/mobile_columns.js','js/mobile_guard.js','js/mobile_camps.js','js/story_expedition_preparation.js',
   'js/treasury.js','js/market.js','js/population.js','js/armies.js','js/wars.js','js/holywar.js','js/rebellions.js',
@@ -233,7 +233,7 @@ for(const prefix of ['harbor','dune']) {
       const s=FB.state,C=subordinateCase,P=FB.expeditionPreparation,t=C.record(s),story=FB.stories.get(C.id),
         funded=C.localGift(s),authorized=C.authorize(s),q=P.review(s,C.id,'form',C.leader(s)),
         owners=JSON.stringify([s.owner,s.holder]),sovereign=s.owner[C.origin],
-        enemy=prefix==='harbor' ? 'harbor_upland' : 'player',
+        enemy=Object.keys(s.realms).find(function(rid){return rid!==sovereign && rid!==C.rid && s.realms[rid].alive;}),
         war=FB.registerOrdinaryWar(s,enemy,{enemy:sovereign,target:C.origin,legacy:false,occupations:{}});
       if(!war)throw new Error('Occupation requires distinct actual war parties');
       war.occupations[C.origin]={occupied:true,progress:100,homeRealm:sovereign};
@@ -321,13 +321,15 @@ test('generated duke forms once through canonical funding and preserves the exac
       stock=FB.marketProvisionSnapshot(s,C.origin).stock,money=FB.treasuryAvailable(s,C.rid),
       seller=FB.treasuryPublicAccountSnapshot(s,t.provider.realmId).gold,q=P.review(s,C.id,'form',C.leader(s)),
       formed=P.commit(s,q),repeat=P.commit(s,q);
-    const snapshot=function(){const s=FB.state;return JSON.stringify([C.record(s),s.realms,s.armies,s.market,s.population,s.player.gold]);};
-    const original=snapshot(),save=JSON.parse(FB.save.serialize());FB.save.restore(save);
+    const snapshot=function(){const s=FB.save.expandedSnapshot(FB.state);
+      return FB.contentValues.canonical([C.record(s),s.realms,s.armies,s.market,s.population,s.player.gold]);};
+    const original=snapshot(),save=JSON.parse(FB.save.serialize()),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();FB.save.restore(save);
     return {funded:funded,authorized:authorized,formed:formed,repeat:repeat,
       food:stock-FB.marketProvisionSnapshot(FB.state,C.origin).stock===t.formed.food,
       debit:Math.abs(money-FB.treasuryAvailable(FB.state,C.rid)-q.cost)<1e-8,
       credit:Math.abs(FB.treasuryPublicAccountSnapshot(FB.state,t.provider.realmId).gold-seller-q.foodCost)<1e-8,
-      same:original===snapshot(),single:FB.state.armies.filter(function(a){return a.realm===C.rid;}).length===1};
+      same:original===snapshot() && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter(),
+      single:FB.state.armies.filter(function(a){return a.realm===C.rid;}).length===1};
   });
   expect(result).toEqual({funded:true,authorized:true,formed:true,repeat:false,food:true,debit:true,credit:true,same:true,single:true});
 });
@@ -344,13 +346,16 @@ test('generated-provider proof cannot escape its exact field or effective revisi
     wrongRevision.revisions={baseline:{provinces:provinces},current:{provinces:base.provinces}};
     const retained=FB.validateBookmark(wrongRevision),
       wrongReference=JSON.parse(JSON.stringify(FBDATA.storyInstances));
-    wrongReference.harbor_preparation.realmId='c_harbor_meadow';
-    const context=FB.stories.compile(wrongReference),unrelated=FB.validateBookmark(base,false,context);
+    const unrelatedWorld=JSON.parse(JSON.stringify(base));unrelatedWorld.stories.push('harbor_reference_probe');
+    wrongReference.harbor_reference_probe={id:'harbor_reference_probe',type:'government_contest',
+      name:'Unrelated court',desc:'An unrelated court reference.',realmId:'c_harbor_meadow'};
+    const context=FB.stories.compile(wrongReference),unrelated=FB.validateBookmark(unrelatedWorld,false,context);
     const required=JSON.parse(JSON.stringify(FBDATA.storyInstances));
-    required.harbor_preparation.requirements={realms:['c_harbor_meadow']};
-    const requirements=FB.validateBookmark(base,false,FB.stories.compile(required));
+    required.harbor_reference_probe={id:'harbor_reference_probe',type:'government_contest',
+      name:'Unrelated court',desc:'An unrelated court reference.',realmId:'harbor_commune',requirements:{realms:['c_harbor_meadow']}};
+    const requirements=FB.validateBookmark(unrelatedWorld,false,FB.stories.compile(required));
     return {retained:retained.some(function(e){return e.indexOf('opening direct-holder jurisdiction')>=0;}),
-      unrelated:unrelated.some(function(e){return e.indexOf('story harbor_preparation: realmId references unknown id c_harbor_meadow')>=0;}),
+      unrelated:unrelated.some(function(e){return e.indexOf('story harbor_reference_probe: realmId references unknown id c_harbor_meadow')>=0;}),
       requirements:requirements.some(function(e){return e.indexOf('unknown realms requirement c_harbor_meadow')>=0;}),
       pure:before===JSON.stringify([FB.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter()};
   });
@@ -361,10 +366,15 @@ test('otherwise valid-looking generated references fail actual file import witho
   await openGame(page,info);
   const mod=generatedDuke();mod.storyInstances.harbor_preparation.provider.realmId='c_harbor_fen';
   await page.evaluate(function(){window.beforeBadProvider={state:JSON.stringify([FB.state,FBDATA]),
-    storage:JSON.stringify(localStorage),rng:FB.getRngState(),uid:FB.getUidCounter()};FB.ui.showMods();});
+    storage:JSON.stringify(localStorage),rng:FB.getRngState(),uid:FB.getUidCounter()};
+    const toast=FB.ui.toast;window.badProviderRefused=false;
+    FB.ui.toast=function(message){
+      if(typeof message==='string' && message.indexOf('Mod requirements failed:')===0)window.badProviderRefused=true;
+      return toast.apply(this,arguments);
+    };FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles({name:'wrong-holder.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))});
   await page.locator('#mod-apply').click();
-  await expect(page.getByText(/Mod requirements failed:/)).toBeVisible();
+  await page.waitForFunction(function(){return window.badProviderRefused;});
   const result=await page.evaluate(function(){const before=window.beforeBadProvider;
     return before.state===JSON.stringify([FB.state,FBDATA]) && before.storage===JSON.stringify(localStorage) &&
       before.rng===FB.getRngState() && before.uid===FB.getUidCounter() && !FBDATA.bookmarks.harbor_world;});
@@ -479,7 +489,7 @@ test('a supported court release changes live account aliases while preserving or
   mod.governmentForms.dune_lineage={holders:'direct',succession:'kin_acclamation',territory:'fixed',consent:'local_reserved',
     levy:'local_obligations',revenue:'local_obligations',council:'local_interests',diplomacy:'territorial_diplomacy',
     ai:'local_kingship',ladder:'inherited_ladder',officeCatalogue:[],homeAuthority:{schema:1,presence:'territory',delegation:false},
-    selectionProfile:{eligibility:{minAge:16},tieBreak:'seniority',consensus:0.6,quorum:0.6,negotiationCost:8,
+    selectionProfile:{eligibility:{minAge:16},tieBreak:'seniority',consensus:0.6,quorum:0.6,negotiationCost:0,
       terms:{levy:0.6,revenue:0.65},reserved:['levy','war','treaty','grant','extraordinary_tax'],members:[
         {id:'dune_kin_interest',name:'Dune kin',principal:'senior_kin',scope:'realm',basis:'kin_recognition',weight:3,
           continuity:'senior_kin',minimumSupport:-15,minimumMartial:0,maximumLevy:0.8,maximumRevenue:0.8},
@@ -490,12 +500,18 @@ test('a supported court release changes live account aliases while preserving or
   mod.startScenarios.find(function(s){return s.id==='dune_home_start';}).governmentForm='dune_lineage';
   await begin(page,info,'dune',mod);
   const result=await page.evaluate(function(){
-    const s=FB.state,C=subordinateCase,t=C.record(s),old=JSON.stringify([t.bindings,t.openingJurisdiction]),
+    const s=FB.state,C=subordinateCase,t=C.record(s),tree=s.realms.player.succession,
+      heir=Object.values(tree.members).find(function(m){return m.parentId===tree.rulerMemberId && m.alive!==false;});
+    if(!heir)throw new Error('Court release requires an existing successor');
+    heir.born=s.date.year-16;
+    const child=s.chars[heir.charId || FB.courtCharacterId(heir.id)];if(child)child.born=heir.born;
+    const old=JSON.stringify([t.bindings,t.openingJurisdiction]),
       cash=FB.treasuryPublicAccountSnapshot(s,'player').gold,me=s.chars[s.player.charId],
       released=FB.governmentSelection.releasePlayerCourt(s,me,true),afterRelease=FB.treasuryPublicAccountSnapshot(s,released).gold;
     FB.stories.get(C.id).day(s,t);const original=old===JSON.stringify([t.bindings,t.openingJurisdiction]),
       save=JSON.parse(FB.save.serialize());FB.save.restore(save);
-    if(cash!==FB.treasuryPublicAccountSnapshot(FB.state,released).gold || C.record(FB.state).reason!=='interrupted')
+    if((FB.realmRulerCharacterSnapshot(FB.state,released)||{}).id===C.record(FB.state).provider.characterId ||
+        cash!==FB.treasuryPublicAccountSnapshot(FB.state,released).gold || C.record(FB.state).reason!=='interrupted')
       throw new Error('Released jurisdiction facts: '+JSON.stringify({before:cash,afterRelease:afterRelease,
         afterBoundary:FB.treasuryPublicAccountSnapshot(FB.state,released).gold,status:C.record(FB.state).status,
         reason:C.record(FB.state).reason,provider:C.record(FB.state).provider,

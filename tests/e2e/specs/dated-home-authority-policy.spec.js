@@ -87,9 +87,10 @@ for(const prefix of ['harbor','dune']) {
         return {revision:FB.state.start.revision,scenario:FB.state.start.scenarioId,original:actor.id===FB.state.player.charId,
           form:FB.governments.forRealm(FB.state,'player').id,absent:absent,noCommand:noCommand,
           noDeputy:!FB.state.authority.appointments.some(function(a){return a.officeId===prefix+'_civil_deputy';}),noPreparation:!FB.state.stories[prefix+'_preparation'],
-          unchanged:before===facts(FB.state),
+          snapshotBefore:JSON.parse(before),snapshotAfter:JSON.parse(facts(FB.state)),unchanged:before===facts(FB.state),
           freshPolicy:!!FB.bookmark(prefix+'_world').homeAuthorityPolicies,valid:H.validate(FB.state)};
       },prefix);
+      expect(result.snapshotAfter).toEqual(result.snapshotBefore);delete result.snapshotBefore;delete result.snapshotAfter;
       expect(result).toEqual({revision:'baseline',scenario:prefix+'_home_start',original:true,form:'territorial',absent:true,
         noCommand:true,noDeputy:true,noPreparation:true,unchanged:true,freshPolicy:true,valid:true});
     });
@@ -102,8 +103,8 @@ for(const prefix of ['harbor','dune']) {
       const s=FB.state,P=FB.expeditionPreparation,id=prefix+'_preparation',t=s.stories[id],rid=FB.stories.get(id).declaration.realmId,
         actor=s.player.charId,before={people:Object.keys(s.chars).sort().join('|'),population:JSON.stringify(s.population),
           land:JSON.stringify([s.owner,s.holder]),stock:FB.marketProvisionSnapshot(s,s.player.provinceId).stock};
-      // These retained dynastic worlds use their unified household purse.
-      s.player.gold=10000;
+      // The local-policy revision explicitly retains the provider's public account.
+      s.realms.player.treasury.gold=10000;
       const grant=P.review(s,id,'grant',actor),publicBefore=FB.treasuryAvailable(s,'player'),
         paid=P.commit(s,grant),replay=P.commit(s,grant),authorized=P.commit(s,P.review(s,id,'authorize',actor)),
         form=P.review(s,id,'form',actor),formed=P.commit(s,form),repeat=P.commit(s,form);
@@ -168,13 +169,14 @@ for(const prefix of ['harbor','dune']) {
     await importWorld(page,info,prefix);
     await beginHome(page,prefix,'local_policy','code');
     const result=await page.evaluate(function(prefix) {
-      const P=FB.expeditionPreparation,id=prefix+'_preparation';
+      const P=FB.expeditionPreparation,id=prefix+'_preparation',snapshots=[];
       function facts(s) {const t=FB.save.expandedSnapshot(s);
         return FB.contentValues.canonical([t.homeAuthorityPolicies,t.chars,t.authority,t.stories,t.realms,t.player.gold,t.population,t.market,t.armies]);}
       function restore() {const serialized=FB.save.serialize(),before=facts(FB.state),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
         FB.save.restore(JSON.parse(serialized));FB.save.restore(JSON.parse(serialized));
+        snapshots.push({before:JSON.parse(before),after:JSON.parse(facts(FB.state))});
         return before===facts(FB.state) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter();}
-      FB.state.player.gold=10000;
+      FB.state.realms.player.treasury.gold=10000;
       const pending=restore(),pendingSave=FB.save.serialize(),closedState=FB.state,
         refused=P.commit(closedState,P.review(closedState,id,'refuse',closedState.player.charId)),closed=refused && restore();
       FB.save.restore(JSON.parse(pendingSave));
@@ -184,8 +186,9 @@ for(const prefix of ['harbor','dune']) {
       const t=JSON.parse(JSON.stringify(FB.state));t.realms.player.alive=false;
       const before=JSON.stringify(t),rng=FB.getRngState(),uid=FB.getUidCounter(),historical=FB.homeAuthority.validate(t),
         pure=before===JSON.stringify(t) && rng===FB.getRngState() && uid===FB.getUidCounter();
-      return {pending:pending,closed:closed,grant:grant,consent:consent,formed:formed,saved:saved,historical:historical,pure:pure};
+      return {snapshots:snapshots,pending:pending,closed:closed,grant:grant,consent:consent,formed:formed,saved:saved,historical:historical,pure:pure};
     },prefix);
+    result.snapshots.forEach(function(pair){expect(pair.after).toEqual(pair.before);});delete result.snapshots;
     expect(result).toEqual({pending:true,closed:true,grant:true,consent:true,formed:true,saved:true,historical:true,pure:true});
   });
 }
