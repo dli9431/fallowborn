@@ -11,7 +11,7 @@ dependsOnRuntime(__filename, ['index.html','data/story_households_800.js','data/
   'data/islamic_rollout.js','data/technology.js','js/story_household.js','js/stories.js','js/starts.js',
   'js/bookmark_setup.js','js/story_settlements.js','js/royal_settlements.js','js/story_campaign.js',
   'js/actions.js','js/treasury.js','js/main.js','js/world.js','js/model.js','js/economy.js',
-  'js/save.js','js/save_v4.js','js/i18n.js','js/ui_misc.js','js/ui_panels.js']);
+  'data/start_ambitions.js','js/story_opening_goals.js','js/save.js','js/save_v4.js','js/i18n.js','js/ui_misc.js','js/ui_panels.js']);
 const ID = 'aachen_household_track_800';
 
 async function year(page, value) {
@@ -45,7 +45,7 @@ test('Aachen attaches locally on every retained revision and preserves ordinary 
       errors:revisions.map(function (revision) { return FB.validateBookmark(FB.bookmark('800', revision)); }).filter(function (e) { return e.length; }),
       noPresetOverride:!sc.familyPresets, stock:[sc.tier,sc.profession,sc.gold,sc.prestige,sc.piety,sc.startEffects.landPlots],
       held:!!FBDATA.storyInstances.aachen_displaced_neighbors_804 };
-  })).toEqual({ tracks:[ID], away:[], errors:[], noPresetOverride:true, stock:[1,'farmer',20,5,0,1], held:false });
+  })).toEqual({ tracks:[ID,'opening_aachen_800'], away:[], errors:[], noPresetOverride:true, stock:[1,'farmer',20,5,0,1], held:false });
   await beginBookmark(page, info, '800', 'aachen_household_800');
   expect(await page.evaluate(function () {
     const s = FB.state, t = s.stories.aachen_household_track_800;
@@ -205,11 +205,19 @@ test('pending and disputed checkpoints restore their exact work balance and miss
       rng === FB.getRngState() && uid === FB.getUidCounter();
     // A campaign predating original attachment provenance has neither marker.
     delete offer.state.start.storyAttachments; delete offer.storyAttachmentSchema;
+    let dependencyRejected = false;
+    try { FB.save.restore(offer); } catch (error) {
+      dependencyRejected = error.message.indexOf('requires story ' + id) >= 0;
+    }
+    dependencyRejected = dependencyRejected && live === FB.state && facts === JSON.stringify(FB.state) &&
+      rng === FB.getRngState() && uid === FB.getUidCounter();
+    // This older campaign also predates the opening profile requiring that track.
+    delete offer.state.stories.opening_aachen_800;
     FB.save.restore(offer);
     const legacy = JSON.parse(FB.save.serialize());
     const legacyUnstamped = legacy.storyAttachmentSchema === undefined && legacy.state.start.storyAttachments === undefined;
-    return { exact, days, empty, missing:!FB.state.stories[id], currentRejected, legacyUnstamped };
-  })).toEqual({ exact:true, days:1, empty:0, missing:true, currentRejected:true, legacyUnstamped:true });
+    return { exact, days, empty, missing:!FB.state.stories[id] && !FB.state.stories.opening_aachen_800, currentRejected, dependencyRejected, legacyUnstamped };
+  })).toEqual({ exact:true, days:1, empty:0, missing:true, currentRejected:true, dependencyRejected:true, legacyUnstamped:true });
 });
 
 test('the shared job review discloses costs, cancels freely and confirms one real working day', async function ({ page }, info) {
