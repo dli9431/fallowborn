@@ -406,11 +406,11 @@ test('mobile vow review preserves form state through Escape and confirms only cu
   });
   await page.locator('#mobile-count').fill('27');
   await page.locator('#mobile-count').dispatchEvent('change');
-  await page.getByRole('button',{name:'Pledge the existing host',exact:true}).click();
+  await page.getByRole('button',{name:/^Pledge the existing host\b/}).click();
   await expect(page.getByText('This binds the current commander', {exact:false})).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('#mobile-count')).toHaveValue('27');
-  await page.getByRole('button',{name:'Pledge the existing host',exact:true}).click();
+  await page.getByRole('button',{name:/^Pledge the existing host\b/}).click();
   await page.locator('#mobile-confirm').click();
   await page.locator('#mobile-continue').click();
   await expect(page.locator('#mobile-count')).toHaveValue('27');

@@ -1458,3 +1458,5 @@ Optional-review and former-patron variations retain a complete unrelated story g
 Mobile religious enrollment coverage
 
 mobile-holywar.spec.js looks up the canonical participant with the selected command realm captured outside its array callback. Manual and automatic joins retain exact existing host/leader identity and fail with explicit preconditions before later assertions. Personal-vow journeys import independent harbor and upland household variants at the actual camp with their real participation track, keeping unrelated civic storylines out of that setup. Both variants refuse remote personal admission without changing the candidate, catalogue, live state, RNG or uid. These scenario-local helpers preserve the normal mandate, religious eligibility, personal admission and conservation gates.
+
+The mobile pledge button selector includes its explanatory accessible note while retaining the existing confirmation, Escape return and form-value preservation assertions. No UI implementation or eligibility policy changes.
