@@ -5,8 +5,13 @@
 async function installRestoreFacts(page) {
   await page.evaluate(function () {
     window.restoreFacts = function (state, project) {
+      const decoded=FB.save.expandedSnapshot(state);
+      // The envelope writer tags authority without adding the tag to live state.
+      // Normalize only its omitted form; explicit conflicting versions stay exact.
+      if (decoded.authority && decoded.authority.schema===undefined)
+        decoded.authority.schema=FB.save.FORMAT.authoritySchema;
       return FB.contentValues.canonical({
-        facts:project(FB.save.expandedSnapshot(state)),
+        facts:project(decoded),
         rng:FB.getRngState() >>> 0,
         uid:FB.getUidCounter()
       });

@@ -317,6 +317,14 @@ for (const label of ['harbor','upland']) {
       const settled=FB.resolveGreatHolyWar(s,'attackers','objectives');FB.game.observe=original;
       story.day(s,rec);
       const archive=s.greatHolyWarHistory.campaigns.find(function (x) {return x.id===c.id;});
+      // A newly awarded crown reaches the normal fiscal boundary before saving.
+      // Initializing its missing budget targets must not grant cash or transact.
+      function balances(){return FB.contentValues.canonical([
+        Object.keys(s.realms).sort().map(function (id) {return [id,FB.treasuryAvailable(s,id)];}),
+        s.player.gold,s.treasuryAccounting,s.owner,s.holder,s.armies,s.chars,
+        FB.getRngState()>>>0,FB.getUidCounter()]);}
+      const money=balances();FB.treasuryInitialize(s);
+      if(money!==balances())throw new Error('Fiscal checkpoint must not change resources or identities');
       function facts(state){return restoreFacts(state,function (v) {
         return [v.owner,v.holder,v.realms,v.armies,v.greatHolyWarHistory,v.stories];
       });}

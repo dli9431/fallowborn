@@ -292,9 +292,17 @@ test('inherited matching save and deliberate demolition never reinstall a machin
   const first=await page.evaluate(function(){const s=FB.state;return {save:FB.save.serialize(),facts:restoreFacts(s,function (v) {return [v.buildings,v.dev,v.openingInfrastructureState];})};});
   await restoreBookmark(page,first.save);
   expect(await page.evaluate(function(){const s=FB.state;return restoreFacts(s,function (v) {return [v.buildings,v.dev,v.openingInfrastructureState];});})).toBe(first.facts);
-  const removed=await page.evaluate(function(){const s=FB.state;if(!FB.demolishBuilding(s,'resource_quay',0,'mill'))throw new Error('Demolition failed');return FB.save.serialize();});
-  await restoreBookmark(page,removed);
-  expect(await page.evaluate(function(){const s=FB.state;return {empty:!(s.buildings.resource_quay||[]).length,again:FB.initializeOpeningInfrastructure(s),noReceipt:!s.buildingOperations};})).toEqual({empty:true,again:false,noReceipt:true});
+  const removed=await page.evaluate(function(){
+    const s=FB.state;if(!FB.demolishBuilding(s,'resource_quay',0,'mill'))throw new Error('Demolition failed');
+    return {save:FB.save.serialize(),facts:restoreFacts(s,function (v) {return [v.buildings,v.dev,v.openingInfrastructureState];})};
+  });
+  await restoreBookmark(page,removed.save);
+  expect(await page.evaluate(function(expected){
+    const s=FB.state,again=FB.initializeOpeningInfrastructure(s),mills=(s.buildings.resource_quay||[]).filter(function (b) {return b.id==='mill' && b.s===0;});
+    // Ordinary demolition retains its ruined physical record and provenance.
+    return {one:mills.length,ruined:mills.length===1 && mills[0].ruined===true,again:again,noReceipt:!s.buildingOperations,
+      exact:assertRestoreFacts(restoreFacts(s,function (v) {return [v.buildings,v.dev,v.openingInfrastructureState];}),expected)};
+  },removed.facts)).toEqual({one:1,ruined:true,again:false,noReceipt:true,exact:true});
 });
 
 

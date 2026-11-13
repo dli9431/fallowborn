@@ -38,24 +38,26 @@ for (const prefix of ['harbor','dune']) {
     const result=await page.evaluate(function () {
       const s=FB.state,M=FB.mobile,rid=FB.campaignBookmark(s).realms.find(function (d) {return d.mobile;}).id;
       function facts(state){return restoreFacts(state,function (v) {
-        return [M.row(v,rid),M.host(v,rid),v.chars,v.realms,v.player.gold];
+        return [M.row(v,rid),M.host(v,rid),v.chars,v.realms,v.player.gold,v.authority];
       });}
       const bytes=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),expected=facts(s);
       const compact=JSON.parse(bytes),charId=s.player.charId;
       Object.keys(compact.chars).forEach(function (id) {delete compact.chars[id].id;});
       Object.keys(compact.realms).forEach(function (id) {if(compact.realms[id].alive===true)delete compact.realms[id].alive;});
       compact.chars=Object.fromEntries(Object.entries(compact.chars).reverse());
+      delete compact.authority.schema;
       const compactBytes=JSON.stringify(compact),equivalent=expected===facts(compact);
       function different(change){const v=JSON.parse(bytes);change(v);return expected!==facts(v);}
       return {equivalent:equivalent,cash:different(function (v) {v.player.gold--; }),
         treasury:different(function (v) {v.realms[rid].treasury.gold--; }),
         identity:different(function (v) {v.chars[charId].id='changed_original_person';}),
+        schema:different(function (v) {v.authority.schema=FB.save.FORMAT.authoritySchema+1;}),
         soldiers:different(function (v) {M.host(v,rid).men--; }),
         order:different(function (v) {M.row(v,rid).members.reverse();}),
         pure:bytes===JSON.stringify(s) && compactBytes===JSON.stringify(compact) &&
           rng===FB.getRngState() && uid===FB.getUidCounter()};
     });
-    expect(result).toEqual({equivalent:true,cash:true,treasury:true,identity:true,soldiers:true,order:true,pure:true});
+    expect(result).toEqual({equivalent:true,cash:true,treasury:true,identity:true,schema:true,soldiers:true,order:true,pure:true});
   });
 
   test(prefix+' imports an independent expedition with conserved resources and matching restore',async function ({page},info) {

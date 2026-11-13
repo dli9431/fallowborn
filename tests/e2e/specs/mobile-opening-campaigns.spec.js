@@ -286,7 +286,9 @@ test('peace, cancelled intent, actual losses, dead original people and moved or 
     const C=window.openingCase,M=FB.mobile,E=FB.expeditionPrograms,s=FB.state,r=C.row(),a=s.armies.find(function (a) {return a.id===r.columns.entries[0].hostId;});
     const cancel=E.reviewControl(s,{realmId:C.rid,action:'cancel',stepId:null,actor:{kind:'character',id:r.leaderId}});
     if (!cancel.review.allowed || !M.commit(s,cancel)) throw new Error('Intent cancellation failed');
-    r.openingCampaigns.entries.forEach(function (e) {FB.settleOrdinaryWar(s,e.warId,'white_peace');});
+    r.openingCampaigns.entries.forEach(function (e) {
+      if(!FB.settleOrdinaryWar(s,e.warId,'white_peace'))throw new Error('Opening peace must settle');
+    });
     // Stage an ordinary casualty boundary and a completed field return, without a simulation loop.
     FB.applyHostLosses(a,3,s);a.mobileFood=1;
     a.at=C.d.mobile.origin;a.from='harbor_gardens';a.path=[];a.goal=null;a.moveLeft=0;
@@ -296,6 +298,10 @@ test('peace, cancelled intent, actual losses, dead original people and moved or 
     const commander=s.chars[r.columns.entries[1].commanderId];commander.dead=true;FB.royalCharDied(s,commander,C.rid);
     // Ordinary ended-war history can be pruned; provenance must not recreate it.
     delete s.wars[r.openingCampaigns.entries[0].warId];
+    // Finish host assignment after the staged casualty, retirement and pruning.
+    FB.assignCampaignHosts(s);
+    if(FB.realmWars(s,C.rid).length || s.armies.some(function (host) {return host.realm===C.rid && host.warId;}))
+      throw new Error('Peace checkpoint must have no active campaign or host assignment');
     M.validate(s);
     function facts(state){return restoreFacts(state,function (v) {
       return [M.row(v,C.rid),v.armies,v.wars,v.chars,v.realms,v.player,v.treasuryAccounting];
