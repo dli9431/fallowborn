@@ -1,8 +1,11 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
+
 const { openGame } = require('../support/game/navigation');
 const { beginBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
+
+test.describe.configure({ mode:'parallel' });
 dependsOnRuntime(__filename, ['index.html','data/story_households_800.js','data/story_instances.js',
   'data/starts.js','data/bookmark_800.js','data/bookmark_800_history.js','data/government_rollout.js',
   'data/islamic_rollout.js','data/technology.js','js/story_household.js','js/stories.js','js/starts.js',
@@ -192,9 +195,21 @@ test('pending and disputed checkpoints restore their exact work balance and miss
     FB.save.restore(disputed); const exact = row === JSON.stringify(FB.state.stories[id]);
     FB.save.restore(pending); const days = FB.state.stories[id].jobs.palace_delivery.daysWorked;
     FB.save.restore(offer); const empty = Object.keys(FB.state.stories[id].jobs).length;
-    delete offer.state.stories[id]; FB.save.restore(offer);
-    return { exact, days, empty, missing:!FB.state.stories[id] };
-  })).toEqual({ exact:true, days:1, empty:0, missing:true });
+    delete offer.state.stories[id];
+    const live = FB.state, facts = JSON.stringify(live), rng = FB.getRngState(), uid = FB.getUidCounter();
+    let rejected = false;
+    try { FB.save.restore(offer); } catch (error) {
+      rejected = error.message.indexOf('state.start.storyAttachments') >= 0;
+    }
+    const currentRejected = rejected && live === FB.state && facts === JSON.stringify(FB.state) &&
+      rng === FB.getRngState() && uid === FB.getUidCounter();
+    // A campaign predating original attachment provenance has neither marker.
+    delete offer.state.start.storyAttachments; delete offer.storyAttachmentSchema;
+    FB.save.restore(offer);
+    const legacy = JSON.parse(FB.save.serialize());
+    const legacyUnstamped = legacy.storyAttachmentSchema === undefined && legacy.state.start.storyAttachments === undefined;
+    return { exact, days, empty, missing:!FB.state.stories[id], currentRejected, legacyUnstamped };
+  })).toEqual({ exact:true, days:1, empty:0, missing:true, currentRejected:true, legacyUnstamped:true });
 });
 
 test('the shared job review discloses costs, cancels freely and confirms one real working day', async function ({ page }, info) {
