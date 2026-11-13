@@ -66,6 +66,32 @@ async function physicalSiteProbe(page,baseline) {
   });
 }
 
+async function contentCopyProbe(page) {
+  await page.addInitScript(function () {
+    window.FB_LOAD_TIMING = true;
+    window.__contentCopies = {};
+  });
+  for (const row of [['js/bookmark_sources.js','o','Copy source values'],
+    ['js/bookmark_composition.js','value','Copy composition values']]) {
+    let source = fs.readFileSync(path.resolve(__dirname,'../../..',row[0]),'utf8').replace(/\r\n/g,'\n');
+    const begin = '  function copy(' + row[1] + ') {', end = '    return clone(' + row[1] + ');\n  }',
+      allocation = '      var result = Array.isArray(row) ? [] : {};', label = JSON.stringify(row[2]);
+    expect(source.split(begin).length, 'copy entry: ' + row[0]).toBe(2);
+    expect(source.split(end).length, 'copy exit: ' + row[0]).toBe(2);
+    const body = source.slice(source.indexOf(begin),source.indexOf(end,source.indexOf(begin)) + end.length);
+    expect(body.split(allocation).length, 'copy allocation: ' + row[0]).toBe(2);
+    source = source.replace(body,body.replace(begin,begin + '\n' +
+      '    return FB.loadTiming ? FB.loadTiming.measure(' + label + ',contentProbeCopy,this,arguments)' +
+      ' : contentProbeCopy.apply(this,arguments);\n  }\n  function contentProbeCopy(' + row[1] + ') {\n' +
+      '    var probe = window.__contentCopies[' + label + '] || (window.__contentCopies[' + label +
+      '] = {calls:0,objects:0});\n    probe.calls++;')
+      .replace(allocation,'      probe.objects++;\n' + allocation));
+    await page.route('**/' + row[0],function (route) {
+      return route.fulfill({contentType:'application/javascript',body:source});
+    });
+  }
+}
+
 for (const pair of [1,2,3]) for (const modded of [false,true]) {
   test('complete preparation paired stages ' + pair + ' ' + (modded ? 'with household JSON' : 'without mods'),async function ({browser},info) {
     test.skip(!info.project.name.endsWith('-served'),'Stage counters use served source interception.');
@@ -74,20 +100,28 @@ for (const pair of [1,2,3]) for (const modded of [false,true]) {
       const context = await browser.newContext(), page = await context.newPage(), guard = installPageGuards(page);
       try {
         await physicalSiteProbe(page,baseline);
+        await contentCopyProbe(page);
         await openTitle(page,info);
+        await page.waitForFunction(function () { return FB.game.loadTiming.reports().length > 0; });
         const title = await page.evaluate(function (text) {
           localStorage.removeItem(FB.storageKey('fb_mods'));
           if (text) localStorage.setItem(FB.storageKey('fb_mods'),JSON.stringify([text]));
           FB.seedRng(634); FB.setUidCounter(0);
           window.__physicalSiteReview = {calls:0,rows:0,elapsedMs:0};
+          window.__contentCopies = {};
+          FB.mods.timing.enable(true);
           FB.game.loadTiming.enable(true);
           return {bootReady:FB.game.bootReady,contentReady:FB.game.contentReady};
         },modded ? overlay : null);
         expect(title).toEqual({bootReady:true,contentReady:false});
+        const titleTiming = await page.evaluate(function () { return FB.game.loadTiming.reports().slice(-1)[0]; });
+        expect(titleTiming.kind).toBe('main-menu');
+        expect(titleTiming.status).toBe('ready');
         const elapsedMs = await page.evaluate(function () {
           const restore = [];
           [['geography',FB],['resolveBookmarkPlatform',FB],['bookmarkRequirementFaults',FB],
-            ['royalCourtFaults',FB]].forEach(function (row) {
+            ['royalCourtFaults',FB],['jsonSnapshot',FB.contentValues],['canonical',FB.contentValues],
+            ['fingerprint',FB.mods]].forEach(function (row) {
             const name = row[0], owner = row[1], original = owner[name];
             owner[name] = function () { return FB.loadTiming.measure(name,original,this,arguments); };
             restore.push(function () { owner[name] = original; });
@@ -103,21 +137,32 @@ for (const pair of [1,2,3]) for (const modded of [false,true]) {
             });
           });
         });
-        await page.waitForFunction(function () { return FB.game.loadTiming.reports().length > 0; });
+        await page.waitForFunction(function () { return FB.game.loadTiming.reports().length > 1; });
         const report = await page.evaluate(function () {
           FB.mods.assertReady();
           return {timing:FB.game.loadTiming.reports().slice(-1)[0],modCount:FB.mods.count(),
             physicalSites:window.__physicalSiteReview,
+            copies:window.__contentCopies,modTiming:FB.mods.timing.read(),
             contentReady:FB.game.contentReady,datesLoaded:FB.bookmarkSources.datesLoaded(null),
+            sourceIds:Object.keys(FBDATA.bookmarkCompositionSources),storyIds:Object.keys(FBDATA.storyInstances),
             bookmarkIds:Object.keys(FBDATA.bookmarks),startIds:FBDATA.startScenarios.map(function (row) { return row.id; })};
         });
         expect(report.contentReady).toBe(true);
         expect(report.datesLoaded).toBe(true);
         expect(report.modCount).toBe(modded ? 1 : 0);
         expect(report.timing.status).toBe('ready');
+        for (const label of ['Copy source values','Copy composition values']) {
+          const operation = report.timing.operations.find(function (row) { return row.label === label; });
+          expect(report.copies[label].objects).toBeGreaterThan(0);
+          expect(operation.calls).toBe(report.copies[label].calls);
+        }
+        const base = report.modTiming.filter(function (row) { return row.operation === 'base_snapshot'; });
+        expect(base).toHaveLength(1);
+        expect(base[0].accepted).toBe(true);
+        expect(base[0].jsonCodeUnits).toBeGreaterThan(0);
         const facts = await snapshot(page);
         const result = {baseline:baseline,mode:modded ? 'household-overlay' : 'unmodded',browser:browser.version(),
-          elapsedMs:elapsedMs,report:report,facts:facts};
+          titleTiming:titleTiming,elapsedMs:elapsedMs,report:report,facts:facts};
         samples.push(result);
         expect(guard.faults).toEqual([]);
       } finally { await context.close(); }
@@ -126,6 +171,8 @@ for (const pair of [1,2,3]) for (const modded of [false,true]) {
     expect(after.facts).toEqual(before.facts);
     expect(after.report.bookmarkIds).toEqual(before.report.bookmarkIds);
     expect(after.report.startIds).toEqual(before.report.startIds);
+    expect(after.report.sourceIds).toEqual(before.report.sourceIds);
+    expect(after.report.storyIds).toEqual(before.report.storyIds);
     expect(after.report.physicalSites.calls).toBe(before.report.physicalSites.calls);
     expect(after.report.physicalSites.rows).toBeLessThan(before.report.physicalSites.rows);
     const result = {pair:pair,sourceCommit:physicalReference.sourceCommit,samples:samples};
