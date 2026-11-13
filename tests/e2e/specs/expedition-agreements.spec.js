@@ -109,7 +109,8 @@ test('a pending review restores without AI acknowledgment or payment and cannot 
 
 test('campaigns without the optional declaration restore without creating a review',async function ({page},info) {
   const input=JSON.parse(JSON.stringify(examples.harbor));
-  delete input.storyInstances.harbor_terms;input.bookmarks.harbor_world.stories=[];
+  delete input.storyInstances.harbor_terms;
+  input.bookmarks.harbor_world.stories=input.bookmarks.harbor_world.stories.filter(function(id){return id!=='harbor_terms';});
   await start(page,info,'harbor',input);
   const absent=await page.evaluate(function () {
     FB.save.restore(JSON.parse(FB.save.serialize()));return !FB.state.stories.harbor_terms;

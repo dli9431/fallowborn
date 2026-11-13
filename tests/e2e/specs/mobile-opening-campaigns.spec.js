@@ -28,7 +28,23 @@ async function start(page,info,prefix,input,scenario) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmarkFromTitle(page,prefix+'_world',scenario || prefix+'_household');
+  if(scenario){
+    const sc=(input || examples[prefix]).startScenarios.find(function(row){return row.id===scenario;});
+    const full=page.locator('#btn-choose-beginning');
+    if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('OPENINGCAMPAIGN-'+prefix+'_world-'+sc.id+'-'+sc.fixedProvinceId+'-'+sc.sex+'-'+sc.characterName.replace(/ /g,'_')+'-standard');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+    await page.getByRole('button',{name:'Begin',exact:true}).click();
+    await page.evaluate(function(){
+      FB.game.setPaused(true);FB.game.auto.all=true;FB.game.auto.style='first';
+      FB.game.uiPrefs.hideTips=true;FB.game.uiPrefs.hideBeginnerHints=true;delete FB.state.player.flags.tutorial;
+    });
+    expect(await page.evaluate(function(){return FB.state.start.scenarioId;})).toBe(sc.id);
+  }
+  else await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await page.evaluate(function () {
     const M=FB.mobile,s=FB.state,d=FB.campaignBookmark(s).realms.find(function (r) {return r.mobile;});
     window.openingCase={d:d,rid:d.id,fresh:function () {
