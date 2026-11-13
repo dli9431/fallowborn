@@ -287,7 +287,11 @@ test('peace, cancelled intent, actual losses, dead original people and moved or 
     const cancel=E.reviewControl(s,{realmId:C.rid,action:'cancel',stepId:null,actor:{kind:'character',id:r.leaderId}});
     if (!cancel.review.allowed || !M.commit(s,cancel)) throw new Error('Intent cancellation failed');
     r.openingCampaigns.entries.forEach(function (e) {
-      if(!FB.settleOrdinaryWar(s,e.warId,'white_peace'))throw new Error('Opening peace must settle');
+      // A preceding settlement may already have ended a related campaign.
+      if(FB.ordinaryWarById(s,e.warId) && !FB.settleOrdinaryWar(s,e.warId,'white_peace'))
+        throw new Error('Opening peace must settle: '+e.warId);
+      if(!s.wars[e.warId] || s.wars[e.warId].status!=='ended')
+        throw new Error('Opening campaign must be ended: '+e.warId);
     });
     // Stage an ordinary casualty boundary and a completed field return, without a simulation loop.
     FB.applyHostLosses(a,3,s);a.mobileFood=1;
