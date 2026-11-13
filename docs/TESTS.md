@@ -1314,8 +1314,10 @@ Nightly is the registered dispatch route even before the standalone comparison
 workflow is registered on the default branch. Its optional comparison inputs
 leave ordinary scheduled suite and timing behavior intact. The full-suite job
 uses the shared E2E workflow with syntax/support checks, thirty-two browser
-shards per branch and merged reports. Report tooling, season and comparison
-drivers come from the dispatched tooling commit. Publish the
+shards per branch and merged reports; season timing retains its separate
+twelve-shard workload. Comparison workloads keep their independent per-subject
+configuration. Report tooling, season and comparison drivers come from the
+dispatched tooling commit. Publish the
 intended public tooling revision before dispatch; game and tooling revisions
 are separate. No default-branch workflow edit is needed.
 

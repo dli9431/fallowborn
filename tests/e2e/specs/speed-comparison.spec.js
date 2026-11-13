@@ -213,7 +213,8 @@ test('Nightly converts numeric call inputs, preserves ordinary jobs and offers a
   expect(nightly).toContain("github.event_name == 'schedule' || inputs.suite");
   expect(nightly).toContain("github.event_name == 'schedule' || inputs.timing");
   expect(nightly).toContain('uses: ./.github/workflows/e2e.yml');
-  expect(nightly).toContain('shards: 16');
+  expect(nightly).toContain('      projects: all\n      shards: 32\n      bounded: false');
+  expect(nightly).toContain('      shards: 12\n');
   expect(nightly).toContain('mode: all');
   expect(nightly).toContain('projects: all');
   expect(nightly).toContain('bounded: false');
