@@ -18,6 +18,7 @@ dependsOnRuntime(__filename,[
 
 async function start(page,info,prefix,input) {
   await openGame(page,info);
+  if(input)expect(await page.evaluate(function(mod){return FB.mods.validate(mod);},input)).toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   if (input) await page.locator('#modfile').setInputFiles({name:'dispatch.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))});
   else await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/expedition-dispatch-'+prefix+'.json'));
@@ -178,7 +179,10 @@ test('a wait consumes no resources, expiry closes without rewards and war dispat
     const early=E.review(s,C.rid,'hold'),bytes=JSON.stringify(s),refused=!E.commit(s,early),pure=bytes===JSON.stringify(s);
     s.turn=10;const food=r.food,money=FB.treasuryAvailable(s,C.rid),people=M.total(s,C.rid),wait=E.commit(s,E.review(s,C.rid,'hold'));
     const conserved=food===r.food && money===FB.treasuryAvailable(s,C.rid) && people===M.total(s,C.rid);
+    // Stage an actual adjacent frontier; declaring war is the behavior under test.
+    C.host(s,1).at='dune_flats';C.host(s,1).from='dune_flats';
     s.turn=30;const owners=JSON.stringify(s.owner),q=E.review(s,C.rid,'frontier_objective'),war=E.commit(s,q),repeat=!E.commit(s,q);
+    if(!war)throw new Error('Expected current frontier war: '+q.reason);
     const army=C.host(s,1),actual=FB.ordinaryWarById(s,army.warId);
     s.turn=240;E.reconcile(s);
     return {refused:refused,pure:pure,wait:wait,conserved:conserved,war:war,repeat:repeat,registered:!!actual,

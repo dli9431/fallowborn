@@ -23,6 +23,7 @@ dependsOnRuntime(__filename, ['index.html','data/mobile_confederations.js','data
 function declaration(prefix) {
   const input = JSON.parse(JSON.stringify(examples[prefix])), b = input.bookmarks[prefix + '_world'];
   const following = b.realms.find(function (r) { return r.mobile; });
+  if(following.mobile.command.operations.indexOf('war')<0)following.mobile.command.operations.push('war');
   const home = input.startScenarios[0].fixedProvinceId;
   const target = following.mobile.expeditionProgram.steps.find(function (step) { return step.adapter === 'war'; }).terms.causes[0].target;
   const sourceId = prefix + '_column_campaign', noticeId = prefix + '_column_notice';
@@ -70,11 +71,19 @@ async function imported(page, info, prefix, input) {
       start:function () {
         // Stage bounded county positions, then use the canonical campaign and
         // host-assignment owners. Arrival/movement itself is covered elsewhere.
-        s.turn = 5; s.date.year = 901;
+        s.turn = 5; s.date=FB.dateAtTurn(s,5);
         this.hosts().forEach(function (a) { this.place(a,this.remote); },this);
-        FB.stories.get(sourceId).day(s,s.stories[sourceId]);
-        const r = s.stories[sourceId];
-        if (r.phase !== 'started' || !FB.ordinaryWarById(s,r.warId)) throw new Error('Expected a real campaign.');
+        const M=FB.mobile,row=M.row(s,d.id),source=FB.stories.get(sourceId),def=source.declaration,
+          cause={type:'aggression',enemy:s.owner[def.target.provinceId],target:def.target.provinceId},
+          review=M.reviewColumns(s,{realmId:d.id,action:'war',terms:{columnId:row.columns.entries[0].id,causes:[cause]},
+            actor:{kind:'character',id:row.leaderId}});
+        if(!M.commit(s,review))throw new Error('Expected a reviewed column war: '+review.review.reason);
+        const war=FB.ordinaryWarBetween(s,d.id,cause.enemy),r=s.stories[sourceId];
+        // Observer coverage stages only the matching source checkpoint. The
+        // real declaration and column assignments use their canonical owners.
+        Object.assign(r,{phase:'started',startedTurn:war.startedTurn,deadline:war.startedTurn+def.durationDays,
+          actorId:row.leaderId,actorGeneration:FB.realmRulerGeneration(s,d.id),targetOwnerId:cause.enemy,warId:war.id});
+        source.validate(r,s);
         this.hosts().forEach(function (a) {
           if (!FB.assignHostCampaign(s,a.id,r.warId)) throw new Error('Expected canonical column assignment.');
         });
