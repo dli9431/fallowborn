@@ -104,7 +104,10 @@ test('single-host opening and observer creation use the same reserve constructor
   const input=JSON.parse(JSON.stringify(examples.harbor)),d=input.bookmarks.harbor_world.realms.find(function (r) {return r.mobile;});
   delete d.mobile.columns;
   d.mobile.opening.reserves=[{memberId:'reed_people',count:680}];
-  d.mobile.expeditionProgram.steps.forEach(function (step) {step.columnId=null;});
+  d.mobile.expeditionProgram.steps.forEach(function (step) {
+    step.columnId=null;
+    if(step.adapter==='supply')step.terms.action='trade';
+  });
   await load(page,info,'harbor',input);
   const result=await page.evaluate(async function () {
     await new Promise(function (resolve,reject) {FB.activateBookmark('harbor_world',null,function (e) {if(e) reject(e);else resolve();});});
@@ -144,9 +147,11 @@ test('a fresh player command keeps the same partition and separate private purse
   expect(result).toEqual({samePerson:true,reserve:280,repeat:true,privateGold:7,publicGold:70,people:1400,valid:true});
 });
 
-test('detached reserve declarations reject malformed, excess and conflicting allocations without side effects',async function ({page},info) {
+for(const range of [[0,6],[6,12],[12,18]]){
+test('detached reserve declarations reject malformed, excess and conflicting allocations without side effects '+range[0],async function ({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function (source) {
+  const result=await page.evaluate(function (input) {
+    const source=input.source;
     const changes=[
       function (o) {o.reserves=null;},function (o) {o.reserves={};},function (o) {o.reserves=[];},
       function (o) {o.reserves[0]=null;},function (o) {o.reserves[0].count=-1;},
@@ -159,16 +164,17 @@ test('detached reserve declarations reject malformed, excess and conflicting all
       function (o,t) {t.civilianCamps={schema:1,entries:[],fieldFood:0};},
       function (o,t) {t.preparationId='unformed_source';}
     ];
-    return changes.map(function (change) {
+    return changes.slice(input.first,input.last).map(function (change) {
       const input=JSON.parse(JSON.stringify(source)),t=input.bookmarks.harbor_world.realms.find(function (r) {return r.mobile;}).mobile;
       change(t.opening,t);
       const bytes=JSON.stringify(input),state=JSON.stringify(FB.state),data=JSON.stringify(FBDATA),rng=FB.getRngState(),uid=FB.getUidCounter();
       return FB.mods.validate(input).length>0 && bytes===JSON.stringify(input) && state===JSON.stringify(FB.state) &&
         data===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
-  },examples.harbor);
-  expect(result).toEqual(Array(18).fill(true));
+  },{source:examples.harbor,first:range[0],last:range[1]});
+  expect(result).toEqual(Array(range[1]-range[0]).fill(true));
 });
+}
 
 test('whole-batch live preflight rejects before creating a person, host, camp or account',async function ({page},info) {
   const input=JSON.parse(JSON.stringify(examples.harbor)),mobile=input.bookmarks.harbor_world.realms

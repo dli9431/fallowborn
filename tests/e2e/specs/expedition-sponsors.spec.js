@@ -290,7 +290,9 @@ test('an independent import needs no former patron court and restores without in
   bm.realms=bm.realms.filter(function (d) {return d.id!=='dune_oasis';});
   bm.provinces.forEach(function (p) {if(p.realm==='dune_oasis') p.realm='dune_gate';});
   // Remove that court's unrelated civic stories before importing the complete world.
-  input.storyInstances={};delete input.startScenarios[0].tracks;delete input.startScenarios[0].trackLocations;
+  input.storyInstances={};bm.stories=[];
+  delete input.startScenarios[0].tracks;delete input.startScenarios[0].trackLocations;
+  input.startScenarios[0].birthplaces={counties:[input.startScenarios[0].fixedProvinceId]};
   delete input.startScenarios[0].fixedProvinceId;
   await start(page,info,'dune',input);
   const result=await page.evaluate(function () {
