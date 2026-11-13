@@ -57,9 +57,11 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
-test('detached imports reject sponsor ambiguities and malformed external warrants without mutation',async function ({page},info) {
+for(const range of [[0,5],[5,10],[10,15],[15,19]]){
+test('detached imports reject sponsor ambiguities and malformed external warrants without mutation '+range[0],async function ({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function (source) {
+  const result=await page.evaluate(function (input) {
+    const source=input.source;
     const changes=[
       function (t) {delete t.sponsorship;},function (t) {t.patronRealmId='dune_oasis';},
       function (t) {delete t.patronRealmId;},function (t) {t.sponsorship=null;},
@@ -71,16 +73,17 @@ test('detached imports reject sponsor ambiguities and malformed external warrant
       function (t) {t.command.superior.id='';},function (t) {t.command.superior.name=' ';},
       function (t) {t.command.superior.realmId='dune_gate';},function (t) {t.command.superior.actorId='dune_incumbent';}
     ];
-    return changes.map(function (change) {
+    return changes.slice(input.first,input.last).map(function (change) {
       const input=JSON.parse(JSON.stringify(source)),t=input.bookmarks.dune_world.realms.find(function (r) {return r.mobile;}).mobile;
       change(t);
       const bytes=JSON.stringify(input),state=JSON.stringify(FB.state),data=JSON.stringify(FBDATA),rng=FB.getRngState(),uid=FB.getUidCounter();
       return FB.mods.validate(input).length>0 && bytes===JSON.stringify(input) && state===JSON.stringify(FB.state) &&
         data===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
-  },examples.dune);
-  expect(result).toEqual(Array(19).fill(true));
+  },{source:examples.dune,first:range[0],last:range[1]});
+  expect(result).toEqual(Array(range[1]-range[0]).fill(true));
 });
+}
 
 test('independence supplies no access, outside consent, service, land award or free money',async function ({page},info) {
   await start(page,info,'dune');
