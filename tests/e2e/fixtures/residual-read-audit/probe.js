@@ -1,6 +1,6 @@
 'use strict';
 
-const paths = ['js/model.js', 'js/government_aristocracy.js', 'js/mobile_confederations.js'];
+const paths = ['js/model.js', 'js/government_aristocracy.js', 'js/mobile_confederations.js', 'js/world.js'];
 function instrument(file, source) {
   source = source.replace(/\r\n/g,'\n');
   function replace(before, after) {
@@ -16,24 +16,44 @@ function instrument(file, source) {
     replace('\n  }\n  function localOfficeTable(state, graph, definitions) {',
       '\n    } finally { if (readAudit) readAudit.leaveOffice(auditFrame); }\n  }\n  function localOfficeTable(state, graph, definitions) {');
   } else if (file === 'js/government_aristocracy.js') {
-    replace('  function constituencyLookups(s,interests) {',
-      '  function constituencyLookups(s,interests) {\n    if (window.__residualReadAudit) window.__residualReadAudit.index(s,interests);');
-    for (const pair of [['assigned','appointmentSlots'], ['local','rightSlots']]) {
-      replace('    for (i = 0; i < ' + pair[0] + '.length; i++) {',
-        '    for (i = 0; i < ' + pair[0] + '.length; i++) {\n' +
-        '      if (window.__residualReadAudit) window.__residualReadAudit.slot(\'' + pair[1] + '\');');
+    replace('  function fiscalConstituencyLookups(s,rid,interests) {',
+      '  function fiscalConstituencyLookups(s,rid,interests) {\n    if (window.__residualReadAudit) window.__residualReadAudit.index(s,interests);');
+    replace('  function constituencyLookups(s,interests,track) {',
+      '  function constituencyLookups(s,interests,track) {\n    if (window.__residualReadAudit) window.__residualReadAudit.slot(\'indexBuildAttempts\');');
+    replace('  function sameLookupInputs(s,interests,old) {',
+      '  function sameLookupInputs(s,interests,old) {\n    if (window.__residualReadAudit) window.__residualReadAudit.slot(\'indexValidations\');');
+    for (const pair of [['assigned','appointment'], ['local','right']]) {
+      const loop = '    for (i = 0; i < ' + pair[0] + '.length; i++) {\n';
+      const build = '      if (!(i in ' + pair[0] + ')) continue;';
+      replace(loop + build, loop +
+        '      if (window.__residualReadAudit) window.__residualReadAudit.slot(\'' + pair[1] + 'Slots\');\n' + build + '\n' +
+        '      if (window.__residualReadAudit) window.__residualReadAudit.slot(\'' + pair[1] + 'Rows\');');
+      const validation = '      if ((i in ' + pair[0] + ') !== (i in old.' + (pair[0] === 'local' ? 'local' : 'assigned') + 'Rows)) return false;';
+      replace(loop + validation, loop +
+        '      if (window.__residualReadAudit) window.__residualReadAudit.slot(\'' + pair[1] + 'ValidationSlots\');\n' +
+        '      if (i in ' + pair[0] + ' && window.__residualReadAudit) window.__residualReadAudit.slot(\'' + pair[1] + 'ValidationRows\');\n' + validation);
     }
-    replace('    return {first:first,rights:selected};',
-      '    if (window.__residualReadAudit) window.__residualReadAudit.builtIndex();\n    return {first:first,rights:selected};');
+    replace('    return {first:first,rights:selected,snapshot:snapshot};',
+      '    if (window.__residualReadAudit) window.__residualReadAudit.builtIndex();\n    return {first:first,rights:selected,snapshot:snapshot};');
+    replace('    if (old && sameLookupInputs(s,interests,old.snapshot)) return old;',
+      '    if (old && sameLookupInputs(s,interests,old.snapshot)) {\n' +
+      '      if (window.__residualReadAudit) window.__residualReadAudit.slot(\'indexReuses\');\n      return old;\n    }');
   } else if (file === 'js/mobile_confederations.js') {
+    replace('    return availablePerson(s,c) && (!r.command || M.commandValid && M.commandValid(s,rid)) ? c : null;',
+      '    var auditResult = availablePerson(s,c) && (!r.command || M.commandValid && M.commandValid(s,rid)) ? c : null;\n' +
+      '    if (window.__residualReadAudit) window.__residualReadAudit.mobileLeader(s,rid,auditResult);\n    return auditResult;');
     replace('  FB.realmIdForRulerCharacter = function (s,value) {',
       '  FB.realmIdForRulerCharacter = function (s,value) {\n' +
       '    var readAudit = window.__residualReadAudit, auditFrame = readAudit && readAudit.enterMobile(s,value);\n    try {');
-    replace('function (id) { return !!(root[id] && root[id].mobile)',
-      'function (id) { if (readAudit) readAudit.mobileSlot(); return !!(root[id] && root[id].mobile)');
+    replace('    var rid = Object.keys(root).filter(function (id) {',
+      '    var rid = Object.keys(root).filter(function (id) {\n      if (readAudit) readAudit.mobileSlot();');
     replace("    return rulerRealm(s,value) || M.landedHomeRealm && M.landedHomeRealm(s,cid) || rid;\n  };",
       "    return rulerRealm(s,value) || M.landedHomeRealm && M.landedHomeRealm(s,cid) || rid;\n" +
       '    } finally { if (readAudit) readAudit.leaveMobile(auditFrame); }\n  };');
+  } else if (file === 'js/world.js') {
+    replace("    return start && start.id ? FB.bookmark(start.id, start.revision === undefined ? 'baseline' : start.revision)\n      : FB.activeBookmark;",
+      "    var auditResult = start && start.id ? FB.bookmark(start.id, start.revision === undefined ? 'baseline' : start.revision)\n      : FB.activeBookmark;\n" +
+      '    if (window.__residualReadAudit) window.__residualReadAudit.officeWorld(state,auditResult);\n    return auditResult;');
   } else throw new Error('Unsupported read audit source ' + file);
   return source;
 }
@@ -43,7 +63,9 @@ function install() {
   const frames = [], offices = [], mobiles = [], restore = [];
   let report, cadence = 'outside';
   function counts() {
-    return {indexCalls:0, indexBuilds:0, appointmentSlots:0, rightSlots:0,
+    return {indexCalls:0, indexBuildAttempts:0, indexBuilds:0, indexValidations:0, indexReuses:0,
+      appointmentSlots:0, rightSlots:0, appointmentRows:0, rightRows:0,
+      appointmentValidationSlots:0, rightValidationSlots:0, appointmentValidationRows:0, rightValidationRows:0,
       officeEntries:0, officeWorldReads:0, officeWorldRepeats:0,
       mobileEntries:0, mobileSlots:0, mobileActiveCalls:0, mobileLeaderCalls:0,
       mobileLeaderSameResultRepeats:0};
@@ -52,6 +74,7 @@ function install() {
   function add(key, value) { report.total[key] += value === undefined ? 1 : value; phase()[key] += value === undefined ? 1 : value; }
   function scopeRow(kind) {
     return report.scopes[kind] || (report.scopes[kind] = {calls:0, indexCalls:0, equivalentIndexRepeats:0,
+      ownedIndexCalls:0, ownedMobileQueries:0,
       changedIndexInputs:0, mobileQueries:0, repeatedCharacterQueries:0, errors:0, examples:[]});
   }
   function enter(kind, state, id) {
@@ -113,6 +136,7 @@ function install() {
     leaveOffice:function (frame) { if (offices.pop() !== frame) throw new Error('Office audit mismatch'); },
     index:function (state, interests) {
       add('indexCalls');
+      if (frames.length) scopeRow(frames[frames.length - 1].kind).ownedIndexCalls++;
       const input = snapshotIndex(state,interests);
       if (!input) return;
       const size = [interests.length,input.assigned.length,input.rights.length].join('/');
@@ -137,6 +161,7 @@ function install() {
       const size = Object.keys(root || {}).length;
       report.mobileInputSizes[size] = (report.mobileInputSizes[size] || 0) + 1;
       add('mobileEntries');
+      if (frames.length) scopeRow(frames[frames.length - 1].kind).ownedMobileQueries++;
       for (const frame of frames) {
         const row = scopeRow(frame.kind); row.mobileQueries++;
         if (frame.characters.some(function (item) { return item.state === state && item.data === FBDATA && item.cid === cid; })) row.repeatedCharacterQueries++;
@@ -148,6 +173,21 @@ function install() {
     },
     leaveMobile:function (frame) { if (mobiles.pop() !== frame) throw new Error('Mobile audit mismatch'); },
     mobileSlot:function () { add('mobileSlots'); },
+    officeWorld:function (state,result) {
+      const frame = offices[offices.length - 1];
+      if (!frame) return;
+      add('officeWorldReads');
+      if (frame.previous && frame.previous.state === state && frame.previous.data === FBDATA && frame.previous.result === result) add('officeWorldRepeats');
+      frame.previous = {state:state,data:FBDATA,result:result};
+    },
+    mobileLeader:function (state,rid,value) {
+      const frame = mobiles[mobiles.length - 1];
+      if (!frame) return;
+      add('mobileLeaderCalls');
+      const previous = frame.leaders.find(function (row) { return row.state === state && row.rid === rid; });
+      if (previous && previous.value === value) add('mobileLeaderSameResultRepeats');
+      else frame.leaders.push({state:state,rid:rid,value:value});
+    },
     stop:function () {
       if (frames.length || offices.length || mobiles.length) throw new Error('Read audit scope leaked');
       for (let i = restore.length - 1; i >= 0; i--) restore[i]();
@@ -155,30 +195,12 @@ function install() {
       return audit.snapshot();
     }
   };
-  const bookmark = FB.campaignBookmark;
-  FB.campaignBookmark = function (state) {
-    const result = bookmark.apply(this,arguments), frame = offices[offices.length - 1];
-    if (frame) {
-      add('officeWorldReads');
-      if (frame.previous && frame.previous.state === state && frame.previous.data === FBDATA && frame.previous.result === result) add('officeWorldRepeats');
-      frame.previous = {state:state,data:FBDATA,result:result};
-    }
-    return result;
-  };
-  restore.push(function () { FB.campaignBookmark = bookmark; });
-  for (const name of ['active','leader']) {
+  for (const name of ['active']) {
     const original = FB.mobile[name];
     FB.mobile[name] = function (state,rid) {
       const frame = mobiles[mobiles.length - 1];
-      if (frame) add(name === 'active' ? 'mobileActiveCalls' : 'mobileLeaderCalls');
+      if (frame) add('mobileActiveCalls');
       const value = original.apply(this,arguments);
-      if (frame) {
-        if (name === 'leader') {
-          const previous = frame.leaders.find(function (row) { return row.state === state && row.rid === rid; });
-          if (previous && previous.value === value) add('mobileLeaderSameResultRepeats');
-          else frame.leaders.push({state:state,rid:rid,value:value});
-        }
-      }
       return value;
     };
     restore.push(function () { FB.mobile[name] = original; });
