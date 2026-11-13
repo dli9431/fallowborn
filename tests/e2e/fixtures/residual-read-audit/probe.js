@@ -45,8 +45,11 @@ function instrument(file, source) {
     replace('  FB.realmIdForRulerCharacter = function (s,value) {',
       '  FB.realmIdForRulerCharacter = function (s,value) {\n' +
       '    var readAudit = window.__residualReadAudit, auditFrame = readAudit && readAudit.enterMobile(s,value);\n    try {');
-    replace('    var rid = Object.keys(root).filter(function (id) {',
-      '    var rid = Object.keys(root).filter(function (id) {\n      if (readAudit) readAudit.mobileSlot();');
+    replace('      rid = ids.filter(function (id) {',
+      '      if (readAudit) readAudit.slot(\'mobileFilterArrays\');\n' +
+      '      rid = ids.filter(function (id) {\n        if (readAudit) readAudit.mobileSlot();');
+    replace('        var id = ids[i];',
+      '        var id = ids[i];\n        if (readAudit) readAudit.mobileSlot();');
     replace("    return rulerRealm(s,value) || M.landedHomeRealm && M.landedHomeRealm(s,cid) || rid;\n  };",
       "    return rulerRealm(s,value) || M.landedHomeRealm && M.landedHomeRealm(s,cid) || rid;\n" +
       '    } finally { if (readAudit) readAudit.leaveMobile(auditFrame); }\n  };');
@@ -67,7 +70,7 @@ function install() {
       appointmentSlots:0, rightSlots:0, appointmentRows:0, rightRows:0,
       appointmentValidationSlots:0, rightValidationSlots:0, appointmentValidationRows:0, rightValidationRows:0,
       officeEntries:0, officeWorldReads:0, officeWorldRepeats:0,
-      mobileEntries:0, mobileSlots:0, mobileActiveCalls:0, mobileLeaderCalls:0,
+      mobileEntries:0, mobileSlots:0, mobileFilterArrays:0, mobileActiveCalls:0, mobileLeaderCalls:0,
       mobileLeaderSameResultRepeats:0};
   }
   function phase() { return report.cadences[cadence] || (report.cadences[cadence] = Object.assign({days:0},counts())); }

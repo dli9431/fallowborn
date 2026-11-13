@@ -2,13 +2,16 @@
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+const {openGame,prepareGameContent} = require('../support/game/navigation');
+const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const source = require('../fixtures/fiscal-read-reuse/source');
 const journey = require('../fixtures/fiscal-read-reuse/journey');
 
 dependsOnRuntime(__filename,['js/government_aristocracy.js','js/lordships.js','js/world.js','js/model.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_guard.js','js/justice.js',
   'js/governments.js','js/government_recognition.js','js/politics.js','js/systems.js',
-  'js/authority.js','js/actions.js','js/treasury.js','js/save.js','js/save_v4.js','js/mods.js','js/main.js']);
+  'js/authority.js','js/actions.js','js/treasury.js','js/save.js','js/save_v4.js','js/mods.js','js/main.js',
+  'js/bookmark_setup.js','js/starts.js','js/home_authority.js']);
 
 for (const start of journey.starts) {
   test('fiscal and office read reuse preserves ordinary and staged boundary days for '+start.scenario,async function ({page},info) {
@@ -231,14 +234,24 @@ test('office world reuse preserves empty, null-state, override and retained revi
   expect(result).toEqual({nativeCalls:1,priorCalls:2,checks:10,ordering:['definitions','bookmark']});
 });
 
-for (const start of [journey.starts[0],journey.starts[4]]) {
+for (const start of [journey.starts[0],journey.starts[4],
+  {scenario:'harbor command',fixture:'harbor'},{scenario:'dune command',fixture:'dune'}]) {
   test('mobile ruler reuse preserves live eligibility, complete scans and replaced leader readers in '+start.scenario,async function ({page},info) {
     const outputs = [], counts = [];
     for (const reference of [true,false]) {
-      await source.route(page,reference);
-      await journey.begin(page,info,start);
+      await source.route(page,reference ? 'filter' : false);
+      if (start.fixture) {
+        await openGame(page,info);
+        await page.evaluate(function () { FB.ui.showMods(); });
+        await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/mobile-command-'+start.fixture+'.json'));
+        await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+        await prepareGameContent(page);
+        await beginBookmarkFromTitle(page,start.fixture+'_world',start.fixture+'_household');
+      } else await journey.begin(page,info,start);
       const result = await page.evaluate(function () {
         const s = FB.state, M = FB.mobile, initial = JSON.stringify(s), native = M.leader, outputs = [];
+        const active = M.active, custody = FB.justiceCustodyOf, guarded = FB.characterGuarded, filter = Array.prototype.filter;
+        const data = JSON.stringify(FBDATA), save = FB.save.serialize(), rng = FB.getRngState(), uid = FB.getUidCounter();
         const rid = Object.keys(s.authority.governments).find(function (id) { return M.active(s,id) && M.leader(s,id); });
         if (!rid) throw new Error('No eligible mobile leader');
         const cid = M.leader(s,rid).id;
@@ -257,9 +270,33 @@ for (const start of [journey.starts[0],journey.starts[4]]) {
         }
         Object.assign(s,JSON.parse(initial));
         const row = M.row(s,rid);
-        if (row.command) { row.command.leaderGeneration++; read('stale command',cid); }
+        if (row.command) {
+          row.command.leaderGeneration++; read('stale command',cid); row.command.leaderGeneration--;
+          row.command.status = 'recalled'; read('recalled command',cid);
+          Object.assign(s,JSON.parse(initial));
+          const member = M.row(s,rid).members.find(function (m) { return m.principal.id === cid; });
+          member.allegiance = false; read('withheld command membership',cid);
+          Object.assign(s,JSON.parse(initial));
+          const issuer = M.row(s,rid).command.issuer;
+          if (issuer) { issuer.generation = (issuer.generation || 0) + 1; read('stale issuer',cid); }
+        }
         read('unknown','unknown-character');
         Object.assign(s,JSON.parse(initial));
+        try {
+          FB.justiceCustodyOf = function (state,id) { return id === cid ? {captiveId:cid} : custody(state,id); };
+          read('custody reader',cid);
+        } finally { FB.justiceCustodyOf = custody; }
+        try {
+          FB.characterGuarded = function (state,id) { return id === cid || guarded && guarded(state,id); };
+          read('guard reader',cid);
+        } finally { FB.characterGuarded = guarded; }
+        try {
+          FB.justiceCustodyOf = function (state,id) {
+            if (id === cid) M.leader = function () { return null; };
+            return custody(state,id);
+          };
+          read('leader replaced during eligibility',cid);
+        } finally { FB.justiceCustodyOf = custody; M.leader = native; }
         const nativeCounts = Object.assign({},fiscalReadCounts);
         let replacements = 0;
         M.leader = function (state,id) { replacements++; return native(state,id); };
@@ -269,14 +306,59 @@ for (const start of [journey.starts[0],journey.starts[4]]) {
         read('reader error',cid);
         M.leader = native;
         read('restored',cid);
+        const ids = Object.keys(s.authority.governments).filter(function (id) {
+          return s.authority.governments[id].mobile && active(s,id);
+        });
+        let trace = [], recursing = false;
+        try {
+          M.active = function (state,id) { trace.push(['active',id]); return active(state,id); };
+          M.leader = function (state,id) { trace.push(['leader',id]); return {id:'filter-target'}; };
+          read('first of all matches','filter-target');
+          outputs.push({label:'complete ordered scan',trace:trace});
+          trace = [];
+          M.active = function (state,id) {
+            trace.push(['active',id]);
+            if (id === ids[ids.length - 1]) throw new Error('last row failure');
+            return active(state,id);
+          };
+          read('late scan error','filter-target');
+          outputs.push({label:'late error order',trace:trace});
+          M.active = active;
+          M.leader = function (state,id) {
+            if (!recursing) {
+              recursing = true;
+              try { read('recursive miss','recursive-miss'); } finally { recursing = false; }
+            }
+            return native(state,id);
+          };
+          read('recursive reader',cid);
+          M.leader = function () { return {id:'filter-target'}; };
+          let customCalls = 0;
+          const allIds = Object.keys(s.authority.governments);
+          Array.prototype.filter = function (callback,receiver) {
+            const matches = filter.call(this,callback,receiver);
+            if (this.length === allIds.length && this.every(function (id,i) { return id === allIds[i]; })) {
+              customCalls++; return matches.reverse();
+            }
+            return matches;
+          };
+          read('replaced filter','filter-target');
+          outputs.push({label:'filter override calls',calls:customCalls});
+        } finally { M.active = active; M.leader = native; Array.prototype.filter = filter; }
         Object.assign(s,JSON.parse(initial));
-        return {outputs:outputs,counts:nativeCounts,replacedCalls:replacedCalls};
+        if (save !== FB.save.serialize() || data !== JSON.stringify(FBDATA) || rng !== FB.getRngState() || uid !== FB.getUidCounter())
+          throw new Error('Mobile reads changed save, catalogue or counters');
+        return {outputs:outputs,counts:nativeCounts,replacedCalls:replacedCalls,command:!!row.command};
       });
       outputs.push({outputs:result.outputs,replacedCalls:result.replacedCalls}); counts.push(result.counts);
     }
     expect(outputs[1]).toEqual(outputs[0]);
     expect(counts[1].slots).toBe(counts[0].slots);
-    expect(counts[1].leaders).toBeLessThan(counts[0].leaders);
+    expect(counts[1].leaders).toBe(counts[0].leaders);
+    if (start.fixture) expect(outputs[1].outputs.some(function (row) { return row.label === 'stale command'; })).toBe(true);
+    expect(outputs[1].outputs.find(function (row) { return row.label === 'late scan error'; }).result)
+      .toEqual({name:'Error',message:'last row failure'});
+    expect(outputs[1].outputs.find(function (row) { return row.label === 'filter override calls'; }).calls).toBe(1);
   });
 }
 

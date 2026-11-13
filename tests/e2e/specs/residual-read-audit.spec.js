@@ -106,6 +106,7 @@ for (const start of starts) {
     for (const row of evidence[1]) {
       expect(row.report.total.officeEntries).toBeGreaterThan(0);
       expect(row.report.total.mobileEntries).toBeGreaterThan(0);
+      expect(row.report.total.mobileFilterArrays).toBe(0);
     }
     await info.attach('read-audit-counts',{body:JSON.stringify({start:start,phases:evidence[1]}),contentType:'application/json'});
   });
@@ -193,6 +194,49 @@ test('read audit detects repeated index inputs, edits and cleanup without cachin
   expect(result.nativeReaders).toBe(true);
   expect(await page.evaluate(function () { return !window.__residualReadAudit; })).toBe(true);
   await info.attach('read-audit-controls',{body:JSON.stringify(result),contentType:'application/json'});
+});
+
+test('read audit separates mature ledger validation from repeated mobile scans', async function ({page},info) {
+  await route(page,true);
+  await begin(page,info,starts[0]);
+  await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/government-query-reuse/probe.js')});
+  await page.evaluate(probe.install);
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = window.__residualReadAudit, A = FB.aristocracy, rid = 'sasanian_476';
+    const rows = [];
+    try {
+      for (const history of [0,256]) {
+        if (history) GOV_QUERY.history(s,rid,history);
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        p.reset();
+        A.withFiscalRead(s,{},function () { A.constituency(s,rid); A.constituency(s,rid); });
+        FB.realmIdForRulerCharacter(s,s.player.charId);
+        FB.realmIdForRulerCharacter(s,s.player.charId);
+        rows.push({history:history,appointments:s.authority.appointments.length,rights:s.authority.rights.length,
+          governments:Object.keys(s.authority.governments).length,report:p.snapshot()});
+        if (before !== JSON.stringify(s) || rng !== FB.getRngState() || uid !== FB.getUidCounter()) throw new Error('Impure mature read');
+      }
+    } finally { p.stop(); }
+    return rows;
+  });
+  for (const row of result) {
+    const c = row.report.total;
+    expect(c.indexCalls).toBe(2);
+    expect(c.indexBuilds).toBe(1);
+    expect(c.indexValidations).toBe(1);
+    expect(c.indexReuses).toBe(1);
+    expect(c.appointmentRows).toBe(row.appointments);
+    expect(c.rightRows).toBe(row.rights);
+    expect(c.appointmentValidationRows).toBe(row.appointments);
+    expect(c.rightValidationRows).toBe(row.rights);
+    expect(c.mobileEntries).toBe(2);
+    expect(c.mobileFilterArrays).toBe(0);
+    expect(c.mobileSlots).toBe(2 * row.governments);
+  }
+  expect(result[1].appointments - result[0].appointments).toBe(256);
+  expect(result[1].rights - result[0].rights).toBe(256);
+  expect(result[1].report.total.mobileSlots).toBe(result[0].report.total.mobileSlots);
+  await info.attach('mature-read-counts',{body:JSON.stringify(result),contentType:'application/json'});
 });
 
 test('read audit rejects missing and duplicate source markers', function () {
