@@ -13,6 +13,8 @@ dependsOnRuntime(__filename,['index.html','data/economy.js','data/units.js','js/
 const fixtures=[
   {file:'dispersed-camps-dune.json',kind:'career',mod:require('../fixtures/authoring/dispersed-camps-dune.json')},
   {file:'dispersed-camps-harbor.json',kind:'career',mod:require('../fixtures/authoring/dispersed-camps-harbor.json')},
+  {file:'guarded-camps-harbor.json',kind:'career',mod:require('../fixtures/authoring/guarded-camps-harbor.json')},
+  {file:'guarded-camps-dune.json',kind:'career',mod:require('../fixtures/authoring/guarded-camps-dune.json')},
   {file:'guarded-principal-harbor.json',kind:'career',mod:require('../fixtures/authoring/guarded-principal-harbor.json')},
   {file:'guarded-principal-dune.json',kind:'career',mod:require('../fixtures/authoring/guarded-principal-dune.json')},
   {file:'expedition-dispatch-dune.json',kind:'unit',mod:require('../fixtures/authoring/expedition-dispatch-dune.json')},

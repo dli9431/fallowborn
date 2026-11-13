@@ -797,13 +797,13 @@ Fish-preservation rejection cases stage calendar changes with the matching turn 
 
 authoring-ruler-fixtures.spec.js checks the ordinary JSON admission of the resource, construction and production fixtures against the complete catalogue. Authored ruler profiles declare sex explicitly, including the female fish-drying ruler, so existing-ruler scenarios keep their declared identities. Two real file-picker imports exercise acceptance and preserve strict rejection when the ruler sex is omitted. Each fixture uses its own fresh browser context and the normal test timeout.
 
-`holywar-protector-causes.spec.js` stages the 1209–1229 French opportunity and
+`holywar-protector-causes.spec.js` stages the 1209â€“1229 French opportunity and
 independently imports `holywar-protector-lantern.json` through Mods. It covers
 authority/window/holder gates, pure previews, costly conserved submission, stale
 and repeated responses, same-faith coalition separation, ordinary host service,
 occupied-only council assets/awards, active submission, player call/answer sheets,
 AI submission, exact changed-content fingerprints, detached malformed-definition
-and save rejection, preparation/active/completed load–re-save–load, and the existing
+and save rejection, preparation/active/completed loadâ€“re-saveâ€“load, and the existing
 Catholic sacred-target campaign without a cause marker. Boundaries are staged
 directly; no years of simulation or device acceptance are inferred.
 
@@ -1408,4 +1408,4 @@ authoring-household-fixtures.spec.js checks twelve ordinary JSON examples, inval
 
 Treasury and preparation restore regressions compare exact codec-expanded facts with canonical object-key ordering, ordered arrays, unchanged uid and unsigned RNG bits. The dated-policy cases also account for the existing authority schema marker added by v4 migration; malformed provenance still rejects without repair. Successful public grants fund explicitly declared public accounts. Occupation scenarios declare a real war from the territorial party, and court-release scenarios distinguish a recognized adult accession from a contested vassal vacancy before checking original-provider death. The generated-provider proof uses an unrelated government-contest field, and failed real imports observe the refusal event while retaining exact state and storage assertions.
 
-authoring-mobile-pasture-fixtures.spec.js checks eight ordinary mobile and pasture examples with strict invalid career, missing replacement-unit or missing baseline rejection and state/RNG/uid purity. Female mobile principals retain their identity and public command independently from their valid private career. Existing levy replacement and explicit baseline revision declarations retain the normal unit and revision contracts. Two actual Mods imports preserve the original guarded female person, private profession and suspended command.
+authoring-mobile-pasture-fixtures.spec.js checks ten ordinary mobile and pasture examples with strict invalid career, missing replacement-unit or missing baseline rejection and state/RNG/uid purity. Female mobile principals retain their identity and public command independently from their valid private career. Existing levy replacement and explicit baseline revision declarations retain the normal unit and revision contracts. Two actual Mods imports preserve the original guarded female person, private profession and suspended command.
