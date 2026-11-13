@@ -5,6 +5,8 @@ const {openGame, prepareGameContent} = require('../support/game/navigation');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, ['js/authority.js','js/ledger_retention.js','js/save_v4.js',
+  'js/title_ids.js','js/stories.js','js/story_expedition_preparation.js','js/story_expedition_agreements.js',
+  'data/story_western_rulers_1096.js','data/story_pilgrim_1096.js',
   'js/save.js','js/government_assembly.js','js/government_civic.js','js/ecclesiastical_strategies.js','js/main.js','js/day_phases.js','js/institutions.js','js/government_support.js','js/tournaments.js','js/messages.js']);
 
 async function start(page, info, bookmark, scenario) {
@@ -239,6 +241,43 @@ test('fixed-seed daily season has identical saves with retention enabled or defe
   expect(before.advanced).toBe(90);
   expect(before.catalogue).toBe(true);
   expect(after).toEqual(before);
+});
+
+test('mature customary save separates retained history, validation, compaction and storage costs', async function ({page}, info) {
+  await page.addInitScript(function () {
+    Object.defineProperty(window,'indexedDB',{configurable:true,value:undefined});
+  });
+  await beginBookmark(page,info,'1096');
+  await page.addScriptTag({path:require('path').join(__dirname,'../fixtures/performance-mature-save/probe.js')});
+  const result = await page.evaluate(function () {
+    const s = FB.state, year = s.date.year;
+    FB.authorityYear(s);
+    s.turn = 31 * 360; s.date.year = year + 31; s.date.season = 0; s.date.day = 1;
+    s.authority.rights.forEach(function (right) {
+      for (let y = 1; y <= 30; y++) right.history.push({turn:y * 360,year:year + y - 1,event:'possession',evidence:null});
+    });
+    const history = s.authority.rights[0].history, cutoff = s.turn - 3600;
+    history.push({turn:cutoff,year:year + 21,event:'disputed',evidence:null});
+    history.push({turn:cutoff + 1,year:year + 21,event:'abandoned',evidence:null});
+    history.push({turn:1,year:year,event:'judgment',evidence:'mature-permanent-proof'});
+    return matureSaveProbe.run(function (state) { return FB.authorityCompact(state); });
+  });
+  await info.attach('mature-customary-save.json',{body:JSON.stringify(result),contentType:'application/json'});
+  console.log('mature customary save ' + JSON.stringify(result));
+  expect(result).toMatchObject({retentionDays:3600,backend:'localstorage',changed:true,deterministic:true,identity:true,catalogue:true,failure:null});
+  expect(result.before.unchanged && result.after.unchanged).toBe(true);
+  expect(result.before.inventory.history.eligible.count).toBeGreaterThan(0);
+  expect(result.after.inventory.history.eligible.count).toBe(0);
+  expect(result.after.inventory.history.withinWindow).toEqual(result.before.inventory.history.withinWindow);
+  expect(result.after.inventory.history.permanent).toEqual(result.before.inventory.history.permanent);
+  expect(result.after.inventory.history.exactTotals).toEqual(result.before.inventory.history.exactTotals);
+  expect(result.before.serializeCounts.snapshotRequests).toBe(11);
+  expect(result.before.serializeCounts.snapshotBuilds).toBe(1);
+  expect(result.after.serializeCounts.snapshotBuilds).toBe(1);
+  expect(result.compaction.map(function (sample) { return sample.changed; })).toEqual([true,true,true]);
+  expect(result.noops.map(function (sample) { return sample.changed; })).toEqual([false,false,false]);
+  for (const sample of result.restores) expect(sample).toMatchObject({completeParity:true,inputUnchanged:true});
+  for (const sample of result.persistence) expect(sample).toMatchObject({accepted:true,storedPrefix:'FBC1.',slotParity:true,exportParity:true});
 });
 
 
