@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts}=require('../support/game/restore-facts');
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
@@ -14,7 +15,7 @@ const config = {
 };
 test.describe.configure({mode:'parallel'});
 
-dependsOnRuntime(__filename,['index.html','data/map_data.js','data/technology.js',
+dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/map_data.js','data/technology.js',
   'data/technology_masonry_circuits.js','data/buildings_circuit_profiles.js',
   'data/building_profiles.js','data/fort_profiles.js','data/eras.js','data/cultures.js',
   'js/technology.js','js/building_profiles.js','js/fort_profiles.js','js/fortifications.js',
@@ -52,6 +53,7 @@ async function start(page,info,kind) {
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   await beginBookmarkFromTitle(page,config[kind].world,config[kind].world + '_household');
+  await installRestoreFacts(page);
 }
 async function hold(page,kind,ruin) {
   await page.evaluate(function (a) {
@@ -155,12 +157,17 @@ for(const kind of ['river','upland']) {
       const s=FB.state,pid=s.player.provinceId;
       if(!FB.startFortProject(s,pid,0,1,{profileId:c.profile}))throw new Error('Funded circuit required');
       const rec=FB.realmTechRecord(s);rec.active=['scriptoria'];rec.progress={scriptoria:7};rec.reserve=3;
-      return {text:FB.save.serialize(),buildings:JSON.parse(JSON.stringify(s.buildings)),gold:s.player.gold,tech:JSON.stringify(rec)};
+      // Completed exposure is implicit on the wire and decoded after pending exposure.
+      // Stage that codec order explicitly; retain exact array comparisons below.
+      rec.exposed=rec.exposed.filter(function (id) {return !rec.completed.includes(id);}).concat(rec.completed);
+      return {text:FB.save.serialize(),facts:restoreFacts(s,function (v) {
+        return [v.buildings,v.player.gold,FB.realmTechRecord(v)];
+      })};
     },config[kind]);
     await restoreBookmark(page,pending.text);
     expect(await page.evaluate(function () {
-      return {buildings:FB.state.buildings,gold:FB.state.player.gold,tech:JSON.stringify(FB.realmTechRecord(FB.state))};
-    })).toEqual({buildings:pending.buildings,gold:pending.gold,tech:pending.tech});
+      return restoreFacts(FB.state,function (v) {return [v.buildings,v.player.gold,FB.realmTechRecord(v)];});
+    })).toBe(pending.facts);
     const removed=await page.evaluate(function () {
       const s=FB.state,pid=s.player.provinceId,b=FB.fortAt(s,pid);
       s.date.year=1301;FB.realmTechRecord(s).completed=[];FB.invalidateTechBonuses();

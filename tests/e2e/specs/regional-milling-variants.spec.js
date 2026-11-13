@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts}=require('../support/game/restore-facts');
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
@@ -9,7 +10,7 @@ const examples = {river:require('../fixtures/authoring/regional-milling-river.js
   catchment:require('../fixtures/authoring/regional-milling-catchment.json')};
 test.describe.configure({mode:'parallel'});
 
-dependsOnRuntime(__filename,['index.html','data/buildings_milling_variants.js','data/building_profiles.js',
+dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/buildings_milling_variants.js','data/building_profiles.js',
   'data/site_resources.js','data/building_operations.js','data/map_data.js','data/technology.js',
   'js/building_profiles.js','js/building_operations.js','js/site_resources.js','js/building_seasons.js',
   'js/building_institutions.js','js/world.js','js/actions.js','js/fortifications.js','js/lordships.js',
@@ -28,6 +29,7 @@ async function start(page,info,label,revision) {
   await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB&&FB.game&&FB.game.bootReady;});
   await beginBookmarkFromTitle(page,world,world+'_household');
+  await installRestoreFacts(page);
   await page.evaluate(function(label){
     const s=FB.state;
     window.millCase={pid:label==='river'?'resource_quay':'resource_hill',slot:label==='river'?0:1,
@@ -271,10 +273,10 @@ test('matching save retains paid depletion and profile; malformed identities rej
   const first=await page.evaluate(function(){
     const s=FB.state,P=FB.buildingProfiles,O=FB.buildingOperations;
     if(!P.commit(s,P.quote(s,millRequest(millActor)))||!O.commit(s,O.quote(s,millService(millActor))))throw new Error('Paid setup failed');
-    return {save:FB.save.serialize(),facts:JSON.stringify([s.buildings,s.siteResources,s.buildingOperations,s.player.gold])};
+    return {save:FB.save.serialize(),facts:restoreFacts(s,function (v) {return [v.buildings,v.siteResources,v.buildingOperations,v.player.gold];})};
   });
   await restoreBookmark(page,first.save);
-  expect(await page.evaluate(function(){const s=FB.state;return JSON.stringify([s.buildings,s.siteResources,s.buildingOperations,s.player.gold]);})).toBe(first.facts);
+  expect(await page.evaluate(function(){const s=FB.state;return restoreFacts(s,function (v) {return [v.buildings,v.siteResources,v.buildingOperations,v.player.gold];});})).toBe(first.facts);
   const r=await page.evaluate(function(){
     const input=JSON.parse(FB.save.serialize()),pid='resource_quay',before=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
     const changes=[function(b){b.buildingProfile.v=2;},function(b){b.buildingProfile.id='missing';},function(b){b.buildingProfile.definition='wrong';},
@@ -287,12 +289,20 @@ test('matching save retains paid depletion and profile; malformed identities rej
 
 test('inherited matching save and deliberate demolition never reinstall a machine or service',async function({page},info){
   await start(page,info,'river','inherited');await hold(page);
-  const first=await page.evaluate(function(){const s=FB.state;return {save:FB.save.serialize(),facts:JSON.stringify([s.buildings,s.dev,s.openingInfrastructureState])};});
+  const first=await page.evaluate(function(){const s=FB.state;return {save:FB.save.serialize(),facts:restoreFacts(s,function (v) {return [v.buildings,v.dev,v.openingInfrastructureState];})};});
   await restoreBookmark(page,first.save);
-  expect(await page.evaluate(function(){const s=FB.state;return JSON.stringify([s.buildings,s.dev,s.openingInfrastructureState]);})).toBe(first.facts);
-  const removed=await page.evaluate(function(){const s=FB.state;if(!FB.demolishBuilding(s,'resource_quay',0,'mill'))throw new Error('Demolition failed');return FB.save.serialize();});
-  await restoreBookmark(page,removed);
-  expect(await page.evaluate(function(){const s=FB.state;return {empty:!(s.buildings.resource_quay||[]).length,again:FB.initializeOpeningInfrastructure(s),noReceipt:!s.buildingOperations};})).toEqual({empty:true,again:false,noReceipt:true});
+  expect(await page.evaluate(function(){const s=FB.state;return restoreFacts(s,function (v) {return [v.buildings,v.dev,v.openingInfrastructureState];});})).toBe(first.facts);
+  const removed=await page.evaluate(function(){
+    const s=FB.state;if(!FB.demolishBuilding(s,'resource_quay',0,'mill'))throw new Error('Demolition failed');
+    return {save:FB.save.serialize(),facts:restoreFacts(s,function (v) {return [v.buildings,v.dev,v.openingInfrastructureState];})};
+  });
+  await restoreBookmark(page,removed.save);
+  expect(await page.evaluate(function(expected){
+    const s=FB.state,again=FB.initializeOpeningInfrastructure(s),mills=(s.buildings.resource_quay||[]).filter(function (b) {return b.id==='mill' && b.s===0;});
+    // Ordinary demolition retains its ruined physical record and provenance.
+    return {one:mills.length,ruined:mills.length===1 && mills[0].ruined===true,again:again,noReceipt:!s.buildingOperations,
+      exact:assertRestoreFacts(restoreFacts(s,function (v) {return [v.buildings,v.dev,v.openingInfrastructureState];}),expected)};
+  },removed.facts)).toEqual({one:1,ruined:true,again:false,noReceipt:true,exact:true});
 });
 
 
