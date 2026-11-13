@@ -118,8 +118,16 @@ test('candidate compilation is detached and same-id overrides rebuild dependents
 });
 
 test('prospective stored stacks honor import order and reject a dangling same-name replacement', async function ({ page },info) {
+  // Boot the existing first mod through ordinary persisted-stack admission.
+  // The file-import case above already covers its initial interactive import.
+  await page.addInitScript(function (first) {
+    if (!sessionStorage.getItem('stored_stack_seeded')) {
+      localStorage.setItem('fb_mods',JSON.stringify([first]));
+      sessionStorage.setItem('stored_stack_seeded','1');
+    }
+  },JSON.stringify(harbor));
   await openGame(page,info);
-  await storeAndReload(page,harbor,'harbor_court');
+  expect(await page.evaluate(function () { return !!FB.stories.get('harbor_court'); })).toBe(true);
   await storeAndReload(page,dune,'dune_court');
   const result = await page.evaluate(function (mods) {
     const before = JSON.stringify(FBDATA), stories = FB.stories.list(), rng = FB.getRngState(), uid = FB.getUidCounter();
