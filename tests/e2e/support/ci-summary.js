@@ -52,10 +52,14 @@ function walk(suite, titles) {
 (report.suites || []).forEach(function (suite) { walk(suite, []); });
 
 const stats = report.stats || {};
+const incomplete = report.coverage && report.coverage.complete === false;
+const failed = failures.length || stats.unexpected || (report.errors || []).length;
 const lines = [];
-lines.push('## Playwright: ' + (failures.length ? 'failed' : 'passed') +
+lines.push('## Playwright: ' + (incomplete ? 'incomplete' : failed ? 'failed' : 'passed') +
   (ref ? ' (' + ref + (mode ? ', ' + mode : '') + ')' : ''));
 lines.push('');
+if (incomplete) lines.push('Incomplete coverage: received ' + report.coverage.receivedShards + ' of ' +
+  report.coverage.expectedShards + ' shard reports. These totals describe available results only.', '');
 lines.push('Passed ' + (stats.expected || 0) + ', failed ' + (stats.unexpected || 0) +
   ', flaky ' + (stats.flaky || 0) + ', skipped ' + (stats.skipped || 0) + ' in ' +
   Math.round((stats.duration || 0) / 60000) + ' min of wall time.');
@@ -69,7 +73,7 @@ if (failures.length) {
     lines.push('| ' + cell(row.project) + ' | ' + cell(row.file + ':' + row.line + ' ' + row.title) +
       ' | ' + cell(row.error || '') + ' |');
   });
-  if (failures.length > 60) lines.push('', (failures.length - 60) + ' more failures are in the HTML report artifact.');
+  if (failures.length > 60) lines.push('', (failures.length - 60) + ' more failures are in the compact JSON report artifact.');
 }
 if (flaky.length) {
   lines.push('');

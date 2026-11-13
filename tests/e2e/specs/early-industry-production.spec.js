@@ -2,6 +2,7 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
@@ -10,7 +11,7 @@ dependsOnRuntime(__filename,['index.html','data/buildings_early_industry.js','da
   'data/production.js','data/production_economy.js','data/site_resources.js','data/technology.js','data/technology_transmission.js',
   'js/production.js','js/production_economy.js','js/site_resources.js','js/actions.js','js/world.js','js/fortifications.js',
   'js/building_profiles.js','js/building_operations.js','js/building_seasons.js','js/market.js','js/economy.js','js/lordships.js','js/treasury.js',
-  'js/technology.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js','js/main.js','js/model.js']);
+  'js/technology.js','js/mods.js','js/save.js','js/save_v4.js','js/wars.js','js/util.js','js/ui_modals.js','js/ui_misc.js','js/main.js','js/model.js']);
 async function boot(page,info,kind,options) {
   options=options || {};await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
   if(options.revision){const m=JSON.parse(JSON.stringify(examples[kind]));m.bookmarks['early_industry_'+kind].revision=options.revision;
@@ -29,7 +30,11 @@ async function boot(page,info,kind,options) {
     await page.locator('#ng-seed').press('Enter');await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();await page.getByRole('button',{name:'Begin',exact:true}).click();
   }
-  await page.evaluate(function(){FB.game.setPaused(true);});
+  await page.evaluate(function(kind){
+    FB.game.setPaused(true);
+    // Paid output needs a real buyer with cash above its current public reserves.
+    FB.state.realms[kind==='paper'?'supplier_bank_court':'resource_fold_court'].treasury.gold=10000;
+  },kind);
 }
 for(const kind of ['paper','metal']){
   test(kind+' real import retains exact catalogue costs and scope with no passive awards or invented stock',async function({page},info){
@@ -49,7 +54,9 @@ for(const kind of ['paper','metal']){
       if(kind==='paper')move('fiber_delivery',2,'transfer');else {move('ore_purchase',2,'buy');move('fuel_purchase',1,'buy');}
       const recipeId=kind==='paper'?'workshop_papermaking':'bloomery_smelting',site=kind+'_plant',recipe=FBDATA.productionRecipes[recipeId];
       const q=P.aiQuote(s,site,'reserve',{recipeId:recipeId,disposition:'store'}),payerBefore=P.account(s,q.request.actor).funds.available;
+      if(!q.allowed)throw new Error('Rejected funded reserve: '+q.reason);
       const batch=P.commit(s,q),paid=payerBefore-P.account(s,q.request.actor).funds.available,again=P.commit(s,q);
+      if(!batch)throw new Error('Allowed funded reserve failed to commit');
       const noEarlyFinish=P.commit(s,P.aiQuote(s,site,'finish',{batchId:batch}));
       const shifts=[];for(let i=0;i<recipe.workDays;i++)shifts.push(P.perform(s,P.aiQuote(s,site,'work',{batchId:batch})));
       const finish=P.commit(s,P.aiQuote(s,site,'finish',{batchId:batch}));
@@ -178,7 +185,7 @@ for(const width of [390,1280])test(width+'px shared production and technology re
   await page.setViewportSize({width:width,height:844});await boot(page,info,'paper');
   await page.evaluate(function(){FB.ui.closeModal();FB.ui.showSettlement('baghdad',0);});await page.locator('#settlement-production').click();
   await expect(page.locator('#gm-body')).toContainText('Make a paper lot');
-  const button=page.getByRole('button',{name:'Move one owned unit',exact:true});
+  const button=page.getByRole('button',{name:/^Move one owned unit\b/});
   await button.click();await page.keyboard.press('Escape');await expect(button).toBeFocused();
   expect(await page.locator('#gm-body').evaluate(function(el){return el.scrollWidth>el.clientWidth+1;})).toBe(false);
   await page.evaluate(function(){FB.ui.showTech();});const row=page.locator('.tech-entry[data-tech-open="paper_making"]');await row.click();
@@ -189,11 +196,18 @@ test('completed paper sale and depleted sources restore exactly without cash or 
   await boot(page,info,'paper');const r=await page.evaluate(function(){const s=FB.state,P=FB.production,E=FB.productionEconomy;s.player.gold=10000;
     E.commit(s,E.aiQuote(s,'fiber_delivery',2,'transfer'));const id=P.commit(s,P.aiQuote(s,'paper_plant','reserve',{recipeId:'workshop_papermaking',disposition:'store'}));
     P.perform(s,P.aiQuote(s,'paper_plant','work',{batchId:id}));P.perform(s,P.aiQuote(s,'paper_plant','work',{batchId:id}));
-    P.commit(s,P.aiQuote(s,'paper_plant','finish',{batchId:id}));const q=E.aiQuote(s,'paper_sale',1,'sell');E.commit(s,q);
-    const before=JSON.stringify([s.production,s.siteResources,s.player.gold,s.realms]),saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
+    P.commit(s,P.aiQuote(s,'paper_plant','finish',{batchId:id}));const q=E.aiQuote(s,'paper_sale',1,'sell');
+    if(!E.commit(s,q))throw new Error('Restore requires a completed paper sale: '+q.reason);
+    function facts(t){
+      const realms=JSON.parse(JSON.stringify(t.realms));
+      // The compact codec restores omitted peace as null; retain actual war values and the canonical registry.
+      Object.keys(realms).forEach(function(rid){realms[rid].war=t.realms[rid].war || null;});
+      return JSON.parse(JSON.stringify([t.production,t.siteResources,t.player.gold,realms,t.wars,FB.getRngState()>>>0,FB.getUidCounter()]));
+    }
+    const before=facts(s),saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
     P.initialize(FB.state);E.initialize(FB.state);P.validate(FB.state);
-    return {same:before===JSON.stringify([FB.state.production,FB.state.siteResources,FB.state.player.gold,FB.state.realms]),repeat:E.commit(FB.state,q)};});
-  expect(r).toEqual({same:true,repeat:false});
+    return {before:before,after:facts(FB.state),repeat:E.commit(FB.state,q)};});
+  expect(r.after).toEqual(r.before);expect(r.repeat).toBe(false);
 });
 test('funded metal work survives an expired construction window and a lost research gate',async function({page},info){
   await boot(page,info,'metal');const r=await page.evaluate(function(){const s=FB.state,P=FB.production,E=FB.productionEconomy;s.player.gold=10000;

@@ -195,6 +195,7 @@
           "rank": 3,
           "government": "territorial",
           "ruler": {
+            "sex": "m",
             "name": "Arno Stone",
             "culture": "frankish",
             "born": 918,

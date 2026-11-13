@@ -42,12 +42,18 @@ on:
         description: Bound runtime dependencies to the boot and determinism canaries, as test:changed does
         type: boolean
         default: true
+      report_source_run:
+        description: Existing run id for report-only recovery; empty runs the suite
+        type: string
+        default: ''
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   plan:
+    if: ${{ inputs.report_source_run == '' }}
     runs-on: ubuntu-latest
     outputs:
       shards: ${{ steps.plan.outputs.shards }}
@@ -63,7 +69,7 @@ jobs:
   check:
     # Arbitrary game refs must not populate shared dependency or browser caches.
     # A spec-only run (the task runner's targeted checks) is judged by its specs alone.
-    if: ${{ inputs.mode != 'specs' }}
+    if: ${{ inputs.report_source_run == '' && inputs.mode != 'specs' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -87,6 +93,7 @@ jobs:
         working-directory: tools
 
   e2e:
+    if: ${{ inputs.report_source_run == '' }}
     needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 150
@@ -185,24 +192,68 @@ jobs:
           pattern: blob-${{ inputs.label }}-*
           path: blobs
           merge-multiple: true
-      - name: Merge reports
+          run-id: ${{ inputs.report_source_run || github.run_id }}
+          github-token: ${{ github.token }}
+      - name: Check report coverage and size
+        id: reports
         env:
+          EXPECTED_SHARDS: ${{ inputs.shards }}
+          SOURCE_RUN: ${{ inputs.report_source_run || github.run_id }}
+        run: |
+          shopt -s nullglob
+          report_files=(blobs/*.zip)
+          echo "shards=${#report_files[@]}" >> "$GITHUB_OUTPUT"
+          if [ "${#report_files[@]}" -ne "$EXPECTED_SHARDS" ]; then
+            echo "complete=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Expected $EXPECTED_SHARDS shard reports, found ${#report_files[@]}. Available results are incomplete."
+          else
+            echo "complete=true" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "${#report_files[@]}" -eq 0 ]; then exit 1; fi
+          total_bytes=$(du -cb "${report_files[@]}" | tail -1 | cut -f1)
+          if [ "$total_bytes" -le 1073741824 ]; then
+            echo "html=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "html=false" >> "$GITHUB_OUTPUT"
+            echo "HTML rendering omitted because blob inputs exceed 1 GiB. Compact results and shard coverage follow; screenshots and traces remain in the source run's per-shard results artifacts: https://github.com/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Merge compact results
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
           FB_CI_REPORT_FILE: ${{ github.workspace }}/merged/results.json
-          PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ github.workspace }}/merged/html
+          FB_CI_REPORT_EXPECTED_SHARDS: ${{ inputs.shards }}
+          FB_CI_REPORT_RECEIVED_SHARDS: ${{ steps.reports.outputs.shards }}
+          FB_CI_REPORT_SOURCE_RUN: ${{ inputs.report_source_run || github.run_id }}
           REF: ${{ inputs.ref }}
           MODE: ${{ inputs.mode }}
         run: |
           mkdir -p merged
-          if ls blobs/*.zip >/dev/null 2>&1; then
-            (cd tooling/tests/e2e && npx playwright merge-reports --reporter="html,$GITHUB_WORKSPACE/tooling/tests/e2e/support/ci-report.js" "$GITHUB_WORKSPACE/blobs")
-            if [ ! -d merged/html ] && [ -d tooling/tests/e2e/playwright-report ]; then
-              cp -r tooling/tests/e2e/playwright-report merged/html
-            fi
-            node tooling/tests/e2e/support/ci-summary.js merged/results.json "$REF" "$MODE" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "No Playwright reports were produced for $REF." >> "$GITHUB_STEP_SUMMARY"
+          (cd tooling/tests/e2e && npx playwright merge-reports --reporter="$GITHUB_WORKSPACE/tooling/tests/e2e/support/ci-report.js" "$GITHUB_WORKSPACE/blobs")
+          node tooling/tests/e2e/support/ci-summary.js merged/results.json "$REF" "$MODE" >> "$GITHUB_STEP_SUMMARY"
+      - name: Render bounded HTML report
+        id: html
+        if: ${{ steps.reports.outputs.html == 'true' }}
+        continue-on-error: true
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+          PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ github.workspace }}/merged/html
+        run: |
+          (cd tooling/tests/e2e && npx playwright merge-reports --reporter=html "$GITHUB_WORKSPACE/blobs")
+          if [ ! -d merged/html ] && [ -d tooling/tests/e2e/playwright-report ]; then
+            cp -r tooling/tests/e2e/playwright-report merged/html
           fi
+      - name: Note unavailable HTML rendering
+        if: ${{ !cancelled() && steps.html.outcome == 'failure' }}
+        run: |
+          echo "::warning::HTML rendering failed; compact results, coverage metadata and per-shard artifacts remain available."
+          echo "HTML rendering failed. Compact results, coverage metadata and per-shard failure artifacts remain available." >> "$GITHUB_STEP_SUMMARY"
+      - name: Require complete shard coverage
+        if: ${{ !cancelled() && steps.reports.outputs.complete != 'true' }}
+        run: |
+          echo "::error::Shard coverage is incomplete. Available compact results are diagnostic only."
+          exit 1
       - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
         with:
           name: report-${{ inputs.label }}
           path: merged

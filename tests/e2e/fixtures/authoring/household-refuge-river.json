@@ -125,12 +125,16 @@
           "diff": "Spouse and young children"
         }
       },
-      "fixedProvinceId": "inventory_quay",
       "tracks": [
         "river_party"
       ],
       "trackLocations": {
         "river_party": [
+          "inventory_quay"
+        ]
+      },
+      "birthplaces": {
+        "counties": [
           "inventory_quay"
         ]
       }
@@ -218,6 +222,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 868,
@@ -240,6 +245,7 @@
           "government": "regnum",
           "liege": "inventory_estuary_court",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 870,

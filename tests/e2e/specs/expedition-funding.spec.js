@@ -1,5 +1,6 @@
 'use strict';
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {startAuthority,examples}=require('../support/game/expedition-authority');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
@@ -131,7 +132,7 @@ test('funding review names the private purse and retains inputs, scroll and focu
   await page.evaluate(function () {FB.ui.showMobileConfederation('harbor_following');});
   await page.locator('#mobile-funding').fill('7');
   await page.locator('#mobile-funding').dispatchEvent('change');
-  const button=page.getByRole('button',{name:'Contribute private funds',exact:true});
+  const button=page.getByRole('button',{name:/^Contribute private funds\b/});
   await button.scrollIntoViewIfNeeded();
   await button.focus();
   const before=await page.evaluate(function () {return {list:document.getElementById('mobile-list').scrollTop,

@@ -81,7 +81,7 @@ jobs:
       label: suite-${{ matrix.ref }}
       mode: all
       projects: all
-      shards: 16
+      shards: 32
       bounded: false
 
   timing:

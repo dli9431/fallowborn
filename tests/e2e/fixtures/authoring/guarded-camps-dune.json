@@ -220,36 +220,6 @@
           "detail": "End this invitation without paying a nomination fee or receiving public rights."
         }
       }
-    },
-    "dune_hosted_agenda": {
-      "id": "dune_hosted_agenda",
-      "type": "ruler_agenda",
-      "subjectRealmId": "dune_coalition",
-      "title": "Review the hosted following",
-      "intro": "Choose priorities while ordinary access, work and command remain independent.",
-      "stages": [
-        {
-          "id": "dune_hosted_review",
-          "name": "The current arrangement",
-          "text": "Keep the present arrangements while reviewing local access in the mobile sheet. This review does not renew access or guarantee personal safety.",
-          "year": 900,
-          "season": 0,
-          "choices": [
-            {
-              "id": "dune_keep_hosting",
-              "label": "Keep the present priority",
-              "detail": "Record this priority without spending money, renewing access or moving the camp.",
-              "operation": "agenda_priority"
-            },
-            {
-              "id": "dune_close_review",
-              "label": "End the review",
-              "detail": "End the personal review with ordinary work and access still available.",
-              "operation": "agenda_finish"
-            }
-          ]
-        }
-      ]
     }
   },
   "startScenarios": [
@@ -286,48 +256,6 @@
       "trackLocations": {
         "dune_candidacy": [
           "dune_well"
-        ]
-      }
-    },
-    {
-      "id": "dune_hosted_leader",
-      "name": "Hosted leader review",
-      "desc": "A personal review of the following.",
-      "intro": "Review the present access separately from your private household.",
-      "rulerRealmId": "dune_coalition",
-      "governmentForm": "expedition_command",
-      "fixedProvinceId": "dune_pass",
-      "startCulture": "dune_folk",
-      "startReligion": "dune_belief",
-      "characterName": "Sela Vey",
-      "sex": "f",
-      "tier": 1,
-      "profession": "soldier",
-      "gold": 7,
-      "prestige": 5,
-      "piety": 0,
-      "bookmarkIds": [
-        "dune_world"
-      ],
-      "eras": [
-        "early_medieval"
-      ],
-      "alwaysUnlocked": true,
-      "hidden": true,
-      "onboarding": "ruler",
-      "familyPresets": {
-        "standard": {
-          "name": "Existing public leader",
-          "diff": "existing person",
-          "desc": "Keep the existing person."
-        }
-      },
-      "tracks": [
-        "dune_hosted_agenda"
-      ],
-      "trackLocations": {
-        "dune_hosted_agenda": [
-          "dune_pass"
         ]
       }
     },
@@ -715,7 +643,6 @@
       },
       "starts": [
         "dune_household",
-        "dune_hosted_leader",
         "dune_host_court"
       ],
       "hidden": false,

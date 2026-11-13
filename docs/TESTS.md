@@ -577,11 +577,11 @@ Workflows live in `.github/workflows/`:
   also upload their `test-results` folders (error contexts, screenshots, traces) as
   `results-<label>-<shard>`. Example: `gh workflow run tests.yml --ref main -f target=476
   -f mode=specs -f specs="specs/boot.spec.js specs/determinism.spec.js"`.
-- `nightly.yml`: daily from `main` and by hand. The full suite on `476` and `dev` in 16 shards,
+- `nightly.yml`: daily from `main` and by hand. The full suite on `476` and `dev` in 32 shards,
   then season timing on `476`.
 - `e2e.yml`: the reusable check, sharded Playwright run (blob reporter), and merge job. The merge
   job writes a job summary with totals, failures and their first error line, flaky tests, and the
-  slowest spec files, and uploads the merged HTML and JSON report as `report-<label>`.
+  slowest spec files, and uploads complete compact JSON with bounded HTML rendering as `report-<label>`.
 - `season-timing.yml`: runs `tests/e2e/measure/season-timing.js` from the calling commit against
   the game at the requested branch, sharded across starts, then compares the merged measurement
   with the previous nightly one and uploads `season-timing-<branch>`.
@@ -797,13 +797,17 @@ project.
 
 ## Shared support
 
-`holywar-protector-causes.spec.js` stages the 1209–1229 French opportunity and
+Fish-preservation rejection cases stage calendar changes with the matching turn and day, retaining the original seasonal term's valid opening history. Spent-stock restore coverage compares every material, seasonal, technology and building value structurally across two matching round trips. Only the technology exposure set is compared in sorted order: the existing codec stores uncompleted exposures and appends completed knowledge during expansion. Every exposure id and all other array order, identities, quantities, terms, RNG and UID counters remain exact.
+
+authoring-ruler-fixtures.spec.js checks the ordinary JSON admission of the resource, construction and production fixtures against the complete catalogue. Authored ruler profiles declare sex explicitly, including the female fish-drying ruler, so existing-ruler scenarios keep their declared identities. Two real file-picker imports exercise acceptance and preserve strict rejection when the ruler sex is omitted. Each fixture uses its own fresh browser context and the normal test timeout.
+
+`holywar-protector-causes.spec.js` stages the 1209â€“1229 French opportunity and
 independently imports `holywar-protector-lantern.json` through Mods. It covers
 authority/window/holder gates, pure previews, costly conserved submission, stale
 and repeated responses, same-faith coalition separation, ordinary host service,
 occupied-only council assets/awards, active submission, player call/answer sheets,
 AI submission, exact changed-content fingerprints, detached malformed-definition
-and save rejection, preparation/active/completed load–re-save–load, and the existing
+and save rejection, preparation/active/completed loadâ€“re-saveâ€“load, and the existing
 Catholic sacred-target campaign without a cause marker. Boundaries are staged
 directly; no years of simulation or device acceptance are inferred.
 
@@ -910,6 +914,8 @@ These six specifications let a refactor prove that behavior did not change and k
 Snapshots. tests/e2e/support/game/parity.js captures a compact world snapshot inside the page: owner and holder per province; each living realm's rank, liege, ruler and ruler generation; government form counts; the player's tier, station, career and career rank; treasury totals; a fixed sample of FB.political.power and FB.political.permission answers; the costs shown for a fixed list of deeds and focuses, plus the freedom, land plot and rank elevation quotes; the RNG state and the next uid. readsArePure records whether capturing left state, RNG and uid unchanged. Derived caches are not captured.
 
 Fresh parity journeys cover every authored start scenario, including the dated 476, 493 and 1204 households and rulers. Ordinary medieval cases retain their baseline revision; newly registered openings choose a compatible declared revision and birthplace. Each case captures creation and immediate save restore without daily simulation or a raised timeout. The fixture ids end in -opening-restore, keeping these checkpoints separate from the earlier seasonal and annual captures. The coverage check still fails when a start scenario is added or retargeted without a matching journey.
+
+Generated declared-opening codes follow the shared canonical spelling: standard family at the principal county seat omits its redundant suffix; nonprincipal identities and named nonzero home slots retain their aligned family and slot fields. Fixed courts use their resolved revision identity even when no resident community shares it. Authored sex and name normalization remain exact, and effective track locations take precedence among eligible birthplaces so the declared opening actually attaches. parity-start-codes.spec.js checks native principal, nonprincipal and established households, an unchanged explicit-code control and two imported female guarded people at different home slots. The helper still compares the complete actual seed to its exact generated or supplied code.
 
 Wave 5 regression coverage includes 476-ladder-careers.spec.js, 476-offices-legitimacy.spec.js, civic-church-actors.spec.js, federate-migration.spec.js and 476-world-stories.spec.js. The ladder's high-resource case and the migration's staged-victory case verify transaction boundaries; they do not establish successful ordinary-play progression or conquest. The daily funding case runs one season of ordinary daily accounting from the actual opening, with random mortality and diplomacy isolated, and restores at its midpoint; the 488 commission, migration war and released service are staged directly in neighbouring cases. Full ordinary-play journeys and subjective phone-size presentation still require owner acceptance. Refreshing intentional 476 parity fixtures is a separate owner-reviewed capture; preserve medieval fixtures for comparison.
 
@@ -1307,7 +1313,7 @@ measurement workloads, not regression-test journeys.
 Nightly is the registered dispatch route even before the standalone comparison
 workflow is registered on the default branch. Its optional comparison inputs
 leave ordinary scheduled suite and timing behavior intact. The full-suite job
-uses the shared E2E workflow with syntax/support checks, sixteen browser
+uses the shared E2E workflow with syntax/support checks, thirty-two browser
 shards per branch and merged reports. Report tooling, season and comparison
 drivers come from the dispatched tooling commit. Publish the
 intended public tooling revision before dispatch; game and tooling revisions
@@ -1413,3 +1419,30 @@ Residual read diagnostics
 residual-read-audit.spec.js checks page-only counters for aristocratic index construction, campaign-world resolution within office input validation and mobile ruler scanning. It compares full state/save/catalogue digests and RNG/UID with untouched source for five ordinary and directly staged boundary journeys, and checks index-input edits and exception cleanup. The probe records actual appointment/right array slots visited and completed indexes. Equivalent index inputs mean identical request ids, table identities, ordered row references and row ids, not cached constituency results or eligibility. Scope counters include nested scopes and must not be summed as independent removable work. Repeated character queries identify candidates for a reader audit; they do not prove equivalent live eligibility or safe reuse.
 
 Nightly read_audit=true passes --read-audit to the development-only season driver for a separately requested natural multi-season counter capture. It routes source hooks only in its browser pages and restores wrapped readers on exit. Each season exports readAudit counts split into ordinary, season-boundary, year-boundary and outside-day work. This option defaults off, cannot be combined with CPU profiling, and adds no game-state fields or shipped source hooks. Instrumented timing is diagnostic only: merged audit reports suppress speed flags/rankings, and paired speed extraction rejects both audit-marked reports and counter-bearing seasons. speed-comparison.spec.js protects rejection and report export with synthetic data, without launching a game measurement.
+
+Finite exchange and early industry regressions in production-economy.spec.js and early-industry-production.spec.js fund the actual public counterparties before paid scenarios; rejection cases still exhaust funds or demand explicitly. Successful reservations and exchanges are required before their output lots or receipts are inspected. Matching transaction restores compare complete structured production, cash and realm facts, retain ordered ledgers, include canonical wars, RNG and uid, and project omitted peaceful realm war aliases as the codec's documented null default. Each scenario keeps its own browser context and can shard independently.
+
+authoring-start-fixtures.spec.js checks the treasury and expedition JSON imports against the ordinary detached validator, including rejection of an altered ruler station and state/RNG/uid purity. Ruler beginnings use the station band matching their authored realm rank; names, sex, government, property and purse policies remain unchanged. The treasury, home-authority, expedition and sovereign-preparation journeys use independent browser contexts and shard by case.
+
+authoring-household-fixtures.spec.js checks twelve ordinary JSON examples, invalid birthplace or missing fixed-story identity rejection, and state/RNG/uid purity. Fixed household storylines declare their actual local culture and faith; ordinary resource and companion-track roles use county birthplace rules. Explicit ruler identities preserve the female fish-drying ruler. Two real file-picker imports verify that both forms still start in their intended county.
+
+Treasury and preparation restore regressions compare exact codec-expanded facts with canonical object-key ordering, ordered arrays, unchanged uid and unsigned RNG bits. The dated-policy cases also account for the existing authority schema marker added by v4 migration; malformed provenance still rejects without repair. Successful public grants fund explicitly declared public accounts. Occupation scenarios declare a real war from the territorial party, and court-release scenarios distinguish a recognized adult accession from a contested vassal vacancy before checking original-provider death. The generated-provider proof uses an unrelated government-contest field, and failed real imports observe the refusal event while retaining exact state and storage assertions.
+
+authoring-mobile-pasture-fixtures.spec.js checks ten ordinary mobile and pasture examples with strict invalid career, missing replacement-unit or missing baseline rejection and state/RNG/uid purity. Female mobile principals retain their identity and public command independently from their valid private career. Existing levy replacement and explicit baseline revision declarations retain the normal unit and revision contracts. Two actual Mods imports preserve the original guarded female person, private profession and suspended command.
+
+
+CI report recovery
+
+Report merging requires one blob archive per requested shard. Missing reports produce explicit incomplete coverage in both JSON metadata and the summary, and fail the report job after preserving available diagnostic results. Compact JSON merges independently with a 6144 MiB Node heap bound and remains available if optional HTML rendering fails. HTML is rendered only when compressed blob inputs total at most 1 GiB; larger runs retain complete compact results and original per-shard screenshots/traces, with a source-run link in the summary. Available merged output uploads even when a later rendering or summary step fails. These reporting limits do not change game tests, timeouts or performance workloads.
+
+The Tests dispatch can recover reports from an existing run using report_source_run and report_label. This skips planning, checks and browser execution, downloads that run's matching blob artifacts and uses the dispatched tooling revision. The caller supplies the original shard count and tested game revision for the summary. Example: gh workflow run tests.yml --ref YOUR_TOOLING_REF -f target=GAME_REVISION -f report_source_run=RUN_ID -f report_label=tests -f shards=4 -f mode=all -f request_id=report-replay. The resulting report describes the source run, not a new game-test pass. Blob retention must still cover that source run.
+
+Mobile consumer regressions compare exact decoded state with ordered arrays, complete original identities and unsigned RNG bits. Expensive malformed-import matrices and independent construction/repair journeys use separate bounded cases. Actual public buyer funds, finite capacity bounds and an unavailable local season are staged as scenario prerequisites. County observer setup creates an actual reviewed column war and its assignments, then stages only the matching campaign-source checkpoint; campaign declaration and natural movement remain covered by their own owner tests. The single-host dispatch variation omits column-only camp loading while retaining the applicable route, wait, offer and war intents. These checks preserve the original rejection, locality, conservation and replay assertions.
+
+Imported mobile scenarios reuse the already prepared Mods title through beginBookmarkFromTitle instead of booting the catalogue again. Exact entry replay compares fresh boots with matching browser onboarding preferences. Current saves require every original story attachment; missing-record compatibility controls remove both provenance fields to represent genuinely older saves. Opening production stock is declared only in revisions with its standing physical asset, and grazing rejection consumes the actual available capacity through the ordinary resource owner.
+
+The two maritime-work examples declare the same explicit male ruler identity as their existing ruler starts. Shared admission coverage checks both ordinary imports and rejection when that sex is erased. Core maritime and construction consumers compare complete decoded receipt/property facts with unchanged array order, unsigned RNG bits and uid, and keep exact invoice prices while allowing only floating-point subtraction tolerance in calculated cash differences. Technology refusal removes the actual declared purchase requirement. Review selectors include accessible card notes while retaining exact focus checks. The optional stock-expiry variation creates its season-profile table before extending it. Independent consumer cases shard without increasing their timeout.
+
+Nightly full-suite runs use 32 shards to reduce the work assigned to each job within its existing 150-minute limit. This preserves all selected browser cases, the normal per-case timeout and two workers per shard. Season timing retains its separate 12-shard workload; paired measurements and report coverage checks are unchanged. A complete shard report remains necessary for full-suite evidence.
+
+Aachen and Constantinople household restore cases require a current save with a deleted original track to reject without replacing live state, changing facts or consuming RNG/uid. Their genuinely older controls omit both attachment provenance markers and their dependent opening profiles, and prove that restore and reserialization keep those markers and tracks absent. Legacy saves retaining a dependent profile still reject its missing required track purely. Fresh catalogue assertions include the implemented companion opening goals. Existing work-balance, death, payment, review and focus checks remain; independent cases can shard.

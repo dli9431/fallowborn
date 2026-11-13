@@ -310,7 +310,7 @@
       "sex": "f",
       "startCulture": "dune_folk",
       "startReligion": "dune_belief",
-      "tier": 4,
+      "tier": 5,
       "profession": "noble",
       "gold": 13,
       "prestige": 5,
@@ -615,6 +615,9 @@
                 "mar": 6,
                 "trait": "patient",
                 "sex": "f"
+              },
+              "publicTreasury": {
+                "schema": 1
               }
             },
             {

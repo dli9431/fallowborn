@@ -2,12 +2,13 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {harbor:require('../fixtures/authoring/guarded-principal-harbor.json'),
   dune:require('../fixtures/authoring/guarded-principal-dune.json')};
 
-dependsOnRuntime(__filename, ['index.html','data/mobile_confederations.js','data/technology.js',
+dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html','data/mobile_confederations.js','data/technology.js',
   'data/eras.js','data/economy.js','data/units.js','js/starts.js','js/main.js','js/world.js',
   'js/mods.js','js/bookmark_setup.js','js/stories.js','js/story_household.js','js/story_ruler_agenda.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_guard.js','js/mobile_camps.js',
@@ -97,7 +98,7 @@ for (const prefix of ['harbor', 'dune']) {
       total:prefix === 'harbor' ? 1400 : 1600, camps:prefix === 'harbor' ? 1 : 2});
   });
 
-  test(prefix + ' code rejects changed identity and home, and direct entry replays the same guarded world', async function ({page}, info) {
+  test(prefix + ' code rejects changed identity and home', async function ({page}, info) {
     await imported(page, info, prefix); await choose(page); await page.locator('#btn-bm-seed').click();
     const sc = examples[prefix].startScenarios[0];
     for (const invalid of [code(prefix).replace(sc.characterName.replace(/ /g, '_'), 'Other_Person'),
@@ -107,12 +108,20 @@ for (const prefix of ['harbor', 'dune']) {
       await page.locator('#ng-seed').fill(invalid); await page.locator('#ng-seed').press('Enter');
       await expect(page.locator('#ng-seed-err')).not.toBeEmpty();
     }
+  });
+
+  test(prefix + ' direct entry replays the same guarded world from a fresh boot', async function ({page}, info) {
+    await imported(page, info, prefix);
+    // Match the browser profile as well as the seed: onboarding is offered once.
+    await page.evaluate(function(){FB.game.uiPrefs.onboardingStarted=true;FB.game.saveUiPrefs();});
     await begin(page, prefix);
     const snapshot = function () { return page.evaluate(function () {
-      const s = FB.state;
-      return JSON.stringify([s.seed,s.chars,s.player,s.start,s.stories,s.authority,s.armies,FB.getRngState() >>> 0,FB.getUidCounter()]);
+      const s = FB.save.expandedSnapshot(FB.state);
+      return JSON.parse(FB.contentValues.canonical([s.seed,s.chars,s.player,s.start,s.stories,s.authority,s.armies,FB.getRngState() >>> 0,FB.getUidCounter()]));
     }); };
-    const first = await snapshot(); await begin(page, prefix, true); expect(await snapshot()).toBe(first);
+    const first = await snapshot();
+    await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page);
+    await begin(page, prefix, true); expect(await snapshot()).toEqual(first);
   });
 
   test(prefix + ' detached imports reject mismatched principal, authority, identity, home and track without publication', async function ({page}, info) {
@@ -202,12 +211,14 @@ for (const prefix of ['harbor', 'dune']) {
       s.player.gold = 2; const r = M.row(s,b.realmId);
       if (r.camps) r.camps.entries[0].food -= 7; else r.food -= 7;
       FB.stories.apply(s,id,'postpone',FB.stories.quote(s,id,'postpone'));
-      const facts = function (s) {return JSON.stringify([s.start,s.player.gold,s.chars,s.stories,M.row(s,b.realmId),s.armies,s.bookmarkSetup]);};
+      const facts = function (state) {const s=FB.save.expandedSnapshot(state);
+        return FB.contentValues.canonical([s.start,s.player.gold,s.chars,s.stories,M.row(s,b.realmId),s.armies,s.bookmarkSetup]);};
       const before = facts(s), saved = JSON.parse(FB.save.serialize()), bytes = JSON.stringify(saved);
       const compact = saved.state.chars[b.charId].id === undefined &&
         FB.validateStartingPrincipal(saved.state) === undefined && FB.mobile.validate(saved.state) && bytes === JSON.stringify(saved);
       FB.save.restore(saved);
-      const guarded = before === facts(FB.state), stable = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
+      const guarded = before === facts(FB.state), guardedBefore=JSON.parse(before),guardedAfter=JSON.parse(facts(FB.state)),
+        stable = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
       const mutations = [function (s) { delete s.start.originalPrincipal; }, function (s) {s.start.originalPrincipal = null;},
         function (s) {s.start.originalPrincipal.version = 2;}, function (s) {s.start.originalPrincipal.extra = true;},
         function (s) {s.start.originalPrincipal.actorId = 'other';}, function (s) {s.start.originalPrincipal.realmId = 'other';},
@@ -225,8 +236,10 @@ for (const prefix of ['harbor', 'dune']) {
       M.commit(FB.state,M.reviewGuard(FB.state,{realmId:b.realmId,action:'release',actor:{kind:'character',id:g.authority.characterId}}));
       FB.stories.apply(FB.state,id,'finish',FB.stories.quote(FB.state,id,'finish'));
       const after = facts(FB.state); FB.save.restore(JSON.parse(FB.save.serialize()));
-      return {compact:compact, guarded:guarded, rejected:rejected, released:after === facts(FB.state), phase:FB.state.stories[id].phase};
+      return {guardedBefore:guardedBefore,guardedAfter:guardedAfter,compact:compact, guarded:guarded, rejected:rejected,
+        released:after === facts(FB.state), phase:FB.state.stories[id].phase};
     }, prefix);
+    expect(result.guardedAfter).toEqual(result.guardedBefore);delete result.guardedBefore;delete result.guardedAfter;
     expect(result).toEqual({compact:true, guarded:true, rejected:Array(15).fill(true), released:true, phase:'done'});
   });
 }

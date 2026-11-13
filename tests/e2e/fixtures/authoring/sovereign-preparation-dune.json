@@ -310,7 +310,7 @@
       "sex": "f",
       "startCulture": "dune_folk",
       "startReligion": "dune_belief",
-      "tier": 4,
+      "tier": 5,
       "profession": "noble",
       "gold": 31,
       "prestige": 5,
@@ -389,7 +389,7 @@
           "realm": "dune_gate",
           "culture": "dune_folk",
           "religion": "dune_belief",
-          "dev": 16,
+          "dev": 10,
           "duchy": "dune_district",
           "population0": 12000,
           "communities": [

@@ -2093,6 +2093,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 918,
@@ -2120,6 +2121,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 918,
@@ -2142,6 +2144,7 @@
           "government": "regnum",
           "liege": "river_worship_inventory_estuary_court",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 918,
@@ -2158,6 +2161,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 918,
@@ -2180,6 +2184,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 918,
@@ -2199,6 +2204,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Lena Bank",
             "culture": "frankish",
             "born": 918,
@@ -2215,6 +2221,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "norse",
             "born": 918,
@@ -2234,6 +2241,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivar Holm",
             "culture": "norse",
             "born": 918,
@@ -2250,6 +2258,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Freya Vale",
             "culture": "norse",
             "born": 918,
@@ -2266,6 +2275,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Arno Stone",
             "culture": "frankish",
             "born": 918,
@@ -2282,6 +2292,7 @@
           "rank": 1,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 918,
@@ -2298,6 +2309,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 918,
@@ -2315,6 +2327,7 @@
           "government": "regnum",
           "liege": "river_fort_inventory_estuary_court",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 918,
@@ -2331,6 +2344,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 918,
@@ -2347,6 +2361,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Mara Brook",
             "culture": "frankish",
             "born": 918,
@@ -2363,6 +2378,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 918,
@@ -2379,6 +2395,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Lena Bank",
             "culture": "frankish",
             "born": 918,
