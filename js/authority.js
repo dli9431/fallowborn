@@ -1430,18 +1430,21 @@
   FB.authorityCompact = function (s) {
     var R = FB.ledgerRetention;
     if (!R || !R.due(s) || !records(s)) return false;
-    var graph = R.graph(R.cutoff(s));
+    // These observations have no dependency edges. Capture ordered membership
+    // on the original entries, without allocating an independent graph node each.
+    var cutoff = R.cutoff(s), keeps = [], folds = false;
     list(s, 'rights').forEach(function (row, ri) {
+      var keep = keeps[ri] = Object.create(null);
       row.history.forEach(function (entry, hi) {
         var permanent = CUSTOM_TOTALS.indexOf(entry.event) < 0 || !!entry.evidence || entry.turn >= s.turn;
-        graph.add(ri + ':' + hi, permanent, entry.turn);
+        keep[hi] = permanent || cutoff !== null && !(Number.isSafeInteger(entry.turn) && entry.turn <= cutoff);
+        if (!keep[hi]) folds = true;
       });
     });
-    var keep = graph.keep();
-    if (!R.folds(graph, keep)) return false;
+    if (!folds) return false;
     return R.stage(s, ['authority'], function (t) {
       t.authority.rights.forEach(function (row, ri) {
-        var parts = R.split(row.history, function (entry, hi) { return ri + ':' + hi; }, keep);
+        var parts = R.split(row.history, function (entry, hi) { return hi; }, keeps[ri]);
         if (!parts.folded.length) return;
         if (!row.retiredHistory) row.retiredHistory = R.blank(CUSTOM_TOTALS);
         parts.folded.forEach(function (entry) { R.add(row.retiredHistory, entry.event, 1); });

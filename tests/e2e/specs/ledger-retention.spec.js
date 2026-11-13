@@ -147,6 +147,10 @@ test('mature production save separates live closure, exact folded totals and per
   expect(result.after.inventory.production.batches.count).toBe(3);
   expect(result.before.inventory.production.nodes.batch).toEqual({total:644,liveClosure:2,windowOnly:1,eligible:641});
   expect(result.after.inventory.production.nodes.batch).toEqual({total:3,liveClosure:2,windowOnly:1,eligible:0});
+  // Production provenance retains both distinct transaction graphs.
+  expect(result.compactCounts.graphs).toEqual([
+    {cutoff:720,nodes:1251,closures:1,input:0},{cutoff:null,nodes:9,closures:1,input:1}
+  ]);
   expect(Object.values(result.after.inventory.production.retired.assets)).toEqual([
     {lots:601,quantity:601,batches:641,cancelled:40,workDays:601,paid:1282,openings:[]}
   ]);
