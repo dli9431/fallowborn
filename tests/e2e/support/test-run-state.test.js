@@ -432,6 +432,7 @@ test('browser projects keep the full affected suite on primary served Chromium',
 
   assert.equal(projects['chromium-served'].testMatch, undefined);
   assert.deepEqual(projects['firefox-served'].testMatch, [
+    '**/security-helpers.spec.js',
     '**/boot.spec.js',
     '**/holywar-accessibility.spec.js',
     '**/journeys.spec.js'

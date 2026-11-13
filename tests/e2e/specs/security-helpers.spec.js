@@ -6,6 +6,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, ['js/util.js', 'js/model.js', 'data/cultures.js']);
 
+// These boundaries must behave identically on chromium-file and served origins.
+
 test('escaped text round-trips through text and either quoted attribute boundary',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
