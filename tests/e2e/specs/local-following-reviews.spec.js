@@ -1,10 +1,13 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
+
+test.describe.configure({mode:'parallel'});
 
 dependsOnRuntime(__filename,['index.html','css/style.css','data/actions.js','data/mobile_confederations.js',
   'js/actions.js','js/ui_mobile.js','js/ui_misc.js','js/ui_panels.js','js/ui_modals.js','js/keys.js',
@@ -26,11 +29,12 @@ async function deed(page) {
 async function start(page,info,prefix,home) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
+  await expectModAdmission(page,require('../fixtures/authoring/local-following-reviews-'+prefix+'.json'));
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/local-following-reviews-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  if (!home) {await beginBookmark(page,info,prefix+'_world',prefix+'_household');return;}
+  if (!home) {await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');return;}
   const code=await page.evaluate(function (prefix) {
     const sc=FBDATA.startScenarios.find(function (sc) {return sc.id===prefix+'_home_start';});
     return 'FOLLOWINGREVIEW-'+prefix+'_world-'+sc.id+'-'+sc.fixedProvinceId+'-'+sc.sex+'-'+sc.characterName.replace(/ /g,'_')+'-standard';

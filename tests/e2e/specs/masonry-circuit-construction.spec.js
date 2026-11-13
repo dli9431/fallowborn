@@ -1,9 +1,10 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/masonry-circuit-river.json'),
   upland:require('../fixtures/authoring/masonry-circuit-upland.json')};
@@ -11,6 +12,8 @@ const config = {
   river:{world:'inventory_estuary',county:'inventory_quay',ruin:'inventory_ridge',profile:'urban_circuit',year:500},
   upland:{world:'inventory_uplands',county:'inventory_vale',ruin:'inventory_well',profile:'upland_timber_circuit',year:800}
 };
+test.describe.configure({mode:'parallel'});
+
 dependsOnRuntime(__filename,['index.html','data/map_data.js','data/technology.js',
   'data/technology_masonry_circuits.js','data/buildings_circuit_profiles.js',
   'data/building_profiles.js','data/fort_profiles.js','data/eras.js','data/cultures.js',
@@ -43,11 +46,12 @@ test.beforeEach(async function ({page}) {
 async function start(page,info,kind) {
   await openGame(page,info);
   await page.evaluate(function () { FB.ui.showMods(); });
+  await expectModAdmission(page,examples[kind]);
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/masonry-circuit-' + kind + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
-  await beginBookmark(page,info,config[kind].world,config[kind].world + '_household');
+  await beginBookmarkFromTitle(page,config[kind].world,config[kind].world + '_household');
 }
 async function hold(page,kind,ruin) {
   await page.evaluate(function (a) {

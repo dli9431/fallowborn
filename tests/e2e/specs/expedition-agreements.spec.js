@@ -1,4 +1,5 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
@@ -6,6 +7,8 @@ const {openGame}=require('../support/game/navigation');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-terms-harbor.json'),
   dune:require('../fixtures/authoring/expedition-terms-upland.json')};
+test.describe.configure({mode:'parallel'});
+
 dependsOnRuntime(__filename,['index.html','data/technology.js','data/mobile_confederations.js','data/units.js',
   'js/story_expedition_agreements.js','js/stories.js','js/bookmark_setup.js','js/mobile_confederations.js',
   'js/mobile_command.js','js/mobile_columns.js','js/expedition_programs.js','js/government_selection.js',
@@ -17,6 +20,7 @@ dependsOnRuntime(__filename,['index.html','data/technology.js','data/mobile_conf
 async function start(page,info,prefix,modified) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
+  await expectModAdmission(page,modified || examples[prefix]);
   await page.locator('#modfile').setInputFiles(modified ? {name:'terms.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(modified))} :
     path.resolve(__dirname,'../fixtures/authoring/expedition-terms-'+
     (prefix==='harbor' ? 'harbor' : 'upland')+'.json'));
@@ -105,7 +109,8 @@ test('a pending review restores without AI acknowledgment or payment and cannot 
 
 test('campaigns without the optional declaration restore without creating a review',async function ({page},info) {
   const input=JSON.parse(JSON.stringify(examples.harbor));
-  delete input.storyInstances.harbor_terms;input.bookmarks.harbor_world.stories=[];
+  delete input.storyInstances.harbor_terms;
+  input.bookmarks.harbor_world.stories=input.bookmarks.harbor_world.stories.filter(function(id){return id!=='harbor_terms';});
   await start(page,info,'harbor',input);
   const absent=await page.evaluate(function () {
     FB.save.restore(JSON.parse(FB.save.serialize()));return !FB.state.stories.harbor_terms;

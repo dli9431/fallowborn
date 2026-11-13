@@ -801,13 +801,13 @@ Fish-preservation rejection cases stage calendar changes with the matching turn 
 
 authoring-ruler-fixtures.spec.js checks the ordinary JSON admission of the resource, construction and production fixtures against the complete catalogue. Authored ruler profiles declare sex explicitly, including the female fish-drying ruler, so existing-ruler scenarios keep their declared identities. Two real file-picker imports exercise acceptance and preserve strict rejection when the ruler sex is omitted. Each fixture uses its own fresh browser context and the normal test timeout.
 
-`holywar-protector-causes.spec.js` stages the 1209â€“1229 French opportunity and
+`holywar-protector-causes.spec.js` stages the 1209ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“1229 French opportunity and
 independently imports `holywar-protector-lantern.json` through Mods. It covers
 authority/window/holder gates, pure previews, costly conserved submission, stale
 and repeated responses, same-faith coalition separation, ordinary host service,
 occupied-only council assets/awards, active submission, player call/answer sheets,
 AI submission, exact changed-content fingerprints, detached malformed-definition
-and save rejection, preparation/active/completed loadâ€“re-saveâ€“load, and the existing
+and save rejection, preparation/active/completed loadÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“re-saveÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“load, and the existing
 Catholic sacred-target campaign without a cause marker. Boundaries are staged
 directly; no years of simulation or device acceptance are inferred.
 
@@ -1456,3 +1456,11 @@ The two maritime-work examples declare the same explicit male ruler identity as 
 Nightly full-suite runs use 32 shards to reduce the work assigned to each job within its existing 150-minute limit. This preserves all selected browser cases, the normal per-case timeout and two workers per shard. Season timing retains its separate 12-shard workload; paired measurements and report coverage checks are unchanged. A complete shard report remains necessary for full-suite evidence.
 
 Aachen and Constantinople household restore cases require a current save with a deleted original track to reject without replacing live state, changing facts or consuming RNG/uid. Their genuinely older controls omit both attachment provenance markers and their dependent opening profiles, and prove that restore and reserialization keep those markers and tracks absent. Legacy saves retaining a dependent profile still reject its missing required track purely. Fresh catalogue assertions include the implemented companion opening goals. Existing work-balance, death, payment, review and focus checks remain; independent cases can shard.
+
+Ordinary import fixture admission
+
+authoring-import-admission.spec.js validates the 27 configurations used by the milling, masonry, local formation, following review, mobile supply/reserve/campaign/vow, calendar, local threat and declarative contract consumers. Validation preserves detached JSON, the live catalogue and state, RNG and uid. Independent harbor and dune real file imports retain their female home rulers at the existing public rank; missing sex and mismatched station still reject. Household county rules preserve the intended birthplace without requiring an unrelated civic storyline, ruler identities stay explicit, replacement policies name the existing levy class and the hill incident retains its eight-day window at its actual opening date. These focused admission checks do not establish full consumer-suite or release acceptance.
+
+The affected import consumers call the scoped support/game/mod-admission.js leaf with their exact assembled candidate before waiting for navigation, so rejected imports report validator faults immediately. Imported journeys reuse beginBookmarkFromTitle after their existing Mods reload and full content preparation, avoiding a redundant catalogue boot. Fresh unmodded journeys retain beginBookmark. No universal fixture, navigation helper, timeout or behavioral assertion changes.
+
+Optional-review and former-patron variations retain a complete unrelated story graph and their intended county. The single-host reserve variation uses the existing camp trade adapter in place of column-only loading. The eighteen malformed reserve declarations, twenty-four malformed campaign declarations and nineteen malformed sponsor declarations remain covered in independent groups of at most six mutations within the ordinary timeout. The opening-campaign opponent enters the actual declared ruler code before checking canonical player aliases.

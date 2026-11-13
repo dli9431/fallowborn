@@ -2238,7 +2238,6 @@
       "eras": [
         "early_medieval"
       ],
-      "fixedProvinceId": "venezia",
       "tracks": [],
       "alwaysUnlocked": true,
       "startAge": 24,
@@ -2250,7 +2249,12 @@
           "diff": "age 24"
         }
       },
-      "intro": "Your household begins among the declared courts."
+      "intro": "Your household begins among the declared courts.",
+      "birthplaces": {
+        "counties": [
+          "venezia"
+        ]
+      }
     }
   ],
   "settlementSites": {

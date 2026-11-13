@@ -1,12 +1,15 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-opening-campaigns-harbor.json'),
   dune:require('../fixtures/authoring/mobile-opening-campaigns-dune.json')};
+test.describe.configure({mode:'parallel'});
+
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/technology.js','data/units.js',
   'js/mobile_columns.js','js/mobile_confederations.js','js/mobile_command.js','js/mobile_guard.js','js/mobile_camps.js',
   'js/expedition_programs.js','js/governments.js','js/government_selection.js','js/government_support.js',
@@ -19,12 +22,29 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 async function start(page,info,prefix,input,scenario) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
+  await expectModAdmission(page,input || examples[prefix]);
   await page.locator('#modfile').setInputFiles(input ? {name:'campaigns.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(input))} : path.resolve(__dirname,'../fixtures/authoring/mobile-opening-campaigns-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',scenario || prefix+'_household');
+  if(scenario){
+    const sc=(input || examples[prefix]).startScenarios.find(function(row){return row.id===scenario;});
+    const full=page.locator('#btn-choose-beginning');
+    if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('OPENINGCAMPAIGN-'+prefix+'_world-'+sc.id+'-'+sc.fixedProvinceId+'-'+sc.sex+'-'+sc.characterName.replace(/ /g,'_')+'-standard');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+    await page.getByRole('button',{name:'Begin',exact:true}).click();
+    await page.evaluate(function(){
+      FB.game.setPaused(true);FB.game.auto.all=true;FB.game.auto.style='first';
+      FB.game.uiPrefs.hideTips=true;FB.game.uiPrefs.hideBeginnerHints=true;delete FB.state.player.flags.tutorial;
+    });
+    expect(await page.evaluate(function(){return FB.state.start.scenarioId;})).toBe(sc.id);
+  }
+  else await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await page.evaluate(function () {
     const M=FB.mobile,s=FB.state,d=FB.campaignBookmark(s).realms.find(function (r) {return r.mobile;});
     window.openingCase={d:d,rid:d.id,fresh:function () {
@@ -93,9 +113,11 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
-test('detached malformed and incompatible declarations reject without mutating input, registries or identity streams',async function ({page},info) {
+for(const range of [[0,6],[6,12],[12,18],[18,24]]){
+test('detached malformed and incompatible declarations reject without mutating input, registries or identity streams '+range[0],async function ({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function (source) {
+  const result=await page.evaluate(function (input) {
+    const source=input.source;
     const changes=[function (m) {m.openingCampaigns=null;},function (m) {m.openingCampaigns.schema=2;},
       function (m) {m.openingCampaigns.extra=true;},function (m) {m.openingCampaigns.entries=[];},
       function (m) {m.openingCampaigns.entries[0].extra=true;},function (m) {m.openingCampaigns.entries[0].opponent.actorId='missing';},
@@ -114,16 +136,17 @@ test('detached malformed and incompatible declarations reject without mutating i
       function (m) {delete m.columns;},function (m) {m.columns.entries=null;},
       function (m) {m.preparationId='not_formed';},function (m) {m.guardedParty={};},function (m) {m.civilianCamps={};},
       function (m,b) {b.opening.actors.harbor_enemy_ruler.ref.realmId='harbor_commune';}];
-    return changes.map(function (change) {
+    return changes.slice(input.first,input.last).map(function (change) {
       const input=JSON.parse(JSON.stringify(source)),b=input.bookmarks.harbor_world,m=b.realms.find(function (r) {return r.mobile;}).mobile;
       change(m,b);
       const bytes=JSON.stringify(input),data=JSON.stringify(FBDATA),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
       return FB.mods.validate(input).length>0 && bytes===JSON.stringify(input) && data===JSON.stringify(FBDATA) &&
         state===JSON.stringify(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
-  },examples.harbor);
-  expect(result).toEqual(Array(24).fill(true));
+  },{source:examples.harbor,first:range[0],last:range[1]});
+  expect(result).toEqual(Array(range[1]-range[0]).fill(true));
 });
+}
 
 test('pure whole-opening preflight rejects stale parties, target control, hostile transit and conflicts before allocation',async function ({page},info) {
   await start(page,info,'harbor');

@@ -1,11 +1,14 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/regional-milling-river.json'),
   catchment:require('../fixtures/authoring/regional-milling-catchment.json')};
+test.describe.configure({mode:'parallel'});
+
 dependsOnRuntime(__filename,['index.html','data/buildings_milling_variants.js','data/building_profiles.js',
   'data/site_resources.js','data/building_operations.js','data/map_data.js','data/technology.js',
   'js/building_profiles.js','js/building_operations.js','js/site_resources.js','js/building_seasons.js',
@@ -19,11 +22,12 @@ async function start(page,info,label,revision) {
   const source=JSON.parse(JSON.stringify(examples[label]));
   const world=label==='river'?'resource_river':'resource_upland';
   source.bookmarks[world].revision=revision||'empty';
+  await expectModAdmission(page,source,'regional milling '+label);
   await page.locator('#modfile').setInputFiles({name:'regional-milling-'+label+'.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(source))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB&&FB.game&&FB.game.bootReady;});
-  await beginBookmark(page,info,world,world+'_household');
+  await beginBookmarkFromTitle(page,world,world+'_household');
   await page.evaluate(function(label){
     const s=FB.state;
     window.millCase={pid:label==='river'?'resource_quay':'resource_hill',slot:label==='river'?0:1,

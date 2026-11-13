@@ -24,7 +24,7 @@
     }
   },
   "startScenarios":[
-    {"id":"calendar_choice_start","name":"Autumn household","desc":"A bounded decision.","intro":"A household considers autumn.","bookmarkIds":["867"],"fixedProvinceId":"paris","alwaysUnlocked":true,"tier":1,"profession":"farmer","gold":20,"prestige":0,"piety":0,"tracks":["calendar_choice_example"]},
-    {"id":"calendar_expiry_start","name":"Winter household","desc":"A winter expiry.","intro":"A household considers winter.","bookmarkIds":["867"],"fixedProvinceId":"aachen","alwaysUnlocked":true,"tier":1,"profession":"farmer","gold":20,"prestige":0,"piety":0,"tracks":["calendar_expiry_example"]}
+    {"id":"calendar_choice_start","name":"Autumn household","desc":"A bounded decision.","intro":"A household considers autumn.","bookmarkIds":["867"],"fixedProvinceId":"paris","startCulture":"frankish","startReligion":"catholic","alwaysUnlocked":true,"tier":1,"profession":"farmer","gold":20,"prestige":0,"piety":0,"tracks":["calendar_choice_example"]},
+    {"id":"calendar_expiry_start","name":"Winter household","desc":"A winter expiry.","intro":"A household considers winter.","bookmarkIds":["867"],"fixedProvinceId":"aachen","startCulture":"frankish","startReligion":"catholic","alwaysUnlocked":true,"tier":1,"profession":"farmer","gold":20,"prestige":0,"piety":0,"tracks":["calendar_expiry_example"]}
   ]
 }

@@ -1,11 +1,14 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = require('../fixtures/authoring/calendar-households.json');
+test.describe.configure({mode:'parallel'});
+
 dependsOnRuntime(__filename, ['index.html', 'data/bookmarks.js', 'data/technology.js',
   'js/story_household.js', 'js/stories.js', 'js/mods.js', 'js/world.js', 'js/starts.js',
   'js/main.js', 'js/save.js', 'js/save_v4.js']);
@@ -13,11 +16,12 @@ dependsOnRuntime(__filename, ['index.html', 'data/bookmarks.js', 'data/technolog
 async function imported(page, info, scenario) {
   await openGame(page, info);
   await page.evaluate(function () { FB.ui.showMods(); });
+  await expectModAdmission(page,examples);
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/calendar-households.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
-  await beginBookmark(page, info, '867', scenario);
+  await beginBookmarkFromTitle(page,'867', scenario);
 }
 
 test('JSON calendar choices include both boundaries, expire after them and survive restore without replay', async function ({ page }, info) {

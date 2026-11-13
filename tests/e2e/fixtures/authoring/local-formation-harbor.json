@@ -234,44 +234,6 @@
     }
   },
   "storyInstances": {
-    "harbor_offices": {
-      "id": "harbor_offices",
-      "type": "government_contest",
-      "name": "The quay election",
-      "desc": "Seek the vacant gate office, serve a term, and return to your household.",
-      "realmId": "harbor_commune"
-    },
-    "harbor_candidacy": {
-      "id": "harbor_candidacy",
-      "type": "civic_candidacy",
-      "requires": [
-        "harbor_offices"
-      ],
-      "requirements": {
-        "realms": [
-          "harbor_commune"
-        ],
-        "provinces": [
-          "harbor_quay"
-        ]
-      },
-      "realmId": "harbor_commune",
-      "officeId": "quay_magistrate",
-      "name": "A place on the quay",
-      "desc": "Choose public service or keep your household outside the office.",
-      "choices": {
-        "stand": {
-          "id": "harbor_stand",
-          "label": "Stand for office",
-          "detail": "Pay the declared nomination fee and seek the public mandate."
-        },
-        "decline": {
-          "id": "harbor_decline",
-          "label": "Remain a private household",
-          "detail": "End this invitation without paying a nomination fee or receiving public rights."
-        }
-      }
-    },
     "harbor_preparation": {
       "id": "harbor_preparation",
       "type": "expedition_preparation",
@@ -331,10 +293,6 @@
       "eras": [
         "early_medieval"
       ],
-      "fixedProvinceId": "harbor_quay",
-      "tracks": [
-        "harbor_candidacy"
-      ],
       "alwaysUnlocked": true,
       "startAge": 24,
       "familyPresets": {
@@ -343,8 +301,8 @@
           "diff": "age 24"
         }
       },
-      "trackLocations": {
-        "harbor_candidacy": [
+      "birthplaces": {
+        "counties": [
           "harbor_quay"
         ]
       }
@@ -365,7 +323,6 @@
       "settlementLayout": null,
       "religiousHeads": {},
       "stories": [
-        "harbor_offices",
         "harbor_preparation"
       ],
       "provinces": [
