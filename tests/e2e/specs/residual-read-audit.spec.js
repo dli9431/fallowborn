@@ -8,6 +8,7 @@ const probe = require('../fixtures/residual-read-audit/probe');
 const sources = probe.paths.map(function (file) { return fs.readFileSync(path.resolve(__dirname,'../../..',file),'utf8'); });
 
 dependsOnRuntime(__filename, ['js/model.js','js/world.js','js/government_aristocracy.js','js/government_recognition.js',
+  'js/mobile_command.js','js/mobile_guard.js','js/justice.js',
   'js/government_selection.js','js/mobile_confederations.js','js/governments.js','js/government_support.js',
   'js/government_ecclesiastical.js','js/ecclesiastical_strategies.js','js/authority.js','js/actions.js',
   'js/treasury.js','js/lordships.js','js/main.js','js/politics.js','js/systems.js','js/save.js','js/save_v4.js','js/mods.js']);
@@ -245,4 +246,84 @@ test('read audit rejects missing and duplicate source markers', function () {
     expect(function () { probe.instrument(file,''); }).toThrow('Read audit source marker changed: ' + file);
     expect(function () { probe.instrument(file,source + '\n' + source); }).toThrow('Read audit source marker changed: ' + file);
   }
+});
+
+test('mobile boundary audit records guard reads and complete owner sizes', async function ({page},info) {
+  await route(page,true);
+  await begin(page,info,starts[0]);
+  await page.evaluate(probe.install);
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = window.__residualReadAudit, M = FB.mobile;
+    const guard = FB.characterGuarded, leader = M.leader, campaign = FB.campaignBookmark;
+    const enter = p.enterMobile, leave = p.leaveMobile;
+    let depth = 0, guards;
+    function facts() {
+      const authority = s.authority || {}, governments = authority.governments || {};
+      const mobile = Object.keys(governments).filter(function (id) { return governments[id].mobile; }).map(function (id) {
+        const row = governments[id].mobile;
+        return {realm:id,form:governments[id].formId,leader:row.leaderId,status:row.status,
+          members:row.members.length,command:row.command || null,guard:row.guardedParty || null};
+      });
+      const owners = {state:s,characters:s.chars,realms:s.realms,governments:governments,
+        appointments:authority.appointments || [],rights:authority.rights || [],
+        migrations:authority.migrations || [],institutions:s.localInstitutions || {},
+        armies:s.armies || [],captives:s.intrigue && s.intrigue.captives || []};
+      const sizes = {};
+      for (const name of Object.keys(owners)) sizes[name] = new TextEncoder().encode(JSON.stringify(owners[name])).length;
+      return {turn:s.turn,date:JSON.parse(JSON.stringify(s.date)),rng:FB.getRngState(),uid:FB.getUidCounter(),
+        characters:Object.keys(s.chars).length,livingCharacters:Object.keys(s.chars).filter(function (id) { return !s.chars[id].dead; }).length,
+        realms:Object.keys(s.realms).length,governments:Object.keys(governments).length,mobile:JSON.parse(JSON.stringify(mobile)),
+        appointments:owners.appointments.length,rights:owners.rights.length,migrations:owners.migrations.length,
+        institutions:Object.keys(owners.institutions).length,armies:owners.armies.length,captives:owners.captives.length,bytes:sizes};
+    }
+    // Observe the probe's frames, without replacing the native leader identity.
+    p.enterMobile = function () { const frame = enter.apply(this,arguments); depth++; return frame; };
+    p.leaveMobile = function () { try { return leave.apply(this,arguments); } finally { depth--; } };
+    FB.characterGuarded = function () {
+      guards.calls++;
+      if (depth) guards.inMobileRead++;
+      const value = guard.apply(this,arguments);
+      if (value) guards.guarded++;
+      return value;
+    };
+    const phases = [];
+    try {
+      const identity = {version:FB.VERSION,start:JSON.parse(JSON.stringify(s.start)),
+        signature:FB.mods.sig(),fingerprint:FB.mods.fingerprint(FB.campaignBookmark(s)),userAgent:navigator.userAgent};
+      for (const phase of ['ordinary','season','year']) {
+        if (phase !== 'ordinary') {
+          const season = phase === 'year' ? 3 : s.date.season;
+          s.turn += (season-s.date.season)*90+90-s.date.day;
+          s.date.season = season; s.date.day = 90;
+        }
+        const before = facts();
+        guards = {calls:0,inMobileRead:0,guarded:0}; p.reset();
+        const start = performance.now();
+        FB.game.passDay({deferUi:true});
+        const instrumentedMs = performance.now()-start;
+        phases.push({phase:phase,days:s.turn-before.turn,instrumentedMs:instrumentedMs,
+          before:before,after:facts(),guards:guards,report:p.snapshot()});
+      }
+      return {identity:identity,phases:phases,nativeReaders:leader === M.leader && campaign === FB.campaignBookmark,depth:depth};
+    } finally {
+      FB.characterGuarded = guard; p.enterMobile = enter; p.leaveMobile = leave; p.stop();
+    }
+  });
+  result.browser = page.context().browser().version();
+  expect(result.nativeReaders).toBe(true);
+  expect(result.depth).toBe(0);
+  for (const row of result.phases) {
+    expect(row.days).toBe(1);
+    expect(row.report.cadences[row.phase].days).toBe(1);
+    expect(row.report.total.mobileFilterArrays).toBe(0);
+    expect(row.report.total.mobileSlots).toBe(row.report.total.mobileEntries * row.before.governments);
+    expect(row.guards.calls).toBeGreaterThan(0);
+    expect(row.guards.inMobileRead).toBeGreaterThan(0);
+    expect(row.guards.inMobileRead).toBeLessThanOrEqual(row.guards.calls);
+    expect(row.before.bytes.state).toBeGreaterThan(row.before.bytes.governments);
+    expect(row.after.bytes.rights).toBeGreaterThan(0);
+    expect(row.instrumentedMs).toBeGreaterThanOrEqual(0);
+  }
+  expect(await page.evaluate(function () { return !window.__residualReadAudit; })).toBe(true);
+  await info.attach('mobile-boundary-owners',{body:JSON.stringify(result),contentType:'application/json'});
 });
