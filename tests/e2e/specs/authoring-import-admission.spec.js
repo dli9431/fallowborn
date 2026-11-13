@@ -6,9 +6,13 @@ const {openGame,prepareGameContent}=require('../support/game/navigation');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
 test.describe.configure({mode:'parallel'});
-dependsOnRuntime(__filename,['index.html','data/eras.js','data/economy.js','data/starts.js',
+dependsOnRuntime(__filename,['index.html','data/eras.js','data/economy.js','data/starts.js','data/units.js',
+  'data/bookmarks.js','data/bookmark_867_expansion.js','data/counties.js',
   'js/mods.js','js/world.js','js/starts.js','js/stories.js','js/bookmark_setup.js',
-  'js/station.js','js/governments.js','js/government_selection.js','js/mobile_confederations.js','js/main.js']);
+  'js/station.js','js/governments.js','js/government_selection.js','js/mobile_confederations.js',
+  'js/mobile_columns.js','js/story_government_selection.js','js/story_courts.js',
+  'js/story_household.js','js/story_local_threat.js','js/localfolk.js',
+  'js/ui_misc.js','js/ui_modals.js','js/main.js']);
 
 const fixtures=[
   {file:'harbor-contracts.json',mod:require('../fixtures/authoring/harbor-contracts.json')},
