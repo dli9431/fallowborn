@@ -238,7 +238,8 @@
             "culture": "frankish",
             "born": 468,
             "mar": 6,
-            "trait": "patient"
+            "trait": "patient",
+            "sex": "m"
           }
         },
         {
@@ -255,7 +256,8 @@
             "culture": "frankish",
             "born": 470,
             "mar": 5,
-            "trait": "patient"
+            "trait": "patient",
+            "sex": "m"
           }
         }
       ],
