@@ -6,6 +6,7 @@ const fileProjectTests = [
   '**/ai-live-decisions.spec.js',
   '**/ai-decision-policies.spec.js',
   '**/1204-history.spec.js',
+  '**/security-helpers.spec.js',
   '**/boot.spec.js',
   '**/bookmark-picker.spec.js',
   '**/determinism.spec.js',
@@ -27,6 +28,7 @@ const fileProjectTests = [
 ];
 const compatibilityProjectTests = [
   '**/ai-decision-integration.spec.js',
+  '**/security-helpers.spec.js',
   '**/boot.spec.js',
   '**/holywar-accessibility.spec.js',
   '**/journeys.spec.js',
