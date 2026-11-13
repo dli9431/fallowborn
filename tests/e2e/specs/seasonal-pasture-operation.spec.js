@@ -15,6 +15,7 @@ dependsOnRuntime(__filename,['index.html','data/buildings_seasonal_pasture.js','
 async function boot(page,info,kind,custom,revision) {
   if(revision){custom=JSON.parse(JSON.stringify(custom || examples[kind]));custom.bookmarks['pasture_'+kind].revision=revision;}
   await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
+  if(custom)expect(await page.evaluate(function(input){return FB.mods.validate(input);},custom)).toEqual([]);
   await page.locator('#modfile').setInputFiles(custom ? {name:'pasture-ai.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(custom))} :
     path.resolve(__dirname,'../fixtures/authoring/seasonal-pasture-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
@@ -124,8 +125,10 @@ for(const kind of ['faroes','upland']) {
             throw new Error('The fixture requires an unavailable local season');
         },function(t){
           const R=FB.siteResources,who=FB.settlementHolder(t,pid,0);
-          const claim=R.commit(t,R.quote(t,{operation:'reserve',sourceId:'farm_grazing',actor:who,amount:2}));
-          R.commit(t,R.quote(t,{operation:'consume',sourceId:'farm_grazing',actor:who,reservationId:claim}));
+          const amount=R.snapshot(t,pid,null,who).find(function(r){return r.id==='farm_grazing';}).available;
+          const claim=R.commit(t,R.quote(t,{operation:'reserve',sourceId:'farm_grazing',actor:who,amount:amount}));
+          if(!claim || !R.commit(t,R.quote(t,{operation:'consume',sourceId:'farm_grazing',actor:who,reservationId:claim})))
+            throw new Error('The negative setup must consume all current grazing capacity');
         },function(t){t.player.war={};},
         function(t){t.holder[pid]='buyer_court';}];
       return changes.map(function(change){const t=JSON.parse(base);change(t);const before=JSON.stringify(t);

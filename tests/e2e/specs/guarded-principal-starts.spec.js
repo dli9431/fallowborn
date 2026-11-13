@@ -98,7 +98,7 @@ for (const prefix of ['harbor', 'dune']) {
       total:prefix === 'harbor' ? 1400 : 1600, camps:prefix === 'harbor' ? 1 : 2});
   });
 
-  test(prefix + ' code rejects changed identity and home, and direct entry replays the same guarded world', async function ({page}, info) {
+  test(prefix + ' code rejects changed identity and home', async function ({page}, info) {
     await imported(page, info, prefix); await choose(page); await page.locator('#btn-bm-seed').click();
     const sc = examples[prefix].startScenarios[0];
     for (const invalid of [code(prefix).replace(sc.characterName.replace(/ /g, '_'), 'Other_Person'),
@@ -108,12 +108,18 @@ for (const prefix of ['harbor', 'dune']) {
       await page.locator('#ng-seed').fill(invalid); await page.locator('#ng-seed').press('Enter');
       await expect(page.locator('#ng-seed-err')).not.toBeEmpty();
     }
+  });
+
+  test(prefix + ' direct entry replays the same guarded world from a fresh boot', async function ({page}, info) {
+    await imported(page, info, prefix);
     await begin(page, prefix);
     const snapshot = function () { return page.evaluate(function () {
       const s = FB.save.expandedSnapshot(FB.state);
       return JSON.parse(FB.contentValues.canonical([s.seed,s.chars,s.player,s.start,s.stories,s.authority,s.armies,FB.getRngState() >>> 0,FB.getUidCounter()]));
     }); };
-    const first = await snapshot(); await begin(page, prefix, true); expect(await snapshot()).toEqual(first);
+    const first = await snapshot();
+    await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page);
+    await begin(page, prefix, true); expect(await snapshot()).toEqual(first);
   });
 
   test(prefix + ' detached imports reject mismatched principal, authority, identity, home and track without publication', async function ({page}, info) {

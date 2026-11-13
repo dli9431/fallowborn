@@ -196,12 +196,18 @@ test('county notice expiry, matching saves and aliases preserve one shared respo
     [C.id,C.alias].forEach(function (id) { FB.stories.get(id).day(s,s.stories[id]); });
     const replay = FB.stories.status(s,C.id) || FB.stories.status(s,C.alias);
     const receipts = [Object.keys(s.stories[C.id].householdReceipts).length,Object.keys(s.stories[C.alias].householdReceipts).length];
-    delete saved.state.stories[C.id]; FB.save.restore(saved);
+    delete saved.state.stories[C.id];
+    const live=FB.state,bytes=JSON.stringify(live),rng=FB.getRngState(),uid=FB.getUidCounter();
+    let requiredRejected=false;try{FB.save.restore(saved);}catch(error){requiredRejected=true;}
+    const rejectionPure=live===FB.state && bytes===JSON.stringify(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();
+    // Only genuinely older saves without paired attachment provenance may omit an original record.
+    delete saved.state.start.storyAttachments;delete saved.storyAttachmentSchema;
+    FB.save.restore(saved);
     return {stale:stale,quiet:quiet,before:before,restored:restored,aliases:aliases,accepted:accepted,repeat:repeat,replay:replay,
-      receipts:receipts,missing:!FB.state.stories[C.id]};
+      receipts:receipts,requiredRejected:requiredRejected,rejectionPure:rejectionPure,missing:!FB.state.stories[C.id]};
   });
   expect(result.restored).toEqual(result.before);
-  expect(result).toMatchObject({stale:false,quiet:null,aliases:true,accepted:true,repeat:false,replay:null,receipts:[1,0],missing:true});
+  expect(result).toMatchObject({stale:false,quiet:null,aliases:true,accepted:true,repeat:false,replay:null,receipts:[1,0],requiredRejected:true,rejectionPure:true,missing:true});
 });
 
 test('campaign battle, field-path and exact-site claims reject on the detached ordinary JSON path', async function ({page},info) {
