@@ -581,7 +581,7 @@ Workflows live in `.github/workflows/`:
   then season timing on `476`.
 - `e2e.yml`: the reusable check, sharded Playwright run (blob reporter), and merge job. The merge
   job writes a job summary with totals, failures and their first error line, flaky tests, and the
-  slowest spec files, and uploads the merged HTML and JSON report as `report-<label>`.
+  slowest spec files, and uploads complete compact JSON with bounded HTML rendering as `report-<label>`.
 - `season-timing.yml`: runs `tests/e2e/measure/season-timing.js` from the calling commit against
   the game at the requested branch, sharded across starts, then compares the merged measurement
   with the previous nightly one and uploads `season-timing-<branch>`.
@@ -1409,3 +1409,10 @@ authoring-household-fixtures.spec.js checks twelve ordinary JSON examples, inval
 Treasury and preparation restore regressions compare exact codec-expanded facts with canonical object-key ordering, ordered arrays, unchanged uid and unsigned RNG bits. The dated-policy cases also account for the existing authority schema marker added by v4 migration; malformed provenance still rejects without repair. Successful public grants fund explicitly declared public accounts. Occupation scenarios declare a real war from the territorial party, and court-release scenarios distinguish a recognized adult accession from a contested vassal vacancy before checking original-provider death. The generated-provider proof uses an unrelated government-contest field, and failed real imports observe the refusal event while retaining exact state and storage assertions.
 
 authoring-mobile-pasture-fixtures.spec.js checks ten ordinary mobile and pasture examples with strict invalid career, missing replacement-unit or missing baseline rejection and state/RNG/uid purity. Female mobile principals retain their identity and public command independently from their valid private career. Existing levy replacement and explicit baseline revision declarations retain the normal unit and revision contracts. Two actual Mods imports preserve the original guarded female person, private profession and suspended command.
+
+
+CI report recovery
+
+Report merging requires one blob archive per requested shard. Missing reports produce explicit incomplete coverage in both JSON metadata and the summary, and fail the report job after preserving available diagnostic results. Compact JSON merges independently with a 6144 MiB Node heap bound and remains available if optional HTML rendering fails. HTML is rendered only when compressed blob inputs total at most 1 GiB; larger runs retain complete compact results and original per-shard screenshots/traces, with a source-run link in the summary. Available merged output uploads even when a later rendering or summary step fails. These reporting limits do not change game tests, timeouts or performance workloads.
+
+The Tests dispatch can recover reports from an existing run using report_source_run and report_label. This skips planning, checks and browser execution, downloads that run's matching blob artifacts and uses the dispatched tooling revision. The caller supplies the original shard count and tested game revision for the summary. Example: gh workflow run tests.yml --ref YOUR_TOOLING_REF -f target=GAME_REVISION -f report_source_run=RUN_ID -f report_label=tests -f shards=4 -f mode=all -f request_id=report-replay. The resulting report describes the source run, not a new game-test pass. Blob retention must still cover that source run.

@@ -69,6 +69,15 @@ class CompactJsonReporter {
       });
     }
     const report = { stats:stats, errors:this.errors, suites:Array.from(files.values()) };
+    if (process.env.FB_CI_REPORT_EXPECTED_SHARDS !== undefined) {
+      const expected = Number(process.env.FB_CI_REPORT_EXPECTED_SHARDS);
+      const received = Number(process.env.FB_CI_REPORT_RECEIVED_SHARDS);
+      const source = process.env.FB_CI_REPORT_SOURCE_RUN || '';
+      if (!Number.isSafeInteger(expected) || expected < 1 || !Number.isSafeInteger(received) || received < 1 || !/^\d+$/.test(source))
+        throw new Error('Invalid CI shard coverage metadata.');
+      report.coverage = { expectedShards:expected, receivedShards:received,
+        complete:expected === received, sourceRun:source };
+    }
     const target = path.resolve(process.env.FB_CI_REPORT_FILE || 'ci-report.json');
     fs.mkdirSync(path.dirname(target), { recursive:true });
     fs.writeFileSync(target, JSON.stringify(report) + '\n');
