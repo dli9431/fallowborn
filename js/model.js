@@ -1590,6 +1590,8 @@ window.FB = window.FB || {};
   };
 
   let officeGraph = null, officeDefinitions = null, localOfficeCache = null;
+  const officeHeadKeys = Object.keys;
+  const nativeOfficeHeadKeys = /\[native code\]/.test(Function.prototype.toString.call(officeHeadKeys));
   // A detached description retains JSON's ordered values without allocating
   // the arrays and serialized key again on every unchanged independent read.
   function officeInputSnapshot(value) {
@@ -1654,9 +1656,20 @@ window.FB = window.FB || {};
         !sameOfficeInput(form && form.systems, parts[5]) || !sameOfficeInput(bookmark && bookmark.systems, parts[6]) ||
         !sameOfficeInput(bookmark && bookmark.greatHolyWars, parts[7])) return false;
     if (!bookmark) return sameOfficeInput(bookmark, parts[8]) && sameOfficeInput(bookmark, parts[9]);
-    const heads = Object.keys(bookmark.religiousHeads || {}), priorHeads = parts[8].values;
-    if (heads.length !== priorHeads.length) return false;
-    for (let i = 0; i < heads.length; i++) if (heads[i] !== priorHeads[i]) return false;
+    const readKeys = Object.keys, headInputs = bookmark.religiousHeads || {}, priorHeads = parts[8].values;
+    if (nativeOfficeHeadKeys && readKeys === officeHeadKeys) {
+      // Compare ordered own keys during enumeration, within this validation only.
+      let headIndex = 0;
+      for (const key in headInputs) if (own(headInputs, key)) {
+        if (key !== priorHeads[headIndex++]) return false;
+      }
+      if (headIndex !== priorHeads.length) return false;
+    } else {
+      // Replaced readers retain their receiver, order, conversions and errors.
+      const heads = Function.prototype.call.call(readKeys, Object, headInputs);
+      if (heads.length !== priorHeads.length) return false;
+      for (let i = 0; i < heads.length; i++) if (heads[i] !== priorHeads[i]) return false;
+    }
     const realms = bookmark.realms || [], provinces = bookmark.provinces || [], faiths = parts[9].values;
     if (realms.length + provinces.length !== faiths.length) return false;
     for (let i = 0; i < realms.length; i++) {

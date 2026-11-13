@@ -203,6 +203,139 @@ test('office validation observes nested edits, JSON key ordering, identity switc
   await info.attach('office-validation-mutations', {body:JSON.stringify(result),contentType:'application/json'});
 });
 
+test('office opening-head keys preserve ordered own enumeration and accessor recovery', async function ({page}, info) {
+  await route(page, false, true);
+  await beginBookmark(page, info, '476');
+  const result = await page.evaluate(function () {
+    const s = FB.state, bookmark = FB.campaignBookmark(s);
+    const descriptor = Object.getOwnPropertyDescriptor(bookmark, 'religiousHeads');
+    const before = JSON.stringify(s), data = JSON.stringify(FBDATA), save = FB.save.serialize();
+    const rng = FB.getRngState(), uid = FB.getUidCounter();
+    function run(reader) {
+      const prototype = {inherited:null, shadowed:null}, heads = Object.create(prototype), checks = [];
+      heads['10'] = null; heads['2'] = null; heads.alpha = null; heads.beta = null;
+      Object.defineProperty(heads, 'shadowed', {value:null, enumerable:false, configurable:true});
+      bookmark.religiousHeads = heads;
+      let table = reader(s);
+      function change(name, edit, expected) {
+        edit();
+        const next = reader(s), changed = next !== table;
+        if (changed !== expected) throw new Error('Head key transition: ' + name);
+        checks.push({name:name, changed:changed, keys:Object.keys(bookmark.religiousHeads || {}), offices:next});
+        table = next;
+      }
+      change('warm', function () {}, false);
+      change('value-only', function () { heads.alpha = 'unused_realm'; }, false);
+      change('numeric-reinsert', function () { delete heads['2']; heads['2'] = null; }, false);
+      change('string-reinsert', function () { delete heads.alpha; heads.alpha = null; }, true);
+      change('remove', function () { delete heads.beta; }, true);
+      change('add', function () { heads.gamma = null; }, true);
+      change('inherited-add', function () { prototype.other = null; }, false);
+      change('nonenumerable-add', function () {
+        Object.defineProperty(heads, 'hidden', {value:null, enumerable:false, configurable:true});
+      }, false);
+      change('enumerable-toggle', function () {
+        Object.defineProperty(heads, 'hidden', {value:null, enumerable:true, configurable:true});
+      }, true);
+      change('nonenumerable-toggle', function () {
+        Object.defineProperty(heads, 'hidden', {value:null, enumerable:false, configurable:true});
+      }, true);
+      change('numeric-insertion-order', function () {
+        const next = Object.create(prototype);
+        next['2'] = null; next['10'] = null; next.alpha = null; next.gamma = null;
+        bookmark.religiousHeads = next;
+      }, false);
+      const current = bookmark.religiousHeads;
+      let reads = 0, fail = false, nested = false;
+      Object.defineProperty(bookmark, 'religiousHeads', {enumerable:true, configurable:true, get:function () {
+        reads++;
+        if (fail) throw new Error('head-keys-sentinel');
+        if (nested) { nested = false; reader(JSON.parse(before)); }
+        return current;
+      }});
+      const warm = reader(s);
+      if (warm !== table || reads !== 1) throw new Error('Head accessor read count');
+      fail = true;
+      let error = null;
+      try { reader(s); } catch (e) { error = e.message; }
+      fail = false;
+      if (error !== 'head-keys-sentinel' || reader(s) !== table) throw new Error('Head accessor error recovery');
+      nested = true;
+      const reentrant = reader(s);
+      if (reentrant === table || JSON.stringify(reentrant) !== JSON.stringify(table)) throw new Error('Head accessor reentry');
+      checks.push({name:'accessor', error:error, warmReads:1, reentrant:true});
+      Object.defineProperty(bookmark, 'religiousHeads', {value:current, enumerable:true, configurable:true, writable:true});
+      change('absent', function () { delete bookmark.religiousHeads; }, true);
+      change('empty', function () { bookmark.religiousHeads = {}; }, false);
+      change('null', function () { bookmark.religiousHeads = null; }, false);
+      return checks;
+    }
+    let current, prior;
+    try {
+      current = run(FB.religiousOffices);
+      Object.defineProperty(bookmark, 'religiousHeads', descriptor);
+      prior = run(FB.officeValidationReference);
+    } finally { Object.defineProperty(bookmark, 'religiousHeads', descriptor); }
+    FB.religiousOffices(s);
+    return {current:current, prior:prior, pure:before === JSON.stringify(s) && data === JSON.stringify(FBDATA) &&
+      save === FB.save.serialize() && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result.current).toEqual(result.prior);
+  expect(result.current.length).toBe(15);
+  expect(result.pure).toBe(true);
+  await info.attach('office-head-key-parity', {body:JSON.stringify(result), contentType:'application/json'});
+});
+
+test('office head enumeration preserves replaced key readers and property evaluation order', async function ({page}, info) {
+  await route(page, false, true);
+  await beginBookmark(page, info, '476');
+  const result = await page.evaluate(function () {
+    const s = FB.state, bookmark = FB.campaignBookmark(s), keys = Object.keys;
+    const descriptor = Object.getOwnPropertyDescriptor(bookmark, 'religiousHeads');
+    const before = JSON.stringify(s), data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+    function run(reader) {
+      const heads = {alpha:null, beta:null};
+      bookmark.religiousHeads = heads;
+      const original = reader(s);
+      let reversed, repeated, error = null, receivers = true, calls = 0;
+      try {
+        Object.keys = function (value) {
+          if (value === heads) { calls++; receivers = receivers && this === Object; return keys(value).reverse(); }
+          return keys(value);
+        };
+        reversed = reader(s); repeated = reader(s);
+        Object.keys = function (value) {
+          if (value === heads) throw new Error('head-key-reader-sentinel');
+          return keys(value);
+        };
+        try { reader(s); } catch (e) { error = e.message; }
+      } finally { Object.keys = keys; }
+      const recovered = reader(s);
+      let accesses = 0;
+      Object.defineProperty(bookmark, 'religiousHeads', {enumerable:true, configurable:true, get:function () {
+        accesses++;
+        Object.keys = function () { throw new Error('late-key-reader-sentinel'); };
+        return heads;
+      }});
+      let ordered;
+      try { ordered = reader(s); }
+      finally { Object.keys = keys; Object.defineProperty(bookmark, 'religiousHeads', descriptor); }
+      return {changed:reversed !== original, reused:repeated === reversed, receivers:receivers, called:calls > 0,
+        error:error, recovered:JSON.stringify(recovered) === JSON.stringify(original),
+        ordered:ordered === recovered, accesses:accesses};
+    }
+    let current, prior;
+    try { current = run(FB.religiousOffices); prior = run(FB.officeValidationReference); }
+    finally { Object.keys = keys; Object.defineProperty(bookmark, 'religiousHeads', descriptor); }
+    return {current:current, prior:prior, pure:before === JSON.stringify(s) && data === JSON.stringify(FBDATA) &&
+      rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result.current).toEqual(result.prior);
+  expect(result.current).toEqual({changed:true, reused:true, receivers:true, called:true,
+    error:'head-key-reader-sentinel', recovered:true, ordered:true, accesses:1});
+  expect(result.pure).toBe(true);
+});
+
 test('office input records preserve reentrant validation and reader or catalogue changes during comparison', async function ({page}, info) {
   await route(page, false, true);
   await beginBookmark(page, info, '476');
