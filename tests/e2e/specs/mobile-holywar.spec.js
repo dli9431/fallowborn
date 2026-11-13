@@ -37,7 +37,10 @@ async function begin(page, info, label, modified) {
       head:label === 'harbor' ? 'harbor_commune' : 'dune_oasis',faith:prefix+'_belief',target:prefix+'_country',
       enemy:label === 'harbor' ? 'harbor_dissent' : 'dune_gate',
       county:label === 'harbor' ? 'harbor_gardens' : 'dune_pass',story:label+'_participation',
-      part:function (s) {return s.greatHolyWar.participants.attackers.find(function (p) {return p.realm === this.rid;});},
+      part:function (s) {
+        const rid=this.rid;
+        return s.greatHolyWar.participants.attackers.find(function (p) {return p.realm === rid;});
+      },
       call:function (manual) {
         const s=FB.state, original=s.player.charId;
         s.date={year:901,season:0,day:1};
@@ -64,6 +67,17 @@ async function begin(page, info, label, modified) {
   },label);
 }
 
+async function beginAtCamp(page,info,label) {
+  const source=JSON.parse(JSON.stringify(examples[label])),prefix=label==='harbor'?'harbor':'dune',
+    world=source.bookmarks[prefix+'_world'],command=world.realms.find(function(r){return r.mobile;}),
+    scenario=source.startScenarios.find(function(row){return row.id===prefix+'_household';}),story=label+'_participation';
+  // Personal admission owns camp presence. Import a household beginning at
+  // that real camp instead of carrying an unrelated local civic storyline.
+  scenario.fixedProvinceId=command.mobile.origin;
+  scenario.tracks=[story];scenario.trackLocations={};scenario.trackLocations[story]=[scenario.fixedProvinceId];
+  await begin(page,info,label,source);
+}
+
 for (const label of ['harbor','upland']) {
   test(label+' ordinary import joins one zero-paper mobile host through a pure review',async function ({page},info) {
     await begin(page,info,label);
@@ -75,9 +89,9 @@ for (const label of ['harbor','upland']) {
       const q=FB.mobileGreatHolyWarReview(s,t.rid,r.leaderId,'join');
       const pure=before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
       const strength=FB.greatHolyWarStrength(s,'attackers'),joined=FB.commitMobileGreatHolyWar(s,q);
-      if(!q.allowed || !joined)throw new Error('Mobile enrollment rejected: '+JSON.stringify({review:q,joined:joined,
-        command:M.commandSnapshot(s,t.rid),host:h,migration:M.migration(s,t.rid),
-        topRealm:FB.topRealm(s,t.rid),realm:s.realms[t.rid],ordinaryWar:FB.realmInOrdinaryWar(s,t.rid)}));
+      if(!q.allowed || !joined)throw new Error('Mobile enrollment rejected: '+JSON.stringify({allowed:q.allowed,
+        camp:q.camp,joined:joined,command:M.commandSnapshot(s,t.rid),
+        host:{id:h.id,at:h.at,men:h.men,warId:h.warId},ordinaryWar:FB.realmInOrdinaryWar(s,t.rid)}));
       const delta=FB.greatHolyWarStrength(s,'attackers')-strength;
       return {pure:pure,allowed:q.allowed,joined:joined,repeat:FB.commitMobileGreatHolyWar(s,q),
         unchanged:old===JSON.stringify([s.armies,r.members,r.accounting,r.food,s.owner,s.holder,s.player.gold]),
@@ -97,8 +111,8 @@ for (const label of ['harbor','upland']) {
       t.call(false);
       const part=t.part(s),id=host.id,count=s.armies.filter(function (h) {return h.realm===t.rid;}).length;
       if(!part)throw new Error('Automatic mobile enrollment absent: '+JSON.stringify({
-        review:FB.mobileGreatHolyWarReview(s,t.rid,M.row(s,t.rid).leaderId,'join'),
-        command:M.commandSnapshot(s,t.rid),host:host,ordinaryWar:FB.realmInOrdinaryWar(s,t.rid)}));
+        command:M.commandSnapshot(s,t.rid),campaign:s.greatHolyWar.id,
+        host:host.id,ordinaryWar:FB.realmInOrdinaryWar(s,t.rid)}));
       t.launch();
       const before=JSON.stringify([s.armies,part,s.greatHolyWar.contribution]);
       FB.greatHolyWarTick(s);FB.greatHolyWarMarkMuster(s,t.rid);
@@ -176,12 +190,12 @@ test('defeated field force leaves the camp, vow and prior service without fictit
 
 for (const label of ['harbor','upland']) {
   test(label+' admission and optional personal vow never duplicate the force or passive contribution',async function ({page},info) {
-    await begin(page,info,label);
+    await beginAtCamp(page,info,label);
     const result=await page.evaluate(function () {
       const s=FB.state,t=vowTest,P=FB.expeditionParticipants,rec=s.stories[t.story],module=FB.stories.get(t.story);
       const request=P.review(s,t.story,'request',s.player.charId,module.declaration.roles[0].id),requested=P.commit(s,request);
-      if(!requested)throw new Error('Personal admission rejected: '+JSON.stringify({request:request,record:rec,
-        player:s.player,migration:FB.mobile.migration(s,t.rid),host:FB.mobile.host(s,t.rid)}));
+      if(!requested)throw new Error('Personal admission rejected: '+JSON.stringify({allowed:request.allowed,
+        role:request.roleId,status:rec.status,at:s.player.provinceId,camp:FB.mobile.migration(s,t.rid).at}));
       module.day(s,rec);
       if(rec.status!=='active') throw new Error('Expected real individual admission');
       const noVow=!s.player.greatHolyWar;t.call(true);t.join();
@@ -200,6 +214,23 @@ for (const label of ['harbor','upland']) {
     });
     expect(result).toEqual({noVow:true,joined:true,unchanged:true,mode:'mobile',land:false,mustered:true,
       credit:0,safe:false,danger:false,noForce:true,retained:true,stopped:true});
+  });
+}
+
+for(const label of ['harbor','upland']) {
+  test(label+' personal admission refuses a remote household without mutation',async function({page},info) {
+    await beginAtCamp(page,info,label);
+    const result=await page.evaluate(function() {
+      const s=FB.state,P=FB.expeditionParticipants,t=vowTest,module=FB.stories.get(t.story),
+        candidate=JSON.parse(JSON.stringify(s)),camp=FB.mobile.migration(candidate,t.rid).at;
+      candidate.player.provinceId=FB.campaignBookmark(s).provinces.find(function(p){return p.id!==camp&&!p.wasteland;}).id;
+      const input=JSON.stringify(candidate),live=JSON.stringify(s),data=JSON.stringify(FBDATA),rng=FB.getRngState(),uid=FB.getUidCounter(),
+        q=P.review(candidate,t.story,'request',candidate.player.charId,module.declaration.roles[0].id),
+        refused=!q.allowed&&!P.commit(candidate,q);
+      return {refused:refused,input:input===JSON.stringify(candidate),live:live===JSON.stringify(s),
+        data:data===JSON.stringify(FBDATA),rng:rng===FB.getRngState(),uid:uid===FB.getUidCounter()};
+    });
+    expect(result).toEqual({refused:true,input:true,live:true,data:true,rng:true,uid:true});
   });
 }
 
@@ -291,7 +322,7 @@ test('supplied service counters never create a historical mobile muster',async f
 });
 
 test('personal mobile references reject erased or mismatched admission without reenrollment',async function ({page},info) {
-  await begin(page,info,'harbor');
+  await beginAtCamp(page,info,'harbor');
   const result=await page.evaluate(function () {
     const s=FB.state,t=vowTest,P=FB.expeditionParticipants,m=FB.stories.get(t.story);
     P.commit(s,P.review(s,t.story,'request',s.player.charId,'guest'));m.day(s,s.stories[t.story]);
