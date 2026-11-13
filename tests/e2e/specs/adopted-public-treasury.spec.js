@@ -10,7 +10,7 @@ const examples = {
   harbor:require('../fixtures/authoring/adopted-public-treasury-harbor.json'),
   dune:require('../fixtures/authoring/adopted-public-treasury-dune.json')
 };
-dependsOnRuntime(__filename,['index.html','data/technology.js','data/political_institutions.js','data/units.js','data/markets.js',
+dependsOnRuntime(__filename,['js/bookmark_composition.js','js/util.js','index.html','data/technology.js','data/political_institutions.js','data/units.js','data/markets.js',
   'js/treasury.js','js/starts.js','js/world.js','js/main.js','js/actions.js','js/save.js','js/save_v4.js',
   'js/mods.js','js/model.js','js/lordships.js','js/market.js','js/logistics.js','js/armies.js',
   'js/home_authority.js','js/mobile_confederations.js','js/mobile_command.js','js/story_expedition_preparation.js',
@@ -261,10 +261,11 @@ for(const prefix of ['harbor','dune']) {
     await importWorld(page,info,prefix);await begin(page,prefix,'code');
     const result=await page.evaluate(function(prefix){
       const P=FB.expeditionPreparation,id=prefix+'_preparation';
-      function facts(s){return JSON.stringify([s.start.publicTreasury,s.realms,s.player.gold,s.stories,s.population,s.market,s.armies]);}
-      function restore(){const before=facts(FB.state),save=FB.save.serialize(),rng=FB.getRngState(),uid=FB.getUidCounter();
+      function facts(s){const t=FB.save.expandedSnapshot(s);
+        return FB.contentValues.canonical([t.start.publicTreasury,t.realms,t.player.gold,t.stories,t.population,t.market,t.armies]);}
+      function restore(){const before=facts(FB.state),save=FB.save.serialize(),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
         FB.save.restore(JSON.parse(save));FB.save.restore(JSON.parse(save));
-        return before===facts(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();}
+        return before===facts(FB.state) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter();}
       FB.state.realms.player.treasury.gold=200;
       const pending=restore(),pendingSave=FB.save.serialize(),s=FB.state,actor=s.player.charId,
         paid=P.commit(s,P.review(s,id,'grant',actor)),authorized=P.commit(s,P.review(s,id,'authorize',actor)),
@@ -362,9 +363,10 @@ test('ordinary JSON rejects malformed or institutional preservation without publ
   expect(result).toEqual(Array(9).fill(true));
 });
 
-test('forged erased duplicated or restocked public saves reject before repair and adoption',async function({page},info){
+for(const offset of [0,4,8,12]) {
+test('forged erased duplicated or restocked public saves reject before repair and adoption, group '+(offset/4+1),async function({page},info){
   await importWorld(page,info,'harbor');await begin(page,'harbor','code');
-  const result=await page.evaluate(function(){
+  const result=await page.evaluate(function(offset){
     const source=JSON.parse(FB.save.serialize()),changes=[function(s){delete s.start.publicTreasury;},
       function(s){s.start.publicTreasury=null;},function(s){s.start.publicTreasury.schema=2;},
       function(s){s.start.publicTreasury.extra=true;},function(s){s.start.publicTreasury.originalRealmId='harbor_commune';},
@@ -374,13 +376,14 @@ test('forged erased duplicated or restocked public saves reject before repair an
       function(s){s.realms.player.treasury.retired=true;},function(s){s.realms.harbor_commune.treasury=JSON.parse(JSON.stringify(s.realms.player.treasury));},
       function(s){s.start.publicTreasury.retirement={turn:0,recipientId:null};},
       function(s){s.treasuryAccounting.mode='accounting';},function(s){s.realms.player.treasury.lastSettledSeason=999;}];
-    return changes.map(function(change){const data=JSON.parse(JSON.stringify(source));change(data.state);
+    return changes.slice(offset,offset+4).map(function(change){const data=JSON.parse(JSON.stringify(source));change(data.state);
       const before=JSON.stringify([FB.state,data.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter();
       let rejected=false;try{FB.save.v4.migrate(data);}catch(error){rejected=true;}
       return rejected && before===JSON.stringify([FB.state,data.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter();});
-  });
-  expect(result).toEqual(Array(16).fill(true));
+  },offset);
+  expect(result).toEqual(Array(4).fill(true));
 });
+}
 
 test('actual vassal adoption retains its original liege owner and holding without acquiring sovereignty',async function({page},info){
   const source=JSON.parse(JSON.stringify(examples.harbor)),bm=source.bookmarks.harbor_world;

@@ -678,6 +678,9 @@
                 "mar": 6,
                 "trait": "patient",
                 "sex": "f"
+              },
+              "publicTreasury": {
+                "schema": 1
               }
             },
             {
