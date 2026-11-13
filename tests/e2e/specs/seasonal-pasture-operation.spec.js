@@ -2,6 +2,7 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={faroes:require('../fixtures/authoring/seasonal-pasture-faroes.json'),upland:require('../fixtures/authoring/seasonal-pasture-upland.json')};
