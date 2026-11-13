@@ -801,13 +801,13 @@ Fish-preservation rejection cases stage calendar changes with the matching turn 
 
 authoring-ruler-fixtures.spec.js checks the ordinary JSON admission of the resource, construction and production fixtures against the complete catalogue. Authored ruler profiles declare sex explicitly, including the female fish-drying ruler, so existing-ruler scenarios keep their declared identities. Two real file-picker imports exercise acceptance and preserve strict rejection when the ruler sex is omitted. Each fixture uses its own fresh browser context and the normal test timeout.
 
-`holywar-protector-causes.spec.js` stages the 1209â€“1229 French opportunity and
+`holywar-protector-causes.spec.js` stages the 1209Ã¢â‚¬â€œ1229 French opportunity and
 independently imports `holywar-protector-lantern.json` through Mods. It covers
 authority/window/holder gates, pure previews, costly conserved submission, stale
 and repeated responses, same-faith coalition separation, ordinary host service,
 occupied-only council assets/awards, active submission, player call/answer sheets,
 AI submission, exact changed-content fingerprints, detached malformed-definition
-and save rejection, preparation/active/completed loadâ€“re-saveâ€“load, and the existing
+and save rejection, preparation/active/completed loadÃ¢â‚¬â€œre-saveÃ¢â‚¬â€œload, and the existing
 Catholic sacred-target campaign without a cause marker. Boundaries are staged
 directly; no years of simulation or device acceptance are inferred.
 
@@ -1453,4 +1453,4 @@ authoring-import-admission.spec.js validates the 27 configurations used by the m
 
 The affected import consumers call the scoped support/game/mod-admission.js leaf with their exact assembled candidate before waiting for navigation, so rejected imports report validator faults immediately. Imported journeys reuse beginBookmarkFromTitle after their existing Mods reload and full content preparation, avoiding a redundant catalogue boot. Fresh unmodded journeys retain beginBookmark. No universal fixture, navigation helper, timeout or behavioral assertion changes.
 
-Optional-review and former-patron variations retain a complete unrelated story graph and their intended county. The single-host reserve variation uses the existing camp trade adapter in place of column-only loading. Its eighteen malformed reserve declarations remain covered in three independent six-mutation groups within the ordinary timeout. The opening-campaign opponent enters the actual declared ruler code before checking canonical player aliases.
+Optional-review and former-patron variations retain a complete unrelated story graph and their intended county. The single-host reserve variation uses the existing camp trade adapter in place of column-only loading. The eighteen malformed reserve declarations and twenty-four malformed campaign declarations remain covered in three and four independent six-mutation groups within the ordinary timeout. The opening-campaign opponent enters the actual declared ruler code before checking canonical player aliases.

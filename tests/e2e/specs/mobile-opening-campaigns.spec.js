@@ -113,9 +113,11 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
-test('detached malformed and incompatible declarations reject without mutating input, registries or identity streams',async function ({page},info) {
+for(const range of [[0,6],[6,12],[12,18],[18,24]]){
+test('detached malformed and incompatible declarations reject without mutating input, registries or identity streams '+range[0],async function ({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function (source) {
+  const result=await page.evaluate(function (input) {
+    const source=input.source;
     const changes=[function (m) {m.openingCampaigns=null;},function (m) {m.openingCampaigns.schema=2;},
       function (m) {m.openingCampaigns.extra=true;},function (m) {m.openingCampaigns.entries=[];},
       function (m) {m.openingCampaigns.entries[0].extra=true;},function (m) {m.openingCampaigns.entries[0].opponent.actorId='missing';},
@@ -134,16 +136,17 @@ test('detached malformed and incompatible declarations reject without mutating i
       function (m) {delete m.columns;},function (m) {m.columns.entries=null;},
       function (m) {m.preparationId='not_formed';},function (m) {m.guardedParty={};},function (m) {m.civilianCamps={};},
       function (m,b) {b.opening.actors.harbor_enemy_ruler.ref.realmId='harbor_commune';}];
-    return changes.map(function (change) {
+    return changes.slice(input.first,input.last).map(function (change) {
       const input=JSON.parse(JSON.stringify(source)),b=input.bookmarks.harbor_world,m=b.realms.find(function (r) {return r.mobile;}).mobile;
       change(m,b);
       const bytes=JSON.stringify(input),data=JSON.stringify(FBDATA),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
       return FB.mods.validate(input).length>0 && bytes===JSON.stringify(input) && data===JSON.stringify(FBDATA) &&
         state===JSON.stringify(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
-  },examples.harbor);
-  expect(result).toEqual(Array(24).fill(true));
+  },{source:examples.harbor,first:range[0],last:range[1]});
+  expect(result).toEqual(Array(range[1]-range[0]).fill(true));
 });
+}
 
 test('pure whole-opening preflight rejects stale parties, target control, hostile transit and conflicts before allocation',async function ({page},info) {
   await start(page,info,'harbor');
