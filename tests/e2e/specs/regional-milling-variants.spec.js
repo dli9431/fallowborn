@@ -14,7 +14,7 @@ dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/bui
   'data/site_resources.js','data/building_operations.js','data/map_data.js','data/technology.js',
   'js/building_profiles.js','js/building_operations.js','js/site_resources.js','js/building_seasons.js',
   'js/building_institutions.js','js/world.js','js/actions.js','js/fortifications.js','js/lordships.js',
-  'js/population.js','js/technology.js','js/treasury.js','js/authority.js','js/home_authority.js',
+  'js/population.js','js/technology.js','js/treasury.js','js/authority.js','js/home_authority.js','js/governments.js','js/government_ai.js','js/ai_decisions.js',
   'js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);
 
 async function start(page,info,label,revision) {
@@ -58,6 +58,21 @@ async function hold(page) {
     FB.invalidateSettlementLordships(s);FB.invalidateBuildingIndex(s,pid);
     window.millActor={kind:'character',id:s.player.charId};
     millKnowledge(millActor,['water_power']);
+  });
+}
+async function preparePublicMill(page) {
+  return page.evaluate(function(){
+    const s=FB.state,a=millPublic();millKnowledge(a,['water_power']);
+    const P=FB.buildingProfiles,d=P.definition('mill',millCase.profileId),reserve=FB.treasuryConstructionReserves(s)[a.id],
+      before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),q=P.quote(s,millRequest(a));
+    const prerequisites={direct:FB.settlementConstructionAuthority(s,millCase.pid,0,a).direct,
+      profile:P.status(s,millCase.pid,0,'mill',millCase.profileId,a).ready,
+      technology:FB.techRequirementMet(s,d.requiresTech,a.id),ordinaryTechnology:FB.hasTech(s,'undershot_watermill',a.id),
+      authority:FB.homeAuthority.quote(s,a.id,'spend',{provinceId:millCase.pid}).allowed,
+      service:FB.buildingOperations.constructionReady(s,millCase.pid,0,'mill',a,millCase.profileId),
+      funded:FB.treasuryAvailable(s,a.id)>=q.cost+FBDATA.buildingOperationProfiles[d.operationProfile].workCost+reserve};
+    return {actor:a,prerequisites:prerequisites,privateGold:s.player.gold,
+      pure:before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
   });
 }
 
@@ -203,34 +218,94 @@ for(const label of ['river','catchment']) test(label+' inherited ruin repair ret
 
 test('public AI construction and service use the same technology, reserves and receipt',async function({page},info){
   await start(page,info,'river');
+  const funding=await preparePublicMill(page);
+  expect(funding.prerequisites).toEqual({direct:true,profile:true,technology:true,ordinaryTechnology:false,authority:true,service:true,funded:true});
+  expect(funding.pure).toBe(true);
   const r=await page.evaluate(function(){
-    const s=FB.state,a=millPublic(),P=FB.buildingProfiles,O=FB.buildingOperations;millKnowledge(a,['water_power']);
+    const s=FB.state,a={kind:'realm',id:millCase.rid},P=FB.buildingProfiles,O=FB.buildingOperations;
+    const admission={profile:FB.aiCanBuildAt(s,a,millCase.pid,0,'mill','horizontal_mill'),
+      realmProfile:FB.aiCanBuildAt(s,a.id,millCase.pid,0,'mill','horizontal_mill'),
+      default:FB.aiCanBuildAt(s,a,millCase.pid,0,'mill'),nullDefault:FB.aiCanBuildAt(s,a.id,millCase.pid,0,'mill',null)};
+    millKnowledge(a,['water_power','undershot_watermill']);
+    admission.learnedDefault=FB.aiCanBuildAt(s,a,millCase.pid,0,'mill');
+    admission.learnedNullDefault=FB.aiCanBuildAt(s,a.id,millCase.pid,0,'mill',null);
+    millKnowledge(a,['water_power']);
     const options=P.aiChoices(s,a,millCase.pid,0,'mill'),choice=options.find(function(v){return v.profileId==='horizontal_mill';});
     const q=P.quote(s,millRequest(a)),privateGold=s.player.gold,gold=s.realms[a.id].treasury.gold;
-    s.realms[a.id].treasury.gold=q.cost;const lowBefore=JSON.stringify(s),poor=P.quote(s,millRequest(a));
-    const protectedFunds=!poor.allowed&&!P.commit(s,poor)&&lowBefore===JSON.stringify(s);s.realms[a.id].treasury.gold=gold;
-    const built=P.commit(s,q),paid=O.runAI(s),again=O.runAI(s);
+    function deniedUnchanged(request,owner,reason){const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),review=owner.quote(s,request);
+      return !review.allowed&&(!reason||review.reason===reason)&&!owner.commit(s,review)&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();}
+    const strategy=FB.governments.forRealm(s,a.id).use.ai,construction=strategy.construction;
+    let dispatchDenied;
+    try{strategy.construction=function(){return false;};dispatchDenied=deniedUnchanged(millRequest(a),P);}
+    finally{strategy.construction=construction;}
+    millKnowledge(a,[]);const technology=deniedUnchanged(millRequest(a),P);millKnowledge(a,['water_power']);
+    s.realms[a.id].treasury.gold=q.cost;const protectedFunds=deniedUnchanged(millRequest(a),P);
+    s.realms[a.id].treasury.gold=gold;
+    const built=P.commit(s,q),afterConstruction=s.realms[a.id].treasury.gold,idle=millEffects();
+    const noStock=!s.siteResources&&!s.buildingOperations;
+    const replayBefore=JSON.stringify(s),replayRng=FB.getRngState(),replayUid=FB.getUidCounter();
+    const constructionReplay=!P.commit(s,q)&&replayBefore===JSON.stringify(s)&&replayRng===FB.getRngState()&&replayUid===FB.getUidCounter();
+    s.realms[a.id].treasury.gold=s.realms[a.id].treasury.militaryAccrued+FB.treasuryConstructionReserves(s)[a.id];
+    const serviceProtected=deniedUnchanged(millService(a),O,'funds');
+    s.realms[a.id].treasury.gold=afterConstruction;
+    const service=O.quote(s,millService(a)),paid=O.runAI(s),paidBefore=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),again=O.runAI(s);
+    const asset=(s.buildings[millCase.pid]||[]).find(function(b){return b.id==='mill'&&b.s===0;}),
+      receipts=s.buildingOperations&&Object.values(s.buildingOperations.receipts)||[],receipt=receipts[0],
+      source=FB.siteResources.snapshot(s,millCase.pid)[0];
     return {choice:!!choice,priority:choice&&choice.def.aiBuildOrder,protectedFunds:protectedFunds,allowed:q.allowed,built:built,paid:paid,again:again,
+      admission:admission,dispatchDenied:dispatchDenied,
+      technology:technology,idle:idle,noStock:noStock,constructionReplay:constructionReplay,serviceProtected:serviceProtected,
+      serviceAllowed:service.allowed,serviceCost:service.cost,constructionPaid:gold-afterConstruction,constructionCost:q.cost,
+      servicePaid:afterConstruction-s.realms[a.id].treasury.gold,receiptCount:receipts.length,
+      receipt:receipt&&{actor:receipt.actor,paid:receipt.paid,amount:receipt.amount,assignment:receipt.assignmentId,
+        assetMatches:receipt.assetId===asset.waterOperation.id,profile:receipt.buildingProfile.id,sources:receipt.sources},
+      one:(s.buildings[millCase.pid]||[]).filter(function(b){return b.id==='mill'&&b.s===0;}).length,
+      consumed:source.consumed,available:source.available,reserved:source.reserved,
+      serviceReplay:paidBefore===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter(),
+      reserveRetained:FB.treasuryAvailable(s,a.id)>=FB.treasuryConstructionReserves(s)[a.id],
       effects:millEffects(),privateUnchanged:privateGold===s.player.gold,expense:gold-s.realms[a.id].treasury.gold,invoice:q.cost+1};
   });
   expect(r).toMatchObject({choice:true,priority:18,protectedFunds:true,allowed:true,built:true,paid:1,again:0,effects:[1,0.03],privateUnchanged:true});expect(r.expense).toBe(r.invoice);
+  expect(r.admission).toEqual({profile:true,realmProfile:true,default:false,nullDefault:false,learnedDefault:true,learnedNullDefault:true});
+  expect(r.dispatchDenied).toBe(true);
+  expect(r).toMatchObject({technology:true,idle:[0,0],noStock:true,constructionReplay:true,serviceProtected:true,serviceAllowed:true,
+    serviceCost:1,servicePaid:1,receiptCount:1,one:1,consumed:1,available:3,reserved:0,serviceReplay:true,reserveRetained:true});
+  expect(r.constructionPaid).toBe(r.constructionCost);expect(r.constructionCost).toBeGreaterThan(0);
+  expect(r.receipt).toMatchObject({actor:funding.actor,paid:1,amount:1,assignment:'mill_grinding',assetMatches:true,profile:'horizontal_mill'});
+  expect(r.receipt.sources).toEqual([{id:'mill_intake',profileId:'horizontal_mill_head',period:0}]);
+  expect(await page.evaluate(function(){return FB.state.player.gold;})).toBe(funding.privateGold);
 });
 
 test('annual public builder considers separately prioritized profiles at their own order',async function({page},info){
   await start(page,info,'river');
+  const funding=await preparePublicMill(page);
+  expect(funding.prerequisites).toEqual({direct:true,profile:true,technology:true,ordinaryTechnology:false,authority:true,service:true,funded:true});
+  expect(funding.pure).toBe(true);
   const r=await page.evaluate(function(){
-    const s=FB.state,a=millPublic();millKnowledge(a,['water_power']);
+    const s=FB.state,a={kind:'realm',id:millCase.rid},gold=s.realms[a.id].treasury.gold,
+      quote=FB.buildingProfiles.quote(s,millRequest(a));
     // Keep the real annual planner and transactions, isolate candidate priority from unrelated affordable buildings.
-    const original=FB.aiCanBuildAt,seen=[];
+    const original=FB.aiCanBuildAt,choices=FB.buildingProfiles.aiChoices,seen=[],offered=[];
     FB.aiCanBuildAt=function(s,actor,pid,slot,id,profileId){
       seen.push([id,profileId||null]);return id==='mill'&&profileId==='horizontal_mill'&&original(s,actor,pid,slot,id,profileId);
     };
-    try{FB.aiBuildingsYear(s);}finally{FB.aiCanBuildAt=original;}
+    FB.buildingProfiles.aiChoices=function(s,actor,pid,slot,id){
+      const options=choices.apply(this,arguments);
+      if(pid===millCase.pid&&slot===0&&id==='mill')offered.push(options.map(function(q){return q.profileId;}));
+      return options;
+    };
+    try{FB.aiBuildingsYear(s);}finally{FB.aiCanBuildAt=original;FB.buildingProfiles.aiChoices=choices;}
     const asset=(s.buildings[millCase.pid]||[]).find(function(b){return b.id==='mill';});
     return {profile:asset&&asset.buildingProfile.id,seen:seen.some(function(v){return v[1]==='horizontal_mill';}),
-      noService:!s.buildingOperations,effects:millEffects()};
+      noService:!s.buildingOperations,effects:millEffects(),offered:offered,allowed:quote.allowed,
+      expense:gold-s.realms[a.id].treasury.gold,invoice:quote.cost,privateGold:s.player.gold,
+      one:(s.buildings[millCase.pid]||[]).filter(function(b){return b.id==='mill'&&b.s===0;}).length,
+      noStock:!s.siteResources,reserveRetained:FB.treasuryAvailable(s,a.id)>=FB.treasuryConstructionReserves(s)[a.id]};
   });
-  expect(r).toEqual({profile:'horizontal_mill',seen:true,noService:true,effects:[0,0]});
+  expect(r).toMatchObject({profile:'horizontal_mill',seen:true,noService:true,effects:[0,0],allowed:true,one:1,noStock:true,reserveRetained:true});
+  // The same eligible alternative is offered at base order 8, then selected only at its own order 18.
+  expect(r.offered).toEqual([['horizontal_mill'],['horizontal_mill']]);
+  expect(r.expense).toBe(r.invoice);expect(r.invoice).toBeGreaterThan(0);expect(r.privateGold).toBe(funding.privateGold);
 });
 
 test('catchment permission, paid filling and finite stored discharge are separate commitments',async function({page},info){
