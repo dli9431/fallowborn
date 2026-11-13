@@ -4,7 +4,7 @@ const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,['js/bookmark_composition.js','index.html','data/bookmark_1241_operations.js','data/bookmark_1241.js',
@@ -317,7 +317,7 @@ for (const prefix of ['harbor','dune']) {
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
     await prepareGameContent(page);
     await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
-    await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+    await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
     expect(await page.evaluate(function () {
       const s=FB.state,M=FB.mobile,d=FB.campaignBookmark(s).realms.find(function (r) {return !!r.mobile;}),r=M.row(s,d.id);
       const facts=function(state){const t=FB.save.expandedSnapshot(state);

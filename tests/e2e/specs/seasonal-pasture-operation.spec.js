@@ -120,7 +120,7 @@ for(const kind of ['faroes','upland']) {
         function(t){t.chars[t.player.charId].imprisoned=true;},
         function(t){t.player.travel={};},function(t){t.player.gold=FB.buildCost(t,pid,'shieling');},
         function(t){t.turn+=10;t.date.day+=10;},function(t){
-          const kinds=FBDATA.buildingSeasonProfiles.shieling_summer.seasonKinds;
+          const kinds=FBDATA.buildingSeasonProfiles[FBDATA.buildings.shieling.seasonProfile].seasonKinds;
           if(![0,1,2,3].some(function(season){t.date.season=season;return kinds.indexOf(FB.localSeason(t,pid))<0;}))
             throw new Error('The fixture requires an unavailable local season');
         },function(t){
@@ -254,6 +254,9 @@ test('AI opens no inputless or unfunded grazing window and rechecks current rese
   const custom=JSON.parse(JSON.stringify(examples.faroes)),start=custom.startScenarios[0];
   start.rulerRealmId='buyer_court';start.fixedProvinceId='pasture_buyer';start.characterName='Odo Vale';start.tier=4;
   custom.bookmarks.pasture_faroes.date.season=1;
+  // The construction revision has no standing outpost and cannot inherit its opening stock.
+  custom.bookmarks.pasture_faroes.revisions.new_works.productionSites=
+    JSON.parse(JSON.stringify(custom.bookmarks.pasture_faroes.productionSites));
   // An explicit fictional prior allocation tests NPC processing reserves; NPC farm harvest is not an adapter here.
   custom.bookmarks.pasture_faroes.productionSites[0].openingLots=[{goodId:'parent_farm_allocation',quantity:1}];
   await boot(page,info,'faroes',custom);

@@ -112,6 +112,8 @@ for (const prefix of ['harbor', 'dune']) {
 
   test(prefix + ' direct entry replays the same guarded world from a fresh boot', async function ({page}, info) {
     await imported(page, info, prefix);
+    // Match the browser profile as well as the seed: onboarding is offered once.
+    await page.evaluate(function(){FB.game.uiPrefs.onboardingStarted=true;FB.game.saveUiPrefs();});
     await begin(page, prefix);
     const snapshot = function () { return page.evaluate(function () {
       const s = FB.save.expandedSnapshot(FB.state);

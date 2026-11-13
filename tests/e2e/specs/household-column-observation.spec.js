@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {
   harbor:require('../fixtures/authoring/expedition-dispatch-harbor.json'),
@@ -57,7 +57,7 @@ async function imported(page, info, prefix, input) {
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(prefix + '_column_notice');
   },prefix);
-  await beginBookmark(page,info,prefix + '_world',prefix + '_household');
+  await beginBookmarkFromTitle(page,prefix + '_world',prefix + '_household');
   await page.evaluate(function (prefix) {
     const s = FB.state, b = FB.campaignBookmark(s), d = b.realms.find(function (r) { return r.mobile; });
     const sourceId = prefix + '_column_campaign', id = prefix + '_column_notice';
