@@ -319,7 +319,7 @@ test('winter interruption and input expiry retain funded work without free compl
   expect(r).toEqual({work:true,winter:false,status:'cancelled',days:1,paid:3,again:0,output:0,retained:true});
 });
 
-test('malformed imports and scenery references reject detached; matching saves reject forged stock and missing provenance',async function({page},info){
+test('malformed imports and scenery references reject detached',async function({page},info){
   await openGame(page,info);
   const validation=await page.evaluate(function(example){
     const before=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -334,6 +334,9 @@ test('malformed imports and scenery references reject detached; matching saves r
       pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
   },examples.faroes);
   expect(validation).toEqual({valid:[],bad:[true,true,true,true,true,true],pure:true});
+});
+
+test('matching pasture saves reject forged stock and missing provenance',async function({page},info){
   await boot(page,info,'faroes');await allocateFarm(page,'faroes');await prepare(page);
   const bad=await page.evaluate(function(){
     const s=FB.state,changes=[function(t){t.production.lots[0].remaining++;},function(t){delete t.production.economy;},
