@@ -138,16 +138,53 @@ for(const label of ['harbor','upland']) {
     const result=await page.evaluate(function(){
       const C=formationCase,P=FB.expeditionPreparation,story=FB.stories.get(C.id);
       return ['wait','refuse','expired','interrupted'].map(function(action){
-        const s=JSON.parse(JSON.stringify(FB.state)),t=C.record(s),before=JSON.stringify([s.population,s.market,s.realms,s.player.gold]);
-        if(action==='wait') {C.authorize(s);P.commit(s,P.review(s,C.id,'wait',C.leader(s)));}
-        else if(action==='refuse') P.commit(s,P.review(s,C.id,'refuse',t.provider.characterId));
-        else {if(action==='expired') s.turn=t.endTurn;else s.chars[t.provider.characterId].dead=true;story.day(s,t);}
+        const s=JSON.parse(JSON.stringify(FB.state)),t=C.record(s),provider=JSON.stringify(t.provider),
+          reserves=JSON.stringify(t.reserves),rng=FB.getRngState(),uid=FB.getUidCounter();
+        function resources(){return JSON.stringify([s.population,s.market,s.player.gold,s.treasuryAccounting,
+          Object.keys(s.realms).map(function(id){return [id,s.realms[id].treasury];})]);}
+        const initialResources=resources();
+        if(action==='expired') s.turn=t.endTurn;
+        if(action==='interrupted') {
+          const c=s.chars[t.provider.characterId];c.dead=true;
+          // Stage the court death boundary without advancing succession or the daily loop.
+          if(c.royalLine) FB.courtMemberDied(s,s.realms[c.royalLine.realmId].succession.members[c.royalLine.memberId],c);
+        }
+        const before=JSON.stringify([s.population,s.market,s.realms,s.player.gold,s.treasuryAccounting]),
+          revision=t.revision;
+        let committed=true;
+        if(action==='wait') committed=C.authorize(s) && P.commit(s,P.review(s,C.id,'wait',C.leader(s)));
+        else if(action==='refuse') committed=P.commit(s,P.review(s,C.id,'refuse',t.provider.characterId));
+        else story.day(s,t);
         const appropriate=action==='wait' ? t.status==='preparing' && !C.form(s) : t.status==='closed' &&
-          t.reason===(action==='refuse' ? 'refused' : action);
-        return appropriate && !FB.mobile.row(s,C.rid) && before===JSON.stringify([s.population,s.market,s.realms,s.player.gold]) && story.validate(t,s)===undefined;
+          t.reason===(action==='refuse' ? 'refused' : action) && t.endedTurn===s.turn &&
+          t.revision===revision+1 && t.reserves.length===0 && JSON.stringify(t.released)===reserves;
+        const receipt=JSON.stringify(s),noForm=!C.form(s) && !C.form(s);
+        story.day(s,t);
+        function rejects(change){const v=JSON.parse(JSON.stringify(s)),r=C.record(v);change(v,r);
+          const bytes=JSON.stringify(v);
+          try{story.validate(r,v);return false;}catch(error){return bytes===JSON.stringify(v);}}
+        const result={action:action,committed:committed,appropriate:appropriate,
+          original:provider===JSON.stringify(t.provider),zero:FB.treasuryAvailable(s,C.rid)===0,
+          noHost:!FB.mobile.row(s,C.rid) && !FB.mobile.host(s,C.rid) && !s.armies.some(function(a){return a.realm===C.rid;}),
+          conserved:initialResources===resources() && before===JSON.stringify([s.population,s.market,s.realms,s.player.gold,s.treasuryAccounting]),
+          noReplay:noForm && receipt===JSON.stringify(s),valid:story.validate(t,s)===undefined,
+          malformed:[rejects(function(v,r){r.endTurn++;}),rejects(function(v,r){r.endedTurn=v.turn+1;})],
+          deterministic:rng===FB.getRngState() && uid===FB.getUidCounter()};
+        if(action==='expired') result.earlyExpiry=rejects(function(v,r){r.endedTurn=r.endTurn-1;});
+        if(action==='interrupted' && t.provider.appointmentId===null) {
+          result.incoherentDeath=rejects(function(v,r){const c=v.chars[r.provider.characterId];
+            v.realms[c.royalLine.realmId].succession.members[c.royalLine.memberId].alive=true;});
+        }
+        return result;
       });
     });
-    expect(result).toEqual(Array(4).fill(true));
+    expect(result).toEqual(['wait','refuse','expired','interrupted'].map(function(action){
+      const expected={action:action,committed:true,appropriate:true,original:true,zero:true,noHost:true,
+        conserved:true,noReplay:true,valid:true,malformed:[true,true],deterministic:true};
+      if(action==='expired') expected.earlyExpiry=true;
+      if(action==='interrupted' && label==='harbor') expected.incoherentDeath=true;
+      return expected;
+    }));
   });
 
   test(label+' NPC policy shares the canonical consent review without contributing private or public money',async function({page},info){
