@@ -214,7 +214,11 @@ test('exhausted resources suspend a ticket, player command withholds AI and exac
 
 test('single-host raw orders pause intent and matching legacy records upgrade only through a live commit',async function ({page},info) {
   const input=JSON.parse(JSON.stringify(examples.harbor)),t=input.bookmarks.harbor_world.realms.find(function (r) {return r.mobile;}).mobile;
-  delete t.columns;t.expeditionProgram.steps.forEach(function (a) {a.columnId=null;});
+  delete t.columns;
+  // Camp loading belongs to columns; this variation keeps single-host adapters.
+  t.expeditionProgram.steps=t.expeditionProgram.steps.filter(function(a){return a.adapter!=='supply' ||
+    ['load','unload'].indexOf(a.terms.action)<0;});
+  t.expeditionProgram.steps.forEach(function (a) {a.columnId=null;});
   await start(page,info,'harbor',input);
   const result=await page.evaluate(function () {
     const C=dispatchCase,s=FB.state,E=FB.expeditionPrograms,M=FB.mobile,r=M.row(s,C.rid),a=C.host(s);
