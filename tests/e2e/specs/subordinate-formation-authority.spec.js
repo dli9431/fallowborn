@@ -234,7 +234,8 @@ for(const prefix of ['harbor','dune']) {
         funded=C.localGift(s),authorized=C.authorize(s),q=P.review(s,C.id,'form',C.leader(s)),
         owners=JSON.stringify([s.owner,s.holder]),sovereign=s.owner[C.origin],
         enemy=Object.keys(s.realms).find(function(rid){return rid!==sovereign && rid!==C.rid && s.realms[rid].alive;}),
-        war=FB.registerOrdinaryWar(s,enemy,{enemy:sovereign,target:C.origin,legacy:false,occupations:{}});
+        attacker=prefix==='dune'?sovereign:enemy,defender=attacker===sovereign?enemy:sovereign,
+        war=FB.registerOrdinaryWar(s,attacker,{enemy:defender,target:s.realms[defender].capital,legacy:false,occupations:{}});
       if(!war)throw new Error('Occupation requires distinct actual war parties');
       war.occupations[C.origin]={occupied:true,progress:100,homeRealm:sovereign};
       const before=JSON.stringify(s),rejected=!P.commit(s,q),fresh=!P.review(s,C.id,'form',C.leader(s)).allowed,
@@ -500,15 +501,15 @@ test('a supported court release changes live account aliases while preserving or
   mod.startScenarios.find(function(s){return s.id==='dune_home_start';}).governmentForm='dune_lineage';
   await begin(page,info,'dune',mod);
   const result=await page.evaluate(function(){
-    const s=FB.state,C=subordinateCase,t=C.record(s),tree=s.realms.player.succession,
-      heir=Object.values(tree.members).find(function(m){return m.parentId===tree.rulerMemberId && m.alive!==false;});
-    if(!heir)throw new Error('Court release requires an existing successor');
-    heir.born=s.date.year-16;
-    const child=s.chars[heir.charId || FB.courtCharacterId(heir.id)];if(child)child.born=heir.born;
+    const s=FB.state,C=subordinateCase,t=C.record(s);
     const old=JSON.stringify([t.bindings,t.openingJurisdiction]),
       cash=FB.treasuryPublicAccountSnapshot(s,'player').gold,me=s.chars[s.player.charId],
       released=FB.governmentSelection.releasePlayerCourt(s,me,true),afterRelease=FB.treasuryPublicAccountSnapshot(s,released).gold;
-    FB.stories.get(C.id).day(s,t);const original=old===JSON.stringify([t.bindings,t.openingJurisdiction]),
+    // The vassal's contested vacancy does not install a replacement ruler.
+    const story=FB.stories.get(C.id);story.day(s,t);
+    const retainedPending=t.status==='preparing' && t.reason===null;
+    FB.courtMemberDied(s,s.realms[released].succession.members[me.royalLine.memberId],me);story.day(s,t);
+    const original=old===JSON.stringify([t.bindings,t.openingJurisdiction]),
       save=JSON.parse(FB.save.serialize());FB.save.restore(save);
     if((FB.realmRulerCharacterSnapshot(FB.state,released)||{}).id===C.record(FB.state).provider.characterId ||
         cash!==FB.treasuryPublicAccountSnapshot(FB.state,released).gold || C.record(FB.state).reason!=='interrupted')
@@ -517,12 +518,12 @@ test('a supported court release changes live account aliases while preserving or
         reason:C.record(FB.state).reason,provider:C.record(FB.state).provider,
         currentRuler:(FB.realmRulerCharacterSnapshot(FB.state,released)||{}).id,
         selection:FB.state.authority.governments[released].selection}));
-    return {released:released,original:original,saved:old===JSON.stringify([C.record(FB.state).bindings,C.record(FB.state).openingJurisdiction]),
+    return {released:released,retainedPending:retainedPending,original:original,saved:old===JSON.stringify([C.record(FB.state).bindings,C.record(FB.state).openingJurisdiction]),
       provider:C.record(FB.state).provider.realmId,alias:FB.state.start.publicTreasury.realmId,
       cash:cash===FB.treasuryPublicAccountSnapshot(FB.state,'dune_gate').gold,
       closed:C.record(FB.state).reason==='interrupted',noHost:!FB.mobile.row(FB.state,C.rid)};
   });
-  expect(result).toEqual({released:'dune_gate',original:true,saved:true,provider:'dune_gate',alias:'dune_gate',cash:true,closed:true,noHost:true});
+  expect(result).toEqual({released:'dune_gate',retainedPending:true,original:true,saved:true,provider:'dune_gate',alias:'dune_gate',cash:true,closed:true,noHost:true});
 });
 
 test('original command issuer succession invalidates consent without granting the sovereign local authority',async function({page},info){

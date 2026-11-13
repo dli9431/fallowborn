@@ -77,7 +77,9 @@ for(const prefix of ['harbor','dune']) {
       await importWorld(page,info,prefix);
       await beginHome(page,prefix,'baseline',entry);
       const result=await page.evaluate(function(prefix) {
-        function facts(s){const t=FB.save.expandedSnapshot(s);return FB.contentValues.canonical([t.chars,t.realms,t.authority,t.stories]);}
+        function facts(s){const t=FB.save.expandedSnapshot(s);
+          if(t.authority.schema===undefined)t.authority.schema=FB.save.FORMAT.authoritySchema;
+          return FB.contentValues.canonical([t.chars,t.realms,t.authority,t.stories]);}
         const s=FB.state,H=FB.homeAuthority,before=facts(s),
           actor=FB.bookmarkActor(s,prefix+'_home_ruler');
         FBDATA.bookmarks[prefix+'_world'].revision='local_policy';
@@ -171,6 +173,7 @@ for(const prefix of ['harbor','dune']) {
     const result=await page.evaluate(function(prefix) {
       const P=FB.expeditionPreparation,id=prefix+'_preparation',snapshots=[];
       function facts(s) {const t=FB.save.expandedSnapshot(s);
+        if(t.authority.schema===undefined)t.authority.schema=FB.save.FORMAT.authoritySchema;
         return FB.contentValues.canonical([t.homeAuthorityPolicies,t.chars,t.authority,t.stories,t.realms,t.player.gold,t.population,t.market,t.armies]);}
       function restore() {const serialized=FB.save.serialize(),before=facts(FB.state),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
         FB.save.restore(JSON.parse(serialized));FB.save.restore(JSON.parse(serialized));
