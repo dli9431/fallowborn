@@ -113,7 +113,7 @@
       unchanged:before === canonical(FB.state),text:text};
   }
   window.matureSaveProbe = {
-    run:function (compact) {
+    run:function (compact, reference) {
       var S = FB.save, rng = FB.getRngState() >>> 0, uid = FB.getUidCounter(), catalogue = JSON.stringify(FBDATA);
       // Finish ordinary load normalization once, before the matched workload.
       // No years of daily play are represented by this directly staged state.
@@ -124,7 +124,10 @@
         compaction.push({ms:sample.ms,changed:sample.value}); twins.push(canonical(twin));
       }
       var compactCounts = counts(function () { compact(copy(source)); });
+      // Reference work is outside all elapsed and counted samples.
+      var expected = reference && copy(source), referenceChanged = reference && reference(expected);
       var changed = compact(FB.state), deterministic = twins.every(function (text) { return text === canonical(copy(FB.state)); });
+      var referenceParity = reference ? referenceChanged === changed && canonical(expected) === canonical(FB.state) : null;
       var after = measure(), facts = savedFacts(after.text), restores = [], persistence = [], noops = [];
       for (var n = 0; n < 3; n++) {
         var input = JSON.parse(after.text), inputFacts = canonical(input);
@@ -164,6 +167,7 @@
         savedStateKeys:Object.keys(JSON.parse(S.serialize()).state).sort(),format:S.FORMAT,signature:FB.mods.sig(),
         before:before,after:after,compaction:compaction,compactCounts:compactCounts,changed:changed,
         deterministic:deterministic,restores:restores,noops:noops,persistence:persistence,
+        referenceParity:referenceParity,
         identity:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter(),catalogue:catalogue === JSON.stringify(FBDATA),
         failure:FB.ledgerRetention.lastFailure};
     }

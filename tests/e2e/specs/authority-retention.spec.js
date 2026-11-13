@@ -249,6 +249,7 @@ test('mature customary save separates retained history, validation, compaction a
   });
   await beginBookmark(page,info,'1096');
   await page.addScriptTag({path:require('path').join(__dirname,'../fixtures/performance-mature-save/probe.js')});
+  await page.addScriptTag({path:require('path').join(__dirname,'../fixtures/performance-mature-save/authority-reference.js')});
   const result = await page.evaluate(function () {
     const s = FB.state, year = s.date.year;
     FB.authorityYear(s);
@@ -260,12 +261,15 @@ test('mature customary save separates retained history, validation, compaction a
     history.push({turn:cutoff,year:year + 21,event:'disputed',evidence:null});
     history.push({turn:cutoff + 1,year:year + 21,event:'abandoned',evidence:null});
     history.push({turn:1,year:year,event:'judgment',evidence:'mature-permanent-proof'});
-    return matureSaveProbe.run(function (state) { return FB.authorityCompact(state); });
+    return matureSaveProbe.run(function (state) { return FB.authorityCompact(state); },authorityRetentionReference);
   });
   await info.attach('mature-customary-save.json',{body:JSON.stringify(result),contentType:'application/json'});
   console.log('mature customary save ' + JSON.stringify(result));
   expect(result).toMatchObject({retentionDays:3600,backend:'localstorage',changed:true,deterministic:true,identity:true,catalogue:true,failure:null});
   expect(result.before.unchanged && result.after.unchanged).toBe(true);
+  expect(result.referenceParity).toBe(true);
+  expect(result.compactCounts).toEqual({graphs:[],snapshotRequests:0,snapshotBuilds:0,
+    expandedInputUtf8Bytes:0,authorityValidations:1});
   expect(result.before.inventory.history.eligible.count).toBeGreaterThan(0);
   expect(result.after.inventory.history.eligible.count).toBe(0);
   expect(result.after.inventory.history.withinWindow).toEqual(result.before.inventory.history.withinWindow);
@@ -278,6 +282,68 @@ test('mature customary save separates retained history, validation, compaction a
   expect(result.noops.map(function (sample) { return sample.changed; })).toEqual([false,false,false]);
   for (const sample of result.restores) expect(sample).toMatchObject({completeParity:true,inputUnchanged:true});
   for (const sample of result.persistence) expect(sample).toMatchObject({accepted:true,storedPrefix:'FBC1.',slotParity:true,exportParity:true});
+});
+
+
+test('customary compaction matches graph eligibility and rejects failed detached folds atomically', async function ({page}, info) {
+  await beginBookmark(page,info,'1096');
+  await page.addScriptTag({path:require('path').join(__dirname,'../fixtures/performance-mature-save/authority-reference.js')});
+  const result = await page.evaluate(function () {
+    const s = FB.state, R = FB.ledgerRetention, validate = FB.save.v4.validateAuthority;
+    FB.authorityYear(s);
+    s.turn = 7200; s.date.year += 20; s.date.day = 1;
+    const before = JSON.stringify(s), environment = JSON.stringify([FBDATA,FB.getRngState(),FB.getUidCounter()]);
+    function copy(v) { return JSON.parse(JSON.stringify(v)); }
+    const variants = [];
+    // Exercise inclusive cutoff, current/future guards, all observation kinds,
+    // permanent/unknown evidence, existing summaries and non-integer turns.
+    for (const days of [3600,720]) {
+      const t = copy(s), cutoff = t.turn - days, first = t.authority.rights[0];
+      first.retiredHistory = {possession:7,disputed:3,abandoned:2};
+      for (const event of ['possession','disputed','abandoned','established','future-kind']) {
+        for (const turn of [1,cutoff-1,cutoff,cutoff+1,t.turn-1,t.turn,t.turn+1,1.5,Number.MAX_SAFE_INTEGER+1,null]) {
+          first.history.push({turn:turn,event:event,evidence:null});
+        }
+        first.history.push({turn:1,event:event,evidence:'permanent-proof'});
+      }
+      first.history.push({event:'possession'});
+      variants.push({state:t,days:days,fail:false});
+      variants.push({state:copy(t),days:days,fail:true});
+      const recent = copy(s);
+      recent.authority.rights.forEach(function (right) { right.history = [{turn:recent.turn,event:'possession'}]; });
+      variants.push({state:recent,days:days,fail:false});
+    }
+    const days = R.days, cases = [];
+    try {
+      for (const variant of variants) {
+        R.days = function () { return variant.days; };
+        const outcomes = [];
+        for (const compact of [authorityRetentionReference,FB.authorityCompact]) {
+          const t = copy(variant.state), input = JSON.stringify(t), root = t.authority, staged = [];
+          FB.save.v4.validateAuthority = function (authority, candidate) {
+            staged.push({text:JSON.stringify(candidate),detached:authority !== root});
+            if (variant.fail) throw new Error('retention validation sentinel');
+            return validate.call(FB.save.v4,authority,candidate);
+          };
+          const changed = compact(t), once = JSON.stringify(t), failure = R.lastFailure;
+          const again = compact(t);
+          outcomes.push({changed:changed,again:again,state:once,staged:staged,failure:failure,
+            unchanged:input === once,stable:once === JSON.stringify(t)});
+        }
+        cases.push({equal:JSON.stringify(outcomes[0]) === JSON.stringify(outcomes[1]),
+          changed:outcomes[1].changed,unchanged:outcomes[1].unchanged,stable:outcomes[1].stable,
+          detached:outcomes[1].staged.every(function (entry) { return entry.detached; }),
+          validations:outcomes[1].staged.length});
+      }
+    } finally { R.days = days; FB.save.v4.validateAuthority = validate; R.lastFailure = null; }
+    return {cases:cases,source:before === JSON.stringify(s),environment:environment === JSON.stringify([FBDATA,FB.getRngState(),FB.getUidCounter()])};
+  });
+  expect(result.source && result.environment).toBe(true);
+  expect(result.cases).toHaveLength(6);
+  for (const item of result.cases) expect(item).toMatchObject({equal:true,stable:true,detached:true});
+  expect(result.cases.map(function (item) { return item.changed; })).toEqual([true,false,false,true,false,false]);
+  expect(result.cases.map(function (item) { return item.validations; })).toEqual([1,2,0,1,2,0]);
+  expect(result.cases.map(function (item) { return item.unchanged; })).toEqual([false,true,true,false,true,true]);
 });
 
 
