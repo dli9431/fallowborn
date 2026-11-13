@@ -237,9 +237,9 @@ for(const prefix of ['harbor','dune']) {
       let war;
       if(FB.civicGovernment.active(s,enemy)) {
         s.realms[enemy].treasury.gold=10000;
-        const cause={type:'aggression',enemy:sovereign,target:C.origin},
+        const cause={type:'aggression',enemy:sovereign,target:s.realms[sovereign].capital},
           declaration=FB.civicGovernment.warQuote(s,enemy,{causes:[cause]});
-        if(!FB.civicGovernment.launchWar(s,declaration))throw new Error('Civic occupation declaration refused: '+JSON.stringify(declaration));
+        if(!FB.civicGovernment.launchWar(s,declaration))throw new Error('Civic occupation declaration refused: '+declaration.reason);
         war=FB.ordinaryWarBetween(s,enemy,sovereign);
       } else war=FB.registerOrdinaryWar(s,enemy,{enemy:sovereign,target:C.origin,legacy:false,occupations:{}});
       if(!war)throw new Error('Occupation requires distinct actual war parties');
