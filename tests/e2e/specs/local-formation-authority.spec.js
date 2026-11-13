@@ -122,13 +122,13 @@ for(const label of ['harbor','upland']) {
           s.population,s.market,s.armies,s.authority,s.chars];
       });}
       function restore(){const before=facts(FB.state),save=FB.save.serialize();FB.save.restore(JSON.parse(save));
-        FB.save.restore(JSON.parse(save));return before===facts(FB.state);}
+        FB.save.restore(JSON.parse(save));return assertRestoreFacts(facts(FB.state),before);}
       const pending=restore();FB.state.player.gold=500;
       const gift=P.commit(FB.state,P.review(FB.state,C.id,'contribute',FB.state.player.charId)),contributed=restore(),
         okay=C.fund(FB.state) && C.authorize(FB.state) && C.form(FB.state),formed=okay && restore(),
         before=facts(FB.state),again=!C.form(FB.state);
       FB.mobile.initialize(FB.state,FB.campaignBookmark(FB.state).realms);FB.stories.start(FB.state);
-      return {pending:pending,gift:gift,contributed:contributed,formed:formed,again:again,noReplay:before===facts(FB.state),valid:FB.mobile.validate(FB.state)};
+      return {pending:pending,gift:gift,contributed:contributed,formed:formed,again:again,noReplay:assertRestoreFacts(facts(FB.state),before),valid:FB.mobile.validate(FB.state)};
     });
     expect(result).toEqual({pending:true,gift:true,contributed:true,formed:true,again:true,noReplay:true,valid:true});
   });

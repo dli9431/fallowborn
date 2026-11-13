@@ -101,7 +101,7 @@ test('a pending review restores without AI acknowledgment or payment and cannot 
     });}
     const resources=facts(s);
     FB.save.restore(JSON.parse(FB.save.serialize()));
-    const pending=before===JSON.stringify(FB.state.stories[id]),preserved=resources===facts(FB.state);
+    const pending=before===JSON.stringify(FB.state.stories[id]),preserved=assertRestoreFacts(facts(FB.state),resources);
     const missing=JSON.parse(FB.save.serialize());delete missing.state.stories[id];
     const bytes=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
     try {FB.save.restore(missing);} catch(error) {rejected=true;}

@@ -72,7 +72,7 @@ test('an original opponent adopted by a ruler start retains the canonical player
       e.opponent.declaredRealmId==='dune_gate' && e.opponent.characterId===s.player.charId && s.start.rulerRealmId==='dune_gate';
     FB.save.restore(JSON.parse(FB.save.serialize()));
     const restored=FB.state;
-    return !!valid && before===facts(restored);
+    return !!valid && assertRestoreFacts(facts(restored),before);
   });
   expect(result).toBe(true);
 });
@@ -109,7 +109,7 @@ for (const prefix of ['harbor','dune']) {
         reserve:r.members.reduce(function (n,m) {return n+m.reserve.reduce(function (n,c) {return n+c.count;},0);},0),
         noConquest:FB.realmTerritory(s,C.rid).length===0 && M.migration(s,C.rid).at===t.origin &&
           hosts.every(function (h) {return h.host.from===h.host.at && !h.host.mobileCourt && !h.host.path.length;}),
-        repeated:repeated,restored:saved===facts(restored),
+        repeated:repeated,restored:assertRestoreFacts(facts(restored),saved),
         tech:FBDATA.techImpactReviews.features.mobile_opening_campaigns.mode};
     });
     expect(result).toEqual({count:prefix==='harbor' ? 2 : 1,
@@ -302,9 +302,9 @@ test('peace, cancelled intent, actual losses, dead original people and moved or 
     });}
     const before=facts(s),rng=FB.getRngState(),uid=FB.getUidCounter();
     FB.save.restore(JSON.parse(FB.save.serialize()));
-    const restored=FB.state,row=M.row(restored,C.rid),same=before===facts(restored);
+    const restored=FB.state,row=M.row(restored,C.rid),same=assertRestoreFacts(facts(restored),before);
     M.initialize(restored,[C.d]);E.day(restored);
-    return {same:same,noReplay:before===facts(restored),wars:FB.realmWars(restored,C.rid).length,
+    return {same:same,noReplay:assertRestoreFacts(facts(restored),before),wars:FB.realmWars(restored,C.rid).length,
       cancelled:row.expeditionProgram.status,losses:row.accounting.dead,moved:restored.armies.find(function (v) {return v.id===a.id;}).at,
       retired:row.columns.entries[1].status,streams:rng===FB.getRngState() && uid===FB.getUidCounter()};
   });

@@ -79,7 +79,7 @@ for (const prefix of ['harbor','dune']) {
         active:snapshot.effective,external:!!(snapshot.superior && snapshot.superior.externalAuthorityId),
         noInventedPerson:prefix!=='dune' || !FB.bookmarkActor(restored,'dune_authorizer'),
         noLand:FB.realmTerritory(restored,rid).length===0,
-        restored:record===facts(restored),valid:M.validate(restored)};
+        restored:assertRestoreFacts(facts(restored),record),valid:M.validate(restored)};
     },prefix);
     expect(result).toEqual({pure:true,independent:{schema:1,kind:'independent'},patron:null,total:true,treasury:true,
       food:true,oneHost:true,active:true,external:prefix==='dune',noInventedPerson:true,noLand:true,restored:true,valid:true});
@@ -340,7 +340,7 @@ test('an independent import needs no former patron court and restores without in
       independent:M.migration(restored,rid).sponsorship.kind,command:M.commandValid(restored,rid),
       noRequest:FB.federateRequest(restored,m.id,'land')===false,
       noLand:FB.realmTerritory(restored,rid).length===0,
-      unchanged:record===facts(restored),
+      unchanged:assertRestoreFacts(facts(restored),record),
       identity:rng===FB.getRngState() && uid===FB.getUidCounter(),valid:M.validate(restored)};
   });
   expect(result).toEqual({absent:true,patron:null,independent:'independent',command:true,noRequest:true,

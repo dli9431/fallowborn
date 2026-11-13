@@ -328,7 +328,7 @@ for (const label of ['harbor','upland']) {
         noPlayerCredit:noPlayerCredit,settled:settled,result:rec.result,captured:c.settlement.captured,
         awards:archive.awards.length>0,once:x.greatHolyWarHistory.campaigns.filter(function (r) {return r.id===c.id;}).length,
         repeat:repeat,camp:M.migration(x,ids.rid).at===camp,
-        exact:before===facts(x),
+        exact:assertRestoreFacts(facts(x),before),
         random:(rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter()};
     },ids);
     expect(result).toEqual({initial:label==='harbor' ? 'started' : 'pending',noMarch:true,mustered:true,one:true,

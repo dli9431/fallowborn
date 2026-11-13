@@ -11,6 +11,25 @@ async function installRestoreFacts(page) {
         uid:FB.getUidCounter()
       });
     };
+    window.assertRestoreFacts = function (actual, expected) {
+      if (actual === expected) return true;
+      const differences=[];
+      function visit(a,b,path) {
+        if (a===b || differences.length>=12) return;
+        if (a && b && typeof a==='object' && typeof b==='object' && Array.isArray(a)===Array.isArray(b)) {
+          Array.from(new Set(Object.keys(a).concat(Object.keys(b)))).sort().forEach(function (key) {
+            visit(a[key],b[key],path+'.'+key);
+          });
+        } else differences.push(path+': '+JSON.stringify(a)+' != '+JSON.stringify(b));
+      }
+      try {visit(JSON.parse(actual),JSON.parse(expected),'restore');}
+      catch (error) {
+        let index=0;while(index<actual.length && actual[index]===expected[index])index++;
+        differences.push('offset '+index+': '+actual.slice(Math.max(0,index-100),index+300)+' != '+
+          expected.slice(Math.max(0,index-100),index+300));
+      }
+      throw new Error('Restore facts differ:\n'+differences.join('\n'));
+    };
   });
 }
 
