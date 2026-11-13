@@ -3,7 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 const mobileFilter = require('./mobile-filter');
-const files = ['js/government_aristocracy.js','js/model.js','js/mobile_confederations.js','js/world.js'];
+const guard = require('./guard');
+const audit = require('../residual-read-audit/probe');
+const files = ['js/government_aristocracy.js','js/model.js','js/mobile_confederations.js','js/world.js','js/mobile_guard.js'];
 const sources = files.map(function (file) { return fs.readFileSync(path.resolve(__dirname,'../../../..',file),'utf8').replace(/\r\n/g,'\n'); });
 function source(file, text, reference) {
   function replace(before,after) {
@@ -38,17 +40,19 @@ function source(file, text, reference) {
       replace('        var id = ids[i];',
         '        var id = ids[i]; if (window.fiscalReadCounts) window.fiscalReadCounts.slots++;');
     }
-  } else {
+  } else if (file === files[3]) {
     replace('  FB.campaignBookmark = function (state) {',
       '  FB.campaignBookmark = function (state) {\n    if (window.fiscalReadCounts) window.fiscalReadCounts.worlds = (window.fiscalReadCounts.worlds || 0)+1;');
-  }
+  } else text = guard.instrument(text,!!reference);
   return text;
 }
-async function route(page,reference) {
+async function route(page,reference,diagnostic) {
   for (let i=0;i<files.length;i++) {
     await page.unroute('**/'+files[i]);
     await page.route('**/'+files[i],function (request) {
-      return request.fulfill({contentType:'application/javascript',body:source(files[i],sources[i],reference)});
+      let body = source(files[i],sources[i],reference);
+      if (diagnostic && audit.paths.indexOf(files[i]) >= 0) body = audit.instrument(files[i],body);
+      return request.fulfill({contentType:'application/javascript',body:body});
     });
   }
 }

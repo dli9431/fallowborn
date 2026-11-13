@@ -6,6 +6,8 @@ const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const source = require('../fixtures/fiscal-read-reuse/source');
 const journey = require('../fixtures/fiscal-read-reuse/journey');
+const audit = require('../fixtures/residual-read-audit/probe');
+const guard = require('../fixtures/fiscal-read-reuse/guard');
 
 dependsOnRuntime(__filename,['js/government_aristocracy.js','js/lordships.js','js/world.js','js/model.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_guard.js','js/justice.js',
@@ -15,17 +17,22 @@ dependsOnRuntime(__filename,['js/government_aristocracy.js','js/lordships.js','j
 
 for (const start of journey.starts) {
   test('fiscal and office read reuse preserves ordinary and staged boundary days for '+start.scenario,async function ({page},info) {
-    const outputs = [], counts = [];
+    const outputs = [], counts = [], diagnostics = [];
     for (const reference of [true,false]) {
-      await source.route(page,reference);
+      await source.route(page,reference,!reference);
       await journey.begin(page,info,start);
+      if (!reference) {
+        await page.evaluate(audit.install);
+        await page.evaluate(guard.observe);
+        await page.evaluate(function (body) { window.__guardFacts = (0,eval)('('+body+')'); },guard.facts.toString());
+      }
       const result = await page.evaluate(async function () {
         window.fiscalReadCounts = {builds:0,requests:0,leaders:0,slots:0,officeEntries:0,fiscalReads:0};
         async function hash(text) {
           const bytes = await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));
           return Array.from(new Uint8Array(bytes)).map(function (n) { return n.toString(16).padStart(2,'0'); }).join('');
         }
-        const states = [];
+        const states = [], phases = [], p = window.__residualReadAudit;
         async function snapshot(phase) {
           const s = FB.state;
           states.push({phase:phase,date:JSON.parse(JSON.stringify(s.date)),turn:s.turn,
@@ -42,13 +49,22 @@ for (const start of journey.starts) {
             s.date.season = season; s.date.day = 90;
           }
           const turn = s.turn;
+          const before = p && window.__guardFacts();
+          if (p) { p.reset(); window.__guardReadCounts = {calls:0,inMobileRead:0,guarded:0,predicates:0,rows:0}; }
+          const started = performance.now();
           FB.game.passDay({deferUi:true});
+          const instrumentedMs = performance.now()-started;
+          if (p) phases.push({phase:phase,days:s.turn-turn,instrumentedMs:instrumentedMs,before:before,
+            after:window.__guardFacts(),guards:window.__guardReadCounts,report:p.snapshot()});
           if (s.turn !== turn+1) throw new Error('Unexpected day advancement');
           await snapshot(phase);
         }
-        return {states:states,counts:window.fiscalReadCounts};
+        if (p) { window.__stopGuardRead(); p.stop(); }
+        return {states:states,counts:window.fiscalReadCounts,phases:phases,
+          identity:{version:FB.VERSION,start:JSON.parse(JSON.stringify(FB.state.start)),userAgent:navigator.userAgent}};
       });
       outputs.push(result.states); counts.push(result.counts);
+      if (!reference) diagnostics.push(result);
     }
     expect(outputs[1]).toEqual(outputs[0]);
     expect(counts[1].requests).toBe(counts[0].requests);
@@ -58,6 +74,18 @@ for (const start of journey.starts) {
     else expect(counts[1].fiscalReads).toBe(0);
     if (start.bookmark !== '1096') expect(counts[1].leaders).toBeLessThan(counts[0].leaders);
     await info.attach('read-reuse-counts',{body:JSON.stringify({start:start,reference:counts[0],candidate:counts[1]}),contentType:'application/json'});
+    for (const row of diagnostics[0].phases) {
+      expect(row.days).toBe(1);
+      expect(row.report.cadences[row.phase].days).toBe(1);
+      expect(row.report.total.mobileFilterArrays).toBe(0);
+      expect(row.report.total.mobileSlots).toBe(row.report.total.mobileEntries*row.before.counts.governments);
+      expect(row.guards.inMobileRead).toBeLessThanOrEqual(row.guards.calls);
+      expect(row.guards.predicates).toBeLessThanOrEqual(row.guards.calls);
+      expect(row.before.bytes.state).toBeGreaterThan(row.before.bytes.governments);
+    }
+    expect(await page.evaluate(function () { return !window.__residualReadAudit && !window.__stopGuardRead; })).toBe(true);
+    await info.attach('guard-boundary-counts',{body:JSON.stringify({start:start,browser:page.context().browser().version(),
+      diagnostics:diagnostics}),contentType:'application/json'});
   });
 }
 
@@ -66,6 +94,145 @@ async function startConstituency(page,info) {
   await journey.begin(page,info,journey.starts[0]);
   await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/government-query-reuse/reference.js')});
 }
+
+test('guard eligibility preserves indexed identities, live reads, method overrides and recursive errors',async function ({page},info) {
+  await source.route(page,false);
+  await journey.begin(page,info,journey.starts[0]);
+  const result = await page.evaluate(function () {
+    const original = FB.characterGuarded, entries = window.__guardEntries, some = Array.prototype.some;
+    const before = JSON.stringify(FB.state), save = FB.save.serialize(), data = JSON.stringify(FBDATA);
+    const rng = FB.getRngState(), uid = FB.getUidCounter(), cases = [];
+    function state(guards) {
+      const governments = {};
+      guards.forEach(function (g,i) { governments['party'+i] = {mobile:{guardedParty:g}}; });
+      return {authority:{governments:governments}};
+    }
+    function party(status,ids) { return {status:status,characterIds:ids}; }
+    function run(oracle,fn) {
+      const trace = [];
+      function read(s,cid) {
+        return oracle ? entries(s).some(function (v) { return v.guard.status !== 'released' && v.guard.characterIds.indexOf(cid) >= 0; })
+          : original(s,cid);
+      }
+      function outcome(s,cid) {
+        try { return {value:read(s,cid)}; } catch(e) { return {name:e.name,message:e.message}; }
+      }
+      try { return {outputs:fn(read,outcome,trace),trace:trace}; }
+      finally { Array.prototype.some = some; }
+    }
+    function check(label,fn) { cases.push({label:label,oracle:run(true,fn),native:run(false,fn)}); }
+    check('empty, live status and exact members',function (read) {
+      const g = party('guarded',['a','b']), s = state([g]), outputs = [read(state([]),'a')];
+      for (const status of ['guarded','expired','interrupted','released']) {
+        g.status = status;
+        outputs.push(read(s,'a'),read(s,'b'),read(s,'missing'),read(s,{id:'a'}));
+      }
+      g.status = 'guarded'; g.characterIds = ['c']; outputs.push(read(s,'a'),read(s,'c'));
+      return outputs;
+    });
+    check('identity index lifetime and root replacement',function (read) {
+      const g = party('guarded',['a']), s = state([g]), outputs = [read(s,'a')];
+      s.authority.governments.party0.mobile.guardedParty = party('released',['a']);
+      outputs.push(read(s,'a'));
+      g.status = 'released'; outputs.push(read(s,'a'));
+      s.authority.governments.party1 = {mobile:{guardedParty:party('guarded',['b'])}};
+      outputs.push(read(s,'b'));
+      s.authority.governments = Object.assign({},s.authority.governments);
+      outputs.push(read(s,'b'),read(s,'a'));
+      return outputs;
+    });
+    check('holes, inherited rows and short circuit',function (read,outcome,trace) {
+      const s = state([party('released',['a']),party('guarded',['b']),party('guarded',['c'])]), rows = entries(s);
+      delete rows[0];
+      const proto = Object.create(Array.prototype);
+      Object.defineProperty(proto,'0',{get:function () { trace.push('inherited'); return {guard:party('guarded',['a'])}; }});
+      Object.setPrototypeOf(rows,proto);
+      Object.defineProperty(rows,'2',{get:function () { trace.push('late'); throw new Error('late guard'); }});
+      return [outcome(s,'a'),outcome(s,'b'),outcome(s,'c')];
+    });
+    check('captured length with append and deletion',function (read,outcome,trace) {
+      const s = state([party('released',[]),party('guarded',['b'])]), rows = entries(s);
+      Object.defineProperty(rows[0].guard,'status',{get:function () {
+        trace.push('status'); rows.push({guard:party('guarded',['c'])}); delete rows[1]; return 'released';
+      }});
+      return [outcome(s,'c'),outcome(s,'c')];
+    });
+    check('live later rows, ordered status and member method reads',function (read,outcome,trace) {
+      const g = {}, s = state([g,party('released',[])]), rows = entries(s);
+      Object.defineProperty(g,'status',{get:function () {
+        trace.push('status'); rows[1] = {guard:party('guarded',['target'])}; return 'guarded';
+      }});
+      Object.defineProperty(g,'characterIds',{get:function () {
+        trace.push('members'); const ids = [];
+        ids.indexOf = function (cid) { trace.push(['indexOf',this === ids,cid]); return -1; };
+        return ids;
+      }});
+      return [outcome(s,'target')];
+    });
+    check('overridden method getter receiver result and own call',function (read,outcome,trace) {
+      const s = state([]), rows = entries(s);
+      const method = function (predicate) { trace.push(['method',this === rows]); return predicate({guard:party('guarded',['a'])}) ? 'custom-result' : 0; };
+      method.call = function () { throw new Error('method.call must not be read'); };
+      Object.defineProperty(rows,'some',{get:function () { trace.push('some getter'); return method; }});
+      return [outcome(s,'a'),outcome(s,'b')];
+    });
+    check('replaced prototype method on empty index',function (read,outcome,trace) {
+      const s = state([]), rows = entries(s);
+      Array.prototype.some = function () { trace.push(['prototype',this === rows]); return 'empty override'; };
+      return [outcome(s,'a')];
+    });
+    check('native method getter edits before length capture',function (read,outcome,trace) {
+      const s = state([]), rows = entries(s);
+      Object.defineProperty(rows,'some',{get:function () { trace.push('get'); rows.push({guard:party('guarded',['a'])}); return some; }});
+      return [outcome(s,'a')];
+    });
+    check('recursive states, thrown value and recovery',function (read,outcome,trace) {
+      const g = {}, s = state([g]), nested = state([party('guarded',['nested'])]);
+      let fail = true;
+      Object.defineProperty(g,'status',{get:function () {
+        trace.push(['nested',read(nested,'nested')]);
+        if (fail) { fail = false; throw new Error('guard getter'); }
+        return 'guarded';
+      }});
+      g.characterIds = ['a'];
+      return [outcome(s,'a'),outcome(s,'a'),outcome(nested,'a')];
+    });
+    check('same-state recursion has independent traversal',function (read,outcome,trace) {
+      const g = party('released',['a']), s = state([g,party('guarded',['b'])]);
+      let nested = false;
+      Object.defineProperty(g,'status',{get:function () {
+        if (!nested) { nested = true; try { trace.push(['recursive',read(s,'b')]); } finally { nested = false; } }
+        return 'released';
+      }});
+      return [outcome(s,'b')];
+    });
+    check('custom method exceptions and recovery',function (read,outcome) {
+      const s = state([party('guarded',['a'])]), rows = entries(s);
+      rows.some = function () { throw new Error('some override'); };
+      const first = outcome(s,'a'); delete rows.some;
+      return [first,outcome(s,'a')];
+    });
+    check('nonarray collection keeps native length conversion',function (read,outcome,trace) {
+      const s = state([party('guarded',['a'])]), filter = Array.prototype.filter;
+      try {
+        Array.prototype.filter = function (predicate,receiver) {
+          const rows = filter.call(this,predicate,receiver);
+          return {0:rows[0],some:some,length:{valueOf:function () { trace.push('length'); return 1.9; }}};
+        };
+        entries(s);
+      } finally { Array.prototype.filter = filter; }
+      return [outcome(s,'a'),outcome(s,'missing')];
+    });
+    return {cases:cases,pure:before === JSON.stringify(FB.state) && save === FB.save.serialize() && data === JSON.stringify(FBDATA) &&
+      rng === FB.getRngState() && uid === FB.getUidCounter() && original === FB.characterGuarded};
+  });
+  expect(result.pure).toBe(true);
+  expect(result.cases).toHaveLength(12);
+  for (const row of result.cases) expect(row.native,row.label).toEqual(row.oracle);
+  expect(result.cases[1].native.outputs).toEqual([true,true,false,false,true,false]);
+  expect(result.cases[5].native.outputs).toEqual([{value:'custom-result'},{value:0}]);
+  await info.attach('guard-live-parity',{body:JSON.stringify(result),contentType:'application/json'});
+});
 
 test('fiscal index reuse validates same-read ledger edits and leaves eligibility live',async function ({page},info) {
   await startConstituency(page,info);
@@ -242,10 +409,12 @@ for (const start of [journey.starts[0],journey.starts[4],
       await source.route(page,reference ? 'filter' : false);
       if (start.fixture) {
         await openGame(page,info);
-        await page.evaluate(function () { FB.ui.showMods(); });
-        await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/mobile-command-'+start.fixture+'.json'));
-        await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-        await prepareGameContent(page);
+        if (reference) {
+          await page.evaluate(function () { FB.ui.showMods(); });
+          await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/mobile-command-'+start.fixture+'.json'));
+          await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+          await prepareGameContent(page);
+        }
         await beginBookmarkFromTitle(page,start.fixture+'_world',start.fixture+'_household');
       } else await journey.begin(page,info,start);
       const result = await page.evaluate(function () {
