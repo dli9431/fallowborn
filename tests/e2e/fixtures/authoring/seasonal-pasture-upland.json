@@ -347,7 +347,6 @@
       "revisions": {
         "baseline": {},
         "new_works": {
-          "name": "Construct an empty seasonal outpost",
           "openingInfrastructure": {
             "version": 1,
             "placements": [
