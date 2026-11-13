@@ -156,6 +156,7 @@
       finally {FB.setUidCounter(savedUid);FB.setRngState(savedRng);}
       q.reason='enterprise';if(!selected || selected.blocked)return q;
       q.baseCost=selected.cost;q.level=selected.level;
+      if(!num(q.baseCost,1,1000000))return q;
       q.launch=FB.siteResources.quote(s,{operation:'reserve',sourceId:a.launchSourceId,actor:request.actor,amount:1});
       q.reason='launch';if(!q.launch.allowed)return q;
       if (invoice) {
@@ -277,7 +278,7 @@
             x.actor.kind!=='realm' || !int(x.identity.generation,0,FB.realmRulerGeneration(s,x.actor.id))) ||
           !(x.enterpriseUid===null || typeof x.enterpriseUid==='string' && x.enterpriseUid.length>0 && x.enterpriseUid.length<=200) ||
           !int(x.level,0,(FBDATA.enterprises[profile.enterpriseType].upgrades || []).length) || (x.enterpriseUid===null)!==(x.level===0) ||
-          !int(x.baseCost,1,1000000) || !int(x.credit,1,Math.floor(x.baseCost*profile.invoiceShare)) ||
+          !num(x.baseCost,1,1000000) || !int(x.credit,1,Math.floor(x.baseCost*profile.invoiceShare)) ||
           !int(x.openedTurn,0,s.turn) || x.expiresTurn!==x.openedTurn+profile.termDays ||
           ['pending','committed','cancelled'].indexOf(x.status)<0 || !Array.isArray(x.inputs) || !x.inputs.length || x.inputs.length>512)fail();
       var total=0, seen={};
