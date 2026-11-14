@@ -188,19 +188,27 @@ test('pure whole-opening preflight rejects stale parties, target control, hostil
 test('a valid live batch credits only the existing treasury allocation and preserves outside population and purses',async function ({page},info) {
   await start(page,info,'harbor');
   const result=await page.evaluate(function () {
-    const C=window.openingCase,M=FB.mobile,s=C.fresh(),before=JSON.stringify([s.population,s.player,
-      Object.keys(s.realms).filter(function (rid) {return rid!==C.rid;}).map(function (rid) {return s.realms[rid].treasury;})]);
+    const C=window.openingCase,M=FB.mobile,s=C.fresh();
+    function facts(state){return restoreFacts(state,function (v) {
+      // The ordinary war owner makes this compatibility alias non-enumerable.
+      return [v.population,Object.assign({},v.player,{war:state.player.war}),
+        Object.keys(v.realms).filter(function (rid) {return rid!==C.rid;})
+          .map(function (rid) {return [rid,v.realms[rid].treasury];}),v.chars,v.bookmarkSetup];
+    });}
+    const before=facts(s),actors=Object.keys(s.bookmarkSetup.actors).map(function (id) {return [id,FB.bookmarkActor(s,id)];});
     const gold=FB.treasuryAvailable(s,C.rid),rng=FB.getRngState(),uid=FB.getUidCounter(),data=JSON.stringify(FBDATA),bytes=JSON.stringify(s);
     const plan=M.openingPlan(s,C.d),pure=plan.allowed && bytes===JSON.stringify(s) && data===JSON.stringify(FBDATA) &&
       rng===FB.getRngState() && uid===FB.getUidCounter();
     M.initialize(s,[C.d]);M.validate(s);
+    const outside=assertRestoreFacts(facts(s),before),formed=JSON.stringify(s);
+    M.initialize(s,[C.d]);M.validate(s);
     return {pure:pure,credit:FB.treasuryAvailable(s,C.rid)-gold,
-      outside:before===JSON.stringify([s.population,s.player,Object.keys(s.realms).filter(function (rid) {return rid!==C.rid;})
-        .map(function (rid) {return s.realms[rid].treasury;})]),
+      outside:outside,actors:actors.every(function (actor) {return actor[1]===FB.bookmarkActor(s,actor[0]);}),
+      repeated:formed===JSON.stringify(s) && data===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter(),
       fighters:s.armies.filter(function (a) {return a.realm===C.rid;}).reduce(function (n,a) {return n+a.men;},0),
       conflicts:FB.realmWars(s,C.rid).length};
   });
-  expect(result).toEqual({pure:true,credit:70,outside:true,fighters:160,conflicts:2});
+  expect(result).toEqual({pure:true,credit:70,outside:true,actors:true,repeated:true,fighters:160,conflicts:2});
 });
 
 test('the actual hostile footprint permits transit but an ungranted peaceful intervening county blocks the same target',async function ({page},info) {
