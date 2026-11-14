@@ -4201,8 +4201,13 @@ FB.CHANGELOG = [
     }
     state.player.charId = me.id;
     state.player.houseFounderId = me.id;
-    FB.setCareer(state, me, sc.profession,
+    const careerStarted = FB.setCareer(state, me, sc.profession,
       startEffects.careerRank || 'journeyman');
+    // Apply the authored initial rank to new households after career admission.
+    if (careerStarted && startEffects.careerRank && !sc.rulerRealmId &&
+        !sc.existingPerson && !sc.originalPrincipal) {
+      me.career.rank = startEffects.careerRank;
+    }
     if (me.career && startEffects.careerExperience !== undefined) {
       me.career.experience = startEffects.careerExperience;
     }

@@ -1,9 +1,11 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['index.html', 'data/starts_courts_800.js', 'data/story_households_baghdad_800.js',
+dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html', 'data/starts_courts_800.js', 'data/story_households_baghdad_800.js',
   'data/starts.js', 'data/bookmark_800.js', 'data/bookmark_800_expansion.js', 'data/bookmark_800_history.js',
   'data/government_rollout.js', 'data/islamic_rollout.js', 'data/political_institutions.js', 'data/travel.js',
   'js/starts.js', 'js/main.js', 'js/mods.js', 'js/world.js', 'js/model.js', 'js/stories.js',
@@ -17,6 +19,18 @@ const COURTS = [
   { id:'irene_800', realm:'byzantium', home:'constantinople', capital:'constantinople', site:'constantinople',
     name:'Irene', sex:'f', age:48, culture:'greek', faith:'orthodox', profile:'byzantine_800' }
 ];
+
+// Keep activation outside the synchronous restore guard, then resume the proof.
+async function evaluateAcrossBookmark(page, compute, argument) {
+  await installRestoreFacts(page);
+  await page.evaluate(compute, argument);
+  const checkpoint = await page.evaluate(function () { return window.__startRestoreSave; });
+  await restoreBookmark(page, checkpoint);
+  expect(await page.evaluate(function () {
+    return [FB.getRngState() >>> 0, FB.getUidCounter()];
+  })).toEqual(await page.evaluate(function () { return window.__startRestoreSequence; }));
+  return page.evaluate(function () { return window.__afterStartRestore(); });
+}
 
 async function datePicker(page, info) {
   await useReleasedStartRules(page);
@@ -32,6 +46,7 @@ async function startCourt(page, info, court, method) {
   await expect(page.locator('[data-scenario="' + court.id + '"]')).toBeVisible();
   if (method === 'picker') await page.locator('[data-scenario="' + court.id + '"]').click();
   else {
+    await page.locator('#btn-ng-back').click();
     await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill('COURT-800-' + court.id + '-' + court.home + '-' + court.sex + '-' + court.name.replace(/-/g, '').replace(/ /g, '_'));
     await page.locator('#ng-seed').press('Enter');
@@ -45,7 +60,9 @@ async function startCourt(page, info, court, method) {
     FB.adoptStartingRealm = function (s, scenario) {
       const c = s.chars[s.player.charId], r = s.realms[scenario.rulerRealmId];
       window.__openingCourt = { id:c.id, spouse:c.spouseId, children:c.childrenIds.slice(),
-        gold:r.treasury.gold, capital:r.capital, source:scenario.rulerRealmId };
+        gold:r.treasury.gold, capital:r.capital, source:scenario.rulerRealmId,
+        owned:Object.keys(s.owner).filter(function (id) { return s.owner[id] === scenario.rulerRealmId; }).sort(),
+        held:Object.keys(s.holder).filter(function (id) { return s.holder[id] === scenario.rulerRealmId; }).sort() };
       FB.adoptStartingRealm = adopt;
       return adopt(s, scenario);
     };
@@ -62,10 +79,9 @@ for (const court of COURTS) {
   for (const method of ['picker','code']) {
     test(court.id + ' via ' + method + ' keeps its actual sovereign, household, government and saved realm', async function ({ page }, info) {
       await startCourt(page, info, court, method);
-      expect(await page.evaluate(function (court) {
+      expect(await evaluateAcrossBookmark(page, function (court) {
         const s = FB.state, p = s.player, c = s.chars[p.charId], old = window.__openingCourt;
-        const originalCounties = FB.campaignBookmark(s).provinces.filter(function (pr) { return pr.realm === court.realm; })
-          .map(function (pr) { return pr.id; }).sort();
+        const originalCounties = old.owned;
         const actualCounties = Object.keys(s.owner).filter(function (id) { return s.owner[id] === 'player'; }).sort();
         const facts = { review:FBDATA.reviewOpenStarts, name:c.name, sex:c.sex, age:FB.ageOf(c,s.date.year),
           culture:c.culture, faith:c.religion, tier:p.tier, source:s.start.rulerRealmId,
@@ -75,24 +91,29 @@ for (const court of COURTS) {
           site:FB.settlementsOf(s,p.provinceId)[p.homeSettlement].site,
           residents:FB.householdMembers(s).every(function (person) { return FB.characterResidence(s,person) === court.home; }),
           territory:JSON.stringify(originalCounties) === JSON.stringify(actualCounties),
+          holders:JSON.stringify(old.held) === JSON.stringify(Object.keys(s.holder).filter(function (id) { return s.holder[id] === 'player'; }).sort()),
           noDuplicate:!s.realms[court.realm], mapping:FB.startRealmId(s,court.realm),
           form:FB.political.government(s,{ kind:'realm',id:'player' }).formId,
-          profile:s.realms.player.administrationProfileId,
+          profile:s.authority.governments.player.administrationProfileId,
           noCopyist:!s.stories.baghdad_copyist_track_800 };
         function snapshot(state) {
           const me = state.chars[state.player.charId];
           return [state.start,state.owner,state.holder,state.player.provinceId,state.player.homeSettlement,
             state.player.gold,state.realms.player,state.authority,state.stories,me.id,me.spouseId,me.childrenIds];
         }
-        const saved = JSON.parse(FB.save.serialize()), before = JSON.stringify(snapshot(saved.state));
-        FB.activateBookmark('1066'); FB.save.restore(saved);
-        facts.restored = before === JSON.stringify(snapshot(FB.state));
-        facts.restoredHome = FB.characterResidence(FB.state,FB.state.chars[FB.state.player.charId]);
-        return facts;
+        const saved = JSON.parse(FB.save.serialize()), before = window.restoreFacts(FB.state,snapshot);
+        window.__startRestoreSave = JSON.stringify(saved);
+        window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+        FB.activateBookmark('1066');
+        window.__afterStartRestore = function () {
+          facts.restored = before === window.restoreFacts(FB.state,snapshot);
+          facts.restoredHome = FB.characterResidence(FB.state,FB.state.chars[FB.state.player.charId]);
+          return facts;
+        };
       }, court)).toEqual({ review:false, name:court.name, sex:court.sex, age:court.age,
         culture:court.culture, faith:court.faith, tier:7, source:court.realm, original:true, unique:1,
         family:true, purse:true, home:court.home, capital:court.capital, site:court.site, residents:true,
-        territory:true, noDuplicate:true, mapping:'player', form:'administrative_monarchy', profile:court.profile,
+        territory:true, holders:true, noDuplicate:true, mapping:'player', form:'administrative_monarchy', profile:court.profile,
         noCopyist:true, restored:true, restoredHome:court.home });
     });
   }
@@ -119,6 +140,7 @@ test('all three 800 starts validate on each retained revision without changing d
 
 test('codes and direct creation reject a different county or date and only standard court families are offered', async function ({ page }, info) {
   await datePicker(page, info);
+  await page.locator('#btn-ng-back').click();
   await page.locator('#btn-bm-seed').click();
   for (const code of ['BAD-800-harun_800-baghdad-m-Harun', 'BAD-800-irene_800-raqqa-f-Irene',
     'BAD-867-harun_800-raqqa-m-Harun', 'BAD-800-irene_800-constantinople-f-Irene-established']) {

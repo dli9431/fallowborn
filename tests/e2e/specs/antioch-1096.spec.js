@@ -2,15 +2,16 @@
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {startParityGame} = require('../support/game/parity');
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1096.js','data/bookmark_1096_scaffold_d.js',
   'data/starts_antioch_1096.js','data/story_antioch_1096.js','data/starts.js',
   'data/story_instances.js','data/eras.js','data/political_institutions.js',
-  'js/starts.js','js/main.js','js/world.js','js/model.js','js/stories.js',
+  'js/starts.js','js/main.js','js/world.js','js/model.js','js/util.js','js/stories.js',
   'js/story_ruler_agenda.js','js/story_opening_goals.js','js/save.js','js/save_v4.js',
-  'js/bookmark_setup.js','js/treasury.js','js/ui_misc.js','js/ui_modals.js'
+  'js/bookmark_composition.js','js/bookmark_setup.js','js/treasury.js','js/ui_misc.js','js/ui_modals.js'
 ]);
 
 const AGENDA = 'antioch_agenda_1096';
@@ -19,8 +20,9 @@ async function start(page,info) {
   // The ordinary code grammar removes hyphens inside personal names.
   await startParityGame(page,info,{
     bookmark:'1096',scenario:'yaghi_siyan_1096',
-    code:'ANTIOCH-1096-yaghi_siyan_1096-antioch-m-YaghiSiyan-standard'
+    code:'ANTIOCH-1096-yaghi_siyan_1096-antioch-m-YaghiSiyan-standard-0-turkic.sunni'
   });
+  await installRestoreFacts(page);
 }
 
 test('Antioch offers one valid existing-ruler start with a real storyline',async function ({page},info) {
@@ -81,11 +83,15 @@ test('the start adopts one historical household, court and fixed directory targe
       noFriend:!(s.player.friendContacts || {})[target],targetName:s.chars[target].name,
       agenda:s.stories.antioch_agenda_1096.subjectId === me.id
     };
-    const bytes = JSON.stringify([s.stories.antioch_agenda_1096,t,me,son,s.player.gold,s.owner]);
+    function snapshot(state) {
+      const ruler = state.chars[state.player.charId], child = state.chars[ruler.childrenIds[0]];
+      return [state.stories.antioch_agenda_1096,state.stories.opening_antioch_1096,
+        ruler,child,state.player.gold,state.owner];
+    }
+    const bytes = window.restoreFacts(s,snapshot);
     FB.save.restore(JSON.parse(FB.save.serialize()));
     const restored = FB.state;
-    return {initial:initial,retained:bytes === JSON.stringify([restored.stories.antioch_agenda_1096,
-      restored.stories.opening_antioch_1096,restored.chars[me.id],restored.chars[son.id],restored.player.gold,restored.owner])};
+    return {initial:initial,retained:bytes === window.restoreFacts(restored,snapshot)};
   })).toEqual({initial:{ruler:['Yaghi-Siyan',1040,'turkic','sunni'],son:['Shams al-Dawla',1070,true],
     children:1,spouse:null,home:'antioch',owned:'player',held:'player',oldRealm:false,duplicate:1,
     binding:'antioch_1096',goals:3,ready:true,contact:true,noFriend:true,targetName:'Berkyaruk',agenda:true},retained:true});
@@ -101,8 +107,9 @@ test('all eight reviews record priorities without creating resources, treaties, 
     const pure = bytes === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
     const applied = [], repeated = [], dates = [];
     story.declaration.stages.forEach(function (stage) {
-      // Stage review boundaries directly; no daily or multi-year simulation.
-      s.date = {year:stage.year,season:stage.season,day:1}; s.turn++;
+      // Keep the opening campaign's dated call anchored while staging reviews.
+      const date = {year:stage.year,season:stage.season,day:1};
+      s.turn += FB.dateOrdinal(date) - FB.dateOrdinal(s.date); s.date = date;
       const c = stage.choices.find(function (c) { return c.operation === 'agenda_priority'; });
       const quote = FB.stories.quote(s,id,c.id);
       applied.push(FB.stories.apply(s,id,c.id,quote));

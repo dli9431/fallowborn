@@ -1,18 +1,31 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['index.html','data/starts_crossing_711.js','data/story_households_crossing_711.js',
+dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html','data/starts_crossing_711.js','data/story_households_crossing_711.js',
   'data/starts.js','data/story_instances.js','data/bookmark_711.js','data/bookmark_711_terrain.js',
   'data/communal_revisions.js','data/government_rollout.js','data/story_campaigns_711.js',
   'data/travel.js','data/events_travel.js','data/technology.js','data/actions.js','data/economy.js',
   'js/starts.js','js/stories.js','js/story_household.js','js/story_household_observer.js',
   'js/story_campaign.js','js/story_polity_foundation.js','js/mods.js','js/world.js',
-  'js/main.js','js/model.js','js/actions.js','js/travel.js','js/events.js','js/wars.js',
+  'js/main.js','js/model.js','js/economy.js','js/actions.js','js/travel.js','js/events.js','js/wars.js',
   'js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_panels.js','js/ui_modals.js']);
 const ID = 'crossing_soldier_track_711';
+
+// Keep activation outside the synchronous restore guard, then resume the proof.
+async function evaluateAcrossBookmark(page, compute, argument) {
+  await installRestoreFacts(page);
+  await page.evaluate(compute, argument);
+  const checkpoint = await page.evaluate(function () { return window.__startRestoreSave; });
+  await restoreBookmark(page, checkpoint);
+  expect(await page.evaluate(function () {
+    return [FB.getRngState() >>> 0, FB.getUidCounter()];
+  })).toEqual(await page.evaluate(function () { return window.__startRestoreSequence; }));
+  return page.evaluate(function () { return window.__afterStartRestore(); });
+}
 
 async function begin(page, info) {
   await beginBookmark(page, info, '711', 'crossing_soldier_711');
@@ -39,7 +52,7 @@ test('the soldier validates on every offered revision with unchanged campaign an
   expect(await page.evaluate(function () {
     const s = FB.state, me = s.chars[s.player.charId];
     return { phase:s.stories.crossing_soldier_track_711.phase, home:s.player.provinceId,
-      culture:me.culture, faith:me.religion, age:FB.ageOf(me,s.date.year), career:me.profession,
+      culture:me.culture, faith:me.religion, age:FB.ageOf(me,s.date.year), career:FB.careerOf(s,me).profession,
       tier:s.player.tier, court:!!s.start.rulerRealmId, asturias:!!s.realms.asturias_711 };
   })).toEqual({ phase:'opening', home:'tangier', culture:'berber', faith:'umayyad_sunni_711',
     age:24, career:'soldier', tier:1, court:false, asturias:false });
@@ -53,7 +66,8 @@ for (const community of ['berber.catholic','arabic.umayyad_sunni_711']) {
     if (await full.isVisible()) await full.click();
     else await page.getByRole('button', { name:'New Game', exact:true }).click();
     await page.locator('#bookmarklist [data-bookmark="711"]').click();
-    await expect(page.getByRole('button', { name:'Soldier at the Strait', exact:true })).toBeVisible();
+    await expect(page.locator('[data-scenario="crossing_soldier_711"]')).toBeVisible();
+    await page.locator('#btn-ng-back').click();
     await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill('STRAIT-711-crossing_soldier_711-tangier-m-Amal-standard-0-' + community);
     await page.locator('#ng-seed').press('Enter');
@@ -125,33 +139,44 @@ for (const result of ['won','failed','diverted','interrupted']) {
 
 test('ordinary crossing travel quotes real cost, moves the protagonist alone and survives restore', async function ({ page }, info) {
   await begin(page, info);
-  expect(await page.evaluate(function () {
+  expect(await evaluateAcrossBookmark(page, function () {
     const s = FB.state, id = 'crossing_soldier_track_711', t = s.stories[id], story = FB.stories.get(id);
     FB.stories.apply(s,id,'pursue',FB.stories.quote(s,id,'pursue'));
     FB.stories.get('strait_crossing_711').day(s,s.stories.strait_crossing_711);
     story.day(s,t);
     const departure = t.phase, publicStory = JSON.stringify(s.stories.strait_crossing_711);
+    s.player.gold = 1000;
+    const wartime = FB.stories.quote(s,id,'cross').allowed;
+    FB.setCareer(s,s.chars[s.player.charId],FB.roleCareer('labor'));
     s.player.gold = 0;
     const poor = FB.stories.quote(s,id,'cross').allowed;
     s.player.gold = 1000;
-    const family = JSON.stringify(FB.householdMembers(s).map(function (c) { return c.id; }));
+    function familyLocations() {
+      return FB.familyTreeMembers(s).filter(function (row) { return !row.c.dead; })
+        .map(function (row) { return [row.c.id,FB.characterResidence(s,row.c)]; });
+    }
+    const family = familyLocations();
     const q = FB.stories.quote(s,id,'cross'), gold = s.player.gold;
     const went = FB.stories.apply(s,id,'cross',q), journey = JSON.stringify(s.player.travel);
-    const facts = { departure, poor, went, paidExact:gold-s.player.gold === q.facts.terms.cost,
+    const facts = { departure, poor, wartime, went, paidExact:gold-s.player.gold === q.facts.terms.cost,
       phase:t.phase, home:s.player.provinceId, current:s.player.travel.currentId, destination:s.player.travel.destinationId,
-      familyKept:family === JSON.stringify(FB.householdMembers(s).map(function (c) { return c.id; })),
+      familyKept:family.length > 0 && JSON.stringify(family) === JSON.stringify(familyLocations()),
       publicKept:publicStory === JSON.stringify(s.stories.strait_crossing_711) };
-    const saved = JSON.parse(FB.save.serialize()); FB.activateBookmark('1066'); FB.save.restore(saved);
-    facts.restored = journey === JSON.stringify(FB.state.player.travel);
-    const restored = FB.state, rec = restored.stories[id];
-    // Stage actual location boundaries; ordinary travel owns movement between them.
-    restored.player.travel.currentId = 'malaga'; restored.player.travel.phase = 'outbound';
-    story.day(restored,rec); facts.passing = rec.phase;
-    restored.player.travel.phase = 'arrived'; story.day(restored,rec); facts.arrived = rec.phase;
-    rec.phase = 'returning'; rec.revision++; delete restored.player.travel;
-    story.day(restored,rec); facts.returned = rec.phase;
-    return facts;
-  })).toEqual({ departure:'departure', poor:false, went:true, paidExact:true, phase:'crossing_journey',
+    const saved = JSON.parse(FB.save.serialize()); window.__startRestoreSave = JSON.stringify(saved);
+    window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+    FB.activateBookmark('1066');
+    window.__afterStartRestore = function () {
+      facts.restored = journey === JSON.stringify(FB.state.player.travel);
+      const restored = FB.state, rec = restored.stories[id];
+      // Stage actual location boundaries; ordinary travel owns movement between them.
+      restored.player.travel.currentId = 'malaga'; restored.player.travel.phase = 'outbound';
+      story.day(restored,rec); facts.passing = rec.phase;
+      restored.player.travel.phase = 'arrived'; story.day(restored,rec); facts.arrived = rec.phase;
+      rec.phase = 'returning'; rec.revision++; delete restored.player.travel;
+      story.day(restored,rec); facts.returned = rec.phase;
+      return facts;
+    };
+  })).toEqual({ departure:'departure', poor:false, wartime:false, went:true, paidExact:true, phase:'crossing_journey',
     home:'tangier', current:'tangier', destination:'malaga', familyKept:true, publicKept:true,
     restored:true, passing:'crossing_journey', arrived:'arrival', returned:'returned' });
 });
@@ -163,6 +188,7 @@ test('changed campaign terms invalidate a journey confirmation without spending 
     FB.stories.apply(s,id,'pursue',FB.stories.quote(s,id,'pursue'));
     FB.stories.get('strait_crossing_711').day(s,s.stories.strait_crossing_711); story.day(s,s.stories[id]);
     s.player.gold = 1000;
+    FB.setCareer(s,s.chars[s.player.charId],FB.roleCareer('labor'));
     const q = FB.stories.quote(s,id,'cross');
     Object.assign(s.stories.strait_crossing_711,{ phase:'resolved',result:'failed',outcomeTurn:s.turn });
     const before = JSON.stringify(s), applied = FB.stories.apply(s,id,'cross',q);
@@ -177,6 +203,7 @@ test('ordinary arrival starts a visitor stay without a phantom patron or an arri
     FB.stories.apply(s,id,'pursue',FB.stories.quote(s,id,'pursue'));
     FB.stories.get('strait_crossing_711').day(s,s.stories.strait_crossing_711); story.day(s,s.stories[id]);
     s.player.gold = 1000;
+    FB.setCareer(s,s.chars[s.player.charId],FB.roleCareer('labor'));
     const went = FB.stories.apply(s,id,'cross',FB.stories.quote(s,id,'cross'));
     const gold = s.player.gold, t = s.player.travel;
     // Stage the final route boundary and let the travel owner perform arrival.
@@ -205,6 +232,7 @@ test('inland travel requires the live Toledo campaign and current coastal sovere
     s.date.year = 714; s.turn = 1080;
     FB.stories.get('toledo_campaign_711').day(s,s.stories.toledo_campaign_711); story.day(s,t);
     const offered = t.phase; s.player.gold = 1000;
+    FB.setCareer(s,s.chars[s.player.charId],FB.roleCareer('labor'));
     const q = FB.stories.quote(s,id,'go');
     FB.transferProvince(s,'malaga','visigoths_711');
     const before = JSON.stringify(s), accepted = FB.stories.apply(s,id,'go',q), pure = before === JSON.stringify(s);
@@ -233,7 +261,7 @@ for (const boundary of ['window','death','successor']) {
       const actor = t.actorId, gold = s.player.gold;
       if (boundary === 'window') { s.date.year = 719; s.turn = 2880; }
       else if (boundary === 'death') s.chars[actor].dead = true;
-      else s.player.charId = FB.householdMembers(s).find(function (c) { return c.id !== actor && !c.dead; }).id;
+      else s.player.charId = FB.heirsOf(s)[0].id;
       story.day(s,t); const closed = JSON.stringify(t); story.day(s,t);
       return { phase:t.phase, originalActor:t.actorId === actor, once:closed === JSON.stringify(t), money:s.player.gold === gold };
     }, boundary)).toEqual({ phase:boundary === 'window' ? 'window_closed' : 'personal_ended', originalActor:true, once:true, money:true });
@@ -247,9 +275,17 @@ test('unrelated starts attach no soldier story and a missing optional record sta
   await begin(page, info);
   expect(await page.evaluate(function () {
     const saved = JSON.parse(FB.save.serialize()); delete saved.state.stories.crossing_soldier_track_711;
+    const before = JSON.stringify(FB.state), rng = FB.getRngState(), uid = FB.getUidCounter();
+    let rejected = false;
+    try { FB.save.restore(saved); }
+    catch (error) { rejected = error.message.indexOf('state.start.storyAttachments') >= 0; }
+    const pure = before === JSON.stringify(FB.state) && rng === FB.getRngState() && uid === FB.getUidCounter();
+    // This fixture predates the sealed opening attachment list.
+    delete saved.storyAttachmentSchema;
+    delete saved.state.start.storyAttachments;
     FB.save.restore(saved); FB.stories.day(FB.state);
-    return !!FB.state.stories.crossing_soldier_track_711;
-  })).toBe(false);
+    return { rejected:rejected, pure:pure, missing:!FB.state.stories.crossing_soldier_track_711 };
+  })).toEqual({ rejected:true, pure:true, missing:true });
 });
 
 test('another date keeps its ordinary open start without the soldier track or its dated journey', async function ({ page }, info) {

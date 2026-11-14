@@ -20,6 +20,7 @@ async function startCopyist(page, info, community) {
   else await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#bookmarklist [data-bookmark="800"]').click();
   await expect(page.locator('[data-scenario="baghdad_copyist_800"]')).toBeVisible();
+  await page.locator('#btn-ng-back').click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill('COPYIST-800-baghdad_copyist_800-baghdad-f-Review');
   await page.locator('#ng-seed').press('Enter');
@@ -46,15 +47,19 @@ for (const culture of ['arabic','persian']) {
     await startCopyist(page, info, culture);
     expect(await page.evaluate(function () {
       const s = FB.state, c = s.chars[s.player.charId], sc = FBDATA.startScenarios_courts_800[0];
+      const savedCareer = FB.contentValues.canonical(c.career);
+      FB.save.restore(JSON.parse(FB.save.serialize()));
       return { review:FBDATA.reviewOpenStarts, home:s.player.provinceId, age:FB.ageOf(c,s.date.year),
         culture:c.culture, faith:c.religion, tier:s.player.tier, profession:c.career.profession,
         rank:c.career.rank, gold:s.player.gold, focus:s.player.focus, phase:s.stories.baghdad_copyist_track_800.phase,
-        family:FB.householdMembers(s).length > 1, jobs:Object.keys(s.stories.baghdad_copyist_track_800.jobs).length,
+        retained:savedCareer === FB.contentValues.canonical(FB.state.chars[c.id].career) && FB.state.player.profession === 'scholar',
+        licensedWork:FB.focusStatus(FB.state,'scholarly_work').can,
+        family:FB.familyTreeMembers(s).some(function (row) { return !row.c.dead; }), jobs:Object.keys(s.stories.baghdad_copyist_track_800.jobs).length,
         local:FB.startStoryTracks(sc,'baghdad'), remote:FB.startStoryTracks(sc,'raqqa'),
         manuscripts:FBDATA.careers.scholar.requiresTech, license:FBDATA.careers.scholar.license.toRank,
         estate:s.player.provs.length };
     })).toEqual({ review:false, home:'baghdad', age:24, culture, faith:'sunni', tier:1, profession:'scholar',
-      rank:'apprentice', gold:12, focus:'scholarly_work', phase:'household', family:true, jobs:0,
+      rank:'apprentice', gold:12, focus:'scholarly_work', phase:'household', retained:true, licensedWork:false, family:true, jobs:0,
       local:[ID], remote:[], manuscripts:'manuscript_codex', license:'journeyman', estate:0 });
   });
 }
@@ -74,7 +79,15 @@ for (const choice of ['seek_study','decline_story']) {
 
 test('copying, checking and delivery reserve one fee and replace exactly three focus days', async function ({ page }, info) {
   await startCopyist(page, info);
+  const opening = await page.evaluate(function () {
+    const s = FB.state;
+    return [s.turn,s.player.gold,s.chars[s.player.charId].career,s.player.focus];
+  });
   expect(await choose(page,'keep_copying')).toBe(true);
+  expect(await page.evaluate(function () {
+    const s = FB.state;
+    return [s.turn,s.player.gold,s.chars[s.player.charId].career,s.player.focus];
+  })).toEqual(opening);
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'baghdad_copyist_track_800', t = s.stories[id], turn = s.turn, gold = s.player.gold;
     const transfers = [], transfer = FB.treasuryTransfer, focus = FB.tickFocus;
@@ -155,7 +168,7 @@ for (const cause of ['departure','patron','control','expiry','successor','death'
       if (cause === 'patron') s.chars[t.jobPatrons.first_copy].dead = true;
       if (cause === 'control') FB.transferProvince(s,'baghdad','byzantium');
       if (cause === 'expiry') { s.turn = t.jobs.first_copy.expiresTurn; s.date.day += 10; }
-      if (cause === 'successor') s.player.charId = FB.householdMembers(s).find(function (c) { return !c.dead && c.id !== t.actorId; }).id;
+      if (cause === 'successor') s.player.charId = FB.heirsOf(s)[0].id;
       if (cause === 'death') s.chars[t.actorId].dead = true;
       story.day(s,t);
       const row = t.jobs.first_copy, once = JSON.stringify(row);
@@ -172,14 +185,15 @@ test('an actual personal journey closes the local order at departure while relat
   await startCopyist(page, info); await choose(page,'keep_copying'); await choose(page,'accept_order');
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'baghdad_copyist_track_800', t = s.stories[id];
-    const family = FB.householdMembers(s).map(function (c) { return c.id; });
+    const family = FB.familyTreeMembers(s).filter(function (row) { return !row.c.dead; })
+      .map(function (row) { return row.c.id; });
     s.player.gold = 1000;
     const q = FB.travelSiteSnapshot(s,'study_constantinople');
     const went = !!q && FB.travelStart(s,q.purpose,q.destinationId,q.destinationRealm);
     FB.stories.get(id).day(s,t);
     return { went, phase:t.phase, origin:s.player.travel && s.player.travel.homeId,
       home:s.player.provinceId, paid:t.jobs.first_copy.paid, refund:t.jobs.first_copy.refunded,
-      kin:family.filter(function (cid) { return cid !== s.player.charId; }).every(function (cid) {
+      kin:family.length > 0 && family.every(function (cid) {
         return FB.characterResidence(s,s.chars[cid]) === 'baghdad';
       }) };
   })).toEqual({ went:true,phase:'remote',origin:'baghdad',home:'baghdad',paid:2,refund:4,kin:true });
@@ -198,6 +212,9 @@ test('matching restore resumes unfinished work once and never attaches a missing
     const paid = FB.state.stories[id].jobs.first_copy.paid, gold = FB.state.player.gold;
     const repeat = FB.stories.apply(FB.state,id,'deliver_copy',FB.stories.quote(FB.state,id,'deliver_copy'));
     const same = FB.state.player.gold === gold;
+    // This fixture represents a campaign before opening attachments were sealed.
+    delete saved.storyAttachmentSchema;
+    delete saved.state.start.storyAttachments;
     delete saved.state.stories[id]; FB.save.restore(saved);
     return { paid,repeat,same,missing:!FB.state.stories[id] };
   })).toEqual({ paid:6,repeat:false,same:true,missing:true });
@@ -238,7 +255,10 @@ test('the shared copying review returns focus on cancel and confirms only the re
     return [FB.state.turn,FB.state.player.gold,FB.state.realms.abbasid.treasury.gold];
   });
   await card.click(); await page.locator('[data-story-choice="accept_order"]').click();
-  await expect(page.getByText('Total reserved fee: 6 gold for 3 action days.',{ exact:true })).toBeVisible();
+  const payer = await page.evaluate(function () {
+    return FB.fullName(FB.stories.ruler(FB.state,'abbasid'));
+  });
+  await expect(page.getByText('Payer: ' + payer + '. Total reserved fee: 6 gold for 3 action days.',{ exact:true })).toBeVisible();
   await page.keyboard.press('Escape'); await page.keyboard.press('Escape');
   await expect(card).toBeFocused();
   expect(await page.evaluate(function () {

@@ -1,11 +1,14 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'index.html', 'data/starts_clovis_493.js', 'data/starts.js', 'data/bookmark_493.js',
+  'js/bookmark_composition.js','index.html', 'data/starts_clovis_493.js', 'data/starts.js', 'data/bookmark_493.js',
   'data/bookmark_493_world.js', 'data/bookmark_493_history.js', 'data/communal_revisions.js',
+  'data/african_religious_rollout.js',
   'data/government_rollout.js', 'data/geographies.js', 'data/geography_expansion.js',
   'data/eras.js', 'data/systems.js', 'data/technology.js', 'data/cultures.js',
   'data/political_institutions.js', 'data/story_instances.js', 'data/story_campaigns.js',
@@ -19,6 +22,18 @@ dependsOnRuntime(__filename, [
 
 const CODE = 'CLOVIS-493-clovis_493-laon-m-Clovis-standard-0-frankish.germanic_pagan';
 const CAMPAIGNS = ['alamannic_campaign_493', 'burgundian_campaign_493', 'visigothic_campaign_493'];
+
+// Keep activation outside the synchronous restore guard, then resume the proof.
+async function evaluateAcrossBookmark(page, compute, argument) {
+  await installRestoreFacts(page);
+  await page.evaluate(compute, argument);
+  const checkpoint = await page.evaluate(function () { return window.__startRestoreSave; });
+  await restoreBookmark(page, checkpoint);
+  expect(await page.evaluate(function () {
+    return [FB.getRngState() >>> 0, FB.getUidCounter()];
+  })).toEqual(await page.evaluate(function () { return window.__startRestoreSequence; }));
+  return page.evaluate(function () { return window.__afterStartRestore(); });
+}
 
 async function fullStart(page) {
   const full = page.locator('#btn-choose-beginning');
@@ -88,6 +103,7 @@ for (const boundary of ['date','scenario']) {
     else {
       await page.locator('[data-bookmark="493"]').click();
       await expect(page.locator('[data-scenario="clovis_493"]')).toHaveCount(0);
+      await page.locator('#btn-ng-back').click();
     }
     await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill(CODE);
@@ -121,14 +137,14 @@ test('the ruler declaration validates on every compatible revision without alter
   expect(result.errors).toEqual([]);
   expect(result.tracks).toEqual([]);
   expect(result.pure).toBe(true);
-  expect(result.revisions.map(function (r) { return r.id; })).toEqual(['baseline','world_v2','jewish_samaritan_v3']);
+  expect(result.revisions.map(function (r) { return r.id; })).toEqual(['baseline','world_v2','jewish_samaritan_v3','world_v2_african_v1']);
   for (const r of result.revisions) expect(r).toMatchObject({ faults:[], offered:true, place:true, away:false });
 });
 
 for (const revision of ['baseline','world_v2','jewish_samaritan_v3']) {
   test(revision + ' adopts one Clovis and the actual court, then restores a hidden save', async function ({ page }, info) {
     await startClovis(page, info, revision, revision === 'world_v2');
-    expect(await page.evaluate(function () {
+    expect(await evaluateAcrossBookmark(page, function () {
       const s = FB.state, me = s.chars[s.player.charId], old = window.__clovisCourt;
       const expected = function (map) {
         return Object.keys(map).every(function (pid) {
@@ -154,14 +170,17 @@ for (const revision of ['baseline','world_v2','jewish_samaritan_v3']) {
         return [state.start,state.owner,state.holder,state.player.gold,state.player.piety,state.player.prestige,
           state.realms.player,c.id,c.name,c.spouseId,c.childrenIds,state.stories];
       }
-      const before = JSON.stringify(snapshot(saved.state));
+      const before = window.restoreFacts(FB.state,snapshot);
       FBDATA.bookmarks['493'].hidden = true;
       FBDATA.startScenarios.find(function (sc) { return sc.id === 'clovis_493'; }).hidden = true;
+      window.__startRestoreSave = JSON.stringify(saved);
+      window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
       FB.activateBookmark('867');
-      FB.save.restore(saved);
-      facts.retained = before === JSON.stringify(snapshot(FB.state));
-      facts.valid = FB.save.v4.validatePlatform(FB.state);
-      return facts;
+      window.__afterStartRestore = function () {
+        facts.retained = before === window.restoreFacts(FB.state,snapshot);
+        facts.valid = FB.save.v4.validatePlatform(FB.state);
+        return facts;
+      };
     })).toEqual({ name:'Clovis', id:true, born:466, tier:6, culture:'frankish', faith:'germanic_pagan',
       form:'regnum', location:'laon', settlement:0, source:'franks_493', unique:1, adopted:true,
       gold:true, owners:true, holders:true, family:true, theuderic:1, retained:true, valid:true });
@@ -213,7 +232,7 @@ for (const id of CAMPAIGNS) {
 
 test('Clovis uses ordinary conversion prices, stale reviews, household scope and persistence', async function ({ page }, info) {
   await startClovis(page, info);
-  const result = await page.evaluate(function () {
+  const result = await evaluateAcrossBookmark(page, function () {
     let s = FB.state;
     const initial = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
     const unavailable = FB.rulerFaithConversionStatus(s,'player','nicene');
@@ -247,13 +266,17 @@ test('Clovis uses ordinary conversion prices, stale reviews, household scope and
     const repeatPure = beforeRepeat === JSON.stringify(s);
     FBDATA.bookmarks['493'].hidden = true;
     FBDATA.startScenarios.find(function (sc) { return sc.id === 'clovis_493'; }).hidden = true;
-    FB.activateBookmark('867'); FB.save.restore(checkpoint); s = FB.state;
-    return { initially:unavailable.ok, refused:refused, pure:pure, encountered:q.encountered, ready:q.ok,
-      stale:stale, stalePure:stalePure, peaceRequired:peaceRequired, applied:applied, paid:paid, unchanged:unchanged,
-      household:household, faith:faith, elite:elite, repeated:repeated, repeatPure:repeatPure,
-      retained:JSON.stringify(s.rulerFaithDecisions) === JSON.stringify(checkpoint.state.rulerFaithDecisions) &&
-        s.player.piety === checkpoint.state.player.piety && s.player.prestige === checkpoint.state.player.prestige &&
-        s.chars[s.player.charId].religion === 'nicene', valid:FB.save.v4.validatePlatform(s) };
+    window.__startRestoreSave = JSON.stringify(checkpoint);
+    window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+    FB.activateBookmark('867');
+    window.__afterStartRestore = function () { s = FB.state;
+      return { initially:unavailable.ok, refused:refused, pure:pure, encountered:q.encountered, ready:q.ok,
+        stale:stale, stalePure:stalePure, peaceRequired:peaceRequired, applied:applied, paid:paid, unchanged:unchanged,
+        household:household, faith:faith, elite:elite, repeated:repeated, repeatPure:repeatPure,
+        retained:JSON.stringify(s.rulerFaithDecisions) === JSON.stringify(checkpoint.state.rulerFaithDecisions) &&
+          s.player.piety === checkpoint.state.player.piety && s.player.prestige === checkpoint.state.player.prestige &&
+          s.chars[s.player.charId].religion === 'nicene', valid:FB.save.v4.validatePlatform(s) };
+    };
   });
   expect(result).toEqual({ initially:false, refused:false, pure:true, encountered:true, ready:true,
     stale:false, stalePure:true, peaceRequired:true, applied:true, paid:true, unchanged:true, household:true,
