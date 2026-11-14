@@ -1,10 +1,12 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename, ['index.html', 'data/starts_rulers_711.js', 'data/story_ruler_agendas_711.js',
+dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html', 'data/starts_rulers_711.js', 'data/story_ruler_agendas_711.js',
   'data/bookmark_711.js', 'data/bookmark_711_terrain.js', 'data/government_rollout.js',
   'data/story_campaigns_711.js', 'data/story_households_crossing_711.js', 'data/story_households_711.js',
   'data/starts_crossing_711.js', 'data/political_institutions.js', 'data/story_instances.js',
@@ -19,6 +21,18 @@ const rulers = [
     culture:'berber', faith:'umayyad_sunni_711', form:'territorial', tier:5, rank:2,
     agenda:'tariq_agenda_711', source:'strait_crossing_711', liege:'ifriqiya_711' }
 ];
+
+// Keep activation outside the synchronous restore guard, then resume the proof.
+async function evaluateAcrossBookmark(page, compute, argument) {
+  await installRestoreFacts(page);
+  await page.evaluate(compute, argument);
+  const checkpoint = await page.evaluate(function () { return window.__startRestoreSave; });
+  await restoreBookmark(page, checkpoint);
+  expect(await page.evaluate(function () {
+    return [FB.getRngState() >>> 0, FB.getUidCounter()];
+  })).toEqual(await page.evaluate(function () { return window.__startRestoreSequence; }));
+  return page.evaluate(function () { return window.__afterStartRestore(); });
+}
 
 async function beginRuler(page, info, row, code) {
   await useReleasedStartRules(page);
@@ -74,27 +88,31 @@ for (const row of rulers) {
   for (const code of [false, true]) {
     test(row.id + ' adopts its original court via ' + (code ? 'start code' : 'picker') + ' and restores it', async function ({ page }, info) {
       await beginRuler(page, info, row, code);
-      expect(await page.evaluate(function (r) {
+      expect(await evaluateAcrossBookmark(page, function (r) {
         const s = FB.state, me = s.chars[s.player.charId], old = window.__openingRuler711;
-        const original = FB.campaignBookmark(s).provinces.filter(function (p) { return p.realm === r.realm; }).map(function (p) { return p.id; }).sort();
+        const original = old.owned;
         const actual = Object.keys(s.owner).filter(function (id) { return s.owner[id] === 'player'; }).sort();
         const source = FB.stories.definition(s, FBDATA.storyCampaigns711[r.source]);
         const site = FB.settlementsOf(s, r.home)[s.player.homeSettlement].site;
-        const snap = function (state) { return JSON.stringify([state.start,state.owner,state.holder,state.player,state.chars,state.realms,state.stories]); };
-        const saved = JSON.parse(FB.save.serialize()), before = snap(saved.state);
-        FB.activateBookmark('1066'); FB.save.restore(saved);
-        return { name:me.name, age:FB.ageOf(me,s.date.year), culture:me.culture, faith:me.religion,
-          home:s.player.provinceId, site:site, tier:s.player.tier, rank:s.realms.player.rank,
-          adopted:me.id === old.id && me.spouseId === old.spouse && JSON.stringify(me.childrenIds) === JSON.stringify(old.children),
-          purse:s.player.gold === (r.id === 'roderic_711' ? FBDATA.startScenarios_rulers_711[0].gold : old.gold),
-          publicCrown:r.id !== 'roderic_711' || !!s.realms.player.treasury,
-          territory:JSON.stringify(original) === JSON.stringify(actual),
-          held:JSON.stringify(old.held) === JSON.stringify(Object.keys(s.holder).filter(function (id) { return s.holder[id] === 'player'; }).sort()),
-          sourceGone:!s.realms[r.realm], originalRulerCount:Object.values(s.chars).filter(function (c) { return c.name === r.name && !c.dead; }).length,
-          liege:s.realms.player.liege || null, form:FB.political.government(s,{kind:'realm',id:'player'}).formId,
-          sourceActor:source.actor.realmId, agenda:s.stories[r.agenda].subjectId === me.id,
-          noSoldier:!s.stories.crossing_soldier_track_711, noToledoHousehold:!s.stories.toledo_household_track_711,
-          restored:before === snap(FB.state) };
+        const snap = function (state) { return [state.start,state.owner,state.holder,state.player,state.chars,state.realms,state.stories]; };
+        const saved = JSON.parse(FB.save.serialize()), before = window.restoreFacts(FB.state,snap);
+        window.__startRestoreSave = JSON.stringify(saved);
+        window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+        FB.activateBookmark('1066');
+        window.__afterStartRestore = function () {
+          return { name:me.name, age:FB.ageOf(me,s.date.year), culture:me.culture, faith:me.religion,
+            home:s.player.provinceId, site:site, tier:s.player.tier, rank:s.realms.player.rank,
+            adopted:me.id === old.id && me.spouseId === old.spouse && JSON.stringify(me.childrenIds) === JSON.stringify(old.children),
+            purse:s.player.gold === (r.id === 'roderic_711' ? FBDATA.startScenarios_rulers_711[0].gold : old.gold),
+            publicCrown:r.id !== 'roderic_711' || !!s.realms.player.treasury,
+            territory:JSON.stringify(original) === JSON.stringify(actual),
+            held:JSON.stringify(old.held) === JSON.stringify(Object.keys(s.holder).filter(function (id) { return s.holder[id] === 'player'; }).sort()),
+            sourceGone:!s.realms[r.realm], originalRulerCount:Object.values(s.chars).filter(function (c) { return c.name === r.name && !c.dead; }).length,
+            liege:s.realms.player.liege || null, form:FB.political.government(s,{kind:'realm',id:'player'}).formId,
+            sourceActor:source.actor.realmId, agenda:s.stories[r.agenda].subjectId === me.id,
+            noSoldier:!s.stories.crossing_soldier_track_711, noToledoHousehold:!s.stories.toledo_household_track_711,
+            restored:before === window.restoreFacts(FB.state,snap) };
+        };
       }, row)).toEqual({ name:row.name, age:36, culture:row.culture, faith:row.faith,
         home:row.home, site:row.site, tier:row.tier, rank:row.rank, adopted:true, purse:true, publicCrown:true,
         territory:true, held:true, sourceGone:true, originalRulerCount:1, liege:row.liege, form:row.form,
@@ -131,11 +149,11 @@ test('Tariq cannot choose the sovereign crossing', async function ({ page }, inf
   expect(await page.evaluate(function () {
     const s = FB.state, tariq = FBDATA.rulerAgendas_711.tariq_agenda_711;
     const none = tariq.stages.every(function (stage) { return stage.choices.every(function (c) { return c.operation !== 'agenda_story_choice'; }); });
-    const own = s.realms.player.liege === 'ifriqiya_711' && s.owner.tangier === 'player';
+    const own = s.realms.player.liege === 'ifriqiya_711' && s.holder.tangier === 'player';
     const source = FB.stories.definition(s,FBDATA.storyCampaigns711.strait_crossing_711);
     const record = s.stories.strait_crossing_711;
-    return { none:none, own:own, actor:source.actor.realmId, initial:record && record.result || null };
-  })).toEqual({ none:true, own:true, actor:'umayyad_711', initial:null });
+    return { none:none, own:own, sovereign:s.owner.tangier, actor:source.actor.realmId, initial:record && record.result || null };
+  })).toEqual({ none:true, own:true, sovereign:'umayyad_711', actor:'umayyad_711', initial:null });
 });
 
 test('Roderic forwards only the current defensive source decision and refuses a stale review', async function ({ page }, info) {

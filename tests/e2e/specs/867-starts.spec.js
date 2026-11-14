@@ -1,18 +1,31 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename, ['index.html','data/starts_york_wessex_867.js','data/story_households_867.js',
+dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html','data/starts_york_wessex_867.js','data/story_households_867.js',
   'data/starts.js','data/bookmarks.js','data/bookmark_867_expansion.js','data/communal_revisions.js',
   'data/government_rollout.js','data/islamic_rollout.js','data/actions.js','data/technology.js',
   'js/starts.js','js/main.js','js/world.js','js/mods.js','js/stories.js','js/story_household.js',
-  'js/model.js','js/actions.js','js/treasury.js','js/wars.js','js/armies.js',
+  'js/model.js','js/economy.js','js/actions.js','js/treasury.js','js/wars.js','js/armies.js',
   'js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_panels.js','js/ui_modals.js']);
 
 const ID = 'york_household_track_867';
+
+// Keep activation outside the synchronous restore guard, then resume the proof.
+async function evaluateAcrossBookmark(page, compute, argument) {
+  await installRestoreFacts(page);
+  await page.evaluate(compute, argument);
+  const checkpoint = await page.evaluate(function () { return window.__startRestoreSave; });
+  await restoreBookmark(page, checkpoint);
+  expect(await page.evaluate(function () {
+    return [FB.getRngState() >>> 0, FB.getUidCounter()];
+  })).toEqual(await page.evaluate(function () { return window.__startRestoreSequence; }));
+  return page.evaluate(function () { return window.__afterStartRestore(); });
+}
 
 async function setup(page, info) {
   await useReleasedStartRules(page);
@@ -68,7 +81,7 @@ test('the picker groups York as Story and Æthelred as Historical and adopts his
   await expect(page.locator('#cg-name')).toHaveValue('Æthelred I');
   await expect(page.locator('#cg-name')).toHaveAttribute('readonly','');
   await finishCreation(page);
-  expect(await page.evaluate(function () {
+  expect(await evaluateAcrossBookmark(page, function () {
     const s = FB.state, me = s.chars[s.player.charId];
     const expected = FB.campaignBookmark(s).provinces.filter(function (p) { return p.realm === 'wessex'; }).map(function (p) { return p.id; }).sort();
     const actual = Object.keys(s.owner).filter(function (id) { return s.owner[id] === 'player'; }).sort();
@@ -82,10 +95,14 @@ test('the picker groups York as Story and Æthelred as Historical and adopts his
       const c = state.chars[state.player.charId];
       return [state.owner,state.holder,state.player.gold,c.id,c.spouseId,c.childrenIds,state.realms.player];
     }
-    const saved = JSON.parse(FB.save.serialize()), before = JSON.stringify(snapshot(saved.state));
-    FB.activateBookmark('1066'); FB.save.restore(saved);
-    facts.retained = before === JSON.stringify(snapshot(FB.state));
-    return facts;
+    const saved = JSON.parse(FB.save.serialize()), before = window.restoreFacts(FB.state,snapshot);
+    window.__startRestoreSave = JSON.stringify(saved);
+    window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+    FB.activateBookmark('1066');
+    window.__afterStartRestore = function () {
+      facts.retained = before === window.restoreFacts(FB.state,snapshot);
+      return facts;
+    };
   })).toEqual({ name:'Æthelred I', age:20, culture:'english', religion:'catholic', home:'winchester',
     tier:6, source:'wessex', mapped:'player', noDuplicate:true, unique:1, territory:true, noYorkStory:true, retained:true });
 });
@@ -117,8 +134,10 @@ for (const family of [
     await finishCreation(page);
     expect(await page.evaluate(function () {
       const s = FB.state, me = s.chars[s.player.charId], t = s.stories.york_household_track_867;
-      const family = FB.householdMembers(s).filter(function (c) { return !c.dead; });
-      return { phase:t.phase, home:s.player.provinceId, tier:s.player.tier, profession:me.profession,
+      // The young preset has parents and siblings, rather than maintained dependants.
+      const family = [me].concat(FB.familyTreeMembers(s).map(function (row) { return row.c; }))
+        .filter(function (c) { return !c.dead; });
+      return { phase:t.phase, home:s.player.provinceId, tier:s.player.tier, profession:FB.careerOf(s,me).profession,
         culture:me.culture, faith:me.religion, ownsCounties:s.player.provs.length,
         kin:family.length > 1, spouse:!!me.spouseId, jobs:Object.keys(t.jobs),
         familyIdentity:family.every(function (c) { return c.culture === me.culture && c.religion === me.religion; }) };
@@ -193,7 +212,7 @@ test('ordinary craft income advances work while choosing focus and gifts do not'
 
 test('peaceful preparations charge only the reviewed private expense and keep public history independent', async function ({ page }, info) {
   await beginBookmark(page, info, '867', 'york_household_867');
-  expect(await page.evaluate(function () {
+  expect(await evaluateAcrossBookmark(page, function () {
     const s = FB.state, id = 'york_household_track_867';
     function choose(c) { return FB.stories.apply(s,id,c,FB.stories.quote(s,id,c)); }
     function publicSnapshot(state) {
@@ -209,12 +228,16 @@ test('peaceful preparations charge only the reviewed private expense and keep pu
     const stale = FB.stories.apply(s,id,'buy_supplies',q), before = s.player.gold;
     const bought = choose('buy_supplies'), expense = before-s.player.gold, repeat = choose('buy_supplies');
     const stayed = choose('stay'), rec = JSON.stringify(s.stories[id]), saved = JSON.parse(FB.save.serialize());
-    FB.activateBookmark('1066'); FB.save.restore(saved);
-    const r = FB.state;
-    return { poor, stale, bought, expense, repeat, stayed, phase:r.stories[id].phase,
-      receipts:Object.keys(r.stories[id].householdReceipts).length,
-      publicKept:publicFacts === publicSnapshot(r),
-      retained:rec === JSON.stringify(r.stories[id]), noContract:!r.stories[id].jobs.repairs };
+    window.__startRestoreSave = JSON.stringify(saved);
+    window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+    FB.activateBookmark('1066');
+    window.__afterStartRestore = function () {
+      const r = FB.state;
+      return { poor, stale, bought, expense, repeat, stayed, phase:r.stories[id].phase,
+        receipts:Object.keys(r.stories[id].householdReceipts).length,
+        publicKept:publicFacts === publicSnapshot(r),
+        retained:rec === JSON.stringify(r.stories[id]), noContract:!r.stories[id].jobs.repairs };
+    };
   })).toEqual({ poor:false, stale:false, bought:true, expense:2, repeat:false, stayed:true, phase:'stayed',
     receipts:0, publicKept:true, retained:true, noContract:true });
 });

@@ -1,11 +1,12 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['index.html', 'data/starts_laskaris_1204.js', 'data/starts.js',
+dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html', 'data/starts_laskaris_1204.js', 'data/starts.js',
   'data/bookmark_1204.js', 'data/bookmark_1204_terrain.js', 'data/bookmark_1204_campaigns.js',
   'data/story_instances.js', 'data/communal_revisions.js', 'data/government_rollout.js',
   'data/story_households_1204.js', 'data/story_ruler_agendas.js', 'data/start_ambitions.js',
@@ -14,6 +15,18 @@ dependsOnRuntime(__filename, ['index.html', 'data/starts_laskaris_1204.js', 'dat
   'js/stories.js', 'js/story_campaign.js', 'js/story_household.js', 'js/story_ruler_agenda.js',
   'js/wars.js', 'js/treasury.js', 'js/save.js', 'js/save_v4.js',
   'js/ui_misc.js', 'js/ui_panels.js', 'js/ui_modals.js']);
+
+// Keep activation outside the synchronous restore guard, then resume the proof.
+async function evaluateAcrossBookmark(page, compute, argument) {
+  await installRestoreFacts(page);
+  await page.evaluate(compute, argument);
+  const checkpoint = await page.evaluate(function () { return window.__startRestoreSave; });
+  await restoreBookmark(page, checkpoint);
+  expect(await page.evaluate(function () {
+    return [FB.getRngState() >>> 0, FB.getUidCounter()];
+  })).toEqual(await page.evaluate(function () { return window.__startRestoreSequence; }));
+  return page.evaluate(function () { return window.__afterStartRestore(); });
+}
 
 async function beginLaskaris(page, info, revision, throughCard) {
   await useReleasedStartRules(page);
@@ -39,11 +52,12 @@ async function beginLaskaris(page, info, revision, throughCard) {
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#bookmarklist [data-bookmark="1204"]').click();
-  const card = page.getByRole('button', { name:'Theodore Laskaris at Nicaea', exact:true });
+  const card = page.locator('[data-scenario="laskaris_1204"]');
   await expect(card).toBeVisible();
   await expect(page.locator('#scenariolist .scen-group').first()).toHaveText('Historical starts');
   if (throughCard) await card.click();
   else {
+    await page.locator('#btn-ng-back').click();
     await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill('LASKARIS-1204-laskaris_1204-nicaea-m-Theodore_Laskaris');
     await page.locator('#ng-seed').press('Enter');
@@ -61,7 +75,7 @@ async function beginLaskaris(page, info, revision, throughCard) {
 for (const opening of [{ revision:'baseline', card:true }, { revision:'inhabited_v2', card:false }]) {
   test(opening.revision + ' adopts the seeded court and restores its existing family and resources', async function ({ page }, info) {
     await beginLaskaris(page, info, opening.revision, opening.card);
-    expect(await page.evaluate(function () {
+    expect(await evaluateAcrossBookmark(page, function () {
       const s = FB.state, me = s.chars[s.player.charId], before = window.__laskarisCourt;
       const identity = { id:me.id, name:me.name, born:me.born, dyn:me.dyn, skills:me.skills,
         spouse:me.spouseId, children:me.childrenIds };
@@ -86,10 +100,14 @@ for (const opening of [{ revision:'baseline', card:true }, { revision:'inhabited
         return [state.start,state.owner,state.holder,state.player.gold,state.player.liege,
           c.id,c.dyn,c.skills,c.spouseId,c.childrenIds,Object.keys(state.chars).sort(),state.stories];
       }
-      const checkpoint = JSON.stringify(snapshot(saved.state));
-      FB.activateBookmark('867'); FB.save.restore(saved);
-      facts.restored = checkpoint === JSON.stringify(snapshot(FB.state));
-      return facts;
+      const checkpoint = window.restoreFacts(FB.state,snapshot);
+      window.__startRestoreSave = JSON.stringify(saved);
+      window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+      FB.activateBookmark('867');
+      window.__afterStartRestore = function () {
+        facts.restored = checkpoint === window.restoreFacts(FB.state,snapshot);
+        return facts;
+      };
     })).toMatchObject({ identity:true, name:'Theodore Laskaris', age:29, culture:'greek', religion:'orthodox',
       tier:6, rank:3, form:'territorial', home:'nicaea', settlement:0, site:'nicaea_head', original:'nicaea_1204',
       scenario:'laskaris_1204', revision:opening.revision, single:true, sourceRemoved:true, treasury:true,
@@ -130,7 +148,8 @@ for (const bad of [{ date:'1066', county:'nicaea' }, { date:'1204', county:'cons
     if (await full.isVisible()) await full.click();
     else await page.getByRole('button', { name:'New Game', exact:true }).click();
     await page.locator('#bookmarklist [data-bookmark="1066"]').click();
-    await expect(page.getByRole('button', { name:'Theodore Laskaris at Nicaea', exact:true })).toHaveCount(0);
+    await expect(page.locator('[data-scenario="laskaris_1204"]')).toHaveCount(0);
+    await page.locator('#btn-ng-back').click();
     await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill('LASKARIS-' + bad.date + '-laskaris_1204-' + bad.county + '-m-Theodore_Laskaris');
     await page.locator('#ng-seed').press('Enter');
@@ -208,13 +227,13 @@ test('the Constantinople household keeps the Nicaean court independent and its o
 });
 
 for (const court of [
-  { id:'muhammad_1204', realm:'khwarazm_1204', place:'gurganj_district', name:'Muhammad_II', form:'regnum', tier:6 },
+  { id:'muhammad_1204', realm:'khwarazm_1204', place:'gurganj_district', name:'Muhammad_II', identity:'persian.sunni', form:'regnum', tier:6 },
   { id:'siwa_delegate_1204', realm:'siwa_households_1204', place:'siwa_oasis', name:'Delegate', form:'assembly_polity', tier:1 }
 ]) {
   test(court.id + ' retains its separate authority and the original Nicaean campaign references', async function ({ page }, info) {
     await useReleasedStartRules(page);
     await startHistoricalGame(page, info, { bookmark:'1204',
-      code:'OTHERCOURT-1204-' + court.id + '-' + court.place + '-m-' + court.name });
+      code:'OTHERCOURT-1204-' + court.id + '-' + court.place + '-m-' + court.name + (court.identity ? '-standard-0-' + court.identity : '') });
     expect(await page.evaluate(function (court) {
       const s = FB.state, rid = court.form === 'assembly_polity' ? court.realm : 'player';
       const def = FB.stories.definition(s,FBDATA.bookmarkContent['1204'].campaigns.nicaean_return_1204);

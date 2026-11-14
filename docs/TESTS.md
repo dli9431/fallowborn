@@ -842,6 +842,23 @@ Specifications should import `test` and `expect` from `support/fixture.js`, not 
 `@playwright/test`. The shared fixture fails the test on page exceptions, console errors, failed
 requests, bad HTTP responses, or network traffic outside the expected local target.
 
+Historical start specifications select scenario cards by their stable `data-scenario`
+identity. Code journeys inspect the offered card, return to the date screen, and open
+the seed dialog there. Cross-bookmark checkpoints use `restoreBookmark` to enter
+`FB.game.loadData`; the synchronous restore guard remains enforced. Their detached
+`restore-facts` projections expand wire defaults and canonicalize object keys while
+retaining every projected value, array position, RNG bit and UID counter. Pre-seal
+campaign fixtures omit the attachment seal when intentionally omitting a story record.
+They also omit its envelope schema stamp; sealed current saves still reject a missing
+attached record without changing the campaign. Copyist openings check that the authored
+apprentice rank survives creation and matching restore in both resident communities.
+The commission entry is a costless review that preserves the apprentice's career and
+focus; licensed scholarly work remains unavailable, and the three paid shifts retain
+their exact reserved fee and replacement of Daily Focus.
+Family assertions distinguish generated genealogy from maintained dependants. Soldier
+journey cases retain the wartime departure refusal and stage civilian work through
+the career API before exercising ordinary travel.
+
 Leaf modules under `support/game/` own common player journeys such as navigation, deterministic
 game start, UI refresh waits, snapshots, and browser-harness injection. Import only the leaf helper
 a specification uses; do not recreate a shared barrel module. Wait for visible screens or

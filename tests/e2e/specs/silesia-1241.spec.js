@@ -1,8 +1,9 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const { test, expect } = require('../support/fixture');
 const { openGame,openTitle } = require('../support/game/navigation');
 const { startParityGame } = require('../support/game/parity');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html','data/starts.js','data/starts_silesia_1241.js','data/story_silesia_1241.js',
@@ -16,6 +17,18 @@ dependsOnRuntime(__filename, [
   'js/mobile_columns.js','js/mobile_confederations.js','js/mobile_command.js','js/bookmark_setup.js',
   'js/bookmark_sources.js','js/bookmark_composition.js','data/bookmark_1241_operations.js'
 ]);
+
+// Keep activation outside the synchronous restore guard, then resume the proof.
+async function evaluateAcrossBookmark(page, compute, argument) {
+  await installRestoreFacts(page);
+  await page.evaluate(compute, argument);
+  const checkpoint = await page.evaluate(function () { return window.__startRestoreSave; });
+  await restoreBookmark(page, checkpoint);
+  expect(await page.evaluate(function () {
+    return [FB.getRngState() >>> 0, FB.getUidCounter()];
+  })).toEqual(await page.evaluate(function () { return window.__startRestoreSequence; }));
+  return page.evaluate(function () { return window.__afterStartRestore(); });
+}
 
 async function startHenry(page, info) {
   await startParityGame(page, info, {bookmark:'1241',scenario:'henry_pious_1241',declaredOpening:true});
@@ -97,7 +110,7 @@ test('adoption preserves one Henry, Anna, all declared children and the existing
   await expect(page.locator('#cg-name')).toHaveAttribute('readonly','');
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
-  const result = await page.evaluate(function () {
+  const result = await evaluateAcrossBookmark(page, function () {
     FB.game.setPaused(true);
     const s = FB.state, me = s.chars[s.player.charId], before = window.__henryBefore;
     const spouse = s.chars[me.spouseId];
@@ -121,14 +134,18 @@ test('adoption preserves one Henry, Anna, all declared children and the existing
       contacts:people.length === 1 && s.chars[people[0]].name === 'Wenceslas I' &&
         people[0] === FB.realmRulerCharacterSnapshot(s,'bohemia_1241').id};
     const saved = JSON.parse(FB.save.serialize());
-    const snapshot = JSON.stringify([s.player,s.realms.player,s.owner,s.holder,s.stories,me.spouseId,me.childrenIds]);
+    const snapshotProject = function (s) { const me = s.chars[s.player.charId]; return [s.player,s.realms.player,s.owner,s.holder,s.stories,me.spouseId,me.childrenIds]; };
+    const snapshot = window.restoreFacts(s,snapshotProject);
     FBDATA.bookmarks['1241'].hidden = true;
-    FB.activateBookmark('867'); FB.save.restore(saved);
-    const restored = FB.state, actor = restored.chars[restored.player.charId];
-    facts.retained = snapshot === JSON.stringify([restored.player,restored.realms.player,restored.owner,restored.holder,
-      restored.stories,actor.spouseId,actor.childrenIds]);
-    facts.valid = FB.save.v4.validatePlatform(restored);
-    return facts;
+    window.__startRestoreSave = JSON.stringify(saved);
+    window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+    FB.activateBookmark('867');
+    window.__afterStartRestore = function () {
+      const restored = FB.state, actor = restored.chars[restored.player.charId];
+      facts.retained = snapshot === window.restoreFacts(FB.state,snapshotProject);
+      facts.valid = FB.save.v4.validatePlatform(restored);
+      return facts;
+    };
   });
   expect(result).toEqual({name:'Henry II the Pious',born:1200,culture:'slavic',faith:'catholic',tier:5,
     location:'wroclaw',settlement:0,single:1,samePerson:true,adopted:true,sameFamily:true,

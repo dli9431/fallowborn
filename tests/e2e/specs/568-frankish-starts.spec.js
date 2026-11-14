@@ -1,17 +1,19 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {useReleasedStartRules} = require('../support/game/released-starts');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/starts.js','data/starts_568.js','data/starts_568_ravenna.js',
+  'js/bookmark_composition.js','index.html','data/starts.js','data/starts_568.js','data/starts_568_ravenna.js',
   'data/starts_rulers_568.js','data/story_ruler_agendas_568.js','data/starts_rulers_568_east.js',
   'data/story_ruler_agendas_568_east.js','data/story_instances.js',
   'data/bookmark_568.js','data/bookmark_568_scaffold_a.js','data/bookmark_568_scaffold_b.js',
   'data/bookmark_568_scaffold_c.js','data/bookmark_568_scaffold_d.js','data/bookmark_568_identities.js',
   'data/eras.js','data/political_institutions.js','data/cultures.js','data/government_rollout.js',
-  'js/main.js','js/starts.js','js/world.js','js/model.js','js/stories.js','js/story_ruler_agenda.js',
+  'js/main.js','js/starts.js','js/world.js','js/model.js','js/authority.js','js/governments.js','js/stories.js','js/story_ruler_agenda.js',
   'js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js'
 ]);
 
@@ -23,6 +25,18 @@ const rulers = [
   {id:'guntram_568',name:'Guntram',title:'Guntram at Orleans',realm:'burgundy_568',
     county:'orleans',site:'orleans_476',agenda:'guntram_agenda_568',born:532}
 ];
+
+// Keep activation outside the synchronous restore guard, then resume the proof.
+async function evaluateAcrossBookmark(page, compute, argument) {
+  await installRestoreFacts(page);
+  await page.evaluate(compute, argument);
+  const checkpoint = await page.evaluate(function () { return window.__startRestoreSave; });
+  await restoreBookmark(page, checkpoint);
+  expect(await page.evaluate(function () {
+    return [FB.getRngState() >>> 0, FB.getUidCounter()];
+  })).toEqual(await page.evaluate(function () { return window.__startRestoreSequence; }));
+  return page.evaluate(function () { return window.__afterStartRestore(); });
+}
 
 async function beginRuler(page,info,row,code) {
   await useReleasedStartRules(page);
@@ -37,7 +51,7 @@ async function beginRuler(page,info,row,code) {
     await page.locator('#ng-seed').press('Enter');
   } else {
     await page.locator('#bookmarklist [data-bookmark="568"]').click();
-    await page.getByRole('button',{name:row.title,exact:true}).click();
+    await page.locator('[data-scenario="'+row.id+'"]').click();
   }
   await expect(page.locator('#cg-name')).toHaveValue(row.name);
   await expect(page.locator('#cg-name')).toHaveAttribute('readonly','');
@@ -75,19 +89,24 @@ for (const row of rulers) {
   for (const code of [false,true]) {
     test(row.id+' adopts its original ruler through '+(code?'a start code':'the picker'),async function ({page},info) {
       await beginRuler(page,info,row,code);
-      expect(await page.evaluate(function (row) {
+      expect(await evaluateAcrossBookmark(page, function (row) {
         const s = FB.state, me = s.chars[s.player.charId];
         const site = FB.settlementsOf(s,row.county)[s.player.homeSettlement];
         const saved = JSON.parse(FB.save.serialize());
-        const snapshot = JSON.stringify([s.start,s.player,s.chars,s.owner,s.holder,s.stories]);
-        FB.activateBookmark('867'); FB.save.restore(saved);
-        const restored = snapshot === JSON.stringify([FB.state.start,FB.state.player,FB.state.chars,FB.state.owner,FB.state.holder,FB.state.stories]);
-        return {name:me.name,born:me.born,tier:s.player.tier,rank:s.realms.player.rank,
-          home:s.player.provinceId,site:site.site,form:s.realms.player.government,
-          sourceGone:!s.realms[row.realm],single:Object.values(s.chars).filter(function (c) { return c.name === row.name && !c.dead; }).length,
-          agenda:s.stories[row.agenda].subjectId === me.id,revision:s.start.revision,
-          spouse:row.id === 'sigebert_568' ? Object.values(s.chars).filter(function (c) { return c.name === 'Brunhild' && !c.dead && c.spouseId === me.id && me.spouseId === c.id; }).length : 0,
-          restored:restored};
+        const snapshotProject = function (s) { const me = s.chars[s.player.charId]; return [s.start,s.player,s.chars,s.owner,s.holder,s.stories]; };
+        const snapshot = window.restoreFacts(s,snapshotProject);
+        window.__startRestoreSave = JSON.stringify(saved);
+        window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+        FB.activateBookmark('867');
+        window.__afterStartRestore = function () {
+          const restored = snapshot === window.restoreFacts(FB.state,snapshotProject);
+          return {name:me.name,born:me.born,tier:s.player.tier,rank:s.realms.player.rank,
+            home:s.player.provinceId,site:site.site,form:FB.political.government(s,{kind:'realm',id:'player'}).formId,
+            sourceGone:!s.realms[row.realm],single:Object.values(s.chars).filter(function (c) { return c.name === row.name && !c.dead; }).length,
+            agenda:s.stories[row.agenda].subjectId === me.id,revision:s.start.revision,
+            spouse:row.id === 'sigebert_568' ? Object.values(s.chars).filter(function (c) { return c.name === 'Brunhild' && !c.dead && c.spouseId === me.id && me.spouseId === c.id; }).length : 0,
+            restored:restored};
+        };
       },row)).toEqual({name:row.name,born:row.born,tier:6,rank:3,home:row.county,site:row.site,
         form:'regnum',sourceGone:true,single:1,agenda:true,revision:'eastern_courts_v3',
         spouse:row.id === 'sigebert_568'?1:0,restored:true});

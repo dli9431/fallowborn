@@ -51,6 +51,7 @@ test('independent explicit and inherited-faith courts import through Mods and re
   else await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#bookmarklist [data-bookmark="1066"]').click();
   await expect(page.getByRole('button', { name:'English court example' })).toBeVisible();
+  await page.locator('#btn-ng-back').click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill('FAITH-1066-inherited_court_example-london-m-Harold_Godwinson');
   await page.locator('#ng-seed').press('Enter');
