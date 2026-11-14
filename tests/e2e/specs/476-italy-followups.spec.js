@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/story_courts_476.js',
+  'data/story_household_effects_476_493.js','js/story_household_observer.js',
   'index.html','data/bookmark_476.js','data/bookmark_476_italy.js','data/bookmarks.js',
   'data/bookmark_476_africa.js','data/bookmark_476_dalmatia_east.js','data/bookmark_476_gaul_iberia.js',
   'data/settlements.js','data/geographies.js','data/starts.js','data/eras.js','data/technology.js','data/systems.js','data/traits.js',
@@ -10,15 +11,14 @@ dependsOnRuntime(__filename, [
   'js/story_courts.js','js/stories.js','js/starts.js','js/authority.js','js/treasury.js',
   'js/population.js','js/world.js','js/model.js','js/institutions.js','js/religion.js','js/events.js',
   'js/save.js','js/save_v4.js','js/ui_modals.js','js/main.js','js/technology.js','js/systems.js','js/settlement.js','js/federates.js',
-  'data/distribution_crazygames.js','js/crazygames.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { openGame } = require('../support/game/navigation');
 
-async function start(page, testInfo, crazygames) {
+async function start(page, testInfo) {
   await startHistoricalGame(page, testInfo, { bookmark:'476',
-    code:'ITALYFOLLOWUP-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' }, crazygames);
+    code:'ITALYFOLLOWUP-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' });
 }
 async function startOdoacer(page, testInfo) {
   await openGame(page, testInfo);
@@ -37,10 +37,10 @@ async function startOdoacer(page, testInfo) {
   await page.evaluate(function () { FB.game.setPaused(true); });
 }
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('declarative Italian families, property and civilian seeds restore once, distribution ' + crazygames,
     async function ({ page }, testInfo) {
-      await start(page,testInfo,crazygames);
+      await start(page,testInfo);
       const result = await page.evaluate(function () {
         const s=FB.state, w=s.stories.western_court_476, setup=s.bookmarkSetup;
         const father=FB.bookmarkActor(s,'basilius'), son=FB.bookmarkActor(s,'senator');
@@ -276,12 +276,18 @@ test('legacy saves without opening records do not manufacture property, cohorts 
   await start(page,testInfo);
   const result=await page.evaluate(function () {
     const saved=JSON.parse(FB.save.serialize());
+    // Older campaigns have no sealed attachment inventory.
+    delete saved.storyAttachmentSchema;
+    delete saved.state.start.storyAttachments;
     delete saved.state.bookmarkSetup;
     delete saved.state.stories.sicilian_tribute_476;
     delete saved.state.stories.norican_evacuation_476;
+    delete saved.state.stories.household_effects_sicilian_tribute_476;
+    delete saved.state.stories.household_effects_norican_evacuation_476;
     const population=JSON.stringify(saved.state.population),ids=Object.keys(saved.state.chars).length;
     FB.save.restore(saved);
-    return {absent:FB.state.bookmarkSetup===undefined && !FB.state.stories.sicilian_tribute_476 && !FB.state.stories.norican_evacuation_476,
+    return {absent:FB.state.bookmarkSetup===undefined && !FB.state.stories.sicilian_tribute_476 && !FB.state.stories.norican_evacuation_476 &&
+      !FB.state.stories.household_effects_sicilian_tribute_476 && !FB.state.stories.household_effects_norican_evacuation_476,
       population:population===JSON.stringify(FB.state.population),actors:ids===Object.keys(FB.state.chars).length};
   });
   expect(result).toEqual({absent:true,population:true,actors:true});

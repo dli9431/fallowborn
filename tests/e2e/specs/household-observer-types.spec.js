@@ -1,23 +1,28 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
-const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
+const { expectModAdmission } = require('../support/game/mod-admission');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = require('../fixtures/authoring/household-observers.json');
 dependsOnRuntime(__filename, ['index.html','js/story_household_observer.js','js/story_household.js',
   'js/stories.js','js/story_campaign.js','js/story_agreements.js','js/story_government_selection.js',
   'js/world.js','js/starts.js','js/mods.js','js/save.js','js/save_v4.js','js/main.js','data/technology.js']);
 
-async function imported(page, info, scenario) {
+async function imported(page, info, scenario, established) {
   await openGame(page, info);
+  const candidate = JSON.parse(JSON.stringify(examples));
+  if (established) candidate.startScenarios.find(function (sc) { return sc.id === 'dune_household'; })
+    .familyPresets = {established:{name:'Established household',diff:'With living kin'}};
+  await expectModAdmission(page, candidate);
   await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/household-observers.json'));
+  await page.locator('#modfile').setInputFiles({ name:'household-observers.json',
+    mimeType:'application/json', buffer:Buffer.from(JSON.stringify(candidate)) });
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('road_household_notice'); });
-  await beginBookmark(page, info, 'dune_world', scenario || 'dune_household');
+  await beginBookmarkFromTitle(page, 'dune_world', scenario || 'dune_household');
 }
 
 test('JSON observers have independent sources, reach and expiry without initial historical replay', async function ({ page }, info) {
@@ -97,10 +102,16 @@ test('pending and resolved notices round trip and missing records remain absent'
     const finished = JSON.parse(FB.save.serialize()); FB.save.restore(finished); s = FB.state;
     FB.stories.get(id).day(s,s.stories[id]);
     const replay = FB.stories.status(s,id), receipt = Object.keys(s.stories[id].householdReceipts).length;
-    delete finished.state.stories[id]; FB.save.restore(finished);
-    return {retained:retained,applied:applied,repeated:repeated,replay:replay,receipt:receipt,
+    delete finished.state.stories[id];
+    const current = FB.state, currentRng = FB.getRngState(), currentUid = FB.getUidCounter();
+    let sealedRejected = false; try { FB.save.restore(finished); } catch (_) { sealedRejected = true; }
+    sealedRejected = sealedRejected && current === FB.state && currentRng === FB.getRngState() && currentUid === FB.getUidCounter();
+    // An older campaign predates the sealed attachment inventory.
+    delete finished.storyAttachmentSchema;
+    delete finished.state.start.storyAttachments; FB.save.restore(finished);
+    return {sealedRejected:sealedRejected,retained:retained,applied:applied,repeated:repeated,replay:replay,receipt:receipt,
       gold:gold === FB.state.player.gold,missing:!FB.state.stories[id]};
-  })).toEqual({retained:true,applied:true,repeated:false,replay:null,receipt:1,gold:true,missing:true});
+  })).toEqual({sealedRejected:true,retained:true,applied:true,repeated:false,replay:null,receipt:1,gold:true,missing:true});
 });
 
 test('a remote campaign reaches a household only when its actual host arrives', async function ({ page }, info) {
@@ -120,7 +131,7 @@ test('a remote campaign reaches a household only when its actual host arrives', 
 });
 
 test('household continuity requires a fresh heir review and never repeats a closed response', async function ({ page }, info) {
-  await imported(page, info);
+  await imported(page, info, null, true);
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'well_household_notice', module = FB.stories.get(id), t = s.stories[id];
     s.turn = 10; s.player.provinceId = 'dune_flats';

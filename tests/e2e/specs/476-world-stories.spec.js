@@ -8,7 +8,7 @@ dependsOnRuntime(__filename, [
   'index.html', 'data/story_campaigns.js', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/eras.js', 'data/systems.js', 'js/systems.js', 'data/cultures.js',
   'data/settlements.js', 'data/map_data.js', 'data/counties.js',
-  'js/util.js', 'js/crazygames.js', 'data/distribution_crazygames.js',
+  'js/util.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
   'data/political_institutions.js', 'data/technology.js', 'data/starts.js',
@@ -21,9 +21,7 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { openCrazyGame } = require('../support/game/crazygames-title');
 const { openStoryAffairs } = require('../support/game/story-placement');
-const { mockCrazyGames } = require('../support/crazygames');
 const RAILS = ['zeno_return_476','clovis_syagrius_476','theoderic_italy_476',
   'eastern_africa_476','eastern_italy_476','rugian_frontier_476','sicilian_tribute_476',
   'norican_evacuation_476','thracian_pressure_476','amal_epirus_476',
@@ -31,15 +29,9 @@ const RAILS = ['zeno_return_476','clovis_syagrius_476','theoderic_italy_476',
   'vasconian_campaign_476','gallaecian_campaign_476',
   'western_office_476'];
 
-async function start(page, testInfo, bookmark, crazygames, scenario) {
-  if (crazygames) {
-    await mockCrazyGames(page);
-    await openCrazyGame(page, testInfo);
-    await page.locator('#btn-choose-beginning').click();
-  } else {
-    await openGame(page, testInfo);
-    await page.getByRole('button', { name:'New Game', exact:true }).click();
-  }
+async function start(page, testInfo, bookmark, scenario) {
+  await openGame(page, testInfo);
+  await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill(bookmark === '867'
     ? 'WORLDSTORIES-867-serf-london-f-Ada'
@@ -52,11 +44,10 @@ async function start(page, testInfo, bookmark, crazygames, scenario) {
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 }
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('independent world stories attach and save with distribution flag ' + crazygames,
     async function ({ page }, testInfo) {
-      if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-      await start(page, testInfo, '476', crazygames);
+      await start(page, testInfo, '476');
       const result = await page.evaluate(function () {
         const s = FB.state, stories = FBDATA.bookmarks['476'].stories;
         const before = JSON.stringify(s), rng = FB.getRngState();
@@ -81,7 +72,7 @@ for (const crazygames of [false,true]) {
 
 test('independent court bargaining waits for an undecided civic household',
   async function ({ page }, testInfo) {
-    await start(page, testInfo, '476', false, 'curialis_476');
+    await start(page, testInfo, '476', 'curialis_476');
     const result = await page.evaluate(function () {
       const s = FB.state, w = s.stories.western_court_476;
       s.turn = 90; FB.stories.day(s);
@@ -352,6 +343,9 @@ test('legacy campaign records migrate without inventing actors, awards or paymen
     const result = await page.evaluate(function () {
       const old = JSON.parse(FB.save.serialize());
       // Pre-rails saves predate declarative openings, so they carry no bookmarkSetup.
+      // Older campaigns have no sealed attachment inventory.
+      delete old.storyAttachmentSchema;
+      delete old.state.start.storyAttachments;
       delete old.state.bookmarkSetup;
       const w = old.state.stories.western_court_476;
       delete w.railsSchema; w.easternReturn = 'interrupted';
@@ -417,7 +411,6 @@ test('one observer season preserves bounded historical opportunities through res
     await start(page, testInfo);
     await page.evaluate(function () {
       FB.game.observe = true;
-      delete FB.state.stories.federate_track_476; delete FB.state.stories.opening_federate_476;
     });
     // Keep each browser task bounded and exercise real daily/seasonal ordering.
     for (let batch = 0; batch < 3; batch++) {

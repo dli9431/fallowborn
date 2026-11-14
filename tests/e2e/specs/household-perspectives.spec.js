@@ -2,6 +2,7 @@
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { installRestoreFacts } = require('../support/game/restore-facts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, ['index.html','data/starts.js','data/starts_perspectives.js','data/start_ambitions.js',
@@ -11,6 +12,7 @@ dependsOnRuntime(__filename, ['index.html','data/starts.js','data/starts_perspec
   'data/cultures.js','data/communal_revisions.js','data/government_rollout.js',
   'data/actions.js','data/economy.js','data/travel.js','data/events_travel.js',
   'js/starts.js','js/stories.js','js/story_household.js','js/story_opening_goals.js','js/story_campaign.js',
+  'js/bookmark_composition.js',
   'js/main.js','js/model.js','js/world.js','js/actions.js','js/travel.js',
   'js/government_civic.js','js/civic_transactions.js','js/save.js','js/save_v4.js',
   'js/i18n.js','js/ui_misc.js','js/ui_panels.js']);
@@ -150,11 +152,16 @@ test('the harbor start validates every offering revision and attaches its househ
 for (const [culture, faith] of [['italian','catholic'],['greek','orthodox'],['frankish','catholic']]) {
   test('harbor merchant ' + culture + ' earns only ordinary income and retains family identity', async function ({ page }, info) {
     await beginCommunity(page, info, '1204', MERCHANT, 'constantinople', culture, faith);
+    await installRestoreFacts(page);
     expect(await page.evaluate(function (input) {
       let s = FB.state; const id = 'constantinople_merchant_track_1204';
       function choose(c) { return FB.stories.apply(s, id, c, FB.stories.quote(s, id, c)); }
+      function publicFacts() {
+        // Restore may reorder object keys; retain every value and array order.
+        return FB.contentValues.canonical(JSON.parse(JSON.stringify([s.owner,s.realms,FB.civicGovernment.row(s, 'venice_1204')])));
+      }
       const kin = FB.householdMembers(s).map(function (c) { return [c.id,c.culture,c.religion]; });
-      const publicBefore = JSON.stringify([s.owner,s.realms,FB.civicGovernment.row(s, 'venice_1204')]);
+      const publicBefore = publicFacts();
       const seed = s.seed, gold = s.player.gold, selected = choose('local_trade'), noWage = s.player.gold === gold;
       FB.stories.get(id).day(s, s.stories[id]); const waiting = s.stories[id].phase;
       FB.tickFocus(s); const earned = s.player.gold > gold, paid = s.player.gold, ready = s.stories[id].phase;
@@ -163,14 +170,22 @@ for (const [culture, faith] of [['italian','catholic'],['greek','orthodox'],['fr
       const finished = choose('stay'), noBonus = s.player.gold === afterSupplies;
       const rec = JSON.stringify(s.stories[id]); FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
       const retained = rec === JSON.stringify(s.stories[id]) && seed === s.seed && s.player.gold === afterSupplies;
-      const publicSame = publicBefore === JSON.stringify([s.owner,s.realms,FB.civicGovernment.row(s, 'venice_1204')]);
+      const publicSame = assertRestoreFacts(publicFacts(), publicBefore);
       const identity = kin.length > 1 && kin.every(function (r) {
         return r[1] === input.culture && r[2] === input.faith && s.chars[r[0]].culture === r[1] && s.chars[r[0]].religion === r[2];
       });
-      const saved = JSON.parse(FB.save.serialize()); delete saved.state.stories[id]; FB.save.restore(saved);
-      return { selected, noWage, waiting, earned, ready, spent, finished, noBonus, retained, publicSame, identity,
-        missingStaysMissing:!FB.state.stories[id] };
-    }, { culture, faith })).toEqual({ selected:true, noWage:true, waiting:'local_work', earned:true, ready:'relationship',
+      const saved = JSON.parse(FB.save.serialize()); delete saved.state.stories[id];
+      // The companion opening profile requires this household graph.
+      delete saved.state.stories.opening_constantinople_merchant_1204;
+      const current = FB.state, currentRng = FB.getRngState(), currentUid = FB.getUidCounter();
+      let sealedRejected = false; try { FB.save.restore(saved); } catch (_) { sealedRejected = true; }
+      sealedRejected = sealedRejected && current === FB.state && currentRng === FB.getRngState() && currentUid === FB.getUidCounter();
+      // An older campaign predates the sealed attachment inventory.
+      delete saved.storyAttachmentSchema;
+      delete saved.state.start.storyAttachments; FB.save.restore(saved);
+      return { sealedRejected, selected, noWage, waiting, earned, ready, spent, finished, noBonus, retained, publicSame, identity,
+        missingStaysMissing:!FB.state.stories[id] && !FB.state.stories.opening_constantinople_merchant_1204 };
+    }, { culture, faith })).toEqual({ sealedRejected:true, selected:true, noWage:true, waiting:'local_work', earned:true, ready:'relationship',
       spent:culture === 'italian' ? 2 : 0, finished:true, noBonus:true, retained:true, publicSame:true, identity:true, missingStaysMissing:true });
   });
 }

@@ -224,7 +224,6 @@ test('one observer season retains valid courts, sites and bounded regional stori
     await start476(page, testInfo);
     await page.evaluate(function () {
       FB.game.observe = true;
-      delete FB.state.stories.curialis_track_476; delete FB.state.stories.opening_curialis_476;
     });
     await page.evaluate(function () {
       for (let day = 0; day < 90; day++) {
