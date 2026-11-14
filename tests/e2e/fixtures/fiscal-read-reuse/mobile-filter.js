@@ -8,7 +8,7 @@ const filter = [
   '    })[0];\n'
 ].join('\n');
 function parent(source) {
-  const begin = '    var ids = Object.keys(root), rid, found = false;\n';
+  const begin = '    var known = dayMobileRealms(s,root);\n';
   const end = '    // An expedition is an additional office.';
   const first = source.indexOf(begin), last = source.indexOf(end);
   if (first < 0 || first !== source.lastIndexOf(begin) || last < first || last !== source.lastIndexOf(end))

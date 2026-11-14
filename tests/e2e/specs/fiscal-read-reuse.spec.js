@@ -13,15 +13,16 @@ dependsOnRuntime(__filename,['js/government_aristocracy.js','js/lordships.js','j
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_guard.js','js/justice.js',
   'js/governments.js','js/government_recognition.js','js/politics.js','js/systems.js',
   'js/authority.js','js/actions.js','js/treasury.js','js/save.js','js/save_v4.js','js/mods.js','js/main.js',
-  'js/bookmark_setup.js','js/starts.js','js/home_authority.js']);
+  'js/bookmark_setup.js','js/starts.js','js/home_authority.js','js/day_phases.js','js/ecclesiastical_strategies.js']);
 
 for (const start of journey.starts) {
   test('fiscal and office read reuse preserves ordinary and staged boundary days for '+start.scenario,async function ({page},info) {
     const outputs = [], counts = [], diagnostics = [];
-    for (const reference of [true,false]) {
-      await source.route(page,reference,!reference);
+    for (const mode of ['reference','candidate','diagnostic']) {
+      const reference = mode === 'reference', diagnostic = mode === 'diagnostic';
+      await source.route(page,reference,diagnostic);
       await journey.begin(page,info,start);
-      if (!reference) {
+      if (diagnostic) {
         await page.evaluate(audit.install);
         await page.evaluate(guard.observe);
         await page.evaluate(function (body) { window.__guardFacts = (0,eval)('('+body+')'); },guard.facts.toString());
@@ -63,13 +64,16 @@ for (const start of journey.starts) {
         return {states:states,counts:window.fiscalReadCounts,phases:phases,
           identity:{version:FB.VERSION,start:JSON.parse(JSON.stringify(FB.state.start)),userAgent:navigator.userAgent}};
       });
-      outputs.push(result.states); counts.push(result.counts);
-      if (!reference) diagnostics.push(result);
+      outputs.push(result.states);
+      if (diagnostic) diagnostics.push(result);
+      else counts.push(result.counts);
     }
     expect(outputs[1]).toEqual(outputs[0]);
+    expect(outputs[2]).toEqual(outputs[1]);
     expect(counts[1].requests).toBe(counts[0].requests);
-    // Inside a simulated day the coalition rows are listed once instead of scanned per read.
+    // Compare native readers; diagnostic wrappers exercise the override fallback separately.
     expect(counts[1].officeEntries).toBeLessThanOrEqual(counts[0].officeEntries);
+    expect(counts[0].slots).toBeGreaterThan(0);
     expect(counts[1].slots).toBeLessThanOrEqual(counts[0].slots);
     if (start.bookmark === '476') expect(counts[1].builds).toBeLessThan(counts[0].builds);
     else expect(counts[1].fiscalReads).toBe(0);

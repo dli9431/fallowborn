@@ -35,6 +35,10 @@ function source(file, text, reference) {
     if (reference) replace('    var rid = Object.keys(root).filter(function (id) {',
       '    var rid = Object.keys(root).filter(function (id) { if (window.fiscalReadCounts) window.fiscalReadCounts.slots++;');
     else {
+      replace('realms:Object.keys(root).filter(function (key) { return !!(root[key] && root[key].mobile); })',
+        'realms:Object.keys(root).filter(function (key) { if (window.fiscalReadCounts) window.fiscalReadCounts.slots++; return !!(root[key] && root[key].mobile); })');
+      replace('      var realmId = known[n];',
+        '      var realmId = known[n]; if (window.fiscalReadCounts) window.fiscalReadCounts.slots++;');
       replace('      rid = ids.filter(function (id) {',
         '      rid = ids.filter(function (id) { if (window.fiscalReadCounts) window.fiscalReadCounts.slots++;');
       replace('        var id = ids[i];',
