@@ -190,23 +190,57 @@ jobs:
           pattern: blob-${{ inputs.label }}-*
           path: blobs
           merge-multiple: true
-      - name: Merge reports
+      # A full suite's shard reports carry several gigabytes of traces. The
+      # compact results merge on their own with a raised heap; the HTML
+      # report is rendered only when the inputs are small enough to fit.
+      - name: Check report size
+        id: reports
+        run: |
+          shopt -s nullglob
+          report_files=(blobs/*.zip)
+          echo "count=${#report_files[@]}" >> "$GITHUB_OUTPUT"
+          if [ "${#report_files[@]}" -eq 0 ]; then
+            echo "html=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          total_bytes=$(du -cb "${report_files[@]}" | tail -1 | cut -f1)
+          if [ "$total_bytes" -le 1073741824 ]; then
+            echo "html=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "html=false" >> "$GITHUB_OUTPUT"
+            echo "HTML rendering omitted because the shard reports exceed 1 GiB. Compact results follow; screenshots and traces remain in this run's per-shard results artifacts." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Merge compact results
         env:
+          NODE_OPTIONS: --max-old-space-size=6144
           FB_CI_REPORT_FILE: ${{ github.workspace }}/merged/results.json
-          PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ github.workspace }}/merged/html
+          REPORT_COUNT: ${{ steps.reports.outputs.count }}
           REF: ${{ inputs.ref }}
           MODE: ${{ inputs.mode }}
         run: |
           mkdir -p merged
-          if ls blobs/*.zip >/dev/null 2>&1; then
-            (cd tooling/tests/e2e && npx playwright merge-reports --reporter="html,$GITHUB_WORKSPACE/tooling/tests/e2e/support/ci-report.js" "$GITHUB_WORKSPACE/blobs")
-            if [ ! -d merged/html ] && [ -d tooling/tests/e2e/playwright-report ]; then
-              cp -r tooling/tests/e2e/playwright-report merged/html
-            fi
+          if [ "$REPORT_COUNT" != "0" ]; then
+            (cd tooling/tests/e2e && npx playwright merge-reports --reporter="$GITHUB_WORKSPACE/tooling/tests/e2e/support/ci-report.js" "$GITHUB_WORKSPACE/blobs")
             node tooling/tests/e2e/support/ci-summary.js merged/results.json "$REF" "$MODE" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "No Playwright reports were produced for $REF." >> "$GITHUB_STEP_SUMMARY"
           fi
+      - name: Render HTML report
+        id: html
+        if: ${{ steps.reports.outputs.html == 'true' }}
+        continue-on-error: true
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+          PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ github.workspace }}/merged/html
+        run: |
+          (cd tooling/tests/e2e && npx playwright merge-reports --reporter=html "$GITHUB_WORKSPACE/blobs")
+          if [ ! -d merged/html ] && [ -d tooling/tests/e2e/playwright-report ]; then
+            cp -r tooling/tests/e2e/playwright-report merged/html
+          fi
+      - name: Note unavailable HTML rendering
+        if: ${{ !cancelled() && steps.html.outcome == 'failure' }}
+        run: |
+          echo "::warning::HTML rendering failed; the compact results and per-shard artifacts remain available."
       - uses: actions/upload-artifact@v4
         with:
           name: report-${{ inputs.label }}

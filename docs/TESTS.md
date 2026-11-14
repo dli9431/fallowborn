@@ -263,7 +263,10 @@ Workflows live in `.github/workflows/`:
   then season timing on `476`.
 - `e2e.yml`: the reusable check, sharded Playwright run (blob reporter), and merge job. The merge
   job writes a job summary with totals, failures and their first error line, flaky tests, and the
-  slowest spec files, and uploads the merged HTML and JSON report as `report-<label>`.
+  slowest spec files, and uploads the merged JSON report as `report-<label>`. The compact JSON
+  merges on its own with a 6144 MiB Node heap. The HTML report is rendered and included only when
+  the shard reports total 1 GiB or less; a full suite with many failing traces exceeds that, and
+  its screenshots and traces stay in the per-shard `results-<label>-<n>` artifacts.
 - `season-timing.yml`: runs `tests/e2e/measure/season-timing.js` from the calling commit against
   the game at the requested branch, sharded across starts, then compares the merged measurement
   with the previous nightly one and uploads `season-timing-<branch>`.
