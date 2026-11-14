@@ -11,7 +11,7 @@ const examples={harbor:require('../fixtures/authoring/mobile-opening-reserves-ha
 test.describe.configure({mode:'parallel'});
 
 dependsOnRuntime(__filename,[
-  'index.html','data/mobile_confederations.js','data/units.js','data/technology.js','data/eras.js',
+  'index.html','data/mobile_confederations.js','data/units.js','data/technology.js','data/eras.js','data/map_data.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/mobile_camps.js',
   'js/mobile_guard.js','js/expedition_programs.js','js/story_expedition_preparation.js',
   'js/authority.js','js/governments.js','js/government_selection.js','js/government_support.js',
@@ -38,9 +38,44 @@ async function start(page,info,prefix,input) {
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
 }
 
+async function observeOpeningTreasury(page) {
+  await page.evaluate(function () {
+    const credit=FB.treasuryCredit;
+    window.reserveOpeningCredits=[];
+    FB.treasuryCredit=function (s,rid,amount) {
+      const d=FB.campaignBookmark(s).realms.find(function (r) {return r.id===rid && r.mobile;});
+      if (!d) return credit.apply(this,arguments);
+      const fiscal=FB.treasurySnapshot(s).rows[rid],privateGold=s.player.gold,
+        entry={rank:s.realms[rid].rank,floor:FBDATA.balance.aiTreasuryOpeningFloor[d.rank],
+          counties:fiscal.counties,income:fiscal.income,
+          net:fiscal.income+fiscal.duesIn-fiscal.duesOut-fiscal.upkeep-fiscal.government,
+          mode:s.treasuryAccounting.mode,turn:s.turn,before:FB.treasuryAvailable(s,rid),allocation:amount,
+          accrued:s.realms[rid].treasury.militaryAccrued,
+          legacyPurse:!!(s.armyLogistics && s.armyLogistics.purses)};
+      const credited=credit.apply(this,arguments);
+      entry.credited=credited;entry.after=FB.treasuryAvailable(s,rid);
+      entry.privateUnchanged=privateGold===s.player.gold;
+      window.reserveOpeningCredits.push(entry);
+      return credited;
+    };
+  });
+}
+async function expectOpeningTreasury(page,definition) {
+  const credits=await page.evaluate(function () {return window.reserveOpeningCredits;});
+  // A countyless rank-two command has zero net receipts: its native opening
+  // reserve is the 20-coin floor, followed by one declared mobile allocation.
+  expect(definition.rank).toBe(2);
+  expect(credits).toEqual([{rank:2,floor:20,counties:0,income:0,net:0,mode:'active',turn:0,
+    before:20,allocation:definition.mobile.treasury,accrued:0,legacyPurse:false,
+    credited:true,after:20+definition.mobile.treasury,privateUnchanged:true}]);
+  return 20+definition.mobile.treasury;
+}
+
 for (const prefix of ['harbor','dune']) {
   test(prefix+' file import partitions existing people beside real columns and program intent',async function ({page},info) {
-    await start(page,info,prefix);
+    await load(page,info,prefix);
+    await observeOpeningTreasury(page);
+    await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
     const result=await page.evaluate(function () {
       const s=FB.state,M=FB.mobile,bm=FB.campaignBookmark(s),d=bm.realms.find(function (r) {return r.mobile;}),
         rid=FB.startRealmId(s,d.id),r=M.row(s,rid),p=M.profile(s,rid),o=d.mobile.opening,
@@ -61,19 +96,28 @@ for (const prefix of ['harbor','dune']) {
       const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
       M.initialize(s,bm.realms);FB.mobileInitializeAuthored(s,bm.realms);
       const repeat=before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
-      const q=FB.expeditionPrograms.review(s,rid,'approach'),at=hosts[0].at,
+      const q=FB.expeditionPrograms.review(s,rid,'approach'),locations=hosts.map(function (a) {return a.at;}),
         ordered=q.allowed && FB.expeditionPrograms.commit(s,q);
       return {conserved:conserved,units:units,repeat:repeat,hosts:hosts.length,people:M.total(s,rid),
         initial:r.accounting.initial,arrivals:r.accounting.arrivals,men:hosts.reduce(function (n,a) {return n+a.men;},0),
         reserve:r.members.reduce(function (n,m) {return n+count(m.reserve);},0),
         food:r.food+hosts.reduce(function (n,a) {return n+a.mobileFood;},0),
-        gold:FB.treasuryAvailable(s,rid),camp:M.migration(s,rid).at===d.mobile.origin && !r.camps,
+        gold:FB.treasuryAvailable(s,rid),privateGold:s.player.gold,
+        camp:M.migration(s,rid).at===d.mobile.origin && !r.camps,
         provenance:JSON.stringify(r.openingReserves)===(JSON.stringify({schema:1,allocations:o.reserves})),
-        ordered:ordered,noTeleport:hosts[0].at===at,valid:M.validate(s),
+        originalPeople:r.openingBindings.every(function (b) {
+          return s.chars[b.characterId]===FB.bookmarkActor(s,b.person.actorId) &&
+            r.members.find(function (m) {return m.id===b.memberId;}).principal.id===b.characterId;
+        }),
+        ordered:ordered,noTeleport:hosts.every(function (a,i) {return a.at===locations[i];}),valid:M.validate(s),
         tech:FBDATA.techImpactReviews.features.mobile_opening_reserves.mode};
     });
+    const publicGold=await expectOpeningTreasury(page,examples[prefix].bookmarks[prefix+'_world'].realms
+      .find(function (r) {return r.mobile;}));
     expect(result).toMatchObject({conserved:true,units:true,repeat:true,hosts:2,arrivals:0,men:160,
-      food:2000,gold:70,camp:true,provenance:true,ordered:true,noTeleport:true,valid:true,tech:'none'});
+      food:2000,gold:publicGold,privateGold:40,camp:true,provenance:true,originalPeople:true,
+      ordered:true,noTeleport:true,valid:true,tech:'none'});
+    expect(result.initial).toBe(prefix==='harbor' ? 1400 : 1600);
     expect(result.people).toBe(result.initial);
     expect(result.reserve).toBe(prefix==='harbor' ? 280 : 790);
   });
@@ -125,6 +169,7 @@ test('a fresh player command keeps the same partition and separate private purse
     .startScenarios.find(function (sc) {return sc.rulerRealmId;});
   input.startScenarios.push(command);input.bookmarks.harbor_world.starts.push(command.id);
   await load(page,info,'harbor',input);
+  await observeOpeningTreasury(page);
   const full=page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
@@ -137,14 +182,25 @@ test('a fresh player command keeps the same partition and separate private purse
   const result=await page.evaluate(function () {
     FB.game.setPaused(true);
     const M=FB.mobile,s=FB.state,rid='harbor_following',r=M.row(s,rid),me=s.chars[s.player.charId],
-      before=JSON.stringify([r,s.armies]),money=FB.treasuryAvailable(s,rid);
-    M.initialize(s,FB.campaignBookmark(s).realms);
+      bm=FB.campaignBookmark(s),d=bm.realms.find(function (r) {return r.mobile;}),
+      hosts=s.armies.filter(function (a) {return a.realm===rid && a.mobileFollowing;}),
+      before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),money=FB.treasuryAvailable(s,rid);
+    M.initialize(s,bm.realms);FB.mobileInitializeAuthored(s,bm.realms);
     return {samePerson:M.leader(s,rid)===me && FB.bookmarkActor(s,'harbor_leader')===me,
       reserve:r.members.reduce(function (n,m) {return n+m.reserve.reduce(function (n,c) {return n+c.count;},0);},0),
-      repeat:before===JSON.stringify([r,s.armies]),privateGold:s.player.gold,publicGold:money,
-      people:M.total(s,rid),valid:M.validate(s)};
+      repeat:before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter(),
+      privateGold:s.player.gold,publicGold:money,people:M.total(s,rid),initial:r.accounting.initial,
+      arrivals:r.accounting.arrivals,hosts:hosts.length,men:hosts.reduce(function (n,a) {return n+a.men;},0),
+      food:r.food+hosts.reduce(function (n,a) {return n+a.mobileFood;},0),program:!!r.expeditionProgram,
+      camp:M.migration(s,rid).at===d.mobile.origin && !r.camps,
+      noTeleport:hosts.every(function (a,i) {
+        const column=d.mobile.columns.entries[i];
+        return a.at===(column.openingLocation ? column.openingLocation.countyId : d.mobile.origin);
+      }),valid:M.validate(s)};
   });
-  expect(result).toEqual({samePerson:true,reserve:280,repeat:true,privateGold:7,publicGold:70,people:1400,valid:true});
+  const publicGold=await expectOpeningTreasury(page,input.bookmarks.harbor_world.realms.find(function (r) {return r.mobile;}));
+  expect(result).toEqual({samePerson:true,reserve:280,repeat:true,privateGold:7,publicGold:publicGold,people:1400,
+    initial:1400,arrivals:0,hosts:2,men:160,food:2000,program:true,camp:true,noTeleport:true,valid:true});
 });
 
 for(const range of [[0,6],[6,12],[12,18]]){

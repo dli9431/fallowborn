@@ -195,13 +195,13 @@ test('shared review names the actor and costs, returns through Back and rejects 
   await expect(page.locator('[data-story-person]')).toHaveAttribute('data-story-person',
     await page.evaluate(function () { return FB.state.player.charId; }));
   await page.locator('[data-story-choice="warn"]').click();
-  await expect(page.locator('#modal')).toContainText('Costs no money or action days.');
+  await expect(page.locator('#genmodal')).toContainText('Costs no money or action days.');
   await page.keyboard.press('Escape');
   await expect(page.locator('[data-story-choice="warn"]')).toBeVisible();
   await page.locator('[data-story-choice="warn"]').click();
   await page.evaluate(function () { FB.state.player.homeSettlement = 1; });
   await page.locator('#gm-story-confirm').click();
-  await expect(page.locator('#modal')).toContainText('This decision changed while it was open.');
+  await expect(page.locator('#genmodal')).toContainText('This decision changed while it was open.');
   expect(await page.evaluate(function () { return FB.state.stories.river_incident.occurrences.length; })).toBe(0);
 });
 
