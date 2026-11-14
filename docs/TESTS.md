@@ -1246,6 +1246,8 @@ Expedition program import fixtures select the catalogue levy unit for ordinary i
 
 The expedition program restore checkpoint compares detached codec-expanded facts structurally, preserving every value and array position while ignoring object insertion order. It compares RNG as the same unsigned 32-bit pattern used by restore and reports differing facts directly.
 
+The expedition sponsor settlement case obtains its camp county through the civic owner's reviewed grant, with the imported council capital in its retained county. It preserves that council's constituency and original office mandates, one independent claims seat, exactly one hundred transferred civilians, military pools, original people, public and private resources, and proportional provisions at the market's stock precision. Current saves reject forged jurisdiction, principals and mandates atomically; a matching restore retains the full selected decoded facts, RNG and UID. Direct holder overwrites remain invalid.
+
 Expedition supply coverage checks the shared focusable review card after stale confirmation disables replenishment, while retaining the input and expanded Details. Escape from an unchanged review still returns focus to the enabled action button.
 
 Local passage fixtures validate their ordinary imports before applying. The harbor formation court has no inherited civic-candidacy story or nonexistent civic office; the dune outside court matches its tier-four ruler start. These setup declarations retain both passage-policy revisions and the existing transaction assertions.
