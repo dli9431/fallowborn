@@ -2,28 +2,16 @@
 const fixture = require('../../fixtures/bookmarks/court-proof.json');
 
 async function installCourtProof(page) {
-  await page.addInitScript(function (fixture) {
-    let data;
-    Object.defineProperty(window, 'FBDATA', {
-      configurable:true, enumerable:true,
-      get:function () { return data; },
-      set:function (next) {
-        data = next;
-        if (Object.prototype.hasOwnProperty.call(data, 'storyInstances')) return;
-        let instances;
-        Object.defineProperty(data, 'storyInstances', {
-          configurable:true, enumerable:true,
-          get:function () { return instances; },
-          set:function (table) {
-            instances = table;
-            Object.assign(table, fixture.storyInstances);
-            Object.assign(data.settlementSites, fixture.settlementSites);
-            data.bookmarks[fixture.bookmark.id] = fixture.bookmark;
-            data.startScenarios.push.apply(data.startScenarios, fixture.startScenarios);
-          }
-        });
-      }
-    });
-  }, fixture);
+  const mod = { name:'Court story proof', bookmarks:{}, storyInstances:fixture.storyInstances,
+    settlementSites:fixture.settlementSites,
+    // Ordinary imports require introduction text and the soldier's male sex.
+    // Complete the literal start without mutating the shared fixture.
+    startScenarios:fixture.startScenarios.map(function (start) {
+      return Object.assign({ intro:start.desc, sex:'m' }, start);
+    }) };
+  mod.bookmarks[fixture.bookmark.id] = fixture.bookmark;
+  await page.addInitScript(function (source) {
+    if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods', JSON.stringify([source]));
+  }, JSON.stringify(mod));
 }
 module.exports = { installCourtProof };

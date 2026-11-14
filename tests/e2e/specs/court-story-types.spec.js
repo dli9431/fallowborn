@@ -1,18 +1,31 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmark, beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
 const { installCourtProof } = require('../support/game/court-story-proof');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['index.html','data/story_courts_476.js','data/story_instances.js',
   'data/settlements.js','data/geographies.js',
   'js/stories.js','js/story_courts.js','js/story_track.js','js/bookmark_setup.js','js/starts.js',
   'js/authority.js','js/federates.js','js/institutions.js','js/lordships.js','js/treasury.js','js/world.js','js/model.js',
-  'js/main.js','js/save.js','js/save_v4.js','js/messages.js','js/i18n.js']);
+  'js/main.js','js/save.js','js/save_v4.js','js/messages.js','js/i18n.js','js/mods.js','js/bookmark_sources.js']);
+
+async function beginCourtProof(page, testInfo) {
+  await installCourtProof(page);
+  await openGame(page, testInfo);
+  await page.evaluate(function () { FB.mods.assertReady(); });
+  await beginBookmarkFromTitle(page, 'proof_courts_900', 'proof_court_household');
+}
 
 test('fictional court instances and all three track profiles play and restore from literal data', async function ({ page }, testInfo) {
-  await installCourtProof(page);
-  await beginBookmark(page, testInfo, 'proof_courts_900', 'proof_court_household');
+  await beginCourtProof(page, testInfo);
+  expect(await page.evaluate(function () {
+    FB.mods.assertReady();
+    const mod = JSON.parse(JSON.parse(localStorage.getItem('fb_mods'))[0]);
+    return { faults:FB.mods.validate(mod), signed:FB.mods.sig() !== '',
+      stories:Object.keys(mod.storyInstances) };
+  })).toEqual({ faults:[], signed:true,
+    stories:Object.keys(require('../fixtures/bookmarks/court-proof.json').storyInstances) });
   const result = await page.evaluate(function () {
     let s = FB.state;
     const w = s.stories.proof_court, restored = s.stories.proof_return;
@@ -72,8 +85,7 @@ test('fictional court instances and all three track profiles play and restore fr
 });
 
 test('a fictional track negotiates its own declared payments and duration without awarding land', async function ({ page }, testInfo) {
-  await installCourtProof(page);
-  await beginBookmark(page, testInfo, 'proof_courts_900', 'proof_court_household');
+  await beginCourtProof(page, testInfo);
   const result = await page.evaluate(function () {
     const s = FB.state, track = 'proof_service', t = s.stories[track];
     const terms = FB.stories.get(track).declaration.parameters;
@@ -169,8 +181,7 @@ test('476 records retain their ids and old schema, and invalid track records fai
 });
 
 test('authored track branches, shortened stages and changed routes survive the shared lifecycle', async function ({ page }, testInfo) {
-  await installCourtProof(page);
-  await beginBookmark(page, testInfo, 'proof_courts_900', 'proof_court_household');
+  await beginCourtProof(page, testInfo);
   const result = await page.evaluate(function () {
     let s = FB.state;
     const service = FB.stories.get('proof_service'), civic = FB.stories.get('proof_civic');
