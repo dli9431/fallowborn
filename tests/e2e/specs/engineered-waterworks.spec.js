@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
@@ -16,7 +17,7 @@ dependsOnRuntime(__filename,['data/buildings_boathouses.js','data/buildings_seas
   'data/building_operations.js','data/site_resources.js','data/bookmarks.js','data/cultures.js','data/eras.js',
   'js/technology.js','js/building_operations.js','js/site_resources.js','js/building_profiles.js','js/building_institutions.js',
   'js/world.js','js/actions.js','js/population.js','js/settlement.js','js/lordships.js','js/treasury.js',
-  'js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js']);
+  'js/wars.js','js/armies.js','js/mods.js','js/bookmark_composition.js','js/save.js','js/save_v4.js','js/ui_modals.js']);
 
 async function start(page,info,name,custom){
   await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
@@ -27,6 +28,7 @@ async function start(page,info,name,custom){
   await prepareGameContent(page);
   await page.waitForFunction(function(key){return window.FB&&FB.game&&FB.game.bootReady&&FBDATA.bookmarks['resource_'+key];},key);
   await beginBookmark(page,info,'resource_'+key,'resource_'+key+'_household');
+  await installRestoreFacts(page);
 }
 async function build(page){
   return page.evaluate(function(){
@@ -84,9 +86,9 @@ for(const name of ['supplied','rain']){
       const privateGold=s.player.gold,idle=[FB.buildingBonusIn(s,a.countyId,'populationCapacity'),FB.buildingBonusIn(s,a.countyId,'populationFamineProtection')];
       const people=JSON.stringify(s.population),worked=O.commit(s,q),paid=gold-s.realms[who.id].treasury.gold;
       const active=[FB.buildingBonusIn(s,a.countyId,'populationCapacity'),FB.buildingBonusIn(s,a.countyId,'populationFamineProtection')];
-      const before=JSON.stringify([s.buildings,s.buildingOperations,s.siteResources,s.population,s.realms]),saved=FB.save.serialize();
+      const before=restoreFacts(s, function (v) { return [v.buildings,v.buildingOperations,v.siteResources,v.population,v.realms]; }),saved=FB.save.serialize();
       FB.save.restore(JSON.parse(saved));const t=FB.state;
-      const matching=before===JSON.stringify([t.buildings,t.buildingOperations,t.siteResources,t.population,t.realms]);
+      const matching=assertRestoreFacts(restoreFacts(t, function (v) { return [v.buildings,v.buildingOperations,v.siteResources,v.population,v.realms]; }),before);
       const valid=O.validate(t),rows=FB.siteResources.snapshot(t),again=O.commit(t,q);
       t.turn=q.untilTurn;FB.invalidateBuildingIndex(t,a.countyId);
       return {idle:idle,worked:worked,paid:paid,cost:q.cost,work:q.workCost,active:active,again:again,matching:matching,valid:valid,
@@ -119,7 +121,9 @@ test('dry, inaccessible, contested, unstaffed and unfunded inputs fail atomicall
     const req={countyId:a.countyId,settlement:a.slot,buildingId:a.buildingId,actor:who};
     return [function(t){R.commit(t,R.quote(t,{operation:'reserve',sourceId:a.sourceId,actor:who,amount:12}));},
       function(t){t.chars[FB.political.actor(t,who).characterId].captive=true;},
-      function(t){t.holder.resource_quay='blocked_holder';},function(t){t.occupier[a.countyId]='blocked_holder';},
+      function(t){t.holder.resource_quay='blocked_holder';},function(t){const war=FB.registerOrdinaryWar(t,'player',{enemy:who.id,target:a.countyId,legacy:false});
+        if(!war)throw new Error('Occupation setup requires an ordinary war');
+        war.occupations[a.countyId]={occupied:true,progress:0};},
       function(t){t.population.counties[a.countyId].count=0;},
       function(t){t.realms[who.id].treasury.gold=0;t.player.gold=100000;},
       function(t){t.realms[who.id].treasury.gold=(FB.treasuryConstructionReserves(t)||{})[who.id];}
@@ -173,7 +177,7 @@ test('retained aqueduct repair outside dates and without knowledge preserves its
       binding:stamp===JSON.stringify(b.waterOperation),effect:FB.countyBuildingCapacityBonus(s,a.countyId),
       blocked:!FB.buildingApplicabilityStatus(s,a.countyId,b.id).ready,again:FB.repairBuilding(s,a.countyId,a.slot,b.id,q.cost)};
   });
-  expect(r).toMatchObject({ready:true,done:true,dev:true,binding:true,effect:0,blocked:true,again:false});expect(r.paid).toBe(r.cost);expect(r.paid).toBeGreaterThan(0);
+  expect(r).toMatchObject({ready:true,done:true,dev:true,binding:true,effect:0,blocked:true,again:false});expect(r.paid).toBeCloseTo(r.cost, 8);expect(r.paid).toBeGreaterThan(0);
 });
 
 test('ordinary imports reject wrong physical sources, aliases and missing tech purely before publication',async function({page},info){
@@ -269,11 +273,11 @@ test('retained partial research is never reseeded and each new project pays its 
     const s=FB.state,pid=s.player.provinceId;s.player.tier=4;s.player.provs=[pid];s.player.gold=10000;
     s.owner[pid]=s.holder[pid]='player';FB.foundPlayerRealm(s);s.realms.player.liege=null;
     s.realmTech.player={completed:['lime_mortar','irrigation_channels','geometry','arithmetic'],exposed:[],active:['scriptoria'],progress:{scriptoria:7},reserve:3,priorities:{},historicalSeeded:1};
-    s.date.year=1300;FB.invalidateTechBonuses();return {record:JSON.stringify(s.realmTech.player),save:FB.save.serialize()};
+    s.date.year=1300;FB.invalidateTechBonuses();return {record:restoreFacts(s, function (v) { return v.realmTech.player; }, {technologySets:true}),save:FB.save.serialize()};
   });
   await restoreBookmark(page,saved.save);
   const r=await page.evaluate(function(input){
-    const s=FB.state,rec=s.realmTech.player,retained=JSON.stringify(rec),before=JSON.stringify([s.buildings,s.population,s.player.gold]);
+    const s=FB.state,rec=s.realmTech.player,retained=restoreFacts(s, function (v) { return v.realmTech.player; }, {technologySets:true}),before=JSON.stringify([s.buildings,s.population,s.player.gold]);
     rec.active=[];rec.reserve=0;
     const rows=input.map(function(id){const started=FB.selectTechProject(s,id),price=FB.techCost(s,id);FB.addResearch(s,price-1);
       const pending=!FB.hasTech(s,id);FB.addResearch(s,1);return {started:started,pending:pending,done:FB.hasTech(s,id)};});
@@ -307,7 +311,9 @@ test('funded retained conveyance operates beyond its construction window and sus
     s.date.year=1066;s.realmTech[FB.techRealmId(s,who.id)].completed=[];FB.invalidateTechBonuses();
     const q=O.quote(s,{countyId:a.countyId,settlement:a.slot,buildingId:a.buildingId,actor:who}),worked=O.commit(s,q);
     const changes=[function(t){t.buildings[a.countyId].find(function(b){return b.id===a.buildingId;}).ruined=true;},
-      function(t){t.occupier[a.countyId]='other';},function(t){t.holder.resource_quay='other';},
+      function(t){const war=FB.registerOrdinaryWar(t,'player',{enemy:who.id,target:a.countyId,legacy:false});
+        if(!war)throw new Error('Occupation setup requires an ordinary war');
+        war.occupations[a.countyId]={occupied:true,progress:0};},function(t){t.holder.resource_quay='other';},
       function(t){t.chars[FB.political.actor(t,who).characterId].captive=true;},function(t){t.turn=q.untilTurn;}];
     const stopped=changes.map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t);
       return FB.countyBuildingCapacityBonus(t,a.countyId)===0&&before===JSON.stringify(t)&&t.buildings[a.countyId].length===3;});

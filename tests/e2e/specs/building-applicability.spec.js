@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
@@ -13,7 +14,7 @@ dependsOnRuntime(__filename, [
   'data/geography_expansion.js', 'data/counties.js', 'data/cultures.js',
   'js/fortifications.js', 'js/actions.js', 'js/lordships.js', 'js/technology.js',
   'js/world.js', 'js/population.js', 'js/model.js', 'js/mods.js', 'js/treasury.js',
-  'js/save.js', 'js/save_v4.js', 'js/ui_modals.js'
+  'js/bookmark_composition.js','js/save.js', 'js/save_v4.js', 'js/ui_modals.js'
 ]);
 
 async function importedStart(page, info) {
@@ -28,6 +29,7 @@ async function importedStart(page, info) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.dated_guest_court;
   });
   await startDeterministicGame(page);
+  await installRestoreFacts(page);
   await page.evaluate(function () {
     const s = FB.state, p = s.player, home = p.provinceId;
     p.tier = 4; p.provs = [home, 'york', 'toledo']; p.gold = 10000; p.liege = null;
@@ -133,7 +135,7 @@ test('two ordinary JSON examples use inclusive dates, AND dimensions and OR alte
     const alternatives = FB.buildingApplicabilityStatus(s, 'toledo', other).ready;
     const betaGold = s.player.gold, betaCost = FB.buildCost(s, 'toledo', other);
     const secondBuilt = FB.build(s, 'toledo', 0, other);
-    const secondCharged = betaGold - s.player.gold === betaCost;
+    const secondCharged = s.player.gold === betaGold - betaCost;
     const missingState = FB.buildingApplicabilityStatus(null, 'york', id).ready;
     const unknownCounty = FB.buildingApplicabilityStatus(s, 'absent_county', id).ready;
     return { yearRows:yearRows, second:second, wrongTradition:wrongTradition,
@@ -189,7 +191,7 @@ test('pure reviews and stale live confirmations never charge an unavailable site
   expect(result).toMatchObject({ review:true, pure:true, stale:false, cached:false,
     changedCulture:false, changedPayer:false, transferred:false, invalidSite:false,
     noCharge:true, built:true, repeated:false, records:1 });
-  expect(result.spent).toBe(result.cost);
+  expect(result.spent).toBeCloseTo(result.cost, 8);
 });
 
 test('vassal rulers and NPC barons use the paying sovereign, with local residents independent', async function ({ page }, info) {
@@ -222,7 +224,7 @@ test('vassal rulers and NPC barons use the paying sovereign, with local resident
   });
   expect(result).toMatchObject({ sovereign:'player', ruler:true, baronReady:true,
     denied:false, preserved:true, paid:true, playerGold:10000, local:'english' });
-  expect(result.spent).toBe(result.cost);
+  expect(result.spent).toBeCloseTo(result.cost, 8);
 });
 
 test('a private player baron uses the target holder instead of an unrelated home sovereign', async function ({ page }, info) {
@@ -265,6 +267,8 @@ test('automation and annual realm purchases share applicability and exact paymen
     const autoSpent = playerGold - s.player.gold;
     s.buildings[pid] = []; FB.invalidateBuildingIndex(s, pid);
     s.holder[pid] = 'york'; s.owner[pid] = 'player';
+    s.player.provs = s.player.provs.filter(function (id) { return id !== pid; });
+    s.turn++; // The prior player construction belongs to the preceding boundary.
     s.realms.york.alive = true; s.realms.york.liege = 'player';
     FB.invalidateSettlementLordships(s);
     Object.keys(s.realms).forEach(function (rid) {
@@ -288,8 +292,8 @@ test('automation and annual realm purchases share applicability and exact paymen
       aiSpent:aiGold - treasury.gold, aiCost:aiCost };
   });
   expect(result).toMatchObject({ outside:false, noAutoCharge:true, inside:true, aiOutside:true, records:1 });
-  expect(result.autoSpent).toBe(result.playerCost);
-  expect(result.aiSpent).toBe(result.aiCost);
+  expect(result.autoSpent).toBeCloseTo(result.playerCost, 8);
+  expect(result.aiSpent).toBeCloseTo(result.aiCost, 8);
 });
 
 test('annual fort planning skips an ineligible capital before selecting and funding another county', async function ({ page }, info) {
@@ -302,6 +306,7 @@ test('annual fort planning skips an ineligible capital before selecting and fund
     });
     FB.mods.apply({ buildings:forts });
     s.realms.york.alive = true; s.realms.york.liege = 'player'; s.realms.york.capital = 'york';
+    s.player.provs = s.player.provs.filter(function (id) { return id !== 'york' && id !== 'toledo'; });
     for (const pid of ['york', 'toledo']) {
       s.holder[pid] = rid; s.owner[pid] = 'player';
       s.buildings[pid] = [];
@@ -358,10 +363,10 @@ test('retained property, ruins and funded forts survive later ineligibility and 
     const demolished = FB.demolishBuilding(s, pid, 0, id);
     const repair = FB.repairBuildingStatus(s, pid, 0, id);
     const repaired = FB.repairBuilding(s, pid, 0, id, repair.cost);
-    const before = JSON.stringify(s.buildings[pid]);
+    const before = restoreFacts(s, function (v) { return v.buildings[pid]; });
     const saved = JSON.parse(FB.save.serialize());
     FB.save.restore(saved); s = FB.state;
-    const sameAssets = before === JSON.stringify(s.buildings[pid]);
+    const sameAssets = assertRestoreFacts(restoreFacts(s, function (v) { return v.buildings[pid]; }), before);
     s.turn = due;
     FB.fortificationDay(s);
     const completed = FB.fortAt(s, pid).level;

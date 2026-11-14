@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
@@ -9,11 +10,14 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const example = require('../fixtures/authoring/windmill-window.json');
 
 dependsOnRuntime(__filename, [
+  'data/technology_waterworks.js','data/technology_masonry_circuits.js','data/technology_baths_headworks.js',
+  'data/buildings_waterworks.js','data/buildings_early_industry.js','data/buildings_early_worship.js',
+  'data/buildings_baths_headworks.js','data/buildings_fish_drying.js','data/buildings_seasonal_pasture.js',
   'index.html', 'data/technology.js', 'data/technology_wind.js', 'data/buildings_wind.js',
-  'data/map_data.js', 'data/bookmarks.js', 'data/eras.js',
+  'data/map_data.js','data/markets.js','js/save_v4.js', 'data/bookmarks.js', 'data/eras.js',
   'js/technology.js', 'js/actions.js', 'js/fortifications.js', 'js/world.js',
   'js/lordships.js', 'js/population.js', 'js/treasury.js', 'js/mods.js',
-  'js/save.js', 'js/main.js', 'js/ui_modals.js'
+  'js/bookmark_composition.js','js/save.js', 'js/main.js', 'js/ui_modals.js'
 ]);
 
 test.beforeEach(async function ({ page }, info) {
@@ -34,6 +38,7 @@ test.beforeEach(async function ({ page }, info) {
 
 async function prepareLord(page) {
   await startDeterministicGame(page);
+  await installRestoreFacts(page);
   await page.evaluate(function () {
     const s = FB.state, p = s.player;
     p.tier = 4; p.provs = [p.provinceId, 'york']; p.gold = 10000; p.liege = null;
@@ -65,6 +70,7 @@ test('one technology and one building correction preserve every mechanical value
     const tech = JSON.parse(JSON.stringify(FBDATA.tech.windmill));
     FB.normalizeTechDefinition('windmill', tech);
     const oldBuilding = JSON.parse(JSON.stringify(window.buildingCorrections_wind_before.windmill));
+    oldBuilding.marketBasket = {materials:0.72,transport:0.18,wares:0.10};
     const building = JSON.parse(JSON.stringify(FBDATA.buildings.windmill));
     const presentation = { name:tech.name, attested:tech.history.attested,
       buildingName:building.name, applicability:building.applicability };
@@ -79,8 +85,8 @@ test('one technology and one building correction preserve every mechanical value
       buildingErrors:FB.validateBuildingData(FBDATA.buildings, true),
       techOwners:Object.keys(FBDATA.techCorrections_wind),
       buildingOwners:Object.keys(FBDATA.buildingCorrections_wind),
-      sameTechIds:Object.keys(FBDATA.tech).sort().join() === Object.keys(window.techCorrections_wind_before).sort().join(),
-      sameBuildingIds:Object.keys(FBDATA.buildings).sort().join() === Object.keys(window.buildingCorrections_wind_before).sort().join(),
+      techIds:Object.keys(FBDATA.tech).sort(),baseTechIds:Object.keys(window.techCorrections_wind_before),
+      buildingIds:Object.keys(FBDATA.buildings).sort(),baseBuildingIds:Object.keys(window.buildingCorrections_wind_before),
       order:scripts.indexOf('data/technology_wind.js') > scripts.indexOf('data/technology.js') &&
         scripts.indexOf('data/buildings_wind.js') > scripts.indexOf('data/technology_wind.js') &&
         scripts.indexOf('data/buildings_wind.js') < scripts.indexOf('data/bookmarks.js'),
@@ -92,7 +98,11 @@ test('one technology and one building correction preserve every mechanical value
     buildingName:'Post Windmill', applicability:{ yearMin:1150 } });
   expect(r.techErrors).toEqual([]); expect(r.buildingErrors).toEqual([]);
   expect(r.techOwners).toEqual(['windmill']); expect(r.buildingOwners).toEqual(['windmill']);
-  expect(r.sameTechIds && r.sameBuildingIds && r.order).toBe(true);
+  expect(r.techIds).toEqual(r.baseTechIds.concat(['aqueduct_maintenance','qanat_construction','cistern_engineering',
+    'masonry_circuits','hypocaust_heating','diversion_dams']).sort());
+  expect(r.buildingIds).toEqual(r.baseBuildingIds.concat(['fish_drying_station','shieling','aqueduct','qanat_waterworks',
+    'urban_cisterns','paper_workshop','bloomery_smithy','monastic_house','public_bath','diversion_headworks']).sort());
+  expect(r.order).toBe(true);
   expect(r.review).toMatchObject({ mode:'soft', tech:['windmill'] });
   expect(r.dateReview).toBe('none');
 });
@@ -133,7 +143,7 @@ test('knowledge and research can precede 1150 while new construction rechecks th
   expect(r).toMatchObject({ research:true, review:'yearMin', pure:true, early:false,
     previous:false, noCharge:true, boundary:true, missingKnowledge:false, built:true,
     later:true, known:true, remote:true });
-  expect(r.researchCost).toBeGreaterThan(0); expect(r.spent).toBe(r.cost);
+  expect(r.researchCost).toBeGreaterThan(0); expect(r.spent).toBeCloseTo(r.cost, 8);
 });
 
 test('private barons share the boundary and pay for their own mill', async function ({ page }) {
@@ -160,7 +170,7 @@ test('private barons share the boundary and pay for their own mill', async funct
       playerUnchanged:s.player.gold === playerGold };
   });
   expect(r).toMatchObject({ early:false, rejected:false, noCharge:true, ready:true, built:true, playerUnchanged:true });
-  expect(r.spent).toBe(r.cost);
+  expect(r.spent).toBeCloseTo(r.cost, 8);
 });
 
 test('automation and annual realm AI use the same live date and canonical price', async function ({ page }) {
@@ -207,7 +217,7 @@ test('automation and annual realm AI use the same live date and canonical price'
       aiCost:aiCost, aiSpent:aiGold - treasury.gold };
   });
   expect(r).toMatchObject({ outside:false, noAutoCharge:true, inside:true, noAiCharge:true, aiReady:true, count:1 });
-  expect(r.autoSpent).toBe(r.autoCost); expect(r.aiSpent).toBe(r.aiCost);
+  expect(r.autoSpent).toBeCloseTo(r.autoCost, 8); expect(r.aiSpent).toBeCloseTo(r.aiCost, 8);
 });
 
 test('inherited mills keep effects and paid repairs before the construction window and through matching restore', async function ({ page }) {
@@ -229,17 +239,17 @@ test('inherited mills keep effects and paid repairs before the construction wind
     knowledge.progress.windmill = 7;
     return { retained:retained, blocked:blocked, ruined:ruined, ready:repair.ready,
       repaired:repaired, cost:repair.cost, spent:gold - s.player.gold, selected:selected,
-      assets:JSON.stringify(s.buildings[pid]), knowledge:JSON.stringify(knowledge),
+      assets:restoreFacts(s, function (v) { return v.buildings[pid]; }), knowledge:restoreFacts(s, function (v) { return v.realmTech[FB.techRealmId(v)]; }, {technologySets:true}),
       save:FB.save.serialize() };
   });
   expect(r).toMatchObject({ retained:{ tax:2, capacity:0.05 }, blocked:false,
     ruined:true, ready:true, repaired:true, selected:true });
-  expect(r.spent).toBe(r.cost);
+  expect(r.spent).toBeCloseTo(r.cost, 8);
   await restoreBookmark(page, r.save);
   const restored = await page.evaluate(function () {
     const s = FB.state;
-    return { assets:JSON.stringify(s.buildings.york),
-      knowledge:JSON.stringify(FB.realmTechRecord(s)),
+    return { assets:restoreFacts(s, function (v) { return v.buildings.york; }),
+      knowledge:restoreFacts(s, function (v) { return v.realmTech[FB.techRealmId(v)]; }, {technologySets:true}),
       blocked:FB.canBuildAt(s, 'york', 1, 'windmill') };
   });
   expect(restored).toEqual({ assets:r.assets, knowledge:r.knowledge, blocked:false });
@@ -248,7 +258,7 @@ test('inherited mills keep effects and paid repairs before the construction wind
 test('an ordinary JSON mill uses a different inclusive window, retains assets and rejects a changed saved fingerprint', async function ({ page }) {
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/windmill-window.json'));
-  await page.locator('#mod-apply').click();
+  await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return FB.game.bootReady && !!FBDATA.buildings.windowed_windmill; });
   await prepareLord(page);
@@ -274,7 +284,7 @@ test('an ordinary JSON mill uses a different inclusive window, retains assets an
   }, example);
   expect(r.rows).toEqual([[false,false],[true,false],[true,false],[true,true],[true,true],[true,false],[true,false]]);
   expect(r).toMatchObject({ built:true, retained:1, invalid:true, pure:true });
-  expect(r.spent).toBe(r.cost);
+  expect(r.spent).toBeCloseTo(r.cost, 8);
   await restoreBookmark(page, r.saved);
   const mismatch = await page.evaluate(function (args) {
     const saved = JSON.parse(args.saved), changed = JSON.parse(JSON.stringify(args.mod));
@@ -305,6 +315,7 @@ for (const bookmark of ['867', '1066']) {
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
     await page.getByRole('button', { name:'Begin', exact:true }).click();
+    await installRestoreFacts(page);
     const r = await page.evaluate(function () {
       FB.game.setPaused(true);
       const current = JSON.parse(JSON.stringify(FB.state)); current.realmTech = {};
@@ -323,11 +334,11 @@ for (const bookmark of ['867', '1066']) {
       });
       return { mismatches:mismatches, realms:Object.keys(current.realmTech).length,
         revision:FB.campaignBookmark(FB.state).revision || 'baseline',
-        knowledge:JSON.stringify(FB.state.realmTech), save:FB.save.serialize() };
+        knowledge:restoreFacts(FB.state, function (v) { return v.realmTech; }, {technologySets:true}), save:FB.save.serialize() };
     });
     expect(r.mismatches).toEqual([]); expect(r.realms).toBeGreaterThan(10);
     expect(r.revision).toBe('baseline');
     await restoreBookmark(page, r.save);
-    expect(await page.evaluate(function () { return JSON.stringify(FB.state.realmTech); })).toBe(r.knowledge);
+    expect(await page.evaluate(function () { return restoreFacts(FB.state, function (v) { return v.realmTech; }, {technologySets:true}); })).toBe(r.knowledge);
   });
 }

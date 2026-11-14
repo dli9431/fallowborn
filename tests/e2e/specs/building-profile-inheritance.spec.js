@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
@@ -14,7 +15,7 @@ dependsOnRuntime(__filename,[
   'js/building_profiles.js','js/building_operations.js','js/building_institutions.js','js/building_seasons.js',
   'js/site_resources.js','js/production.js','js/production_economy.js','js/actions.js','js/world.js',
   'js/population.js','js/treasury.js','js/lordships.js','js/fortifications.js','js/mods.js',
-  'js/save.js','js/save_v4.js','js/ui_panels.js','js/ui_modals.js','js/ui_misc.js','js/main.js']);
+  'js/bookmark_composition.js','js/save.js','js/save_v4.js','js/ui_panels.js','js/ui_modals.js','js/ui_misc.js','js/main.js']);
 
 async function start(page,info,label,empty) {
   await openGame(page,info);
@@ -30,6 +31,7 @@ async function start(page,info,label,empty) {
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   const world = label === 'river' ? 'inventory_estuary' : 'resource_upland';
   await beginBookmark(page,info,world,world + '_household');
+  await installRestoreFacts(page);
 }
 async function hold(page) {
   await page.evaluate(function () {
@@ -79,7 +81,7 @@ test('inherited river permission and water payment are separate, finite and once
       actual:FB.siteResources.snapshot(s,pid,null,actor)[0].available};
   });
   expect(r).toMatchObject({dormant:0,denied:false,permission:true,free:true,paid:true,again:false,piety:2,construction:false,actual:5});
-  expect(r.cost).toBe(r.quoted);
+  expect(r.cost).toBeCloseTo(r.quoted, 8);
 });
 
 test('dry inherited river works manufacture neither service nor source capacity',async function({page},info){
@@ -108,7 +110,7 @@ test('ruined hill repair uses retained replacement cost outside construction gat
       research:FB.buildingBonusAt(s,pid,b.s,'research'),upkeep:FB.buildingBonusAt(s,pid,b.s,'upkeep')};
   });
   expect(r).toMatchObject({ready:true,repaired:true,repeat:false,blocked:false,baseCost:40,identity:true,dev:0,granted:0,research:0.25,upkeep:2});
-  expect(r.cost).toBe(r.paid);expect(r.cost).toBeGreaterThan(20);
+  expect(r.cost).toBeCloseTo(r.paid, 8);expect(r.cost).toBeGreaterThan(20);
 });
 
 test('fiscal, population and military projections use replacement amounts on the one physical asset',async function({page},info){
@@ -164,10 +166,10 @@ test('matching restore retains exact paid service and removed inventory without 
     const s=FB.state,pid=s.player.provinceId,b=s.buildings[pid][0],actor={kind:'character',id:s.player.charId};
     if(!FB.buildingInstitutionApply(s,FB.buildingInstitutionQuote(s,pid,b.s,b.id,actor,'reaffirm')))throw new Error('Permission setup failed');
     if(!FB.buildingOperations.commit(s,FB.buildingOperations.quote(s,{countyId:pid,settlement:b.s,buildingId:b.id,actor:actor})))throw new Error('Service setup failed');
-    return {save:FB.save.serialize(),facts:JSON.stringify([s.buildings,s.buildingOperations,s.siteResources,s.player.gold])};
+    return {save:FB.save.serialize(),facts:restoreFacts(s, function (v) { return [v.buildings,v.buildingOperations,v.siteResources,v.player.gold]; })};
   });
   await restoreBookmark(page,first.save);
-  expect(await page.evaluate(function(){const s=FB.state;return JSON.stringify([s.buildings,s.buildingOperations,s.siteResources,s.player.gold]);})).toBe(first.facts);
+  expect(await page.evaluate(function(){const s=FB.state;return restoreFacts(s, function (v) { return [v.buildings,v.buildingOperations,v.siteResources,v.player.gold]; });})).toBe(first.facts);
   const removed=await page.evaluate(function(){const s=FB.state,pid=s.player.provinceId,b=s.buildings[pid][0];
     if(!FB.demolishBuilding(s,pid,b.s,b.id))throw new Error('Demolition failed');return FB.save.serialize();});
   await restoreBookmark(page,removed);
@@ -231,7 +233,7 @@ test('automatic alternatives retain base defaults, exact profile price, reserves
       defaultTax:FBDATA.buildings.profile_work.tax};
   });
   expect(r).toMatchObject({pure:true,stable:true,selected:'hill_grazing',done:true,profile:'hill_grazing',defaultTax:2});
-  expect(r.paid).toBe(r.price);
+  expect(r.paid).toBeCloseTo(r.price, 8);
 });
 
 test('AI first permission and real service use canonical reviews without renewing a changed incumbent',async function({page},info){

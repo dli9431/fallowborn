@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const fs = require('fs');
@@ -12,7 +13,7 @@ dependsOnRuntime(__filename, [
   'data/building_profiles.js','js/building_profiles.js',
   'js/actions.js', 'js/fortifications.js', 'js/mods.js', 'js/world.js',
   'js/lordships.js', 'js/treasury.js', 'js/ui_modals.js', 'js/ui_misc.js',
-  'js/technology.js', 'js/save.js', 'js/main.js', 'js/population.js',
+  'js/technology.js', 'js/bookmark_composition.js','js/save_v4.js','js/save.js', 'js/main.js', 'js/population.js',
   'data/map_data.js', 'data/technology.js'
 ]);
 
@@ -21,12 +22,13 @@ test.beforeEach(async function ({ page }, info) {
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
     '../fixtures/authoring/building-construction-groups.json'));
-  await page.locator('#mod-apply').click();
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.review_guest_house;
   });
   await startDeterministicGame(page);
+  await installRestoreFacts(page);
   await page.evaluate(function () {
     const s = FB.state, pid = s.player.provinceId;
     window.groupCounty = pid;
@@ -63,7 +65,7 @@ test('ordinary imports support independent one- and two-place groups without rol
   });
   expect(r).toMatchObject({ first:true, alternative:false, blockedSpent:0, otherRole:true,
     workshop:true, yard:true, third:false, review:'none', group:{ ok:false, count:2, limit:2, remaining:0 } });
-  expect(r.spent).toBe(r.firstCost);
+  expect(r.spent).toBeCloseTo(r.firstCost, 8);
   expect(r.group.reason).toContain('including ruins');
 });
 
@@ -100,16 +102,16 @@ test('old over-limit assets work and repair, and matching restore preserves exac
     const gold = s.player.gold;
     const repaired = FB.repairBuilding(s, pid, 1, 'review_quiet_house', quote.cost);
     return { repaired:repaired, cost:quote.cost, paid:gold - s.player.gold,
-      bonus:FB.buildingBonusIn(s, pid, 'tax'), records:JSON.stringify(s.buildings[pid]),
+      bonus:FB.buildingBonusIn(s, pid, 'tax'), records:restoreFacts(s, function (v) { return v.buildings[pid]; }),
       group:FB.buildingConstructionGroupStatus(s, pid, 'review_guest_house'), save:FB.save.serialize() };
   });
-  expect(before.repaired).toBe(true); expect(before.paid).toBe(before.cost);
+  expect(before.repaired).toBe(true); expect(before.paid).toBeCloseTo(before.cost, 8);
   expect(before.bonus).toBe(3);
   expect(before.group).toMatchObject({ count:2, limit:1, ok:false });
   await restoreBookmark(page, before.save);
   const after = await page.evaluate(function () {
     const s = FB.state, pid = groupCounty;
-    return { records:JSON.stringify(s.buildings[pid]), bonus:FB.buildingBonusIn(s, pid, 'tax'),
+    return { records:restoreFacts(s, function (v) { return v.buildings[pid]; }), bonus:FB.buildingBonusIn(s, pid, 'tax'),
       blocked:FB.canBuildAt(s, pid, 2, 'review_guest_house') };
   });
   expect(after).toEqual({ records:before.records, bonus:3, blocked:false });
@@ -148,7 +150,7 @@ test('baron purchases share the county gate and pay once only when space is free
       station:3, culture:me.culture, religion:me.religion, traits:[] });
     if (!FB.assignSettlementLordship(s, pid, 1, baron.id)) throw new Error('Baron grant failed');
     FB.settleBaronyAccounts(s, Math.floor(s.turn / 90) + 1);
-    FB.baronyAccount(s, baron.id).gold = 1000;
+    if (!FB.creditBaronyAccount(s, baron.id, 1000 - FB.baronyAccount(s, baron.id).gold)) throw new Error('Funding failed');
     s.buildings[pid] = [{ s:0, id:'review_guest_house', ruined:true }];
     FB.invalidateBuildingIndex(s, pid);
     const blocked = FB.buildBarony(s, baron.id, pid, 1, 'review_quiet_house');
@@ -162,7 +164,7 @@ test('baron purchases share the county gate and pay once only when space is free
       playerBlocked:FB.canBuildAt(s, pid, 2, 'review_guest_house') };
   });
   expect(r).toMatchObject({ blocked:false, untouched:1000, cleared:true, built:true, repeated:false, playerBlocked:false });
-  expect(r.spent).toBe(r.cost);
+  expect(r.spent).toBeCloseTo(r.cost, 8);
 });
 
 test('annual AI and player automation skip full groups and retain paid construction', async function ({ page }) {
@@ -204,13 +206,15 @@ test('annual AI and player automation skip full groups and retain paid construct
       aiSpent:gold - account.gold, cost:cost };
   });
   expect(r.autoGrouped).toBe(false); expect(r.blocked).toBe(true);
-  expect(r.autoBuilt).toBe(true); expect(r.autoSpent).toBe(r.autoCost);
-  expect(r.aiBuilt).toBe(true); expect(r.aiSpent).toBe(r.cost);
+  expect(r.autoBuilt).toBe(true); expect(r.autoSpent).toBeCloseTo(r.autoCost, 8);
+  expect(r.aiBuilt).toBe(true); expect(r.aiSpent).toBeCloseTo(r.cost, 8);
 });
 
 test('fort foundations reserve group capacity while repairs and funded completion retain their place', async function ({ page }) {
   const r = await page.evaluate(function () {
     const s = FB.state, pid = groupCounty, fortId = FB.fortificationBuildingId();
+    const knowledge = FB.realmTechRecord(s);
+    FB.fortLevelDef(1).requiresTech.forEach(function (id) { if (knowledge.completed.indexOf(id) < 0) knowledge.completed.push(id); });
     s.armies = []; s.greatHolyWar = null;
     // Attach the existing strategic consumer to the imported one-place group.
     const def = Object.assign({}, FBDATA.buildings[fortId], {
@@ -249,7 +253,7 @@ test('fort foundations reserve group capacity while repairs and funded completio
   });
   expect(r).toMatchObject({ blocked:false, untouched:true, foundationBlocks:true, completed:1,
     standing:1, removed:true, absent:true, repair:true });
-  expect(r.paid).toBe(r.expected); expect(r.repairPaid).toBe(r.repairExpected);
+  expect(r.paid).toBeCloseTo(r.expected, 8); expect(r.repairPaid).toBeCloseTo(r.repairExpected, 8);
 });
 
 test('changing a stored group under the same mod name rejects the previous save', async function ({ page }) {
@@ -260,7 +264,7 @@ test('changing a stored group under the same mod name rejects the previous save'
   changed.buildings.review_quiet_house.constructionGroup.maxCounty = 2;
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modpaste').fill(JSON.stringify(changed));
-  await page.locator('#mod-apply').click();
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady &&

@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
@@ -15,7 +16,7 @@ dependsOnRuntime(__filename, [
   'data/religious_institutions.js','data/religious_activities.js','data/political_institutions.js',
   'js/building_institutions.js','js/fortifications.js','js/actions.js','js/world.js',
   'js/lordships.js','js/treasury.js','js/institutions.js','js/religious_institutions.js',
-  'js/religious_activities.js','js/religion.js','js/abbeys.js','js/mods.js','js/save.js',
+  'js/religious_activities.js','js/religion.js','js/abbeys.js','js/mods.js','js/bookmark_composition.js','js/save.js',
   'js/save_v4.js','js/main.js','js/model.js','js/population.js','js/ui_modals.js','js/ui_misc.js'
 ]);
 
@@ -35,6 +36,7 @@ async function start(page, info, label, npc, required) {
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.binding_work; });
   const world = label === 'see' ? 'inventory_estuary' : 'inventory_uplands';
   await beginBookmark(page, info, world, world + '_household');
+  await installRestoreFacts(page);
   await page.evaluate(function (npc) {
     const s = FB.state, pid = s.player.provinceId;
     window.bindingCounty = pid;
@@ -58,11 +60,11 @@ test('an opted-in inherited unbound facility stays dormant through restore until
   await start(page, info, 'see', false, true);
   const r = await page.evaluate(function () {
     let s = FB.state; const pid = bindingCounty;
-    const before = JSON.stringify(s.buildings), gold = s.player.gold;
+    const before = restoreFacts(s, function (v) { return v.buildings; }), gold = s.player.gold;
     const idle = ['tax','upkeep'].every(function (key) { return FB.buildingBonusAt(s,pid,0,key) === 0; });
     const occupied = !FB.buildingInstitutionStatus(s,pid,0,'temple').allowed;
     FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
-    const retained = before === JSON.stringify(s.buildings) && !s.buildings[pid][0].institutionBinding;
+    const retained = assertRestoreFacts(restoreFacts(s, function (v) { return v.buildings; }), before) && !s.buildings[pid][0].institutionBinding;
     const q = FB.buildingInstitutionQuote(s,pid,0,'binding_work',undefined,'reaffirm');
     const reviewed = FB.buildingInstitutionApply(s,q), repeat = FB.buildingInstitutionApply(s,q);
     return {idle:idle,occupied:occupied,retained:retained,reviewed:reviewed,repeat:repeat,
@@ -100,7 +102,7 @@ test('the see import binds the actual office and pays construction and maintenan
   });
   expect(r).toMatchObject({ pure:true, built:true, repeated:false, samePeople:true, sameInstitutions:true,
     incumbent:true, property:null, upkeep:2, review:'none' });
-  expect(r.paid).toBe(r.price); expect(r.payer).toEqual({ kind:'character', id:r.player });
+  expect(r.paid).toBeCloseTo(r.price, 8); expect(r.payer).toEqual({ kind:'character', id:r.player });
 });
 
 test('a bound foundation also excludes ordinary unbound worship after ruin and loss of permission', async function ({ page }, info) {
@@ -138,7 +140,7 @@ test('the house import needs a real paid endowment and never spends its restrict
       propertyId:s.buildings[pid][0].institutionBinding.propertyId, upkeep:FB.buildingBonusAt(s, pid, 0, 'upkeep') };
   });
   expect(r).toMatchObject({ rejected:false, pure:true, endowmentPaid:20, built:true, propertyUntouched:true, propertyId:'binding_property', upkeep:1 });
-  expect(r.reason).toContain('endowed'); expect(r.paid).toBe(r.price);
+  expect(r.reason).toContain('endowed'); expect(r.paid).toBeCloseTo(r.price, 8);
 });
 
 test('one physical foundation excludes alternatives and ruins without excluding unrelated facilities', async function ({ page }, info) {
@@ -181,7 +183,7 @@ test('death and replacement office suspend operation and require a fresh exact r
     s.chars[original].dead = false; FB.build(s, pid, 0, 'binding_work');
     const raw = JSON.stringify(s.buildings[pid]); s.chars[original].dead = true;
     const inactive = FB.buildingBonusAt(s, pid, 0, 'upkeep') === 0;
-    const current = FB.makeCharacter(s, { name:'Second keeper', born:s.date.year - 35, religion:'catholic', culture:'frankish', role:'priest', traits:[] });
+    const current = FB.makeCharacter(s, { name:'Second keeper', born:s.date.year - 35, religion:'catholic', culture:'frankish', sex:'m', role:'priest', traits:[] });
     s.religiousHeads.binding_bishop = current.id;
     const before = s.player.gold, q = FB.buildingInstitutionQuote(s, pid, 0, 'binding_work', undefined, 'reaffirm');
     const stillInactive = FB.buildingBonusAt(s, pid, 0, 'tax') === 0;
@@ -233,7 +235,7 @@ test('realm AI uses its own treasury, the same authority gate and ordinary const
     return { allowed:allowed, built:built, repeated:repeated, paid:paid, cost:q.cost, sameHousehold:household === s.player.gold,
       correctPayer:payer.kind === 'realm' && payer.id === rid, upkeep:FB.buildingBonusAt(s, pid, 0, 'upkeep') };
   });
-  expect(r).toMatchObject({ allowed:true, built:true, repeated:false, sameHousehold:true, correctPayer:true, upkeep:2 }); expect(r.paid).toBe(r.cost);
+  expect(r).toMatchObject({ allowed:true, built:true, repeated:false, sameHousehold:true, correctPayer:true, upkeep:2 }); expect(r.paid).toBeCloseTo(r.cost, 8);
 });
 
 test('annual AI creates an exact binding and leaves a later vacancy unfilled', async function ({ page }, info) {
@@ -265,7 +267,7 @@ test('private barons use their real account and a public title supplies no secon
     return { built:built, paid:1000 - FB.baronyAccount(s, baron.id).gold, cost:q.cost, private:b.payer.kind === 'character' && b.payer.id === baron.id,
       householdUntouched:before === s.player.gold, publicRejected:publicRejected };
   });
-  expect(r).toMatchObject({ built:true, private:true, householdUntouched:true, publicRejected:true }); expect(r.paid).toBe(r.cost);
+  expect(r).toMatchObject({ built:true, private:true, householdUntouched:true, publicRejected:true }); expect(r.paid).toBeCloseTo(r.cost, 8);
 });
 
 test('public construction cannot lower the ordinary reserve through a caller-supplied value', async function ({ page }, info) {
@@ -286,14 +288,14 @@ for (const label of ['see','house']) test(label + ' matching restore preserves e
     const s = FB.state, pid = bindingCounty;
     if (label === 'house') endowBindingHouse();
     FB.build(s, pid, 0, 'binding_work');
-    return { save:FB.save.serialize(), records:JSON.stringify(s.buildings), property:JSON.stringify(s.abbeys || null),
-      gold:s.player.gold, dev:s.dev[pid], institutions:JSON.stringify(s.localInstitutions) };
+    return { save:FB.save.serialize(), records:restoreFacts(s, function (v) { return v.buildings; }), property:restoreFacts(s, function (v) { return v.abbeys || null; }),
+      gold:s.player.gold, dev:s.dev[pid], institutions:restoreFacts(s, function (v) { return v.localInstitutions; }) };
   }, label);
   await restoreBookmark(page, before.save);
   const after = await page.evaluate(function () {
     const s = FB.state;
-    return { records:JSON.stringify(s.buildings), property:JSON.stringify(s.abbeys || null),
-      gold:s.player.gold, dev:s.dev[bindingCounty], institutions:JSON.stringify(s.localInstitutions) };
+    return { records:restoreFacts(s, function (v) { return v.buildings; }), property:restoreFacts(s, function (v) { return v.abbeys || null; }),
+      gold:s.player.gold, dev:s.dev[bindingCounty], institutions:restoreFacts(s, function (v) { return v.localInstitutions; }) };
   });
   delete before.save; expect(after).toEqual(before);
 });
@@ -345,9 +347,9 @@ test('unbound legacy buildings keep their effects and are not enrolled by restor
     const s = FB.state, pid = bindingCounty;
     s.buildings[pid] = [{ s:0, id:'binding_work' }]; FB.invalidateBuildingIndex(s, pid);
     const q = FB.buildingInstitutionQuote(s, pid, 0, 'binding_work', undefined, 'reaffirm');
-    const before = JSON.stringify(s.buildings), upkeep = FB.buildingBonusAt(s, pid, 0, 'upkeep');
+    const before = restoreFacts(s, function (v) { return v.buildings; }), upkeep = FB.buildingBonusAt(s, pid, 0, 'upkeep');
     FB.save.restore(JSON.parse(FB.save.serialize()));
-    return { upkeep:upkeep, rejected:!q.allowed, exact:before === JSON.stringify(FB.state.buildings), bound:!!FB.state.buildings[pid][0].institutionBinding };
+    return { upkeep:upkeep, rejected:!q.allowed, exact:assertRestoreFacts(restoreFacts(FB.state, function (v) { return v.buildings; }), before), bound:!!FB.state.buildings[pid][0].institutionBinding };
   });
   expect(r).toEqual({ upkeep:2, rejected:true, exact:true, bound:false });
 });

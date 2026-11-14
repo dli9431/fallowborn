@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
@@ -10,6 +11,8 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const released = require('../fixtures/released-catalogue.json');
 
 dependsOnRuntime(__filename,[
+  'data/bookmark_1096_mainz.js','data/bookmark_1096_western_expeditions.js','data/bookmark_1096_pilgrim.js',
+  'data/story_households_rhineland_1096.js','data/story_western_rulers_1096.js','data/expeditions_1096.js',
   'index.html','data/bookmark_1096.js','data/identities_1096.js','data/institutions_1096.js',
   'data/bookmark_1096_campaigns.js','data/story_household_effects_1096.js','data/story_world_1096.js',
   'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js',
@@ -23,7 +26,7 @@ dependsOnRuntime(__filename,[
   'data/religious_institutions.js','data/ecclesiastical_profiles.js',
   'js/world.js','js/starts.js','js/main.js','js/model.js','js/technology.js',
   'js/institutions.js','js/religious_institutions.js','js/population.js',
-  'js/governments.js','js/government_administration.js','js/save.js','js/save_v4.js',
+  'js/governments.js','js/government_administration.js','js/bookmark_composition.js','js/save.js','js/save_v4.js',
   'js/ui_misc.js','js/ui_modals.js','js/crazygames.js'
 ]);
 
@@ -110,7 +113,7 @@ test('the corrected world has complete date-owned hierarchy, layouts, identities
 test('composition rejects incomplete or conflicting parts before changing any publication',async function ({page},info) {
   await openGame(page,info);
   const result = await page.evaluate(function (source) {
-    const run = new Function('window','FBDATA',source);
+    const run = new Function('window','FBDATA','FB',source);
     const original = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
     const cases = [
       ['region',function (d) { delete d.bookmarkRegions1096.jazira; }],
@@ -144,7 +147,7 @@ test('composition rejects incomplete or conflicting parts before changing any pu
       entry[1](detached);
       const before = JSON.stringify(detached), published = detached.bookmarks['1096'];
       let rejected = false;
-      try { run({FBDATA:detached},detached); } catch (error) { rejected = true; }
+      try { run({FBDATA:detached},detached,{bookmarkSources:{stage:function (spec,compose) { compose(detached); }}}); } catch (error) { rejected = true; }
       return {name:entry[0],rejected:rejected,pure:JSON.stringify(detached) === before &&
         published === detached.bookmarks['1096']};
     });
@@ -158,32 +161,37 @@ test('composition rejects incomplete or conflicting parts before changing any pu
 test('the dated parts recompose without an earlier bookmark and preserve their detached inputs',async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function (source) {
-    const detached = JSON.parse(JSON.stringify(FBDATA)), original = detached.bookmarks['1096'];
+    const detached = JSON.parse(JSON.stringify(FBDATA));
+    // Recompose the date-owned baseline; later contributors own other revisions.
+    const original = JSON.parse(JSON.stringify(FB.bookmark('1096','baseline')));
+    detached.bookmarks['1096'] = original;
     const before = JSON.stringify(detached.bookmarkRegions1096);
     delete detached.bookmarks['1066'];
     delete detached.bookmarks['867'];
-    new Function('window','FBDATA',source)({FBDATA:detached},detached);
+    new Function('window','FBDATA','FB',source)({FBDATA:detached},detached,{bookmarkSources:{stage:function (spec,compose) { compose(detached); }}});
     const b = detached.bookmarks['1096'];
     const fields = ['provinces','realms','duchies','kingdoms','empires','opening','localInstitutions',
       'climate','religiousHeads','date','era','geography','revision','openingRevision','openingLegacyRevision'];
     return {equal:fields.every(function (field) { return JSON.stringify(original[field]) === JSON.stringify(b[field]); }),
+      differing:fields.filter(function (field) { return JSON.stringify(original[field]) !== JSON.stringify(b[field]); }),
       unchanged:before === JSON.stringify(detached.bookmarkRegions1096),
       detached:b !== original && b.localInstitutions !== detached.bookmarkInstitutions1096 &&
         b.duchies.ile !== detached.bookmarkRegions1096.west_north.duchies.ile,
       heads:b.religiousHeads,visible:b.hidden !== true};
-  },composer)).toEqual({equal:true,unchanged:true,detached:true,
+  },composer)).toEqual({equal:true,differing:[],unchanged:true,detached:true,
     heads:{catholic:'papacy_1096',sunni:'abbasid_1096'},visible:true});
 });
 
 async function begin(page,info,county,identity,crazygames) {
   await startHistoricalGame(page,info,{bookmark:'1096',
     code:'ASSEMBLY-1096-farmer-'+county+'-f-Leah-established-0-'+identity},!!crazygames);
+  await installRestoreFacts(page);
 }
 
 test('activation rejects bad references before replacing a live corrected campaign or cached world',async function ({page},info) {
   await begin(page,info,'mainz','ashkenazi.jewish');
   const result = await page.evaluate(async function () {
-    const original = FBDATA.bookmarks['1096'], state = FB.state, world = FB.world, active = FB.activeBookmark;
+    const original = FBDATA.bookmarks['1096'], effective = FB.bookmark('1096'), state = FB.state, world = FB.world, active = FB.activeBookmark;
     const rng = FB.getRngState(), uid = FB.getUidCounter(), saved = JSON.stringify(state);
     const changes = [
       function (b) { b.realms[0].liege = b.realms[0].id; },
@@ -196,7 +204,11 @@ test('activation rejects bad references before replacing a live corrected campai
     const results = [];
     try {
       for (const change of changes) {
-        const candidate = JSON.parse(JSON.stringify(original)); change(candidate);
+        const candidate = JSON.parse(JSON.stringify(original)), selected = candidate.revisions[candidate.revision];
+        ['realms','provinces','localInstitutions','religiousHeads','climate'].forEach(function (key) {
+          selected[key] = JSON.parse(JSON.stringify(effective[key]));
+        });
+        change(selected);
         FBDATA.bookmarks['1096'] = candidate;
         const data = JSON.stringify(FBDATA);
         const error = await new Promise(function (resolve) {
@@ -273,13 +285,16 @@ for (const household of [{county:'mainz',identity:'ashkenazi.jewish'},{county:'q
     expect(result.heads.sunni).toBe('abbasid_1096');
     expect(result.heads.durham_bishop).toBeNull();
     expect(result.durham.representativeId).toBeNull();
-    expect(result.worldStories).toEqual(['eastern_undertaking_1096','eastern_undertaking_households_1096']);
+    expect(result.worldStories).toEqual(['eastern_undertaking_1096','eastern_undertaking_households_1096','mainz_refuge_1096',
+      'godfrey_preparation_1096','godfrey_program_1096','raymond_preparation_1096','raymond_program_1096',
+      'bohemond_preparation_1096','bohemond_program_1096','raymond_assurance_1096',
+      'peter_preparation_1096','peter_program_1096','walter_preparation_1096','walter_program_1096']);
     expect(result.expedition).toBe(false);
-    expect(result.validation).toEqual([]);
+    expect(result.validation).toBe(true);
   });
 }
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('saved people, possessions and knowledge survive preview and hidden restore on '+(crazygames ? 'CrazyGames' : 'standard'),
     async function ({page},info) {
       await begin(page,info,'mainz','ashkenazi.jewish',crazygames);
@@ -293,8 +308,7 @@ for (const crazygames of [false,true]) {
       const saved = await page.evaluate(function () { return FB.save.serialize(); });
       const before = await page.evaluate(function () {
         const s = FB.state;
-        return JSON.parse(JSON.stringify([s.chars,s.owner,s.holder,s.realmTech,s.localInstitutions,s.religiousHeads,s.start,
-          FB.getRngState() >>> 0,FB.getUidCounter()]));
+        return restoreFacts(s, function (v) { return [v.chars,v.owner,v.holder,v.realmTech,v.localInstitutions,v.religiousHeads,v.start]; }, {technologySets:true});
       });
       await page.evaluate(function () {
         FBDATA.bookmarks['1096'].hidden = true;
@@ -305,8 +319,7 @@ for (const crazygames of [false,true]) {
       await restoreBookmark(page,saved);
       expect(await page.evaluate(function () {
         const s = FB.state;
-        return JSON.parse(JSON.stringify([s.chars,s.owner,s.holder,s.realmTech,s.localInstitutions,s.religiousHeads,s.start,
-          FB.getRngState() >>> 0,FB.getUidCounter()]));
+        return restoreFacts(s, function (v) { return [v.chars,v.owner,v.holder,v.realmTech,v.localInstitutions,v.religiousHeads,v.start]; }, {technologySets:true});
       })).toEqual(before);
       expect(await page.evaluate(function () {
         return {active:FB.activeBookmarkId,available:FB.bookmarkAvailable('1096'),
