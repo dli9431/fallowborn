@@ -26,6 +26,13 @@ or catalogue id. JSON conversion retains the prior undefined, sparse-array,
 nonfinite-number and `toJSON` semantics. Effective signatures keep their existing
 format and inputs; no save field or compatibility exception is introduced.
 
+Source and composition copies traverse native ordered key snapshots directly,
+avoiding a callback for every copied container. Each copy still owns a fresh
+memoized graph, preserves internal aliases and reads values in key order.
+Replaced key or traversal readers use their original callback path, including
+readers installed before the source owners load. Immutable snapshot metadata
+and recursive inspection of mutable copies keep their existing owners.
+
 SHA-256 allocates its UTF-8 byte storage once and reuses one 64-word schedule
 for every block in a fingerprint. Only the actual encoded length is padded and
 hashed; unused capacity never enters the digest. This avoids per-block arrays
@@ -52,6 +59,14 @@ Deferred installation
 The initial title reads stored mod names and display declarations without applying them. FB.mods.menuDeclarations supplies a preview only; it neither accepts data nor establishes a save fingerprint. When mods are active, the first campaign selection or opening the Mods view prepares the complete bundled baseline before applyStored runs. Unmodded campaigns review one date and call prepareUnmodded for shared AI-policy validation and currency configuration without capturing that baseline. This path requires an empty mod stack and preserves the empty standard signature or existing CrazyGames edition signature. Complete publication restores the untouched authoring data before applyStored captures the installer snapshot when Mods or authoring require it. Existing whole-candidate validation, failure diagnostics, ordering and exact mod signatures remain authoritative. Previewed choices are resolved again against installed content before play.
 
 Composition preparation reviews mandatory retained worlds through validateBookmarkWorlds so shared catalogue checks run once within that synchronous candidate batch. Complete revision validation uses the same short-lived scope. Per-world validators and complete start checks still run. No catalogue proof survives a later review, publication or import, including after an exception or an in-place data edit.
+
+Physical settlement-site ids and coordinates are reviewed once per exact table
+within that same candidate batch. Global and geography-owned tables keep separate
+results when their objects differ. Each world still receives its own ordered,
+bookmark-labelled faults and checks its county presentations, site references,
+duplicate membership, names and kinds. Standalone reviews remain fresh; nested
+reviews under another data root isolate their results, and batch exit releases
+the table results even after an exception.
 
 AI decision policies
 

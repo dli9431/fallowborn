@@ -180,6 +180,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "norse",
             "born": 868,

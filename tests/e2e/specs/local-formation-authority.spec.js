@@ -1,13 +1,17 @@
 'use strict';
+const {installRestoreFacts}=require('../support/game/restore-facts');
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/local-formation-harbor.json'),
   upland:require('../fixtures/authoring/local-formation-upland.json')};
-dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/political_institutions.js',
+test.describe.configure({mode:'parallel'});
+
+dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/mobile_confederations.js','data/political_institutions.js',
   'js/story_expedition_preparation.js','js/home_authority.js','js/authority.js','js/politics.js',
   'js/governments.js','js/government_continuity.js','js/government_selection.js','js/government_civic.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/mobile_guard.js','js/mobile_camps.js',
@@ -19,12 +23,14 @@ async function begin(page,info,label,legacy) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   const name=(legacy ? 'mobile-preparation-' : 'local-formation-')+label+'.json';
+  await expectModAdmission(page,require('../fixtures/authoring/'+name));
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring',name));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   const prefix=label==='harbor' ? 'harbor' : 'dune';
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
   await page.evaluate(function (label) {
     window.formationCase={id:label+'_preparation',rid:label==='harbor' ? 'harbor_following' : 'dune_coalition',
       origin:label==='harbor' ? 'harbor_quay' : 'dune_well',remote:label==='harbor' ? 'harbor_ridge' : 'dune_pass',
@@ -111,16 +117,18 @@ for(const label of ['harbor','upland']) {
     await begin(page,info,label);
     const result=await page.evaluate(function(){
       const C=formationCase,P=FB.expeditionPreparation;
-      function facts(s){return JSON.stringify([C.record(s),s.player.gold,s.treasuryAccounting,s.realms[C.rid].treasury,
-        s.population,s.market,s.armies,s.authority,s.chars]);}
+      function facts(state){return restoreFacts(state,function (s) {
+        return [C.record(s),s.player.gold,s.treasuryAccounting,s.realms[C.rid].treasury,
+          s.population,s.market,s.armies,s.authority,s.chars];
+      });}
       function restore(){const before=facts(FB.state),save=FB.save.serialize();FB.save.restore(JSON.parse(save));
-        FB.save.restore(JSON.parse(save));return before===facts(FB.state);}
+        FB.save.restore(JSON.parse(save));return assertRestoreFacts(facts(FB.state),before);}
       const pending=restore();FB.state.player.gold=500;
       const gift=P.commit(FB.state,P.review(FB.state,C.id,'contribute',FB.state.player.charId)),contributed=restore(),
         okay=C.fund(FB.state) && C.authorize(FB.state) && C.form(FB.state),formed=okay && restore(),
         before=facts(FB.state),again=!C.form(FB.state);
       FB.mobile.initialize(FB.state,FB.campaignBookmark(FB.state).realms);FB.stories.start(FB.state);
-      return {pending:pending,gift:gift,contributed:contributed,formed:formed,again:again,noReplay:before===facts(FB.state),valid:FB.mobile.validate(FB.state)};
+      return {pending:pending,gift:gift,contributed:contributed,formed:formed,again:again,noReplay:assertRestoreFacts(facts(FB.state),before),valid:FB.mobile.validate(FB.state)};
     });
     expect(result).toEqual({pending:true,gift:true,contributed:true,formed:true,again:true,noReplay:true,valid:true});
   });

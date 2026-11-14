@@ -1,14 +1,18 @@
 'use strict';
+const {installRestoreFacts}=require('../support/game/restore-facts');
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-expedition-harbor.json'),
   dune:require('../fixtures/authoring/mobile-expedition-dune.json')};
 const sponsored=require('../fixtures/authoring/mobile-command-dune.json');
-dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
+test.describe.configure({mode:'parallel'});
+
+dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/mobile_confederations.js','data/units.js','data/technology.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js','js/federates.js','js/government_continuity.js',
   'js/governments.js','js/government_selection.js','js/government_support.js','js/bookmark_setup.js','js/world.js','js/mods.js',
   'js/authority.js','js/treasury.js','js/armies.js','js/population.js','js/settlement.js','js/starts.js','js/util.js',
@@ -17,16 +21,45 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 async function start(page,info,prefix,input) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
+  await expectModAdmission(page,input || examples[prefix]);
   await page.locator('#modfile').setInputFiles(input ? {
     name:'expedition-example.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))
   } : path.resolve(__dirname,'../fixtures/authoring/mobile-expedition-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
 }
 
 for (const prefix of ['harbor','dune']) {
+  test(prefix+' decoded restore facts retain resource values, original identities and member order without mutation',async function ({page},info) {
+    await start(page,info,prefix);
+    const result=await page.evaluate(function () {
+      const s=FB.state,M=FB.mobile,rid=FB.campaignBookmark(s).realms.find(function (d) {return d.mobile;}).id;
+      function facts(state){return restoreFacts(state,function (v) {
+        return [M.row(v,rid),M.host(v,rid),v.chars,v.realms,v.player.gold,v.authority];
+      });}
+      const bytes=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),expected=facts(s);
+      const compact=JSON.parse(bytes),charId=s.player.charId;
+      Object.keys(compact.chars).forEach(function (id) {delete compact.chars[id].id;});
+      Object.keys(compact.realms).forEach(function (id) {if(compact.realms[id].alive===true)delete compact.realms[id].alive;});
+      compact.chars=Object.fromEntries(Object.entries(compact.chars).reverse());
+      delete compact.authority.schema;
+      const compactBytes=JSON.stringify(compact),equivalent=expected===facts(compact);
+      function different(change){const v=JSON.parse(bytes);change(v);return expected!==facts(v);}
+      return {equivalent:equivalent,cash:different(function (v) {v.player.gold--; }),
+        treasury:different(function (v) {v.realms[rid].treasury.gold--; }),
+        identity:different(function (v) {v.chars[charId].id='changed_original_person';}),
+        schema:different(function (v) {v.authority.schema=FB.save.FORMAT.authoritySchema+1;}),
+        soldiers:different(function (v) {M.host(v,rid).men--; }),
+        order:different(function (v) {M.row(v,rid).members.reverse();}),
+        pure:bytes===JSON.stringify(s) && compactBytes===JSON.stringify(compact) &&
+          rng===FB.getRngState() && uid===FB.getUidCounter()};
+    });
+    expect(result).toEqual({equivalent:true,cash:true,treasury:true,identity:true,schema:true,soldiers:true,order:true,pure:true});
+  });
+
   test(prefix+' imports an independent expedition with conserved resources and matching restore',async function ({page},info) {
     await start(page,info,prefix);
     const result=await page.evaluate(function (prefix) {
@@ -35,7 +68,10 @@ for (const prefix of ['harbor','dune']) {
       const bytes=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),snapshot=M.commandSnapshot(s,rid);
       FB.save.v4.validateAuthority(s.authority,s);M.validate(s);M.commandSnapshot(s,rid);M.initialize(s,[d]);
       const pure=bytes===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
-      const record=JSON.stringify([r,moving,host,s.chars,s.owner,s.holder,FB.treasuryAvailable(s,rid),s.player.gold]);
+      function facts(state){return restoreFacts(state,function (v) {
+        return [M.row(v,rid),M.migration(v,rid),M.host(v,rid),v.chars,v.owner,v.holder,FB.treasuryAvailable(v,rid),v.player.gold];
+      });}
+      const record=facts(s);
       FB.save.restore(JSON.parse(FB.save.serialize()));
       const restored=FB.state;
       return {pure:pure,independent:moving.sponsorship,patron:moving.patronRealmId,
@@ -45,17 +81,18 @@ for (const prefix of ['harbor','dune']) {
         active:snapshot.effective,external:!!(snapshot.superior && snapshot.superior.externalAuthorityId),
         noInventedPerson:prefix!=='dune' || !FB.bookmarkActor(restored,'dune_authorizer'),
         noLand:FB.realmTerritory(restored,rid).length===0,
-        restored:record===JSON.stringify([M.row(restored,rid),M.migration(restored,rid),M.host(restored,rid),
-          restored.chars,restored.owner,restored.holder,FB.treasuryAvailable(restored,rid),restored.player.gold]),valid:M.validate(restored)};
+        restored:assertRestoreFacts(facts(restored),record),valid:M.validate(restored)};
     },prefix);
     expect(result).toEqual({pure:true,independent:{schema:1,kind:'independent'},patron:null,total:true,treasury:true,
       food:true,oneHost:true,active:true,external:prefix==='dune',noInventedPerson:true,noLand:true,restored:true,valid:true});
   });
 }
 
-test('detached imports reject sponsor ambiguities and malformed external warrants without mutation',async function ({page},info) {
+for(const range of [[0,5],[5,10],[10,15],[15,19]]){
+test('detached imports reject sponsor ambiguities and malformed external warrants without mutation '+range[0],async function ({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function (source) {
+  const result=await page.evaluate(function (input) {
+    const source=input.source;
     const changes=[
       function (t) {delete t.sponsorship;},function (t) {t.patronRealmId='dune_oasis';},
       function (t) {delete t.patronRealmId;},function (t) {t.sponsorship=null;},
@@ -67,16 +104,17 @@ test('detached imports reject sponsor ambiguities and malformed external warrant
       function (t) {t.command.superior.id='';},function (t) {t.command.superior.name=' ';},
       function (t) {t.command.superior.realmId='dune_gate';},function (t) {t.command.superior.actorId='dune_incumbent';}
     ];
-    return changes.map(function (change) {
+    return changes.slice(input.first,input.last).map(function (change) {
       const input=JSON.parse(JSON.stringify(source)),t=input.bookmarks.dune_world.realms.find(function (r) {return r.mobile;}).mobile;
       change(t);
       const bytes=JSON.stringify(input),state=JSON.stringify(FB.state),data=JSON.stringify(FBDATA),rng=FB.getRngState(),uid=FB.getUidCounter();
       return FB.mods.validate(input).length>0 && bytes===JSON.stringify(input) && state===JSON.stringify(FB.state) &&
         data===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
-  },examples.dune);
-  expect(result).toEqual(Array(19).fill(true));
+  },{source:examples.dune,first:range[0],last:range[1]});
+  expect(result).toEqual(Array(range[1]-range[0]).fill(true));
 });
+}
 
 test('independence supplies no access, outside consent, service, land award or free money',async function ({page},info) {
   await start(page,info,'dune');
@@ -286,13 +324,17 @@ test('an independent import needs no former patron court and restores without in
   bm.realms=bm.realms.filter(function (d) {return d.id!=='dune_oasis';});
   bm.provinces.forEach(function (p) {if(p.realm==='dune_oasis') p.realm='dune_gate';});
   // Remove that court's unrelated civic stories before importing the complete world.
-  input.storyInstances={};delete input.startScenarios[0].tracks;delete input.startScenarios[0].trackLocations;
+  input.storyInstances={};bm.stories=[];
+  delete input.startScenarios[0].tracks;delete input.startScenarios[0].trackLocations;
+  input.startScenarios[0].birthplaces={counties:[input.startScenarios[0].fixedProvinceId]};
   delete input.startScenarios[0].fixedProvinceId;
   await start(page,info,'dune',input);
   const result=await page.evaluate(function () {
     const s=FB.state,M=FB.mobile,rid='dune_coalition',m=M.migration(s,rid);
-    const record=JSON.stringify([M.row(s,rid),m,M.host(s,rid),s.chars,s.owner,s.holder,
-      FB.treasuryAvailable(s,rid),s.player.gold]);
+    function facts(state){return restoreFacts(state,function (v) {
+      return [M.row(v,rid),M.migration(v,rid),M.host(v,rid),v.chars,v.owner,v.holder,FB.treasuryAvailable(v,rid),v.player.gold];
+    });}
+    const record=facts(s);
     const rng=FB.getRngState(),uid=FB.getUidCounter();
     FB.save.restore(JSON.parse(FB.save.serialize()));
     const restored=FB.state;
@@ -300,8 +342,7 @@ test('an independent import needs no former patron court and restores without in
       independent:M.migration(restored,rid).sponsorship.kind,command:M.commandValid(restored,rid),
       noRequest:FB.federateRequest(restored,m.id,'land')===false,
       noLand:FB.realmTerritory(restored,rid).length===0,
-      unchanged:record===JSON.stringify([M.row(restored,rid),M.migration(restored,rid),M.host(restored,rid),
-        restored.chars,restored.owner,restored.holder,FB.treasuryAvailable(restored,rid),restored.player.gold]),
+      unchanged:assertRestoreFacts(facts(restored),record),
       identity:rng===FB.getRngState() && uid===FB.getUidCounter(),valid:M.validate(restored)};
   });
   expect(result).toEqual({absent:true,patron:null,independent:'independent',command:true,noRequest:true,

@@ -136,6 +136,8 @@ inherited. Legacy definitions that put qualities such as `head` at the top level
 compile as properties, and old `group:'christian'` mods now naturally inherit the
 Christian root.
 
+Faith property cloning and recursive merging ignore the reserved keys __proto__, constructor and prototype at every depth, including objects inside arrays. Imported JSON must not change object prototypes or supply inherited engine properties. Ordinary properties still inherit and override without mutating their source definitions.
+
 The initial property vocabulary is intentionally extensible rather than a closed enum:
 
 - `marriage.spouseLimit`, `marriage.divorce`,

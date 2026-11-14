@@ -577,17 +577,21 @@ Workflows live in `.github/workflows/`:
   also upload their `test-results` folders (error contexts, screenshots, traces) as
   `results-<label>-<shard>`. Example: `gh workflow run tests.yml --ref main -f target=476
   -f mode=specs -f specs="specs/boot.spec.js specs/determinism.spec.js"`.
-- `nightly.yml`: daily from `main` and by hand. The full suite on `476` and `dev` in 16 shards,
+- `nightly.yml`: daily from `main` and by hand. The full suite on `476` and `dev` in 32 shards,
   then season timing on `476`.
 - `e2e.yml`: the reusable check, sharded Playwright run (blob reporter), and merge job. The merge
   job writes a job summary with totals, failures and their first error line, flaky tests, and the
-  slowest spec files, and uploads the merged HTML and JSON report as `report-<label>`.
+  slowest spec files, and uploads complete compact JSON with bounded HTML rendering as `report-<label>`.
 - `season-timing.yml`: runs `tests/e2e/measure/season-timing.js` from the calling commit against
   the game at the requested branch, sharded across starts, then compares the merged measurement
   with the previous nightly one and uploads `season-timing-<branch>`.
 
 Read results with `gh run list`, `gh run view <id>`, `gh run view <id> --log-failed`, and
 `gh run download <id> -n <artifact>`. Only pushed branches can run in CI.
+
+Jobs that check out an arbitrary game ref do not retain Git credentials or save npm or Playwright browser caches. Report-only tooling jobs may cache their trusted dependency installation. CI summary table cells encode literal backslashes, pipes and HTML and flatten line breaks before rendering report data. The check job also runs the bounded static HTML extraction regressions without regenerating language catalogs.
+
+Security helper coverage in tests/e2e/specs/security-helpers.spec.js checks text and both quoted attribute boundaries, crest seed markup and recursive faith-property prototype protection on the file and served targets and compatibility browsers. tests/e2e/support/ci-summary.test.js covers report table boundaries. tools/test_i18n_catalog.py covers non-display closing tags and source-position preservation.
 
 ### Season timing
 
@@ -793,13 +797,17 @@ project.
 
 ## Shared support
 
-`holywar-protector-causes.spec.js` stages the 1209–1229 French opportunity and
+Fish-preservation rejection cases stage calendar changes with the matching turn and day, retaining the original seasonal term's valid opening history. Spent-stock restore coverage compares every material, seasonal, technology and building value structurally across two matching round trips. Only the technology exposure set is compared in sorted order: the existing codec stores uncompleted exposures and appends completed knowledge during expansion. Every exposure id and all other array order, identities, quantities, terms, RNG and UID counters remain exact.
+
+authoring-ruler-fixtures.spec.js checks the ordinary JSON admission of the resource, construction and production fixtures against the complete catalogue. Authored ruler profiles declare sex explicitly, including the female fish-drying ruler, so existing-ruler scenarios keep their declared identities. Two real file-picker imports exercise acceptance and preserve strict rejection when the ruler sex is omitted. Each fixture uses its own fresh browser context and the normal test timeout.
+
+`holywar-protector-causes.spec.js` stages the 1209ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“1229 French opportunity and
 independently imports `holywar-protector-lantern.json` through Mods. It covers
 authority/window/holder gates, pure previews, costly conserved submission, stale
 and repeated responses, same-faith coalition separation, ordinary host service,
 occupied-only council assets/awards, active submission, player call/answer sheets,
 AI submission, exact changed-content fingerprints, detached malformed-definition
-and save rejection, preparation/active/completed load–re-save–load, and the existing
+and save rejection, preparation/active/completed loadÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“re-saveÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“load, and the existing
 Catholic sacred-target campaign without a cause marker. Boundaries are staged
 directly; no years of simulation or device acceptance are inferred.
 
@@ -907,6 +915,8 @@ Snapshots. tests/e2e/support/game/parity.js captures a compact world snapshot in
 
 Fresh parity journeys cover every authored start scenario, including the dated 476, 493 and 1204 households and rulers. Ordinary medieval cases retain their baseline revision; newly registered openings choose a compatible declared revision and birthplace. Each case captures creation and immediate save restore without daily simulation or a raised timeout. The fixture ids end in -opening-restore, keeping these checkpoints separate from the earlier seasonal and annual captures. The coverage check still fails when a start scenario is added or retargeted without a matching journey.
 
+Generated declared-opening codes follow the shared canonical spelling: standard family at the principal county seat omits its redundant suffix; nonprincipal identities and named nonzero home slots retain their aligned family and slot fields. Fixed courts use their resolved revision identity even when no resident community shares it. Authored sex and name normalization remain exact, and effective track locations take precedence among eligible birthplaces so the declared opening actually attaches. parity-start-codes.spec.js checks native principal, nonprincipal and established households, an unchanged explicit-code control and two imported female guarded people at different home slots. The helper still compares the complete actual seed to its exact generated or supplied code.
+
 Wave 5 regression coverage includes 476-ladder-careers.spec.js, 476-offices-legitimacy.spec.js, civic-church-actors.spec.js, federate-migration.spec.js and 476-world-stories.spec.js. The ladder's high-resource case and the migration's staged-victory case verify transaction boundaries; they do not establish successful ordinary-play progression or conquest. The daily funding case runs one season of ordinary daily accounting from the actual opening, with random mortality and diplomacy isolated, and restores at its midpoint; the 488 commission, migration war and released service are staged directly in neighbouring cases. Full ordinary-play journeys and subjective phone-size presentation still require owner acceptance. Refreshing intentional 476 parity fixtures is a separate owner-reviewed capture; preserve medieval fixtures for comparison.
 
 Corpus journeys import each save listed in docs/plans/v2-476-phase-0/save-manifest.json through the ordinary loader and snapshot on load, at the next season boundary and at the next year boundary. Each export is hashed first; one that no longer matches its manifest SHA-256 fails the journey. The exports live in the checkout's ignored saves/ folder and are not part of this repository. Manifest paths are relative to the game checkout; FB_PARITY_CORPUS (or --corpus) names another checkout that holds them, such as the primary checkout when running from a worktree. A missing export is skipped with its expected path.
@@ -973,6 +983,25 @@ complete-world replacement rejection,
 snapshot descendant invalidation, JSON conversion edge cases, duplicate
 bookmark review and fresh validation after failures. The reference remains a
 test-only source oracle, never a runtime dependency.
+
+The three paired preparation cases in each mode also retain title readiness
+separately from complete catalogue readiness. Served source probes count copied
+objects and arrays in the source and composition owners, while load timing
+separates their copy work, JSON snapshots, canonical text and fingerprints.
+The existing mod diagnostic records baseline root count and JSON size in UTF-16
+code units. These instrumented samples include diagnostic overhead; they are
+stage attribution, not unprofiled speed comparisons. Ordered source, story,
+bookmark and start ids and exact catalogue facts must still agree with the
+preceding physical-site implementation.
+
+The preparation cases also pin complete catalogue digests and copied-container
+counts to the source/composition traversal reference. Direct served probes
+compare both private copy owners with their preceding traversal for aliases,
+cycles, detached graphs, sparse arrays, snapshot metadata, live getter edits,
+recursive calls and exception recovery. Reader replacements before owner loading
+and during a copy retain callback order, receiver, key-list holes and length.
+Only current-source anchors in the older preparation oracle change; its
+preceding implementation and all campaign/save parity assertions remain intact.
 
 `save-season-profile.spec.js` is an opt-in Chromium diagnostic. It imports the
 file named by `FB_PROFILE_SAVE` through the game's ordinary save loader, then
@@ -1276,6 +1305,16 @@ scroll and focus at desktop and compact widths. No generations are simulated.
 
 Production ledger retention
 
+The mature-save diagnostics in authority-retention.spec.js and ledger-retention.spec.js directly stage native 1096 customary observations and imported inland production history, including cutoff, recent, permanent and live-provenance records. The browser-only performance-mature-save probe attaches per-kind counts, UTF-8 JSON bytes, exact summaries and three elapsed samples for validation, detached expansion, serialization, compaction, restore, manual-slot encoding and portable export. Counted graph/expansion passes run separately from timings. Serialization and slot/export times include their child work; do not add them to validation times. The localStorage fallback reports encoded string code units and a key/value UTF-16 budget estimate, not physical disk usage or a device quota result. Complete normalized save envelopes, input purity, RNG/uid, catalogue, live/window retention and repeated slot/export/restore parity remain asserted. These directly staged histories are not natural multi-year campaigns, and elapsed samples have no speed thresholds.
+
+The customary case also compares the complete staged state with an independent
+graph-based reference outside the measured samples, and requires one authority
+validation without an observation graph. A separate two-window matrix covers
+cutoff/current/future turns, non-integer and missing turns, permanent evidence,
+unknown events, existing summaries, no-op behavior and detached validation-failure
+rollback with exact reference parity. Production still requires its distinct
+cutoff and validation provenance graphs.
+
 ledger-retention.spec.js stages long campaigns directly on two ordinary JSON imports of the inland supplier world (default window and a declared 720-day balance window) plus the river boat-work import. It checks that more settled lots, batches and maritime invoices than the old 512 lifetime caps leave new reservations and invoice preparation open, that the season boundary folds exact totals and folded stock use deterministically without RNG, UID, payment or id reuse, that live reservations, stored output and trade provenance survive, and that compacted saves round-trip. It also checks that 512 live lots refuse new production and trade at write time, that one more live record rejects on load, and that tampered folded summaries reject without changing the current campaign. The test-local variants add the ruler sex required by the current ruler-profile contract and stage a whole enterprise price for the river invoice. These targeted checks do not establish full-suite, performance or device acceptance.
 
 Industry-law ledger retention
@@ -1289,6 +1328,10 @@ community-retention.spec.js stages native Ctesiphon membership beyond 64 histori
 
 ## Controlled paired speed comparisons
 
+fiscal-read-reuse.spec.js compares the pre-reuse source paths with current fiscal, office and mobile reads over ordinary and directly staged season/year days in five established starts. It retains full state/save/catalogue digests, fingerprints, RNG and UID, counts actual index builds separately from live constituency calls and compares native mobile scan work, including day-list construction and visits. The mobile reference replaces the day shortcut as well as the full-scan implementation. A separate diagnostic pass installs reader wrappers, exercises their conservative override paths and must preserve the same complete parity snapshots; its operation counts are not compared with unwrapped readers. Focused cases cover same-read ledger and eligibility edits, intervening reader mutations, nested/foreign fiscal contexts, error cleanup, office null-state and reader overrides, retained revisions and fresh mobile eligibility. The source oracle and counters are routed into test pages only; these cases establish correctness and mechanical work counts, not speed gains.
+
+Mobile filter cases additionally compare the immediately preceding full-filter algorithm, retaining its native leader reuse. Historical followings and the ordinary harbor/dune JSON command imports check identical ordered reader calls, current custody and guard overrides, command membership, recall and leader/issuer generations, recursive queries, reader replacement during eligibility, errors after an earlier match, replaced filter order and unchanged serialized save/catalogue/RNG/UID. The earlier leader-call reduction remains covered by the five pre-reuse boundary comparisons; the immediate filter comparison requires equal leader and government-visit counts.
+
 The paired comparison workflow uses one tooling revision and pins both game
 revisions before creating a separate hosted job for each workload. Each job
 runs 3 to 9 baseline/candidate pairs in alternating order on the same machine.
@@ -1301,9 +1344,11 @@ measurement workloads, not regression-test journeys.
 Nightly is the registered dispatch route even before the standalone comparison
 workflow is registered on the default branch. Its optional comparison inputs
 leave ordinary scheduled suite and timing behavior intact. The full-suite job
-uses the shared E2E workflow with syntax/support checks, sixteen browser
-shards per branch and merged reports. Report tooling, season and comparison
-drivers come from the dispatched tooling commit. Publish the
+uses the shared E2E workflow with syntax/support checks, thirty-two browser
+shards per branch and merged reports; season timing retains its separate
+twelve-shard workload. Comparison workloads keep their independent per-subject
+configuration. Report tooling, season and comparison drivers come from the
+dispatched tooling commit. Publish the
 intended public tooling revision before dispatch; game and tooling revisions
 are separate. No default-branch workflow edit is needed.
 
@@ -1395,3 +1440,78 @@ Samples stage no retention history automatically; long-history compaction needs
 its own staged correctness and size evidence. Require repeated gains beyond
 observed variability with correctness coverage and an appropriate baseline;
 use more repetitions or independent jobs when results are noisy.
+
+Office lookup diagnostics
+
+office-lookup-probe.spec.js routes temporary model-source counters only inside its browser pages and compares them with untouched source for the five paired measurement starts. It records dependency-key builds, table hits and misses, local and faith row visits, key lengths, incumbent recursion and repeated equal direct inputs within one ruler-realm or legitimacy read. It stages ordinary, season-boundary and year-boundary days directly, compares full-state/save/catalogue digests plus RNG and UID, checks edit detection and exception cleanup, and attaches the raw counts. Its inputMs values include instrumentation overhead and are diagnostic only. Use the separate unprofiled paired workflow for speed claims. No probe fields enter game state or shipped scripts.
+
+With detached office dependency snapshots, the probe's retained keyBuilds field counts independent validations, and keySerializations counts actual complete key construction. localRows, faithRows and keyChars describe the logical dependency size for each read, including reused keys; they are not allocation or exact scan counters. office-validation.spec.js compares the unchanged public parent through ordinary and directly staged boundary days, tests nested edits, JSON ordering and conversion errors, catalogue/state changes, live holders, ordinary JSON imports and restore, and counts complete serialized key constructions separately. Warm unchanged reads must construct none. Full state, save, catalogue, office and holder outputs, RNG/UID, signatures and fingerprints retain parent parity.
+
+The lookup probe's separate `scans` report counts actual structural-comparison entries, recursive value comparisons, local/realm/province comparison loop bodies, opening-head key arrays, serialized local rows, table builds/local rows and live holder evaluations. Early rejection can visit fewer rows than the logical dependency size. A control checks a complete warm comparison, first-row rejection and live holder removal; all five journeys also compare office/holder digests and opening, ledger, signature and fingerprint facts with untouched source. These page-only counters add diagnostic overhead and do not measure unprofiled speed.
+
+The separate headKeyComparisons counter records each ordered own-key comparison, including the native enumeration path that creates no head-key array. The original array hook remains for prior source and replaced readers; unknown or duplicate hooks still reject. office-validation.spec.js adds numeric and string key order, reinsertion, add/remove, inherited and nonenumerable keys, absent/empty maps, accessor error/reentry and replaced key-reader parity against the serialization oracle. religious-office-tables.spec.js also checks that an opening-key accessor exception releases the incumbent recursion guard before independent and live-holder reads. These checks retain full state/save/catalogue and RNG/UID purity.
+
+Residual read diagnostics
+
+residual-read-audit.spec.js checks page-only counters for aristocratic index construction, campaign-world resolution within office input validation and mobile ruler scanning. It compares full state/save/catalogue digests, mod signatures, campaign fingerprints and RNG/UID with untouched source for five ordinary and directly staged boundary journeys, and checks index-input edits and exception cleanup. Missing or duplicate source markers reject instrumentation. Campaign-world and mobile leader hooks preserve the native reader identities used by reuse guards; installing a wrapper around either would select fallback work and distort the counters.
+
+`indexCalls` counts fiscal lookup requests, including reused indexes. `indexBuildAttempts` counts constructor entries, `indexBuilds` counts completed indexes, `indexValidations` counts reuse-validation entries (including early rejection), and `indexReuses` counts successful validation returns. `appointmentSlots`/`rightSlots` count constructor loop iterations; `appointmentRows`/`rightRows` count present rows reached after skipping holes, including a malformed row that rejects construction. The corresponding `ValidationSlots`/`ValidationRows` counters belong only to validation loops, including partial scans before rejection. These totals and cadence counters count each operation once, independently of nested reader scopes; diagnostic input snapshots are not counted as native scans. Focused assertions distinguish two outside-scope builds from one fiscal build plus one complete validation/reuse, and check native office resolution and office/mobile exception cleanup.
+
+`mobileFilterArrays` counts entries into the array-producing filter path; native ruler queries use the complete direct scan and produce none. `mobileSlots` counts each visited key in either path. A directly staged, authority-validated ledger with 256 additional historical appointments and rights distinguishes larger fiscal construction/validation scans from unchanged mobile query and key-visit counts. These counts do not establish a season speed gain or a first/fourth-season growth ratio.
+
+The mobile boundary owner diagnostic records before/after character, realm, government, appointment, right, migration, institution, army and captive counts and UTF-8 JSON sizes over three ordinary or directly staged boundary days. It counts guard-reader calls separately inside mobile ruler frames without replacing the native leader identity, and retains the actual browser version. Its elapsed samples include audit overhead; they are diagnostic stage times, not unprofiled season comparisons or heap-allocation measurements.
+
+fiscal-read-reuse.spec.js also retains guard predicate setup and visited-party counters, complete residual counters and owner sizes for each of those three days across all five starts. Its page-only guard oracle preserves the preceding predicate implementation independently of the mobile filter oracle. Focused guard cases compare live status/member edits, the existing party-index lifetime, sparse/inherited rows, captured lengths, method getters and overrides, recursive reads, exceptions and recovery. Full state/save/catalogue and RNG/UID parity remain required; predicate setup counts describe source operations rather than measured heap allocations or unprofiled speed.
+
+Its harbor and dune command cases each import their ordinary JSON once through Mods. The second source variant reloads that same installed mod and fully prepares its catalogue before starting the same seed; it does not repeat the identical import cycle. Both variants retain every eligibility, command, traversal, recursion, override and purity assertion within the ordinary timeout.
+
+The Muhammad autumn diagnostic combines the existing residual and office probes for directly staged autumn entry, an ordinary autumn day and winter entry. It retains native read/structural counts, fiscal-scope opt-out, owner counts and UTF-8 JSON sizes, browser identity and exact untouched/instrumented state, save, catalogue, office and holder parity. Only three days advance; the staged workload does not represent a naturally aged autumn campaign. Its elapsed samples include the combined probe overhead and cannot establish a season speed gain or attribute hosted timing variability by themselves.
+
+Equivalent index inputs mean identical request ids, table identities, ordered row references and row ids, not cached constituency results or eligibility. Scope request/repeat counters include nested scopes and must not be summed as independent removable work. `ownedIndexCalls` and `ownedMobileQueries` instead attribute each request only to its innermost reader scope. Completed campaign-world and native leader reads belong only to the innermost office/mobile frame. Repeated character queries identify candidates for a reader audit; they do not prove equivalent live eligibility or safe reuse. Earlier diagnostic captures retain their original meaning and must not be presented as current counts after fiscal reuse; recapture against pinned game and tooling revisions. Repairing these hooks establishes no numeric speed gain.
+
+Nightly read_audit=true passes --read-audit to the development-only season driver for a separately requested natural multi-season counter capture. It routes source hooks only in its browser pages and restores wrapped readers on exit. Each season exports readAudit counts split into ordinary, season-boundary, year-boundary and outside-day work. This option defaults off, cannot be combined with CPU profiling, and adds no game-state fields or shipped source hooks. Instrumented timing is diagnostic only: merged audit reports suppress speed flags/rankings, and paired speed extraction rejects both audit-marked reports and counter-bearing seasons. speed-comparison.spec.js protects rejection and report export with synthetic data, without launching a game measurement.
+
+Finite exchange and early industry regressions in production-economy.spec.js and early-industry-production.spec.js fund the actual public counterparties before paid scenarios; rejection cases still exhaust funds or demand explicitly. Successful reservations and exchanges are required before their output lots or receipts are inspected. Matching transaction restores compare complete structured production, cash and realm facts, retain ordered ledgers, include canonical wars, RNG and uid, and project omitted peaceful realm war aliases as the codec's documented null default. Each scenario keeps its own browser context and can shard independently.
+
+authoring-start-fixtures.spec.js checks the treasury and expedition JSON imports against the ordinary detached validator, including rejection of an altered ruler station and state/RNG/uid purity. Ruler beginnings use the station band matching their authored realm rank; names, sex, government, property and purse policies remain unchanged. The treasury, home-authority, expedition and sovereign-preparation journeys use independent browser contexts and shard by case.
+
+authoring-household-fixtures.spec.js checks twelve ordinary JSON examples, invalid birthplace or missing fixed-story identity rejection, and state/RNG/uid purity. Fixed household storylines declare their actual local culture and faith; ordinary resource and companion-track roles use county birthplace rules. Explicit ruler identities preserve the female fish-drying ruler. Two real file-picker imports verify that both forms still start in their intended county.
+
+Treasury and preparation restore regressions compare exact codec-expanded facts with canonical object-key ordering, ordered arrays, unchanged uid and unsigned RNG bits. The dated-policy cases also account for the existing authority schema marker added by v4 migration; malformed provenance still rejects without repair. Successful public grants fund explicitly declared public accounts. Occupation scenarios declare a real war from the territorial party, and court-release scenarios distinguish a recognized adult accession from a contested vassal vacancy before checking original-provider death. The generated-provider proof uses an unrelated government-contest field, and failed real imports observe the refusal event while retaining exact state and storage assertions.
+
+authoring-mobile-pasture-fixtures.spec.js checks ten ordinary mobile and pasture examples with strict invalid career, missing replacement-unit or missing baseline rejection and state/RNG/uid purity. Female mobile principals retain their identity and public command independently from their valid private career. Existing levy replacement and explicit baseline revision declarations retain the normal unit and revision contracts. Two actual Mods imports preserve the original guarded female person, private profession and suspended command.
+
+
+CI report recovery
+
+Report merging requires one blob archive per requested shard. Missing reports produce explicit incomplete coverage in both JSON metadata and the summary, and fail the report job after preserving available diagnostic results. Compact JSON merges independently with a 6144 MiB Node heap bound and remains available if optional HTML rendering fails. HTML is rendered only when compressed blob inputs total at most 1 GiB; larger runs retain complete compact results and original per-shard screenshots/traces, with a source-run link in the summary. Available merged output uploads even when a later rendering or summary step fails. These reporting limits do not change game tests, timeouts or performance workloads.
+
+The Tests dispatch can recover reports from an existing run using report_source_run and report_label. This skips planning, checks and browser execution, downloads that run's matching blob artifacts and uses the dispatched tooling revision. The caller supplies the original shard count and tested game revision for the summary. Example: gh workflow run tests.yml --ref YOUR_TOOLING_REF -f target=GAME_REVISION -f report_source_run=RUN_ID -f report_label=tests -f shards=4 -f mode=all -f request_id=report-replay. The resulting report describes the source run, not a new game-test pass. Blob retention must still cover that source run.
+
+Mobile consumer regressions compare exact decoded state with ordered arrays, complete original identities and unsigned RNG bits. Expensive malformed-import matrices and independent construction/repair journeys use separate bounded cases. Actual public buyer funds, finite capacity bounds and an unavailable local season are staged as scenario prerequisites. County observer setup creates an actual reviewed column war and its assignments, then stages only the matching campaign-source checkpoint; campaign declaration and natural movement remain covered by their own owner tests. The single-host dispatch variation omits column-only camp loading while retaining the applicable route, wait, offer and war intents. These checks preserve the original rejection, locality, conservation and replay assertions.
+
+Scoped restore consumers install support/game/restore-facts.js after navigation to compare selected roots from the detached expanded save view. Object keys use canonical order; values, original identities, array order, unsigned RNG bits and the UID counter remain exact. The detached view supplies only the omitted authority schema tag that the envelope writer adds; explicit conflicting versions stay exact. The helper never serializes, restores or repairs its input, and failed comparisons report changed field paths. Two independent imported expeditions verify omitted codec defaults and reordered object keys compare equally while changed personal cash, public treasury, character identity, schema version, soldier count and member order remain detectable, without mutating either input. The pending circuit restore stages completed technology exposure after pending exposure, matching the codec's implicit completed entries while retaining exact array comparisons. Awarded-crown checkpoints initialize missing fiscal budget targets through the treasury owner while asserting unchanged balances, accounting, property, armies, people and RNG/UID. Staged peace checkpoints use the civic reviewed peace owner where required, stage ordinary willingness without advancing days, and finish host assignment after casualties, retirement and history pruning. Ordinary mill demolition retains its exact ruined physical record and provenance across restore and opening replay.
+
+Imported mobile scenarios reuse the already prepared Mods title through beginBookmarkFromTitle instead of booting the catalogue again. Exact entry replay compares fresh boots with matching browser onboarding preferences. Current saves require every original story attachment; missing-record compatibility controls remove both provenance fields to represent genuinely older saves. Opening production stock is declared only in revisions with its standing physical asset, and grazing rejection consumes the actual available capacity through the ordinary resource owner.
+
+The stored-stack import-order control boots its first valid persisted mod through ordinary catalogue admission, then performs the actual second import and rejected same-name replacement. Its one-time storage setup leaves subsequent stored-stack changes intact. The separate file-import case covers the initial interactive import. This keeps the order, effective override and rejection-purity assertions within the existing timeout while avoiding a redundant complete catalogue preparation.
+
+The two maritime-work examples declare the same explicit male ruler identity as their existing ruler starts. Shared admission coverage checks both ordinary imports and rejection when that sex is erased. Core maritime and construction consumers compare complete decoded receipt/property facts with unchanged array order, unsigned RNG bits and uid, and keep exact invoice prices while allowing only floating-point subtraction tolerance in calculated cash differences. Technology refusal removes the actual declared purchase requirement. Review selectors include accessible card notes while retaining exact focus checks. The optional stock-expiry variation creates its season-profile table before extending it. Independent consumer cases shard without increasing their timeout.
+
+Nightly full-suite runs use 32 shards to reduce the work assigned to each job within its existing 150-minute limit. This preserves all selected browser cases, the normal per-case timeout and two workers per shard. Season timing retains its separate 12-shard workload; paired measurements and report coverage checks are unchanged. A complete shard report remains necessary for full-suite evidence.
+
+Aachen and Constantinople household restore cases require a current save with a deleted original track to reject without replacing live state, changing facts or consuming RNG/uid. Their genuinely older controls omit both attachment provenance markers and their dependent opening profiles, and prove that restore and reserialization keep those markers and tracks absent. Legacy saves retaining a dependent profile still reject its missing required track purely. Fresh catalogue assertions include the implemented companion opening goals. Existing work-balance, death, payment, review and focus checks remain; independent cases can shard.
+
+Ordinary import fixture admission
+
+authoring-import-admission.spec.js validates the 27 configurations used by the milling, masonry, local formation, following review, mobile supply/reserve/campaign/vow, calendar, local threat and declarative contract consumers. Validation preserves detached JSON, the live catalogue and state, RNG and uid. Independent harbor and dune real file imports retain their female home rulers at the existing public rank; missing sex and mismatched station still reject. Household county rules preserve the intended birthplace without requiring an unrelated civic storyline, ruler identities stay explicit, replacement policies name the existing levy class and the hill incident retains its eight-day window at its actual opening date. These focused admission checks do not establish full consumer-suite or release acceptance.
+
+The affected import consumers call the scoped support/game/mod-admission.js leaf with their exact assembled candidate before waiting for navigation, so rejected imports report validator faults immediately. Imported journeys reuse beginBookmarkFromTitle after their existing Mods reload and full content preparation, avoiding a redundant catalogue boot. Fresh unmodded journeys retain beginBookmark. No universal fixture, navigation helper, timeout or behavioral assertion changes.
+
+Optional-review and former-patron variations retain a complete unrelated story graph and their intended county. The single-host reserve variation uses the existing camp trade adapter in place of column-only loading. The eighteen malformed reserve declarations, twenty-four malformed campaign declarations and nineteen malformed sponsor declarations remain covered in independent groups of at most six mutations within the ordinary timeout. The opening-campaign opponent enters the actual declared ruler code before checking canonical player aliases.
+
+Mobile religious enrollment coverage
+
+mobile-holywar.spec.js looks up the canonical participant with the selected command realm captured outside its array callback. Manual and automatic joins retain exact existing host/leader identity and fail with explicit preconditions before later assertions. Personal-vow journeys import independent harbor and upland household variants at the actual camp with their real participation track, keeping unrelated civic storylines out of that setup. Both variants refuse remote personal admission without changing the candidate, catalogue, live state, RNG or uid. These scenario-local helpers preserve the normal mandate, religious eligibility, personal admission and conservation gates.
+
+The mobile pledge button selector includes its explanatory accessible note while retaining the existing confirmation, Escape return and form-value preservation assertions. No UI implementation or eligibility policy changes.

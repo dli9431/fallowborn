@@ -54,10 +54,10 @@
       ],
       "realms": [
         {"id": "composition_crown", "name": "River court", "capital": "composition_port", "color": "#458c96", "aggression": 0, "rank": 2, "government": "regnum",
-          "ruler": {"name": "Ivo Reed", "culture": "frankish", "born": 1117, "mar": 6, "trait": "patient"},
+          "ruler": {"sex": "m", "name": "Ivo Reed", "culture": "frankish", "born": 1117, "mar": 6, "trait": "patient"},
           "techSeed": {"complete": ["scriptoria", "windmill", "ringworks", "castle_towers"], "omit": ["paper_scholarship"]}},
         {"id": "composition_march", "name": "Hill court", "capital": "composition_hill", "color": "#aa7944", "aggression": 0, "rank": 1, "government": "regnum", "liege": "composition_crown",
-          "ruler": {"name": "Odo Vale", "culture": "frankish", "born": 1119, "mar": 5, "trait": "patient"}}
+          "ruler": {"sex": "m", "name": "Odo Vale", "culture": "frankish", "born": 1119, "mar": 5, "trait": "patient"}}
       ],
       "duchies": {}, "kingdoms": {}, "empires": {},
       "revision": "inherited", "revisions": {

@@ -1,0 +1,45 @@
+{
+  "sourceCommit": "bcc5b4a5513d5e1eb5e50f4c7840de5356f6c6f0",
+  "files": [
+    {
+      "path": "js/bookmark_sources.js",
+      "parameter": "o",
+      "reference": "  function copy(o) {\n    var memo = new WeakMap();\n    function clone(row) {\n      if (!row || typeof row !== 'object') return row;\n      if (memo.has(row)) return memo.get(row);\n      var result = Array.isArray(row) ? [] : {};\n      memo.set(row,result);\n      Object.keys(row).forEach(function (key) { result[key] = clone(row[key]); });\n      FB.contentValues.copied(row,result);\n      return result;\n    }\n    return clone(o);\n  }"
+    },
+    {
+      "path": "js/bookmark_composition.js",
+      "parameter": "value",
+      "reference": "  function copy(value) {\n    var memo = new WeakMap();\n    function clone(row) {\n      if (!row || typeof row !== 'object') return row;\n      if (memo.has(row)) return memo.get(row);\n      var result = Array.isArray(row) ? [] : {};\n      memo.set(row,result);\n      Object.keys(row).forEach(function (key) { result[key] = clone(row[key]); });\n      copied(row,result);\n      return result;\n    }\n    return clone(value);\n  }"
+    }
+  ],
+  "facts": {
+    "unmodded": {
+      "data": "0c61e0a6e01b3c2c5638a94504c99978aa0f00f40d1e7a12b9b279cd102a97cf",
+      "revisions": "9f3ecd203d2df4eddd2a42104346fe291d3450ead5b1455b37651734ef86c119",
+      "signature": "",
+      "fingerprint": "0fc4ae7fa04e4093f79d8d1dd6e62f69a30f13e98cb48bfe514e8efc48cb9fa1",
+      "save": null,
+      "rng": 634,
+      "uid": 0
+    },
+    "household-overlay": {
+      "data": "b433eb17e04e54d565475333d7a7cdbffd0ffbb693fdd46d081e5ddc2e46234c",
+      "revisions": "9f3ecd203d2df4eddd2a42104346fe291d3450ead5b1455b37651734ef86c119",
+      "signature": "effective-1-d85ba1411513c7af10f1ea8a12822afd053667d619e595fa22356e8d69d8e80a",
+      "fingerprint": "0fc4ae7fa04e4093f79d8d1dd6e62f69a30f13e98cb48bfe514e8efc48cb9fa1",
+      "save": null,
+      "rng": 634,
+      "uid": 0
+    }
+  },
+  "copies": {
+    "Copy source values": {
+      "calls": 11802,
+      "objects": 973809
+    },
+    "Copy composition values": {
+      "calls": 5892,
+      "objects": 404023
+    }
+  }
+}

@@ -121,6 +121,46 @@ test('settled history beyond the old 512 cap leaves production open and folds ex
   expect(r.used).toEqual(r.expectedUse);
 });
 
+test('mature production save separates live closure, exact folded totals and persisted encoding',async function({page},info){
+  await page.addInitScript(function(){
+    Object.defineProperty(window,'indexedDB',{configurable:true,value:undefined});
+  });
+  await boot(page,info,null);
+  await page.addScriptTag({path:require('path').join(__dirname,'../fixtures/performance-mature-save/probe.js')});
+  const result=await page.evaluate(function(){
+    const s=FB.state,H=window.retentionStage;
+    H.age(s,12);
+    for(let n=1;n<=600;n++)H.batch(s,n,'use','committed');
+    for(let n=601;n<=640;n++)H.batch(s,n,'store','cancelled');
+    H.batch(s,s.turn-3600,'use','committed');
+    H.batch(s,s.turn-3599,'use','committed');
+    H.batch(s,650,'store','committed');
+    H.batch(s,660,'store','reserved');
+    FB.production.validate(s);
+    return matureSaveProbe.run(function(state){return FB.production.compact(state);});
+  });
+  await info.attach('mature-production-save.json',{body:JSON.stringify(result),contentType:'application/json'});
+  console.log('mature production save '+JSON.stringify(result));
+  expect(result).toMatchObject({retentionDays:3600,backend:'localstorage',changed:true,deterministic:true,identity:true,catalogue:true,failure:null});
+  expect(result.before.unchanged && result.after.unchanged).toBe(true);
+  expect(result.before.inventory.production.batches.count).toBe(644);
+  expect(result.after.inventory.production.batches.count).toBe(3);
+  expect(result.before.inventory.production.nodes.batch).toEqual({total:644,liveClosure:2,windowOnly:1,eligible:641});
+  expect(result.after.inventory.production.nodes.batch).toEqual({total:3,liveClosure:2,windowOnly:1,eligible:0});
+  // Production provenance retains both distinct transaction graphs.
+  expect(result.compactCounts.graphs).toEqual([
+    {cutoff:720,nodes:1251,closures:1,input:0},{cutoff:null,nodes:9,closures:1,input:1}
+  ]);
+  expect(Object.values(result.after.inventory.production.retired.assets)).toEqual([
+    {lots:601,quantity:601,batches:641,cancelled:40,workDays:601,paid:1282,openings:[]}
+  ]);
+  expect(Object.values(result.after.inventory.production.retired.used).sort(function(a,b){return a-b;})).toEqual([601,1202]);
+  expect(result.compaction.map(function(sample){return sample.changed;})).toEqual([true,true,true]);
+  expect(result.noops.map(function(sample){return sample.changed;})).toEqual([false,false,false]);
+  for(const sample of result.restores)expect(sample).toMatchObject({completeParity:true,inputUnchanged:true});
+  for(const sample of result.persistence)expect(sample).toMatchObject({accepted:true,storedPrefix:'FBC1.',slotParity:true,exportParity:true});
+});
+
 test('live reservations, stored output and trade provenance survive compaction and round-trip through saves',async function({page},info){
   await boot(page,info,null);
   const r=await page.evaluate(function(){

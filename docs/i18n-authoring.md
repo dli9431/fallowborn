@@ -535,3 +535,6 @@ localPassagePolicies and accessOrigin.passagePolicy store only protocol ids, num
 Corridor receipt presentation
 
 Corridor decisions reuse the existing literal FB.T county, payment, capacity, duration and original-outside-ruler labels. The strict saved-corridor rejection routes through FB.T as well. Original actor names remain identity data; neither rendered labels nor translated prose are stored in envelope, binding or receipt state. Individual receipts use the shared source/confirmation UI and ordinary English fallback. No generated catalogue is edited by this capability.
+
+
+Static JavaScript lexical scanning treats regular-expression literals as opaque source, including quotes, character classes, escaped slashes and text resembling localization calls. Arithmetic division remains an operator, and genuine unterminated strings still fail with their source line. Lexer regressions and structured/static HTML extraction checks run together in CI. This source-tooling repair does not regenerate catalogues.

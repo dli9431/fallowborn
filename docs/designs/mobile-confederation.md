@@ -12,6 +12,10 @@ Acceptance of a mobile agreement is a reviewed transaction. A civic counterparty
 
 Mobile confederation
 
+The mobile layer of realmIdForRulerCharacter evaluates its native leader reader once per qualifying filter row. It still scans every government in the same order before consulting the inherited territorial resolver and retains landed-home and mobile fallback precedence. Replaced leader readers retain the original two-call behavior after a truthy first result. No leader or ruler answer survives a predicate evaluation; later reads recheck custody, guards, command authority and generations.
+
+The native scan retains the first matching realm directly instead of collecting a filtered array. It captures the ordered keys once and still evaluates every present key, including live callbacks and errors after the first match. Recursive queries use independent local variables. A replaced array filter keeps the original filter path and its returned order. This removes temporary result arrays and predicate closures, without reducing ruler queries, government visits or eligibility work.
+
 Character-held outside responses recognize the current protagonist's live player court when the station resolver confirms territorial rule. The inherited royal-line lookup deliberately excludes player and cannot resolve that alias by itself. Other household members acquire no court authority. A current managed-office vacancy invalidates an original corridor authority chain even if its living abdicator still occupies the genealogy root; ordinary daily reconciliation ends the affected receipt without replacing its original people.
 
 Optional bounded command columns partition an authored opening's existing force and food into canonical hosts while retaining one civilian camp and account. The complete contract, strict optional saves, current commander scopes, reviewed movement/reorganization and final reunion rules are in docs/designs/mobile-columns.md. Existing single-host defaults retain their original schemas and behavior.
@@ -114,6 +118,8 @@ Optional mobile.preparationId defers only its realm's fresh initialization. Its 
 Original guarded parties
 
 A declared guardedParty is separate from member demographic pools and migration carriage. Its original leader remains the same person with an ineffective command, and its named existing companions never acquire member votes. The constructor preflights all identities and locality before changing state. Hosting access and civilian consumption continue under their existing finite owners while command is suspended. No guard timer grants command or relocates anyone. The shared release and actual personal-location contract, ordinary-custody precedence and none technology decisions are in docs/designs/mobile-guard.md.
+
+The native characterGuarded read traverses the existing original-party identity index directly, avoiding per-read predicate construction even when that list is empty. Its index lifetime is unchanged. Each call reads current status and membership in order, captures the original length, skips absent indices and stops at the first match. A replaced some method is read once and invoked with the same list as receiver; unsupported collections retain that method's behavior. Recursion uses local traversal variables and exceptions retain no partial eligibility answer. The mobile ruler query still performs every government visit and live custody, guard and command check.
 
 Dispersed civilians
 

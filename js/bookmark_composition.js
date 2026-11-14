@@ -109,6 +109,9 @@ window.FB = window.FB || {};
     valueSnapshots.set(target,{keys:keys,values:values,value:value});
   }
   FB.contentValues = {snapshot:snapshot,jsonSnapshot:jsonSnapshot,canonical:canonical,copied:copied};
+  var copyKeys = Object.keys, copyEach = Array.prototype.forEach;
+  var copyReadersNative = /\[native code\]/.test(Function.prototype.toString.call(copyKeys)) &&
+    /\[native code\]/.test(Function.prototype.toString.call(copyEach));
   function copy(value) {
     var memo = new WeakMap();
     function clone(row) {
@@ -116,7 +119,15 @@ window.FB = window.FB || {};
       if (memo.has(row)) return memo.get(row);
       var result = Array.isArray(row) ? [] : {};
       memo.set(row,result);
-      Object.keys(row).forEach(function (key) { result[key] = clone(row[key]); });
+      var readKeys = Object.keys, keys = Function.prototype.call.call(readKeys,Object,row), each = keys.forEach;
+      if (copyReadersNative && readKeys === copyKeys && each === copyEach) {
+        // Match forEach even if its getter exposes and edits the key list.
+        for (var i = 0, length = keys.length; i < length; i++) {
+          if (i in keys) { var key = keys[i]; result[key] = clone(row[key]); }
+        }
+      } else {
+        Function.prototype.call.call(each,keys,function (key) { result[key] = clone(row[key]); });
+      }
       copied(row,result);
       return result;
     }

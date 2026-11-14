@@ -199,7 +199,8 @@
             "culture": "frankish",
             "born": 768,
             "mar": 6,
-            "trait": "patient"
+            "trait": "patient",
+            "sex": "m"
           }
         }
       ],

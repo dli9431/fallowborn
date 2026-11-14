@@ -1,5 +1,7 @@
 Read-only institution queries
 
+Native explicit-state office-input validation resolves the campaign world once for both local institution definitions and office dependency comparison. Independent entries still validate independently. Null-state and missing-start fallbacks retain their original FB.state and activeBookmark distinction. Replaced local definition or campaign bookmark readers retain their original call order and separate calls. Explicit empty local tables, retained revision errors, authoring edits and detached catalogues retain their existing meaning. The helper shares definitions only, never a holder or eligibility answer.
+
 The Religious Membership deed uses hasPlayerReligiousInstitution to stop at the first visible institution. It checks the protagonist first, then the remaining managed household; household-only opportunities remain visible and independent authorities remain excluded. The modal still receives the complete sorted playerReligiousInstitutions list. Both reads share the same membership, faith, residence and patron rules and retain no visibility cache. religiousInstitutionAvailable exposes the canonical availability predicate without building a detached snapshot.
 
 Malformed opening diagnostics
@@ -122,6 +124,12 @@ compared structurally because resolved worlds alias their authoring records. A c
 within a daily or seasonal pass. Switching a detached catalogue or state cannot
 reuse the installed table. Religion invalidation rebuilds the faith graph; direct
 faith-record edits retain the existing invalidateFaithState contract.
+
+Unchanged independent reads compare those ordered JSON inputs against a private detached dependency snapshot. They still inspect every relevant local definition, system layer and bookmark religion reference, but do not recreate the local-row arrays, concatenate/map the bookmark rows or serialize the complete key on a hit. A changed dependency uses the original key construction and table-build path. The snapshot preserves JSON null/omitted values and object insertion order, never aliases mutable source descendants, and lasts only with the existing single table cache. Non-JSON conversion objects fall back to the original serialization path. No mutation counters, global per-turn reuse or holder-result cache is introduced.
+
+After a successful comparison, validation returns the existing private dependency record when it is still current and its catalogue and system reader identities still match. This avoids a replacement record and the caller's repeated identity/key guard within that same read. Reentrant validation or identity changes during comparison retain the original record-construction and table checks. Every independent entry still resolves and compares all inputs. Office lookup diagnostics count record allocations and repeated table guards separately from validations, while office-validation.spec.js covers reentry, reader/catalogue changes during comparison and exception recovery.
+
+Within that comparison, native opening-head keys are compared in their own enumerable order during enumeration. This avoids a temporary key array and its separate traversal; every local definition and opening realm/province faith reference is still checked. Numeric key order, string reinsertion, inherited and nonenumerable exclusion, accessor reads and reentry retain their existing meaning. A replaced Object.keys reader uses the original array comparison with its original receiver and evaluation order. The serialized rebuild path and live holder reads remain independent of this loop.
 
 Each build evaluates a distinct system/faith pair and profile/faith pair once.
 The optional checks argument of religiousInstitutionOffice shares those pure

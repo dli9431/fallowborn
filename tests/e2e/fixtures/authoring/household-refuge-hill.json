@@ -125,12 +125,16 @@
           "diff": "Spouse and young children"
         }
       },
-      "fixedProvinceId": "shelter_hill_quay",
       "tracks": [
         "hill_party"
       ],
       "trackLocations": {
         "hill_party": [
+          "shelter_hill_quay"
+        ]
+      },
+      "birthplaces": {
+        "counties": [
           "shelter_hill_quay"
         ]
       }
@@ -218,6 +222,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 868,
@@ -240,6 +245,7 @@
           "government": "regnum",
           "liege": "shelter_hill_estuary_court",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 870,

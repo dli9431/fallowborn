@@ -51,7 +51,7 @@
         {"id": "resource_rocks", "name": "Rocky scenery", "wasteland": true}
       ],
       "realms": [{"id": "resource_river_court", "name": "River court", "capital": "resource_quay", "color": "#458c96", "aggression": 0, "rank": 2, "government": "regnum",
-        "ruler": {"name": "Ivo Reed", "culture": "frankish", "born": 868, "mar": 6, "trait": "patient"}}],
+        "ruler": {"sex": "m", "name": "Ivo Reed", "culture": "frankish", "born": 868, "mar": 6, "trait": "patient"}}],
       "duchies": {}, "kingdoms": {}, "empires": {}, "revision": "supplied",
       "revisions": {
         "baseline": {},

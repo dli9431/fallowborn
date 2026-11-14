@@ -197,44 +197,6 @@
     }
   },
   "storyInstances": {
-    "dune_offices": {
-      "id": "dune_offices",
-      "type": "government_contest",
-      "name": "The well council",
-      "desc": "Public water rights continue through each change of office.",
-      "realmId": "dune_oasis"
-    },
-    "dune_candidacy": {
-      "id": "dune_candidacy",
-      "type": "civic_candidacy",
-      "requires": [
-        "dune_offices"
-      ],
-      "requirements": {
-        "realms": [
-          "dune_oasis"
-        ],
-        "provinces": [
-          "dune_well"
-        ]
-      },
-      "realmId": "dune_oasis",
-      "officeId": "well_keeper",
-      "name": "Keep the common wells",
-      "desc": "Choose public service or keep your household outside the office.",
-      "choices": {
-        "stand": {
-          "id": "dune_stand",
-          "label": "Stand for office",
-          "detail": "Pay the declared nomination fee and seek the public mandate."
-        },
-        "decline": {
-          "id": "dune_decline",
-          "label": "Remain a private household",
-          "detail": "End this invitation without paying a nomination fee or receiving public rights."
-        }
-      }
-    },
     "upland_preparation": {
       "id": "upland_preparation",
       "type": "expedition_preparation",
@@ -282,10 +244,6 @@
       "eras": [
         "early_medieval"
       ],
-      "fixedProvinceId": "dune_well",
-      "tracks": [
-        "dune_candidacy"
-      ],
       "alwaysUnlocked": true,
       "startAge": 24,
       "familyPresets": {
@@ -294,8 +252,8 @@
           "diff": "age 24"
         }
       },
-      "trackLocations": {
-        "dune_candidacy": [
+      "birthplaces": {
+        "counties": [
           "dune_well"
         ]
       }
@@ -316,7 +274,6 @@
       "settlementLayout": null,
       "religiousHeads": {},
       "stories": [
-        "dune_offices",
         "upland_preparation"
       ],
       "provinces": [

@@ -87,20 +87,23 @@
   function jurisdiction(s,m) { return rights(s).filter(function (row) { return m.rightIds.indexOf(row.id) >= 0; }); }
   function interest(s,rid,id) { var data = A.state(s,rid); return data && data.interests.filter(function (m) { return m.id === id; })[0]; }
   function rule(s,rid,id) { var p = A.profile(s,rid); return p && p.interests.filter(function (m) { return m.id === id; })[0]; }
-  function constituencyLookups(s,interests) {
+  function constituencyLookups(s,interests,track) {
     // One interest cannot save a scan. Nonstandard inputs keep the original
     // filters, including their strict matching and malformed-input failures.
     if (!Array.isArray(interests) || interests.length < 2 || interests.map !== Array.prototype.map) return null;
     var i, j, m, row, id, list, requested = Object.create(null), selected = [];
+    var snapshot = track ? {interests:interests,map:interests.map,requests:new Array(interests.length)} : null;
     for (i = 0; i < interests.length; i++) {
       if (!(i in interests)) continue;
       m = interests[i];
       if (!m || typeof m.appointmentId !== 'string' || !Array.isArray(m.rightIds) ||
           m.rightIds.indexOf !== Array.prototype.indexOf) return null;
       selected[i] = [];
+      if (snapshot) snapshot.requests[i] = [m.appointmentId,m.rightIds,[],m.rightIds.indexOf];
       for (j = 0; j < m.rightIds.length; j++) {
         id = m.rightIds[j];
         if (typeof id !== 'string') return null;
+        if (snapshot) snapshot.requests[i][2][j] = id;
         list = requested[id] || (requested[id] = []);
         // Requests for one interest are contiguous. Only membership is unique;
         // repeated ledger records will each be appended in the scan below.
@@ -110,6 +113,13 @@
     var assigned = appointments(s), local = rights(s);
     if (!Array.isArray(assigned) || !Array.isArray(local) || assigned.filter !== Array.prototype.filter ||
         local.filter !== Array.prototype.filter) return null;
+    if (snapshot) {
+      snapshot.assigned = assigned; snapshot.local = local;
+      snapshot.assignedFilter = assigned.filter; snapshot.localFilter = local.filter;
+      snapshot.assignedRows = new Array(assigned.length); snapshot.assignedIds = [];
+      snapshot.localRows = new Array(local.length); snapshot.localIds = [];
+      snapshot.day = FB.dayRead || null;
+    }
     var first = Object.create(null);
     for (i = 0; i < assigned.length; i++) {
       if (!(i in assigned)) continue;
@@ -117,6 +127,7 @@
       if (!row) return null;
       id = row.id;
       if (typeof id !== 'string') return null;
+      if (snapshot) { snapshot.assignedRows[i] = row; snapshot.assignedIds[i] = id; }
       if (!own(first,id)) first[id] = row;
     }
     for (i = 0; i < local.length; i++) {
@@ -125,28 +136,94 @@
       if (!row) return null;
       id = row.id;
       if (typeof id !== 'string') return null;
+      if (snapshot) { snapshot.localRows[i] = row; snapshot.localIds[i] = id; }
       list = requested[id];
       if (list) for (j = 0; j < list.length; j++) selected[list[j]].push(row);
     }
-    return {first:first,rights:selected};
+    return {first:first,rights:selected,snapshot:snapshot};
+  }
+  // A fiscal lifetime shares only index storage. Validate its detached input
+  // snapshot on every reuse, including edits by replaceable read callbacks.
+  var fiscalReads = [];
+  A.fiscalReadActive = function () { return fiscalReads.length > 0; };
+  A.withFiscalRead = function (s,context,read,projection) {
+    var parent = fiscalReads[fiscalReads.length - 1];
+    if (projection && parent && parent.actor && parent.state === s && parent.data === FBDATA && parent.context === context) return read();
+    fiscalReads.push({state:s,data:FBDATA,context:context,actor:!projection,entries:null});
+    try { return read(); } finally { fiscalReads.pop(); }
+  };
+  function sameLookupInputs(s,interests,old) {
+    var assigned = appointments(s), local = rights(s), i, j, m, request;
+    if (old.interests !== interests || !Array.isArray(interests) || interests.map !== old.map || interests.map !== Array.prototype.map ||
+        interests.length !== old.requests.length || assigned !== old.assigned || local !== old.local ||
+        assigned.filter !== old.assignedFilter || local.filter !== old.localFilter ||
+        assigned.filter !== Array.prototype.filter || local.filter !== Array.prototype.filter ||
+        assigned.length !== old.assignedRows.length || local.length !== old.localRows.length) return false;
+    // One fiscal read is a pure quote. Within the simulated day that built this
+    // index, unchanged ledger identities and sizes mean unchanged rows.
+    if (old.day && old.day === FB.dayRead) return true;
+    for (i = 0; i < interests.length; i++) {
+      if ((i in interests) !== (i in old.requests)) return false;
+      if (!(i in interests)) continue;
+      m = interests[i]; request = old.requests[i];
+      if (!m || m.appointmentId !== request[0] || m.rightIds !== request[1] ||
+          m.rightIds.indexOf !== request[3] || m.rightIds.indexOf !== Array.prototype.indexOf || m.rightIds.length !== request[2].length) return false;
+      for (j = 0; j < m.rightIds.length; j++) if (m.rightIds[j] !== request[2][j]) return false;
+    }
+    for (i = 0; i < assigned.length; i++) {
+      if ((i in assigned) !== (i in old.assignedRows)) return false;
+      if (i in assigned && (assigned[i] !== old.assignedRows[i] || assigned[i].id !== old.assignedIds[i])) return false;
+    }
+    for (i = 0; i < local.length; i++) {
+      if ((i in local) !== (i in old.localRows)) return false;
+      if (i in local && (local[i] !== old.localRows[i] || local[i].id !== old.localIds[i])) return false;
+    }
+    return true;
+  }
+  function fiscalConstituencyLookups(s,rid,interests) {
+    var read = fiscalReads[fiscalReads.length - 1];
+    if (!read || read.state !== s || read.data !== FBDATA) return constituencyLookups(s,interests);
+    var old = read.entries && read.entries[rid];
+    if (old && sameLookupInputs(s,interests,old.snapshot)) return old;
+    var lookup = constituencyLookups(s,interests,true);
+    if (lookup) {
+      if (!read.entries) read.entries = Object.create(null);
+      read.entries[rid] = lookup;
+    } else if (read.entries) delete read.entries[rid];
+    return lookup;
+  }
+  function constituencyVoice(s,rid,p,lookup,m,i) {
+    var row = lookup ? lookup.first[m.appointmentId] : assignment(s,m), c = row && s.chars[row.holder.id];
+    var local = lookup ? lookup.rights[i] : jurisdiction(s,m);
+    var active = !!row && row.status === 'active' && (row.endTurn === null || row.endTurn > s.turn) &&
+      live(s,c) && c.dyn === m.dynasty && s.date.year - c.born >= p.minimumAge &&
+      (s.holder[m.scope.id] || s.owner[m.scope.id]) === rid && local.length === 2 && local.every(function (r) {
+        return r.status === 'active' && r.strength >= 50 && same(r.beneficiary,row.holder);
+      });
+    return Object.assign(copy(m), { principal:row ? copy(row.holder) : null, active:!!active,
+      weight:rule(s,rid,m.id).weight, terms:row && row.provincialTerms ? {
+        revenue:1 - row.publicTerms.share, levy:row.provincialTerms.levy, status:row.provincialTerms.status
+      } : null });
   }
   A.constituency = function (s,rid) {
     var data = A.state(s,rid), p = A.profile(s,rid);
-    var lookup = data && p && constituencyLookups(s,data.interests);
-    return data && p ? data.interests.map(function (m,i) {
-      var row = lookup ? lookup.first[m.appointmentId] : assignment(s,m), c = row && s.chars[row.holder.id];
-      var local = lookup ? lookup.rights[i] : jurisdiction(s,m);
-      var active = !!row && row.status === 'active' && (row.endTurn === null || row.endTurn > s.turn) &&
-        live(s,c) && c.dyn === m.dynasty && s.date.year - c.born >= p.minimumAge &&
-        (s.holder[m.scope.id] || s.owner[m.scope.id]) === rid && local.length === 2 && local.every(function (r) {
-          return r.status === 'active' && r.strength >= 50 && same(r.beneficiary,row.holder);
-        });
-      return Object.assign(copy(m), { principal:row ? copy(row.holder) : null, active:!!active,
-        weight:rule(s,rid,m.id).weight, terms:row && row.provincialTerms ? {
-          revenue:1 - row.publicTerms.share, levy:row.provincialTerms.levy, status:row.provincialTerms.status
-        } : null });
-    }) : [];
+    var lookup = data && p && fiscalConstituencyLookups(s,rid,data.interests);
+    return data && p ? data.interests.map(function (m,i) { return constituencyVoice(s,rid,p,lookup,m,i); }) : [];
   };
+  /* The first voice of one county. A fiscal base asks for a single county on
+     every settlement, so only that interest is evaluated and copied. */
+  function countyVoice(s,rid,pid) {
+    var data = A.state(s,rid), p = A.profile(s,rid);
+    if (!data || !p) return undefined;
+    var interests = data.interests;
+    if (!Array.isArray(interests) || interests.map !== Array.prototype.map)
+      return A.constituency(s,rid).filter(function (v) { return v.scope.id === pid; })[0];
+    var lookup = fiscalConstituencyLookups(s,rid,interests);
+    for (var i = 0; i < interests.length; i++) {
+      if (i in interests && interests[i].scope.id === pid) return constituencyVoice(s,rid,p,lookup,interests[i],i);
+    }
+    return undefined;
+  }
   A.readiness = function (s,rid) {
     var p = A.profile(s,rid), data = A.state(s,rid), sitting = current(s,rid);
     var succession = tree(s,rid);
@@ -539,14 +616,14 @@
   G.register('holders','mixed_provincial',Object.assign({},G.strategy('holders','public_offices')));
   var levy = Object.assign({},G.strategy('levy','public_service')), baseLevy = levy.settlementBase;
   levy.settlementBase = function (s,rid,c) {
-    var m = A.constituency(s,rid).filter(function (v) { return v.scope.id === c.provinceId; })[0];
+    var m = countyVoice(s,rid,c.provinceId);
     return baseLevy(s,rid,c) * (m ? m.active && m.terms.status === 'assent' ? m.terms.levy : 0.35 : 1);
   };
   G.register('levy','provincial_obligations',levy);
   var revenue = Object.assign({},G.strategy('revenue','public_receipts'));
   var countyBase = revenue.countyBase, settlementBase = revenue.settlementBase;
   function revenueFactor(s,rid,pid) {
-    var m = A.constituency(s,rid).filter(function (v) { return v.scope.id === pid; })[0];
+    var m = countyVoice(s,rid,pid);
     return m && (!m.active || m.terms.status === 'withheld') ? 0.5 : 1;
   }
   revenue.countyBase = function (s,rid,c) { return countyBase(s,rid,c) * revenueFactor(s,rid,c.provinceId); };

@@ -442,6 +442,8 @@ Revision catalogue compatibility
 
 Public world lookup reuse
 
+Native office dependency validation uses localInstitutionOfficeInputs to borrow one resolved campaign world for its local definition and bookmark inputs. This lifetime is one explicit-state entry only. Replaced campaign or local-definition readers keep their original separate evaluation order, and null-state/missing-start cases keep the existing FB.state versus activeBookmark fallbacks. Independent entries continue to validate resolution inputs, including retained revisions and catalogue changes.
+
 FB.bookmark and FB.campaignBookmark share a resolved revision while its resolution
 inputs are unchanged. The session cache is scoped to the exact FBDATA root and
 bookmark table, keyed by definition object and requested revision (including an

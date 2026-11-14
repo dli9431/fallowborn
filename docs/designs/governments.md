@@ -146,8 +146,17 @@ within that invocation. Appointment selection retains the first matching row;
 rights selection retains every matching row, including repeated record ids, in
 ledger order. Repeated requested ids only affect membership. Every interest and
 its live eligibility checks still run, and results remain detached. Single-interest
-reads and nonstandard input shapes use the original filters. No lookup survives
-the call or crosses fiscal projections, actions, content changes or restore.
+reads and nonstandard input shapes use the original filters. Independent reads
+build afresh. An aristocratic realm settlementActorFiscal read may share an index with its native
+child projections using the same state, catalogue and fiscal context; a standalone
+settlementFiscalProjection has its own lifetime. Nested actor reads and foreign
+contexts stay independent. Every reuse compares detached ordered row identities,
+ids, requested appointment/right ids, array identities and native methods before
+borrowing storage. In-place edits rebuild, and all live eligibility checks and
+detached results still run. The private stack ends in finally on return or throw;
+no index is stored on the public fiscal context or survives its owning read.
+
+Fiscal context setup is conditional on an existing aristocratic government row for the actor realm or physical county holder, or an already active fiscal lifetime whose nested boundaries must remain isolated. Other actors and counties use the original path; their individual aristocratic county projections can still establish a local lifetime. Replaced county-holder readers that introduce a different government simply lose optional sharing, with unchanged calculations and live lookups. No era, bookmark or historical id selects this optimization.
 
 Mobile coalition dispatch
 

@@ -253,36 +253,6 @@
           "detail": "End this invitation without paying a nomination fee or receiving public rights."
         }
       }
-    },
-    "harbor_hosted_agenda": {
-      "id": "harbor_hosted_agenda",
-      "type": "ruler_agenda",
-      "subjectRealmId": "harbor_following",
-      "title": "Review the hosted following",
-      "intro": "Choose priorities while ordinary access, work and command remain independent.",
-      "stages": [
-        {
-          "id": "harbor_hosted_review",
-          "name": "The current arrangement",
-          "text": "Keep the present arrangements while reviewing local access in the mobile sheet. This review does not renew access or guarantee personal safety.",
-          "year": 900,
-          "season": 0,
-          "choices": [
-            {
-              "id": "harbor_keep_hosting",
-              "label": "Keep the present priority",
-              "detail": "Record this priority without spending money, renewing access or moving the camp.",
-              "operation": "agenda_priority"
-            },
-            {
-              "id": "harbor_close_review",
-              "label": "End the review",
-              "detail": "End the personal review with ordinary work and access still available.",
-              "operation": "agenda_finish"
-            }
-          ]
-        }
-      ]
     }
   },
   "startScenarios": [
@@ -318,48 +288,6 @@
       },
       "trackLocations": {
         "harbor_candidacy": [
-          "harbor_quay"
-        ]
-      }
-    },
-    {
-      "id": "harbor_hosted_leader",
-      "name": "Hosted leader review",
-      "desc": "A personal review of the following.",
-      "intro": "Review the present access separately from your private household.",
-      "rulerRealmId": "harbor_following",
-      "governmentForm": "hosted_following",
-      "fixedProvinceId": "harbor_quay",
-      "startCulture": "harbor_folk",
-      "startReligion": "harbor_belief",
-      "characterName": "Lena Reed",
-      "sex": "f",
-      "tier": 1,
-      "profession": "soldier",
-      "gold": 7,
-      "prestige": 5,
-      "piety": 0,
-      "bookmarkIds": [
-        "harbor_world"
-      ],
-      "eras": [
-        "early_medieval"
-      ],
-      "alwaysUnlocked": true,
-      "hidden": true,
-      "onboarding": "ruler",
-      "familyPresets": {
-        "standard": {
-          "name": "Existing public leader",
-          "diff": "existing person",
-          "desc": "Keep the existing person."
-        }
-      },
-      "tracks": [
-        "harbor_hosted_agenda"
-      ],
-      "trackLocations": {
-        "harbor_hosted_agenda": [
           "harbor_quay"
         ]
       }
@@ -660,8 +588,7 @@
         }
       },
       "starts": [
-        "harbor_household",
-        "harbor_hosted_leader"
+        "harbor_household"
       ],
       "hidden": false,
       "opening": {

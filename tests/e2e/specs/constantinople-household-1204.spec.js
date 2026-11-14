@@ -1,8 +1,11 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
+
 const { openGame } = require('../support/game/navigation');
 const { beginBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
+
+test.describe.configure({ mode:'parallel' });
 
 dependsOnRuntime(__filename, ['index.html','data/starts.js','data/story_households_1204.js',
   'data/bookmark_1204.js','data/bookmark_1204_campaigns.js','data/bookmark_1204_terrain.js',
@@ -11,7 +14,7 @@ dependsOnRuntime(__filename, ['index.html','data/starts.js','data/story_househol
   'js/story_household.js','js/stories.js','js/starts.js','js/story_campaign.js','js/story_history.js',
   'js/actions.js','js/travel.js','js/events.js','js/main.js','js/world.js','js/model.js',
   'js/government_civic.js','js/civic_transactions.js','js/religious_institutions.js',
-  'js/save.js','js/save_v4.js','js/i18n.js','js/ui_misc.js','js/ui_panels.js']);
+  'data/start_ambitions.js','js/story_opening_goals.js','js/save.js','js/save_v4.js','js/i18n.js','js/ui_misc.js','js/ui_panels.js']);
 
 const ID = 'constantinople_household_track_1204';
 
@@ -35,7 +38,7 @@ test('Constantinople attaches only at its start and validates every offered revi
     return { tracks:FB.startTracks(sc, 'constantinople'), away:FB.startTracks(sc, 'nicaea'),
       valid:revisions.length > 1 && revisions.every(function (r) { return FB.validateBookmark(FB.bookmark('1204', r)).length === 0; }),
       elsewhere:FBDATA.startScenarios.filter(function (r) { return r.id !== sc.id && (r.tracks || []).indexOf('constantinople_household_track_1204') >= 0; }).length };
-  })).toEqual({ tracks:[ID], away:[], valid:true, elsewhere:0 });
+  })).toEqual({ tracks:[ID,'opening_constantinople_1204'], away:[], valid:true, elsewhere:0 });
   await beginBookmark(page, info, '1204', 'constantinople_household_1204');
   expect(await page.evaluate(function () {
     const s = FB.state;
@@ -207,9 +210,28 @@ test('death ends the personal plan and existing saves without it remain without 
     FB.stories.get(id).day(s, t);
     const interrupted = t.phase, noCost = money === s.player.gold;
     delete saved.state.stories[id];
+    const live = FB.state, facts = JSON.stringify(live), rng = FB.getRngState(), uid = FB.getUidCounter();
+    let rejected = false;
+    try { FB.save.restore(saved); } catch (error) {
+      rejected = error.message.indexOf('state.start.storyAttachments') >= 0;
+    }
+    const currentRejected = rejected && live === FB.state && facts === JSON.stringify(FB.state) &&
+      rng === FB.getRngState() && uid === FB.getUidCounter();
+    // A campaign predating original attachment provenance has neither marker.
+    delete saved.state.start.storyAttachments; delete saved.storyAttachmentSchema;
+    let dependencyRejected = false;
+    try { FB.save.restore(saved); } catch (error) {
+      dependencyRejected = error.message.indexOf('requires story ' + id) >= 0;
+    }
+    dependencyRejected = dependencyRejected && live === FB.state && facts === JSON.stringify(FB.state) &&
+      rng === FB.getRngState() && uid === FB.getUidCounter();
+    // This older campaign also predates the opening profile requiring that track.
+    delete saved.state.stories.opening_constantinople_1204;
     FB.save.restore(saved);
-    return { interrupted:interrupted, noCost:noCost, missing:!FB.state.stories[id] };
-  })).toEqual({ interrupted:'interrupted', noCost:true, missing:true });
+    const legacy = JSON.parse(FB.save.serialize());
+    const legacyUnstamped = legacy.storyAttachmentSchema === undefined && legacy.state.start.storyAttachments === undefined;
+    return { interrupted:interrupted, noCost:noCost, missing:!FB.state.stories[id] && !FB.state.stories.opening_constantinople_1204, currentRejected, dependencyRejected, legacyUnstamped };
+  })).toEqual({ interrupted:'interrupted', noCost:true, missing:true, currentRejected:true, dependencyRejected:true, legacyUnstamped:true });
 });
 
 test('absence withdraws local costs before the next story boundary', async function ({ page }, info) {

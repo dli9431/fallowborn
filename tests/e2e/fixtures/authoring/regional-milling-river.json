@@ -202,7 +202,8 @@
             "culture": "frankish",
             "born": 868,
             "mar": 6,
-            "trait": "patient"
+            "trait": "patient",
+            "sex": "m"
           },
           "techSeed": {
             "omit": [

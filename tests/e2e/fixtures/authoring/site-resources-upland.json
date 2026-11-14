@@ -34,9 +34,9 @@
       ],
       "realms": [
         {"id": "resource_hill_court", "name": "Hill court", "capital": "resource_hill", "color": "#aa7944", "aggression": 0, "rank": 2, "government": "regnum",
-          "ruler": {"name": "Arno Stone", "culture": "frankish", "born": 918, "mar": 6, "trait": "patient"}},
+          "ruler": {"sex": "m", "name": "Arno Stone", "culture": "frankish", "born": 918, "mar": 6, "trait": "patient"}},
         {"id": "resource_fold_court", "name": "Fold court", "capital": "resource_fold", "color": "#779955", "aggression": 0, "rank": 1, "government": "regnum",
-          "ruler": {"name": "Odo Vale", "culture": "frankish", "born": 920, "mar": 5, "trait": "patient"}}
+          "ruler": {"sex": "m", "name": "Odo Vale", "culture": "frankish", "born": 920, "mar": 5, "trait": "patient"}}
       ],
       "duchies": {}, "kingdoms": {}, "empires": {},
       "siteResourceAssignments": [

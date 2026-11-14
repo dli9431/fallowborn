@@ -6,7 +6,10 @@ const {test,expect} = require('../support/fixture');
 const {openTitle,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+const {installPageGuards} = require('../support/page-contract');
 const reference = require('../fixtures/content-preparation/reference.json');
+const physicalReference = require('../fixtures/content-preparation/physical-sites-reference.json');
+const copyReference = require('../fixtures/content-preparation/copy-traversal-reference.json');
 const overlay = fs.readFileSync(path.resolve(__dirname,'../fixtures/634-core-identities/household-overlay.json'),'utf8');
 const malformed = fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/ctesiphon-household-plans.json'),'utf8');
 dependsOnRuntime(__filename,['js/bookmark_composition.js','js/bookmark_sources.js','js/mods.js',
@@ -39,6 +42,220 @@ async function snapshot(page) {
     save:FB.state ? FB.save.serialize() : null, rng:FB.getRngState(), uid:FB.getUidCounter()};
   });
 }
+
+async function physicalSiteProbe(page,baseline) {
+  let source = fs.readFileSync(path.resolve(__dirname,'../../../js/world.js'),'utf8').replace(/\r\n/g,'\n');
+  if (baseline) {
+    for (const patch of physicalReference.patches) {
+      expect(source.split(patch.current).length).toBe(2);
+      source = source.replace(patch.current,patch.reference);
+    }
+    expect(crypto.createHash('sha256').update(source).digest('hex')).toBe(physicalReference.sourceSha256);
+  }
+  const begin = '    var siteSlug = /^[a-z0-9]+(_[a-z0-9]+)*$/;\n    var siteGeography',
+    end = '    var supportedKinds = { village:1, town:1, city:1 };';
+  expect(source.split(begin).length).toBe(2);
+  expect(source.split(end).length).toBe(2);
+  expect(source.split('if (!siteSlug.test(siteId))').length).toBe(2);
+  source = source.replace(begin,'    var siteReviewStarted = performance.now();\n' + begin)
+    .replace('if (!siteSlug.test(siteId))','if (!(window.__physicalSiteReview.rows++, siteSlug.test(siteId)))')
+    .replace(end,'    window.__physicalSiteReview.calls++;\n' +
+      '    window.__physicalSiteReview.elapsedMs += performance.now() - siteReviewStarted;\n' + end);
+  await page.addInitScript(function () { window.__physicalSiteReview = {calls:0,rows:0,elapsedMs:0}; });
+  await page.route('**/js/world.js',function (route) {
+    return route.fulfill({contentType:'application/javascript',body:source});
+  });
+}
+
+async function contentCopyProbe(page) {
+  await page.addInitScript(function () {
+    window.FB_LOAD_TIMING = true;
+    window.__contentCopies = {};
+  });
+  for (const row of [['js/bookmark_sources.js','o','Copy source values'],
+    ['js/bookmark_composition.js','value','Copy composition values']]) {
+    let source = fs.readFileSync(path.resolve(__dirname,'../../..',row[0]),'utf8').replace(/\r\n/g,'\n');
+    const begin = '  function copy(' + row[1] + ') {', end = '    return clone(' + row[1] + ');\n  }',
+      allocation = '      var result = Array.isArray(row) ? [] : {};', label = JSON.stringify(row[2]);
+    expect(source.split(begin).length, 'copy entry: ' + row[0]).toBe(2);
+    expect(source.split(end).length, 'copy exit: ' + row[0]).toBe(2);
+    const body = source.slice(source.indexOf(begin),source.indexOf(end,source.indexOf(begin)) + end.length);
+    expect(body.split(allocation).length, 'copy allocation: ' + row[0]).toBe(2);
+    source = source.replace(body,body.replace(begin,begin + '\n' +
+      '    return FB.loadTiming ? FB.loadTiming.measure(' + label + ',contentProbeCopy,this,arguments)' +
+      ' : contentProbeCopy.apply(this,arguments);\n  }\n  function contentProbeCopy(' + row[1] + ') {\n' +
+      '    var probe = window.__contentCopies[' + label + '] || (window.__contentCopies[' + label +
+      '] = {calls:0,objects:0});\n    probe.calls++;')
+      .replace(allocation,'      probe.objects++;\n' + allocation));
+    await page.route('**/' + row[0],function (route) {
+      return route.fulfill({contentType:'application/javascript',body:source});
+    });
+  }
+}
+
+for (const pair of [1,2,3]) for (const modded of [false,true]) {
+  test('complete preparation paired stages ' + pair + ' ' + (modded ? 'with household JSON' : 'without mods'),async function ({browser},info) {
+    test.skip(!info.project.name.endsWith('-served'),'Stage counters use served source interception.');
+    const samples = [];
+    for (const baseline of pair % 2 ? [true,false] : [false,true]) {
+      const context = await browser.newContext(), page = await context.newPage(), guard = installPageGuards(page);
+      try {
+        await physicalSiteProbe(page,baseline);
+        await contentCopyProbe(page);
+        await openTitle(page,info);
+        await page.waitForFunction(function () { return FB.game.loadTiming.reports().length > 0; });
+        const title = await page.evaluate(function (text) {
+          localStorage.removeItem(FB.storageKey('fb_mods'));
+          if (text) localStorage.setItem(FB.storageKey('fb_mods'),JSON.stringify([text]));
+          FB.seedRng(634); FB.setUidCounter(0);
+          window.__physicalSiteReview = {calls:0,rows:0,elapsedMs:0};
+          window.__contentCopies = {};
+          FB.mods.timing.enable(true);
+          FB.game.loadTiming.enable(true);
+          return {bootReady:FB.game.bootReady,contentReady:FB.game.contentReady};
+        },modded ? overlay : null);
+        expect(title).toEqual({bootReady:true,contentReady:false});
+        const titleTiming = await page.evaluate(function () { return FB.game.loadTiming.reports().slice(-1)[0]; });
+        expect(titleTiming.kind).toBe('main-menu');
+        expect(titleTiming.status).toBe('ready');
+        const elapsedMs = await page.evaluate(function () {
+          const restore = [];
+          [['geography',FB],['resolveBookmarkPlatform',FB],['bookmarkRequirementFaults',FB],
+            ['royalCourtFaults',FB],['jsonSnapshot',FB.contentValues],['canonical',FB.contentValues],
+            ['fingerprint',FB.mods]].forEach(function (row) {
+            const name = row[0], owner = row[1], original = owner[name];
+            owner[name] = function () { return FB.loadTiming.measure(name,original,this,arguments); };
+            restore.push(function () { owner[name] = original; });
+          });
+          FB.game.loadTiming.begin('complete-content');
+          const started = performance.now();
+          return new Promise(function (resolve,reject) {
+            FB.game.prepareContent(function (error) {
+              const elapsed = performance.now() - started;
+              FB.game.loadTiming.finish(error ? 'failed' : 'ready');
+              restore.reverse().forEach(function (work) { work(); });
+              if (error) reject(error); else resolve(elapsed);
+            });
+          });
+        });
+        await page.waitForFunction(function () { return FB.game.loadTiming.reports().length > 1; });
+        const report = await page.evaluate(function () {
+          FB.mods.assertReady();
+          return {timing:FB.game.loadTiming.reports().slice(-1)[0],modCount:FB.mods.count(),
+            physicalSites:window.__physicalSiteReview,
+            copies:window.__contentCopies,modTiming:FB.mods.timing.read(),
+            contentReady:FB.game.contentReady,datesLoaded:FB.bookmarkSources.datesLoaded(null),
+            sourceIds:Object.keys(FBDATA.bookmarkCompositionSources),storyIds:Object.keys(FBDATA.storyInstances),
+            bookmarkIds:Object.keys(FBDATA.bookmarks),startIds:FBDATA.startScenarios.map(function (row) { return row.id; })};
+        });
+        expect(report.contentReady).toBe(true);
+        expect(report.datesLoaded).toBe(true);
+        expect(report.modCount).toBe(modded ? 1 : 0);
+        expect(report.timing.status).toBe('ready');
+        for (const label of ['Copy source values','Copy composition values']) {
+          const operation = report.timing.operations.find(function (row) { return row.label === label; });
+          expect(report.copies[label].objects).toBeGreaterThan(0);
+          expect(operation.calls).toBe(report.copies[label].calls);
+        }
+        const base = report.modTiming.filter(function (row) { return row.operation === 'base_snapshot'; });
+        expect(base).toHaveLength(1);
+        expect(base[0].accepted).toBe(true);
+        expect(base[0].jsonCodeUnits).toBeGreaterThan(0);
+        const facts = await snapshot(page);
+        expect(facts).toEqual(copyReference.facts[modded ? 'household-overlay' : 'unmodded']);
+        expect(report.copies).toEqual(copyReference.copies);
+        const result = {baseline:baseline,mode:modded ? 'household-overlay' : 'unmodded',browser:browser.version(),
+          titleTiming:titleTiming,elapsedMs:elapsedMs,report:report,facts:facts};
+        samples.push(result);
+        expect(guard.faults).toEqual([]);
+      } finally { await context.close(); }
+    }
+    const before = samples.find(function (row) { return row.baseline; }), after = samples.find(function (row) { return !row.baseline; });
+    expect(after.facts).toEqual(before.facts);
+    expect(after.report.bookmarkIds).toEqual(before.report.bookmarkIds);
+    expect(after.report.startIds).toEqual(before.report.startIds);
+    expect(after.report.sourceIds).toEqual(before.report.sourceIds);
+    expect(after.report.storyIds).toEqual(before.report.storyIds);
+    expect(after.report.physicalSites.calls).toBe(before.report.physicalSites.calls);
+    expect(after.report.physicalSites.rows).toBeLessThan(before.report.physicalSites.rows);
+    const result = {pair:pair,sourceCommit:physicalReference.sourceCommit,samples:samples};
+    await info.attach('complete-content-stages',{body:JSON.stringify(result,null,2),contentType:'application/json'});
+    console.log('COMPLETE_CONTENT_STAGES ' + JSON.stringify(result));
+  });
+}
+
+test('physical site faults preserve world labels, candidate isolation and fresh review after edits or exceptions',async function ({page},info) {
+  test.skip(!info.project.name.endsWith('-served'),'Reference source interception uses the served project.');
+  const outcomes = [];
+  for (const baseline of [true,false]) {
+    await physicalSiteProbe(page,baseline);
+    await openTitle(page,info);
+    await prepareGameContent(page);
+    const result = await page.evaluate(function () {
+      const live = FBDATA, table = live.settlementSites, native = FB.validateBookmarkWorld;
+      const worlds = [FB.bookmark('867'),FB.bookmark('1066')];
+      const data = JSON.stringify(live), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const rows = {};
+      try {
+        table['Invalid Site'] = {x:181,y:91};
+        rows.invalid = FB.validateBookmarkWorlds(worlds);
+        delete table['Invalid Site'];
+        rows.repaired = FB.validateBookmarkWorlds(worlds);
+        table.content_review_probe = {x:181,y:0};
+        rows.edited = FB.validateBookmarkWorlds(worlds);
+        delete table.content_review_probe;
+        rows.afterEdit = FB.validateBookmarkWorlds(worlds);
+        // A recursive review under another root must not borrow or overwrite
+        // the outer candidate's shared physical-table result.
+        let nested = false;
+        FB.validateBookmarkWorld = function () {
+          const faults = native.apply(this,arguments);
+          if (!nested) {
+            nested = true;
+            window.FBDATA = Object.assign({},live,{settlementSites:Object.assign({},table,{content_nested_probe:{x:0,y:91}})});
+            try { rows.nested = FB.validateBookmarkWorlds(worlds); }
+            finally { window.FBDATA = live; nested = false; }
+          }
+          return faults;
+        };
+        rows.outer = FB.validateBookmarkWorlds(worlds);
+        FB.validateBookmarkWorld = function () {
+          native.apply(this,arguments);
+          throw new Error('injected physical review failure');
+        };
+        try { FB.validateBookmarkWorlds(worlds); } catch (error) { rows.failure = error.message; }
+        FB.validateBookmarkWorld = native;
+        table.content_after_failure = {x:0,y:91};
+        rows.afterFailure = FB.validateBookmarkWorlds(worlds);
+        delete table.content_after_failure;
+        rows.final = FB.validateBookmarkWorlds(worlds);
+        rows.import = FB.mods.validate({name:'Physical site review',settlementSites:{content_import_probe:{x:181,y:0}}});
+        live.settlementSites = [];
+        rows.array = FB.validateBookmarkWorlds(worlds);
+        live.settlementSites = table;
+        rows.pure = JSON.stringify(live) === data && FB.getRngState() === rng && FB.getUidCounter() === uid;
+        return rows;
+      } finally {
+        delete table['Invalid Site']; delete table.content_review_probe; delete table.content_after_failure;
+        live.settlementSites = table; window.FBDATA = live; FB.validateBookmarkWorld = native;
+      }
+    });
+    expect(result.pure).toBe(true);
+    for (const key of ['repaired','afterEdit','outer','final']) expect(result[key]).toEqual([[],[]]);
+    expect(result.invalid).toEqual(['867','1066'].map(function (id) {
+      return ['Bookmark ' + id + ': invalid settlement site id Invalid Site.',
+        'Bookmark ' + id + ': settlement site Invalid Site has invalid coordinates.'];
+    }));
+    expect(result.edited[0]).toContain('Bookmark 867: settlement site content_review_probe has invalid coordinates.');
+    expect(result.nested[0]).toContain('Bookmark 867: settlement site content_nested_probe has invalid coordinates.');
+    expect(result.afterFailure[0]).toContain('Bookmark 867: settlement site content_after_failure has invalid coordinates.');
+    expect(result.failure).toBe('injected physical review failure');
+    expect(result.import.length).toBeGreaterThan(0);
+    expect(result.array[0]).toContain('Bookmark 867: FBDATA.settlementSites must be an object keyed by site id.');
+    outcomes.push(result);
+  }
+  expect(outcomes[1]).toEqual(outcomes[0]);
+});
 
 for (const modded of [false,true]) {
   test('complete preparation matches the prior implementation ' + (modded ? 'with household JSON' : 'without mods'),async function ({page},info) {
@@ -204,3 +421,139 @@ test('content measurement reports sampled self time without adding ancestor time
     {name:'prepare',url:'http://127.0.0.1/js/main.js',line:10,selfMs:1,samples:1}
   ]);
 });
+
+for (const earlyReaders of [false,true]) {
+  test('copy traversal preserves live reads, graphs and reader overrides ' + (earlyReaders ? 'installed before owners' : 'with native owners'),async function ({page},info) {
+    test.skip(!info.project.name.endsWith('-served'),'Private copy probes use served source interception.');
+    if (earlyReaders) await page.addInitScript(function () {
+      const keys = Object.keys, each = Array.prototype.forEach;
+      Object.keys = function (row) { return keys(row); };
+      Array.prototype.forEach = function (callback,receiver) { return each.call(this,callback,receiver); };
+    });
+    for (const row of copyReference.files) {
+      let source = fs.readFileSync(path.resolve(__dirname,'../../..',row.path),'utf8').replace(/\r\n/g,'\n');
+      const end = '    return clone(' + row.parameter + ');\n  }';
+      expect(source.split(end).length).toBe(2);
+      const prior = row.reference.replace('function copy(','function priorCopy(');
+      source = source.replace(end,end + '\n' + prior + '\n' +
+        '  window.__copyTraversals = window.__copyTraversals || {};\n' +
+        '  window.__copyTraversals[' + JSON.stringify(row.path) + '] = {current:copy,prior:priorCopy};');
+      await page.route('**/' + row.path,function (route) {
+        return route.fulfill({contentType:'application/javascript',body:source});
+      });
+    }
+    await openTitle(page,info);
+    const results = await page.evaluate(function () {
+      function exercise(copy) {
+        const checks = [], events = [], values = FB.contentValues;
+        const shared = {n:1}, sparse = []; sparse.length = 5; sparse[2] = shared;
+        const input = {first:shared,second:shared,list:sparse}; input.self = input;
+        Object.defineProperty(input,'hidden',{value:'ignored'});
+        const graph = copy(input), independent = copy(input);
+        checks.push(graph !== input,graph.first !== shared,graph.first === graph.second,
+          graph.first === graph.list[2],graph.self === graph,independent.first !== graph.first,
+          graph.list.length === 3,!(0 in graph.list),!(1 in graph.list),!('hidden' in graph));
+        graph.first.n = 8;
+        checks.push(shared.n === 1,independent.first.n === 1);
+        const live = {first:null,deleted:2,last:3};
+        Object.defineProperty(live,'first',{enumerable:true,get:function () {
+          events.push('first'); delete live.deleted; live.last = 9; live.added = 4;
+          checks.push(copy({nested:shared}).nested.n === 1);
+          return shared;
+        }});
+        const edited = copy(live);
+        checks.push(Object.keys(edited).join(',') === 'first,deleted,last',
+          edited.deleted === undefined,edited.last === 9,!('added' in edited));
+        const frozen = values.snapshot({first:shared,second:shared}), mutable = copy(frozen);
+        const retained = values.snapshot(mutable);
+        checks.push(mutable.first === mutable.second,retained.first === retained.second,
+          retained !== frozen,values.canonical(retained) === values.canonical(frozen));
+        mutable.first.n = 7;
+        checks.push(values.snapshot(mutable) !== retained,retained.first.n === 1,frozen.first.n === 1);
+        let fail = true;
+        const throwing = {first:1};
+        Object.defineProperty(throwing,'last',{enumerable:true,get:function () {
+          events.push('last'); if (fail) throw new Error('copy getter failure'); return shared;
+        }});
+        try { copy(throwing); checks.push(false); } catch (error) { checks.push(error.message === 'copy getter failure'); }
+        fail = false; checks.push(copy(throwing).last.n === 1);
+
+        const nativeKeys = Object.keys, nativeEach = Array.prototype.forEach;
+        try {
+          // Preserve the returned list's receiver, getter count, holes and
+          // initial length, even when its method shadows Function.call.
+          let returned, readerGets = 0;
+          const watched = {first:null,skipped:2,last:3};
+          Object.defineProperty(watched,'first',{enumerable:true,get:function () {
+            events.push('watched'); delete returned[1]; returned.push('appended'); return 5;
+          }});
+          Object.keys = function (row) {
+            const keys = nativeKeys(row);
+            if (row !== watched) return keys;
+            returned = keys;
+            Object.defineProperty(keys,'forEach',{get:function () {
+              readerGets++;
+              const each = function (callback) {
+                checks.push(this === keys); return nativeEach.call(this,callback);
+              };
+              each.call = function () { throw new Error('shadowed call'); };
+              return each;
+            }});
+            return keys;
+          };
+          const overridden = copy(watched);
+          checks.push(readerGets === 1,nativeKeys(overridden).join(',') === 'first,last',overridden.first === 5);
+          Object.keys = nativeKeys;
+          // Accessor readers must be fetched once with the original receiver.
+          // A forEach getter can expose even a native Object.keys result.
+          let keyGets = 0, eachGets = 0, exposed;
+          const keysDescriptor = Object.getOwnPropertyDescriptor(Object,'keys');
+          const eachDescriptor = Object.getOwnPropertyDescriptor(Array.prototype,'forEach');
+          const accessorInput = {first:null,skipped:2,last:3};
+          Object.defineProperty(accessorInput,'first',{enumerable:true,get:function () {
+            delete exposed[1]; exposed.push('extra'); return 4;
+          }});
+          try {
+            Object.defineProperty(Object,'keys',{configurable:true,get:function () {
+              keyGets++; checks.push(this === Object); return nativeKeys;
+            }});
+            Object.defineProperty(Array.prototype,'forEach',{configurable:true,get:function () {
+              eachGets++; exposed = this; return nativeEach;
+            }});
+            const accessorCopy = copy(accessorInput);
+            checks.push(keyGets === 1,eachGets === 1,nativeKeys(accessorCopy).join(',') === 'first,last',
+              accessorCopy.first === 4);
+          } finally {
+            Object.defineProperty(Object,'keys',keysDescriptor);
+            Object.defineProperty(Array.prototype,'forEach',eachDescriptor);
+          }
+          const order = [];
+          const ordered = {};
+          ['first','last'].forEach(function (key) {
+            Object.defineProperty(ordered,key,{enumerable:true,get:function () { order.push(key); return key; }});
+          });
+          Array.prototype.forEach = function (callback) {
+            for (let i = this.length - 1; i >= 0; i--) if (i in this) callback(this[i],i,this);
+          };
+          const reversed = copy(ordered);
+          checks.push(order.join(',') === 'last,first',nativeKeys(reversed).join(',') === 'last,first');
+          Array.prototype.forEach = nativeEach;
+          Object.keys = function (row) { if (row === watched) throw new Error('copy keys failure'); return nativeKeys(row); };
+          try { copy(watched); checks.push(false); } catch (error) { checks.push(error.message === 'copy keys failure'); }
+        } finally { Object.keys = nativeKeys; Array.prototype.forEach = nativeEach; }
+        checks.push(copy({after:{n:6}}).after.n === 6);
+        return {checks:checks,events:events};
+      }
+      return Object.keys(window.__copyTraversals).map(function (path) {
+        const readers = window.__copyTraversals[path];
+        return {path:path,current:exercise(readers.current),prior:exercise(readers.prior)};
+      });
+    });
+    expect(results).toHaveLength(2);
+    for (const row of results) {
+      expect(row.current,row.path).toEqual(row.prior);
+      expect(row.current.checks.every(Boolean),row.path).toBe(true);
+      expect(row.current.events).toEqual(['first','last','last','watched']);
+    }
+  });
+}

@@ -2,8 +2,9 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/dispersed-camps-harbor.json'),
   dune:require('../fixtures/authoring/dispersed-camps-dune.json')};
@@ -20,7 +21,7 @@ async function imported(page,info,prefix,stem) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
 }
 
 for (const prefix of ['harbor','dune']) {
@@ -43,9 +44,11 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
-test('detached imports reject malformed, duplicate, remote and overallocated partitions purely',async function ({page},info) {
+for(const offset of [0,6,12]) {
+test('detached imports reject malformed, duplicate, remote and overallocated partitions purely, group '+(offset/6+1),async function ({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function (source) {
+  const result=await page.evaluate(function (input) {
+    const source=input.source;
     const changes=[function (t) {t.civilianCamps=null;},function (t,c) {c.schema=2;},function (t,c) {c.extra=true;},
       function (t,c) {c.entries.pop();},function (t,c) {c.entries.push(c.entries[0]);},
       function (t,c) {c.entries[1].id=c.entries[0].id;},function (t,c) {c.entries[1].countyId=c.entries[0].countyId;},
@@ -54,16 +57,17 @@ test('detached imports reject malformed, duplicate, remote and overallocated par
       function (t,c) {c.entries[0].members[0].memberId='missing';},function (t,c) {c.entries[0].members.push(c.entries[0].members[0]);},
       function (t,c) {c.entries[0].food++;},function (t,c) {c.fieldFood=1000;c.entries[0].food-=968;},
       function (t) {delete t.hostedAccess;},function (t) {delete t.command;}];
-    return changes.map(function (change) {
+    return changes.slice(input.offset,input.offset+6).map(function (change) {
       const input=JSON.parse(JSON.stringify(source)),t=input.bookmarks.harbor_world.realms.find(function (d) {return d.mobile;}).mobile;
       change(t,t.civilianCamps);
       const bytes=JSON.stringify(input),data=JSON.stringify(FBDATA),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
       return FB.mods.validate(input).length>0 && bytes===JSON.stringify(input) && data===JSON.stringify(FBDATA) &&
         state===JSON.stringify(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
-  },examples.harbor);
-  expect(result).toEqual(Array(17).fill(true));
+  },{source:examples.harbor,offset:offset});
+  expect(result).toEqual(Array(Math.min(6,17-offset)).fill(true));
 });
+}
 
 test('the whole opening preflight rejects exhausted remote hosting capacity before creating anything',async function ({page},info) {
   await imported(page,info,'harbor');
@@ -77,7 +81,8 @@ test('the whole opening preflight rejects exhausted remote hosting capacity befo
       if (kind==='capacity') s.population.counties[pid].count=100;
       if (kind==='holder') s.holder[pid]='harbor_upland';
       if (kind==='late') s.turn=1;
-      if (kind==='batch') s.authority.governments.harbor_upland.mobile={agreements:[{id:'prior',kind:'access',status:'active',endTurn:90,countyIds:[pid],capacity:1000}]};
+      if (kind==='batch') s.authority.governments.harbor_upland.mobile={agreements:[{id:'prior',kind:'access',status:'active',endTurn:90,
+        countyIds:[pid],capacity:M.accessCapacity(s,pid).capacity}]};
       const bytes=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();let failed=false;
       try {M.initialize(s,[d]);}catch(error) {failed=true;}
       return failed && bytes===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
@@ -224,10 +229,10 @@ test('camp selector and review Back preserve the selected locality and input',as
   await page.locator('#mobile-camp').selectOption('harbor_far');
   await page.locator('#mobile-count').fill('1');
   await page.locator('#mobile-count').dispatchEvent('change');
-  await page.getByRole('button',{name:'Work at selected camp',exact:true}).waitFor();
+  await page.getByRole('button',{name:/^Work at selected camp\b/}).waitFor();
   // The local household may review work at its own camp; changing input remains retained.
   await page.locator('#mobile-camp').selectOption('harbor_near');
-  await page.getByRole('button',{name:'Work at selected camp',exact:true}).click();
+  await page.getByRole('button',{name:/^Work at selected camp\b/}).click();
   await page.keyboard.press('Escape');
   await expect(page.locator('#mobile-camp')).toHaveValue('harbor_near');
   await expect(page.locator('#mobile-count')).toHaveValue('1');

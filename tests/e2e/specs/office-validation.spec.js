@@ -1,0 +1,422 @@
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const {test, expect} = require('../support/fixture');
+const {dependsOnRuntime} = require('../support/runtime-dependencies');
+const {beginBookmark, beginBookmarkFromTitle, restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {openGame, prepareGameContent} = require('../support/game/navigation');
+const source = fs.readFileSync(path.resolve(__dirname, '../../../js/model.js'), 'utf8');
+const reference = fs.readFileSync(path.resolve(__dirname, '../fixtures/religious-office-tables/validation-reference.txt'), 'utf8');
+const prior = source.slice(0, source.indexOf('  let officeGraph =')) + reference + source.slice(source.indexOf('  /* Local sees'));
+
+dependsOnRuntime(__filename, ['js/model.js', 'js/world.js', 'js/systems.js', 'js/religious_institutions.js',
+  'js/authority.js', 'js/government_ecclesiastical.js', 'js/papacy.js', 'js/religion.js', 'js/mods.js', 'js/save.js', 'js/save_v4.js']);
+
+async function route(page, old, both) {
+  await page.unroute('**/js/model.js');
+  let text = old ? prior : source;
+  if (both) {
+    const oracle = reference.replace(/\bofficeGraph\b/g, 'priorOfficeGraph')
+      .replace(/\bofficeDefinitions\b/g, 'priorOfficeDefinitions').replace(/\blocalOfficeCache\b/g, 'priorOfficeCache')
+      .replace(/\blocalOfficeInputs\b/g, 'priorOfficeInputs').replace(/\blocalOfficeTable\b/g, 'priorOfficeTable')
+      .replace(/\breligiousOfficeDefinitions\b/g, 'priorOffices').replace(/\bwithLocalReligiousOffices\b/g, 'priorLocalOffices');
+    text = text.replace('  /* Local sees', oracle + '\n  FB.officeValidationReference = priorOffices;\n  /* Local sees');
+  }
+  await page.route('**/js/model.js', function (request) { return request.fulfill({contentType:'application/javascript', body:text}); });
+}
+
+function installCounts() {
+  window.measureOfficeKeys = function (fn) {
+    const stringify = JSON.stringify, counts = {builds:0, chars:0};
+    JSON.stringify = function (value) {
+      const result = stringify.apply(this, arguments);
+      if (Array.isArray(value) && value.length === 11 && value[3] === FBDATA.systems && Array.isArray(value[10])) {
+        counts.builds++; counts.chars += result.length;
+      }
+      return result;
+    };
+    let error = null;
+    try { fn(); } catch (e) { error = e.message; }
+    finally { JSON.stringify = stringify; }
+    return {counts:counts, error:error};
+  };
+}
+
+async function snapshot(page) {
+  return page.evaluate(async function () {
+    async function hash(text) {
+      const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(bytes)).map(function (n) { return n.toString(16).padStart(2, '0'); }).join('');
+    }
+    const s = FB.state, offices = FB.religiousOffices(s), holders = {};
+    Object.keys(offices).forEach(function (id) { const holder = FB.religiousOfficeSnapshot(s, id, offices); holders[id] = holder && holder.id || null; });
+    return {state:await hash(JSON.stringify(s)), save:await hash(FB.save.serialize()), data:await hash(JSON.stringify(FBDATA)),
+      offices:offices, holders:holders, rng:FB.getRngState(), uid:FB.getUidCounter(), signature:FB.mods.sig(),
+      fingerprint:FB.mods.fingerprint(FB.campaignBookmark(s))};
+  });
+}
+
+for (const bookmark of ['476', '1096', '1204']) for (const phase of ['ordinary', 'season', 'year']) {
+  test('office validation preserves parent state and removes repeated key serialization in ' + bookmark + ' / ' + phase, async function ({page}, info) {
+    const outputs = [], evidence = [];
+    for (const old of [true, false]) {
+      await route(page, old, false);
+      await beginBookmark(page, info, bookmark);
+      await page.evaluate(installCounts);
+      const result = await page.evaluate(function (phase) {
+        const s = FB.state;
+        if (phase !== 'ordinary') {
+          const season = phase === 'year' ? 3 : s.date.season;
+          s.turn += (season - s.date.season) * 90 + 90 - s.date.day;
+          s.date.season = season; s.date.day = 90;
+        }
+        const turn = s.turn;
+        const result = measureOfficeKeys(function () { FB.game.passDay({deferUi:true}); });
+        result.days = s.turn - turn;
+        return result;
+      }, phase);
+      expect(result.error, phase).toBe(null);
+      expect(result.days, phase).toBe(1);
+      outputs.push(await snapshot(page)); evidence.push(result.counts);
+    }
+    expect(outputs[1]).toEqual(outputs[0]);
+    expect(evidence[1].builds).toBeLessThan(evidence[0].builds);
+    expect(evidence[1].chars).toBeLessThan(evidence[0].chars);
+    console.log('OFFICE_VALIDATION_KEYS ' + JSON.stringify({bookmark:bookmark, phase:phase, reference:evidence[0], candidate:evidence[1]}));
+    await info.attach('office-key-counts', {body:JSON.stringify({bookmark:bookmark, phase:phase, reference:evidence[0], candidate:evidence[1]}), contentType:'application/json'});
+  });
+}
+
+test('office validation observes nested edits, JSON key ordering, identity switches and errors', async function ({page}, info) {
+  await route(page, false, true);
+  await beginBookmark(page, info, '476');
+  await page.evaluate(installCounts);
+  const result = await page.evaluate(function () {
+    const s = FB.state, dataBefore = JSON.stringify(FBDATA), stateBefore = JSON.stringify(s);
+    const rng = FB.getRngState(), uid = FB.getUidCounter(), checks = [];
+    function read(fn) { let value = null, error = null; try { value = fn(s); } catch (e) { error = e.message; } return {value:value, error:error}; }
+    function compare(name) {
+      const current = read(FB.religiousOffices), prior = read(FB.officeValidationReference);
+      if (current.error !== prior.error || JSON.stringify(current.value) !== JSON.stringify(prior.value)) throw new Error('Parity: ' + name);
+      checks.push(name);
+      return current.error;
+    }
+    function edit(name, object, key, value) {
+      compare('before-' + name);
+      const current = FB.religiousOffices(s), prior = FB.officeValidationReference(s);
+      const present = Object.prototype.hasOwnProperty.call(object,key), saved = object[key];
+      try {
+        object[key] = value;
+        const error = compare(name);
+        if (!error && (current === FB.religiousOffices(s)) !== (prior === FB.officeValidationReference(s))) throw new Error('Cache identity: ' + name);
+      } finally { if (present) object[key] = saved; else delete object[key]; }
+      compare('restored-' + name);
+    }
+    compare('initial');
+    const warm = measureOfficeKeys(function () { for (let i = 0; i < 20; i++) FB.religiousOffices(s); });
+    const original = measureOfficeKeys(function () { for (let i = 0; i < 20; i++) FB.officeValidationReference(s); });
+    const bm = FB.campaignBookmark(s), local = FB.localInstitutionDefinitions(s);
+    const id = Object.keys(local).find(function (id) { return !!local[id].officeId; }), def = local[id];
+    edit('office-id', def, 'officeId', def.officeId + '_other');
+    edit('office-religion', def, 'religion', 'orthodox');
+    edit('office-system', def, 'officeSystem', null);
+    edit('nested-office-profile', def, 'officeProfile', {minAge:31, nested:{ordered:[1,null,{active:true}]}});
+    const profile = def.officeProfile;
+    def.officeProfile = {minAge:18, nested:{items:[1,2]}};
+    try {
+      compare('profile-base');
+      edit('nested-array-value', def.officeProfile.nested.items, 1, 3);
+      edit('nested-new-key', def.officeProfile.nested, 'added', {value:true});
+      def.officeProfile.nested.order = {first:1, second:2};
+      try { edit('object-key-order', def.officeProfile.nested, 'order', {second:2, first:1}); }
+      finally { delete def.officeProfile.nested.order; }
+      edit('undefined-array-value', def.officeProfile.nested.items, 1, undefined);
+      edit('nonfinite-array-value', def.officeProfile.nested.items, 1, NaN);
+      edit('undefined-object-value', def.officeProfile.nested, 'omitted', undefined);
+      edit('json-conversion', def.officeProfile.nested, 'conversion', {toJSON:function () { return {value:2}; }});
+      const converted = function () {};
+      converted.toJSON = function () { return {value:3}; };
+      edit('function-json-conversion', def.officeProfile.nested, 'conversion', converted);
+      edit('function-array-conversion', def.officeProfile.nested.items, 1, converted);
+      const cycle = {}; cycle.self = cycle;
+      edit('cyclic-error', def.officeProfile.nested, 'cycle', cycle);
+      compare('after-error');
+    } finally { if (profile === undefined) delete def.officeProfile; else def.officeProfile = profile; }
+    edit('fresh-only', def, 'freshOnly', true);
+    const fresh = def.freshOnly, ledger = s.localInstitutions;
+    def.freshOnly = true;
+    try {
+      s.localInstitutions = Object.assign({}, ledger);
+      delete s.localInstitutions[id]; compare('fresh-absent');
+      edit('fresh-presence', s.localInstitutions, id, ledger[id] || {});
+    } finally { s.localInstitutions = ledger; if (fresh === undefined) delete def.freshOnly; else def.freshOnly = fresh; }
+    const profiles = FBDATA.religiousInstitutionProfiles;
+    profiles.validation_profile = {period:{yearMin:s.date.year,yearMax:null}, system:'episcopal_sees',
+      selection:{roleId:'leader',strategy:'appointment'}, roles:{leader:{minAge:18}}};
+    local.validation_row = {officeId:'validation_office', profileId:'validation_profile', religion:def.religion};
+    try {
+      compare('profile-row-added');
+      edit('profile-period', profiles.validation_profile.period, 'yearMax', s.date.year - 1);
+      edit('profile-system', profiles.validation_profile, 'system', null);
+      edit('profile-min-age', profiles.validation_profile.roles.leader, 'minAge', 27);
+      edit('profile-strategy', profiles.validation_profile.selection, 'strategy', 'election');
+      edit('profile-id', local.validation_row, 'profileId', null);
+    } finally { delete local.validation_row; delete profiles.validation_profile; }
+    compare('profile-row-removed');
+    edit('system-default', FBDATA.systems.episcopal_sees, 'defaultEnabled', !FBDATA.systems.episcopal_sees.defaultEnabled);
+    const era = FBDATA.eras[FB.campaignEra(s)], formId = s.start.defaultGovernment || era.defaultGovernment;
+    edit('era-systems', era, 'systems', {disable:['episcopal_sees']});
+    edit('form-systems', FBDATA.governmentForms[formId], 'systems', {enable:['episcopal_sees']});
+    edit('system-layer', bm, 'systems', {enable:['episcopal_sees']});
+    const savedSystems = bm.systems;
+    bm.systems = Object.assign({}, savedSystems, {enable:['episcopal_sees']});
+    try {
+      compare('enable-base');
+      edit('nested-system-list', bm.systems.enable, 0, 'public_offices');
+    } finally { if (savedSystems === undefined) delete bm.systems; else bm.systems = savedSystems; }
+    edit('great-holy-wars', bm, 'greatHolyWars', !bm.greatHolyWars);
+    edit('realm-faith', bm.realms[0], 'religion', 'orthodox');
+    edit('province-faith', bm.provinces[0], 'religion', 'orthodox');
+    edit('political-office-key', bm.religiousHeads, 'validation_demo_office', 'validation_demo_realm');
+    edit('turn', s, 'turn', s.turn + 1);
+    edit('date', s.date, 'day', s.date.day + 1);
+    const installed = FBDATA;
+    try { window.FBDATA = Object.assign({}, installed); compare('detached-catalogue'); }
+    finally { window.FBDATA = installed; }
+    compare('installed-again');
+    const detached = JSON.parse(JSON.stringify(s));
+    if (JSON.stringify(FB.religiousOffices(detached)) !== JSON.stringify(FB.officeValidationReference(detached))) throw new Error('Detached state');
+    compare('state-again');
+    const holderId = Object.keys(s.religiousHeads).find(function (id) { return !!s.religiousHeads[id]; });
+    const table = FB.religiousOffices(s), holder = s.religiousHeads[holderId];
+    try {
+      s.religiousHeads[holderId] = null;
+      if (table !== FB.religiousOffices(s) || FB.religiousOfficeSnapshot(s,holderId) !== null) throw new Error('Live holder');
+    } finally { s.religiousHeads[holderId] = holder; }
+    compare('final');
+    return {checks:checks, warm:warm, reference:original, pure:dataBefore === JSON.stringify(FBDATA) && stateBefore === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result.warm.error).toBe(null);
+  expect(result.warm.counts.builds).toBe(0);
+  expect(result.reference.counts.builds).toBe(20);
+  expect(result.pure).toBe(true);
+  await info.attach('office-validation-mutations', {body:JSON.stringify(result),contentType:'application/json'});
+});
+
+test('office opening-head keys preserve ordered own enumeration and accessor recovery', async function ({page}, info) {
+  await route(page, false, true);
+  await beginBookmark(page, info, '476');
+  const result = await page.evaluate(function () {
+    const s = FB.state, bookmark = FB.campaignBookmark(s);
+    const descriptor = Object.getOwnPropertyDescriptor(bookmark, 'religiousHeads');
+    const before = JSON.stringify(s), data = JSON.stringify(FBDATA), save = FB.save.serialize();
+    const rng = FB.getRngState(), uid = FB.getUidCounter();
+    function run(reader) {
+      const prototype = {inherited:null, shadowed:null}, heads = Object.create(prototype), checks = [];
+      heads['10'] = null; heads['2'] = null; heads.alpha = null; heads.beta = null;
+      Object.defineProperty(heads, 'shadowed', {value:null, enumerable:false, configurable:true});
+      bookmark.religiousHeads = heads;
+      let table = reader(s);
+      function change(name, edit, expected) {
+        edit();
+        const next = reader(s), changed = next !== table;
+        if (changed !== expected) throw new Error('Head key transition: ' + name);
+        checks.push({name:name, changed:changed, keys:Object.keys(bookmark.religiousHeads || {}), offices:next});
+        table = next;
+      }
+      change('warm', function () {}, false);
+      change('value-only', function () { heads.alpha = 'unused_realm'; }, false);
+      change('numeric-reinsert', function () { delete heads['2']; heads['2'] = null; }, false);
+      change('string-reinsert', function () { delete heads.alpha; heads.alpha = null; }, true);
+      change('remove', function () { delete heads.beta; }, true);
+      change('add', function () { heads.gamma = null; }, true);
+      change('inherited-add', function () { prototype.other = null; }, false);
+      change('nonenumerable-add', function () {
+        Object.defineProperty(heads, 'hidden', {value:null, enumerable:false, configurable:true});
+      }, false);
+      change('enumerable-toggle', function () {
+        Object.defineProperty(heads, 'hidden', {value:null, enumerable:true, configurable:true});
+      }, true);
+      change('nonenumerable-toggle', function () {
+        Object.defineProperty(heads, 'hidden', {value:null, enumerable:false, configurable:true});
+      }, true);
+      change('numeric-insertion-order', function () {
+        const next = Object.create(prototype);
+        next['2'] = null; next['10'] = null; next.alpha = null; next.gamma = null;
+        bookmark.religiousHeads = next;
+      }, false);
+      const current = bookmark.religiousHeads;
+      let reads = 0, fail = false, nested = false;
+      Object.defineProperty(bookmark, 'religiousHeads', {enumerable:true, configurable:true, get:function () {
+        reads++;
+        if (fail) throw new Error('head-keys-sentinel');
+        if (nested) { nested = false; reader(JSON.parse(before)); }
+        return current;
+      }});
+      const warm = reader(s);
+      if (warm !== table || reads !== 1) throw new Error('Head accessor read count');
+      fail = true;
+      let error = null;
+      try { reader(s); } catch (e) { error = e.message; }
+      fail = false;
+      if (error !== 'head-keys-sentinel' || reader(s) !== table) throw new Error('Head accessor error recovery');
+      nested = true;
+      const reentrant = reader(s);
+      if (reentrant === table || JSON.stringify(reentrant) !== JSON.stringify(table)) throw new Error('Head accessor reentry');
+      checks.push({name:'accessor', error:error, warmReads:1, reentrant:true});
+      Object.defineProperty(bookmark, 'religiousHeads', {value:current, enumerable:true, configurable:true, writable:true});
+      change('absent', function () { delete bookmark.religiousHeads; }, true);
+      change('empty', function () { bookmark.religiousHeads = {}; }, false);
+      change('null', function () { bookmark.religiousHeads = null; }, false);
+      return checks;
+    }
+    let current, prior;
+    try {
+      current = run(FB.religiousOffices);
+      Object.defineProperty(bookmark, 'religiousHeads', descriptor);
+      prior = run(FB.officeValidationReference);
+    } finally { Object.defineProperty(bookmark, 'religiousHeads', descriptor); }
+    FB.religiousOffices(s);
+    return {current:current, prior:prior, pure:before === JSON.stringify(s) && data === JSON.stringify(FBDATA) &&
+      save === FB.save.serialize() && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result.current).toEqual(result.prior);
+  expect(result.current.length).toBe(15);
+  expect(result.pure).toBe(true);
+  await info.attach('office-head-key-parity', {body:JSON.stringify(result), contentType:'application/json'});
+});
+
+test('office head enumeration preserves replaced key readers and property evaluation order', async function ({page}, info) {
+  await route(page, false, true);
+  await beginBookmark(page, info, '476');
+  const result = await page.evaluate(function () {
+    const s = FB.state, bookmark = FB.campaignBookmark(s), keys = Object.keys;
+    const descriptor = Object.getOwnPropertyDescriptor(bookmark, 'religiousHeads');
+    const before = JSON.stringify(s), data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+    function run(reader) {
+      const heads = {alpha:null, beta:null};
+      bookmark.religiousHeads = heads;
+      const original = reader(s);
+      let reversed, repeated, error = null, receivers = true, calls = 0;
+      try {
+        Object.keys = function (value) {
+          if (value === heads) { calls++; receivers = receivers && this === Object; return keys(value).reverse(); }
+          return keys(value);
+        };
+        reversed = reader(s); repeated = reader(s);
+        Object.keys = function (value) {
+          if (value === heads) throw new Error('head-key-reader-sentinel');
+          return keys(value);
+        };
+        try { reader(s); } catch (e) { error = e.message; }
+      } finally { Object.keys = keys; }
+      const recovered = reader(s);
+      let accesses = 0;
+      Object.defineProperty(bookmark, 'religiousHeads', {enumerable:true, configurable:true, get:function () {
+        accesses++;
+        Object.keys = function () { throw new Error('late-key-reader-sentinel'); };
+        return heads;
+      }});
+      let ordered;
+      try { ordered = reader(s); }
+      finally { Object.keys = keys; Object.defineProperty(bookmark, 'religiousHeads', descriptor); }
+      return {changed:reversed !== original, reused:repeated === reversed, receivers:receivers, called:calls > 0,
+        error:error, recovered:JSON.stringify(recovered) === JSON.stringify(original),
+        ordered:ordered === recovered, accesses:accesses};
+    }
+    let current, prior;
+    try { current = run(FB.religiousOffices); prior = run(FB.officeValidationReference); }
+    finally { Object.keys = keys; Object.defineProperty(bookmark, 'religiousHeads', descriptor); }
+    return {current:current, prior:prior, pure:before === JSON.stringify(s) && data === JSON.stringify(FBDATA) &&
+      rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result.current).toEqual(result.prior);
+  expect(result.current).toEqual({changed:true, reused:true, receivers:true, called:true,
+    error:'head-key-reader-sentinel', recovered:true, ordered:true, accesses:1});
+  expect(result.pure).toBe(true);
+});
+
+test('office input records preserve reentrant validation and reader or catalogue changes during comparison', async function ({page}, info) {
+  await route(page, false, true);
+  await beginBookmark(page, info, '476');
+  const result = await page.evaluate(function () {
+    const s = FB.state, data = FBDATA, systemEnabled = FB.systemEnabled;
+    const before = JSON.stringify(s), dataBefore = JSON.stringify(data), save = FB.save.serialize();
+    const rng = FB.getRngState(), uid = FB.getUidCounter();
+    const local = FB.localInstitutionDefinitions(s), detached = JSON.parse(before);
+    const id = Object.keys(local).find(function (id) { return !!local[id].officeId; });
+    const row = local[id], descriptor = Object.getOwnPropertyDescriptor(row, 'officeId'), checks = [];
+    function run(reader, action) {
+      const warm = reader(s);
+      let entered = false, calls = 0, value = null, error = null;
+      Object.defineProperty(row, 'officeId', {enumerable:true, configurable:true, get:function () {
+        if (!entered) {
+          entered = true;
+          if (action === 'nested') reader(detached);
+          if (action === 'catalogue') window.FBDATA = Object.assign({}, data);
+          if (action === 'reader') FB.systemEnabled = function () { calls++; return systemEnabled.apply(this, arguments); };
+          if (action === 'error') throw new Error('input-record-sentinel');
+        }
+        return descriptor.value;
+      }});
+      try { value = reader(s); } catch (e) { error = e.message; }
+      finally {
+        Object.defineProperty(row, 'officeId', descriptor);
+        window.FBDATA = data; FB.systemEnabled = systemEnabled;
+      }
+      return {value:value, error:error, changed:value !== warm, entered:entered, readerUsed:calls > 0};
+    }
+    ['nested', 'catalogue', 'reader', 'error'].forEach(function (action) {
+      const current = run(FB.religiousOffices, action), prior = run(FB.officeValidationReference, action);
+      if (JSON.stringify(current) !== JSON.stringify(prior)) throw new Error('Input record parity: ' + action);
+      if (!current.entered || !current.changed || (action === 'reader' && !current.readerUsed)) throw new Error('Missing input transition: ' + action);
+      if (current.error !== (action === 'error' ? 'input-record-sentinel' : null)) throw new Error('Input record error: ' + action);
+      if (JSON.stringify(FB.religiousOffices(s)) !== JSON.stringify(FB.officeValidationReference(s))) throw new Error('Input record recovery: ' + action);
+      checks.push(action);
+    });
+    return {checks:checks, pure:before === JSON.stringify(s) && dataBefore === JSON.stringify(FBDATA) && save === FB.save.serialize() &&
+      rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result.checks).toEqual(['nested', 'catalogue', 'reader', 'error']);
+  expect(result.pure).toBe(true);
+});
+
+for (const config of ['estuary', 'southern']) {
+  test('office validation preserves ordinary JSON import, rejection and restore for ' + config, async function ({page}, info) {
+    const mod = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../fixtures/political-religious-head/' + config + '.json'), 'utf8'));
+      await route(page, false, true);
+      await openGame(page, info);
+      expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },mod)).toEqual([]);
+      await page.evaluate(function () { FB.ui.showMods(); });
+      await page.locator('#modfile').setInputFiles({name:'office-validation.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))});
+      await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+      await prepareGameContent(page);
+      await beginBookmarkFromTitle(page, Object.keys(mod.bookmarks)[0], mod.startScenarios[0].id);
+      async function compareImported() {
+        return page.evaluate(function () {
+          const s = FB.state, before = JSON.stringify(s), data = JSON.stringify(FBDATA), save = FB.save.serialize();
+          const rng = FB.getRngState(), uid = FB.getUidCounter();
+          const current = FB.religiousOffices(s), prior = FB.officeValidationReference(s);
+          if (JSON.stringify(current) !== JSON.stringify(prior)) throw new Error('Imported table parity');
+          Object.keys(prior).forEach(function (id) {
+            const a = FB.religiousOfficeSnapshot(s,id,current), b = FB.religiousOfficeSnapshot(s,id,prior);
+            if ((a && a.id) !== (b && b.id)) throw new Error('Imported holder parity');
+          });
+          return {pure:before === JSON.stringify(s) && data === JSON.stringify(FBDATA) && save === FB.save.serialize() &&
+            rng === FB.getRngState() && uid === FB.getUidCounter(), offices:current, rng:rng >>> 0, uid:uid,
+            signature:FB.mods.sig(), fingerprint:FB.mods.fingerprint(FB.campaignBookmark(s))};
+        });
+      }
+      const initial = await compareImported();
+      expect(initial.pure).toBe(true);
+      const rejected = await page.evaluate(function (mod) {
+        const before = JSON.stringify([FB.state,FBDATA,localStorage]), rng = FB.getRngState(), uid = FB.getUidCounter();
+        mod.religions = {invalid:{head:{officeId:42}}};
+        return FB.mods.store(JSON.stringify(mod)) === false && before === JSON.stringify([FB.state,FBDATA,localStorage]) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      }, mod);
+      expect(rejected).toBe(true);
+      const saved = await page.evaluate(function () { return FB.save.serialize(); });
+      await restoreBookmark(page, saved);
+      expect(await compareImported()).toEqual(initial);
+  });
+}

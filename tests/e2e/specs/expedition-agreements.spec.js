@@ -1,4 +1,6 @@
 'use strict';
+const {installRestoreFacts}=require('../support/game/restore-facts');
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
@@ -6,7 +8,9 @@ const {openGame}=require('../support/game/navigation');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-terms-harbor.json'),
   dune:require('../fixtures/authoring/expedition-terms-upland.json')};
-dependsOnRuntime(__filename,['index.html','data/technology.js','data/mobile_confederations.js','data/units.js',
+test.describe.configure({mode:'parallel'});
+
+dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/technology.js','data/mobile_confederations.js','data/units.js',
   'js/story_expedition_agreements.js','js/stories.js','js/bookmark_setup.js','js/mobile_confederations.js',
   'js/mobile_command.js','js/mobile_columns.js','js/expedition_programs.js','js/government_selection.js',
   'js/government_civic.js','js/civic_transactions.js','js/government_support.js','js/government_continuity.js','js/governments.js',
@@ -17,6 +21,7 @@ dependsOnRuntime(__filename,['index.html','data/technology.js','data/mobile_conf
 async function start(page,info,prefix,modified) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
+  await expectModAdmission(page,modified || examples[prefix]);
   await page.locator('#modfile').setInputFiles(modified ? {name:'terms.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(modified))} :
     path.resolve(__dirname,'../fixtures/authoring/expedition-terms-'+
     (prefix==='harbor' ? 'harbor' : 'upland')+'.json'));
@@ -34,6 +39,7 @@ async function start(page,info,prefix,modified) {
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.evaluate(function () {FB.game.setPaused(true);});
+  await installRestoreFacts(page);
 }
 
 for (const prefix of ['harbor','dune']) {
@@ -89,11 +95,13 @@ test('ordinary detached validation rejects unsupported obligations and unresolve
 test('a pending review restores without AI acknowledgment or payment and cannot lose its attachment',async function ({page},info) {
   await start(page,info,'harbor');
   const result=await page.evaluate(function () {
-    const s=FB.state,id='harbor_terms',before=JSON.stringify(s.stories[id]),
-      resources=JSON.stringify([s.owner,s.holder,s.authority,s.armies,s.player.gold]);
+    const s=FB.state,id='harbor_terms',before=JSON.stringify(s.stories[id]);
+    function facts(state){return restoreFacts(state,function (v) {
+      return [v.owner,v.holder,v.authority,v.armies,v.player.gold];
+    });}
+    const resources=facts(s);
     FB.save.restore(JSON.parse(FB.save.serialize()));
-    const pending=before===JSON.stringify(FB.state.stories[id]),preserved=resources===JSON.stringify([
-      FB.state.owner,FB.state.holder,FB.state.authority,FB.state.armies,FB.state.player.gold]);
+    const pending=before===JSON.stringify(FB.state.stories[id]),preserved=assertRestoreFacts(facts(FB.state),resources);
     const missing=JSON.parse(FB.save.serialize());delete missing.state.stories[id];
     const bytes=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
     try {FB.save.restore(missing);} catch(error) {rejected=true;}
@@ -105,7 +113,8 @@ test('a pending review restores without AI acknowledgment or payment and cannot 
 
 test('campaigns without the optional declaration restore without creating a review',async function ({page},info) {
   const input=JSON.parse(JSON.stringify(examples.harbor));
-  delete input.storyInstances.harbor_terms;input.bookmarks.harbor_world.stories=[];
+  delete input.storyInstances.harbor_terms;
+  input.bookmarks.harbor_world.stories=input.bookmarks.harbor_world.stories.filter(function(id){return id!=='harbor_terms';});
   await start(page,info,'harbor',input);
   const absent=await page.evaluate(function () {
     FB.save.restore(JSON.parse(FB.save.serialize()));return !FB.state.stories.harbor_terms;

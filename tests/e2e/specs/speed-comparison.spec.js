@@ -5,7 +5,8 @@ const path = require('path');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {stats,comparePairs,extract,pairOrder,run} = require('../measure/speed-comparison');
 dependsOnRuntime(__filename,['tests/e2e/measure/speed-comparison.js','tests/e2e/measure/content.js',
-  'tests/e2e/measure/season-timing.js','.github/workflows/nightly.yml','.github/workflows/speed-comparison.yml','.github/workflows/e2e.yml']);
+  'tests/e2e/measure/season-timing.js','.github/workflows/nightly.yml','.github/workflows/season-timing.yml',
+  '.github/workflows/speed-comparison.yml','.github/workflows/e2e.yml']);
 
 function pairs() {
   return [50,60,40].map(function (value) {
@@ -51,6 +52,11 @@ test('profiled, failed and missing season workloads are rejected',function () {
   expect(function () { extract(data,'476:start',2); }).toThrow();
   data.cpuProfile = true;
   expect(function () { extract(data,'476:start',1); }).toThrow();
+  data.cpuProfile = false; data.readAudit = true;
+  expect(function () { extract(data,'476:start',1); }).toThrow();
+  data.readAudit = false; data.starts[0].seasons[0].readAudit = {indexCalls:1};
+  expect(function () { extract(data,'476:start',1); }).toThrow();
+  delete data.starts[0].seasons[0].readAudit;
   data.cpuProfile = false; data.starts[0].status = 'failed';
   expect(function () { extract(data,'476:start',1); }).toThrow();
 });
@@ -194,16 +200,21 @@ test('Nightly converts numeric call inputs, preserves ordinary jobs and offers a
   const nightly = fs.readFileSync(path.join(root,'.github/workflows/nightly.yml'),'utf8');
   const workflow = fs.readFileSync(path.join(root,'.github/workflows/speed-comparison.yml'),'utf8');
   const e2e = fs.readFileSync(path.join(root,'.github/workflows/e2e.yml'),'utf8');
+  const season = fs.readFileSync(path.join(root,'.github/workflows/season-timing.yml'),'utf8');
   expect(nightly.match(/^jobs:/gm)).toHaveLength(1);
   expect(nightly.match(/^  suite:/gm)).toHaveLength(1);
   expect(nightly).toContain('      suite:\n        description: Run the full Playwright suite');
+  expect(nightly).toContain('read_audit: ${{ inputs.read_audit == true }}');
+  expect(season).toContain('READ_AUDIT: ${{ inputs.read_audit }}');
+  expect(season).toContain('if [ "$READ_AUDIT" = true ]; then set -- "$@" --read-audit; fi');
   expect(nightly).toContain("repeats: ${{ fromJSON(format('{0}', inputs.comparison_repeats || 3)) }}");
   expect(nightly).toContain("seasons: ${{ fromJSON(format('{0}', inputs.seasons || 4)) }}");
   expect(nightly).toContain('subjects: ${{ inputs.comparison_subjects');
   expect(nightly).toContain("github.event_name == 'schedule' || inputs.suite");
   expect(nightly).toContain("github.event_name == 'schedule' || inputs.timing");
   expect(nightly).toContain('uses: ./.github/workflows/e2e.yml');
-  expect(nightly).toContain('shards: 16');
+  expect(nightly).toContain('      projects: all\n      shards: 32\n      bounded: false');
+  expect(nightly).toContain('      shards: 12\n');
   expect(nightly).toContain('mode: all');
   expect(nightly).toContain('projects: all');
   expect(nightly).toContain('bounded: false');
@@ -215,4 +226,23 @@ test('Nightly converts numeric call inputs, preserves ordinary jobs and offers a
   expect(workflow).toContain('specs/speed-comparison.spec.js --project=chromium-served');
   expect(workflow).toContain('if: always()');
   expect(workflow).toContain('name: speed-comparison-${{ strategy.job-index }}');
+});
+
+test('read-audit reports retain counters while suppressing timing comparisons and rankings',function ({},info) {
+  const directory = info.outputPath('counter-report');
+  fs.mkdirSync(directory,{recursive:true});
+  const data = seasonSample('synthetic:start');
+  Object.assign(data,{mode:'measure',version:'fixture',seasons:1,gameCommit:'synthetic',gameRef:'synthetic',readAudit:true});
+  data.starts[0].seasons[0].readAudit = {total:{indexCalls:2}};
+  const input = path.join(directory,'input.json'), output = path.join(directory,'report.json'), summary = path.join(directory,'summary.txt');
+  fs.writeFileSync(input,JSON.stringify(data));
+  const result = require('child_process').spawnSync(process.execPath,[path.resolve(__dirname,'../measure/season-timing.js'),
+    'report','--in',input,'--out',output,'--summary',summary],{encoding:'utf8'});
+  expect(result.status,result.stderr).toBe(0);
+  const report = JSON.parse(fs.readFileSync(output,'utf8'));
+  expect(report.readAudit).toBe(true);
+  expect(report.starts[0].seasons[0].readAudit.total.indexCalls).toBe(2);
+  expect(report.flags).toEqual([]);
+  expect(report.ranked).toEqual([]);
+  expect(fs.readFileSync(summary,'utf8')).toContain('Instrumented times are diagnostic only');
 });
