@@ -134,7 +134,9 @@ for (const start of starts) {
       if (fusedHeads) expect(phase.scans.headKeyArrays).toBe(0);
       else expect(phase.scans.headKeyArrays).toBeGreaterThan(0);
       const facts = parity[1].find(function (row) { return row.phase === phase.phase; });
-      expect(phase.scans.headKeyComparisons).toBe(phase.counts.reusedInputRecords * facts.workloadBefore.openingHeadKeys);
+      // Reads inside one simulated day reuse a record that was already compared during it.
+      expect(phase.scans.headKeyComparisons).toBeLessThanOrEqual(phase.counts.reusedInputRecords * facts.workloadBefore.openingHeadKeys);
+      expect(phase.scans.headKeyComparisons % Math.max(1, facts.workloadBefore.openingHeadKeys)).toBe(0);
       expect(phase.scans.localComparisonRows).toBeLessThanOrEqual(phase.counts.localRows);
       expect(phase.scans.realmComparisonRows + phase.scans.provinceComparisonRows).toBeLessThanOrEqual(phase.counts.faithRows);
       expect(phase.scans.tableBuilds).toBe(phase.counts.misses);

@@ -464,11 +464,21 @@
       return (stories || FB.stories).isStoryline(id);
     });
   };
+  /* The answer follows the campaign's start stamp and catalogue definitions.
+     Neither changes inside one simulated day, where stories ask it repeatedly. */
+  var delegatedRead = null;
   function delegatedStart(s) {
+    var day = FB.dayRead, start = s && s.start, old = delegatedRead;
+    if (day && start && old && old.day === day && old.state === s && old.start === start &&
+        old.scenarioId === start.scenarioId && old.id === start.id && old.revision === start.revision &&
+        old.data === FBDATA) return old.value;
     var scenario = FB.campaignStart(s);
-    return !!(scenario && scenario.rulerRealmId && !FB.governments.problems(scenario.governmentForm).length &&
+    var value = !!(scenario && scenario.rulerRealmId && !FB.governments.problems(scenario.governmentForm).length &&
       (FB.governments.resolve(scenario.governmentForm).use.succession.delegatedLeadership ||
        FB.governments.resolve(scenario.governmentForm).use.succession.commandLeadership));
+    delegatedRead = day && start ? {day:day, state:s, start:start, scenarioId:start.scenarioId, id:start.id,
+      revision:start.revision, data:FBDATA, value:value} : null;
+    return value;
   }
   FB.startRealmId = function (s, id) {
     return s && s.start && s.start.rulerRealmId === id && !delegatedStart(s) ? 'player' : id;

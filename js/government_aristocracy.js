@@ -118,6 +118,7 @@
       snapshot.assignedFilter = assigned.filter; snapshot.localFilter = local.filter;
       snapshot.assignedRows = new Array(assigned.length); snapshot.assignedIds = [];
       snapshot.localRows = new Array(local.length); snapshot.localIds = [];
+      snapshot.day = FB.dayRead || null;
     }
     var first = Object.create(null);
     for (i = 0; i < assigned.length; i++) {
@@ -158,6 +159,9 @@
         assigned.filter !== old.assignedFilter || local.filter !== old.localFilter ||
         assigned.filter !== Array.prototype.filter || local.filter !== Array.prototype.filter ||
         assigned.length !== old.assignedRows.length || local.length !== old.localRows.length) return false;
+    // One fiscal read is a pure quote. Within the simulated day that built this
+    // index, unchanged ledger identities and sizes mean unchanged rows.
+    if (old.day && old.day === FB.dayRead) return true;
     for (i = 0; i < interests.length; i++) {
       if ((i in interests) !== (i in old.requests)) return false;
       if (!(i in interests)) continue;
@@ -188,23 +192,38 @@
     } else if (read.entries) delete read.entries[rid];
     return lookup;
   }
+  function constituencyVoice(s,rid,p,lookup,m,i) {
+    var row = lookup ? lookup.first[m.appointmentId] : assignment(s,m), c = row && s.chars[row.holder.id];
+    var local = lookup ? lookup.rights[i] : jurisdiction(s,m);
+    var active = !!row && row.status === 'active' && (row.endTurn === null || row.endTurn > s.turn) &&
+      live(s,c) && c.dyn === m.dynasty && s.date.year - c.born >= p.minimumAge &&
+      (s.holder[m.scope.id] || s.owner[m.scope.id]) === rid && local.length === 2 && local.every(function (r) {
+        return r.status === 'active' && r.strength >= 50 && same(r.beneficiary,row.holder);
+      });
+    return Object.assign(copy(m), { principal:row ? copy(row.holder) : null, active:!!active,
+      weight:rule(s,rid,m.id).weight, terms:row && row.provincialTerms ? {
+        revenue:1 - row.publicTerms.share, levy:row.provincialTerms.levy, status:row.provincialTerms.status
+      } : null });
+  }
   A.constituency = function (s,rid) {
     var data = A.state(s,rid), p = A.profile(s,rid);
     var lookup = data && p && fiscalConstituencyLookups(s,rid,data.interests);
-    return data && p ? data.interests.map(function (m,i) {
-      var row = lookup ? lookup.first[m.appointmentId] : assignment(s,m), c = row && s.chars[row.holder.id];
-      var local = lookup ? lookup.rights[i] : jurisdiction(s,m);
-      var active = !!row && row.status === 'active' && (row.endTurn === null || row.endTurn > s.turn) &&
-        live(s,c) && c.dyn === m.dynasty && s.date.year - c.born >= p.minimumAge &&
-        (s.holder[m.scope.id] || s.owner[m.scope.id]) === rid && local.length === 2 && local.every(function (r) {
-          return r.status === 'active' && r.strength >= 50 && same(r.beneficiary,row.holder);
-        });
-      return Object.assign(copy(m), { principal:row ? copy(row.holder) : null, active:!!active,
-        weight:rule(s,rid,m.id).weight, terms:row && row.provincialTerms ? {
-          revenue:1 - row.publicTerms.share, levy:row.provincialTerms.levy, status:row.provincialTerms.status
-        } : null });
-    }) : [];
+    return data && p ? data.interests.map(function (m,i) { return constituencyVoice(s,rid,p,lookup,m,i); }) : [];
   };
+  /* The first voice of one county. A fiscal base asks for a single county on
+     every settlement, so only that interest is evaluated and copied. */
+  function countyVoice(s,rid,pid) {
+    var data = A.state(s,rid), p = A.profile(s,rid);
+    if (!data || !p) return undefined;
+    var interests = data.interests;
+    if (!Array.isArray(interests) || interests.map !== Array.prototype.map)
+      return A.constituency(s,rid).filter(function (v) { return v.scope.id === pid; })[0];
+    var lookup = fiscalConstituencyLookups(s,rid,interests);
+    for (var i = 0; i < interests.length; i++) {
+      if (i in interests && interests[i].scope.id === pid) return constituencyVoice(s,rid,p,lookup,interests[i],i);
+    }
+    return undefined;
+  }
   A.readiness = function (s,rid) {
     var p = A.profile(s,rid), data = A.state(s,rid), sitting = current(s,rid);
     var succession = tree(s,rid);
@@ -597,14 +616,14 @@
   G.register('holders','mixed_provincial',Object.assign({},G.strategy('holders','public_offices')));
   var levy = Object.assign({},G.strategy('levy','public_service')), baseLevy = levy.settlementBase;
   levy.settlementBase = function (s,rid,c) {
-    var m = A.constituency(s,rid).filter(function (v) { return v.scope.id === c.provinceId; })[0];
+    var m = countyVoice(s,rid,c.provinceId);
     return baseLevy(s,rid,c) * (m ? m.active && m.terms.status === 'assent' ? m.terms.levy : 0.35 : 1);
   };
   G.register('levy','provincial_obligations',levy);
   var revenue = Object.assign({},G.strategy('revenue','public_receipts'));
   var countyBase = revenue.countyBase, settlementBase = revenue.settlementBase;
   function revenueFactor(s,rid,pid) {
-    var m = A.constituency(s,rid).filter(function (v) { return v.scope.id === pid; })[0];
+    var m = countyVoice(s,rid,pid);
     return m && (!m.active || m.terms.status === 'withheld') ? 0.5 : 1;
   }
   revenue.countyBase = function (s,rid,c) { return countyBase(s,rid,c) * revenueFactor(s,rid,c.provinceId); };

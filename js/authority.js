@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var Q = FB.political;
-  var priorOffices = Q.offices, priorPermission = Q.permission;
+  var priorOffices = Q.offices, priorPermission = Q.permission, baseActor = Q.actor;
 
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
@@ -36,9 +36,20 @@
     return id;
   }
   FB.authorityNextId = next;
+  /* Whether the actor query answers for a reference: the campaign has a
+     player and the realm is alive or the character is living. The complete
+     actor also derives a ruler, realm and station that an existence check
+     never reads. A replaced actor query keeps the complete validation. */
+  function actorExists(s, kind, id) {
+    if (Q.actor !== baseActor) return !!Q.actor(s, { kind:kind, id:id });
+    if (!s || !s.player || typeof id !== 'string' || !id) return false;
+    var table = kind === 'realm' ? s.realms : kind === 'character' ? s.chars : null;
+    var row = table && own(table, id) && table[id];
+    return !!row && (kind === 'realm' ? !!row.alive : !row.dead);
+  }
   function ref(s, value) {
     return value && (value.kind === 'character' || value.kind === 'realm') &&
-      typeof value.id === 'string' && Q.actor(s, value) ?
+      typeof value.id === 'string' && actorExists(s, value.kind, value.id) ?
       { kind:value.kind, id:value.id } : null;
   }
   function same(a, b) {
@@ -55,7 +66,7 @@
       ? { kind:'host', id:value.id } : null;
     if (value.kind === 'county') return FB.world && own(FB.world.byId, value.id)
       ? { kind:'county', id:value.id } : null;
-    if (value.kind === 'realm') return Q.actor(s, { kind:'realm', id:value.id })
+    if (value.kind === 'realm') return actorExists(s, 'realm', value.id)
       ? { kind:'realm', id:value.id } : null;
     return null;
   }
@@ -75,8 +86,17 @@
   }
   /* Scalar readers retain actor validation and definition existence without
      allocating the detached rules required by the public government query. */
+  /* A realm actor exists exactly when the campaign has a player and the realm
+     is alive. The complete actor also resolves its ruler, which office-bound
+     and mobile realms derive at a cost; a scalar form read needs none of it.
+     A replaced actor query keeps the complete validation. */
+  function livingRealmRef(s, realmRef) {
+    if (Q.actor !== baseActor) return !!Q.actor(s, realmRef);
+    var realms = s && s.player && s.realms, id = realmRef.id;
+    return !!(realms && typeof id === 'string' && id && own(realms, id) && realms[id] && realms[id].alive);
+  }
   Q.governmentFormId = function (s, realmRef) {
-    if (!realmRef || realmRef.kind !== 'realm' || !Q.actor(s, realmRef)) return null;
+    if (!realmRef || realmRef.kind !== 'realm' || !livingRealmRef(s, realmRef)) return null;
     var formId = selectedForm(s, governmentRecord(s, realmRef));
     return FBDATA.governmentForms[formId] ? formId : null;
   };
@@ -340,7 +360,7 @@
   function activeAppointment(s, row) {
     if (!row || row.status !== 'active' || row.endTurn !== null &&
         row.endTurn <= s.turn || !ref(s, row.holder) ||
-        !Q.actor(s, { kind:'realm', id:row.institutionId })) return false;
+        !actorExists(s, 'realm', row.institutionId)) return false;
     if (!within(s, row.institutionId, row.scope)) return false;
     var def = FBDATA.authorityOffices[row.officeId];
     if (row.publicTerms && (!FB.publicAppointmentEffective || !FB.publicAppointmentEffective(s, row))) return false;
@@ -440,6 +460,24 @@
         terms:copy(row) });
     }
     return out;
+  };
+  /* One appointment's status exactly as its holder's office list reports it,
+     without building and copying every other office of that holder. */
+  var authorityOffices = Q.offices;
+  Q.appointmentStatus = function (s, row) {
+    if (Q.offices !== authorityOffices || row.id === undefined) {
+      var view = Q.offices(s, row.holder).filter(function (item) { return item.ref.appointmentId === row.id; })[0];
+      return view ? view.status : 'expired';
+    }
+    if (!ref(s, row.holder)) return 'expired';
+    for (var item of list(s, 'appointments')) if (item.id === row.id && same(item.holder, row.holder)) {
+      return activeAppointment(s, item) ? 'active' :
+        item.status === 'active' && FBDATA.authorityOffices[item.officeId] &&
+        (item.publicTerms ? item.publicTerms.confirmation : FBDATA.authorityOffices[item.officeId].succession) === 'reaffirm' &&
+        item.appointerGeneration !== FB.realmRulerGeneration(s, item.institutionId)
+          ? 'contested' : item.status === 'active' ? 'expired' : item.status;
+    }
+    return 'expired';
   };
   var priorOffice = Q.office;
   Q.office = function (s, officeRef) {
@@ -991,10 +1029,7 @@
     else s.player.gold -= cost;
   }
   function sameQuote(a, b) { return !!a && !!b && JSON.stringify(a) === JSON.stringify(b); }
-  function officeStatus(s, row) {
-    var view = Q.offices(s, row.holder).filter(function (item) { return item.ref.appointmentId === row.id; })[0];
-    return view ? view.status : 'expired';
-  }
+  function officeStatus(s, row) { return Q.appointmentStatus(s, row); }
   FB.officeAppointmentQuote = function (s, actor, terms) {
     terms = terms || {};
     var rid = terms.institutionId, def = FBDATA.authorityOffices[terms.officeId],

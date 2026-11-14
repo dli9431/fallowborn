@@ -68,8 +68,9 @@ for (const start of journey.starts) {
     }
     expect(outputs[1]).toEqual(outputs[0]);
     expect(counts[1].requests).toBe(counts[0].requests);
-    expect(counts[1].officeEntries).toBe(counts[0].officeEntries);
-    expect(counts[1].slots).toBe(counts[0].slots);
+    // Inside a simulated day the coalition rows are listed once instead of scanned per read.
+    expect(counts[1].officeEntries).toBeLessThanOrEqual(counts[0].officeEntries);
+    expect(counts[1].slots).toBeLessThanOrEqual(counts[0].slots);
     if (start.bookmark === '476') expect(counts[1].builds).toBeLessThan(counts[0].builds);
     else expect(counts[1].fiscalReads).toBe(0);
     if (start.bookmark !== '1096') expect(counts[1].leaders).toBeLessThan(counts[0].leaders);
@@ -78,7 +79,7 @@ for (const start of journey.starts) {
       expect(row.days).toBe(1);
       expect(row.report.cadences[row.phase].days).toBe(1);
       expect(row.report.total.mobileFilterArrays).toBe(0);
-      expect(row.report.total.mobileSlots).toBe(row.report.total.mobileEntries*row.before.counts.governments);
+      expect(row.report.total.mobileSlots).toBeLessThanOrEqual(row.report.total.mobileEntries*row.before.counts.governments);
       expect(row.guards.inMobileRead).toBeLessThanOrEqual(row.guards.calls);
       expect(row.guards.predicates).toBeLessThanOrEqual(row.guards.calls);
       expect(row.before.bytes.state).toBeGreaterThan(row.before.bytes.governments);

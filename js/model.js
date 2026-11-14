@@ -1680,15 +1680,49 @@ window.FB = window.FB || {};
     }
     return true;
   }
+  /* The saved-state inputs of the office table: the clock, the faith
+     revision and whether each fresh-only institution has been seeded. */
+  function stampOfficeDay(record, day, state, local, era, form) {
+    record.day = day || null;
+    if (!day || !state) return record;
+    const date = state.date, held = state.localInstitutions, fresh = [], freshHeld = [];
+    for (const id in local) if (own(local, id) && local[id] && local[id].freshOnly) {
+      fresh.push(id);
+      freshHeld.push(!!(held && held[id]));
+    }
+    record.era = era; record.form = form; record.turn = state.turn;
+    record.dated = !!date;
+    record.year = date ? date.year : null;
+    record.season = date ? date.season : null;
+    record.dateDay = date ? date.day : null;
+    record.revision = stateFaithRevision(requestedFaithState(state));
+    record.fresh = fresh; record.freshHeld = freshHeld;
+    return record;
+  }
+  function sameOfficeState(state, old) {
+    const date = state.date, held = state.localInstitutions, fresh = old.fresh;
+    if (state.turn !== old.turn || !!date !== old.dated ||
+        date && (date.year !== old.year || date.season !== old.season || date.day !== old.dateDay) ||
+        stateFaithRevision(requestedFaithState(state)) !== old.revision) return false;
+    for (let i = 0; i < fresh.length; i++) {
+      if (!!(held && held[fresh[i]]) !== old.freshHeld[i]) return false;
+    }
+    return true;
+  }
   function localOfficeInputs(state, graph) {
     const world = FB.localInstitutionOfficeInputs(state), local = world.local, bookmark = world.bookmark;
     const era = FBDATA.eras && FBDATA.eras[state ? FB.campaignEra(state) : bookmark && FB.bookmarkEra(bookmark)];
     const formId = state && state.start && state.start.defaultGovernment || era && era.defaultGovernment;
     const form = FBDATA.governmentForms && FBDATA.governmentForms[formId];
-    const old = localOfficeCache;
-    const unchanged = old && old.state === state && old.data === FBDATA && old.graph === graph &&
-      old.bookmark === bookmark && old.local === local && old.systemEnabled === FB.systemEnabled &&
-      sameOfficeInputs(state, local, bookmark, era, form, old.snapshot);
+    const old = localOfficeCache, day = FB.dayRead;
+    const identical = old && old.state === state && old.data === FBDATA && old.graph === graph &&
+      old.bookmark === bookmark && old.local === local && old.systemEnabled === FB.systemEnabled;
+    // The catalogue was already compared during this simulated day, and no
+    // definition edit can interleave with it. Only saved state can differ.
+    const trusted = identical && !!state && !!day && old.day === day && old.era === era && old.form === form &&
+      sameOfficeState(state, old);
+    const unchanged = trusted || identical && sameOfficeInputs(state, local, bookmark, era, form, old.snapshot);
+    if (unchanged && !trusted) stampOfficeDay(old, day, state, local, era, form);
     let key = unchanged && old.key;
     if (!unchanged) {
       // Compare only definition inputs, never growing membership/history ledgers.
@@ -1714,7 +1748,7 @@ window.FB = window.FB || {};
     // reentrant read or an authoring getter did not replace its live inputs.
     if (unchanged && localOfficeCache === old && old.data === data && old.systemEnabled === systemEnabled) return old;
     return { state:state, data:data, graph:graph, bookmark:bookmark, local:local,
-      systemEnabled:systemEnabled, key:key,
+      systemEnabled:systemEnabled, key:key, era:era, form:form, day:null,
       snapshot:old && old.key === key ? old.snapshot : officeInputSnapshot(JSON.parse(key)) };
   }
   function localOfficeTable(state, graph, definitions) {
@@ -1725,6 +1759,7 @@ window.FB = window.FB || {};
         old.local === inputs.local && old.systemEnabled === inputs.systemEnabled && old.key === inputs.key) return old.table;
     inputs.table = withLocalReligiousOffices(state, definitions, inputs.local);
     localOfficeCache = inputs;
+    stampOfficeDay(inputs, FB.dayRead, state, inputs.local, inputs.era, inputs.form);
     return inputs.table;
   }
   function religiousOfficeDefinitions(state) {

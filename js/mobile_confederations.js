@@ -855,6 +855,7 @@
     var p = FBDATA.mobileProfiles[d.mobile.profileId], g = s.authority.governments[d.id] ||
       (s.authority.governments[d.id]={formId:G.forRealm(s,d.id).id,sinceTurn:s.turn});
     if (!p || !M.active(s, d.id)) throw new Error('Invalid mobile opening');
+    M.resetDayRows();
     var r = g.mobile = {schema:plan ? 2 : 1,profileId:d.mobile.profileId,migrationId:null,status:'active',serial:0,revision:0,
       leaderId:null,selection:null,decision:null,food:food,lastDay:s.turn,worked:{},agreements:[],
       accounting:{initial:0,arrivals:0,dead:0,settled:0,dispersed:0},members:[]};
@@ -1216,11 +1217,39 @@
   };
   var snapshot = FB.realmRulerCharacterSnapshot, rulerRealm = FB.realmIdForRulerCharacter, advance = FB.advanceRealmSuccession, died = FB.royalCharDied;
   var rulerFilter = Array.prototype.filter;
+  /* Inside one simulated day the realms holding a coalition record are listed
+     once. A new or moved record resets the list; a removed one is rechecked on
+     every read. Outside a day, or with replaced readers, the full scan runs. */
+  var nativeActive = M.active, dayRows = new WeakMap(), invalidateForms = G.invalidate;
+  M.resetDayRows = function () { dayRows = new WeakMap(); };
+  G.invalidate = function () { dayRows = new WeakMap(); return invalidateForms.apply(G,arguments); };
+  function dayMobileRealms(s,root) {
+    var day = FB.dayRead;
+    if (!day || M.leader !== nativeLeader || M.active !== nativeActive) return null;
+    var cached = dayRows.get(s);
+    if (!cached || cached.day !== day || cached.root !== root) {
+      cached = {day:day,root:root,realms:Object.keys(root).filter(function (key) { return !!(root[key] && root[key].mobile); })};
+      dayRows.set(s,cached);
+    }
+    return cached.realms;
+  }
+  function dayMobileRealm(s,root,known,cid) {
+    for (var n = 0; n < known.length; n++) {
+      var realmId = known[n];
+      if (!(root[realmId] && root[realmId].mobile) || !M.active(s,realmId)) continue;
+      var person = M.leader(s,realmId);
+      if (person && person.id === cid) return realmId;
+    }
+    return undefined;
+  }
   FB.realmRulerCharacterSnapshot = function (s,rid) { return M.active(s,rid) ? M.leader(s,rid) : snapshot(s,rid); };
   FB.realmIdForRulerCharacter = function (s,value) {
     var cid = typeof value === 'string' ? value : value && value.id;
     // Only a realm with a coalition record can have a leader; skip the form lookup for the rest.
     var root = s.authority && s.authority.governments || {};
+    var known = dayMobileRealms(s,root);
+    // The home crown and a landed command outrank a coalition; scan only without them.
+    if (known) return rulerRealm(s,value) || M.landedHomeRealm && M.landedHomeRealm(s,cid) || dayMobileRealm(s,root,known,cid);
     var ids = Object.keys(root), rid, found = false;
     if (ids.filter !== rulerFilter) {
       rid = ids.filter(function (id) {

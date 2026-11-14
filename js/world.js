@@ -123,20 +123,25 @@ window.FB = window.FB || {};
     }
     if (!base || !base.revisions) return resolveBookmarkRevision(base, revision);
     var entries = resolvedWorlds.get(base), catalogue = base.revisions;
-    var entry = entries && entries.get(revision);
+    var entry = entries && entries.get(revision), day = FB.dayRead;
+    // A world compared during this simulated day stays resolved until it ends.
+    if (entry && day && entry.day === day && entry.catalogue === catalogue) return entry.world;
     if (entry && entry.catalogue === catalogue && validRevisionCatalogue(catalogue, entry.selected) &&
         sameResolutionFields(entry.base, base) &&
         sameResolutionFields(entry.baseline, catalogue.baseline) &&
         sameResolutionFields(entry.layer, catalogue[entry.selected]) &&
         (entry.openingId === null || ownKey(entry.world.openingRevisions, entry.openingId) &&
-          entry.world.openingRevisions[entry.openingId] === entry.world.opening)) return entry.world;
+          entry.world.openingRevisions[entry.openingId] === entry.world.opening)) {
+      entry.day = day || null;
+      return entry.world;
+    }
     var world = resolveBookmarkRevision(base, revision), selected = world.revision;
     var opening = ownKey(catalogue[selected], 'opening') ? catalogue[selected].opening
       : ownKey(catalogue.baseline, 'opening') ? catalogue.baseline.opening : base.opening;
     if (!entries) { entries = new Map(); resolvedWorlds.set(base, entries); }
     entries.set(revision, {selected:selected, catalogue:catalogue, base:resolutionFields(base),
       baseline:resolutionFields(catalogue.baseline), layer:resolutionFields(catalogue[selected]),
-      openingId:typeof opening === 'string' ? opening : null, world:world});
+      openingId:typeof opening === 'string' ? opening : null, day:day || null, world:world});
     return world;
   }
   FB.bookmark = function (id, revision) {

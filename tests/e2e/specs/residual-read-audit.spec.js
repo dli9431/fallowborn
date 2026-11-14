@@ -317,7 +317,8 @@ test('mobile boundary audit records guard reads and complete owner sizes', async
     expect(row.days).toBe(1);
     expect(row.report.cadences[row.phase].days).toBe(1);
     expect(row.report.total.mobileFilterArrays).toBe(0);
-    expect(row.report.total.mobileSlots).toBe(row.report.total.mobileEntries * row.before.governments);
+    // Inside a simulated day the coalition rows are listed once instead of scanned per read.
+    expect(row.report.total.mobileSlots).toBeLessThanOrEqual(row.report.total.mobileEntries * row.before.governments);
     expect(row.guards.calls).toBeGreaterThan(0);
     expect(row.guards.inMobileRead).toBeGreaterThan(0);
     expect(row.guards.inMobileRead).toBeLessThanOrEqual(row.guards.calls);
@@ -434,7 +435,7 @@ test('Muhammad autumn audit preserves staged days and attributes native read own
     expect(c.officeEntries).toBe(row.office.keyBuilds);
     expect(c.officeWorldReads).toBe(c.officeEntries);
     expect(c.officeWorldRepeats).toBe(0);
-    expect(c.mobileSlots).toBe(c.mobileEntries*facts.before.governments);
+    expect(c.mobileSlots).toBeLessThanOrEqual(c.mobileEntries*facts.before.governments);
     expect(c.mobileFilterArrays).toBe(0);
     expect(row.office.keyBuilds).toBe(row.office.hits+row.office.misses);
     expect(row.structure.tableBuilds).toBe(row.office.misses);

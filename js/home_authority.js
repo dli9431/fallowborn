@@ -97,10 +97,13 @@
     if (c.homeProvinceId && !(FB.world && FB.world.byId[c.homeProvinceId])) return null;
     /* The owning residence lookup has a protagonist-home fallback. An unknown
        foreign person is not proof of presence at that fallback. */
-    var seated = Object.keys(s.realms || {}).some(function (rid) { var r = ruler(s,rid); return r && r.id === c.id; });
-    if (!seated && !c.homeProvinceId && !c.royalLine && !Object.keys(s.provChars || {}).some(function (pid) {
-      return s.provChars[pid].indexOf(c.id) >= 0;
-    })) return null;
+    // A recorded home or royal line already proves presence; resolve every
+    // realm's ruler only for a person who has neither.
+    if (!c.homeProvinceId && !c.royalLine &&
+        !Object.keys(s.realms || {}).some(function (rid) { var r = ruler(s,rid); return r && r.id === c.id; }) &&
+        !Object.keys(s.provChars || {}).some(function (pid) {
+          return s.provChars[pid].indexOf(c.id) >= 0;
+        })) return null;
     return FB.characterResidence(s,c);
   };
   H.quote = function (s,rid,operation,request) {
@@ -129,7 +132,7 @@
             request.appointmentId && request.appointmentId !== a.id || request.characterId && request.characterId !== a.holder.id) return false;
         var d = FBDATA.authorityOffices[a.officeId], c = s.chars[a.holder.id];
         var at = H.location(s,c), scope = a.scope;
-        var effective = Q.offices(s,a.holder).some(function (o) { return o.ref.appointmentId === a.id && o.status === 'active'; });
+        var effective = Q.appointmentStatus(s,a) === 'active';
         evidence.push([a,d && d.homePowers,at,effective]);
         if (!d || !H.powersValid(d) || !d.homePowers || d.homePowers.indexOf(operation) < 0 || !effective ||
             !local(c) || a.appointerGeneration !== generation ||

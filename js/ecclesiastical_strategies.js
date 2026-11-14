@@ -91,13 +91,28 @@
     }
     return cached.ids;
   }
+  /* An office-bound realm is ruled by the recorded holder of its office. Only a
+     papal election names a different person, so every other realm is ruled out
+     from the saved ledger before its incumbent is resolved. */
+  var nativeIncumbent = E.incumbent, nativeOfficeSnapshot = FB.religiousOfficeSnapshot;
+  function mayHold(s,rid,cid) {
+    var r = E.row(s,rid), p = r && E.profile(s,rid);
+    if (!r || !p || p.source === 'papal_election') return true;
+    var holder = s.religiousHeads && s.religiousHeads[r.officeId];
+    var entity = holder && (s.chars && s.chars[holder] || s.realms && s.realms[holder]);
+    return !!entity && entity.id === cid;
+  }
   FB.realmRulerCharacterSnapshot = function (s,rid) { return E.active(s,rid) && E.row(s,rid) ? E.incumbent(s,rid) : snapshot(s,rid); };
   FB.materializeRealmRuler = function (s,rid) { return E.active(s,rid) && E.row(s,rid) ? E.incumbent(s,rid) : materialize.apply(FB,arguments); };
   FB.realmIdForRulerCharacter = function (s,value) {
     var cid = typeof value === 'string' ? value : value && value.id;
     if (!s || !cid) return null;
     var ids = bindings(s);
-    for (var i = 0; i < ids.length; i++) { var c = s.realms[ids[i]] && s.realms[ids[i]].alive && E.incumbent(s,ids[i]); if (c && c.id === cid) return ids[i]; }
+    var ledger = E.incumbent === nativeIncumbent && FB.religiousOfficeSnapshot === nativeOfficeSnapshot;
+    for (var i = 0; i < ids.length; i++) {
+      if (ledger && !mayHold(s,ids[i],cid)) continue;
+      var c = s.realms[ids[i]] && s.realms[ids[i]].alive && E.incumbent(s,ids[i]); if (c && c.id === cid) return ids[i];
+    }
     var inherited = rulerRealm(s,value); return inherited && E.active(s,inherited) && E.row(s,inherited) ? null : inherited;
   };
   var died = FB.royalCharDied, advance = FB.advanceRealmSuccession, absorb = FB.absorbRealm;
