@@ -6,7 +6,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const { installStoryProof } = require('../support/game/story-proof');
 dependsOnRuntime(__filename, ['index.html','data/bookmark_800.js','data/bookmark_800_history.js','data/starts.js',
   'data/story_instances.js','data/political_institutions.js','js/stories.js','js/story_settlements.js',
-  'js/royal_settlements.js','js/starts.js','js/world.js','js/model.js','js/main.js','js/save.js','js/save_v4.js']);
+  'js/royal_settlements.js','js/starts.js','js/world.js','js/model.js','js/main.js','js/save.js','js/save_v4.js',
+  'js/mods.js','js/bookmark_sources.js']);
 
 test('each settlement type plays a second data-only instance with a different family and regions', async function ({ page }, testInfo) {
   await installStoryProof(page);
@@ -14,6 +15,13 @@ test('each settlement type plays a second data-only instance with a different fa
   await startParityGame(page, testInfo, {
     bookmark:'proof_settlements_900', code:'GENERIC-proof_settlements_900-farmer-london-m-Proof'
   });
+  expect(await page.evaluate(function () {
+    FB.mods.assertReady();
+    const mod = JSON.parse(JSON.parse(localStorage.getItem('fb_mods'))[0]);
+    return { faults:FB.mods.validate(mod), signed:FB.mods.sig() !== '',
+      stories:Object.keys(mod.storyInstances) };
+  })).toEqual({ faults:[], signed:true,
+    stories:Object.keys(require('../fixtures/bookmarks/settlement-proof.json').storyInstances) });
   const result = await page.evaluate(function () {
     let s = FB.state, cast = s.stories.proof_partition.cast;
     const order = FB.stories.attached(s), source = JSON.stringify(FB.bookmark(s.start.id));

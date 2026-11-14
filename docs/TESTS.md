@@ -273,6 +273,8 @@ Dated government rollout coverage is in tests/e2e/specs/government-rollout.spec.
 
 476-ladder-careers.spec.js stages a live appointment for the Roman civic route, reviews a free resident's own local Standing independently of player reputation, and verifies underage and insufficient-treasury blockers before the funded annual AI promotion. civic-church-actors.spec.js checks the expanded 89 civic and 108 church institutions while retaining its pure-read, distinct-office and medieval-isolation assertions. court-story-types.spec.js checks that household choices and ruler restoration award no territory, then preserves the ownership and holder facts saved after its explicit conquest and recovery staging.
 
+story-types.spec.js and court-story-types.spec.js install their literal fictional worlds and story declarations through ordinary stored JSON mods. The shared proof installers preserve normal source staging and detached mod admission. Both specifications check the imported story ids, successful validation and nonempty mod signature before exercising their story and save lifecycles.
+
 # Testing Fallowborn
 
 `named-religious-cases.spec.js` covers actual local clergy-violence evidence,

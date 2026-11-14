@@ -1,31 +1,13 @@
 'use strict';
 const proof = require('../../fixtures/bookmarks/settlement-proof.json');
 
-// Add literal declarations at the data catalogue boundary. This works for
-// file:// as well as served boot, and never injects a factory or engine hook.
+// Ordinary persisted JSON keeps source preparation ahead of detached mod
+// validation and story registration, on file:// and served boot.
 async function installStoryProof(page) {
-  await page.addInitScript(function (fixture) {
-    let data;
-    Object.defineProperty(window, 'FBDATA', {
-      configurable:true,
-      enumerable:true,
-      get:function () { return data; },
-      set:function (next) {
-        data = next;
-        if (Object.prototype.hasOwnProperty.call(data, 'storyInstances')) return;
-        let instances;
-        Object.defineProperty(data, 'storyInstances', {
-          configurable:true,
-          enumerable:true,
-          get:function () { return instances; },
-          set:function (table) {
-            instances = table;
-            Object.assign(table, fixture.storyInstances);
-            data.bookmarks[fixture.bookmark.id] = fixture.bookmark;
-          }
-        });
-      }
-    });
-  }, proof);
+  const mod = { name:'Settlement story proof', bookmarks:{}, storyInstances:proof.storyInstances };
+  mod.bookmarks[proof.bookmark.id] = proof.bookmark;
+  await page.addInitScript(function (source) {
+    if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods', JSON.stringify([source]));
+  }, JSON.stringify(mod));
 }
 module.exports = { installStoryProof };
