@@ -1,15 +1,19 @@
 'use strict';
+const {installRestoreFacts}=require('../support/game/restore-facts');
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const imports={harbor:require('../fixtures/authoring/mobile-vow-harbor.json'),
   upland:require('../fixtures/authoring/mobile-vow-upland.json')};
 const callId='eastern_undertaking_1096', observerId='eastern_undertaking_households_1096';
 
+test.describe.configure({mode:'parallel'});
+
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_1096.js','data/bookmark_1096_campaigns.js',
+  'index.html','js/bookmark_composition.js','data/bookmark_1096.js','data/bookmark_1096_campaigns.js',
   'data/bookmark_1096_mainz.js','data/bookmark_1096_western_expeditions.js','data/bookmark_1096_pilgrim.js',
   'data/story_western_rulers_1096.js','data/story_pilgrim_1096.js',
   'data/story_household_effects_1096.js','data/story_world_1096.js','data/expeditions_1096.js',
@@ -28,6 +32,7 @@ dependsOnRuntime(__filename,[
 
 async function historical(page,info) {
   await beginBookmark(page,info,'1096','pilgrim_household_1096');
+  await installRestoreFacts(page);
   await page.evaluate(function (ids) {
     window.worldCase={id:ids[0],observer:ids[1],
       // A detached, player-pending opening permits direct boundary checks.
@@ -140,17 +145,47 @@ test('the current head can decline at the last opening boundary without charging
 test('matching saves retain the one campaign and missing older story records remain absent',async function ({page},info) {
   await historical(page,info);
   const result=await page.evaluate(function () {
-    const C=worldCase,owners=function () {const s=FB.state;return JSON.stringify([s.stories,s.greatHolyWar,
-      s.greatHolyWarHistory,s.owner,s.holder,s.chars,s.realms,s.armies,s.player.gold]);};
-    const before=owners(),rng=FB.getRngState(),uid=FB.getUidCounter(),saved=JSON.parse(FB.save.serialize());
+    const C=worldCase;
+    function facts(state) {return restoreFacts(state,function (s) {
+      return [s.start,s.stories,s.greatHolyWar,s.greatHolyWarHistory,
+        s.owner,s.holder,s.chars,s.realms,s.armies,s.player.gold];
+    });}
+    const before=facts(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter(),saved=JSON.parse(FB.save.serialize());
+    const attachments=saved.state.start.storyAttachments;
+    if (saved.storyAttachmentSchema!==1 || attachments.schema!==1 ||
+        attachments.world.indexOf(C.id)<0 || attachments.world.indexOf(C.observer)<0)
+      throw new Error('Expected both original world attachments in the current save');
     FB.save.restore(saved);FB.stories.restore(FB.state);FB.prepareOpeningHolyWarCalls(FB.state);
-    const exact=before===owners(),random=(rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter();
-    delete saved.state.stories[C.id];delete saved.state.stories[C.observer];
-    FB.save.restore(saved);FB.stories.restore(FB.state);FB.prepareOpeningHolyWarCalls(FB.state);
+    const exact=assertRestoreFacts(facts(FB.state),before),random=(rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter();
+    const original=JSON.stringify(FB.state.start.storyAttachments)===JSON.stringify(attachments);
+    // Saves predating original attachment provenance have neither paired field.
+    let older=JSON.parse(JSON.stringify(saved));
+    delete older.storyAttachmentSchema;delete older.state.start.storyAttachments;
+    delete older.state.stories[C.id];
+    const live=FB.state,liveBefore=JSON.stringify(live),input=JSON.stringify(older);
+    let dependencyRejected=false;
+    try {FB.save.restore(older);} catch (error) {
+      dependencyRejected=error.message.indexOf('requires story '+C.id)>=0;
+    }
+    dependencyRejected=dependencyRejected && live===FB.state && liveBefore===JSON.stringify(FB.state) &&
+      input===JSON.stringify(older) && (rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter();
+    // An older campaign without the optional call also lacks its dependent notice.
+    delete older.state.stories[C.observer];
+    const legacyBefore=facts(older.state);
+    let legacyExact=true,legacyUnstamped=true;
+    for (let round=0;round<2;round++) {
+      FB.save.restore(older);FB.stories.restore(FB.state);FB.prepareOpeningHolyWarCalls(FB.state);
+      legacyExact=assertRestoreFacts(facts(FB.state),legacyBefore) && legacyExact;
+      older=JSON.parse(FB.save.serialize());
+      legacyUnstamped=older.storyAttachmentSchema===undefined &&
+        older.state.start.storyAttachments===undefined && legacyUnstamped;
+    }
     return {exact:exact,random:random,missing:!FB.state.stories[C.id] && !FB.state.stories[C.observer],
-      campaign:FB.state.greatHolyWar.id===saved.state.greatHolyWar.id,sequence:FB.state.greatHolyWarHistory.sequence};
+      campaign:FB.state.greatHolyWar.id===saved.state.greatHolyWar.id,sequence:FB.state.greatHolyWarHistory.sequence,
+      original:original,dependencyRejected:dependencyRejected,legacyExact:legacyExact,legacyUnstamped:legacyUnstamped};
   });
-  expect(result).toEqual({exact:true,random:true,missing:true,campaign:true,sequence:1});
+  expect(result).toEqual({exact:true,random:true,missing:true,campaign:true,sequence:1,
+    original:true,dependencyRejected:true,legacyExact:true,legacyUnstamped:true});
 });
 
 test('1096 call provenance rejects malformed saves before replacing the current campaign',async function ({page},info) {
@@ -159,15 +194,19 @@ test('1096 call provenance rejects malformed saves before replacing the current 
     const C=worldCase,source=JSON.parse(FB.save.serialize());
     return [function (saved) {saved.state.stories[C.id].openingCall.schema=2;},
       function (saved) {saved.state.stories[C.id].openingCall.headCharacterId='missing_head';},
-      function (saved) {saved.state.greatHolyWar.targetKingdom='unrelated_target';}].map(function (change) {
+      function (saved) {saved.state.greatHolyWar.targetKingdom='unrelated_target';},
+      function (saved) {delete saved.state.stories[C.id];},
+      function (saved) {delete saved.state.stories[C.observer];},
+      function (saved) {delete saved.storyAttachmentSchema;},
+      function (saved) {delete saved.state.start.storyAttachments;}].map(function (change) {
       const saved=JSON.parse(JSON.stringify(source));change(saved);
-      const state=FB.state,before=JSON.stringify(state),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const state=FB.state,before=JSON.stringify(state),input=JSON.stringify(saved),rng=FB.getRngState(),uid=FB.getUidCounter();
       let rejected=false;try {FB.save.restore(saved);} catch (error) {rejected=true;}
       return rejected && state===FB.state && before===JSON.stringify(FB.state) &&
-        rng===FB.getRngState() && uid===FB.getUidCounter();
+        input===JSON.stringify(saved) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
   });
-  expect(result).toEqual([true,true,true]);
+  expect(result).toEqual([true,true,true,true,true,true,true]);
 });
 
 test('the local observer reads an actual failed campaign once and rejects stale source-person reviews',async function ({page},info) {
@@ -246,12 +285,14 @@ async function imported(page,info,label,withPersonal) {
     scenario.tracks.push(track);scenario.trackLocations[track]=[scenario.fixedProvinceId];
   }
   await page.evaluate(function () {FB.ui.showMods();});
+  await expectModAdmission(page,source);
   await page.locator('#modfile').setInputFiles({name:'world-'+label+'.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(source))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (id) {return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(id);},id);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
   return {id:id,notice:notice,county:county,rid:label==='harbor' ? 'harbor_following' : 'dune_coalition',
     head:prefix+(label==='harbor' ? '_commune' : '_oasis')};
 }
@@ -310,8 +351,18 @@ for (const label of ['harbor','upland']) {
       const settled=FB.resolveGreatHolyWar(s,'attackers','objectives');FB.game.observe=original;
       story.day(s,rec);
       const archive=s.greatHolyWarHistory.campaigns.find(function (x) {return x.id===c.id;});
-      const saved=JSON.parse(FB.save.serialize()),before=JSON.stringify([s.owner,s.holder,s.realms,s.armies,
-        s.greatHolyWarHistory,s.stories]),rng=FB.getRngState(),uid=FB.getUidCounter();
+      // A newly awarded crown reaches the normal fiscal boundary before saving.
+      // Initializing its missing budget targets must not grant cash or transact.
+      function balances(){return FB.contentValues.canonical([
+        Object.keys(s.realms).sort().map(function (id) {return [id,FB.treasuryAvailable(s,id)];}),
+        s.player.gold,s.treasuryAccounting,s.owner,s.holder,s.armies,s.chars,
+        FB.getRngState()>>>0,FB.getUidCounter()]);}
+      const money=balances();FB.treasuryInitialize(s);
+      if(money!==balances())throw new Error('Fiscal checkpoint must not change resources or identities');
+      function facts(state){return restoreFacts(state,function (v) {
+        return [v.owner,v.holder,v.realms,v.armies,v.greatHolyWarHistory,v.stories];
+      });}
+      const before=facts(s),saved=JSON.parse(FB.save.serialize()),rng=FB.getRngState(),uid=FB.getUidCounter();
       const repeat=FB.resolveGreatHolyWar(s,'attackers','objectives');
       FB.save.restore(saved);story.day(FB.state,FB.state.stories[ids.id]);FB.stories.restore(FB.state);
       const x=FB.state;
@@ -319,7 +370,7 @@ for (const label of ['harbor','upland']) {
         noPlayerCredit:noPlayerCredit,settled:settled,result:rec.result,captured:c.settlement.captured,
         awards:archive.awards.length>0,once:x.greatHolyWarHistory.campaigns.filter(function (r) {return r.id===c.id;}).length,
         repeat:repeat,camp:M.migration(x,ids.rid).at===camp,
-        exact:before===JSON.stringify([x.owner,x.holder,x.realms,x.armies,x.greatHolyWarHistory,x.stories]),
+        exact:assertRestoreFacts(facts(x),before),
         random:(rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter()};
     },ids);
     expect(result).toEqual({initial:label==='harbor' ? 'started' : 'pending',noMarch:true,mustered:true,one:true,

@@ -277,6 +277,48 @@ for (const bookmark of ['476', '1096', '1204']) {
   });
 }
 
+test('opening-head key errors release incumbent guards before independent live reads', async function ({page}, info) {
+  await beginBookmark(page, info, '1204');
+  const result = await page.evaluate(function () {
+    const s = FB.state, E = FB.ecclesiasticalGovernment, rid = 'papacy_1204';
+    const bookmark = FB.campaignBookmark(s), descriptor = Object.getOwnPropertyDescriptor(bookmark, 'religiousHeads');
+    const before = JSON.stringify(s), data = JSON.stringify(FBDATA), save = FB.save.serialize();
+    const rng = FB.getRngState(), uid = FB.getUidCounter(), holder = E.incumbent(s, rid);
+    if (!holder) throw new Error('Missing papal incumbent');
+    let error = null, nested = 'unreached', reads = 0;
+    try {
+      Object.defineProperty(bookmark, 'religiousHeads', {enumerable:true, configurable:true, get:function () {
+        nested = E.incumbent(s, rid);
+        throw new Error('opening-head-sentinel');
+      }});
+      try { E.incumbent(s, rid); } catch (e) { error = e.message; }
+    } finally { Object.defineProperty(bookmark, 'religiousHeads', descriptor); }
+    const recovered = E.incumbent(s, rid);
+    try {
+      Object.defineProperty(bookmark, 'religiousHeads', {enumerable:true, configurable:true, get:function () {
+        reads++; return descriptor.value;
+      }});
+      FB.religiousOffices(s);
+      FB.religiousOffices(s);
+    } finally { Object.defineProperty(bookmark, 'religiousHeads', descriptor); }
+    const officeId = E.row(s, rid).officeId, canonical = s.religiousHeads[officeId];
+    let absent;
+    try { s.religiousHeads[officeId] = null; absent = E.incumbent(s, rid); }
+    finally { s.religiousHeads[officeId] = canonical; }
+    return {error:error, nested:nested, recovered:recovered && recovered.id, holder:holder.id, reads:reads,
+      absent:absent, final:E.incumbent(s, rid).id,
+      pure:before === JSON.stringify(s) && data === JSON.stringify(FBDATA) && save === FB.save.serialize() &&
+        rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result.error).toBe('opening-head-sentinel');
+  expect(result.nested).toBe(null);
+  expect(result.recovered).toBe(result.holder);
+  expect(result.reads).toBe(2);
+  expect(result.absent).toBe(null);
+  expect(result.final).toBe(result.holder);
+  expect(result.pure).toBe(true);
+});
+
 for (const crazygames of [false, true]) {
   test('papal reads validate once with live canonical claimants and guard cleanup in ' + (crazygames ? 'CrazyGames' : 'standard'), async function ({ page }, info) {
     const results = [];

@@ -33,16 +33,25 @@ window.FB = window.FB || {};
     c.stop = function (result) { c.stopped = true; c.result = result; };
     // The list is stable for this pass, even if a callback registers future work.
     const active = phases.slice();
-    for (let i = 0; i < active.length; i++) {
-      const phase = active[i];
-      if (phase.mode !== 'both' && phase.mode !== (c.game.observe ? 'observe' : 'play')) continue;
-      if (phase.cadence !== 'daily' && !c.seasonBoundary) continue;
-      if (phase.cadence === 'newYear' && !c.newYear) continue;
-      if (phase.condition && !phase.condition(s, p, c)) continue;
-      phase.run(s, p, c);
-      if (c.stopped) return c.result;
-    }
-    return c.result;
+    /* One simulated day is synchronous: no mod, bookmark or catalogue edit
+       can interleave with it. FB.dayRead names that pass, so a definition
+       reader which fully checked its catalogue inputs during this day may
+       trust them until the day ends and compare only saved state. Outside a
+       day every reader keeps its complete validation. */
+    const outerRead = FB.dayRead;
+    FB.dayRead = outerRead || {};
+    try {
+      for (let i = 0; i < active.length; i++) {
+        const phase = active[i];
+        if (phase.mode !== 'both' && phase.mode !== (c.game.observe ? 'observe' : 'play')) continue;
+        if (phase.cadence !== 'daily' && !c.seasonBoundary) continue;
+        if (phase.cadence === 'newYear' && !c.newYear) continue;
+        if (phase.condition && !phase.condition(s, p, c)) continue;
+        phase.run(s, p, c);
+        if (c.stopped) return c.result;
+      }
+      return c.result;
+    } finally { FB.dayRead = outerRead; }
   };
 
   function add(id, order, cadence, mode, condition, run) {

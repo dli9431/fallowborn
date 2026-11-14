@@ -123,20 +123,25 @@ window.FB = window.FB || {};
     }
     if (!base || !base.revisions) return resolveBookmarkRevision(base, revision);
     var entries = resolvedWorlds.get(base), catalogue = base.revisions;
-    var entry = entries && entries.get(revision);
+    var entry = entries && entries.get(revision), day = FB.dayRead;
+    // A world compared during this simulated day stays resolved until it ends.
+    if (entry && day && entry.day === day && entry.catalogue === catalogue) return entry.world;
     if (entry && entry.catalogue === catalogue && validRevisionCatalogue(catalogue, entry.selected) &&
         sameResolutionFields(entry.base, base) &&
         sameResolutionFields(entry.baseline, catalogue.baseline) &&
         sameResolutionFields(entry.layer, catalogue[entry.selected]) &&
         (entry.openingId === null || ownKey(entry.world.openingRevisions, entry.openingId) &&
-          entry.world.openingRevisions[entry.openingId] === entry.world.opening)) return entry.world;
+          entry.world.openingRevisions[entry.openingId] === entry.world.opening)) {
+      entry.day = day || null;
+      return entry.world;
+    }
     var world = resolveBookmarkRevision(base, revision), selected = world.revision;
     var opening = ownKey(catalogue[selected], 'opening') ? catalogue[selected].opening
       : ownKey(catalogue.baseline, 'opening') ? catalogue.baseline.opening : base.opening;
     if (!entries) { entries = new Map(); resolvedWorlds.set(base, entries); }
     entries.set(revision, {selected:selected, catalogue:catalogue, base:resolutionFields(base),
       baseline:resolutionFields(catalogue.baseline), layer:resolutionFields(catalogue[selected]),
-      openingId:typeof opening === 'string' ? opening : null, world:world});
+      openingId:typeof opening === 'string' ? opening : null, day:day || null, world:world});
     return world;
   }
   FB.bookmark = function (id, revision) {
@@ -188,12 +193,24 @@ window.FB = window.FB || {};
 
   /* Definitions follow the campaign even while another bookmark is active.
      An explicit table replaces the legacy catalogue, including an empty table. */
-  FB.localInstitutionDefinitions = function (state) {
+  var nativeCampaignBookmark = FB.campaignBookmark, nativeBookmark = FB.bookmark;
+  var nativeLocalInstitutionDefinitions = FB.localInstitutionDefinitions = function (state) {
     state = state || FB.state;
     var definition = state && state.start && state.start.id
       ? FB.campaignBookmark(state) : FB.activeBookmark;
     return definition && definition.localInstitutions !== undefined
       ? definition.localInstitutions : FBDATA.localInstitutions || {};
+  };
+
+  FB.localInstitutionOfficeInputs = function (state) {
+    if (state && state.start && state.start.id && FB.campaignBookmark === nativeCampaignBookmark && FB.bookmark === nativeBookmark &&
+        FB.localInstitutionDefinitions === nativeLocalInstitutionDefinitions) {
+      var definition = FB.campaignBookmark(state);
+      return {local:definition && definition.localInstitutions !== undefined
+        ? definition.localInstitutions : FBDATA.localInstitutions || {},bookmark:definition};
+    }
+    var local = FB.localInstitutionDefinitions(state);
+    return {local:local,bookmark:state ? FB.campaignBookmark(state) : FB.activeBookmark};
   };
 
   FB.bookmarks = function (includeHidden) {
@@ -1844,7 +1861,7 @@ window.FB = window.FB || {};
   function withValidationCatalogues(work) {
     var previous = validationCatalogues;
     if (!previous || previous.data !== FBDATA)
-      validationCatalogues = {data:FBDATA,faults:Object.create(null)};
+      validationCatalogues = {data:FBDATA,faults:Object.create(null),siteFaults:new WeakMap()};
     try { return work(); }
     finally { validationCatalogues = previous; }
   }
@@ -1853,6 +1870,27 @@ window.FB = window.FB || {};
     if (batch && ownKey(batch.faults,key)) return batch.faults[key];
     var faults = FB.loadTiming ? FB.loadTiming.measure('Validate shared catalogues',work) : work();
     if (batch) batch.faults[key] = faults;
+    return faults;
+  }
+
+  // Physical coordinates belong to the shared candidate table. County
+  // presentations and their world-specific diagnostics are still checked below.
+  function physicalSiteFaults(siteTable) {
+    var batch = validationCatalogues && validationCatalogues.data === FBDATA ? validationCatalogues : null;
+    var faults = batch && batch.siteFaults.get(siteTable);
+    if (faults) return faults;
+    faults = [];
+    var siteSlug = /^[a-z0-9]+(_[a-z0-9]+)*$/;
+    for (var siteId in siteTable) {
+      if (!Object.prototype.hasOwnProperty.call(siteTable, siteId)) continue;
+      if (!siteSlug.test(siteId)) faults.push('invalid settlement site id ' + siteId + '.');
+      var siteRec = siteTable[siteId] || {};
+      if (!isFinite(siteRec.x) || siteRec.x < -180 || siteRec.x > 180 ||
+          !isFinite(siteRec.y) || siteRec.y < -90 || siteRec.y > 90) {
+        faults.push('settlement site ' + siteId + ' has invalid coordinates.');
+      }
+    }
+    if (batch) batch.siteFaults.set(siteTable,faults);
     return faults;
   }
 
@@ -2304,15 +2342,7 @@ window.FB = window.FB || {};
           ' must be an object keyed by site id.');
         siteTable = null;
       } else {
-        for (var siteId in siteTable) {
-          if (!Object.prototype.hasOwnProperty.call(siteTable, siteId)) continue;
-          if (!siteSlug.test(siteId)) fault('invalid settlement site id ' + siteId + '.');
-          var siteRec = siteTable[siteId] || {};
-          if (!isFinite(siteRec.x) || siteRec.x < -180 || siteRec.x > 180 ||
-              !isFinite(siteRec.y) || siteRec.y < -90 || siteRec.y > 90) {
-            fault('settlement site ' + siteId + ' has invalid coordinates.');
-          }
-        }
+        physicalSiteFaults(siteTable).forEach(fault);
       }
     }
     var supportedKinds = { village:1, town:1, city:1 };

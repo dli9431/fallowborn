@@ -116,6 +116,7 @@
     if (errors.length) out.sites = [];
     return out;
   };
+  P.compile = function (bm) { return FB.compileProduction(bm); };
   var cached;
   function plan(s) {
     var bm = FB.campaignBookmark(s), stamp = FB.mods.sig();

@@ -220,6 +220,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivo Reed",
             "culture": "frankish",
             "born": 868,

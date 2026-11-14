@@ -56,6 +56,8 @@
     var row = saved(s,from);
     s.authority.governments[to] = row;
     delete s.authority.governments[from];
+    // The row answers under a new realm id; drop every per-realm reader cache.
+    G.invalidate();
     row.recognition = {};
     delete row.lastAccession;
     rows(s).forEach(function (office) {

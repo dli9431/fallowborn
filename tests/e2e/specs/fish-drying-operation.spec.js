@@ -2,6 +2,7 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
@@ -95,13 +96,15 @@ test('real player work produces one conserved lot and allocation grants 0.03 onl
   await boot(page,info,'cool');
   const r=await page.evaluate(function(){
     const s=FB.state,S=FB.buildingSeasons,P=FB.production,made=FISH.finish(),before=FISH.effect();
+    const snapshot=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
     const q=S.quote(s,{operation:'allocate',assignmentId:'drying_window',actor:FISH.actor(),lotId:made.lot.id});
+    const reviewPure=snapshot===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
     const allocated=S.commit(s,q),again=S.commit(s,q),effect=FISH.effect(),sold=FB.productionEconomy.aiQuote(s,'provisions_sale',1,'sell').allowed;
     P.validate(s);S.validate(s);
-    return {direct:made.direct,worked:made.worked,finished:made.finished,before:before,allocated:allocated,again:again,effect:effect,sold:sold,
+    return {reviewAllowed:q.allowed,reviewPure:reviewPure,direct:made.direct,worked:made.worked,finished:made.finished,before:before,allocated:allocated,again:again,effect:effect,sold:sold,
       raw:s.production.lots.find(function(l){return l.origin.kind==='producer';}).remaining,output:made.lot.quantity,remaining:s.production.lots.find(function(l){return l.id===made.lot.id;}).remaining};
   });
-  expect(r).toEqual({direct:false,worked:true,finished:true,before:0,allocated:true,again:false,effect:0.03,sold:false,raw:0,output:1,remaining:0});
+  expect(r).toEqual({reviewAllowed:true,reviewPure:true,direct:false,worked:true,finished:true,before:0,allocated:true,again:false,effect:0.03,sold:false,raw:0,output:1,remaining:0});
 });
 test('local preserved-fish allocation remains useful when the declared buyer cannot pay',async function({page},info){
   await boot(page,info,'cool');
@@ -206,7 +209,10 @@ test('player funding and interrupted assets reject fresh or stale paid work atom
   const r=await page.evaluate(function(){
     const s=FB.state,P=FB.production;FISH.catch();s.turn=91;s.date.day=2;FISH.open();const q=P.aiQuote(s,'drying_plant','reserve',{recipeId:'dry_fish',disposition:'store'});
     const base=JSON.stringify(s),a=FISH.site().site;
-    const changes=[function(t){t.player.gold=0;},function(t){t.buildings[a.countyId][0].ruined=true;},function(t){t.chars[t.player.charId].imprisoned=true;},function(t){t.date.season=1;}];
+    const changes=[function(t){t.player.gold=0;},function(t){t.buildings[a.countyId][0].ruined=true;},function(t){t.chars[t.player.charId].imprisoned=true;},function(t){
+      // Advance the dated clock together so the original cool-season term stays valid history.
+      t.turn+=90-t.date.day+1;t.date.season=1;t.date.day=1;
+    }];
     return changes.map(function(change){const t=JSON.parse(base);change(t);const before=JSON.stringify(t);return !P.commit(t,q)&&before===JSON.stringify(t);});
   });
   expect(r).toEqual([true,true,true,true]);
@@ -228,12 +234,23 @@ test('matching spent-stock saves restore without reseeding, renewed terms or new
   await boot(page,info,'cool');
   const r=await page.evaluate(function(){
     const s=FB.state,S=FB.buildingSeasons,P=FB.production,made=FISH.finish();S.commit(s,S.quote(s,{operation:'allocate',assignmentId:'drying_window',actor:FISH.actor(),lotId:made.lot.id}));
-    const before=JSON.stringify([s.production,s.buildingSeasons,s.realmTech,s.buildings]),rng=FB.getRngState(),uid=FB.getUidCounter();
+    function snapshot(t){
+      const copy=JSON.parse(JSON.stringify([t.production,t.buildingSeasons,t.realmTech,t.buildings]));
+      // The codec stores uncompleted exposures and appends completed knowledge on expansion.
+      // Exposure is a set; preserve every id while leaving all other array order exact.
+      Object.keys(copy[2]).forEach(function(id){copy[2][id].exposed.sort();});
+      return copy;
+    }
+    const before=snapshot(s),rng=FB.getRngState(),uid=FB.getUidCounter();
     FB.save.restore(JSON.parse(FB.save.serialize()));P.initialize(FB.state);FB.productionEconomy.initialize(FB.state);
-    return {same:before===JSON.stringify([FB.state.production,FB.state.buildingSeasons,FB.state.realmTech,FB.state.buildings]),
+    const first=snapshot(FB.state);
+    FB.save.restore(JSON.parse(FB.save.serialize()));P.initialize(FB.state);FB.productionEconomy.initialize(FB.state);
+    return {before:before,first:first,second:snapshot(FB.state),
       harvest:FB.productionEconomy.harvest(FB.state),rng:(rng>>>0)===(FB.getRngState()>>>0),uid:uid===FB.getUidCounter()};
   });
-  expect(r).toEqual({same:true,harvest:false,rng:true,uid:true});
+  expect(r.first).toEqual(r.before);
+  expect(r.second).toEqual(r.before);
+  expect({harvest:r.harvest,rng:r.rng,uid:r.uid}).toEqual({harvest:false,rng:true,uid:true});
 });
 test('strict saves reject invented stock, lost provenance and forged benefit without mutating the candidate',async function({page},info){
   await boot(page,info,'cool');

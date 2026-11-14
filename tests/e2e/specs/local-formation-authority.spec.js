@@ -1,13 +1,17 @@
 'use strict';
+const {installRestoreFacts}=require('../support/game/restore-facts');
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/local-formation-harbor.json'),
   upland:require('../fixtures/authoring/local-formation-upland.json')};
-dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/political_institutions.js',
+test.describe.configure({mode:'parallel'});
+
+dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/mobile_confederations.js','data/political_institutions.js',
   'js/story_expedition_preparation.js','js/home_authority.js','js/authority.js','js/politics.js',
   'js/governments.js','js/government_continuity.js','js/government_selection.js','js/government_civic.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/mobile_guard.js','js/mobile_camps.js',
@@ -19,12 +23,14 @@ async function begin(page,info,label,legacy) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   const name=(legacy ? 'mobile-preparation-' : 'local-formation-')+label+'.json';
+  await expectModAdmission(page,require('../fixtures/authoring/'+name));
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring',name));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   const prefix=label==='harbor' ? 'harbor' : 'dune';
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
   await page.evaluate(function (label) {
     window.formationCase={id:label+'_preparation',rid:label==='harbor' ? 'harbor_following' : 'dune_coalition',
       origin:label==='harbor' ? 'harbor_quay' : 'dune_well',remote:label==='harbor' ? 'harbor_ridge' : 'dune_pass',
@@ -111,16 +117,18 @@ for(const label of ['harbor','upland']) {
     await begin(page,info,label);
     const result=await page.evaluate(function(){
       const C=formationCase,P=FB.expeditionPreparation;
-      function facts(s){return JSON.stringify([C.record(s),s.player.gold,s.treasuryAccounting,s.realms[C.rid].treasury,
-        s.population,s.market,s.armies,s.authority,s.chars]);}
+      function facts(state){return restoreFacts(state,function (s) {
+        return [C.record(s),s.player.gold,s.treasuryAccounting,s.realms[C.rid].treasury,
+          s.population,s.market,s.armies,s.authority,s.chars];
+      });}
       function restore(){const before=facts(FB.state),save=FB.save.serialize();FB.save.restore(JSON.parse(save));
-        FB.save.restore(JSON.parse(save));return before===facts(FB.state);}
+        FB.save.restore(JSON.parse(save));return assertRestoreFacts(facts(FB.state),before);}
       const pending=restore();FB.state.player.gold=500;
       const gift=P.commit(FB.state,P.review(FB.state,C.id,'contribute',FB.state.player.charId)),contributed=restore(),
         okay=C.fund(FB.state) && C.authorize(FB.state) && C.form(FB.state),formed=okay && restore(),
         before=facts(FB.state),again=!C.form(FB.state);
       FB.mobile.initialize(FB.state,FB.campaignBookmark(FB.state).realms);FB.stories.start(FB.state);
-      return {pending:pending,gift:gift,contributed:contributed,formed:formed,again:again,noReplay:before===facts(FB.state),valid:FB.mobile.validate(FB.state)};
+      return {pending:pending,gift:gift,contributed:contributed,formed:formed,again:again,noReplay:assertRestoreFacts(facts(FB.state),before),valid:FB.mobile.validate(FB.state)};
     });
     expect(result).toEqual({pending:true,gift:true,contributed:true,formed:true,again:true,noReplay:true,valid:true});
   });
@@ -130,16 +138,53 @@ for(const label of ['harbor','upland']) {
     const result=await page.evaluate(function(){
       const C=formationCase,P=FB.expeditionPreparation,story=FB.stories.get(C.id);
       return ['wait','refuse','expired','interrupted'].map(function(action){
-        const s=JSON.parse(JSON.stringify(FB.state)),t=C.record(s),before=JSON.stringify([s.population,s.market,s.realms,s.player.gold]);
-        if(action==='wait') {C.authorize(s);P.commit(s,P.review(s,C.id,'wait',C.leader(s)));}
-        else if(action==='refuse') P.commit(s,P.review(s,C.id,'refuse',t.provider.characterId));
-        else {if(action==='expired') s.turn=t.endTurn;else s.chars[t.provider.characterId].dead=true;story.day(s,t);}
+        const s=JSON.parse(JSON.stringify(FB.state)),t=C.record(s),provider=JSON.stringify(t.provider),
+          reserves=JSON.stringify(t.reserves),rng=FB.getRngState(),uid=FB.getUidCounter();
+        function resources(){return JSON.stringify([s.population,s.market,s.player.gold,s.treasuryAccounting,
+          Object.keys(s.realms).map(function(id){return [id,s.realms[id].treasury];})]);}
+        const initialResources=resources();
+        if(action==='expired') s.turn=t.endTurn;
+        if(action==='interrupted') {
+          const c=s.chars[t.provider.characterId];c.dead=true;
+          // Stage the court death boundary without advancing succession or the daily loop.
+          if(c.royalLine) FB.courtMemberDied(s,s.realms[c.royalLine.realmId].succession.members[c.royalLine.memberId],c);
+        }
+        const before=JSON.stringify([s.population,s.market,s.realms,s.player.gold,s.treasuryAccounting]),
+          revision=t.revision;
+        let committed=true;
+        if(action==='wait') committed=C.authorize(s) && P.commit(s,P.review(s,C.id,'wait',C.leader(s)));
+        else if(action==='refuse') committed=P.commit(s,P.review(s,C.id,'refuse',t.provider.characterId));
+        else story.day(s,t);
         const appropriate=action==='wait' ? t.status==='preparing' && !C.form(s) : t.status==='closed' &&
-          t.reason===(action==='refuse' ? 'refused' : action);
-        return appropriate && !FB.mobile.row(s,C.rid) && before===JSON.stringify([s.population,s.market,s.realms,s.player.gold]) && story.validate(t,s)===undefined;
+          t.reason===(action==='refuse' ? 'refused' : action) && t.endedTurn===s.turn &&
+          t.revision===revision+1 && t.reserves.length===0 && JSON.stringify(t.released)===reserves;
+        const receipt=JSON.stringify(s),noForm=!C.form(s) && !C.form(s);
+        story.day(s,t);
+        function rejects(change){const v=JSON.parse(JSON.stringify(s)),r=C.record(v);change(v,r);
+          const bytes=JSON.stringify(v);
+          try{story.validate(r,v);return false;}catch(error){return bytes===JSON.stringify(v);}}
+        const result={action:action,committed:committed,appropriate:appropriate,
+          original:provider===JSON.stringify(t.provider),zero:FB.treasuryAvailable(s,C.rid)===0,
+          noHost:!FB.mobile.row(s,C.rid) && !FB.mobile.host(s,C.rid) && !s.armies.some(function(a){return a.realm===C.rid;}),
+          conserved:initialResources===resources() && before===JSON.stringify([s.population,s.market,s.realms,s.player.gold,s.treasuryAccounting]),
+          noReplay:noForm && receipt===JSON.stringify(s),valid:story.validate(t,s)===undefined,
+          malformed:[rejects(function(v,r){r.endTurn++;}),rejects(function(v,r){r.endedTurn=v.turn+1;})],
+          deterministic:rng===FB.getRngState() && uid===FB.getUidCounter()};
+        if(action==='expired') result.earlyExpiry=rejects(function(v,r){r.endedTurn=r.endTurn-1;});
+        if(action==='interrupted' && t.provider.appointmentId===null) {
+          result.incoherentDeath=rejects(function(v,r){const c=v.chars[r.provider.characterId];
+            v.realms[c.royalLine.realmId].succession.members[c.royalLine.memberId].alive=true;});
+        }
+        return result;
       });
     });
-    expect(result).toEqual(Array(4).fill(true));
+    expect(result).toEqual(['wait','refuse','expired','interrupted'].map(function(action){
+      const expected={action:action,committed:true,appropriate:true,original:true,zero:true,noHost:true,
+        conserved:true,noReplay:true,valid:true,malformed:[true,true],deterministic:true};
+      if(action==='expired') expected.earlyExpiry=true;
+      if(action==='interrupted' && label==='harbor') expected.incoherentDeath=true;
+      return expected;
+    }));
   });
 
   test(label+' NPC policy shares the canonical consent review without contributing private or public money',async function({page},info){

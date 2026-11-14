@@ -81,27 +81,39 @@ async function startParityGame(page, testInfo, journey) {
   await openGame(page, testInfo);
   let code = journey.code;
   if (journey.declaredOpening) code = await page.evaluate(function (input) {
-    const scenario = FBDATA.startScenarios.find(function (s) {return s.id === input.scenario;});
+    let scenario = FBDATA.startScenarios.find(function (s) {return s.id === input.scenario;});
     if (!scenario) throw new Error('Missing authored parity start ' + input.scenario);
     scenario.hidden = false;
     const current = FB.bookmark(input.bookmark);
     const candidates = [current].concat(FB.bookmarkRevisions(input.bookmark));
     const bookmark = candidates.find(function (b) {
+      const identity = FB.startIdentity ? FB.startIdentity(scenario,b) : scenario;
       return (!b.starts || b.starts.indexOf(scenario.id) >= 0) &&
-        b.provinces.some(function (p) {return FB.startProvinceAllowed(scenario,b,p.id);});
+        b.provinces.some(function (p) {return FB.startProvinceAllowed(identity,b,p.id);});
     });
     if (!bookmark) throw new Error('No compatible revision for ' + scenario.id);
+    scenario = FB.startIdentity ? FB.startIdentity(scenario,bookmark) : scenario;
     FBDATA.bookmarks[input.bookmark].hidden = false;
     FBDATA.bookmarks[input.bookmark].revision = bookmark.revision;
-    const county = bookmark.provinces.find(function (p) {return FB.startProvinceAllowed(scenario,bookmark,p.id);});
-    const declared = FB.provinceCommunities(county).find(function (c) {
+    const allowed = bookmark.provinces.filter(function (p) {return FB.startProvinceAllowed(scenario,bookmark,p.id);});
+    const trackSet = FB.startTrackSet ? FB.startTrackSet(scenario,bookmark) : scenario;
+    const locations = trackSet.trackLocations || {};
+    const storyPlaces = Object.keys(locations).reduce(function (ids,id) {return ids.concat(locations[id]);},[]);
+    const county = allowed.find(function (p) {return storyPlaces.indexOf(p.id)>=0;}) || allowed[0];
+    if (!county) throw new Error('No declared birthplace for ' + scenario.id);
+    const declared = scenario.rulerRealmId || scenario.existingPerson || scenario.originalPrincipal
+      ? {culture:scenario.startCulture,religion:scenario.startReligion} : FB.provinceCommunities(county).find(function (c) {
       return c.culture === scenario.startCulture && c.religion === scenario.startReligion;
     });
     const family = scenario.familyPresets ? Object.keys(scenario.familyPresets)[0] : 'established';
-    const name = (scenario.characterName || 'Parity').replace(/ /g,'_');
-    const code = 'PARITY-' + input.bookmark + '-' + scenario.id + '-' + county.id + '-m-' + name + '-' + family;
-    return code + (declared && (declared.culture !== county.culture || declared.religion !== county.religion)
-      ? '-0-' + declared.culture + '.' + declared.religion : '');
+    const name = (scenario.characterName || 'Parity').replace(/-/g,'').replace(/\s+/g,'_');
+    const slot = FB.startSettlementIndex ? FB.startSettlementIndex(scenario,bookmark) : 0;
+    if (slot<0) throw new Error('No declared home site for ' + scenario.id);
+    const code = 'PARITY-' + input.bookmark + '-' + scenario.id + '-' + county.id + '-' + (scenario.sex || 'm') + '-' + name;
+    if (declared && (declared.culture !== county.culture || declared.religion !== county.religion))
+      return code + '-' + family + '-' + slot + '-' + declared.culture + '.' + declared.religion;
+    if (slot>0) return code + '-' + family + '-' + slot;
+    return family==='standard' ? code : code + '-' + family;
   }, journey);
   await page.evaluate(function () { FB.startProgression.noteTier(3); });
   const fullStartButton = page.locator('#btn-choose-beginning');

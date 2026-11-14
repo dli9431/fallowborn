@@ -194,8 +194,8 @@
     if (s.production) FB.production.validate(s);
     S.validate(s);
     // Ended terms and settled debits do not count; only live terms, debits and their provenance do.
-    var live=r && FB.production.liveCounts(s);
-    if (r && (r.revision>=1000000 || live.terms>=512 || live.debits>=LIMIT)) return q;
+    var liveCounts=r && FB.production.liveCounts(s);
+    if (r && (r.revision>=1000000 || liveCounts.terms>=512 || liveCounts.debits>=LIMIT)) return q;
     var old=term(s,a),period=Math.floor(s.turn/a.profile.periodDays),until=Math.min((period+1)*a.profile.periodDays,s.turn+a.profile.maxDays,s.turn+91-s.date.day);
     q.reason='period';
     if (request.operation==='open') {

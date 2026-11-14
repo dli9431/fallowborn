@@ -3,6 +3,8 @@
 (function () {
   'use strict';
   var M=FB.mobile, S=FB.governmentSelection, partyIndex=new WeakMap();
+  var guardSome=Array.prototype.some, guardArray=Array.isArray;
+  var nativeGuardSome=/\[native code\]/.test(Function.prototype.toString.call(guardSome));
   function copy(v) {return JSON.parse(JSON.stringify(v));}
   function own(v,k) {return !!v && Object.prototype.hasOwnProperty.call(v,k);}
   function keys(v,list) {return !!v && typeof v==='object' && !Array.isArray(v) &&
@@ -49,7 +51,18 @@
     var g=record(s,rid);return !!g && g.characterIds.indexOf(cid)>=0;
   };
   FB.characterGuarded=function (s,cid) {
-    return entries(s).some(function (v) {return v.guard.status!=='released' && v.guard.characterIds.indexOf(cid)>=0;});
+    var rows=entries(s), some=rows.some;
+    if (!nativeGuardSome || !guardArray(rows) || some!==guardSome) {
+      return Function.prototype.call.call(some,rows,function (v) {return v.guard.status!=='released' && v.guard.characterIds.indexOf(cid)>=0;});
+    }
+    // Keep some's length, holes, live reads and first-match order without
+    // constructing a predicate for each eligibility read, including empty lists.
+    for (var i=0, length=rows.length; i<length; i++) {
+      if (!(i in rows)) continue;
+      var v = rows[i];
+      if (v.guard.status!=='released' && v.guard.characterIds.indexOf(cid)>=0) return true;
+    }
+    return false;
   };
   FB.guardedPartyResidence=function (s,cid) {
     var entry=entries(s).filter(function (v) {return v.guard.characterIds.indexOf(cid)>=0;})[0];

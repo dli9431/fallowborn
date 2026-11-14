@@ -193,7 +193,7 @@ test('player and AI callers commit identical deterministic transactions without 
 for(const width of [390,1280])test('relay review retains list, scroll and focus at width '+width,async function({page},info){
   await page.setViewportSize({width:width,height:820});await boot(page,info,'road');await consent(page);await arrive(page,'road');
   await page.evaluate(function(){FB.ui.showProduction('resource_quay',0,function(){FB.ui.showSettlement('resource_quay',0);});});
-  const collect=page.getByRole('button',{name:'Collect one provision unit',exact:true});
+  const collect=page.getByRole('button',{name:/^Collect one provision unit\b/});
   await expect(collect).toBeEnabled();await collect.click();
   await expect(page.getByText('Review relay provisions',{exact:true})).toBeVisible();
   await page.keyboard.press('Escape');await expect(collect).toBeFocused();

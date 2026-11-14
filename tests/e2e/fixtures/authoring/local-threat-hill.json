@@ -194,13 +194,13 @@
       },
       "firstDate": {
         "year": 900,
-        "season": 0,
-        "day": 1
+        "season": 3,
+        "day": 87
       },
       "lastDate": {
-        "year": 900,
+        "year": 901,
         "season": 0,
-        "day": 8
+        "day": 4
       },
       "ai": {
         "policy": "local_pressure",

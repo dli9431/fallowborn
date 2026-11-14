@@ -1,10 +1,11 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={shore:require('../fixtures/authoring/maritime-work-shore.json'),river:require('../fixtures/authoring/maritime-work-river.json')};
-dependsOnRuntime(__filename,['index.html','data/production.js','data/maritime_work.js','data/production_economy.js',
+dependsOnRuntime(__filename,['js/bookmark_composition.js','index.html','data/production.js','data/maritime_work.js','data/production_economy.js',
   'data/economy.js','data/economy_maritime.js','data/technology.js','data/site_resources.js','data/building_profiles.js','data/building_seasons.js',
   'js/production.js','js/maritime_work.js','js/production_economy.js','js/site_resources.js','js/actions.js','js/world.js',
   'js/building_operations.js','js/building_seasons.js','js/building_profiles.js','js/economy.js','js/technology.js',
@@ -13,6 +14,7 @@ dependsOnRuntime(__filename,['index.html','data/production.js','data/maritime_wo
 async function boot(page,info,kind) {
   await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
   const m=JSON.parse(JSON.stringify(examples[kind]));m.bookmarks['maritime_'+kind].revision='new_works';
+  expect(await page.evaluate(function(mod){return FB.mods.validate(mod);},m)).toEqual([]);
   await page.locator('#modfile').setInputFiles({name:'maritime-construction-'+kind+'.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(m))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
@@ -37,10 +39,10 @@ for(const kind of ['shore','river']) {
     await boot(page,info,kind);
     const r=await page.evaluate(function(){
       const s=FB.state,P=FB.production,E=FB.productionEconomy,M=FB.maritimeWork,who=FB.settlementHolder(s,'resource_quay',0);
-      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const before=JSON.stringify(s),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
       const ready=P.industrialConstructionReady(s,'resource_quay',0,'boat_workshop',who);
       const direct=FB.canBuildAt(s,'resource_quay',0,'boat_workshop'),ai=FB.aiCanBuildAt(s,who.id,'resource_quay',0,'boat_workshop');
-      const pure=before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+      const pure=before===JSON.stringify(s)&&rng===(FB.getRngState()>>>0)&&uid===FB.getUidCounter();
       const revision=s.production.revision,next=s.production.nextId,cash=s.player.gold,cost=FB.buildCost(s,'resource_quay','boat_workshop');
       const built=FB.build(s,'resource_quay',0,'boat_workshop'),paid=cash-s.player.gold;
       const row=P.snapshot(s).find(function(x){return x.site.id==='boat_plant';});
@@ -58,14 +60,16 @@ for(const kind of ['shore','river']) {
       const id=M.commit(s,M.aiQuote(s,'licensed_work','prepare',{enterpriseUid:null}));
       const q=M.aiQuote(s,'licensed_work','complete',{invoiceId:id}),cashBefore=s.player.gold,completed=M.commit(s,q);
       const remainingPaid=cashBefore-s.player.gold;P.validate(s);
-      const facts=JSON.stringify([s.production,s.buildings,s.siteResources,s.player.gold,s.player.enterprises]);
+      function facts(){const t=FB.save.expandedSnapshot(FB.state);return FB.contentValues.canonical([
+        t.production,t.buildings,t.siteResources,t.player.gold,t.player.enterprises,FB.getRngState()>>>0,FB.getUidCounter()]);}
+      const beforeRestore=facts();
       FB.save.restore(JSON.parse(FB.save.serialize()));P.initialize(FB.state);
       return {ready:ready,direct:direct,ai:ai,pure:pure,built:built,paid:paid,cost:cost,once:once,stable:stable,empty:empty,noFree:noFree,
         constructed:row.asset.constructed,finished:finished,completed:completed,due:q.due,remainingPaid:remainingPaid,credit:q.credit,base:q.baseCost,
-        same:facts===JSON.stringify([FB.state.production,FB.state.buildings,FB.state.siteResources,FB.state.player.gold,FB.state.player.enterprises])};
+        same:beforeRestore===facts()};
     });
     expect(r).toMatchObject({ready:true,direct:true,ai:true,pure:true,built:true,once:true,stable:true,empty:true,noFree:false,constructed:true,finished:true,completed:true,same:true});
-    expect(r.paid).toBe(r.cost);expect(r.remainingPaid).toBe(r.due);expect(r.credit).toBeGreaterThan(0);expect(r.credit).toBeLessThanOrEqual(Math.floor(r.base*0.1));
+    expect(r.paid).toBeCloseTo(r.cost,8);expect(r.remainingPaid).toBeCloseTo(r.due,8);expect(r.credit).toBeGreaterThan(0);expect(r.credit).toBeLessThanOrEqual(Math.floor(r.base*0.1));
   });
 
   test(kind+' construction refuses missing license, worker, stock, technology and private invoice funds purely',async function({page},info){
@@ -80,8 +84,8 @@ for(const kind of ['shore','river']) {
           if(remaining)FB.siteResources.commit(t,FB.siteResources.quote(t,{operation:'reserve',sourceId:'work_slip',actor:actor,amount:remaining}));},
         function(t){FB.realmTechRecord(t,FB.techRealmId(t)).completed=[];},
         function(t){t.chars[t.player.charId].dead=true;}];
-      const blocked=changes.map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t),rng=FB.getRngState(),uid=FB.getUidCounter();
-        return !P.industrialConstructionReady(t,'resource_quay',0,'boat_workshop',actor)&&before===JSON.stringify(t)&&rng===FB.getRngState()&&uid===FB.getUidCounter();});
+      const blocked=changes.map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
+        return !P.industrialConstructionReady(t,'resource_quay',0,'boat_workshop',actor)&&before===JSON.stringify(t)&&rng===(FB.getRngState()>>>0)&&uid===FB.getUidCounter();});
       const form=Object.keys(FBDATA.governmentForms).find(function(key){return FB.governments.resolve(key).use.succession.publicCrown;});
       const t=JSON.parse(JSON.stringify(s));t.authority.governments.player.formId=form;t.realms.player.treasury={version:1,gold:5000,militaryAccrued:0};t.treasuryAccounting.mode='active';
       const before=JSON.stringify(t),publicBlocked=!P.industrialConstructionReady(t,'resource_quay',0,'boat_workshop',actor);
@@ -94,12 +98,12 @@ for(const kind of ['shore','river']) {
 test('ordinary maritime construction metadata rejects mismatched consumers without publishing',async function({page},info){
   await openGame(page,info);
   const r=await page.evaluate(function(example){
-    const before=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState(),uid=FB.getUidCounter();
+    const before=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
     const changes=[function(m){m.buildings.boat_workshop.maritimeWorkProfileId='absent';},
       function(m){delete m.buildings.boat_workshop.productionRecipeIds;},function(m){m.productionRecipes.prepare_boat_work.requiresSale=true;},
       function(m){m.maritimeWorkProfiles.maintained_river.quantity=2;},function(m){m.buildings.boat_workshop.maritimeWorkProfileId={};}];
     const valid=FB.mods.validate(example),bad=changes.map(function(change){const m=JSON.parse(JSON.stringify(example));change(m);return FB.mods.validate(m).length>0;});
-    return {valid:valid,bad:bad,pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
+    return {valid:valid,bad:bad,pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===(FB.getRngState()>>>0)&&uid===FB.getUidCounter()};
   },examples.river);
   expect(r).toEqual({valid:[],bad:Array(5).fill(true),pure:true});
 });

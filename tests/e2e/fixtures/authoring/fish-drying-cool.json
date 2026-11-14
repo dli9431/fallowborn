@@ -189,6 +189,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Ivar Holm",
             "culture": "norse",
             "born": 818,
@@ -205,6 +206,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Freya Vale",
             "culture": "norse",
             "born": 815,

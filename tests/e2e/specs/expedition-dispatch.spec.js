@@ -2,8 +2,9 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-dispatch-harbor.json'),
   dune:require('../fixtures/authoring/expedition-dispatch-dune.json')};
@@ -17,13 +18,14 @@ dependsOnRuntime(__filename,[
 
 async function start(page,info,prefix,input) {
   await openGame(page,info);
+  if(input)expect(await page.evaluate(function(mod){return FB.mods.validate(mod);},input)).toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   if (input) await page.locator('#modfile').setInputFiles({name:'dispatch.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))});
   else await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/expedition-dispatch-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await page.evaluate(function () {
     const s=FB.state,d=FB.campaignBookmark(s).realms.find(function (r) {return r.mobile;});
     window.dispatchCase={rid:FB.startRealmId(s,d.id),definition:d,
@@ -177,7 +179,10 @@ test('a wait consumes no resources, expiry closes without rewards and war dispat
     const early=E.review(s,C.rid,'hold'),bytes=JSON.stringify(s),refused=!E.commit(s,early),pure=bytes===JSON.stringify(s);
     s.turn=10;const food=r.food,money=FB.treasuryAvailable(s,C.rid),people=M.total(s,C.rid),wait=E.commit(s,E.review(s,C.rid,'hold'));
     const conserved=food===r.food && money===FB.treasuryAvailable(s,C.rid) && people===M.total(s,C.rid);
+    // Stage an actual adjacent frontier; declaring war is the behavior under test.
+    C.host(s,1).at='dune_flats';C.host(s,1).from='dune_flats';
     s.turn=30;const owners=JSON.stringify(s.owner),q=E.review(s,C.rid,'frontier_objective'),war=E.commit(s,q),repeat=!E.commit(s,q);
+    if(!war)throw new Error('Expected current frontier war: '+q.reason);
     const army=C.host(s,1),actual=FB.ordinaryWarById(s,army.warId);
     s.turn=240;E.reconcile(s);
     return {refused:refused,pure:pure,wait:wait,conserved:conserved,war:war,repeat:repeat,registered:!!actual,
@@ -209,7 +214,11 @@ test('exhausted resources suspend a ticket, player command withholds AI and exac
 
 test('single-host raw orders pause intent and matching legacy records upgrade only through a live commit',async function ({page},info) {
   const input=JSON.parse(JSON.stringify(examples.harbor)),t=input.bookmarks.harbor_world.realms.find(function (r) {return r.mobile;}).mobile;
-  delete t.columns;t.expeditionProgram.steps.forEach(function (a) {a.columnId=null;});
+  delete t.columns;
+  // Camp loading belongs to columns; this variation keeps single-host adapters.
+  t.expeditionProgram.steps=t.expeditionProgram.steps.filter(function(a){return a.adapter!=='supply' ||
+    ['load','unload'].indexOf(a.terms.action)<0;});
+  t.expeditionProgram.steps.forEach(function (a) {a.columnId=null;});
   await start(page,info,'harbor',input);
   const result=await page.evaluate(function () {
     const C=dispatchCase,s=FB.state,E=FB.expeditionPrograms,M=FB.mobile,r=M.row(s,C.rid),a=C.host(s);

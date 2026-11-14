@@ -14,6 +14,8 @@ Do not write long multi-year simulation tests. A 20-year 476 campaign test took 
 
 Continuous integration
 
+CI test and measurement jobs use Node.js 24. JavaScript actions use supported versions that declare the Node.js 24 runtime; changing setup-node's node-version alone does not update the action runtime.
+
 GitHub Actions runs all tests; nothing runs on the owner's machine unless the owner starts it. .github/workflows/tests.yml runs on every push to main, dev, and 476, on pull requests, and by hand: npm run check, npm run test:server, then the changed specs plus the boot and determinism canaries (the test:changed selection) across all four projects, sharded. A manual run can test any pushed branch or commit (target), choose mode=all or mode=specs with an exact specs list, a base commit, projects, shards, and a request_id that names the run. .github/workflows/nightly.yml runs from main every night and by hand: the full suite on 476 and dev, and season timing for every start on 476. .github/workflows/e2e.yml and season-timing.yml are the reusable jobs behind them. docs/TESTS.md, Continuous integration, describes the jobs and artifacts.
 
 Trigger and read runs with the GitHub CLI, for example: gh workflow run tests.yml --ref 476 -f mode=all; gh workflow run tests.yml --ref main -f target=476 -f mode=specs -f specs="specs/boot.spec.js"; gh workflow run nightly.yml -f suite=false -f timing_ref=476; gh run list --workflow tests.yml --branch 476 --limit 5; gh run view <run-id> for job results and the summary; gh run view <run-id> --log-failed for failing step logs; gh run download <run-id> -n report-tests -D ci-report for the merged HTML/JSON report.

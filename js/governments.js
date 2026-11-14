@@ -33,8 +33,8 @@ window.FB = window.FB || {};
   var defaults = { holders:'direct', territory:'fixed', succession:'dynastic', consent:'territorial', levy:'feudal_levy', revenue:'demesne_revenue',
     council:'royal_council', diplomacy:'territorial_diplomacy',
     ai:'realm_decisions', ladder:'inherited_ladder' };
-  var realmCache = new WeakMap();
-  G.invalidate = function () { realmCache = new WeakMap(); };
+  var realmCache = new WeakMap(), lastRealmState = null, lastRealmCache = null;
+  G.invalidate = function () { realmCache = new WeakMap(); lastRealmState = null; lastRealmCache = null; };
   G.contract = function (slot, methods) { contracts[slot] = methods.slice(); G.invalidate(); };
   G.interfaces = function () { return JSON.parse(JSON.stringify(contracts)); };
 
@@ -169,11 +169,13 @@ window.FB = window.FB || {};
     if (!state || !state.realms || !state.realms[rid] || !state.realms[rid].alive) return null;
     var stored = state.authority && state.authority.governments && state.authority.governments[rid];
     var id = stored && stored.formId || state.start && state.start.defaultGovernment || 'territorial';
-    var cache = realmCache.get(state);
+    // Consecutive reads nearly always name the same campaign; skip the map lookup for them.
+    var cache = lastRealmState === state ? lastRealmCache : realmCache.get(state);
     if (!cache || cache.turn !== state.turn || cache.forms !== FBDATA.governmentForms) {
       cache = { turn:state.turn, forms:FBDATA.governmentForms, realms:Object.create(null) };
       realmCache.set(state, cache);
     }
+    lastRealmState = state; lastRealmCache = cache;
     var row = cache.realms[rid], definition = FBDATA.governmentForms[id];
     if (!row || row.id !== id || row.definition !== definition) {
       var resolved = !G.problems(id).length ? resolvedForm(id) : null;

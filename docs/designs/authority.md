@@ -343,7 +343,7 @@ The [staged retention survey](../research/customary-history-retention.md) record
 per-kind counts, UTF-8 bytes, growth shares and focused regression evidence.
 
 At the season boundary, `authorityCompact` uses the shared ledger retention
-graph and `ledgerRetentionDays` window (default 3600 days). Old possession,
+transaction and `ledgerRetentionDays` window (default 3600 days). Old possession,
 dispute and abandonment observations without evidence fold into each right's
 optional `retiredHistory:{possession,disputed,abandoned}` exact nonnegative
 safe-integer counts. Entries at the cutoff may fold. Current-turn entries,
@@ -358,6 +358,10 @@ news. Existing local institution and government support rolling histories and
 tournament close-boundary pruning keep their existing policies.
 
 Compaction stages a detached authority root and validates it before adoption.
+History entries have no dependency edges, so the owner records ordered keep
+membership directly instead of allocating a graph node for every observation.
+Membership is decided on the original entries before copying; the shared stable
+split preserves retained order and the original exact summary addition order.
 Malformed totals reject on restore; legacy rights without totals remain valid
 and are not rewritten merely by loading. The save envelope, fingerprints and
 definition contracts are unchanged. New possession rights are live grants and

@@ -2,11 +2,12 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename,['index.html','data/bookmark_1241_operations.js','data/bookmark_1241.js',
+dependsOnRuntime(__filename,['js/bookmark_composition.js','index.html','data/bookmark_1241_operations.js','data/bookmark_1241.js',
   'data/bookmark_1241_core_starts.js','data/story_koten_1241.js',
   'data/bookmark_1241_scaffold_a.js','data/bookmark_1241_scaffold_b.js','data/bookmark_1241_scaffold_c.js',
   'data/bookmark_1241_scaffold_d.js','data/bookmark_1241_frederick.js','data/bookmark_1241_alexander.js',
@@ -128,33 +129,20 @@ test('the dated combined opening conserves both populations, exact forces, food 
 for (const revision of retained) {
   test(revision+' matching saves keep absent operations after the fresh catalogue advances',async function ({page},info) {
     await start(page,info,revision);
-    expect(await page.evaluate(function (ids) {
-      // Compare each part separately so a mismatch names what changed.
-      const material=function (s) {return {start:JSON.stringify(s.start),setup:JSON.stringify(s.bookmarkSetup),
-        authority:JSON.stringify(Object.assign({},s.authority,{schema:undefined})),armies:JSON.stringify(s.armies),
-        chars:JSON.stringify(s.chars),realms:JSON.stringify(s.realms)};};
-      const s=FB.state,before=material(s),copies={chars:JSON.parse(JSON.stringify(s.chars)),realms:JSON.parse(JSON.stringify(s.realms))};
-      // Name the first changed records and fields, including order-only changes.
-      const changed=function (was,now) {
-        return Object.keys(Object.assign({},was,now)).filter(function (id) {
-          return JSON.stringify(was[id])!==JSON.stringify(now[id]);
-        }).slice(0,5).map(function (id) {
-          const a=was[id] || {},b=now[id] || {};
-          const fields=Object.keys(Object.assign({},a,b)).filter(function (k) {return JSON.stringify(a[k])!==JSON.stringify(b[k]);});
-          return id+(was[id] ? '' : ' added')+(now[id] ? '' : ' removed')+': '+(fields.length ? fields.map(function (k) {
-            return k+' '+String(JSON.stringify(a[k])).slice(0,80)+' -> '+String(JSON.stringify(b[k])).slice(0,80);
-          }).join('; ') : 'key order '+Object.keys(a).join(',').slice(0,160)+' -> '+Object.keys(b).join(',').slice(0,160));
-        });
-      };
+    const result=await page.evaluate(function (ids) {
+      const material=function (s) {const t=FB.save.expandedSnapshot(s);
+        if(t.authority.schema===undefined)t.authority.schema=FB.save.FORMAT.authoritySchema;
+        return JSON.parse(FB.contentValues.canonical([t.start,t.bookmarkSetup,t.authority,t.armies,t.chars,t.realms]));};
+      const s=FB.state,before=material(s),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
       const saved=JSON.parse(FB.save.serialize());FBDATA.bookmarks['1241'].revision='operations_v2';
       FB.save.restore(saved);
-      const restored=FB.state,after=material(restored),same={};
-      Object.keys(before).forEach(function (key) {same[key]=before[key]===after[key];});
-      return {absent:!restored.realms[ids.command] && !restored.realms[ids.following],same:same,
-        changed:{chars:changed(copies.chars,restored.chars),realms:changed(copies.realms,restored.realms)},
+      const restored=FB.state;
+      return {absent:!restored.realms[ids.command] && !restored.realms[ids.following],before:before,after:material(restored),
+        deterministic:rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter(),
         warnings:FB.save.lastRestoreWarnings.map(function (w) {return w.stage+': '+String(w.error && w.error.message || w.error);})};
-    },{command:command,following:following})).toEqual({absent:true,warnings:[],changed:{chars:[],realms:[]},
-      same:{start:true,setup:true,authority:true,armies:true,chars:true,realms:true}});
+    },{command:command,following:following});
+    expect(result.after).toEqual(result.before);delete result.before;delete result.after;
+    expect(result).toEqual({absent:true,warnings:[],deterministic:true});
   });
 }
 
@@ -226,10 +214,11 @@ test('matching divergent operations retain losses, depleted stores, peace and ca
     const retired=s.armies.find(function (a) {return a.id===r.columns.entries[3].hostId;});FB.disbandArmy(s,retired);
     k.camps.entries[0].food=3;k.camps.entries[1].food=5;FB.treasurySpend(s,ids.command,40);
     const original=s.chars[k.leaderId];original.dead=true;FB.royalCharDied(s,original,ids.following);
-    const material=function (state) {return JSON.stringify([state.start,state.bookmarkSetup,
-      Object.assign({},state.authority,{schema:undefined}),state.armies,
-      state.wars,state.chars,state.realms,state.player,state.treasuryAccounting]);};
-    M.validate(s);const before=material(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+    const material=function (state) {const t=FB.save.expandedSnapshot(state);
+      if(t.authority.schema===undefined)t.authority.schema=FB.save.FORMAT.authoritySchema;
+      return FB.contentValues.canonical([t.start,t.bookmarkSetup,t.authority,t.armies,
+        t.wars,t.chars,t.realms,t.player,t.treasuryAccounting]);};
+    M.validate(s);const before=material(s),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
     // Report which half of the round trip rejects, with both guard records.
     let stage='serialize',saved=null;
     try {saved=JSON.parse(FB.save.serialize());stage='restore';FB.save.restore(saved);}
@@ -245,7 +234,7 @@ test('matching divergent operations retain losses, depleted stores, peace and ca
     M.initialize(restored,FB.campaignBookmark(restored).realms);E.day(restored);
     return same && before===material(restored) && FB.realmWars(restored,ids.command).length===0 &&
       M.row(restored,ids.command).accounting.dead===7 && M.row(restored,ids.command).expeditionProgram.status==='cancelled' &&
-      rng===FB.getRngState() && uid===FB.getUidCounter();
+      rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter();
   },{command:command,following:following})).toBe(true);
 });
 
@@ -328,15 +317,17 @@ for (const prefix of ['harbor','dune']) {
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
     await prepareGameContent(page);
     await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
-    await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+    await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
     expect(await page.evaluate(function () {
       const s=FB.state,M=FB.mobile,d=FB.campaignBookmark(s).realms.find(function (r) {return !!r.mobile;}),r=M.row(s,d.id);
-      const initial=JSON.stringify([r,s.armies,s.chars,s.realms,s.authority.migrations]);
+      const facts=function(state){const t=FB.save.expandedSnapshot(state);
+        return FB.contentValues.canonical([M.row(t,d.id),t.armies,t.chars,t.realms,t.authority.migrations]);};
+      const initial=facts(s),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
       FB.save.restore(JSON.parse(FB.save.serialize()));
       const restored=FB.state;
       return r.guardedParty.status==='guarded' && r.camps.entries.length===2 && !M.commandValid(s,d.id) &&
         M.total(s,d.id)===r.accounting.initial && M.migration(s,d.id).courtIds.indexOf(r.leaderId)<0 &&
-        initial===JSON.stringify([M.row(restored,d.id),restored.armies,restored.chars,restored.realms,restored.authority.migrations]) && M.validate(restored);
+        initial===facts(restored) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter() && M.validate(restored);
     })).toBe(true);
   });
 }

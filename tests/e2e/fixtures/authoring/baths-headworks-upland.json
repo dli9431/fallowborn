@@ -116,7 +116,11 @@
           "diff": "age 24"
         }
       },
-      "fixedProvinceId": "resource_fold"
+      "birthplaces": {
+        "counties": [
+          "resource_fold"
+        ]
+      }
     }
   ],
   "bookmarks": {
@@ -188,6 +192,7 @@
           "rank": 1,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Arno Stone",
             "culture": "frankish",
             "born": 918,
@@ -216,6 +221,7 @@
           "rank": 2,
           "government": "regnum",
           "ruler": {
+            "sex": "m",
             "name": "Odo Vale",
             "culture": "frankish",
             "born": 920,

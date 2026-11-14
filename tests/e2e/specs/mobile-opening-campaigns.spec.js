@@ -1,16 +1,20 @@
 'use strict';
+const {installRestoreFacts}=require('../support/game/restore-facts');
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-opening-campaigns-harbor.json'),
   dune:require('../fixtures/authoring/mobile-opening-campaigns-dune.json')};
-dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/technology.js','data/units.js',
+test.describe.configure({mode:'parallel'});
+
+dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/mobile_confederations.js','data/technology.js','data/units.js',
   'js/mobile_columns.js','js/mobile_confederations.js','js/mobile_command.js','js/mobile_guard.js','js/mobile_camps.js',
   'js/expedition_programs.js','js/governments.js','js/government_selection.js','js/government_support.js',
-  'js/government_continuity.js','js/government_assembly.js','js/government_civic.js','js/civic_strategies.js',
+  'js/government_continuity.js','js/government_assembly.js','js/government_civic.js','js/civic_strategies.js','js/civic_transactions.js',
   'js/ecclesiastical_strategies.js','js/home_authority.js','js/authority.js','js/wars.js','js/armies.js','js/federates.js',
   'js/logistics.js','js/treasury.js','js/population.js','js/settlement.js','js/technology.js','js/bookmark_setup.js',
   'js/starts.js','js/world.js','js/main.js','js/model.js','js/station.js','js/util.js','js/justice.js',
@@ -19,12 +23,30 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 async function start(page,info,prefix,input,scenario) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
+  await expectModAdmission(page,input || examples[prefix]);
   await page.locator('#modfile').setInputFiles(input ? {name:'campaigns.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(input))} : path.resolve(__dirname,'../fixtures/authoring/mobile-opening-campaigns-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',scenario || prefix+'_household');
+  if(scenario){
+    const sc=(input || examples[prefix]).startScenarios.find(function(row){return row.id===scenario;});
+    const full=page.locator('#btn-choose-beginning');
+    if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('OPENINGCAMPAIGN-'+prefix+'_world-'+sc.id+'-'+sc.fixedProvinceId+'-'+sc.sex+'-'+sc.characterName.replace(/ /g,'_')+'-standard');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+    await page.getByRole('button',{name:'Begin',exact:true}).click();
+    await page.evaluate(function(){
+      FB.game.setPaused(true);FB.game.auto.all=true;FB.game.auto.style='first';
+      FB.game.uiPrefs.hideTips=true;FB.game.uiPrefs.hideBeginnerHints=true;delete FB.state.player.flags.tutorial;
+    });
+    expect(await page.evaluate(function(){return FB.state.start.scenarioId;})).toBe(sc.id);
+  }
+  else await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
   await page.evaluate(function () {
     const M=FB.mobile,s=FB.state,d=FB.campaignBookmark(s).realms.find(function (r) {return r.mobile;});
     window.openingCase={d:d,rid:d.id,fresh:function () {
@@ -43,12 +65,14 @@ test('an original opponent adopted by a ruler start retains the canonical player
   await start(page,info,'dune',null,'dune_opponent');
   const result=await page.evaluate(function () {
     const C=window.openingCase,s=FB.state,M=FB.mobile,r=C.row(),e=r.openingCampaigns.entries[0],w=FB.ordinaryWarById(s,e.warId);
-    const before=JSON.stringify([r,s.wars,s.armies,s.chars,s.player,s.start]),valid=w && w.defender==='player' &&
+    function facts(state){return restoreFacts(state,function (v) {
+      return [M.row(v,C.rid),v.wars,v.armies,v.chars,v.player,v.start];
+    });}
+    const before=facts(s),valid=w && w.defender==='player' &&
       e.opponent.declaredRealmId==='dune_gate' && e.opponent.characterId===s.player.charId && s.start.rulerRealmId==='dune_gate';
     FB.save.restore(JSON.parse(FB.save.serialize()));
     const restored=FB.state;
-    return !!valid && before===JSON.stringify([M.row(restored,C.rid),restored.wars,restored.armies,
-      restored.chars,restored.player,restored.start]);
+    return !!valid && assertRestoreFacts(facts(restored),before);
   });
   expect(result).toBe(true);
 });
@@ -63,7 +87,10 @@ for (const prefix of ['harbor','dune']) {
       const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
       M.initialize(s,[C.d]);M.validate(s);
       const repeated=before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
-      const saved=JSON.stringify([r,s.armies,s.wars,s.chars,s.treasuryAccounting,s.realms,s.player]);
+      function facts(state){return restoreFacts(state,function (v) {
+        return [M.row(v,C.rid),v.armies,v.wars,v.chars,v.treasuryAccounting,v.realms,v.player];
+      });}
+      const saved=facts(s);
       FB.save.restore(JSON.parse(FB.save.serialize()));
       const restored=FB.state;
       return {count:wars.length,positions:hosts.map(function (c) {return c.host.at;}),
@@ -82,8 +109,7 @@ for (const prefix of ['harbor','dune']) {
         reserve:r.members.reduce(function (n,m) {return n+m.reserve.reduce(function (n,c) {return n+c.count;},0);},0),
         noConquest:FB.realmTerritory(s,C.rid).length===0 && M.migration(s,C.rid).at===t.origin &&
           hosts.every(function (h) {return h.host.from===h.host.at && !h.host.mobileCourt && !h.host.path.length;}),
-        repeated:repeated,restored:saved===JSON.stringify([M.row(restored,C.rid),restored.armies,restored.wars,
-          restored.chars,restored.treasuryAccounting,restored.realms,restored.player]),
+        repeated:repeated,restored:assertRestoreFacts(facts(restored),saved),
         tech:FBDATA.techImpactReviews.features.mobile_opening_campaigns.mode};
     });
     expect(result).toEqual({count:prefix==='harbor' ? 2 : 1,
@@ -93,9 +119,11 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
-test('detached malformed and incompatible declarations reject without mutating input, registries or identity streams',async function ({page},info) {
+for(const range of [[0,6],[6,12],[12,18],[18,24]]){
+test('detached malformed and incompatible declarations reject without mutating input, registries or identity streams '+range[0],async function ({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function (source) {
+  const result=await page.evaluate(function (input) {
+    const source=input.source;
     const changes=[function (m) {m.openingCampaigns=null;},function (m) {m.openingCampaigns.schema=2;},
       function (m) {m.openingCampaigns.extra=true;},function (m) {m.openingCampaigns.entries=[];},
       function (m) {m.openingCampaigns.entries[0].extra=true;},function (m) {m.openingCampaigns.entries[0].opponent.actorId='missing';},
@@ -114,16 +142,17 @@ test('detached malformed and incompatible declarations reject without mutating i
       function (m) {delete m.columns;},function (m) {m.columns.entries=null;},
       function (m) {m.preparationId='not_formed';},function (m) {m.guardedParty={};},function (m) {m.civilianCamps={};},
       function (m,b) {b.opening.actors.harbor_enemy_ruler.ref.realmId='harbor_commune';}];
-    return changes.map(function (change) {
+    return changes.slice(input.first,input.last).map(function (change) {
       const input=JSON.parse(JSON.stringify(source)),b=input.bookmarks.harbor_world,m=b.realms.find(function (r) {return r.mobile;}).mobile;
       change(m,b);
       const bytes=JSON.stringify(input),data=JSON.stringify(FBDATA),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
       return FB.mods.validate(input).length>0 && bytes===JSON.stringify(input) && data===JSON.stringify(FBDATA) &&
         state===JSON.stringify(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
-  },examples.harbor);
-  expect(result).toEqual(Array(24).fill(true));
+  },{source:examples.harbor,first:range[0],last:range[1]});
+  expect(result).toEqual(Array(range[1]-range[0]).fill(true));
 });
+}
 
 test('pure whole-opening preflight rejects stale parties, target control, hostile transit and conflicts before allocation',async function ({page},info) {
   await start(page,info,'harbor');
@@ -159,19 +188,27 @@ test('pure whole-opening preflight rejects stale parties, target control, hostil
 test('a valid live batch credits only the existing treasury allocation and preserves outside population and purses',async function ({page},info) {
   await start(page,info,'harbor');
   const result=await page.evaluate(function () {
-    const C=window.openingCase,M=FB.mobile,s=C.fresh(),before=JSON.stringify([s.population,s.player,
-      Object.keys(s.realms).filter(function (rid) {return rid!==C.rid;}).map(function (rid) {return s.realms[rid].treasury;})]);
+    const C=window.openingCase,M=FB.mobile,s=C.fresh();
+    function facts(state){return restoreFacts(state,function (v) {
+      // The ordinary war owner makes this compatibility alias non-enumerable.
+      return [v.population,Object.assign({},v.player,{war:state.player.war}),
+        Object.keys(v.realms).filter(function (rid) {return rid!==C.rid;})
+          .map(function (rid) {return [rid,v.realms[rid].treasury];}),v.chars,v.bookmarkSetup];
+    });}
+    const before=facts(s),actors=Object.keys(s.bookmarkSetup.actors).map(function (id) {return [id,FB.bookmarkActor(s,id)];});
     const gold=FB.treasuryAvailable(s,C.rid),rng=FB.getRngState(),uid=FB.getUidCounter(),data=JSON.stringify(FBDATA),bytes=JSON.stringify(s);
     const plan=M.openingPlan(s,C.d),pure=plan.allowed && bytes===JSON.stringify(s) && data===JSON.stringify(FBDATA) &&
       rng===FB.getRngState() && uid===FB.getUidCounter();
     M.initialize(s,[C.d]);M.validate(s);
+    const outside=assertRestoreFacts(facts(s),before),formed=JSON.stringify(s);
+    M.initialize(s,[C.d]);M.validate(s);
     return {pure:pure,credit:FB.treasuryAvailable(s,C.rid)-gold,
-      outside:before===JSON.stringify([s.population,s.player,Object.keys(s.realms).filter(function (rid) {return rid!==C.rid;})
-        .map(function (rid) {return s.realms[rid].treasury;})]),
+      outside:outside,actors:actors.every(function (actor) {return actor[1]===FB.bookmarkActor(s,actor[0]);}),
+      repeated:formed===JSON.stringify(s) && data===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter(),
       fighters:s.armies.filter(function (a) {return a.realm===C.rid;}).reduce(function (n,a) {return n+a.men;},0),
       conflicts:FB.realmWars(s,C.rid).length};
   });
-  expect(result).toEqual({pure:true,credit:70,outside:true,fighters:160,conflicts:2});
+  expect(result).toEqual({pure:true,credit:70,outside:true,actors:true,repeated:true,fighters:160,conflicts:2});
 });
 
 test('the actual hostile footprint permits transit but an ungranted peaceful intervening county blocks the same target',async function ({page},info) {
@@ -257,7 +294,20 @@ test('peace, cancelled intent, actual losses, dead original people and moved or 
     const C=window.openingCase,M=FB.mobile,E=FB.expeditionPrograms,s=FB.state,r=C.row(),a=s.armies.find(function (a) {return a.id===r.columns.entries[0].hostId;});
     const cancel=E.reviewControl(s,{realmId:C.rid,action:'cancel',stepId:null,actor:{kind:'character',id:r.leaderId}});
     if (!cancel.review.allowed || !M.commit(s,cancel)) throw new Error('Intent cancellation failed');
-    r.openingCampaigns.entries.forEach(function (e) {FB.settleOrdinaryWar(s,e.warId,'white_peace');});
+    r.openingCampaigns.entries.forEach(function (e) {
+      const war=FB.ordinaryWarById(s,e.warId),V=FB.civicGovernment;
+      if(war) {
+        // Stage the ordinary peace-willingness boundary without advancing days.
+        war.seasons=4;
+        const civic=[war.attacker,war.defender].find(function (id) {return V.active(s,id);});
+        if(civic && FB.settleOrdinaryWar(s,e.warId,'white_peace'))throw new Error('Civic peace requires review');
+        const review=civic && V.peaceQuote(s,civic,{warId:e.warId});
+        if(!(civic ? V.makePeace(s,review) : FB.settleOrdinaryWar(s,e.warId,'white_peace')))
+          throw new Error('Opening peace must settle: '+e.warId+' '+JSON.stringify(review));
+      }
+      if(!s.wars[e.warId] || s.wars[e.warId].status!=='ended')
+        throw new Error('Opening campaign must be ended: '+e.warId);
+    });
     // Stage an ordinary casualty boundary and a completed field return, without a simulation loop.
     FB.applyHostLosses(a,3,s);a.mobileFood=1;
     a.at=C.d.mobile.origin;a.from='harbor_gardens';a.path=[];a.goal=null;a.moveLeft=0;
@@ -267,14 +317,19 @@ test('peace, cancelled intent, actual losses, dead original people and moved or 
     const commander=s.chars[r.columns.entries[1].commanderId];commander.dead=true;FB.royalCharDied(s,commander,C.rid);
     // Ordinary ended-war history can be pruned; provenance must not recreate it.
     delete s.wars[r.openingCampaigns.entries[0].warId];
+    // Finish host assignment after the staged casualty, retirement and pruning.
+    FB.assignCampaignHosts(s);
+    if(FB.realmWars(s,C.rid).length || s.armies.some(function (host) {return host.realm===C.rid && host.warId;}))
+      throw new Error('Peace checkpoint must have no active campaign or host assignment');
     M.validate(s);
-    const before=JSON.stringify([r,s.armies,s.wars,s.chars,s.realms,s.player,s.treasuryAccounting]),rng=FB.getRngState(),uid=FB.getUidCounter();
+    function facts(state){return restoreFacts(state,function (v) {
+      return [M.row(v,C.rid),v.armies,v.wars,v.chars,v.realms,v.player,v.treasuryAccounting];
+    });}
+    const before=facts(s),rng=FB.getRngState(),uid=FB.getUidCounter();
     FB.save.restore(JSON.parse(FB.save.serialize()));
-    const restored=FB.state,row=M.row(restored,C.rid),same=before===JSON.stringify([row,restored.armies,restored.wars,
-      restored.chars,restored.realms,restored.player,restored.treasuryAccounting]);
+    const restored=FB.state,row=M.row(restored,C.rid),same=assertRestoreFacts(facts(restored),before);
     M.initialize(restored,[C.d]);E.day(restored);
-    return {same:same,noReplay:before===JSON.stringify([row,restored.armies,restored.wars,restored.chars,
-      restored.realms,restored.player,restored.treasuryAccounting]),wars:FB.realmWars(restored,C.rid).length,
+    return {same:same,noReplay:assertRestoreFacts(facts(restored),before),wars:FB.realmWars(restored,C.rid).length,
       cancelled:row.expeditionProgram.status,losses:row.accounting.dead,moved:restored.armies.find(function (v) {return v.id===a.id;}).at,
       retired:row.columns.entries[1].status,streams:rng===FB.getRngState() && uid===FB.getUidCounter()};
   });
