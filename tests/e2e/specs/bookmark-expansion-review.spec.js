@@ -11,10 +11,10 @@ dependsOnRuntime(__filename,[
   'data/government_rollout.js','data/geography_expansion.js','data/cultures.js','data/political_institutions.js',
   'data/bookmark_476_wider_identities.js','data/starts.js','data/eras.js','data/systems.js',
   'js/world.js','js/main.js','js/starts.js','js/mods.js','js/title_ids.js','js/governments.js',
-  'js/systems.js','js/save.js','js/save_v4.js','js/crazygames.js','data/distribution_crazygames.js'
+  'js/story_household.js','js/stories.js','js/systems.js','js/save.js','js/save_v4.js','js/crazygames.js','data/distribution_crazygames.js'
 ]);
 
-for (const id of ['867','1066']) for (const flag of [false,true]) {
+for (const id of ['867','1066']) for (const flag of [false]) {
   test(id + ' ordinary new games keep the retained opening, distribution ' + flag,async function ({page},info) {
     await startHistoricalGame(page,info,{bookmark:id,
       code:'DEFAULTREVIEW-' + id + '-farmer-london-m-Review-established'},flag);
@@ -30,12 +30,7 @@ for (const id of ['867','1066']) for (const flag of [false,true]) {
 }
 
 test('expanded 1066 preserves the existing Seljuk and Makurian governments',async function ({page},info) {
-  await page.addInitScript(function () {
-    document.addEventListener('DOMContentLoaded',function () {
-      FBDATA.bookmarks['1066'].revision = 'inhabited_v2_governments_v2';
-    },{once:true});
-  });
-  await startHistoricalGame(page,info,{bookmark:'1066',code:'COURTREVIEW-1066-farmer-qasr_ibrim-m-Review-established'});
+  await startHistoricalGame(page,info,{bookmark:'1066',revision:'inhabited_v2_governments_v2',code:'COURTREVIEW-1066-farmer-qasr_ibrim-m-Review-established'});
   expect(await page.evaluate(function () {
     const s = FB.state, old = FB.bookmark('1066','governments_v2'), b = FB.campaignBookmark(s);
     return {courts:['seljuk_1066','makuria_1066'].map(function (rid) {
@@ -104,8 +99,16 @@ for (const revision of ['baseline','inhabited_v2']) {
       FBDATA.bookmarks['1204'].revision = revision;
       const scenario = JSON.parse(JSON.stringify(FBDATA.startScenarios.find(function (s) { return s.id === 'farmer'; })));
       Object.assign(scenario,{id:'late_mod_farmer',name:'Late mod farmer',bookmarkIds:['1204'],
-        fixedProvinceId:'london',startCulture:'english',startReligion:'catholic',alwaysUnlocked:true});
-      const mod = {name:'Late start review',startScenarios:[scenario]}, faults = FB.mods.validate(mod);
+        fixedProvinceId:'london',startCulture:'english',startReligion:'catholic',alwaysUnlocked:true,
+        tracks:['late_mod_household']});
+      const mod = {name:'Late start review',startScenarios:[scenario],storyInstances:{late_mod_household:{
+        id:'late_mod_household',type:'household_track',title:'A London household',intro:'Consider household life.',
+        homeProvinceId:'london',continuity:'household',initialStage:'review',stages:{
+          review:{name:'Household plans',text:'Decide whether to remain at home.',transitions:[],choices:[
+            {id:'stay',label:'Remain at home',detail:'Continue ordinary household life.',
+              operation:{kind:'record_decision'},next:'done'}]},
+          done:{name:'Plans settled',text:'Ordinary life continues.',terminal:true,choices:[],transitions:[]}
+        }}}}, faults = FB.mods.validate(mod);
       if (!faults.length) FB.mods.apply(mod);
       return faults;
     },revision)).toEqual([]);

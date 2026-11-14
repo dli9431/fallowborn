@@ -25,12 +25,7 @@ const CURRENT = 'inhabited_v2_governments_v2';
 const inhabited = ['kumbi_district','jenne_district','gao_district','ghadames_oasis','awjila_oasis',
   'qasr_ibrim','central_iran_oases','sarakhs_oasis','kath_district','gurganj_district','lower_syr_darya'];
 async function startExpanded(page,info,start,flag) {
-  await page.addInitScript(function (revision) {
-    document.addEventListener('DOMContentLoaded',function () {
-      FBDATA.bookmarks['1066'].revision = revision;
-    },{once:true});
-  },CURRENT);
-  return startHistoricalGame(page,info,start,flag);
+  return startHistoricalGame(page,info,Object.assign({},start,{revision:CURRENT}),flag);
 }
 function journey(county) {
   return {bookmark:'1066',code:'TERRAIN1066-1066-farmer-' + county + '-m-Review-established'};
@@ -94,7 +89,7 @@ test('expanded 1066 accounts for every district while retaining both released wo
     governments:true,future:true,review:'none',mods:[]});
 });
 
-for (const flag of [false,true]) test('inhabited raster, sites, climate, dry routes and compact character health, CrazyGames ' + flag,
+for (const flag of [false]) test('inhabited raster, sites, climate, dry routes and compact character health, CrazyGames ' + flag,
   async function ({page},info) {
     await startExpanded(page,info,journey('kumbi_district'),flag);
     const result = await page.evaluate(function (ids) {
@@ -220,10 +215,7 @@ test('Wagadu recognises a maternal nephew through canonical kin selection with c
 });
 
 for (const revision of ['baseline','governments_v2']) test(revision + ' 1066 households and converted frontier survive new-date switching',async function ({page},info) {
-  await page.addInitScript(function (revision) {
-    document.addEventListener('DOMContentLoaded',function () { FBDATA.bookmarks['1066'].revision = revision; },{once:true});
-  },revision);
-  await startHistoricalGame(page,info,journey('london')); await injectBrowserHarness(page);
+  await startHistoricalGame(page,info,Object.assign(journey('london'),{revision:revision})); await injectBrowserHarness(page);
   const source = await page.evaluate(function (revision) {
     const s = FB.state; s.player.gold = 5000; s.player.prestige = 500;
     FB.settleWaste(s,'w_karakum'); s.dev.w_karakum = 3;

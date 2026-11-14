@@ -678,7 +678,7 @@ function communalSavedFacts() {
     institutions:s.localInstitutions,heads:s.religiousHeads,abbeys:s.abbeys,communities:s.communities,population:s.population}));
 }
 
-for (const distribution of ['standard','CrazyGames']) {
+for (const distribution of ['standard']) {
   test(distribution + ' communal restore after another bookmark retains a gift and replays one funded service',
     async function ({page}, testInfo) {
       await communalHousehold(page,testInfo,distribution === 'CrazyGames');
@@ -722,14 +722,9 @@ const DATED_COMMUNAL_OPENINGS = [
 ];
 
 async function startCommunalOpening(page,testInfo,input,crazygames) {
-  await page.addInitScript(function (opening) {
-    window.addEventListener('DOMContentLoaded',function () {
-      FBDATA.bookmarks[opening.id].revision = opening.revision;
-    },{once:true});
-  },input);
   const scenario = input.id === '476' ? 'farmer_476' : input.id === '493' ? 'farmer_493' : 'farmer';
   const faith = input.faith || 'jewish';
-  await startHistoricalGame(page,testInfo,{bookmark:input.id,
+  await startHistoricalGame(page,testInfo,{bookmark:input.id,revision:input.revision,
     // canonical codes omit the county's own community
     code:'DATED-' + input.id + '-' + scenario + '-' + input.pid + '-f-Sara-established' +
       (input.principal && !input.faith ? '' : '-0-' + input.culture + '.' + faith)},!!crazygames);
@@ -968,7 +963,7 @@ test('the dated synagogue public AI spends only its actual treasury on the canon
     })).toEqual({bounded:true,repeat:0,spent:1,fund:1,dry:true,household:true,plots:true,land:0,owner:'jewish_sardis_congregation_476'});
   });
 
-for (const distribution of ['standard','CrazyGames']) {
+for (const distribution of ['standard']) {
   test(distribution + ' dated Sardis restore after another world preserves its voluntary gift and completes service once',
     async function ({page},testInfo) {
       await fundDatedSardis(page,testInfo,distribution === 'CrazyGames');

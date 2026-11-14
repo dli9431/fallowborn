@@ -4,6 +4,8 @@ const {test, expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
+const {installRestoreFacts} = require('../support/game/restore-facts');
+const {expectModAdmission} = require('../support/game/mod-admission');
 
 dependsOnRuntime(__filename, [
   'index.html', 'data/bookmark_1066_north_atlantic.js', 'data/geography_north_atlantic.js',
@@ -18,7 +20,8 @@ dependsOnRuntime(__filename, [
   'js/governments.js', 'js/government_support.js', 'js/government_collective.js',
   'js/government_assembly.js', 'js/government_continuity.js', 'js/authority.js',
   'js/treasury.js', 'js/bookmark_setup.js', 'js/model.js', 'js/travel.js', 'js/armies.js',
-  'js/mapview.js', 'js/save.js', 'js/save_v4.js', 'js/stories.js', 'js/climate.js'
+  'js/mapview.js', 'js/save.js', 'js/save_v4.js', 'js/stories.js', 'js/climate.js',
+  'js/bookmark_composition.js'
 ]);
 const SOURCE = 'inhabited_v2_governments_v2_islamic_v1_institutions_v1';
 const REVISION = 'north_atlantic_v1';
@@ -39,12 +42,7 @@ async function activate(page, revision, geography) {
 }
 
 async function startIslands(page, info, county) {
-  await page.addInitScript(function (revision) {
-    document.addEventListener('DOMContentLoaded', function () {
-      FBDATA.bookmarks['1066'].revision = revision;
-    }, {once:true});
-  }, REVISION);
-  await startHistoricalGame(page, info, {bookmark:'1066',
+  await startHistoricalGame(page, info, {bookmark:'1066',revision:REVISION,
     code:'ISLANDS1066-1066-farmer-' + (county || 'iceland_southwest') + '-m-Review-established'});
 }
 
@@ -154,7 +152,8 @@ test('the adopting raster has inhabited sites, seven water edges and independent
       const pairs = [['bergen','shetland','open'],['orkney','shetland','open'],
         ['caithness','orkney','coastal'],['caithness','lewis','open'],['faroes','lewis','open'],
         ['faroes','shetland','open'],['faroes','iceland_east','open']];
-      const sites = w.sites.filter(function (site) { return input.ids.indexOf(site.pid) >= 0; });
+      const allSites = w.sites.filter(function (site) { return input.ids.indexOf(site.pid) >= 0; });
+      const sites = allSites.filter(function (site) { return site.authored; });
       return {width:w.W,projection:FB.proj.W === w.W && FB.proj.H === w.H,
         cached:!previous || previous === w,island:!!w.byId.faroes,
         hit:FB.provinceAtGrid(w.byId.bergen.sx,w.byId.bergen.sy).id,
@@ -165,13 +164,20 @@ test('the adopting raster has inhabited sites, seven water edges and independent
           const p = FB.provinceAtGrid(site.x,site.y);
           return site.authored && p && p.id === site.pid && site.snap <= FB.mapScale('siteSnapMax');
         }) : sites.length === 0,
+        slots:input.active ? input.ids.map(function (id) {
+          return allSites.filter(function (site) { return site.pid === id; }).length;
+        }) : [],
+        bounds:allSites.every(function (site) {
+          const p = FB.provinceAtGrid(site.x,site.y);
+          return p && p.id === site.pid;
+        }),
         crossings:pairs.every(function (p) {
           return input.active ? FB.waterCrossing(p[0],p[1]) === p[2] && FB.waterCrossing(p[1],p[0]) === p[2] &&
             !!w.adj[p[0]][p[1]] && !!w.adj[p[1]][p[0]] && FB.landRouteUnits(p[0],p[1]) === 1 :
             FB.waterCrossing(p[0],p[1]) === null;
         }),noShortcut:!FB.waterCrossing('faroes','iceland_southwest')};
     }, {active:row[2],ids:INHABITED})).toEqual({width:row[1],projection:true,cached:true,island:row[2],
-      hit:'bergen',rows:true,sites:true,crossings:true,noShortcut:true});
+      hit:'bergen',rows:true,sites:true,slots:row[2] ? Array(10).fill(8) : [],bounds:true,crossings:true,noShortcut:true});
   }
   expect(await activate(page,REVISION,'europe_regional')).toContain('does not match');
   expect(await page.evaluate(function () { return FB.activeBookmark.revision; })).toBe('baseline');
@@ -179,18 +185,22 @@ test('the adopting raster has inhabited sites, seven water edges and independent
 
 test('matching island saves preserve people and refuse mismatched geography stamps', async function ({page}, info) {
   await startIslands(page, info, 'faroes');
+  await installRestoreFacts(page);
   const save = await page.evaluate(function () { return FB.save.serialize(); });
   const before = await page.evaluate(function () {
-    return JSON.stringify([FB.state.owner,FB.state.holder,FB.state.governmentSupport,
-      FB.state.realms.orkney_earldom_1066.succession,FB.state.bookmarkSetup]);
+    window.islandSavedFacts = function () {
+      return restoreFacts(FB.state,function (s) {
+        return [s.owner,s.holder,s.governmentSupport,s.realms.orkney_earldom_1066.succession,s.bookmarkSetup];
+      });
+    };
+    return islandSavedFacts();
   });
   expect(await activate(page,'baseline')).toBe(null);
   expect(await activate(page,REVISION,GEOGRAPHY)).toBe(null);
   expect(await page.evaluate(function (input) {
     FB.save.restore(JSON.parse(input.save));
     const s = FB.state;
-    const matching = input.before === JSON.stringify([s.owner,s.holder,s.governmentSupport,
-      s.realms.orkney_earldom_1066.succession,s.bookmarkSetup]);
+    const matching = assertRestoreFacts(islandSavedFacts(),input.before);
     const rows = Object.keys(s.chars).length;
     const erlend = FB.authoredRoyalMemberSnapshot(s,'orkney_earldom_1066','erlend');
     const id = erlend.charId;
@@ -210,12 +220,7 @@ test('matching island saves preserve people and refuse mismatched geography stam
 });
 
 test('retained saves do not acquire island people, counties or optional assembly records', async function ({page}, info) {
-  await page.addInitScript(function () {
-    document.addEventListener('DOMContentLoaded', function () {
-      FBDATA.bookmarks['1066'].revision = 'baseline';
-    }, {once:true});
-  });
-  await startHistoricalGame(page,info,{bookmark:'1066',code:'RETAINED1066-1066-farmer-london-m-Review-established'});
+  await startHistoricalGame(page,info,{bookmark:'1066',revision:'baseline',code:'RETAINED1066-1066-farmer-london-m-Review-established'});
   expect(await page.evaluate(function () {
     const saved = JSON.parse(FB.save.serialize());
     // Explicitly remove a saved optional record: restore must not create a new opening.
@@ -249,21 +254,26 @@ test('ordinary JSON imports can vary the assembly policy and reject invalid isla
         before === JSON.stringify(root) && rng === FB.getRngState() && uid === FB.getUidCounter();
     });
   })).toEqual([true,true,true]);
-  expect(await page.evaluate(function () {
-    const b = JSON.parse(JSON.stringify(FBDATA.bookmarks['1066']));
+  const mod = await page.evaluate(function (revision) {
+    const b = JSON.parse(JSON.stringify(FB.bookmark('1066',revision)));
+    // Import one complete adopting world without duplicating unrelated worlds
+    // into the browser's finite mod storage.
+    b.revisions = {baseline:{}}; b.revisions[revision] = {};
     const profile = JSON.parse(JSON.stringify(FBDATA.constituencyProfiles.iceland_commonwealth_1066));
     profile.selection.termDays = 720;
     profile.selection.threshold = 0.6;
     profile.members[0].weight = 1;
-    const r = b.revisions.north_atlantic_v1.realms.find(function (r) { return r.id === 'iceland_commonwealth_1066'; });
+    const r = b.realms.find(function (r) { return r.id === 'iceland_commonwealth_1066'; });
     r.constituency = 'island_review_voice';
     b.revision = 'north_atlantic_v1';
-    const text = JSON.stringify({name:'Island assembly variation',bookmarks:{'1066':b},
-      constituencyProfiles:{island_review_voice:profile}});
-    const errors = FB.mods.validate(JSON.parse(text));
-    if (errors.length) throw new Error(errors.join('\n'));
-    return FB.mods.store(text);
-  })).not.toBe(false);
+    return {name:'Island assembly variation',bookmarks:{'1066':b},
+      constituencyProfiles:{island_review_voice:profile}};
+  },REVISION);
+  await expectModAdmission(page,mod);
+  await page.evaluate(function () { FB.ui.showMods(); });
+  await page.locator('#modfile').setInputFiles({name:'island-assembly.json',mimeType:'application/json',
+    buffer:Buffer.from(JSON.stringify(mod))});
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && !!FBDATA.constituencyProfiles.island_review_voice;

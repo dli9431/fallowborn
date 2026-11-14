@@ -3,16 +3,18 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark} = require('../support/game/bookmark-acceptance');
+const {installRestoreFacts} = require('../support/game/restore-facts');
+const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {harbor:require('../fixtures/authoring/revision-start-tracks-harbor.json'),
   dune:require('../fixtures/authoring/revision-start-tracks-dune.json')};
 dependsOnRuntime(__filename, ['index.html','data/starts.js','data/mobile_confederations.js',
   'js/starts.js','js/world.js','js/mods.js','js/main.js','js/stories.js','js/bookmark_setup.js',
+  'js/bookmark_composition.js','js/bookmark_sources.js',
   'js/story_government_selection.js','js/story_opening_goals.js','js/story_expedition_preparation.js',
   'js/story_expedition_participation.js','js/story_household_party.js','js/household_party_camp.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/save.js','js/save_v4.js',
-  'js/model.js','js/treasury.js','js/authority.js','js/ui_misc.js','js/ui_modals.js']);
+  'js/model.js','js/station.js','js/treasury.js','js/authority.js','js/ui_misc.js','js/ui_modals.js']);
 
 async function importExample(page, info, prefix, revision) {
   await openGame(page, info);
@@ -29,6 +31,24 @@ async function importExample(page, info, prefix, revision) {
   if (revision) await page.evaluate(function (args) {
     FBDATA.bookmarks[args.prefix + '_world'].revision = args.revision;
   }, {prefix:prefix, revision:revision});
+  await installRestoreFacts(page);
+}
+
+async function openStartCode(page, code) {
+  const full = page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button', {name:'New Game', exact:true}).click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill(code);
+  await page.locator('#ng-seed').press('Enter');
+}
+
+async function copyStartCodeToTitle(page) {
+  return page.evaluate(function () {
+    const code = FB.state.seed;
+    FB.game.toTitle();
+    return code;
+  });
 }
 
 for (const prefix of ['harbor','dune']) {
@@ -76,6 +96,8 @@ for (const prefix of ['harbor','dune']) {
       const card = page.locator('[data-scenario="' + prefix + '_household"]');
       await expect(card).toContainText('Story start');
       await card.click();
+      await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+      await page.locator('#btn-pick-random').click();
       await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
       await page.getByRole('button', {name:'Begin Your Story', exact:true}).click();
       await page.getByRole('button', {name:'Begin', exact:true}).click();
@@ -95,19 +117,28 @@ for (const prefix of ['harbor','dune']) {
     for (const legacy of [false,true]) {
       test(prefix + ' ' + revision + ' ' + (legacy ? 'legacy' : 'stamped') + ' code/save keeps original tracks under fresh expansion', async function ({page}, info) {
         await importExample(page, info, prefix, revision);
-        await beginBookmark(page, info, prefix + '_world', prefix + '_household');
+        await beginBookmarkFromTitle(page, prefix + '_world', prefix + '_household');
+        const code = await copyStartCodeToTitle(page);
+        await openStartCode(page,code);
+        await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+        await page.getByRole('button', {name:'Begin Your Story', exact:true}).click();
+        await page.getByRole('button', {name:'Begin', exact:true}).click();
+        expect(await page.evaluate(function () {
+          FB.game.setPaused(true);
+          return FB.state.seed;
+        })).toBe(code);
         const result = await page.evaluate(function (args) {
           let saved = JSON.parse(FB.save.serialize());
           const signature = saved.mods, attachments = JSON.stringify(saved.state.start.storyAttachments);
           if (args.legacy) { delete saved.state.start.storyAttachments; delete saved.storyAttachmentSchema; }
           FBDATA.bookmarks[args.prefix + '_world'].revision = 'expanded';
-          function facts(s) { return JSON.stringify([s.stories,s.chars,s.player.gold,s.player.provinceId,
-            s.player.travel,s.authority,s.armies,s.population,s.bookmarkSetup,s.start.revision]); }
+          function facts(s) { return restoreFacts(s,function (s) { return [s.stories,s.chars,s.player.gold,s.player.provinceId,
+            s.player.travel,s.authority,s.armies,s.population,s.bookmarkSetup,s.start.revision]; }); }
           const before = facts(FB.state), rng = FB.getRngState(), uid = FB.getUidCounter();
           let stable = true;
           for (let i = 0; i < 3; i++) {
             FB.save.restore(saved);
-            stable = stable && before === facts(FB.state);
+            stable = stable && assertRestoreFacts(facts(FB.state),before);
             saved = JSON.parse(FB.save.serialize());
             stable = stable && saved.mods === signature;
           }
@@ -152,20 +183,16 @@ for (const prefix of ['harbor','dune']) {
 
   test(prefix + ' code rejects an effective profile-only household despite its global storyline', async function ({page}, info) {
     await importExample(page, info, prefix);
+    await beginBookmarkFromTitle(page, prefix + '_world', prefix + '_household');
+    const code = await copyStartCodeToTitle(page);
     await page.evaluate(function (prefix) {
       const sc = FBDATA.startScenarios.find(function (r) { return r.id === prefix + '_household'; });
       const row = FBDATA.bookmarks[prefix + '_world'].revisions.expanded.startTrackOverrides.entries[sc.id];
       row.tracks = [prefix + '_opening_review']; row.trackLocations = {};
     }, prefix);
-    const full = page.locator('#btn-choose-beginning');
-    if (await full.isVisible()) await full.click();
-    else await page.getByRole('button', {name:'New Game', exact:true}).click();
     // Code parsing checks eligibility before activating this invalid edited
     // world, preserving the same no-storyline boundary as direct creation.
-    await page.locator('#btn-bm-seed').click();
-    const sc = examples[prefix].startScenarios[0];
-    await page.locator('#ng-seed').fill('TRACKWORLD-' + prefix + '_world-' + sc.id + '-' + sc.fixedProvinceId + '-m-Review-standard');
-    await page.locator('#ng-seed').press('Enter');
+    await openStartCode(page,code);
     await expect(page.locator('#ng-seed-err')).toContainText('doesn’t parse');
     expect(await page.evaluate(function (prefix) {
       const sc = FBDATA.startScenarios.find(function (r) { return r.id === prefix + '_household'; });
@@ -175,7 +202,7 @@ for (const prefix of ['harbor','dune']) {
 
   test(prefix + ' expanded saves reject missing original records and malformed provenance atomically', async function ({page}, info) {
     await importExample(page, info, prefix);
-    await beginBookmark(page, info, prefix + '_world', prefix + '_household');
+    await beginBookmarkFromTitle(page, prefix + '_world', prefix + '_household');
     const result = await page.evaluate(function (prefix) {
       const saved = JSON.parse(FB.save.serialize()), before = JSON.stringify(FB.state), rng = FB.getRngState(), uid = FB.getUidCounter();
       const changes = [function (d) { delete d.state.stories[prefix + '_admission']; },
@@ -197,7 +224,7 @@ for (const prefix of ['harbor','dune']) {
 
   test(prefix + ' older ordinary save without a scenario stamp or profile stays unexpanded', async function ({page}, info) {
     await importExample(page, info, prefix, 'baseline');
-    await beginBookmark(page, info, prefix + '_world', prefix + '_household');
+    await beginBookmarkFromTitle(page, prefix + '_world', prefix + '_household');
     const result = await page.evaluate(function (prefix) {
       let saved = JSON.parse(FB.save.serialize());
       const profile = prefix + '_opening_review';
@@ -260,9 +287,9 @@ test('a retained world cannot inherit fresh-only hosts, tracks or dependencies t
   expect(result).toEqual([true,true,true,true]);
 });
 
-test('invalid complete overrides and effective references reject ordinary imports without publication', async function ({page}, info) {
+for (const group of [0,1,2,3]) test('invalid complete overrides and effective references reject ordinary imports without publication, group ' + group, async function ({page}, info) {
   await openGame(page, info);
-  const result = await page.evaluate(function (source) {
+  const result = await page.evaluate(function (input) {
     const changes = [function (p) { p.schema = 2; }, function (p) { p.extra = true; },
       function (p) { p.entries = {}; }, function (p) { p.entries.missing_start = p.entries.harbor_household; },
       function (p) { p.entries.harbor_household = null; },
@@ -284,8 +311,8 @@ test('invalid complete overrides and effective references reject ordinary import
     const data = JSON.stringify(FBDATA), registry = FB.stories.list(), state = FB.state;
     const messages = JSON.stringify(FB.englishMessages()), storage = localStorage.getItem('fb_mods');
     const rng = FB.getRngState(), uid = FB.getUidCounter();
-    return changes.map(function (change) {
-      const mod = JSON.parse(JSON.stringify(source));
+    return changes.slice(input.group * 5,input.group * 5 + 5).map(function (change) {
+      const mod = JSON.parse(JSON.stringify(input.source));
       change(mod.bookmarks.harbor_world.revisions.expanded.startTrackOverrides);
       const errors = FB.mods.validate(mod), stored = FB.mods.store(JSON.stringify(mod));
       let rejected = false; try { FB.mods.apply(mod); } catch (_) { rejected = true; }
@@ -294,25 +321,28 @@ test('invalid complete overrides and effective references reject ordinary import
         messages === JSON.stringify(FB.englishMessages()) && storage === localStorage.getItem('fb_mods') &&
         registry.every(function (story, i) { return FB.stories.list()[i] === story; });
     });
-  }, examples.harbor);
-  expect(result).toEqual(Array(19).fill(true));
+  }, {source:examples.harbor,group:group});
+  expect(result).toEqual(Array(Math.min(5,19 - group * 5)).fill(true));
 });
 
 test('succession keeps original revision tracks and leaves personal admission with its founder', async function ({page}, info) {
   await importExample(page, info, 'harbor');
-  await beginBookmark(page, info, 'harbor_world', 'harbor_household');
+  await beginBookmarkFromTitle(page, 'harbor_world', 'harbor_household');
   const result = await page.evaluate(function () {
+    function facts(s) { return restoreFacts(s,function (s) { return [s.stories,s.chars,s.player.gold,s.player.travel,s.armies]; }); }
     const s = FB.state, founder = s.player.charId, provenance = JSON.stringify(s.start.storyAttachments);
     const heir = Object.keys(s.chars).map(function (id) { return s.chars[id]; }).find(function (c) {
       return c.id !== founder && !c.dead && c.role === 'sibling' && FB.ageOf(c,s.date.year) >= 16;
     });
-    s.chars[founder].dead = true; s.player.charId = heir.id; s.player.dead = false; s.player.travel = null;
+    FB.game.die('A bounded succession fixture.');
+    if (!FB.game.succeedTo(heir.id)) throw new Error('The household succession was refused.');
+    FB.ui.closeModal();
     ['harbor_admission','harbor_family_plan'].forEach(function (id) { FB.stories.get(id).day(s,s.stories[id]); });
-    const before = JSON.stringify([s.stories,s.chars,s.player.gold,s.player.travel,s.armies]);
+    const before = facts(s);
     for (let i = 0; i < 3; i++) FB.save.restore(JSON.parse(FB.save.serialize()));
     const now = FB.state;
     return {same:provenance === JSON.stringify(now.start.storyAttachments),
-      stable:before === JSON.stringify([now.stories,now.chars,now.player.gold,now.player.travel,now.armies]),
+      stable:assertRestoreFacts(facts(now),before),
       founder:now.stories.harbor_admission.actorId === founder && now.stories.harbor_family_plan.actorId === founder,
       noEnrollment:now.player.travel === null && now.stories.harbor_admission.roleId === null};
   });
@@ -337,9 +367,10 @@ test('named household offering and adopted ruler restore use effective original 
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks.harbor_world; });
   expect(await page.evaluate(function () {
-    const sc = FBDATA.startScenarios.find(function (row) { return row.existingPerson; });
+    const sc = FBDATA.startScenarios.find(function (row) { return row.id === 'harbor_existing_household'; });
     return !!FB.existingPersonStartProfile(sc,FB.bookmark('harbor_world'));
   })).toBe(true);
+  await installRestoreFacts(page);
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
@@ -351,11 +382,12 @@ test('named household offering and adopted ruler restore use effective original 
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   const result = await page.evaluate(function () {
     FB.game.setPaused(true);
-    const s = FB.state, before = JSON.stringify([s.stories,s.chars,s.player.gold,s.start.storyAttachments]);
+    function facts(s) { return restoreFacts(s,function (s) { return [s.stories,s.chars,s.player.gold,s.start.storyAttachments]; }); }
+    const s = FB.state, before = facts(s);
     for (let i = 0; i < 3; i++) FB.save.restore(JSON.parse(FB.save.serialize()));
     return {absent:!FB.state.stories || !FB.state.stories.harbor_ruler_review,
       tracks:FB.state.start.storyAttachments.tracks,
-      stable:before === JSON.stringify([FB.state.stories,FB.state.chars,FB.state.player.gold,FB.state.start.storyAttachments])};
+      stable:assertRestoreFacts(facts(FB.state),before)};
   });
   expect(result).toEqual({absent:true,tracks:[],stable:true});
 });

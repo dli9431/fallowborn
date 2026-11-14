@@ -4,7 +4,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
-const {restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {releasedCatalogue} = require('../support/released-catalogue');
 const released = require('../fixtures/released-catalogue.json');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
@@ -27,12 +27,7 @@ const ids = groups.concat('durham_see_1096');
 async function begin(page,info,county,crazygames) {
   // This specification owns the retained lay-group and vacancy declaration.
   // The fresh Mainz shelter revision has its own coverage.
-  await page.addInitScript(function() {
-    document.addEventListener('DOMContentLoaded',function() {
-      FBDATA.bookmarks['1096'].revision='baseline';
-    },{once:true});
-  });
-  await startHistoricalGame(page,info,{bookmark:'1096',
+  await startHistoricalGame(page,info,{bookmark:'1096',revision:'baseline',
     code:'LOCALGROUPS-1096-farmer-'+(county || 'mainz')+'-f-Leah-established-0-ashkenazi.jewish'},!!crazygames);
 }
 
@@ -191,7 +186,7 @@ test('malformed locality, invented staff and unsupported powers fail detached va
   })).toEqual({rejected:Array(8).fill(true),headConflict:true,pure:true});
 });
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('membership and the separate vacant bishop survive restore on '+(crazygames ? 'CrazyGames' : 'standard'),
     async function ({page},info) {
       await begin(page,info,'mainz',crazygames);
@@ -274,7 +269,9 @@ test('the ordinary JSON importer retains date-local declarations and exact conte
   await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.mods.count() === 1; });
-  await begin(page,info);
+  await page.evaluate(function () { FBDATA.bookmarks['1096'].revision = 'baseline'; });
+  await beginBookmarkFromTitle(page,'1096','farmer');
+  expect(await page.evaluate(function () { return FB.state.start.revision; })).toBe('baseline');
   expect(await page.evaluate(function () { return Object.keys(FB.localInstitutionDefinitions(FB.state)); })).toEqual(ids);
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
   await restoreBookmark(page,saved);

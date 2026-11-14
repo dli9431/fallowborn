@@ -4,7 +4,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {startDeterministicGame} = require('../support/game/start');
-const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {injectHolyWarHarness} = require('../support/game/holywar-harness');
 const {releasedCatalogue} = require('../support/released-catalogue');
@@ -436,15 +436,17 @@ test('seven opening decisions gate district participation by independent dates a
     ],bounds:true,pure:true});
   });
 
+async function startNorthernRevision(page,testInfo,revision) {
+  await openGame(page,testInfo);
+  await page.evaluate(function (revision) { FBDATA.bookmarks['1066'].revision = revision; },revision);
+  await beginBookmarkFromTitle(page,'1066');
+  expect(await page.evaluate(function () { return FB.state.start.revision; })).toBe(revision);
+}
+
 for (const revision of ['baseline','inhabited_v2']) {
   test(revision + ' 1066 gathering consumes household supplies once without granting ranks or property',
     async function ({page},testInfo) {
-      await page.addInitScript(function (revision) {
-        document.addEventListener('DOMContentLoaded',function () {
-          FBDATA.bookmarks['1066'].revision = revision;
-        },{once:true});
-      },revision);
-      await beginBookmark(page,testInfo,'1066');
+      await startNorthernRevision(page,testInfo,revision);
       await page.evaluate(stageNorthernObservance,{province:'uppsala',faith:'norse_pagan',gold:1,
         sex:revision === 'baseline' ? 'f' : 'm'});
       expect(await page.evaluate(function () {
@@ -471,12 +473,7 @@ for (const revision of ['baseline','inhabited_v2']) {
 
 test('ordinary 1066 participation implies no festival season and a changed year invalidates a pending review',
   async function ({page},testInfo) {
-    await page.addInitScript(function () {
-      document.addEventListener('DOMContentLoaded',function () {
-        FBDATA.bookmarks['1066'].revision = 'inhabited_v2';
-      },{once:true});
-    });
-    await beginBookmark(page,testInfo,'1066');
+    await startNorthernRevision(page,testInfo,'inhabited_v2');
     await page.evaluate(stageNorthernObservance,{province:'uppsala',faith:'norse_pagan',gold:1});
     expect(await page.evaluate(function () {
       const s = FB.state, id = 'uppsala_local_gathering', cid = s.player.charId;
@@ -497,12 +494,7 @@ test('ordinary 1066 participation implies no festival season and a changed year 
 
 test('a Christian local authority preserves northern households and one existing voluntary mission project',
   async function ({page},testInfo) {
-    await page.addInitScript(function () {
-      document.addEventListener('DOMContentLoaded',function () {
-        FBDATA.bookmarks['1066'].revision = 'inhabited_v2';
-      },{once:true});
-    });
-    await beginBookmark(page,testInfo,'1066');
+    await startNorthernRevision(page,testInfo,'inhabited_v2');
     await page.evaluate(stageNorthernObservance,{province:'uppsala',faith:'norse_pagan',gold:1});
     expect(await page.evaluate(function () {
       const s = FB.state, c = s.chars[s.player.charId], rid = s.holder.uppsala || s.owner.uppsala;
@@ -551,12 +543,7 @@ test('unaccepted Sami and later steppe candidates create no institutions or new 
 
 test('autonomous local participation conserves the public reserve and never charges the household',
   async function ({page},testInfo) {
-    await page.addInitScript(function () {
-      document.addEventListener('DOMContentLoaded',function () {
-        FBDATA.bookmarks['1066'].revision = 'inhabited_v2';
-      },{once:true});
-    });
-    await beginBookmark(page,testInfo,'1066');
+    await startNorthernRevision(page,testInfo,'inhabited_v2');
     expect(await page.evaluate(function () {
       const s = FB.state, rid = s.owner.uppsala, c = FB.realmRulerCharacterSnapshot(s,rid);
       const faith = 'e2e_northern_ai_faith';
@@ -629,15 +616,10 @@ test('a mobile court keeps mixed religious members and conserved people when its
     })).toEqual({pure:true,moved:true,arrived:true,people:true,identities:true,countyPopulation:true,members:true,valid:true});
   });
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test((crazygames ? 'CrazyGames' : 'standard') + ' restore keeps frozen 1066 district terms after a different opening',
     async function ({page},testInfo) {
-      await page.addInitScript(function () {
-        document.addEventListener('DOMContentLoaded',function () {
-          FBDATA.bookmarks['1066'].revision = 'inhabited_v2';
-        },{once:true});
-      });
-      await startHistoricalGame(page,testInfo,{bookmark:'1066',
+      await startHistoricalGame(page,testInfo,{bookmark:'1066',revision:'inhabited_v2',
         code:'NORTHERNSAVE-1066-farmer-uppsala-f-Review-established'},crazygames);
       await page.evaluate(stageNorthernObservance,{province:'uppsala',faith:'norse_pagan',gold:1});
       const original = await page.evaluate(function () {

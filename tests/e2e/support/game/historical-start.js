@@ -2,18 +2,15 @@
 
 const { expect } = require('../fixture');
 const { mockCrazyGames } = require('../crazygames');
-const { startParityGame } = require('./parity');
+const { startParityGame, prepareJourneyBookmark } = require('./parity');
 const { openCrazyGame } = require('./crazygames-title');
 
 // Historical review journeys choose their title contract explicitly. Keep the
 // standard parity helper and the universal navigation fixture unchanged.
 async function startHistoricalGame(page, testInfo, journey, crazygames) {
-  // A review journey may start a date hidden from new campaigns.
-  await page.addInitScript(function (id) {
-    document.addEventListener('DOMContentLoaded', function () {
-      if (window.FBDATA && FBDATA.bookmarks && FBDATA.bookmarks[id]) FBDATA.bookmarks[id].hidden = false;
-    }, { once:true });
-  }, journey.bookmark);
+  // Historical reviews expose hidden dates by default; callers can retain the
+  // ordinary visibility gate explicitly. Parity journeys keep their defaults.
+  journey = Object.assign({ unhide:true }, journey);
   if (!crazygames) return startParityGame(page, testInfo, journey);
   await mockCrazyGames(page);
   await page.addInitScript(function () {
@@ -21,6 +18,7 @@ async function startHistoricalGame(page, testInfo, journey, crazygames) {
     window.FB_CRAZYGAMES_STORAGE = 'localstorage';
   });
   await openCrazyGame(page, testInfo);
+  await prepareJourneyBookmark(page, journey);
   expect(await page.evaluate(function () {
     return { distribution:FB.platform.isCrazyGames, storage:FB.save.storageBackend(),
       available:FB.crazySave.available(), initialized:window.__cgTest.calls.includes('init') };
@@ -39,6 +37,9 @@ async function startHistoricalGame(page, testInfo, journey, crazygames) {
   expect(await page.evaluate(function () {
     return { bookmark:FB.state.start.id, seed:FB.state.seed };
   })).toEqual({ bookmark:journey.bookmark, seed:journey.code });
+  if (journey.revision) expect(await page.evaluate(function () {
+    return FB.state.start.revision;
+  })).toBe(journey.revision);
   await page.evaluate(function () {
     FB.game.setPaused(true);
     Object.assign(FB.game.auto, {

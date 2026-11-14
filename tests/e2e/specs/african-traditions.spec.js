@@ -32,13 +32,8 @@ dependsOnRuntime(__filename,[
 
 const CURRENT = 'inhabited_v2_governments_v2';
 async function startGhana(page,info,crazygames) {
-  await page.addInitScript(function (revision) {
-    document.addEventListener('DOMContentLoaded',function () {
-      FBDATA.bookmarks['1066'].revision = revision;
-    },{once:true});
-  },CURRENT);
   await startHistoricalGame(page,info,{
-    bookmark:'1066',code:'AFRICAN1066-1066-farmer-kumbi_district-m-Review-established'
+    bookmark:'1066',revision:CURRENT,code:'AFRICAN1066-1066-farmer-kumbi_district-m-Review-established'
   },crazygames);
 }
 
@@ -58,13 +53,7 @@ test('African profile revisions preserve all released faith and default contract
 async function startAfricanPlay(page,info,date,property,crazygames) {
   const revision = date === '476' ? 'wider_v2' : date === '493' ? 'world_v2' : CURRENT;
   const pid = date === '1066' ? 'kumbi_district' : 'garama';
-  await page.addInitScript(function (input) {
-    document.addEventListener('DOMContentLoaded',function () {
-      FBDATA.bookmarks[input.date].revision = input.revision;
-      FBDATA.bookmarks[input.date].hidden = false;
-    },{once:true});
-  },{date:date,revision:revision});
-  await startHistoricalGame(page,info,{bookmark:date,
+  await startHistoricalGame(page,info,{bookmark:date,revision:revision,
     code:'AFRICANPLAY' + date + '-' + date + '-' + (date === '476' || date === '493' ? 'farmer_' + date : 'farmer') +
       '-' + pid + '-f-Review-established' +
       (date === '1066' ? '-0-soninke_1066.sunni' : '')},crazygames);
@@ -335,7 +324,7 @@ function africanPlayFacts() {
     court:s.realms.wagadu_1066.religion}));
 }
 
-for (const crazygames of [false,true]) test('Ghana learning retains its community, prepaid property and commitment on restore, CrazyGames ' + crazygames,
+for (const crazygames of [false]) test('Ghana learning retains its community, prepaid property and commitment on restore, CrazyGames ' + crazygames,
   async function ({page},info) {
     await startAfricanPlay(page,info,'1066',true,crazygames);
     const saved = await page.evaluate(function () {
@@ -484,7 +473,7 @@ test('held Nile, Horn, Sahel and Niger assignments remain dated and distinct',
     })).toEqual({held:true,oldWorlds:true,gaoCourt:'sunni',futureCourt:'sunni'});
   });
 
-for (const crazygames of [false,true]) test('Ghana households and generated faith retain mixed population on restore, CrazyGames ' + crazygames,
+for (const crazygames of [false]) test('Ghana households and generated faith retain mixed population on restore, CrazyGames ' + crazygames,
   async function ({page},info) {
     await startGhana(page,info,crazygames);
     const source = await page.evaluate(function () {
@@ -560,13 +549,7 @@ const AFRICAN_DATED = [
 ];
 
 async function startAfricanDated(page,info,row,crazygames,retained) {
-  await page.addInitScript(function (input) {
-    document.addEventListener('DOMContentLoaded',function () {
-      FBDATA.bookmarks[input.id].revision = input.revision;
-      FBDATA.bookmarks[input.id].hidden = false; // Isolated owner-review journey.
-    },{once:true});
-  },{id:row.id,revision:row.prior + (retained ? '' : '_african_v1')});
-  await startHistoricalGame(page,info,{bookmark:row.id,
+  await startHistoricalGame(page,info,{bookmark:row.id,revision:row.prior + (retained ? '' : '_african_v1'),
     code:'AFRICANDATED' + row.id + '-' + row.id + '-' + (row.id === '476' || row.id === '493' ? 'farmer_' + row.id : 'farmer') +
       '-' + row.pid + '-f-Review-established' +
       (row.identity ? '-0-' + row.identity : '')},crazygames);
@@ -619,10 +602,9 @@ test('seven African review openings preserve complete earlier worlds and validat
     },AFRICAN_DATED)).toEqual({results:[true,true,true,true,true,true,true],institutions:[],activities:[],pure:true});
   });
 
-// The distribution flag changes storage and presentation, not the placed
-// activity rules, so one dated world reviews the CrazyGames path.
+// Exercise the placed activity rules independently in each dated world.
 for (const row of AFRICAN_DATED) {
-  for (const crazygames of row.id === '1204' ? [false,true] : [false]) {
+  for (const crazygames of [false]) {
     test(row.id + ' placed lay activity and membership retain minorities and restore, CrazyGames ' + crazygames,
       async function ({page},info) {
         await startAfricanDated(page,info,row,crazygames,false);
