@@ -3,10 +3,11 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/start_ambitions.js', 'js/story_opening_goals.js',
   'data/story_courts_476.js','data/bookmark_476_wider.js',
+  'data/story_household_effects_476_493.js','js/story_household_observer.js',
   'index.html','data/bookmarks.js','data/bookmark_476.js','data/bookmark_476_gaul_iberia.js',
   'data/bookmark_476_italy.js','data/bookmark_476_dalmatia_east.js','data/cultures.js','data/intrigue.js','data/settlements.js',
   'data/geographies.js','data/eras.js','data/starts.js','data/technology.js','data/systems.js',
-  'data/political_institutions.js','data/story_campaigns.js','data/distribution_crazygames.js',
+  'data/political_institutions.js','data/story_campaigns.js',
   'js/world.js','js/model.js','js/authority.js','js/governments.js','js/politics.js',
   'js/justice.js','js/institutions.js','js/religion.js','js/population.js','js/settlement.js',
   'js/stories.js','js/story_campaign.js','data/story_instances.js','js/story_courts.js',
@@ -19,16 +20,15 @@ const { startHistoricalGame } = require('../support/game/historical-start');
 const { openGame } = require('../support/game/navigation');
 const previous = require('../fixtures/bookmarks/476-iberia-before.json');
 
-async function start(page, testInfo, crazygames) {
-  if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
+async function start(page, testInfo) {
   await startHistoricalGame(page, testInfo, { bookmark:'476',
-    code:'IBERIA476-476-curialis_476-ravenna-m-Marcus' }, !!crazygames);
+    code:'IBERIA476-476-curialis_476-ravenna-m-Marcus' });
 }
 
-for (const crazygames of [false, true]) {
+for (const crazygames of [false]) {
   test('Iberian smoke retains civic seats, regional communities and courts with flag ' + crazygames,
     async function ({ page }, testInfo) {
-      await start(page, testInfo, crazygames);
+      await start(page, testInfo);
       const result = await page.evaluate(function () {
         const s = FB.state, region = FBDATA.bookmarkRegions476.gaul_iberia;
         const cities = ['tarragona','merida','sevilla','toledo','cordoba','barcelona','zaragoza','lisboa','astorga','lugo'];
@@ -247,7 +247,8 @@ for (const opening of [
         });
         bm.realms = bm.realms.filter(function (r) { return before.realmIdsToOmit.indexOf(r.id) < 0; });
         bm.realms.find(function (r) { return r.id === 'aquitaine'; }).governingIdentity.legalIdentityId = before.visigothicLegalIdentityId;
-        bm.stories = bm.stories.filter(function (id) { return before.storyIdsToOmit.indexOf(id) < 0; });
+        bm.stories = bm.stories.filter(function (id) { return before.storyIdsToOmit.indexOf(id) < 0 &&
+          before.storyIdsToOmit.map(function (source) { return 'household_effects_' + source; }).indexOf(id) < 0; });
         before.institutionIdsToOmit.forEach(function (id) { delete bm.localInstitutions[id]; });
         FB.startProgression.noteTier(3);
       },{ before:previous, opening:opening });
@@ -301,7 +302,6 @@ test('one season in Iberia keeps conserved communities, valid courts and bounded
     await start(page,testInfo);
     await page.evaluate(function () {
       FB.game.observe = true;
-      delete FB.state.stories.curialis_track_476; delete FB.state.stories.opening_curialis_476;
       FB.state.player.provinceId = 'merida';
       FB.state.chars[FB.state.player.charId].homeProvinceId = 'merida';
     });

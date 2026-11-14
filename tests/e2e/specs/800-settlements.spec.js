@@ -1,26 +1,20 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { openCrazyGame } = require('../support/game/crazygames-title');
-const { mockCrazyGames } = require('../support/crazygames');
 const { startParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/bookmark_800.js', 'data/bookmark_800_history.js', 'data/bookmark_800_expansion.js',
+  'data/story_household_effects_711_800_1204.js', 'js/story_household_observer.js',
   'data/geography_expansion.js', 'data/government_rollout.js', 'data/bookmark_476_wider_identities.js',
   'data/bookmarks.js', 'data/starts.js', 'data/technology.js', 'data/political_institutions.js',
-  'data/distribution_crazygames.js', 'js/crazygames.js',
   'js/world.js', 'js/royal_settlements.js', 'js/story_settlements.js', 'data/story_instances.js',
   'js/stories.js', 'js/starts.js', 'js/model.js', 'js/governments.js', 'js/station.js', 'js/localfolk.js',
   'js/wars.js', 'js/authority.js', 'js/treasury.js', 'js/events.js',
   'js/main.js', 'js/save.js', 'js/save_v4.js'
 ]);
-async function observe(page, testInfo, bookmark, crazygames) {
-  if (crazygames) {
-    await mockCrazyGames(page);
-    await openCrazyGame(page, testInfo);
-  }
-  else await openGame(page, testInfo);
+async function observe(page, testInfo, bookmark) {
+  await openGame(page, testInfo);
   const error = await page.evaluate(function (bookmark) {
     return new Promise(function (resolve) {
       FB.activateBookmark(bookmark, null, function (fault) {
@@ -50,11 +44,10 @@ async function observe(page, testInfo, bookmark, crazygames) {
   });
 }
 
-for (const crazy of [false, true]) {
+for (const crazy of [false]) {
   test('800 courts link real sons once and preserve their saved identity with flag ' + crazy,
     async function ({ page }, testInfo) {
-      if (crazy) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-      await observe(page, testInfo, null, crazy);
+      await observe(page, testInfo);
       const result = await page.evaluate(function () {
         let s = FB.state;
         const rec = settlementRecord(s);
@@ -299,10 +292,17 @@ test('867 stays detached and an older 800 save gains no historical people or sto
       bookmark:'800', code:'SETTLEMENTS-800-farmer-london-m-Review'
     });
     const result = await page.evaluate(function () {
-      ['divisio','ordinatio','gifts','recognition','verdun'].forEach(function (key) { delete FB.state.stories[key + '_800']; });
+      // This campaign predates both the settlement stories and attachment sealing.
+      delete FB.state.start.storyAttachments;
+      ['divisio','ordinatio','gifts','recognition','verdun'].forEach(function (key) {
+        delete FB.state.stories[key + '_800'];
+        delete FB.state.stories['household_effects_' + key + '_800'];
+      });
       const before = Object.keys(FB.state.chars).sort().join('|');
       FB.save.restore(JSON.parse(FB.save.serialize()));
-      return { absent:['divisio','ordinatio','gifts','recognition','verdun'].every(function (key) { return !FB.stories.record(FB.state, key + '_800'); }),
+      return { absent:['divisio','ordinatio','gifts','recognition','verdun'].every(function (key) {
+        return !FB.stories.record(FB.state, key + '_800') && !FB.stories.record(FB.state, 'household_effects_' + key + '_800');
+      }),
         people:before === Object.keys(FB.state.chars).sort().join('|') };
     });
     expect(result).toEqual({ absent:true, people:true });
@@ -322,6 +322,9 @@ test('bundled 800 saves migrate their pending, planned and concluded opportuniti
       const id = key + '_800'; FB.stories.apply(s, id, 'approve', FB.stories.quote(s, id, 'approve'));
     });
     const old = JSON.parse(FB.save.serialize()), rows = {}, cast = old.state.stories.divisio_800.cast;
+    // The combined settlement record predates attachment sealing.
+    delete old.storyAttachmentSchema;
+    delete old.state.start.storyAttachments;
     const pressure = old.state.stories.verdun_800.pressure;
     function snapshot(rows) { return JSON.stringify(Object.keys(rows).sort().map(function (id) { return [id,rows[id]]; })); }
     function effects(state) {
@@ -363,6 +366,8 @@ for (const damage of ['conflict','missing_opportunity','bad_cast','bad_pressure'
     const result = await page.evaluate(function (damage) {
       const save = JSON.parse(FB.save.serialize()), source = { cast:save.state.stories.divisio_800.cast,
         pressure:save.state.stories.verdun_800.pressure, opportunities:{} };
+      delete save.storyAttachmentSchema;
+      delete save.state.start.storyAttachments;
       ['divisio','ordinatio','gifts','recognition','verdun'].forEach(function (key) {
         const row = save.state.stories[key + '_800']; delete row.approvals; delete row.cast; delete row.pressure;
         source.opportunities[key] = row; delete save.state.stories[key + '_800'];

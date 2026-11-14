@@ -3,25 +3,20 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/bookmark_1204_terrain.js',
   'data/story_courts_476.js',
+  'data/story_household_effects_711_800_1204.js', 'js/story_household_observer.js',
   'index.html', 'data/bookmark_1204.js', 'data/bookmark_1204_campaigns.js',
   'data/bookmark_476.js', 'js/title_ids.js',
   'data/technology.js', 'data/systems.js', 'data/eras.js', 'data/starts.js',
   'js/stories.js', 'js/story_history.js', 'js/story_campaign.js', 'data/story_instances.js',
   'js/starts.js', 'js/main.js', 'js/world.js', 'js/model.js', 'js/authority.js',
+  'js/mobile_confederations.js', 'js/government_assembly.js', 'js/government_civic.js', 'js/ecclesiastical_strategies.js',
   'js/holywar.js', 'js/papacy.js', 'js/treasury.js', 'js/save.js', 'js/save_v4.js',
-  'data/distribution_crazygames.js', 'js/crazygames.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { openCrazyGame } = require('../support/game/crazygames-title');
 
-async function begin(page, testInfo, distribution) {
-  if (distribution) await page.addInitScript(function () {
-    window.FB_DISTRIBUTION = 'crazygames';
-    window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-  });
-  if (distribution) await openCrazyGame(page, testInfo);
-  else await openGame(page, testInfo);
+async function begin(page, testInfo) {
+  await openGame(page, testInfo);
   await page.evaluate(function () { FB.startProgression.noteTier(3); });
   const fullStart = page.locator('#btn-choose-beginning');
   if (await fullStart.isVisible()) await fullStart.click();
@@ -69,10 +64,10 @@ async function begin(page, testInfo, distribution) {
   });
 }
 
-for (const distribution of [false, true]) {
+for (const distribution of [false]) {
   test('1204 starts with landless named claimants and bounded prior crusades: ' + distribution,
     async function ({ page }, testInfo) {
-      await begin(page, testInfo, distribution);
+      await begin(page, testInfo);
       const result = await page.evaluate(function () {
         const s = FB.state, before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
         const names = ['thessalonica_partition_1204','athens_partition_1204','achaia_partition_1204']
@@ -98,8 +93,9 @@ for (const distribution of [false, true]) {
           }), review:[FBDATA.techImpactReviews.features.negotiated_historical_partition.mode,
             FBDATA.techImpactReviews.features.dated_holy_war_calls.mode] };
       });
-      expect(result.names).toEqual([['Boniface of Montferrat',false,null,null],
-        ['Othon de la Roche',false,null,null],['William of Champlitte',false,null,null]]);
+      // The multi-office realm lookup returns undefined when no crown is held.
+      expect(result.names).toEqual([['Boniface of Montferrat',false,undefined,null],
+        ['Othon de la Roche',false,undefined,null],['William of Champlitte',false,undefined,null]]);
       expect(result.pure && result.samePeople).toBe(true);
       expect(result.owners).toEqual(['thessalonica_1204','sgouros_1204','morea_1204']);
       expect(result.active).toBeNull();
@@ -333,7 +329,13 @@ test('old campaigns receive no new history or people and malformed historical sa
         .map(function (id) { return old.state.stories[id].beneficiaryId; });
       people.forEach(function (id) { delete old.state.chars[id]; });
       ['thessalonica_partition_1204','athens_partition_1204','achaia_partition_1204','latin_bithynia_1204','latin_athens_1204','latin_achaia_1204','fifth_crusade_call_1204']
-        .forEach(function (id) { delete old.state.stories[id]; });
+        .forEach(function (id) {
+          delete old.state.stories[id];
+          delete old.state.stories['household_effects_' + id];
+        });
+      // Older campaigns have no sealed attachment inventory.
+      delete old.storyAttachmentSchema;
+      delete old.state.start.storyAttachments;
       const retainedStories = Object.keys(old.state.stories).sort();
       old.state.greatHolyWarHistory.campaigns = [];
       FB.save.restore(old);

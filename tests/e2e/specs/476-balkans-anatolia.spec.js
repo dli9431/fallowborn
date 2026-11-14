@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'data/start_ambitions.js', 'js/story_opening_goals.js',
   'data/bookmark_476_wider.js', 'data/bookmark_476_wider_identities.js', 'data/geography_expansion.js',
   'data/story_courts_476.js',
+  'data/story_household_effects_476_493.js', 'js/story_household_observer.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_dalmatia_east.js', 'data/bookmark_476_italy.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
@@ -196,7 +197,8 @@ test('an unversioned core opening restores under its retained revision without s
       bm.realms = bm.realms.map(function (r) {
         return r.id === 'sasanian_476' ? FBDATA.bookmarkRegions476.outer.realms.find(function (o) { return o.id === r.id; }) : r;
       });
-      bm.stories = bm.stories.filter(function (id) { return ['thracian_pressure_476','amal_epirus_476'].indexOf(id) < 0; });
+      bm.stories = bm.stories.filter(function (id) { return ['thracian_pressure_476','amal_epirus_476',
+        'household_effects_thracian_pressure_476','household_effects_amal_epirus_476'].indexOf(id) < 0; });
       const old = ['salona_council','salona_see','constantinople_senate','constantinople_see','thessalonica_see',
         'dyrrachium_see','serdica_see','nicaea_see','ephesus_see','caesarea_see'];
       bm.localInstitutions = Object.assign({},bm.localInstitutions);
@@ -291,7 +293,7 @@ test('one regional daily season resolves both bounded rails and retains communit
     await start(page,testInfo); await injectBrowserHarness(page);
     await page.evaluate(function () {
       const s = FB.state;
-      FB.game.observe = true; delete s.stories.curialis_track_476; delete s.stories.opening_curialis_476;
+      FB.game.observe = true;
       s.player.provinceId = 'thessaloniki';
       window.regionalChance = FB.chance; FB.chance = function (p) { return p >= 1; };
       // Stage Zeno's return, then open the season in 482: the Thracian window

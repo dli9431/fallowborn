@@ -1,9 +1,9 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
-const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startParityGame } = require('../support/game/parity');
+const { expectModAdmission } = require('../support/game/mod-admission');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const proof = require('../fixtures/authoring/ruler-agendas.json');
 dependsOnRuntime(__filename, ['index.html','js/story_ruler_agenda.js','js/story_campaign.js','data/story_campaigns.js','js/stories.js','js/starts.js',
@@ -13,10 +13,14 @@ dependsOnRuntime(__filename, ['index.html','js/story_ruler_agenda.js','js/story_
   'js/main.js','data/starts.js','data/aristocratic_courts.js','data/bookmark_1204_terrain.js','data/technology.js',
   'data/story_ruler_agendas.js']);
 
-async function importedStart(page, info, scenario) {
+async function importedStart(page, info, scenario, withoutAgenda) {
   await openGame(page, info);
+  const candidate = JSON.parse(JSON.stringify(proof));
+  if (withoutAgenda) candidate.startScenarios.find(function (sc) { return sc.id === scenario; }).tracks = [];
+  await expectModAdmission(page, candidate);
   await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/ruler-agendas.json'));
+  await page.locator('#modfile').setInputFiles({ name:'ruler-agendas.json', mimeType:'application/json',
+    buffer:Buffer.from(JSON.stringify(candidate)) });
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('proof_royal_agenda'); });
@@ -156,7 +160,7 @@ for (const fault of ['operation','unknown_field','duplicate_choice','reserved_ch
   });
 }
 
-test('optional agenda save extension preserves absence and rejects malformed records before adoption', async function ({ page }, info) {
+test('current agenda saves reject malformed and missing sealed records before adoption', async function ({ page }, info) {
   await importedStart(page, info, 'peroz_476');
   const result = await page.evaluate(function () {
     const id = 'proof_royal_agenda', saved = JSON.parse(FB.save.serialize()), broken = JSON.parse(JSON.stringify(saved));
@@ -164,10 +168,36 @@ test('optional agenda save extension preserves absence and rejects malformed rec
     const live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter(), source = JSON.stringify(broken);
     let rejected = false; try { FB.save.restore(broken); } catch (_) { rejected = true; }
     const pure = live === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter() && source === JSON.stringify(broken);
-    delete saved.state.stories[id]; FB.save.restore(saved); FB.stories.day(FB.state);
-    return { rejected:rejected, pure:pure, absent:!FB.state.stories[id] };
+    delete saved.state.stories[id];
+    const current = FB.state, currentRng = FB.getRngState(), currentUid = FB.getUidCounter();
+    let sealedRejected = false; try { FB.save.restore(saved); } catch (_) { sealedRejected = true; }
+    sealedRejected = sealedRejected && current === FB.state && currentRng === FB.getRngState() && currentUid === FB.getUidCounter();
+    return { sealedRejected:sealedRejected, rejected:rejected, pure:pure };
   });
-  expect(result).toEqual({ rejected:true, pure:true, absent:true });
+  expect(result).toEqual({ sealedRejected:true, rejected:true, pure:true });
+});
+
+test('an imported ruler start without an agenda preserves its absence in current and pre-seal saves', async function ({ page }, info) {
+  await importedStart(page, info, 'peroz_476', true);
+  const result = await page.evaluate(function () {
+    const id = 'proof_royal_agenda', source = JSON.parse(FB.save.serialize()), bytes = JSON.stringify(source);
+    const original = JSON.stringify(source.state.start), person = source.state.player.charId;
+    const initial = !FB.state.stories[id], rng = FB.getRngState(), uid = FB.getUidCounter();
+    FB.save.restore(source);
+    const firstPure = rng === FB.getRngState() && uid === FB.getUidCounter();
+    FB.stories.day(FB.state);
+    const current = !FB.state.stories[id] && original === JSON.stringify(FB.state.start);
+    const legacy = JSON.parse(JSON.stringify(source));
+    delete legacy.storyAttachmentSchema; delete legacy.state.start.storyAttachments;
+    const legacyRng = FB.getRngState(), legacyUid = FB.getUidCounter();
+    FB.save.restore(legacy);
+    const secondPure = legacyRng === FB.getRngState() && legacyUid === FB.getUidCounter();
+    FB.stories.day(FB.state);
+    return { initial:initial, current:current, absent:!FB.state.stories[id],
+      identity:FB.state.start.rulerRealmId === 'sasanian_476' && person === FB.state.player.charId,
+      pure:bytes === JSON.stringify(source) && firstPure && secondPure };
+  });
+  expect(result).toEqual({ initial:true, current:true, absent:true, identity:true, pure:true });
 });
 
 test('a territorial ruler losing the whole domain cannot continue the original court program', async function ({ page }, info) {
@@ -185,18 +215,16 @@ test('a territorial ruler losing the whole domain cannot continue the original c
 
 test('changing an imported agenda under the same mod name rejects its old campaign fingerprint', async function ({ page }, info) {
   await importedStart(page,info,'peroz_476');
-  const saved = await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
-  const changed = JSON.parse(JSON.stringify(proof));
-  changed.storyInstances.proof_royal_agenda.stages[1].year = 478;
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles({ name:'ruler-agendas.json', mimeType:'application/json', buffer:Buffer.from(JSON.stringify(changed)) });
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
-  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('proof_royal_agenda'); });
-  const result = await page.evaluate(function (saved) {
-    const live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter(), source = JSON.stringify(saved);
-    let rejected = false; try { FB.save.restore(saved); } catch (_) { rejected = true; }
-    return { rejected:rejected, pure:live === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter() && source === JSON.stringify(saved) };
-  },saved);
-  expect(result).toEqual({ rejected:true, pure:true });
+  const result = await page.evaluate(function (source) {
+    const saved = JSON.parse(FB.save.serialize()), matching = !FB.save.otherWorld(saved);
+    const changed = JSON.parse(JSON.stringify(source));
+    changed.storyInstances.proof_royal_agenda.stages[1].year = 478;
+    // Exercise the same canonical installer without preparing another full title.
+    FB.mods.apply(changed);
+    const live = FB.state, state = JSON.stringify(live), rng = FB.getRngState(), uid = FB.getUidCounter(), bytes = JSON.stringify(saved);
+    let rejected = false; try { FB.save.restore(saved); } catch (error) { rejected = /different mod/.test(error.message); }
+    return { matching:matching, mismatch:FB.save.otherWorld(saved), rejected:rejected,
+      pure:live === FB.state && state === JSON.stringify(FB.state) && rng === FB.getRngState() && uid === FB.getUidCounter() && bytes === JSON.stringify(saved) };
+  },proof);
+  expect(result).toEqual({ matching:true, mismatch:true, rejected:true, pure:true });
 });

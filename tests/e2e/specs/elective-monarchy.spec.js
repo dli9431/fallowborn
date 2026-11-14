@@ -27,6 +27,8 @@ async function start(page, testInfo, fictional) {
       [b].concat(Object.values(b.revisions || {})).forEach(function (layer) {
         (layer.realms || []).filter(function (r) { return r.id === f.realmId; }).forEach(function (r) { r.government = f.formId; });
       });
+      FBDATA.startScenarios.filter(function (sc) { return sc.rulerRealmId === f.realmId; })
+        .forEach(function (sc) { sc.governmentForm = f.formId; });
       FB.governments.invalidate();
     }
     FB.startProgression.noteTier(3);
@@ -317,6 +319,9 @@ test('a genuinely older campaign gains no delegates or elective form on restorat
       source.state.authority.governments[rid].formId = 'territorial';
       delete source.state.authority.governments[rid].selection;
     });
+    // Older campaigns have no sealed attachment inventory.
+    delete source.storyAttachmentSchema;
+    delete source.state.start.storyAttachments;
     delete source.state.localInstitutions;
     delete source.state.stories.toledo_crown_711;
     delete source.state.stories.northeastern_crown_711;

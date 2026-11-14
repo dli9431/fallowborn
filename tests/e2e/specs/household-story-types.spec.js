@@ -39,11 +39,17 @@ test('ordinary JSON import supplies two different household graphs with durable 
     const retained = rec === JSON.stringify(s.stories[id]);
     // Matching older saves remain without a newly introduced optional track.
     delete saved.state.stories[id];
+    const current = FB.state, currentRng = FB.getRngState(), currentUid = FB.getUidCounter();
+    let sealedRejected = false; try { FB.save.restore(saved); } catch (_) { sealedRejected = true; }
+    sealedRejected = sealedRejected && current === FB.state && currentRng === FB.getRngState() && currentUid === FB.getUidCounter();
+    // An older campaign predates the sealed attachment inventory.
+    delete saved.storyAttachmentSchema;
+    delete saved.state.start.storyAttachments;
     FB.save.restore(saved);
-    return { pure:pure, wrongHome:wrongHome, stale:stale, applied:applied, repeated:repeated, retained:retained,
+    return { sealedRejected:sealedRejected, pure:pure, wrongHome:wrongHome, stale:stale, applied:applied, repeated:repeated, retained:retained,
       missing:!FB.state.stories || !FB.state.stories[id] };
   });
-  expect(result).toEqual({ pure:true, wrongHome:0, stale:false, applied:true, repeated:false, retained:true, missing:true });
+  expect(result).toEqual({ sealedRejected:true, pure:true, wrongHome:0, stale:false, applied:true, repeated:false, retained:true, missing:true });
 });
 
 test('the independent dated graph expires without a reward or replay', async function ({ page }, info) {

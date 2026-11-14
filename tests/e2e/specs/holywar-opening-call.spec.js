@@ -1,9 +1,9 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
-const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
+const { expectModAdmission } = require('../support/game/mod-admission');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = {
   harbor:require('../fixtures/authoring/holywar-opening-harbor.json'),
@@ -15,18 +15,26 @@ dependsOnRuntime(__filename, ['index.html','js/story_history.js','js/stories.js'
   'js/religion.js','js/treasury.js','data/technology.js','data/cultures.js','data/systems.js',
   'data/eras.js','data/starts.js']);
 
+function openingCandidate(example) {
+  const candidate = JSON.parse(JSON.stringify(examples[example]));
+  if (example === 'upland') candidate.bookmarks.dune_world.date = {year:900,season:0,day:1};
+  return candidate;
+}
+
 async function begin(page, info, example) {
   await openGame(page, info);
+  const candidate = openingCandidate(example);
+  await expectModAdmission(page, candidate);
   await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
-    '../fixtures/authoring/holywar-opening-' + example + '.json'));
+  await page.locator('#modfile').setInputFiles({ name:'holywar-opening-' + example + '.json',
+    mimeType:'application/json', buffer:Buffer.from(JSON.stringify(candidate)) });
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
   const prefix = example === 'harbor' ? 'harbor' : 'dune';
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix + '_world'];
   }, prefix);
-  await beginBookmark(page, info, prefix + '_world', prefix + '_household');
+  await beginBookmarkFromTitle(page, prefix + '_world', prefix + '_household');
   await page.evaluate(function (prefix) {
     window.openingTest = {
       id:prefix + '_opening_call', faith:prefix + '_belief', head:prefix === 'harbor' ? 'harbor_commune' : 'dune_oasis',
@@ -216,10 +224,15 @@ test('strict optional saves reject malformed preparation without evaluating or a
         rng === FB.getRngState() && uid === FB.getUidCounter();
     });
     const missing = JSON.parse(JSON.stringify(source)); delete missing.state.stories[t.id];
+    const live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
+    let sealedRejected = false; try { FB.save.restore(missing); } catch (_) { sealedRejected = true; }
+    sealedRejected = sealedRejected && live === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter();
+    delete missing.storyAttachmentSchema;
+    delete missing.state.start.storyAttachments; // A campaign predating attachment sealing.
     FB.save.restore(missing); FB.stories.restore(FB.state); FB.prepareOpeningHolyWarCalls(FB.state);
-    return {faults:faults,absent:!FB.state.stories[t.id],noCall:!FB.state.greatHolyWar};
+    return {sealedRejected:sealedRejected,faults:faults,absent:!FB.state.stories[t.id],noCall:!FB.state.greatHolyWar};
   });
-  expect(result).toEqual({faults:Array(8).fill(true),absent:true,noCall:true});
+  expect(result).toEqual({sealedRejected:true,faults:Array(8).fill(true),absent:true,noCall:true});
 });
 
 test('a completed opening observes the real campaign result once across restore', async function ({page}, info) {
@@ -262,6 +275,6 @@ test('changed preparation under the same mod name rejects the prior fingerprint'
     try { FB.save.restore(saved); } catch (error) { rejected = /different mod/.test(error.message); }
     return {matching:matching,mismatch:FB.save.otherWorld(saved),rejected:rejected,
       pure:state === FB.state && before === JSON.stringify(FB.state) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  }, examples.upland);
+  }, openingCandidate('upland'));
   expect(result).toEqual({matching:true,mismatch:true,rejected:true,pure:true});
 });
