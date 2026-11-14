@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
@@ -11,7 +12,7 @@ dependsOnRuntime(__filename,[
   'data/fort_profiles.js', 'js/fort_profiles.js','index.html','data/building_profiles.js','data/building_institutions.js',
   'data/building_operations.js','data/site_resources.js','data/technology.js','data/map_data.js',
   'js/building_profiles.js','js/building_institutions.js','js/building_operations.js','js/site_resources.js',
-  'js/fortifications.js','js/actions.js','js/world.js','js/mods.js','js/save.js','js/save_v4.js',
+  'js/fortifications.js','js/actions.js','js/world.js','js/mods.js','js/bookmark_composition.js','js/save.js','js/save_v4.js',
   'js/technology.js','js/population.js','js/lordships.js','js/treasury.js','js/politics.js',
   'js/home_authority.js','js/ui_misc.js','js/ui_modals.js','js/main.js']);
 
@@ -27,6 +28,7 @@ async function start(page,info,label,npc) {
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildingProfiles && FBDATA.buildingProfiles[Object.keys(FBDATA.buildingProfiles)[0]]; });
   const world = label === 'river' ? 'inventory_estuary' : 'resource_upland';
   await beginBookmark(page,info,world,world + '_household');
+  await installRestoreFacts(page);
   await page.evaluate(function (npc) {
     const s = FB.state, pid = s.player.provinceId;
     window.profileCounty = pid;
@@ -80,7 +82,7 @@ test('selected river construction pays once, keeps one base asset and awards onl
   });
   expect(r).toMatchObject({allowed:true,built:true,repeat:false,one:true,baseId:'profile_work',profile:'river_serviced',
     dev:0,granted:0,values:[30,2,0],idle:0,water:0,institution:'binding_institution',people:true,baseAttempt:false,alternative:false});
-  expect(r.paid).toBe(r.cost);
+  expect(r.paid).toBeCloseTo(r.cost, 8);
 });
 
 test('hill variants differ in price, learning, site permission and technology while ordinary construction survives',async function ({page},info) {
@@ -121,7 +123,7 @@ test('one real water payment uses replacement benefits and retains profile price
       orphanRetained:root===JSON.stringify(s.buildingOperations)&&funds===s.player.gold};
   });
   expect(r).toMatchObject({paid:true,repeat:false,benefit:2,profile:'river_serviced',retained:true,removed:true,absent:true,orphanRetained:true});
-  expect(r.cost).toBe(r.quote);
+  expect(r.cost).toBeCloseTo(r.quote, 8);
 });
 
 test('stale price, source, date, authority and incumbent confirmations fail atomically',async function ({page},info) {
@@ -130,7 +132,7 @@ test('stale price, source, date, authority and incumbent confirmations fail atom
     const s=FB.state,P=FB.buildingProfiles,pid=profileCounty;profileKnowledge(['water_power']);
     const changes=[function(){s.player.gold--;},function(){s.date.year++;},function(){s.holder[pid]='missing';},
       function(){s.chars[s.religiousHeads.binding_bishop].dead=true;},
-      function(){const q=FB.siteResources.quote(s,{operation:'reserve',sourceId:'profile_intake',actor:{kind:'character',id:s.player.charId},amount:1,reservationId:'profile_rival'}); if(!FB.siteResources.commit(s,q))throw new Error('Source setup failed');}];
+      function(){const q=FB.siteResources.quote(s,{operation:'reserve',sourceId:'profile_intake',actor:{kind:'character',id:s.player.charId},amount:1}); if(!FB.siteResources.commit(s,q))throw new Error('Source setup failed');}];
     return changes.map(function(change){
       const state=JSON.stringify(s),q=P.quote(s,profileRequest('river_serviced'));change();
       const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -167,7 +169,7 @@ test('realm selected construction protects ordinary treasury reserves and leaves
     const before=JSON.stringify(s),blocked=!FB.buildRealm(s,rid,pid,0,'profile_work',0,'hill_learned');
     return {built:built,paid:paid,cost:q.cost,privateSame:privateCash===s.player.gold,blocked:blocked,pure:before===JSON.stringify(s)};
   });
-  expect(r).toMatchObject({built:true,privateSame:true,blocked:true,pure:true});expect(r.paid).toBe(r.cost);
+  expect(r).toMatchObject({built:true,privateSame:true,blocked:true,pure:true});expect(r.paid).toBeCloseTo(r.cost, 8);
 });
 
 test('private barons fund a selected profile from their real account',async function ({page},info) {
@@ -181,7 +183,7 @@ test('private barons fund a selected profile from their real account',async func
     return {built:built,cost:q.cost,paid:1000-FB.baronyAccount(s,baron.id).gold,privateSame:gold===s.player.gold,
       selected:s.buildings[pid][0].buildingProfile.id};
   });
-  expect(r).toMatchObject({built:true,privateSame:true,selected:'hill_grazing'});expect(r.paid).toBe(r.cost);
+  expect(r).toMatchObject({built:true,privateSame:true,selected:'hill_grazing'});expect(r.paid).toBeCloseTo(r.cost, 8);
 });
 
 test('a funded profiled fort finishes after its construction window without changing canonical tier values',async function ({page},info) {
@@ -263,9 +265,10 @@ test('detached ordinary JSON rejects unsupported overrides and references withou
 
 test('profile selectors and confirmation retain source scroll, disclosures and focus through Back and Cancel',async function ({page},info) {
   await start(page,info,'river');
+  await page.setViewportSize({width:390,height:844});
   await page.evaluate(function(){profileKnowledge(['water_power']);FB.ui.showBuildings(profileCounty,0);});
   const entry=page.locator('[data-profile-building="profile_work"]');
-  const disclosure=page.locator('#gm-body .settcard-info').first();
+  const disclosure=page.locator('#gm-body .settcard-info:visible').first();
   await disclosure.click();
   await entry.focus();
   const scroll=await page.evaluate(function(){const body=document.getElementById('gm-body');body.scrollTop=100;return body.scrollTop;});

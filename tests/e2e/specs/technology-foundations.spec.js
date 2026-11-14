@@ -1,9 +1,10 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/technology.js', 'data/technology_foundations.js',
   'data/bookmarks.js', 'data/eras.js', 'data/cultures.js',
-  'js/technology.js', 'js/world.js', 'js/main.js', 'js/save.js'
+  'js/technology.js', 'js/world.js', 'js/main.js', 'js/save.js','js/save_v4.js','js/bookmark_composition.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -92,6 +93,7 @@ test('ancient evidence changes soft research review while prerequisites and paid
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
+  await installRestoreFacts(page);
     const results = await page.evaluate(function () {
       const liveBefore = JSON.stringify(FB.state);
       const out = ['seed_selection', 'haymaking', 'stone_sawing'].map(function (id) {
@@ -145,6 +147,7 @@ test('completed foundations retain their exact scalar bonuses and capability lis
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
+  await installRestoreFacts(page);
     const result = await page.evaluate(function (ids) {
       const state = JSON.parse(JSON.stringify(FB.state));
       const rid = FB.techRealmId(state);
@@ -180,6 +183,7 @@ for (const bookmark of ['867', '1066']) {
       await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
       await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
       await page.getByRole('button', { name:'Begin', exact:true }).click();
+      await installRestoreFacts(page);
       const result = await page.evaluate(function (ids) {
         FB.game.setPaused(true);
         const originals = {}, current = JSON.parse(JSON.stringify(FB.state));
@@ -202,7 +206,7 @@ for (const bookmark of ['867', '1066']) {
               JSON.stringify(old.realmTech[rid][key].slice().sort());
           });
         });
-        window.__foundationSavedKnowledge = JSON.stringify(FB.state.realmTech);
+        window.__foundationSavedKnowledge = restoreFacts(FB.state, function (v) { return v.realmTech; }, {technologySets:true});
         return { mismatch:mismatch, realms:Object.keys(current.realmTech).length,
           revision:FB.campaignBookmark(FB.state).revision || 'baseline',
           text:FB.save.serialize() };
@@ -222,8 +226,64 @@ for (const bookmark of ['867', '1066']) {
         return page.evaluate(function () { return window.__foundationRestored; });
       }).toBe(true);
       const knowledge = await page.evaluate(function () {
-        return { saved:JSON.parse(window.__foundationSavedKnowledge), restored:FB.state.realmTech };
+        return { saved:window.__foundationSavedKnowledge, restored:restoreFacts(FB.state, function (v) { return v.realmTech; }, {technologySets:true}) };
       });
       expect(knowledge.restored).toEqual(knowledge.saved);
     });
 }
+
+
+test('detached restore facts normalize only codec defaults and opted-in technology set order',
+  async function ({ page }, info) {
+    await openGame(page,info);
+    await installRestoreFacts(page);
+    const result = await page.evaluate(function () {
+      return [
+        ['manuscript_codex','scriptoria','paper_making'],
+        ['quern_stones','water_power','undershot_watermill']
+      ].map(function (ids) {
+        const state = {player:{gold:100},authority:{schema:FB.save.FORMAT.authoritySchema},
+          chars:{keeper:{id:'keeper',name:'Keeper'}},
+          realms:{court:{id:'court',alive:true,treasury:{gold:200}}},
+          buildings:{county:[{s:0,id:'library',devGranted:0},{s:1,id:'temple',ruined:true}]},
+          realmTech:{court:{completed:ids.slice(0,2),exposed:ids.slice(),
+            active:[ids[2],ids[1]],reserve:3,progress:{},priorities:{}}}};
+        state.realmTech.court.progress[ids[2]]=7;
+        state.realmTech.court.priorities[ids[1]]=2;
+        function copy(value) { return JSON.parse(JSON.stringify(value)); }
+        function all(v) { return v; }
+        function facts(v) { return restoreFacts(v,all,{technologySets:true}); }
+        const raw=JSON.stringify(state),rng=FB.getRngState(),uid=FB.getUidCounter(),expected=facts(state);
+        const reordered=copy(state);
+        reordered.realmTech.court.completed.reverse();
+        reordered.realmTech.court.exposed.reverse();
+        reordered.buildings.county[0]={devGranted:0,id:'library'};
+        delete reordered.authority.schema;
+        const compactBefore=JSON.stringify(reordered),actual=facts(reordered);
+        const mutations=[
+          function (v) { v.player.gold++; },
+          function (v) { v.realms.court.treasury.gold++; },
+          function (v) { v.chars.keeper.id='other'; },
+          function (v) { v.authority.schema++; },
+          function (v) { v.buildings.county.reverse(); },
+          function (v) { v.buildings.county[0].devGranted++; },
+          function (v) { v.realmTech.court.active.reverse(); },
+          function (v) { v.realmTech.court.progress[ids[2]]++; },
+          function (v) { v.realmTech.court.reserve++; },
+          function (v) { v.realmTech.court.priorities[ids[1]]++; },
+          function (v) { v.realmTech.court.completed.push(ids[0]); },
+          function (v) { v.realmTech.court.exposed.push('geometry'); }
+        ];
+        const detected=mutations.map(function (change) {
+          const changed=copy(state);change(changed);
+          try { assertRestoreFacts(facts(changed),expected);return false; }
+          catch (error) { return /Restore facts differ/.test(error.message); }
+        });
+        return {equal:assertRestoreFacts(actual,expected),detected:detected,
+          orderedByDefault:restoreFacts(state,all)!==restoreFacts(reordered,all),
+          pure:raw===JSON.stringify(state)&&compactBefore===JSON.stringify(reordered)&&
+            rng===FB.getRngState()&&uid===FB.getUidCounter()};
+      });
+    });
+    expect(result).toEqual(Array(2).fill({equal:true,detected:Array(12).fill(true),orderedByDefault:true,pure:true}));
+  });

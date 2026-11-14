@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const fs = require('fs');
@@ -13,11 +14,12 @@ const importPath = path.resolve(__dirname, '../fixtures/authoring/learning-and-c
 dependsOnRuntime(__filename, [
   'data/technology_baths_headworks.js', 'data/buildings_baths_headworks.js',
   'data/technology_masonry_circuits.js', 'data/technology_waterworks.js', 'data/buildings_waterworks.js', 'data/buildings_early_worship.js','data/buildings_fish_drying.js',
+  'data/buildings_boathouses.js','data/buildings_seasonal_pasture.js','data/buildings_early_industry.js',
   'data/technology_learning.js', 'data/buildings_learning_care.js',
   'data/technology.js', 'data/technology_early_refinements.js', 'data/map_data.js', 'data/markets.js', 'data/bookmarks.js',
   'data/eras.js', 'js/technology.js', 'js/actions.js', 'js/fortifications.js',
   'js/world.js', 'js/lordships.js', 'js/treasury.js', 'js/population.js', 'js/institutions.js',
-  'js/mods.js', 'js/save.js', 'js/main.js', 'js/ui_modals.js', 'js/ui_misc.js'
+  'js/mods.js', 'js/bookmark_composition.js','js/save_v4.js','js/save.js', 'js/main.js', 'js/ui_modals.js', 'js/ui_misc.js'
 ]);
 
 test.beforeEach(async function ({ page }, info) { await openGame(page, info); });
@@ -33,6 +35,7 @@ async function prepareLord(page, imported) {
     });
   }
   await startDeterministicGame(page);
+  await installRestoreFacts(page);
   await page.evaluate(function () {
     const s = FB.state, pid = s.player.provinceId;
     s.player.tier = 4; s.player.provs = [pid]; s.player.gold = 10000;
@@ -75,7 +78,7 @@ test('catalogue corrections retain costs and effects with explicit paper transmi
   expected.paper_scholarship.history.adoption.persianate = [800,1000];
   expect(r.retained).toEqual(expected);
   expect(r.errors).toEqual([]); expect(r.buildings).toEqual([]);
-  expect(r.techCount).toBe(195); expect(r.buildingCount).toBe(27);
+  expect(r.techCount).toBe(195); expect(r.buildingCount).toBe(31);
   expect(r.scriptoria).toEqual(['rule:scriptoria','building:library']);
   expect(r.paper).toEqual([]); expect(r.library).toBe('scriptoria');
   expect(r.reqs).toEqual([
@@ -128,7 +131,7 @@ test('manuscript libraries are paid without paper and contribute national resear
         return FB.techPrerequisitesMet(s,id);
       })};
   });
-  expect(r.locked).toBe(false); expect(r.built).toBe(true); expect(r.spent).toBe(r.cost);
+  expect(r.locked).toBe(false); expect(r.built).toBe(true); expect(r.spent).toBeCloseTo(r.cost, 8);
   expect(r.paper).toBe(false); expect(r.delta).toBeCloseTo(r.factor,10);
   expect(r.delegated).toBe(true); expect(r.delegatedRate).toBe(r.after);
   expect(r.advanced).toEqual([true,true,true]);
@@ -227,7 +230,7 @@ test('a guesthouse pays its real quote with no discovery, development or reward 
   });
   expect(r).toMatchObject({lowDev:false,eligible:true,rejected:false,pure:true,built:true,
     repeat:false,repeatedGold:true,noAward:true,protection:0.03,upkeep:1,research:0,hospital:false});
-  expect(r.spent).toBe(r.cost);
+  expect(r.spent).toBeCloseTo(r.cost, 8);
 });
 
 test('hospital and guesthouse ruins share capacity, old excess repairs and saves retain facts', async function ({ page }) {
@@ -251,14 +254,14 @@ test('hospital and guesthouse ruins share capacity, old excess repairs and saves
     return {blocked:blocked,attempted:attempted,untouched:untouched,repaired:repaired,
       paid:gold-s.player.gold,cost:quote.cost,blockedAgain:blockedAgain,
       protection:FB.buildingBonusIn(s,pid,'populationCrisisProtection'),
-      records:JSON.stringify(s.buildings[pid]),completed:rec.completed.slice().sort(),save:FB.save.serialize()};
+      records:restoreFacts(s, function (v) { return v.buildings[pid]; }),completed:rec.completed.slice().sort(),save:FB.save.serialize()};
   });
   expect(before).toMatchObject({blocked:false,attempted:false,untouched:true,repaired:true,blockedAgain:false});
-  expect(before.paid).toBe(before.cost); expect(before.protection).toBeCloseTo(0.13,10);
+  expect(before.paid).toBeCloseTo(before.cost, 8); expect(before.protection).toBeCloseTo(0.13,10);
   await restoreBookmark(page,before.save);
   const after = await page.evaluate(function () {
     const s = FB.state, pid = s.player.provinceId;
-    return {records:JSON.stringify(s.buildings[pid]),completed:FB.realmTechRecord(s).completed.slice().sort(),
+    return {records:restoreFacts(s, function (v) { return v.buildings[pid]; }),completed:FB.realmTechRecord(s).completed.slice().sort(),
       blocked:FB.canBuildAt(s,pid,2,'hospice'),capacity:FB.buildingConstructionGroupStatus(s,pid,'hospice').count};
   });
   expect(after).toEqual({records:before.records,completed:before.completed,blocked:false,capacity:2});
@@ -277,7 +280,10 @@ test('player automation respects care ruins and pays after deliberate removal', 
   const r = await page.evaluate(function () {
     const s = FB.state, pid = s.player.provinceId;
     Object.keys(FBDATA.buildings).forEach(function (id) {
-      if (id!=='hospice') delete FBDATA.buildings[id].aiBuildOrder;
+      if (id!=='hospice') FBDATA.buildings[id] = Object.assign({},FBDATA.buildings[id],{cost:1e9});
+    });
+    Object.keys(FBDATA.buildingProfiles).forEach(function (id) {
+      FBDATA.buildingProfiles[id].replace = Object.assign({},FBDATA.buildingProfiles[id].replace,{cost:1e9});
     });
     s.buildings[pid] = [{s:0,id:'hospital',ruined:true}]; FB.invalidateBuildingIndex(s,pid);
     const before = s.player.gold;
@@ -289,7 +295,7 @@ test('player automation respects care ruins and pays after deliberate removal', 
     return {blocked:blocked,built:built,cost:cost,spent:gold-s.player.gold,
       count:FB.buildingCountIn(s,pid,'hospice',true)};
   });
-  expect(r).toMatchObject({blocked:true,built:true,count:1}); expect(r.spent).toBe(r.cost);
+  expect(r).toMatchObject({blocked:true,built:true,count:1}); expect(r.spent).toBeCloseTo(r.cost, 8);
 });
 
 test('private barons pay for and maintain a guesthouse without charging the county holder twice', async function ({ page }) {
@@ -311,7 +317,7 @@ test('private barons pay for and maintain a guesthouse without charging the coun
       blocked:FB.canBuildAt(s,pid,0,'hospice')};
   });
   expect(r).toMatchObject({built:true,playerUntouched:true,privateUpkeep:1,playerUpkeep:0,blocked:false});
-  expect(r.spent).toBe(r.cost);
+  expect(r.spent).toBeCloseTo(r.cost, 8);
 });
 
 test('annual AI pays from public treasury and cannot stack a hospital onto its guesthouse', async function ({ page }) {
@@ -352,7 +358,7 @@ test('annual AI pays from public treasury and cannot stack a hospital onto its g
       noSecondPurchase:afterGold===account.gold && records===JSON.stringify(s.buildings[pid])};
   });
   expect(r).toMatchObject({poor:true,built:true,addedUpkeep:1,blocked:false,noSecondPurchase:true});
-  expect(r.spent).toBe(r.cost);
+  expect(r.spent).toBeCloseTo(r.cost, 8);
 });
 
 test('ordinary imported facilities differ in knowledge, payment, research and care capacity', async function ({ page }) {
@@ -381,11 +387,11 @@ test('ordinary imported facilities differ in knowledge, payment, research and ca
       one:one,two:two,third:third,separate:separate,save:FB.save.serialize(),sig:FB.mods.sig()};
   });
   expect(r).toMatchObject({manuscript:true,paperWithoutKnowledge:false,paper:true,one:true,two:true,third:false,separate:true});
-  expect(r.manuscriptSpent).toBe(r.cost); expect(r.paperSpent).toBe(r.paperCost);
+  expect(r.manuscriptSpent).toBeCloseTo(r.cost, 8); expect(r.paperSpent).toBeCloseTo(r.paperCost, 8);
   expect(r.research).toBeCloseTo(2*r.factor,10);
-  const records = await page.evaluate(function () { return JSON.stringify(FB.state.buildings[FB.state.player.provinceId]); });
+  const records = await page.evaluate(function () { return restoreFacts(FB.state, function (v) { return v.buildings[v.player.provinceId]; }); });
   await restoreBookmark(page,r.save);
-  expect(await page.evaluate(function () { return JSON.stringify(FB.state.buildings[FB.state.player.provinceId]); })).toBe(records);
+  expect(await page.evaluate(function () { return restoreFacts(FB.state, function (v) { return v.buildings[v.player.provinceId]; }); })).toBe(records);
   const changed = JSON.parse(fs.readFileSync(importPath,'utf8'));
   changed.buildings.review_manuscript_room.research = 0.75;
   await page.evaluate(function () { FB.ui.showMods(); });

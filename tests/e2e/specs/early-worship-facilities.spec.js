@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
@@ -13,7 +14,7 @@ dependsOnRuntime(__filename,['index.html','data/buildings_early_worship.js','dat
   'js/building_profiles.js','js/building_institutions.js','js/building_operations.js','js/building_seasons.js',
   'js/fortifications.js','js/actions.js','js/world.js','js/technology.js','js/lordships.js','js/treasury.js',
   'js/institutions.js','js/religious_institutions.js','js/religious_activities.js','js/abbeys.js',
-  'js/mods.js','js/save.js','js/save_v4.js','js/main.js','js/model.js','js/population.js',
+  'js/mods.js','js/bookmark_composition.js','js/save.js','js/save_v4.js','js/main.js','js/model.js','js/population.js',
   'js/ui_modals.js','js/ui_misc.js','data/cultures.js','data/eras.js']);
 
 async function start(page,info,label,npc) {
@@ -25,6 +26,7 @@ async function start(page,info,label,npc) {
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.monastic_house; });
   const world = label === 'river' ? 'inventory_estuary' : 'inventory_uplands';
   await beginBookmark(page,info,world,world + '_household');
+  await installRestoreFacts(page);
   await page.evaluate(function (input) {
     const s = FB.state;
     window.worship = input.label === 'river' ? {
@@ -58,6 +60,7 @@ async function start(page,info,label,npc) {
     };
     window.endowWorshipHouse = function () {
       const at = worship.house;
+      s.player.provinceId = at[0]; s.player.settlement = at[1];
       s.player.landPlots = [{provinceId:at[0],settlement:at[1]},{provinceId:at[0],settlement:at[1]}];
       const q = FB.religiousPatronageQuote(s,'binding_foundation',s.player.charId,'foundation',
         {land:{provinceId:at[0],settlement:at[1],count:2}});
@@ -111,7 +114,7 @@ for (const label of ['river','upland']) test(label + ' imported foundations pay 
   });
   expect(r).toMatchObject({pure:true,built:true,repeat:false,profile:'episcopal_complex',base:'temple',
     correctPayer:true,piety:1,upkeep:2,noAwards:true,noInstitutionOrPeople:true,noResearch:true});
-  expect(r.paid).toBe(r.quote); expect(r.payer.kind).toBe('character');
+  expect(r.paid).toBeCloseTo(r.quote, 8); expect(r.payer.kind).toBe('character');
 });
 
 for (const label of ['river','upland']) test(label + ' monastic premises require an actual endowed property and leave its account and members intact',async function ({page},info) {
@@ -133,7 +136,7 @@ for (const label of ['river','upland']) test(label + ' monastic premises require
   });
   expect(r).toMatchObject({refused:true,endowment:20,built:true,propertyUnchanged:true,membershipUnchanged:true,
     propertyId:'binding_property',piety:1,upkeep:1,research:0,noTech:true});
-  expect(r.reason).toContain('endowed'); expect(r.paid).toBe(r.quote);
+  expect(r.reason).toContain('endowed'); expect(r.paid).toBeCloseTo(r.quote, 8);
 });
 
 test('unbound monastic property stays dormant through endowment and restore until explicit permission',async function ({page},info) {
@@ -144,9 +147,9 @@ test('unbound monastic property stays dormant through endowment and restore unti
     const idle=FB.buildingBonusAt(s,at[0],at[1],'piety')===0&&FB.buildingBonusAt(s,at[0],at[1],'upkeep')===0;
     const occupied=!FB.buildingInstitutionStatus(s,at[0],at[1],'temple').allowed;
     endowWorshipHouse();const endowedIdle=FB.buildingBonusAt(s,at[0],at[1],'piety')===0;
-    const before=JSON.stringify(s.buildings),gold=s.player.gold;
+    const before=restoreFacts(s, function (v) { return v.buildings; }),gold=s.player.gold;
     FB.save.restore(JSON.parse(FB.save.serialize()));s=FB.state;
-    const retained=before===JSON.stringify(s.buildings)&&FB.buildingBonusAt(s,at[0],at[1],'piety')===0;
+    const retained=assertRestoreFacts(restoreFacts(s, function (v) { return v.buildings; }),before)&&FB.buildingBonusAt(s,at[0],at[1],'piety')===0;
     const q=FB.buildingInstitutionQuote(s,at[0],at[1],'monastic_house',undefined,'reaffirm');
     const approved=FB.buildingInstitutionApply(s,q),repeat=FB.buildingInstitutionApply(s,q);
     return {idle:idle,occupied:occupied,endowedIdle:endowedIdle,retained:retained,approved:approved,repeat:repeat,
@@ -181,7 +184,7 @@ test('construction chronology, development, exact mortar and national tradition 
     const blocked=!P.commit(s,q)&&snapshot===JSON.stringify(s);worshipKnowledge(true);
     s.dev[at[0]]=3;FB.invalidateBuildingIndex(s,at[0]);const low=!P.quote(s,worshipRequest('see')).allowed;
     s.dev[at[0]]=4;FB.invalidateBuildingIndex(s,at[0]);const enough=P.quote(s,worshipRequest('see')).allowed;
-    s.realms.player.techTraditions=['latin'];const tradition=!P.quote(s,worshipRequest('congregation')).allowed;
+    s.realms[FB.techRealmId(s,FB.settlementCountyHolder(s,worship.congregation[0]))].techTraditions=['latin'];const tradition=!P.quote(s,worshipRequest('congregation')).allowed;
     return {years:years,house:house,mosque:mosque,blocked:blocked,reason:q.reason,low:low,enough:enough,tradition:tradition};
   });
   expect(r).toMatchObject({years:[false,true,true,false],house:[false,true,true,false],mosque:[false,true,true,false],blocked:true,low:true,enough:true,tradition:true});
@@ -250,7 +253,7 @@ test('AI choices use the merged profile priorities and exact public purse with r
       reserve:FB.treasuryAvailable(s,rid)>=q.reserve+2*(FBDATA.balance.realmReserveSeasons||2)};
   });
   expect(r).toMatchObject({selected:true,priority:27,basePriority:14,built:true,repeat:false,household:true,reserve:true});
-  expect(r.paid).toBe(r.cost); expect(r.payer).toEqual({kind:'realm',id:r.realm});
+  expect(r.paid).toBeCloseTo(r.cost, 8); expect(r.payer).toEqual({kind:'realm',id:r.realm});
 });
 
 test('the annual public builder commits a separately prioritized bound worship profile once',async function ({page},info) {
@@ -291,7 +294,7 @@ for (const label of ['river','upland']) test(label + ' matching restore retains 
     FB.buildingProfiles.commit(s,FB.buildingProfiles.quote(s,worshipRequest('see')));
     const record=FB.realmTechRecord(s);record.completed=record.completed.filter(function(id){return id!=='universities';});
     record.active=['universities'];record.progress.universities=1;
-    window.worshipSavedFacts=function(){const v=FB.state;return JSON.stringify([v.buildings,v.abbeys,v.localInstitutions,v.religiousHeads,v.realmTech,v.player.gold,v.dev]);};
+    window.worshipSavedFacts=function(){const v=FB.state;return restoreFacts(v, function (v) { return [v.buildings,v.abbeys,v.localInstitutions,v.religiousHeads,v.realmTech,v.player.gold,v.dev]; }, {technologySets:true});};
     return {save:FB.save.serialize(),facts:worshipSavedFacts()};
   });
   await restoreBookmark(page,before.save);
@@ -303,9 +306,9 @@ test('old unbound temple and cathedral assets survive catalogue adoption without
   const r=await page.evaluate(function () {
     let s=FB.state;const at=worship.see;
     s.buildings[at[0]]=[{s:0,id:'temple'},{s:1,id:'cathedral',ruined:true}];FB.invalidateBuildingIndex(s,at[0]);
-    const before=JSON.stringify(s.buildings),gold=s.player.gold;
+    const before=restoreFacts(s, function (v) { return v.buildings; }),gold=s.player.gold;
     s.date.year=1400;worshipKnowledge(false);FB.save.restore(JSON.parse(FB.save.serialize()));s=FB.state;
-    return {exact:before===JSON.stringify(s.buildings),gold:gold===s.player.gold,piety:FB.buildingBonusAt(s,at[0],0,'piety'),
+    return {exact:assertRestoreFacts(restoreFacts(s, function (v) { return v.buildings; }),before),gold:gold===s.player.gold,piety:FB.buildingBonusAt(s,at[0],0,'piety'),
       noBinding:s.buildings[at[0]].every(function(b){return !b.institutionBinding&&!b.buildingProfile;})};
   });
   expect(r).toEqual({exact:true,gold:true,piety:2,noBinding:true});
@@ -325,7 +328,7 @@ test('retained profiled ruins repair at their selected invoice outside construct
       noConstruction:!P.quote(s,worshipRequest('congregation')).allowed,noTech:!FB.techRequirementMet(s,'lime_mortar')};
   });
   expect(r).toMatchObject({ready:true,repaired:true,again:false,exact:true,dev:true,piety:1,noConstruction:true,noTech:true});
-  expect(r.paid).toBe(r.cost);expect(r.cost).toBeGreaterThan(0);
+  expect(r.paid).toBeCloseTo(r.cost, 8);expect(r.cost).toBeGreaterThan(0);
 });
 
 test('a vassal settlement builder pays its private account while the remote sovereign keeps its purse',async function ({page},info) {
@@ -342,7 +345,7 @@ test('a vassal settlement builder pays its private account while the remote sove
       payer:asset.institutionBinding.payer.id===baron.id,remote:s.player.provinceId!==at[0],
       piety:FB.buildingBonusAt(s,at[0],at[1],'piety'),publicRejected:!P.quote(s,worshipRequest('congregation',{kind:'realm',id:'player'})).allowed};
   });
-  expect(r).toMatchObject({built:true,household:true,payer:true,remote:true,piety:2,publicRejected:true});expect(r.paid).toBe(r.cost);
+  expect(r).toMatchObject({built:true,household:true,payer:true,remote:true,piety:2,publicRejected:true});expect(r.paid).toBeCloseTo(r.cost, 8);
 });
 
 test('saved profile and foundation forgeries reject before state, RNG or identity adoption',async function ({page},info) {

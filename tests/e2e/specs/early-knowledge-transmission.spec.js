@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
@@ -15,7 +16,7 @@ dependsOnRuntime(__filename, [
   'data/technology_maritime.js', 'data/technology_wind.js', 'data/technology_transmission.js',
   'data/cultures.js', 'data/eras.js', 'data/bookmarks.js', 'data/bookmark_867_expansion.js',
   'data/bookmark_1066_inhabited.js', 'data/map_data.js', 'data/buildings_learning_care.js',
-  'js/technology.js', 'js/world.js', 'js/mods.js', 'js/save.js', 'js/save_v4.js', 'js/main.js'
+  'js/technology.js', 'js/world.js', 'js/mods.js', 'js/bookmark_composition.js','js/save.js', 'js/save_v4.js', 'js/main.js'
 ]);
 
 test.beforeEach(async function ({ page }) {
@@ -71,6 +72,7 @@ async function startCampaign(page, bookmark, revision) {
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
+  await installRestoreFacts(page);
   await page.evaluate(function () { FB.game.setPaused(true); });
 }
 
@@ -90,7 +92,9 @@ test('only five adoption pairs change across the complete existing catalogue', a
       .forEach(function (key) { Object.keys(FBDATA[key]).forEach(function (id) {
         (owners[id] || (owners[id] = [])).push(key);
       }); });
-    return {expected:expected,actual:FBDATA.tech,errors:errors,
+    const actual = JSON.parse(JSON.stringify(FBDATA.tech));
+    Object.keys(actual).forEach(function (id) { FB.normalizeTechDefinition(id,actual[id]); });
+    return {expected:expected,actual:actual,errors:errors,
       pure:before === JSON.stringify(FBDATA.tech) && rng === FB.getRngState() && uid === FB.getUidCounter(),
       owners:['paper_making','paper_scholarship','capitularies'].map(function (id) { return owners[id]; }),
       sources:Array.from(document.scripts).map(function (el) { return el.getAttribute('src'); }).filter(Boolean)};
@@ -162,11 +166,11 @@ for (const bookmark of ['867','1066']) for (const revision of ['baseline',null])
         rec.reserve = 3; rec.historicalSeeded = 1;
         s.buildings[pid] = [{s:0,id:'library'},{s:0,id:'temple',ruined:true}];
         FB.invalidateBuildingIndex(s,pid); FB.invalidateTechBonuses();
-        return {record:rec,assets:s.buildings,revision:s.start.revision,save:FB.save.serialize()};
+        return {record:restoreFacts(s, function (v) { return v.realmTech[FB.techRealmId(v)]; }, {technologySets:true}),assets:s.buildings,revision:s.start.revision,save:FB.save.serialize()};
       });
       await restoreBookmark(page,before.save);
       const after = await page.evaluate(function () {
-        return {record:FB.realmTechRecord(FB.state),assets:FB.state.buildings,revision:FB.state.start.revision};
+        return {record:restoreFacts(FB.state, function (v) { return v.realmTech[FB.techRealmId(v)]; }, {technologySets:true}),assets:FB.state.buildings,revision:FB.state.start.revision};
       });
       expect(after).toEqual({record:before.record,assets:before.assets,revision:before.revision});
     });
@@ -198,10 +202,10 @@ for (const sample of [
       const s = FB.state, rec = FB.realmTechRecord(s);
       rec.completed = ['manuscript_codex']; rec.exposed = ['manuscript_codex','paper_making'];
       rec.active = ['paper_making']; rec.progress = {paper_making:9}; rec.reserve = 2; rec.historicalSeeded = 1;
-      return {record:rec,assets:s.buildings,save:FB.save.serialize()};
+      return {record:restoreFacts(s, function (v) { return v.realmTech[FB.techRealmId(v)]; }, {technologySets:true}),assets:s.buildings,save:FB.save.serialize()};
     });
     await restoreBookmark(page,before.save);
-    expect(await page.evaluate(function () { return {record:FB.realmTechRecord(FB.state),assets:FB.state.buildings}; }))
+    expect(await page.evaluate(function () { return {record:restoreFacts(FB.state, function (v) { return v.realmTech[FB.techRealmId(v)]; }, {technologySets:true}),assets:FB.state.buildings}; }))
       .toEqual({record:before.record,assets:before.assets});
     const pure = await page.evaluate(function () {
       const mod = {tech:{paper_making:JSON.parse(JSON.stringify(FBDATA.tech.paper_making))}};

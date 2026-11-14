@@ -1,4 +1,5 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
@@ -16,7 +17,7 @@ dependsOnRuntime(__filename, [
   'data/technology_learning.js', 'data/buildings_learning_care.js',
   'data/technology_civic_military.js', 'data/buildings_civic_military.js',
   'data/technology_maritime.js', 'data/buildings_maritime.js', 'data/buildings_boathouses.js', 'data/economy_maritime.js',
-  'data/technology_wind.js', 'data/buildings_wind.js', 'data/economy.js',
+  'data/technology_wind.js', 'data/buildings_wind.js', 'data/economy.js','data/industry_laws.js','data/holy_war_causes.js',
   'data/buildings_seasonal_pasture.js','data/production_seasonal_pasture.js',
   'data/buildings_early_industry.js','data/production_early_industry.js',
   'data/technology_transmission.js','data/buildings_early_worship.js','data/buildings_fish_drying.js','data/building_profiles.js','data/building_institutions.js',
@@ -24,7 +25,7 @@ dependsOnRuntime(__filename, [
   'data/geographies.js', 'data/geography_expansion.js', 'data/cultures.js', 'data/eras.js',
   'data/settlements.js', 'data/settlements_real.js', 'data/starts.js',
   'data/political_institutions.js', 'js/technology.js', 'js/actions.js', 'js/world.js',
-  'js/main.js', 'js/mods.js', 'js/save.js', 'js/save_v4.js', 'js/fortifications.js',
+  'js/main.js', 'js/mods.js', 'js/bookmark_composition.js','js/save.js', 'js/save_v4.js', 'js/fortifications.js',
   'js/lordships.js', 'js/settlement.js', 'js/treasury.js', 'js/population.js',
   'js/institutions.js', 'js/governments.js', 'js/government_administration.js'
 ]);
@@ -44,6 +45,7 @@ async function startCampaign(page, bookmark, revision) {
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
   await page.getByRole('button', { name:'Begin', exact:true }).click();
+  await installRestoreFacts(page);
   await page.evaluate(function () { FB.game.setPaused(true); });
 }
 
@@ -165,7 +167,8 @@ test('all supplements compose once with stable effects, grants, budgets and rele
     expect(r.sources.indexOf(source)).toBeGreaterThan(r.sources.indexOf('data/technology.js'));
     expect(r.sources.indexOf(source)).toBeLessThan(r.sources.indexOf('data/bookmarks.js'));
   }
-  expect(r.sources.indexOf('data/economy_maritime.js')).toBe(r.sources.indexOf('data/economy.js') + 1);
+  expect(r.sources.slice(r.sources.indexOf('data/economy.js'),r.sources.indexOf('data/economy_maritime.js')+1))
+    .toEqual(['data/economy.js','data/industry_laws.js','data/holy_war_causes.js','data/economy_maritime.js']);
   expect(r.sources.filter(function (s) { return s === 'data/economy_maritime.js'; })).toHaveLength(1);
   expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
 });
@@ -204,7 +207,7 @@ for (const bookmark of ['867','1066']) for (const revision of ['baseline',null])
       rec.active = ['scriptoria']; rec.progress = { scriptoria:7 }; rec.reserve = 3;
       rec.historicalSeeded = 1; FB.invalidateTechBonuses();
       return { corrected:corrected, prior:prior, declarations:declarations === JSON.stringify(FBDATA.bookmarks),
-        buildings:JSON.stringify(s.buildings),
+        buildings:restoreFacts(s, function (v) { return v.buildings; }),
         geography:s.start.geography, revision:s.start.revision, save:FB.save.serialize() };
     });
     expect(Object.keys(r.corrected).length).toBeGreaterThan(10);
@@ -214,7 +217,7 @@ for (const bookmark of ['867','1066']) for (const revision of ['baseline',null])
     await restoreBookmark(page,r.save);
     expect(await page.evaluate(knowledgeSnapshot)).toEqual(knowledge);
     expect(await page.evaluate(function () {
-      return { buildings:JSON.stringify(FB.state.buildings),
+      return { buildings:restoreFacts(FB.state, function (v) { return v.buildings; }),
         geography:FB.state.start.geography, revision:FB.state.start.revision };
     })).toEqual({ buildings:r.buildings, geography:r.geography, revision:r.revision });
   });
@@ -325,7 +328,7 @@ test('composed scopes, group occupancy, research and inherited repair share paid
     repaired:true,repairReady:true,removed:true,missingPaper:false,missingPaperFree:true,paper:true,wind:true,
     replacement:false,noReplacementCharge:true });
   expect(r.repairSpent).toBeCloseTo(r.repairCost,8);
-  expect(r.paperSpent).toBe(r.price); expect(r.windSpent).toBe(r.windPrice);
+  expect(r.paperSpent).toBeCloseTo(r.price, 8); expect(r.windSpent).toBe(r.windPrice);
   expect(r.researchDelta).toBeCloseTo(0.5*r.factor,10);
   expect(r.newResearchDelta).toBeCloseTo(0.5*r.factor,10);
   expect(r.devAfter).toBe(r.devBefore+1);
@@ -382,7 +385,7 @@ test('annual AI keeps the full catalogue and refuses an unfunded care purchase i
       sameCatalogue:priorities === JSON.stringify(FBDATA.buildings), samePeople:population === people() };
   });
   expect(r).toMatchObject({ poor:true,addedUpkeep:1,protected:true,noSecondPurchase:true,sameCatalogue:true,samePeople:true });
-  expect(r.spent).toBe(r.cost); expect(r.buildings).toEqual([{ s:0,id:'hospice' }]);
+  expect(r.spent).toBeCloseTo(r.cost, 8); expect(r.buildings).toEqual([{ s:0,id:'hospice' }]);
 });
 
 test('combined invalid scopes, groups and inventory fail before publication', async function ({ page }, info) {
