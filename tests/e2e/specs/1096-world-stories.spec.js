@@ -145,17 +145,47 @@ test('the current head can decline at the last opening boundary without charging
 test('matching saves retain the one campaign and missing older story records remain absent',async function ({page},info) {
   await historical(page,info);
   const result=await page.evaluate(function () {
-    const C=worldCase,owners=function () {const s=FB.state;return JSON.stringify([s.stories,s.greatHolyWar,
-      s.greatHolyWarHistory,s.owner,s.holder,s.chars,s.realms,s.armies,s.player.gold]);};
-    const before=owners(),rng=FB.getRngState(),uid=FB.getUidCounter(),saved=JSON.parse(FB.save.serialize());
+    const C=worldCase;
+    function facts(state) {return restoreFacts(state,function (s) {
+      return [s.start,s.stories,s.greatHolyWar,s.greatHolyWarHistory,
+        s.owner,s.holder,s.chars,s.realms,s.armies,s.player.gold];
+    });}
+    const before=facts(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter(),saved=JSON.parse(FB.save.serialize());
+    const attachments=saved.state.start.storyAttachments;
+    if (saved.storyAttachmentSchema!==1 || attachments.schema!==1 ||
+        attachments.world.indexOf(C.id)<0 || attachments.world.indexOf(C.observer)<0)
+      throw new Error('Expected both original world attachments in the current save');
     FB.save.restore(saved);FB.stories.restore(FB.state);FB.prepareOpeningHolyWarCalls(FB.state);
-    const exact=before===owners(),random=(rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter();
-    delete saved.state.stories[C.id];delete saved.state.stories[C.observer];
-    FB.save.restore(saved);FB.stories.restore(FB.state);FB.prepareOpeningHolyWarCalls(FB.state);
+    const exact=assertRestoreFacts(facts(FB.state),before),random=(rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter();
+    const original=JSON.stringify(FB.state.start.storyAttachments)===JSON.stringify(attachments);
+    // Saves predating original attachment provenance have neither paired field.
+    let older=JSON.parse(JSON.stringify(saved));
+    delete older.storyAttachmentSchema;delete older.state.start.storyAttachments;
+    delete older.state.stories[C.id];
+    const live=FB.state,liveBefore=JSON.stringify(live),input=JSON.stringify(older);
+    let dependencyRejected=false;
+    try {FB.save.restore(older);} catch (error) {
+      dependencyRejected=error.message.indexOf('requires story '+C.id)>=0;
+    }
+    dependencyRejected=dependencyRejected && live===FB.state && liveBefore===JSON.stringify(FB.state) &&
+      input===JSON.stringify(older) && (rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter();
+    // An older campaign without the optional call also lacks its dependent notice.
+    delete older.state.stories[C.observer];
+    const legacyBefore=facts(older.state);
+    let legacyExact=true,legacyUnstamped=true;
+    for (let round=0;round<2;round++) {
+      FB.save.restore(older);FB.stories.restore(FB.state);FB.prepareOpeningHolyWarCalls(FB.state);
+      legacyExact=assertRestoreFacts(facts(FB.state),legacyBefore) && legacyExact;
+      older=JSON.parse(FB.save.serialize());
+      legacyUnstamped=older.storyAttachmentSchema===undefined &&
+        older.state.start.storyAttachments===undefined && legacyUnstamped;
+    }
     return {exact:exact,random:random,missing:!FB.state.stories[C.id] && !FB.state.stories[C.observer],
-      campaign:FB.state.greatHolyWar.id===saved.state.greatHolyWar.id,sequence:FB.state.greatHolyWarHistory.sequence};
+      campaign:FB.state.greatHolyWar.id===saved.state.greatHolyWar.id,sequence:FB.state.greatHolyWarHistory.sequence,
+      original:original,dependencyRejected:dependencyRejected,legacyExact:legacyExact,legacyUnstamped:legacyUnstamped};
   });
-  expect(result).toEqual({exact:true,random:true,missing:true,campaign:true,sequence:1});
+  expect(result).toEqual({exact:true,random:true,missing:true,campaign:true,sequence:1,
+    original:true,dependencyRejected:true,legacyExact:true,legacyUnstamped:true});
 });
 
 test('1096 call provenance rejects malformed saves before replacing the current campaign',async function ({page},info) {
@@ -164,15 +194,19 @@ test('1096 call provenance rejects malformed saves before replacing the current 
     const C=worldCase,source=JSON.parse(FB.save.serialize());
     return [function (saved) {saved.state.stories[C.id].openingCall.schema=2;},
       function (saved) {saved.state.stories[C.id].openingCall.headCharacterId='missing_head';},
-      function (saved) {saved.state.greatHolyWar.targetKingdom='unrelated_target';}].map(function (change) {
+      function (saved) {saved.state.greatHolyWar.targetKingdom='unrelated_target';},
+      function (saved) {delete saved.state.stories[C.id];},
+      function (saved) {delete saved.state.stories[C.observer];},
+      function (saved) {delete saved.storyAttachmentSchema;},
+      function (saved) {delete saved.state.start.storyAttachments;}].map(function (change) {
       const saved=JSON.parse(JSON.stringify(source));change(saved);
-      const state=FB.state,before=JSON.stringify(state),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const state=FB.state,before=JSON.stringify(state),input=JSON.stringify(saved),rng=FB.getRngState(),uid=FB.getUidCounter();
       let rejected=false;try {FB.save.restore(saved);} catch (error) {rejected=true;}
       return rejected && state===FB.state && before===JSON.stringify(FB.state) &&
-        rng===FB.getRngState() && uid===FB.getUidCounter();
+        input===JSON.stringify(saved) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
   });
-  expect(result).toEqual([true,true,true]);
+  expect(result).toEqual([true,true,true,true,true,true,true]);
 });
 
 test('the local observer reads an actual failed campaign once and rejects stale source-person reviews',async function ({page},info) {

@@ -14,8 +14,9 @@ test.describe.configure({mode:'parallel'});
 
 dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/mobile_confederations.js','data/units.js','data/technology.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js','js/federates.js','js/government_continuity.js',
-  'js/governments.js','js/government_selection.js','js/government_support.js','js/bookmark_setup.js','js/world.js','js/mods.js',
-  'js/authority.js','js/treasury.js','js/armies.js','js/population.js','js/settlement.js','js/starts.js','js/util.js',
+  'js/governments.js','js/government_selection.js','js/government_support.js','js/government_civic.js','js/civic_transactions.js',
+  'js/civic_strategies.js','js/civic_validation.js','js/bookmark_setup.js','js/world.js','js/mods.js',
+  'js/authority.js','js/treasury.js','js/armies.js','js/population.js','js/settlement.js','js/market.js','js/starts.js','js/util.js',
   'js/save.js','js/save_v4.js','js/ui_mobile.js','js/ui_misc.js','js/main.js','js/wars.js','js/model.js','js/station.js','js/technology.js']);
 
 async function start(page,info,prefix,input) {
@@ -178,23 +179,74 @@ test('independent recruitment uses the same finite people and public funds for p
 });
 
 test('settlement on actually owned land uses one real seat and conserves the civilian transfer',async function ({page},info) {
-  await start(page,info,'dune');
+  const input=JSON.parse(JSON.stringify(examples.dune));
+  // A civic grant cannot dispose of the capital or the last county.
+  input.bookmarks.dune_world.realms.find(function (r) {return r.id==='dune_oasis';}).capital='dune_flats';
+  await start(page,info,'dune',input);
   const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='dune_coalition',county='dune_well';
-    s.owner[county]=rid;s.holder[county]=rid;FB.invalidateRealmCache();
+    const s=FB.state,M=FB.mobile,C=FB.governments.support,V=FB.civicGovernment;
+    const rid='dune_coalition',grantor='dune_oasis',county='dune_well',r=M.row(s,rid),host=M.host(s,rid);
+    C.validate(s);
+    // Reproduce the invalid setup on a detached copy: the council still owns
+    // this constituency and its original office mandates, even under occupation.
+    const forged=JSON.parse(JSON.stringify(s));forged.owner[county]=rid;forged.holder[county]=rid;
+    const forgedBytes=JSON.stringify(forged),rng=FB.getRngState(),uid=FB.getUidCounter();
+    let forgedRejected=false;
+    try {C.validate(forged);} catch(error) {forgedRejected=/Invalid constituency or mandate/.test(error.message);}
+    forgedRejected=forgedRejected && forgedBytes===JSON.stringify(forged) && rng===FB.getRngState() && uid===FB.getUidCounter();
+    const resources=JSON.stringify([s.realms,s.chars,s.player.gold,s.player.enterprises,s.player.landPlots]);
+    const offices=JSON.stringify(V.row(s,grantor).offices);
+    const capital=V.proposalQuote(s,grantor,'grant',{provinceId:'dune_flats',recipientId:rid});
+    const grant=V.proposalQuote(s,grantor,'grant',{provinceId:county,recipientId:rid});
+    const granted=V.proposalApply(s,grant),grantReplay=!V.proposalApply(s,grant);
+    C.validate(s);
+    const electorate=C.row(s,grantor),constituency=JSON.stringify(s.governmentSupport);
     const total=M.total(s,rid),residents=s.population.counties[county].count;
+    function civilians(){return r.members.reduce(function (n,m) {
+      return n+m.civilians.reduce(function (sum,c) {return sum+c.count;},0);
+    },0);}
+    const civilianCount=civilians(),military=JSON.stringify([host,r.members.map(function (m) {return m.reserve;})]);
+    const food=r.food,stock=FB.marketProvisionSnapshot(s,county).stock;
     const noPatronBypass=FB.political.federateSettlementQuote(s,M.migration(s,rid).id)===null;
     const review=M.review(s,{realmId:rid,action:'settle',actor:{kind:'realm',id:rid},terms:{countyId:county,count:100,final:false}});
     const accepted=M.commit(s,review),repeat=!M.commit(s,review),moving=M.migration(s,rid);
     FB.save.v4.validateAuthority(s.authority,s);
-    const record=JSON.stringify([M.row(s,rid),moving,s.population.counties[county]]);
-    FB.save.restore(JSON.parse(FB.save.serialize()));
-    return {accepted:accepted,repeat:repeat,noPatronBypass:noPatronBypass,seats:moving.session.seats,
+    const currentValid=C.validate(s);
+    const civiliansOnly=civilianCount-civilians()===100 && military===JSON.stringify([host,r.members.map(function (m) {return m.reserve;})]);
+    // Market stock is recorded in tenths; the camp debits the full quoted share.
+    const foodConserved=Math.abs(food-r.food-review.review.foodTransfer)<0.000001 &&
+      FB.marketProvisionSnapshot(s,county).stock===Math.round((stock+review.review.foodTransfer)*10)/10;
+    function facts(state){return restoreFacts(state,function (v) {
+      return [M.row(v,rid),M.migration(v,rid),v.population.counties[county],v.governmentSupport,v.authority,
+        v.chars,v.realms,v.owner,v.holder,v.market.counties[county],v.player.gold,v.player.enterprises,v.player.landPlots];
+    });}
+    const record=facts(s),saved=JSON.parse(FB.save.serialize());
+    const rejected=[function (v) {v.governmentSupport.polities[grantor].scopes.push(county);},
+      function (v) {v.governmentSupport.polities[grantor].members[0].principal.id=county;},
+      function (v) {v.authority.governments[grantor].civic.offices[0].mandateId=rid+':mandate:1';}].map(function (change) {
+      const bad=JSON.parse(JSON.stringify(saved));change(bad.state);
+      const bytes=JSON.stringify(s),candidate=JSON.stringify(bad),rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
+      try {FB.save.restore(bad);} catch(error) {rejected=/Invalid constituency|Invalid civic/.test(error.message);}
+      return rejected && FB.state===s && bytes===JSON.stringify(s) && candidate===JSON.stringify(bad) &&
+        rng===FB.getRngState() && uid===FB.getUidCounter();
+    });
+    FB.save.restore(saved);
+    return {forgedRejected:forgedRejected,capitalRefused:!capital.allowed,granted:granted,grantReplay:grantReplay,
+      owned:s.owner[county]===rid && s.holder[county]===rid,
+      constituency:{id:electorate.id,scopes:electorate.scopes,principals:electorate.members.map(function (m) {return m.principal;}),
+        mandate:electorate.mandate,offices:offices===JSON.stringify(V.row(s,grantor).offices)},
+      constituencyUnchanged:constituency===JSON.stringify(s.governmentSupport),currentValid:currentValid,rejected:rejected,
+      resources:resources===JSON.stringify([s.realms,s.chars,s.player.gold,s.player.enterprises,s.player.landPlots]),
+      accepted:accepted,repeat:repeat,noPatronBypass:noPatronBypass,seats:moving.session.seats,civiliansOnly:civiliansOnly,foodConserved:foodConserved,
       conserved:M.total(FB.state,rid)===total-100 && FB.state.population.counties[county].count===residents+100,
-      noPatron:moving.patronRealmId===null,restored:record===JSON.stringify([M.row(FB.state,rid),M.migration(FB.state,rid),
-        FB.state.population.counties[county]]),valid:M.validate(FB.state)};
+      noPatron:moving.patronRealmId===null,restored:assertRestoreFacts(facts(FB.state),record),
+      constituencyValid:C.validate(FB.state),valid:M.validate(FB.state)};
   });
-  expect(result).toEqual({accepted:true,repeat:true,noPatronBypass:true,seats:['dune_coalition'],conserved:true,noPatron:true,restored:true,valid:true});
+  expect(result).toEqual({forgedRejected:true,capitalRefused:true,granted:true,grantReplay:true,owned:true,
+    constituency:{id:'dune_oasis',scopes:['dune_flats'],principals:[{kind:'county',id:'dune_flats'},{kind:'county',id:'dune_flats'}],mandate:null,offices:true},
+    constituencyUnchanged:true,currentValid:true,rejected:[true,true,true],resources:true,
+    accepted:true,repeat:true,noPatronBypass:true,seats:['dune_coalition'],civiliansOnly:true,foodConserved:true,
+    conserved:true,noPatron:true,restored:true,constituencyValid:true,valid:true});
 });
 
 test('independent access still requires the real holder and one conserved payment',async function ({page},info) {

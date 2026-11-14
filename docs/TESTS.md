@@ -149,6 +149,8 @@ ruler-start-restoration.spec.js uses real Godfrey, Raymond, Bohemond and Kilij A
 
 1096-world-stories.spec.js asserts the exact composed story list and five separately authored mobile declarations, while retaining the original call's empty seeded-host ledger, once-only behavior and no involuntary vow. It separately pins the retained baseline to its two world stories and no mobile declarations.
 
+Its current-save control retains the original campaign, required stories and attachment ledger. Current and legacy restores use the detached codec-expanded comparison with canonical object keys, exact values and ordered arrays. Missing current records or either paired provenance field reject before adoption without changing the input, live state, RNG or UID. The legacy control omits both storyAttachmentSchema and state.start.storyAttachments: a retained observer still requires its source call, while an older save lacking both optional records restores and re-saves twice with exact campaign, history, ownership, people, armies, cash, RNG and UID. Neither missing story nor attachment provenance is reconstructed. Independent imported muster, battle-credit and canonical-award checks retain their exact restore and once-only assertions.
+
 political-religious-head.spec.js covers native and ordinary JSON political office
 configurations with distinct age/sex, constituency, polity and seat rules. It checks
 fresh identity binding, pure reads, refused generic writers, independent offices,
@@ -651,6 +653,15 @@ Each test receives a fresh isolated browser context. The suite never assumes tha
 storage behaves like origin-backed storage.
 
 ## Current coverage
+
+`local-formation-authority.spec.js` stages expiry at the declared deadline and
+records an incumbent provider's death through the court owner before preparation
+dispatch. Both ordinary JSON configurations cover zero-funded waiting, refusal,
+expiry and interruption with exact population, market, public/private money and
+accounting conservation, retained provider provenance, released reserves and no
+host or replay. Malformed deadlines, future closure turns, premature expiry and
+inconsistent character/court death facts still reject without mutation. Pending,
+contributed and formed restore/replay coverage remains in the same specification.
 
 `guild-monopoly-laws.spec.js` covers paid ruler issuance and guildmaster petitions,
 exclusive and licensed operation, actual representative/public-account balances,
@@ -1254,6 +1265,8 @@ Expedition program import fixtures select the catalogue levy unit for ordinary i
 
 The expedition program restore checkpoint compares detached codec-expanded facts structurally, preserving every value and array position while ignoring object insertion order. It compares RNG as the same unsigned 32-bit pattern used by restore and reports differing facts directly.
 
+The expedition sponsor settlement case obtains its camp county through the civic owner's reviewed grant, with the imported council capital in its retained county. It preserves that council's constituency and original office mandates, one independent claims seat, exactly one hundred transferred civilians, military pools, original people, public and private resources, and proportional provisions at the market's stock precision. Current saves reject forged jurisdiction, principals and mandates atomically; a matching restore retains the full selected decoded facts, RNG and UID. Direct holder overwrites remain invalid.
+
 Expedition supply coverage checks the shared focusable review card after stale confirmation disables replenishment, while retaining the input and expanded Details. Escape from an unchanged review still returns focus to the enabled action button.
 
 Local passage fixtures validate their ordinary imports before applying. The harbor formation court has no inherited civic-candidacy story or nonexistent civic office; the dune outside court matches its tier-four ruler start. These setup declarations retain both passage-policy revisions and the existing transaction assertions.
@@ -1504,11 +1517,21 @@ Aachen and Constantinople household restore cases require a current save with a 
 
 Ordinary import fixture admission
 
+regional-milling-variants.spec.js checks that the river court's public construction budget covers the computed civilian and military reserves, accrued bills, machine and prospective service. Public horizontal milling requires Water Power while the ordinary mill's Undershot Watermill remains unknown. Realm-id and actor-object construction calls retain the selected profile through government dispatch; omitted and null profiles keep the ordinary technology gate, and a government construction veto still rejects without mutation. The public cases retain private household cash, exact construction and service charges, protected-fund refusals, one real receipt, finite water depletion and mutation-free replay rejection. The annual planner receives the same eligible horizontal mill at the base and separate profile priority, selects it at the latter, and leaves it dormant without inventing water or service. Matching, ruined and demolished asset restores retain their existing strict identity checks.
+
+masonry-circuit-construction.spec.js stages an adult builder at each imported timber construction-window boundary, keeping the distinct level requirements and county scope checks. Refusal coverage distinguishes the absent ninth site from the eight compiled canonical sites, verifies direct-holder, funding and competing-ruin blockers, and requires an eligible quote before stale-term rejection. Every rejection retains exact state, RNG and UID; sequential invoices, once-only completion and matching pending/demolished restores remain covered.
+
 authoring-import-admission.spec.js validates the 27 configurations used by the milling, masonry, local formation, following review, mobile supply/reserve/campaign/vow, calendar, local threat and declarative contract consumers. Validation preserves detached JSON, the live catalogue and state, RNG and uid. Independent harbor and dune real file imports retain their female home rulers at the existing public rank; missing sex and mismatched station still reject. Household county rules preserve the intended birthplace without requiring an unrelated civic storyline, ruler identities stay explicit, replacement policies name the existing levy class and the hill incident retains its eight-day window at its actual opening date. These focused admission checks do not establish full consumer-suite or release acceptance.
+
+local-following-reviews.spec.js reveals the actual Mobile coalition deed through the existing Deeds navigation before clicking it, including home-ruler starts whose accordion has no waiting story. Navigation preserves state, RNG and uid. Both harbor and dune imports check private contributions with and without a separate home treasury: an unseparated player treasury quote aliases household cash, while a separate public account remains unchanged by a private gift. Exact treasury records, military accrual and unrelated accounts accompany the payer/recipient balance assertions for private gifts, public grants and outside acceptance. An unaffordable repeat private gift returns focus to its disabled action's focusable review card; the public account cannot fund it. Distinct first/second offers require independent outside consent, retain unchanged first-offer terms and charge only the selected second offer. Changed confirmations still reject without state mutation; existing Back, Escape, phone, disclosure, scroll and focus checks remain.
 
 The affected import consumers call the scoped support/game/mod-admission.js leaf with their exact assembled candidate before waiting for navigation, so rejected imports report validator faults immediately. Imported journeys reuse beginBookmarkFromTitle after their existing Mods reload and full content preparation, avoiding a redundant catalogue boot. Fresh unmodded journeys retain beginBookmark. No universal fixture, navigation helper, timeout or behavioral assertion changes.
 
 Optional-review and former-patron variations retain a complete unrelated story graph and their intended county. The single-host reserve variation uses the existing camp trade adapter in place of column-only loading. The eighteen malformed reserve declarations, twenty-four malformed campaign declarations and nineteen malformed sponsor declarations remain covered in independent groups of at most six mutations within the ordinary timeout. The opening-campaign opponent enters the actual declared ruler code before checking canonical player aliases.
+
+mobile-opening-campaigns.spec.js compares live-batch outside population, the complete player, unrelated public treasuries with their realm identities, characters and bookmark actor bindings through exact detached decoded facts. The ordinary war owner makes the player's compatibility war getter non-enumerable; the comparison explicitly retains its effective value before and after formation. Object keys are canonical, while all values, array order, RNG and UID remain exact. The case retains the existing 70-coin allocation, 160 fighters and two declared conflicts, checks original actor references, and requires repeat initialization to preserve the complete formed state and issue no second credit.
+
+mobile-opening-reserves.spec.js derives public opening cash from the native treasury reserve and the declared mobile allocation. Both countyless rank-two imports and the fresh player command observe the 20-coin opening floor, zero net fiscal receipts, no legacy provisioning purse and exactly one 70-coin allocation, yielding 90 public coin with unchanged private cash. Repeated base and authored mobile initialization preserve complete state, RNG and UID and issue no further credit. Exact people, fighters, resting reserves, food, two columns, original actor bindings, camp location and prospective program intent remain covered alongside matching spent-resource restores and strict rejection controls. The focused runtime inputs include data/map_data.js, which owns the opening-floor balance.
 
 Mobile religious enrollment coverage
 
