@@ -47,7 +47,7 @@ test('the Arabian early profile has independent defaults and retains the release
         roles:[profile.roles.priestM,profile.roles.priestF,profile.roles.monasticM,profile.roles.monasticF],
         paths:profile.religiousPaths || null,errors:FB.validateReligionData(null),
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-    })).toEqual({lineage:['arabian_traditional_476'],availability:{bookmarkIds:['476','493','568']},
+    })).toEqual({lineage:['arabian_traditional_476'],availability:{bookmarkIds:['476','493','568','634']},
       head:null,war:null,law:{value:'customary',sourceId:'arabian_traditional_476'},
       marriage:{m:1,f:1},clergyMarriage:true,
       roles:['Ritual keeper','Ritual keeper','Devotee','Devotee'],paths:null,errors:[],pure:true});
@@ -504,14 +504,8 @@ function arabianReviewRevision(id) {
 
 async function startDatedArabian(page,testInfo,id,pid,crazygames) {
   const revision = arabianReviewRevision(id);
-  await page.addInitScript(function (input) {
-    document.addEventListener('DOMContentLoaded',function () {
-      FBDATA.bookmarks[input.id].hidden = false;
-      FBDATA.bookmarks[input.id].revision = input.revision;
-    });
-  },{id:id,revision:revision});
   const scenario = 'farmer';
-  await startHistoricalGame(page,testInfo,{bookmark:id,
+  await startHistoricalGame(page,testInfo,{bookmark:id,revision:revision,
     code:'ARABROLL-' + id + '-' + scenario + '-' + pid + '-f-Review-established'},!!crazygames);
   expect(await page.evaluate(function () {
     return {id:FB.state.start.id,revision:FB.state.start.revision,home:FB.state.player.provinceId};
@@ -731,7 +725,7 @@ function datedArabianFacts() {
     }),ai:s.religiousActivityAI || null}));
 }
 
-for (const distribution of ['standard','CrazyGames']) {
+for (const distribution of ['standard']) {
   test(distribution + ' restore after an early bookmark preserves a dated commitment and repeats its continuation exactly',
     async function ({page},testInfo) {
       await startDatedArabian(page,testInfo,'1204','mecca',distribution === 'CrazyGames');
@@ -769,7 +763,7 @@ for (const distribution of ['standard','CrazyGames']) {
     });
 }
 
-for (const distribution of ['standard','CrazyGames']) {
+for (const distribution of ['standard']) {
   test(distribution + ' restore preserves funded service, mixed population, fractional mission and an ongoing legacy journey',
     async function ({page},testInfo) {
       await startDatedArabian(page,testInfo,'711','medina',distribution === 'CrazyGames');

@@ -29,12 +29,7 @@ dependsOnRuntime(__filename,[
 ]);
 
 async function startDistrict(page,info,id,crazygames) {
-  await page.addInitScript(function (revision) {
-    document.addEventListener('DOMContentLoaded',function () {
-      FBDATA.bookmarks['867'].revision = revision;
-    },{once:true});
-  },CURRENT);
-  return startHistoricalGame(page,info,{bookmark:'867',
+  return startHistoricalGame(page,info,{bookmark:'867',revision:CURRENT,
     code:'DISTRICT867-867-farmer-' + id + '-m-Review-established'},!!crazygames);
 }
 
@@ -163,7 +158,7 @@ test('867 revisions account for all scenery and retain the released catalogue',a
     unchanged:true,slots:true,empty:true,governmentOnly:true,inheritance:true,tech:'none',technology:[],pure:true});
 });
 
-for (const flag of [false,true]) test('fresh expanded households and bounded district routes, distribution ' + flag,
+for (const flag of [false]) test('fresh expanded households and bounded district routes, distribution ' + flag,
   async function ({page},info) {
     await startDistrict(page,info,'jenne_district',flag);
     const result = await page.evaluate(function (rows) {

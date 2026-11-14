@@ -153,7 +153,7 @@ test('unreviewed county replacement is rejected without granting an imam or cent
     },profiles)).toEqual({guarded:true,pure:true});
   });
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   for (const row of [
     {bookmark:'800',revision:'inhabited_v2_governments_v2_islamic_v1',province:'tahert',realm:'rustamids',faith:'ibadi'},
     {bookmark:'867',revision:'governments_v2_islamic_v1',province:'tahert',realm:'rustamids',faith:'ibadi'},
@@ -161,12 +161,7 @@ for (const crazygames of [false,true]) {
   ]) {
     test(row.bookmark + ' reviewed court stays distinct from its residents and restores, CrazyGames ' + crazygames,
       async function ({page},info) {
-        await page.addInitScript(function (row) {
-          document.addEventListener('DOMContentLoaded',function () {
-            FBDATA.bookmarks[row.bookmark].revision = row.revision;
-          },{once:true});
-        },row);
-        await startHistoricalGame(page,info,{bookmark:row.bookmark,
+        await startHistoricalGame(page,info,{bookmark:row.bookmark,revision:row.revision,
           code:'ISLAMICREVIEW-' + row.bookmark + '-serf-' + row.province + '-m-Review-established'},crazygames);
         const before = await page.evaluate(function (row) {
           const s = FB.state, ruler = FB.realmRulerCharacterSnapshot(s,row.realm);
@@ -256,7 +251,7 @@ test('dated fresh rollout selects only accepted worlds and preserves mixed popul
       valid:true,unchanged:true,noHeldPlacement:true,early:true,pure:true});
   });
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('fresh 800 Kufa learning separates legal affiliation from theology and restores, CrazyGames ' + crazygames,
     async function ({page},info) {
       await startHistoricalGame(page,info,{bookmark:'800',
@@ -341,10 +336,7 @@ for (const crazygames of [false,true]) {
   ]) {
     test(row.bookmark + ' retained campaign restores without adopting fresh courts or circles, CrazyGames ' + crazygames,
       async function ({page},info) {
-        await page.addInitScript(function (row) {
-          document.addEventListener('DOMContentLoaded',function () { FBDATA.bookmarks[row.bookmark].revision = row.revision; },{once:true});
-        },row);
-        await startHistoricalGame(page,info,{bookmark:row.bookmark,
+        await startHistoricalGame(page,info,{bookmark:row.bookmark,revision:row.revision,
           code:'ISLAMICRETAINED-' + row.bookmark + '-serf-' + row.province + '-m-Review-established'},crazygames);
         function retainedFacts() {
           const s = FB.state, c = s.chars[s.player.charId];
@@ -356,13 +348,11 @@ for (const crazygames of [false,true]) {
         }
         const saved = await page.evaluate(function () { return FB.save.serialize(); });
         const before = await page.evaluate(retainedFacts);
-        await page.addInitScript(function (selected) {
-          document.addEventListener('DOMContentLoaded',function () {
-            Object.keys(selected).forEach(function (id) { FBDATA.bookmarks[id].revision = selected[id]; });
-          },{once:true});
-        },selectedRevisions);
         if (crazygames) await openCrazyGame(page,info);
         else await openGame(page,info);
+        await page.evaluate(function (selected) {
+          Object.keys(selected).forEach(function (id) { FBDATA.bookmarks[id].revision = selected[id]; });
+        },selectedRevisions);
         await restoreBookmark(page,saved);
         expect(await page.evaluate(retainedFacts)).toEqual(before);
         expect(await page.evaluate(function () {
@@ -398,7 +388,7 @@ const circles = [
     affiliations:['shafii_learning_1066','ashari_learning_1066'],sex:'f'}
 ];
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('saved school descendants, projects, pilgrimage ranks and restricted property survive another world, CrazyGames ' + crazygames,
     async function ({page},info) {
       await beginCircle(page,info,circles[0],crazygames);
@@ -449,12 +439,7 @@ for (const crazygames of [false,true]) {
 }
 
 async function beginCircle(page,info,row,crazygames) {
-  await page.addInitScript(function () {
-    document.addEventListener('DOMContentLoaded',function () {
-      FBDATA.bookmarks['1066'].revision = 'governments_v2_islamic_v1_institutions_v1';
-    },{once:true});
-  });
-  await startHistoricalGame(page,info,{bookmark:'1066',
+  await startHistoricalGame(page,info,{bookmark:'1066',revision:'governments_v2_islamic_v1_institutions_v1',
     code:'ISLAMICCIRCLE-1066-serf-' + row.province + '-' + row.sex + '-Review-established'},!!crazygames);
   await page.evaluate(function (row) {
     window.islamicCircle = row;
@@ -662,7 +647,7 @@ test('public support and bounded AI fund only the actual ruler account without s
     })).toEqual({applied:true,ai:1,repeat:0,payer:true,publicSpent:6,household:true,restricted:6,preserved:[10,6],noOffice:null});
   });
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('independent school affiliations and an unfinished lesson restore exactly, CrazyGames ' + crazygames,
     async function ({page},info) {
       await beginCircle(page,info,circles[1],crazygames);

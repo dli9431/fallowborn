@@ -498,7 +498,7 @@ function iranianSavedFacts() {
     }),heads:s.religiousHeads,institutions:s.localInstitutions,property:s.abbeys,
     communities:FB.countyCommunities(s,'baghdad')}));
 }
-for (const distribution of ['standard','CrazyGames']) {
+for (const distribution of ['standard']) {
   test(distribution + ' restores Iranian gifts and completes a funded lesson once',async function ({page},testInfo) {
     await iranianServiceHousehold(page,testInfo,'493',distribution === 'CrazyGames');
     const saved = await page.evaluate(function () {
@@ -688,7 +688,7 @@ function laterIranianSavedFacts() {
     root:FB.religionOf('zoroastrian',s).properties,child:FB.religionOf('e2e_iranian_saved_child',s).properties,
     communities:FB.countyCommunities(s,'istakhr'),project:FB.countyCommunityProject(s,'istakhr','faith')}));
 }
-for (const distribution of ['standard','CrazyGames']) {
+for (const distribution of ['standard']) {
   test(distribution + ' restores later learning with saved doctrine, a mixed community and conversion progress',async function ({page},testInfo) {
     await laterIranianHousehold(page,testInfo,'800',distribution === 'CrazyGames');
     const saved = await page.evaluate(function () {

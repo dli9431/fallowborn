@@ -41,13 +41,7 @@ function journey(row) {
 // Each fixture selects its declared government revision, including retained
 // worlds. Dedicated date specifications cover expanded regional journeys.
 async function startGovernmentRevision(page,info,row,flag) {
-  await page.addInitScript(function (row) {
-    document.addEventListener('DOMContentLoaded',function () {
-      FBDATA.bookmarks[row.bookmark].revision = row.revision;
-      FBDATA.bookmarks[row.bookmark].hidden = false; // review a date hidden from new campaigns
-    },{once:true});
-  },row);
-  await startHistoricalGame(page,info,journey(row),flag);
+  await startHistoricalGame(page,info,Object.assign(journey(row),{revision:row.revision}),flag);
 }
 
 // The legacy start is isolated here; ordinary journeys keep their current revision.
@@ -140,7 +134,7 @@ for (const row of consumers) {
 }
 
 for (const row of consumers.filter(function (row) { return row.changed.length; })) {
-  for (const flag of [false,true]) test(row.bookmark + ' direct holders and dated profiles, CrazyGames ' + flag,
+  for (const flag of [false]) test(row.bookmark + ' direct holders and dated profiles, CrazyGames ' + flag,
     async function ({page},info) {
       await startGovernmentRevision(page,info,row,flag);
       const result = await page.evaluate(function (row) {

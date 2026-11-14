@@ -79,6 +79,7 @@ async function settleForParity(page) {
 
 async function startParityGame(page, testInfo, journey) {
   await openGame(page, testInfo);
+  await prepareJourneyBookmark(page, journey);
   let code = journey.code;
   if (journey.declaredOpening) code = await page.evaluate(function (input) {
     let scenario = FBDATA.startScenarios.find(function (s) {return s.id === input.scenario;});
@@ -137,6 +138,9 @@ async function startParityGame(page, testInfo, journey) {
   });
   expect(started.bookmark).toBe(journey.bookmark);
   expect(started.seed).toBe(code);
+  if (journey.revision) expect(await page.evaluate(function () {
+    return FB.state.start.revision;
+  })).toBe(journey.revision);
   await settleForParity(page);
   /* Journeys are not tutorial tests; drop the synthetic tutorial in every
      tree the same way, as the shared start journey does. */
@@ -144,6 +148,18 @@ async function startParityGame(page, testInfo, journey) {
     if (FB.state.player.flags) delete FB.state.player.flags.tutorial;
   });
   return code;
+}
+
+// Content preparation republishes the catalogue. Apply isolated review choices
+// only after that boundary and before the seed dialog reads the selected date.
+async function prepareJourneyBookmark(page, journey) {
+  if (!journey.revision && !journey.unhide) return;
+  await page.evaluate(function (input) {
+    const bookmark = FBDATA.bookmarks[input.bookmark];
+    if (!bookmark) throw new Error('Missing prepared bookmark ' + input.bookmark);
+    if (input.revision) bookmark.revision = input.revision;
+    if (input.unhide) bookmark.hidden = false;
+  }, {bookmark:journey.bookmark, revision:journey.revision, unhide:journey.unhide});
 }
 
 async function loadParitySave(page, testInfo, text) {
@@ -440,6 +456,7 @@ module.exports = {
   captureWorldSnapshot:captureWorldSnapshot,
   loadParitySave:loadParitySave,
   expectedScenarioTable:expectedScenarioTable,
+  prepareJourneyBookmark:prepareJourneyBookmark,
   startParityGame:startParityGame,
   startScenarioTable:startScenarioTable
 };
