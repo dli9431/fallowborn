@@ -63,6 +63,34 @@ reload and repeated restoration. Public Sasanian intrigue hearings use the decla
 religious law remains the existing fallback. These bounded checks do not replace
 owner runtime, historical or device acceptance.
 
+Legacy bookmark source oracles
+
+The native, 568 and bootstrap composition specifications serve the former eager
+document for immutable source oracles. The manifest helper restores every dated
+script at its original deferred position before the stage-only legacy adapter
+runs; the native comparison also asserts the complete ordered script inventory.
+Source-boundary and fault-injection probes that prepend code to lazy 568 files
+use that same eager document, so their mutations observe the intended draft.
+The standard-edition cases retain exact catalogue, story order, retained-save
+and spent-resource comparisons.
+
+The frozen 634 assembler also runs against its frozen identities and regional
+inputs in a detached browser-only catalogue. Its complete predecessor world,
+ordinary starts and shared declarations are compared with the current assembler,
+accounting for the enumerated map corrections, visibility and added revisions.
+The live oracle uses the complete 634 assembler so later personal and world
+stories see their declared revisions. Full cross-page fingerprints include all
+current revisions and public roots; the predecessor fixture is never rewritten.
+The bootstrap restore explicitly selects the former baseline and hides the
+current destination before loading its spent-resource save.
+The 1096 oracle keeps both frozen pilgrim declarations and appends the later
+following group from its current owner, preserving exact registration order and
+the complete world's expedition dependencies without editing the fixture.
+The older Baghdad household choice is reconciled with the exact later correction
+that records a copying intention instead of selecting licensed scholarly work;
+both source spellings are checked before the correction is applied. Individual
+story fingerprints accompany the complete native catalogue comparison.
+
 Retained shared definitions and fixed-start identities
 
 Additional estuary-governments.json and upland-governments.json inputs cover additive government forms, administration profiles and aristocratic profiles through trusted native evidence and real ordinary JSON file imports. retained-shared-identities.spec.js checks missing evidence, attempted replacement, forged current rows and warmed stale-live definitions independently for each root, with pure rejection and exact subsequent proof. A hidden new revision preserves visible retained raw/effective worlds, menu visibility, spent resources, exact people, RNG and uid through repeated loads and cold re-saves. Boolean visibility overrides also validate through ordinary JSON; malformed values remain rejected. Existing three-root evidence, configuration, edition and forgery controls remain in place.
@@ -135,7 +163,7 @@ spec separately owns predecessor-proof selection, ambiguity, JSON order,
 raw JSON bytes, bundled content and public-root rejection. These checks do not
 establish packaged, visual or device acceptance.
 
-bookmark-composition-native.spec.js compares the exact retained projection of all public definition roots, native worlds, revisions, starts and story order against the unchanged native-before-shared fixtures. Only the enumerated 634 revision, fresh pointer, separately asserted visibility change and exact previously merged quadrant and technology-review deltas are reconciled. merged-corrections.json records the old/new map values, Aquitaine insertion and minority-stewardship technology-review rationale; both sides must match those declarations before full equality. Koten and its graph remain in the full equality comparison. Its unrelated-date spent-resource journeys use ordinary unmodded signatures rather than turning a diagnostic fingerprint application into a synthetic modded save. Current persisted 634 mod compatibility is covered by 634-scenery-revisions.spec.js. 634-first-playable.spec.js and 634-rulers.spec.js distinguish the selected core_courts_v4 world from explicitly named core_identities_v3 campaigns. They retain earlier opening, personal-program and diagnostic checks alongside the complete world's three offered rulers, current agendas and hidden-save restoration.
+bookmark-composition-native.spec.js compares all public definition roots, native worlds, revisions, starts and story order with the eager source oracle, including every current 634 revision. The detached predecessor proof checks the unchanged native-before-shared 634 assembler and inputs; merged-corrections.json pins the old/new map values, Aquitaine insertion and minority-stewardship technology-review rationale. Each correction requires its exact predecessor before reconciliation. Koten and its graph remain in the full equality comparison. Unrelated-date spent-resource journeys use ordinary unmodded signatures rather than turning a diagnostic fingerprint application into a synthetic modded save. Current persisted 634 mod compatibility is covered by 634-scenery-revisions.spec.js. 634-first-playable.spec.js and 634-rulers.spec.js distinguish the selected core_courts_v4 world from explicitly named core_identities_v3 campaigns. They retain earlier opening, personal-program and diagnostic checks alongside the complete world's three offered rulers, current agendas and hidden-save restoration.
 
 Office applicability and ruler-save regression coverage
 
