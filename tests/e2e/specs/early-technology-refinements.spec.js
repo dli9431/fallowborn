@@ -1,10 +1,14 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { startParityGame } = require('../support/game/parity');
+const { installRestoreFacts } = require('../support/game/restore-facts');
+const { expectModAdmission } = require('../support/game/mod-admission');
 const { releasedCatalogue } = require('../support/released-catalogue');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const released = require('../fixtures/released-catalogue.json');
@@ -102,7 +106,11 @@ test('two complete refinements add only their declared effects, graph and simula
   });
   const source = 'data/technology_early_refinements.js';
   expect(r.sources.filter(function (s) { return s === source; })).toHaveLength(1);
-  expect(r.sources.indexOf(source)).toBe(r.sources.indexOf('data/technology.js') + 1);
+  expect(r.sources.slice(r.sources.indexOf('data/technology.js'),r.sources.indexOf(source) + 1)).toEqual([
+    'data/technology.js','data/site_resources.js','data/building_operations.js','data/production.js',
+    'data/production_economy.js','data/siege_support.js','data/maritime_work.js',
+    'data/relay_services.js','data/building_seasons.js',source
+  ]);
   expect(r.sources.indexOf(source)).toBeLessThan(r.sources.indexOf('data/technology_foundations.js'));
 });
 
@@ -140,7 +148,9 @@ test('paid research adds one soft refinement without granting money, property, u
 
 for (const year of [867,1066]) {
   test(year + ' fresh knowledge has exact refinement deltas and unchanged retained knowledge and world hashes', async function ({ page }, info) {
-    await beginBookmark(page,info,String(year),'farmer');
+    // These visible dates need no review override of their hidden declaration.
+    await startParityGame(page,info,{bookmark:String(year),scenario:'farmer',
+      code:'BOOKMARKSMOKE-' + year + '-farmer-london-m-Review-established'});
     const r = await page.evaluate(function (input) {
       const table = FBDATA.tech, s = FB.state, declarations = JSON.stringify(FBDATA.bookmarks);
       function seed(tradition, remove) {
@@ -255,22 +265,27 @@ test('the same start replays paid player and nonplayer refinement completion', a
 
 test('an old matching save retains partial research and actual property without adding new knowledge', async function ({ page }, info) {
   await openGame(page,info); await startDeterministicGame(page); await stageSovereign(page);
+  await installRestoreFacts(page);
   const before = await page.evaluate(function () {
     const s = FB.state, pid = s.player.provinceId;
     s.realmTech.player = {completed:['manuscript_codex'],exposed:['manuscript_codex','scriptoria'],
       active:['scriptoria'],progress:{scriptoria:7.25},reserve:3.5,priorities:{scriptoria:1200},historicalSeeded:1};
     s.buildings[pid] = [{s:0,id:'library'},{s:0,id:'hospice',ruined:true}];
     FB.invalidateBuildingIndex(s,pid); s.date.year = 1300;
-    return {record:JSON.stringify(s.realmTech.player),assets:JSON.stringify(s.buildings),save:FB.save.serialize()};
+    return {facts:restoreFacts(s,function (v) {
+      return {record:v.realmTech.player,assets:v.buildings};
+    },{technologySets:true}),save:FB.save.serialize()};
   });
   await restoreBookmark(page,before.save);
   expect(await page.evaluate(function () {
     const s = FB.state;
-    return {record:JSON.stringify(s.realmTech.player),assets:JSON.stringify(s.buildings),
+    return {facts:restoreFacts(s,function (v) {
+      return {record:v.realmTech.player,assets:v.buildings};
+    },{technologySets:true}),
       newKnowledge:FB.hasTech(s,'feltmaking') || FB.hasTech(s,'bookhand_standardization'),
       available:FB.techCandidate(s,'feltmaking').available,
       locked:FB.techCandidate(s,'bookhand_standardization').reqLocked};
-  })).toEqual({record:before.record,assets:before.assets,newKnowledge:false,available:true,locked:true});
+  })).toEqual({facts:before.facts,newKnowledge:false,available:true,locked:true});
 });
 
 for (const input of [
@@ -280,6 +295,8 @@ for (const input of [
 ]) {
   test(input.file + ' imports independent terms, rejects malformed candidates purely and preserves exact saved content', async function ({ page }, info) {
     await openGame(page,info); await page.evaluate(function () { FB.ui.showMods(); });
+    const mod = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/'+input.file),'utf8'));
+    await expectModAdmission(page,mod,input.file);
     await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+input.file));
     await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
     await prepareGameContent(page);
@@ -287,6 +304,7 @@ for (const input of [
       return window.FB && FB.game && FB.game.bootReady && FBDATA.tech[p.id].cost === p.cost;
     },input);
     await startDeterministicGame(page); await stageSovereign(page);
+    await installRestoreFacts(page);
     const r = await page.evaluate(function (p) {
       const s = FB.state, rec = s.realmTech.player, data = JSON.stringify(FBDATA.tech);
       const state = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -305,7 +323,8 @@ for (const input of [
       const baseline = p.channel === 'enterprise' ? FB.techCostModifier(s,'enterprise') : FB.techBonus(s,'education');
       const started = FB.selectTechProject(s,p.id); FB.addResearch(s,FB.techCost(s,p.id));
       const final = p.channel === 'enterprise' ? FB.techCostModifier(s,'enterprise') : FB.techBonus(s,'education');
-      const saved = {record:JSON.stringify(rec),save:FB.save.serialize()};
+      const saved = {record:restoreFacts(s,function (v) { return v.realmTech.player; },{technologySets:true}),
+        save:FB.save.serialize()};
       // Imported effect magnitudes still use the ordinary national guards.
       const original = FBDATA.tech[p.id].fx;
       FBDATA.tech[p.id].fx = {costs:{enterprise:-2},education:2}; FB.invalidateTechBonuses();
@@ -318,7 +337,9 @@ for (const input of [
     expect(r).toMatchObject({pure:true,locked:true,started:true,guards:[0.55,0.20]});
     expect(r.delta).toBeCloseTo(input.amount,10);
     await restoreBookmark(page,r.save);
-    expect(await page.evaluate(function () { return JSON.stringify(FB.state.realmTech.player); })).toBe(r.record);
+    expect(await page.evaluate(function () {
+      return restoreFacts(FB.state,function (v) { return v.realmTech.player; },{technologySets:true});
+    })).toBe(r.record);
     await page.evaluate(function (p) {
       const stored = JSON.parse(localStorage.getItem('fb_mods')), mod = JSON.parse(stored[0]);
       mod.tech[p.id].cost++; localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(mod)]));
