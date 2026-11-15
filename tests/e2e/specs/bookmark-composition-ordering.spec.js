@@ -4,11 +4,11 @@ const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {openCrazyGame} = require('../support/game/crazygames-title');
-const {mockCrazyGames} = require('../support/crazygames');
+const {expectModAdmission} = require('../support/game/mod-admission');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {harbor:require('../fixtures/authoring/existing-person-harbor.json'),
   dune:require('../fixtures/authoring/existing-person-dune.json')};
+const sourceLoader = fs.readFileSync(path.resolve(__dirname,'../../../js/bookmark_sources.js'),'utf8');
 const source634 = fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_634.js'),'utf8');
 
 dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','js/bookmark_sources.js','data/bookmark_sources.js','js/main.js','js/mods.js',
@@ -24,40 +24,40 @@ function inputFor(prefix) {
   Object.keys(mod).forEach(function (key) {
     if (['name','bookmarks','startScenarios'].indexOf(key) < 0) catalogs[key] = mod[key];
   });
+  mod.startScenarios[1].sex = 'm';
   const bookmark = mod.bookmarks[prefix + '_world']; bookmark.starts = [];
   return {id:prefix + '_ordering',source:'fixtures/authoring/existing-person-' + prefix + '.json',
     bookmark:bookmark,catalogs:catalogs,starts:mod.startScenarios.map(function (definition) { return {definition:definition}; })};
 }
 
-for (const crazy of [false,true]) {
-  test('634 captures source positions before validators load on ' + (crazy ? 'CrazyGames' : 'standard'),async function ({page},info) {
+{
+  test('634 captures source positions before validators load on standard',async function ({page},info) {
     test.skip(!info.project.name.endsWith('-served'),'Data-position interception requires the served origin.');
-    const before = `
+    await page.route('**/js/bookmark_sources.js',function (route) {
+      return route.fulfill({contentType:'application/javascript',body:sourceLoader + early});
+    });
+    const early = `
       window.__orderingStage = {capture:typeof FB.bookmarkCompositions.captureStarts === 'function',
         mods:!!FB.mods,stories:!!FB.stories,world:!!FB.validateBookmark,rng:!!FB.getRngState};
       window.__orderingStage.early = FB.bookmarkCompositions.prepare({id:'ordering_early_probe',bookmark:{id:'ordering_future'}}).publish();
-      window.__orderingPublicBefore = JSON.stringify({worlds:FBDATA.bookmarks,sites:FBDATA.settlementSites,
-        layouts:FBDATA.settlementLayouts,faiths:FBDATA.religions,forms:FBDATA.governmentForms,starts:FBDATA.startScenarios});
-      window.__orderingLiveStarts = FB.bookmarkSources.inspect().starts;
+    `;
+    const before = `
+      window.__orderingPublicBefore = JSON.stringify({worlds:window.FBDATA.bookmarks,sites:window.FBDATA.settlementSites,
+        layouts:window.FBDATA.settlementLayouts,faiths:window.FBDATA.religions,forms:window.FBDATA.governmentForms,starts:window.FBDATA.startScenarios});
+      window.__orderingLiveStarts = FBDATA.startScenarios.map(function (row) { return row.id; });
     `;
     const after = `
-      window.__orderingStage.unchanged = window.__orderingPublicBefore === JSON.stringify({worlds:FBDATA.bookmarks,
-        sites:FBDATA.settlementSites,layouts:FBDATA.settlementLayouts,faiths:FBDATA.religions,
-        forms:FBDATA.governmentForms,starts:FBDATA.startScenarios});
+      window.__orderingStage.unchanged = window.__orderingPublicBefore === JSON.stringify({worlds:window.FBDATA.bookmarks,
+        sites:window.FBDATA.settlementSites,layouts:window.FBDATA.settlementLayouts,faiths:window.FBDATA.religions,
+        forms:window.FBDATA.governmentForms,starts:window.FBDATA.startScenarios});
       window.__orderingStage.placements = FBDATA.bookmarkCompositionSources.autumn_634.input.starts.map(function (unit) { return unit.after; });
       var earlier = ['farmer_568','craftsman_568','ravenna_household_568','sigebert_568','chilperic_568','guntram_568'];
       window.__orderingStage.expected = [window.__orderingLiveStarts.concat(earlier),window.__orderingLiveStarts.concat(earlier,['farmer_634'])];
     `;
     await page.route('**/data/bookmark_634.js',function (route) {
-      return route.fulfill({contentType:'application/javascript',body:before + source634 + after});
+      return route.fulfill({contentType:'application/javascript',body:source634.replace('function (FBDATA) {','function (FBDATA) {' + before).replace(/\}\);\s*$/,after + '\n});')});
     });
-    if (crazy) {
-      await mockCrazyGames(page);
-      await page.addInitScript(function () {
-        window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-      });
-      await openCrazyGame(page,info);
-    } else await openGame(page,info);
+    await openGame(page,info);
     const result = await page.evaluate(function () {
       return {stage:window.__orderingStage,report:FB.bookmarkCompositions.sourceReports().find(function (row) { return row.id === 'autumn_634'; })};
     });
@@ -266,6 +266,7 @@ test('a placed preview retains the ordinary JSON file import contract',async fun
   expect(candidate.report.ready).toBe(true);
   expect(candidate.preview.startScenarios.every(function (row) { return !Object.prototype.hasOwnProperty.call(row,'after') && !Object.prototype.hasOwnProperty.call(row,'storyAfter'); })).toBe(true);
   candidate.preview.name = 'Dune placed preview';
+  await expectModAdmission(page,candidate.preview);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({name:'dune-placed-preview.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(candidate.preview))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);

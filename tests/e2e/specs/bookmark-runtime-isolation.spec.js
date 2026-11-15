@@ -1,8 +1,6 @@
 'use strict';
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {openCrazyGame} = require('../support/game/crazygames-title');
-const {mockCrazyGames} = require('../support/crazygames');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
@@ -71,16 +69,10 @@ test('resolved fresh and retained worlds preserve world-only validation through 
   expect(result.unknown).toContain('runtime_unknown_revision');
 });
 
-for (const crazy of [false,true]) {
-  test('dangling starts do not block healthy campaigns on ' + (crazy ? 'CrazyGames' : 'standard'),
+{
+  test('dangling starts do not block healthy campaigns on standard',
     async function ({page},info) {
-      if (crazy) {
-        await mockCrazyGames(page);
-        await page.addInitScript(function () {
-          window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-        });
-        await openCrazyGame(page,info);
-      } else await openGame(page,info);
+      await openGame(page,info);
       expect(await page.evaluate(function () {
         const farmer = FBDATA.startScenarios.find(function (row) { return row.id === 'farmer'; });
         const orphan = Object.assign({},farmer,{id:'isolation_orphan',bookmarkIds:['isolation_missing_world']});
@@ -194,7 +186,7 @@ test('a stale selected start is rechecked before changing Observe, state, RNG or
   })).toBe(true);
 });
 
-test('broken world revisions stay scoped and a matching save restores despite unrelated start errors',async function ({page},info) {
+test('invalid revision candidates reject and a matching save restores despite unrelated start errors',async function ({page},info) {
   await openGame(page,info);
   await enterCode(page,await codeFor(page,'farmer'));
   await finishStart(page);
@@ -202,7 +194,8 @@ test('broken world revisions stay scoped and a matching save restores despite un
     FB.state.player.gold = Math.max(0,FB.state.player.gold - 3);
     const text = FB.save.serialize();
     FBDATA.bookmarks['1066'].revision = 'isolation_missing_revision';
-    FBDATA.bookmarks['867'].revisions.isolation_invalid = null;
+    window.__isolationBrokenWorld = JSON.parse(JSON.stringify(FBDATA.bookmarks['867']));
+    window.__isolationBrokenWorld.revisions.isolation_invalid = null;
     const base = FBDATA.startScenarios.find(function (row) { return row.id === 'farmer'; });
     FBDATA.startScenarios.push(Object.assign({},base,{id:'isolation_orphan',bookmarkIds:['isolation_missing_world']}));
     return {text:text,gold:FB.state.player.gold,revision:FB.state.start.revision};
@@ -212,8 +205,15 @@ test('broken world revisions stay scoped and a matching save restores despite un
     const farmer = FBDATA.startScenarios.find(function (row) { return row.id === 'farmer'; });
     return {healthy:ids.indexOf('867') >= 0,broken:ids.indexOf('1066') >= 0,
       retainedHealthy:FB.startRuntimeReport(farmer,FB.bookmark('867')).available,
-      strictRejects:FB.validateBookmark(FBDATA.bookmarks['867']).length > 0};
+      strictRejects:FB.validateBookmark(window.__isolationBrokenWorld).length > 0};
   })).toEqual({healthy:true,broken:false,retainedHealthy:true,strictRejects:true});
+  expect(await page.evaluate(function () {
+    const state = FB.state, before = JSON.stringify([FBDATA,state]), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const candidate = {bookmarks:{'867':window.__isolationBrokenWorld}}, input = JSON.stringify(candidate);
+    const rejected = FB.mods.validate(candidate).some(function (fault) { return fault.indexOf('isolation_invalid') >= 0; });
+    return {rejected:rejected,pure:input === JSON.stringify(candidate) && state === FB.state &&
+      before === JSON.stringify([FBDATA,state]) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  })).toEqual({rejected:true,pure:true});
   await restoreBookmark(page,saved.text);
   expect(await page.evaluate(function () { return {id:FB.state.start.id,gold:FB.state.player.gold,revision:FB.state.start.revision}; }))
     .toEqual({id:'867',gold:saved.gold,revision:saved.revision});
@@ -229,7 +229,8 @@ test('malformed start policy blocks starts while Observe remains available in a 
     return FB.bookmarkRuntimeDiagnostics().filter(function (row) { return row.kind === 'start_policy' && row.bookmarkId === '867'; }).length;
   })).toBe(1);
   await page.getByRole('button',{name:/Observe/}).click();
-  expect(await page.evaluate(function () { return !!FB.state && FB.game.observe; })).toBe(true);
+  await expect(page.locator('body')).toHaveClass(/observing/);
+  expect(await page.evaluate(function () { FB.game.setPaused(true); return !!FB.state && FB.game.observe; })).toBe(true);
 });
 
 test('world corruption after preview rejects direct play and Observe without campaign mutation',async function ({page},info) {

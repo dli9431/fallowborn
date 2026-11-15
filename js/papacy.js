@@ -3385,7 +3385,8 @@ window.FB = window.FB || {};
     }
     return playerChar(state) && playerChar(state).religion;
   }
-  function bindOffice(fn, allOffices, contextEvent, nullWhenDisabled) {
+  function bindOffice(fn, allOffices, contextEvent, disabledValue) {
+    if (disabledValue === undefined) disabledValue = false;
     return function (state) {
       var args = arguments;
       if (activeOffice || !state) return fn.apply(this, args);
@@ -3407,7 +3408,7 @@ window.FB = window.FB || {};
       var result = record ? FB.withPapalOffice(state, record.religionId, function () {
         return fn.apply(null, args);
       }) : fn.apply(this, args);
-      return nullWhenDisabled && result === false ? null : result;
+      return result === false ? disabledValue : result;
     };
   }
   var allOfficeCalls = ['ensurePapacyState', 'papacyDay', 'papacyYearly',
@@ -3419,7 +3420,7 @@ window.FB = window.FB || {};
         key === 'papalElectionLaw' || key === 'papalAuthorityBand' ||
         key === 'papalInstitutionActive' || key === 'papalOfficeIncumbentSnapshot') return;
     FB[key] = bindOffice(FB[key], allOfficeCalls.indexOf(key) >= 0, false,
-      key === 'ensurePapacy');
+      key === 'ensurePapacy' ? null : key === 'papacyRealmStrengthMultiplier' ? 1 : false);
   });
   Object.keys(FB.fns).forEach(function (key) {
     if (priorFns.indexOf(key) >= 0) return;

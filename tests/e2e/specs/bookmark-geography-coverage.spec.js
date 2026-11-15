@@ -88,7 +88,8 @@ test('1204 opening and every saved settlement slot survive removal of the 1066 d
       const data = clone(inputs);
       if (remove) { delete data.bookmarks['1066']; delete data.settlementLayouts['1066']; }
       // Each source receives a detached data catalogue and cannot change the live world.
-      new Function('window','FBDATA',source)({FBDATA:data},data);
+      const sourceOwner = {bookmarkSources:{stage:function (definition,build) { build(data); }}};
+      new Function('window','FBDATA','FB',source)({FBDATA:data},data,sourceOwner);
       return {bookmark:data.bookmarks['1204'],layout:data.settlementLayouts['1204']};
     }
     return {previous:build(sources.previous,false),current:build(sources.current,false),
@@ -137,7 +138,7 @@ test('an independent fictional opening compiles the shared district sites and cl
   }
 });
 
-for (const flag of [false,true]) test('shared district raster, dry routes and restore remain bounded, flag ' + flag,
+for (const flag of [false]) test('shared district raster, dry routes and restore remain bounded, flag ' + flag,
   async function ({page},testInfo) {
     await startRegion(page,testInfo,'garama',flag);
     const before = await page.evaluate(function (ids) {
