@@ -1,4 +1,5 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -20,10 +21,11 @@ for (const name of ['Orin Vale-Sen','Orin-Vale-Sen','Orin Vale','Aurelian Consta
       gold:20, prestige:0, piety:0, familyPresets:{ standard:{} }, onboarding:'ruler', intro:'Your court awaits.' });
     await useReleasedStartRules(page);
     await openGame(page, info);
+    await expectModAdmission(page,mod);
     await page.evaluate(function () { FB.ui.showMods(); });
     await page.locator('#modfile').setInputFiles({ name:'encoded-court.json',mimeType:'application/json',
       buffer:Buffer.from(JSON.stringify(mod)) });
-    await page.locator('#mod-apply').click();
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
     await prepareGameContent(page);
     await page.waitForFunction(function () {
       return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks.harbor_world;

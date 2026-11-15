@@ -2,6 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
+const {installPageGuards} = require('../support/page-contract');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
@@ -315,52 +317,68 @@ for (const who of ['umar','heraclius']) {
   });
 }
 
-test('independent ordinary JSON reviews retain exact commitments, reject malformed sources purely and keep a future stop route',async function ({page},info) {
-  await load(page,info);
-  const fixturePath = path.resolve(__dirname,'../fixtures/authoring/634-court-agenda.json');
-  const mod = JSON.parse(fs.readFileSync(fixturePath,'utf8'));
-  expect(await page.evaluate(function (mod) {
-    const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
-    const valid = FB.mods.validate(mod), invalid = [];
-    function rejected(change) { const m = JSON.parse(JSON.stringify(mod)); change(m.storyInstances.umar_court_agenda_634); invalid.push(FB.mods.validate(m).length > 0); }
-    rejected(function (d) { d.stages[0].choices[0].choiceId = 'invent_victory'; });
-    rejected(function (d) { d.stages[0].choices[0].amount = 1; });
-    rejected(function (d) { d.requires = []; });
-    rejected(function (d) { d.stages[0].choices.pop(); });
-    return {valid:valid,invalid:invalid,pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  },mod)).toEqual({valid:[],invalid:[true,true,true,true],pure:true});
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(fixturePath);
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
-  await start(page,info,'umar_634',true);
-  expect(await page.evaluate(function () {
-    const s = FB.state, id = 'umar_court_agenda_634', before = RA.resources(s);
-    const decline = RA.choose(id,'import_decline_iraq');
-    return {decline:decline,iraq:s.stories.iraqi_front_634.reason,syria:s.stories.syrian_front_634.playerDecision,
-      choices:FB.stories.choices(s,id).map(function (c) { return c.id; }),future:FB.stories.quote(s,id,'import_finish_accounts').allowed,
-      resources:before === RA.resources(s)};
-  })).toEqual({decline:true,iraq:'player_declined',syria:null,choices:['agenda_stop_program'],future:false,resources:true});
-  await roundTrip(page);
-  expect(await page.evaluate(function () {
-    return RA.choose('umar_court_agenda_634','agenda_stop_program') && FB.state.stories.umar_court_agenda_634.status === 'agenda_stopped';
-  })).toBe(true);
-  await roundTrip(page);
-  const saved = await page.evaluate(function () { return FB.save.serialize(); });
-  mod.storyInstances.umar_court_agenda_634.stages[0].text = 'A changed Iraqi review under the same mod name.';
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles({name:'634-court-agenda.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod),'utf8')});
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
-  expect(await page.evaluate(async function (text) {
-    const e = JSON.parse(text);
-    await new Promise(function (resolve,reject) {
-      FB.activateBookmark(e.state.start.id,null,function (error) { if (error) reject(error); else resolve(); },
-        {revision:e.state.start.revision,geography:e.state.start.geography});
-    });
-    const before = JSON.stringify([FB.state,FBDATA]), rng = FB.getRngState(), uid = FB.getUidCounter();
-    let rejected = false;
-    try { FB.save.restore(e); } catch (error) { rejected = /mod|content|signature/i.test(error.message); }
-    return {rejected:rejected,pure:before === JSON.stringify([FB.state,FBDATA]) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  },saved)).toEqual({rejected:true,pure:true});
+test.describe('ordinary imported court reviews',function () {
+  test.describe.configure({mode:'default'});
+  let context,page,guard;
+  const fixturePath=path.resolve(__dirname,'../fixtures/authoring/634-court-agenda.json');
+  let mod,saved;
+  test.beforeAll(async function ({browser},info) {
+    context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+    await load(page,info);
+  });
+  test.afterAll(async function () {
+    if(context)try {expect(guard.faults).toEqual([]);}finally {await context.close();}
+  });
+  test('ordinary JSON source validation rejects malformed reviews without publication',async function () {
+    mod = JSON.parse(fs.readFileSync(fixturePath,'utf8'));
+    expect(await page.evaluate(function (mod) {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const valid = FB.mods.validate(mod), invalid = [];
+      function rejected(change) { const m = JSON.parse(JSON.stringify(mod)); change(m.storyInstances.umar_court_agenda_634); invalid.push(FB.mods.validate(m).length > 0); }
+      rejected(function (d) { d.stages[0].choices[0].choiceId = 'invent_victory'; });
+      rejected(function (d) { d.stages[0].choices[0].amount = 1; });
+      rejected(function (d) { d.requires = []; });
+      rejected(function (d) { d.stages[0].choices.pop(); });
+      return {valid:valid,invalid:invalid,pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    },mod)).toEqual({valid:[],invalid:[true,true,true,true],pure:true});
+  });
+  test('ordinary JSON reviews retain exact commitments and a future stop route',async function ({},info) {
+    mod=JSON.parse(fs.readFileSync(fixturePath,'utf8'));
+    await page.evaluate(function () { FB.ui.showMods(); });
+    await page.locator('#modfile').setInputFiles(fixturePath);
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+    await start(page,info,'umar_634',true);
+    expect(await page.evaluate(function () {
+      const s = FB.state, id = 'umar_court_agenda_634', before = RA.resources(s);
+      const decline = RA.choose(id,'import_decline_iraq');
+      return {decline:decline,iraq:s.stories.iraqi_front_634.reason,syria:s.stories.syrian_front_634.playerDecision,
+        choices:FB.stories.choices(s,id).map(function (c) { return c.id; }),future:FB.stories.quote(s,id,'import_finish_accounts').allowed,
+        resources:before === RA.resources(s)};
+    })).toEqual({decline:true,iraq:'player_declined',syria:null,choices:['agenda_stop_program'],future:false,resources:true});
+    await roundTrip(page);
+    expect(await page.evaluate(function () {
+      return RA.choose('umar_court_agenda_634','agenda_stop_program') && FB.state.stories.umar_court_agenda_634.status === 'agenda_stopped';
+    })).toBe(true);
+    await roundTrip(page);
+    saved = await page.evaluate(function () { return FB.save.serialize(); });
+  });
+  test('changed same-name ordinary review content rejects a prior campaign atomically',async function () {
+    mod.storyInstances.umar_court_agenda_634.stages[0].text = 'A changed Iraqi review under the same mod name.';
+    await page.evaluate(function () { FB.ui.showMods(); });
+    await page.locator('#modfile').setInputFiles({name:'634-court-agenda.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod),'utf8')});
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+    expect(await page.evaluate(async function (text) {
+      const e = JSON.parse(text);
+      await new Promise(function (resolve,reject) {
+        FB.activateBookmark(e.state.start.id,null,function (error) { if (error) reject(error); else resolve(); },
+          {revision:e.state.start.revision,geography:e.state.start.geography});
+      });
+      const before = JSON.stringify([FB.state,FBDATA]), rng = FB.getRngState(), uid = FB.getUidCounter();
+      let rejected = false;
+      try { FB.save.restore(e); } catch (error) { rejected = /mod|content|signature/i.test(error.message); }
+      return {rejected:rejected,pure:before === JSON.stringify([FB.state,FBDATA]) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    },saved)).toEqual({rejected:true,pure:true});
+  });
 });

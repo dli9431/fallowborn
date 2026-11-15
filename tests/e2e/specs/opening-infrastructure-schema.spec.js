@@ -1,10 +1,11 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const fs = require('fs');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
@@ -24,15 +25,16 @@ for (const name of ['estuary', 'uplands']) {
 
 async function importExample(page, info, name) {
   await openGame(page, info);
+  await expectModAdmission(page,examples[name]);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.join(fixtureDirectory,
     'opening-infrastructure-' + name + '.json'));
-  await page.locator('#mod-apply').click();
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (name) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks['inventory_' + name];
   }, name);
-  await beginBookmark(page, info, 'inventory_' + name, 'inventory_' + name + '_household');
+  await beginBookmarkFromTitle(page, 'inventory_' + name, 'inventory_' + name + '_household');
 }
 
 // Each fault traverses both built-in validation and ordinary detached import.
@@ -292,7 +294,18 @@ test('missing, mismatched, generated, moved and unestablished site identities fa
       const mod = JSON.parse(JSON.stringify(source)), bm = mod.bookmarks.inventory_estuary;
       bm.revisions.inherited.openingInfrastructure.placements = [bm.revisions.inherited.openingInfrastructure.placements[0]];
       if (kind === 'moved') bm.provinces[0].x = 1.6;
-      if (kind === 'scenery') bm.provinces[0].wasteland = true;
+      if (kind === 'scenery') {
+        bm.provinces[0].wasteland = true;
+        // Keep the independent ruler start on a settled seat; only the
+        // inventory's original site is being made unavailable in this case.
+        bm.realms[0].capital = 'inventory_marsh';
+        mod.startScenarios.find(function (row) {return row.id === 'inventory_estuary_ruler';}).fixedProvinceId = 'inventory_marsh';
+        const placements=bm.revisions.inherited.openingInfrastructure.placements;
+        bm.revisions.inherited.openingInfrastructure.placements=[];
+        const faults=FB.mods.validate(mod);
+        if (faults.length) throw new Error('Scenery control: '+faults.join('; '));
+        bm.revisions.inherited.openingInfrastructure.placements=placements;
+      }
       if (kind === 'missing') delete mod.geographies.inventory_estuary_land.sites.inventory_quay_store;
       if (kind === 'duplicate') mod.settlementLayouts.inventory_estuary_layout.inventory_marsh.push(
         { site:'inventory_quay_store', name:'Wrong county store', kind:'village' });

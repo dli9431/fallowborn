@@ -1,10 +1,11 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
@@ -22,14 +23,15 @@ function example(prefix) {
 
 async function beginExample(page, info, prefix) {
   await openGame(page, info);
+  await expectModAdmission(page,example(prefix));
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.join(__dirname, '../fixtures/authoring/' + prefix + '-control.json'));
-  await page.locator('#mod-apply').click();
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (id) {
     return window.FB && FB.game && FB.game.bootReady && !!FBDATA.bookmarks[id];
   }, prefix + '_control_world');
-  await beginBookmark(page, info, prefix + '_control_world');
+  await beginBookmarkFromTitle(page, prefix + '_control_world');
 }
 
 for (const prefix of ['river', 'upland']) {
