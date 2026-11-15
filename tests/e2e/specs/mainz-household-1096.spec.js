@@ -7,6 +7,7 @@ dependsOnRuntime(__filename,['index.html','data/starts_mainz_1096.js','data/stor
   'data/bookmark_1096.js','data/bookmark_1096_scaffold_b.js','data/institutions_1096.js','data/identities_1096.js',
   'data/story_instances.js','data/actions.js','data/starts.js','data/bookmark_1096_mainz.js','data/communal_revisions.js',
   'data/government_rollout.js','js/starts.js','js/story_household.js','js/story_household_party.js',
+  'data/bookmark_1096_pilgrim.js','js/util.js',
   'js/story_household_refuge.js','js/story_opening_goals.js','js/story_household_observer.js','js/stories.js',
   'js/home_authority.js','js/institutions.js','js/model.js','js/settlement.js','js/world.js','js/treasury.js',
   'js/actions.js','js/save.js','js/save_v4.js','js/mods.js','js/main.js']);
@@ -18,7 +19,7 @@ async function start(page,info) {
       const s=FB.state,R=FB.householdRefuges;
       return R.commit(s,R.review(s,'mainz_refuge_1096',action,actor,terms));
     };
-    window.mainzAt=function(turn) { const s=FB.state;s.turn=turn;s.date=FB.dateAtTurn(s,turn); };
+    window.mainzAt=function(turn) { const s=FB.state;s.date=FB.dateAtTurn(s,turn);s.turn=turn; };
     window.mainzRecord=function() { return FB.state.stories.mainz_refuge_1096; };
     window.mainzPeople=function(child) {
       const s=FB.state,P=FB.householdParties,id='mainz_party_1096',actor=s.player.charId;
@@ -37,7 +38,9 @@ async function start(page,info) {
     };
     window.mainzRequest=function(ids) {
       const s=FB.state;
-      if (!mainzAct('request',s.player.charId,{partyId:'mainz_party_1096',personIds:ids})) throw new Error('Request refused');
+      const q=FB.householdRefuges.review(s,'mainz_refuge_1096','request',s.player.charId,{partyId:'mainz_party_1096',personIds:ids});
+      if (!FB.householdRefuges.commit(s,q)) throw new Error('Request refused: '+JSON.stringify({
+        provider:q.facts.provider.allowed,permission:q.facts.provider.permission,property:q.facts.provider.property,people:q.facts.people}));
       const r=mainzRecord().requests.slice(-1)[0];
       r.members.forEach(function(m) {
         if (!mainzAct('consent',m.caregiverId || m.personId,{requestId:r.id,personId:m.personId})) throw new Error('Shelter consent refused');
@@ -69,7 +72,7 @@ test('the new start is local, has a complete story and preserves all retained wo
       oldOffice:!!old.localInstitutions.mainz_see_1096,oldRefuge:old.stories.indexOf('mainz_refuge_1096')>=0,
       identity:[sc.startCulture,sc.startReligion,sc.tier,sc.profession],tracks:FB.startTracks(sc,'mainz'),
       pure:source===JSON.stringify(FBDATA)&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
-  })).toEqual({errors:[],olderrors:[],revision:'mainz_household_v1',local:true,remote:false,retained:false,
+  })).toEqual({errors:[],olderrors:[],revision:'pilgrim_followings_v1',local:true,remote:false,retained:false,
     oldOffice:false,oldRefuge:false,identity:['ashkenazi','jewish',1,'craftsman'],
     tracks:['mainz_household_track_1096','mainz_party_1096','opening_mainz_1096'],pure:true});
   await start(page,info);
@@ -77,11 +80,17 @@ test('the new start is local, has a complete story and preserves all retained wo
     const s=FB.state,office=FB.religiousOfficeSnapshot(s,'mainz_archbishop_1096');
     return {home:s.player.provinceId,phase:s.stories.mainz_household_track_1096.phase,
       family:FB.householdMembers(s).length>1,requests:mainzRecord().requests.length,
+      sites:FB.settlementsOf(s,'mainz').map(function(site) { return site.site; }),
+      refugeHolder:FB.settlementHolder(s,'mainz',6),
       office:[office.name,office.born,office.homeProvinceId],
       oneRuthard:Object.values(s.chars).filter(function(c) { return c.name==='Ruthard'; }).length,
       civil:FB.householdRefuges.review(s,'mainz_refuge_1096','request',s.player.charId,{partyId:'mainz_party_1096',personIds:[s.player.charId]}).facts.provider.allowed,
       errors:FBTEST.checkInvariants()};
-  })).toEqual({home:'mainz',phase:'household',family:true,requests:0,office:['Ruthard',1050,'mainz'],oneRuthard:1,civil:true,errors:[]});
+  })).toEqual({home:'mainz',phase:'household',family:true,requests:0,
+    sites:['mainz_head','geo_wiesbaden_2809346','geo_darmstadt_2938913','geo_russelsheim_am_main_2842884',
+      'geo_bad_kreuznach_2953416','geo_taunusstein_2823799','mainz_refuge_1096'],
+    refugeHolder:{kind:'realm',id:'mainz_custody_1096'},
+    office:['Ruthard',1050,'mainz'],oneRuthard:1,civil:true,errors:[]});
 });
 
 test('ordinary work and costless continuation grant no story money, protection or movement',async function({page},info) {

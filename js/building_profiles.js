@@ -29,7 +29,10 @@
     out.name = p.name; out.desc = p.desc;
     return out;
   };
-  P.assetDefinition = function (r) { return P.definition(r.id,r.buildingProfile && r.buildingProfile.id); };
+  // Aggregation callers may reuse the canonical id they already read.
+  P.assetDefinition = function (r,buildingId) {
+    return P.definition(buildingId === undefined ? r.id : buildingId,r.buildingProfile && r.buildingProfile.id);
+  };
   P.catalogFaults = function (c) {
     var out = [], table = c.buildingProfiles;
     if (!object(table) || Object.keys(table).length > 256) return ['buildingProfiles must be a table of at most 256 profiles.'];

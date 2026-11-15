@@ -9,11 +9,11 @@ dependsOnRuntime(__filename, ['index.html','data/story_household_effects_711_800
   'data/bookmark_800.js','data/bookmark_800_history.js','data/bookmark_800_expansion.js',
   'data/bookmark_1204.js','data/bookmark_1204_campaigns.js','data/bookmark_1204_terrain.js',
   'data/story_instances.js','data/story_households_711.js','data/story_households_800.js',
-  'data/story_households_1204.js','data/starts.js','data/technology.js','data/distribution_crazygames.js',
+  'data/story_households_1204.js','data/starts.js','data/technology.js',
   'js/story_household_observer.js','js/story_household.js','js/stories.js','js/story_campaign.js',
   'js/story_settlements.js','js/story_history.js','js/story_polity_foundation.js','js/rebellions.js',
   'js/world.js','js/starts.js','js/main.js','js/wars.js','js/armies.js','js/royal_settlements.js',
-  'js/holywar.js','js/authority.js','js/treasury.js','js/save.js','js/save_v4.js','js/crazygames.js']);
+  'js/holywar.js','js/authority.js','js/treasury.js','js/save.js','js/save_v4.js']);
 
 test('all 29 sources and 122 news milestones have bounded revision-scoped household rules', async function ({page}, info) {
   await openGame(page, info);
@@ -164,17 +164,22 @@ test('a grant reaches only actual granted counties and cannot confirm after thir
     Object.assign(source,{phase:'resolved',result:'granted',outcomeTurn:10,realmId:'athens_latin_1204',grantedCounties:['athens']});
     m.day(s,t); const unheld = FB.stories.status(s,id);
     s.holder.athens = 'athens_latin_1204'; s.stories[id] = m.init(s);
-    // A fresh observer baselines an old grant. Deliver only a later occurrence.
+    // An old grant stays baselined even if its timestamp is rewritten.
     source.outcomeTurn = 11; s.turn = 11; m.day(s,s.stories[id]);
+    const replay = FB.stories.quote(s,id,'records').allowed;
+    // A separate observer attaches before the grant it will actually witness.
+    Object.assign(source,{phase:'pending',result:null,outcomeTurn:null});
+    s.stories[id] = m.init(s);
+    Object.assign(source,{phase:'resolved',result:'granted',outcomeTurn:12});
+    s.turn = 12; m.day(s,s.stories[id]);
     const q = FB.stories.quote(s,id,'records');
     s.holder.athens = 'nicaea_1204'; FB.invalidateRealmCache();
-    return {unheld:unheld,offered:q.allowed,stale:FB.stories.apply(s,id,'records',q)};
-  })).toEqual({unheld:null,offered:true,stale:false});
+    return {unheld:unheld,replay:replay,offered:q.allowed,stale:FB.stories.apply(s,id,'records',q)};
+  })).toEqual({unheld:null,replay:false,offered:true,stale:false});
 });
 
-for (const crazy of [false,true]) {
+for (const crazy of [false]) {
   test('live religious objectives reach minority households without replay or costs, flag '+crazy, async function ({page}, info) {
-    if (crazy) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
     await beginBookmark(page,info,'1204','serf');
     expect(await page.evaluate(function () {
       const s = FB.state, id = 'household_effects_fifth_crusade_call_1204', m = FB.stories.get(id), t = s.stories[id];

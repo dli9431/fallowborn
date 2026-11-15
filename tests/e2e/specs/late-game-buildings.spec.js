@@ -2,6 +2,9 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/technology_masonry_circuits.js', 'data/technology_waterworks.js', 'data/buildings_waterworks.js',
+  'data/technology_baths_headworks.js', 'js/building_operations.js', 'js/building_profiles.js',
+  'data/buildings_baths_headworks.js', 'data/buildings_early_worship.js',
+  'js/building_institutions.js', 'js/building_seasons.js',
   'js/actions.js', 'js/lordships.js', 'js/fortifications.js',
   'js/market.js',
   'js/population.js',
@@ -47,7 +50,8 @@ test('late game buildings and technologies validate cleanly and expose expected 
 
       const expectedTechs = [
         'ribbed_vaulting', 'spinning_wheel', 'deep_shaft_mining',
-        'marine_insurance', 'plate_armor', 'gunpowder_artillery'
+        'marine_insurance', 'plate_armor', 'gunpowder_artillery',
+        'hypocaust_heating', 'diversion_dams'
       ];
       const techChecks = {};
       expectedTechs.forEach(function (id) {
@@ -69,7 +73,9 @@ test('late game buildings and technologies validate cleanly and expose expected 
     });
 
     expect(result.validationErrors).toEqual([]);
-    expect(result.techCount).toBe(193);
+    expect(result.techCount).toBe(195);
+    expect(result.techChecks.hypocaust_heating).toEqual({exists:true,domain:'crafts',sourcesCount:2,unlocks:[]});
+    expect(result.techChecks.diversion_dams).toEqual({exists:true,domain:'agriculture',sourcesCount:2,unlocks:['building:diversion_headworks']});
 
     expect(result.buildingChecks.university.devMin).toBe(7);
     expect(result.buildingChecks.university.requiresTech).toBe('universities');
@@ -246,6 +252,7 @@ test('late-game building reads reuse county aggregates and refresh after mutatio
       // county building aggregation here, after that one-time scan is warm.
       FB.rebuildFortIndex(s);
       idReads = 0;
+      const aggregateStarted = performance.now();
       const initial = {
         tax:FB.buildingBonus(s, 'tax'),
         upkeep:FB.buildingBonus(s, 'upkeep'),
@@ -264,6 +271,7 @@ test('late-game building reads reuse county aggregates and refresh after mutatio
       FB.countyBuildingCapacityBonus(s, home);
       FB.standingBuildingCountIn(s, other);
       const readsAfterRepeat = idReads;
+      const aggregateMs = performance.now() - aggregateStarted;
 
       const originalMarketCostQuote = FB.marketCostQuote;
       let marketQuoteCalls = 0;
@@ -304,6 +312,7 @@ test('late-game building reads reuse county aggregates and refresh after mutatio
         initial:initial,
         readsAfterWarm:readsAfterWarm,
         readsAfterRepeat:readsAfterRepeat,
+        aggregateMs:aggregateMs,
         marketQuoteCalls:marketQuoteCalls,
         openCount:openCount,
         taxAfterAppend:taxAfterAppend,
@@ -313,6 +322,11 @@ test('late-game building reads reuse county aggregates and refresh after mutatio
       };
     });
 
+    console.log('Building aggregate diagnostic: ' + JSON.stringify({
+      start:'867:farmer', records:4, coldIdReads:result.readsAfterWarm,
+      warmIdReads:result.readsAfterRepeat - result.readsAfterWarm,
+      aggregateMs:result.aggregateMs
+    }));
     expect(result.initial).toMatchObject({
       tax:8,
       upkeep:3,
@@ -322,7 +336,6 @@ test('late-game building reads reuse county aggregates and refresh after mutatio
       standing:2
     });
     expect(result.initial.settlementTax).toBe(result.projectedSettlementTax);
-    expect(result.readsAfterWarm).toBe(4);
     expect(result.readsAfterRepeat).toBe(result.readsAfterWarm);
     expect(result.openCount).toBeGreaterThan(0);
     expect(result.marketQuoteCalls).toBe(0);
@@ -334,5 +347,43 @@ test('late-game building reads reuse county aggregates and refresh after mutatio
       millsEver:1,
       capacity:0
     });
+    // Retain the cold-read budget after the functional and warm-reuse checks.
+    expect(result.readsAfterWarm).toBe(4);
+  }
+);
+
+test('aggregate effects retain selected profiles and dormant operating guards',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state, pid = s.player.provinceId;
+      const unbound = {s:0,id:'public_bath'};
+      const heated = {s:0,id:'public_bath',buildingProfile:FB.buildingProfiles.stamp('public_bath','hypocaust_bath')};
+      const unfunded = {s:0,id:'public_bath',waterOperation:{v:1,id:'unfunded_bath',
+        profileId:'public_bath_service',assignmentId:'unfunded_bath',revision:0}};
+      const foundation = {s:0,id:'monastic_house'};
+      const rows = [unbound,heated,unfunded,foundation].map(function (record) {
+        s.buildings[pid] = [record];
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        // Standalone callers still resolve the asset's own optional profile.
+        const definition = FB.buildingProfiles.assetDefinition(record);
+        const standalone = FB.buildingOperations.effects(s,pid,record);
+        return {
+          cost:definition.cost,
+          definitionAttraction:definition.migrationAttraction || 0,
+          attraction:FB.buildingBonusIn(s,pid,'migrationAttraction'),
+          piety:FB.buildingBonusIn(s,pid,'piety'),
+          upkeep:FB.buildingBonusIn(s,pid,'upkeep'),
+          standaloneAttraction:standalone.migrationAttraction || 0,
+          pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()
+        };
+      });
+      return rows;
+    });
+    expect(result).toEqual([
+      {cost:65,definitionAttraction:0.5,attraction:0.5,piety:0,upkeep:2,standaloneAttraction:0.5,pure:true},
+      {cost:80,definitionAttraction:1,attraction:0,piety:0,upkeep:0,standaloneAttraction:0,pure:true},
+      {cost:65,definitionAttraction:0.5,attraction:0,piety:0,upkeep:0,standaloneAttraction:0,pure:true},
+      {cost:60,definitionAttraction:0,attraction:0,piety:0,upkeep:0,standaloneAttraction:0,pure:true}
+    ]);
   }
 );

@@ -3319,7 +3319,9 @@ window.FB = window.FB || {};
          slot's generated name/location with a real place but, unlike a
          curated entry, do not force early visibility — development reveals
          them on the normal thresholds. */
-      if (!entry.fill) forcedCount++;
+      // Curated sites can follow retained fill slots. Keep their saved indexes
+      // and reveal the whole prefix through the last curated place.
+      if (!entry.fill) forcedCount = ai + 1;
       var geo = siteTable[entry.site];
       if (!geo) continue; // impossible after bookmark validation; defensive
       var wx = FB.lonToX(geo.x), wy = FB.latToY(geo.y);

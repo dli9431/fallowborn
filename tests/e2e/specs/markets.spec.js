@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/economy.js',
   'js/market.js',
+  'js/industry_laws.js', 'data/industry_laws.js',
   'js/title_ids.js',
   'js/world.js',
   'js/main.js',
@@ -638,8 +639,6 @@ test('typed charters validate scope while legacy contracts and exact ids remain 
           'e2e:market-petition');
       }
       FB.ui.showGuildMonopolyPetition();
-      const petitionDialogText = document.getElementById('gm-body').textContent;
-      FB.ui.closeModal();
       return {
         charter:charter,
         exactId:exact && exact.record.contractId,
@@ -655,10 +654,14 @@ test('typed charters validate scope while legacy contracts and exact ids remain 
         craftMismatch:craftMismatch,
         petitionText:FB.eventById('guild_monopoly_petition').text,
         grantDialogText:grantDialogText,
-        grantDestination:FB.world.byId[market.destinationId].name,
-        petitionDialogText:petitionDialogText
+        grantDestination:FB.world.byId[market.destinationId].name
       };
     });
+    await expect(page.getByRole('heading', {name:'Guild monopoly terms', exact:true})).toBeVisible();
+    await page.locator('#guild-financial-only').click();
+    await expect(page.getByRole('heading', {name:'Define the monopoly', exact:true})).toBeVisible();
+    result.petitionDialogText = await page.locator('#gm-body').textContent();
+    await page.evaluate(function () { FB.ui.closeModal(); });
 
     expect(result.charter).toMatchObject({
       mode:'corridor', goodId:'wares'

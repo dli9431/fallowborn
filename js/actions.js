@@ -10381,7 +10381,7 @@ window.FB = window.FB || {};
       if (!fortification || (Number(entry.level) || 0) > 0) {
         index.usable[id] = (index.usable[id] || 0) + 1;
       }
-      const def = FB.buildingOperations ? FB.buildingOperations.effects(state, pid, entry) : FBDATA.buildings[id];
+      const def = FB.buildingOperations ? FB.buildingOperations.effects(state, pid, entry, id) : FBDATA.buildings[id];
       if (!fortification && !(def && def.fort)) index.standingNonFort++;
       if (!def || def.fort) continue;
       if (entry.institutionBinding && !FB.buildingInstitutionOperating(state, pid, entry)) continue;

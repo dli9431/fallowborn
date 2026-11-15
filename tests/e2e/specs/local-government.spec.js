@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/modifiers.js',
   'js/actions.js',
+  'js/industry_laws.js', 'data/industry_laws.js', 'data/economy.js',
   'js/lordships.js',
   'js/technology.js',
   'data/map_data.js',
@@ -49,7 +50,10 @@ test('town council seats are local, retryable, and apply each bounded ordinance'
       var oldChance = FB.chance;
       var effects = {};
       FB.chance = function () { return true; };
-      Object.keys(FBDATA.localCouncilMotions).forEach(function (motionId) {
+      var ordinanceIds = Object.keys(FBDATA.localCouncilMotions).filter(function (id) {
+        return !FB.industryLaws.forMotion(id);
+      });
+      ordinanceIds.forEach(function (motionId) {
         p.localCouncil.nextMotionTurn = s.turn;
         FB.proposeLocalCouncilMotion(s, motionId);
         effects[motionId] = {
@@ -93,6 +97,7 @@ test('town council seats are local, retryable, and apply each bounded ordinance'
         chance:chance,
         expectedChance:expectedChance,
         effects:effects,
+        ordinanceIds:ordinanceIds,
 
         expired:expired,
         relocated:relocated,
@@ -108,6 +113,7 @@ test('town council seats are local, retryable, and apply each bounded ordinance'
     expect(result.legacyProvince).toBeTruthy();
     expect(result.legacyAvailable).toBe(true);
     expect(result.chance).toBeCloseTo(result.expectedChance, 8);
+    expect(result.ordinanceIds).toEqual(['fair_measures', 'civic_works', 'watch_and_ward']);
     expect(result.effects.fair_measures.enterprise).toBeCloseTo(0.15, 8);
     expect(result.effects.civic_works.gold).toBeCloseTo(1.5, 8);
     expect(result.effects.watch_and_ward.retinue).toBe(30);
