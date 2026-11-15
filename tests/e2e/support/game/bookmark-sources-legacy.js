@@ -2,17 +2,120 @@
 const fs = require('fs');
 const path = require('path');
 const nativeSourceFiles = require('../../fixtures/bookmark-composition/native-before-shared/sources.json');
+const {routeEagerDocument} = require('../../fixtures/bookmark-manifest/eager-document');
+const {expect} = require('../fixture');
+const corrections = require('../../fixtures/634-scenery-revisions/merged-corrections.json');
+const fixtureRoot = path.resolve(__dirname,'../../fixtures/bookmark-composition/native-before-shared');
+const gameRoot = path.resolve(__dirname,'../../../..');
+
+// Keep the immutable predecessor assembler as an independent retained-world
+// proof. Its later revision and personal-story sources must run with today's
+// assembler, rather than attaching to a predecessor that has no such revisions.
+async function installLegacy634(page,assembler) {
+  const inputs = ['bookmark_634_identities.js','bookmark_634_scaffold_a.js','bookmark_634_scaffold_b.js',
+    'bookmark_634_scaffold_c.js','bookmark_634_scaffold_d.js','starts_634_ordinary.js'];
+  const former = inputs.map(function (file) { return fs.readFileSync(path.join(fixtureRoot,file),'utf8'); }).join('\n') + '\n' +
+    (assembler || fs.readFileSync(path.join(fixtureRoot,'bookmark_634.js'),'utf8'));
+  const current = fs.readFileSync(path.join(gameRoot,'data/bookmark_634.js'),'utf8');
+  const before = 'window.__legacy634=(function(FBDATA,FB){var window={FBDATA:FBDATA};FBDATA.bookmarkRegions634={};\n' + former +
+    '\nvar source=FBDATA.bookmarkCompositionSources&&FBDATA.bookmarkCompositionSources.autumn_634;' +
+    'return source?{world:source.input&&source.input.bookmark,catalogs:source.input&&source.input.catalogs,starts:source.input&&source.input.starts.map(function(u){return u.definition;}),faults:source.faults||[]}' +
+    ':(function(){var catalogs={settlementLayouts:{"634_opening":FBDATA.settlementLayouts["634_opening"]},settlementSites:{},governmentForms:{},religions:FBDATA.bookmarkReligions634,cultures:FBDATA.bookmarkCultures568};' +
+    'Object.keys(FBDATA.bookmarkRegions634).forEach(function(id){var region=FBDATA.bookmarkRegions634[id];["settlementSites","governmentForms"].forEach(function(root){Object.assign(catalogs[root],region[root]||{});});});' +
+    'return {world:FBDATA.bookmarks["634"],catalogs:catalogs,starts:FBDATA.startScenarios_634_ordinary,faults:[]};})();' +
+    '})(JSON.parse(JSON.stringify(FBDATA)),{bookmarkCompositions:{captureStarts:function(o,g,rows){var out={};rows.forEach(function(r,i){out[r.id]=i;});return out;},captureAvailability:function(o,p){return p;}}});\n';
+  const after = '\nwindow.__legacy634.current=JSON.parse(JSON.stringify(FBDATA.bookmarkCompositionSources.autumn_634.input));';
+  await page.route('**/data/bookmark_634.js',function (route) {
+    return route.fulfill({contentType:'application/javascript',body:before + current + after});
+  });
+}
+
+async function assertLegacy634(page) {
+  const proof = await page.evaluate(function () { return window.__legacy634; });
+  expect(proof.faults).toEqual([]);
+  const former = proof.world, current = proof.current.bookmark;
+  expect({hidden:former.hidden,revision:former.revision,revisions:former.revisions})
+    .toEqual({hidden:true,revision:'baseline',revisions:{baseline:{}}});
+  ['provinces','realms'].forEach(function (key) {
+    corrections[key].forEach(function (change) {
+      const row = former[key].find(function (row) { return row.id === change.id; });
+      Object.keys(change.before).forEach(function (field) { expect(row[field]).toEqual(change.before[field]); });
+      Object.assign(row,change.after);
+    });
+  });
+  corrections.addedRealms.forEach(function (change) {
+    expect(former.realms.some(function (row) { return row.id === change.definition.id; })).toBe(false);
+    const at = former.realms.findIndex(function (row) { return row.id === change.after; });
+    expect(at).toBeGreaterThanOrEqual(0);
+    former.realms.splice(at + 1,0,change.definition);
+  });
+  expect(current.revision).toBe('core_courts_v4');
+  expect(Object.keys(current.revisions)).toEqual(['baseline','scenery_protected_v1','ordinary_settlement_v2','core_identities_v3','core_courts_v4']);
+  // Compare every predecessor world field. Added revisions stay in the full
+  // cross-page catalogue equality; they are not removed from that fingerprint.
+  delete former.hidden;
+  former.revision = current.revision;
+  former.revisions = current.revisions;
+  former.starts = [];
+  if (Object.keys(former.startLocations).length) {
+    // The pre-conversion composer published locations itself. The converted
+    // input delegates that exact map to the canonical publication transaction.
+    proof.current.starts.forEach(function (unit) { current.startLocations[unit.definition.id] = unit.locations; });
+  }
+  expect(current).toEqual(former);
+  expect(proof.current.starts.map(function (unit) { return unit.definition; })).toEqual(proof.starts);
+  Object.keys(proof.catalogs).forEach(function (root) {
+    Object.keys(proof.catalogs[root]).forEach(function (id) {
+      expect(proof.current.catalogs[root][id]).toEqual(proof.catalogs[root][id]);
+    });
+  });
+}
 
 // 7b557cd0 source text, executed at the original URLs only by the owner's
 // browser harness. The compatibility adapter supplies no runtime validation.
 async function installNativeLegacy(page) {
+  // The pinned stage-only adapter predates lazy dates. Restore the former
+  // document positions before executing any immutable source replacements.
+  await routeEagerDocument(page);
   await page.route('**/js/bookmark_sources.js',function (route) {
     return route.fulfill({contentType:'application/javascript',body:
-      'FB.bookmarkSources={current:function(){return null;},ready:function(){return false;},owns:function(){return false;},reports:function(){return [];},finish:function(){},stage:function(spec,fn){fn(FBDATA);}};'});
+      'FB.bookmarkSources={current:function(){return null;},ready:function(){return false;},owns:function(){return false;},reports:function(){return [];},unreviewedReference:function(){return false;},hasRetainedCatalogueTransitions:function(){return false;},finish:function(){},stage:function(spec,fn){fn(FBDATA);}};'});
   });
   for (const file of nativeSourceFiles) {
-    const body = fs.readFileSync(path.resolve(__dirname,'../../fixtures/bookmark-composition/native-before-shared',path.basename(file)),'utf8');
+    if (file.indexOf('_634') >= 0) continue;
+    let body = fs.readFileSync(path.resolve(__dirname,'../../fixtures/bookmark-composition/native-before-shared',path.basename(file)),'utf8');
+    if (file === 'data/story_pilgrim_1096.js') {
+      // Preserve both frozen household declarations. Add the later independent
+      // following group that the current 1096 world explicitly references.
+      const current = fs.readFileSync(path.join(gameRoot,file),'utf8');
+      const declarations = current.match(/\/\* These source cards attach only in the fresh following revision\. \*\/[\s\S]*?(?=FBDATA\.openingProfiles_pilgrim_1096 =)/g);
+      const registration = current.match(/  var following=FBDATA\.householdTracks_pilgrim_followings_1096[\s\S]*?(?=\n\}\)\(\);)/g);
+      expect(declarations).toHaveLength(1);
+      expect(registration).toHaveLength(1);
+      body += '\n' + declarations[0] + '\n(function(){var expiry={kind:"year",min:1097,max:10000};function route(when,next){return {when:when,next:next};}\n' + registration[0] + '\n})();';
+    }
+    if (file === 'data/story_households_baghdad_800.js') {
+      // The former choice selected licensed work directly. Preserve the later
+      // deliberate correction: an opening decision only records the intention.
+      const before = "{ id:'keep_copying', label:'Keep copying as a livelihood', detail:'Select ordinary scholarly work and review a local order. Choosing work pays nothing by itself.', operation:{ kind:'set_focus', focusId:'scholarly_work' }, next:'offer' }";
+      const after = "{ id:'keep_copying', label:'Keep copying as a livelihood', detail:'Consider a funded copying order. This choice pays nothing and grants no scholarly license. Each paid shift needs its own review.', operation:{ kind:'record_decision' }, next:'offer' }";
+      expect(body.split(before)).toHaveLength(2);
+      expect(fs.readFileSync(path.join(gameRoot,file),'utf8').split(after)).toHaveLength(2);
+      body = body.replace(before,after);
+    }
     await page.route('**/' + file,function (route) { return route.fulfill({contentType:'application/javascript',body:body}); });
   }
+  await installLegacy634(page);
+  await page.route('**/data/bookmark_sources.js',function (route) {
+    function reconcile(changes) {
+      changes.forEach(function (change) {
+        const group = FBDATA[change.root][change.group];
+        if (JSON.stringify(group[change.id]) !== JSON.stringify(change.before)) throw new Error('Unexpected predecessor public definition: ' + change.id);
+        group[change.id] = change.after;
+      });
+    }
+    const source = fs.readFileSync(path.join(gameRoot,'data/bookmark_sources.js'),'utf8');
+    return route.fulfill({contentType:'application/javascript',body:source + '\n(' + reconcile.toString() + ')(' + JSON.stringify(corrections.publicDefinitions) + ');'});
+  });
 }
-module.exports = {installNativeLegacy,nativeSourceFiles};
+module.exports = {installNativeLegacy,nativeSourceFiles,installLegacy634,assertLegacy634};

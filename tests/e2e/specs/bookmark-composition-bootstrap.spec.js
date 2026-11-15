@@ -6,12 +6,14 @@ const {installPageGuards} = require('../support/page-contract');
 const {openGame} = require('../support/game/navigation');
 const {beginBookmarkFromTitle,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {installLegacy568} = require('../support/game/bookmark-composition-legacy');
+const {installLegacy634,assertLegacy634} = require('../support/game/bookmark-sources-legacy');
+const {manifestRuns,manifestFiles} = require('../fixtures/bookmark-manifest/eager-document');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 // Committed c251ccd2 source, kept immutable as the pre-conversion oracle.
 // It executes only inside the owner's approved browser harness.
 const legacy = fs.readFileSync(path.resolve(__dirname,'../fixtures/bookmark-composition/634-before-shared.js'),'utf8');
 
-dependsOnRuntime(__filename,['index.html','data/bookmark_634.js','data/starts_634_ordinary.js',
+dependsOnRuntime(__filename,['index.html','data/bookmark_manifest.js','js/bookmark_sources.js','data/bookmark_634.js','data/starts_634_ordinary.js',
   'data/bookmark_634_identities.js','data/bookmark_634_scaffold_a.js','data/bookmark_634_scaffold_b.js',
   'data/bookmark_634_scaffold_c.js','data/bookmark_634_scaffold_d.js','data/starts.js',
   'data/bookmarks.js','data/geographies.js','data/geography_expansion.js','data/cultures.js',
@@ -20,7 +22,8 @@ dependsOnRuntime(__filename,['index.html','data/bookmark_634.js','data/starts_63
   'js/model.js','js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js',
   'data/bookmark_568.js','data/bookmark_568_composition.js','data/starts_568.js','data/starts_568_ravenna.js',
   'data/starts_rulers_568.js','data/starts_rulers_568_east.js','data/story_ruler_agendas_568.js',
-  'data/story_ruler_agendas_568_east.js','data/story_households_568_ravenna.js']);
+  'data/story_ruler_agendas_568_east.js','data/story_households_568_ravenna.js'].concat(
+    manifestFiles(manifestRuns(fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_manifest.js'),'utf8')))));
 
 async function catalogue(page) {
   return page.evaluate(function () {
@@ -38,12 +41,12 @@ test('shared 634 boot preserves the former catalogue fingerprint and restores an
   const oldGuard = installPageGuards(oldPage);
   try {
     await installLegacy568(oldPage);
-    await oldPage.route('**/data/bookmark_634.js',function (route) {
-      return route.fulfill({contentType:'application/javascript',body:legacy});
-    });
+    await installLegacy634(oldPage,legacy);
     await openGame(oldPage,info);
     await openGame(page,info);
+    await assertLegacy634(oldPage);
     expect(await catalogue(page)).toEqual(await catalogue(oldPage));
+    await oldPage.evaluate(function () { FBDATA.bookmarks['634'].revision = 'baseline'; });
     await beginBookmarkFromTitle(oldPage,'634','farmer_634');
     await oldPage.evaluate(function () { FB.state.player.gold -= 3; });
     const expected = await facts(oldPage), saved = await oldPage.evaluate(function () { return FB.save.serialize(); });
@@ -52,6 +55,10 @@ test('shared 634 boot preserves the former catalogue fingerprint and restores an
         FB.activateBookmark('867',null,function (error) { resolve(error && error.message || null); });
       });
     })).toBeNull();
+    await page.evaluate(function () {
+      const raw = FBDATA.bookmarks['634'];
+      raw.hidden = true; raw.revisions[raw.revision].hidden = true;
+    });
     await restoreBookmark(page,saved);
     expect(await facts(page)).toEqual(expected);
     expect(await page.evaluate(function () {

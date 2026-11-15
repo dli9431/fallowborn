@@ -47,7 +47,7 @@ for (const label of ['harbor','upland']) {
         before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),q=P.review(s,C.id,'form',C.leader(s));
       const pure=before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
       return {status:t.status,noHost:!FB.mobile.row(s,C.rid) && !s.armies.some(function(a){return a.realm===C.rid;}) &&
-        !s.authority.migrations.some(function(m){return m.realmId===C.rid;}),zero:FB.treasuryAvailable(s,C.rid)===0,
+        !(s.authority.migrations || []).some(function(m){return m.realmId===C.rid;}),zero:FB.treasuryAvailable(s,C.rid)===0,
         reserved:t.reserves.reduce(function(n,c){return n+c.count;},0),consumed:t.consumed.length,
         denied:!q.allowed,pure:pure,valid:FB.mobile.validate(s),definition:FB.validateBookmark(FB.campaignBookmark(s)).length};
     });

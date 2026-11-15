@@ -8,7 +8,7 @@ dependsOnRuntime(__filename, [
   'js/ai_decisions.js','js/model.js','js/agency.js','js/world.js','js/government_ai.js',
   'js/governments.js','js/authority.js','js/wars.js','js/balance.js','js/mods.js',
   'js/save.js','js/save_v4.js','js/main.js','js/util.js','js/intrigue.js',
-  'data/ai_decisions.js','data/traits.js','data/ambitions.js','data/political_institutions.js','data/intrigue.js',
+  'data/ai_decisions.js','data/map_data.js','data/traits.js','data/ambitions.js','data/political_institutions.js','data/intrigue.js',
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
 
@@ -16,10 +16,16 @@ test('generated and historical rulers use their current characters while neutral
   await openGame(page,testInfo);
   await startDeterministicGame(page);
   const out = await page.evaluate(function () {
-    const neutral = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_war));
-    neutral.adjustments = [];
-    FB.mods.apply({aiDecisionPolicies:{neutral_inputs:neutral},balance:{aiWarPolicy:'neutral_inputs'}});
     const s = FB.state, P = FB.aiDecisions;
+    const neutral = {aiDecisionPolicies:{},balance:{}};
+    Object.keys(P.protocol()).forEach(function (family) {
+      const id = 'neutral_inputs_' + family;
+      const definition = JSON.parse(JSON.stringify(P.resolve(s,null,family).definition));
+      definition.adjustments = [];
+      neutral.aiDecisionPolicies[id] = definition;
+      neutral.balance[P.protocol(family).key] = id;
+    });
+    FB.mods.apply(neutral);
     const historical = FBDATA.realms.find(function (r) {
       return r.ruler && r.ruler.generated !== true && FB.realmRulerCharacterSnapshot(s,r.id);
     }).id;

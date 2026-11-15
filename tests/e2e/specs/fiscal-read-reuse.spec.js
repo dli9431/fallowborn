@@ -1,6 +1,8 @@
 'use strict';
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+const {installPageGuards} = require('../support/page-contract');
+test.describe.configure({mode:'parallel'});
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
@@ -9,19 +11,43 @@ const journey = require('../fixtures/fiscal-read-reuse/journey');
 const audit = require('../fixtures/residual-read-audit/probe');
 const guard = require('../fixtures/fiscal-read-reuse/guard');
 
-dependsOnRuntime(__filename,['js/government_aristocracy.js','js/lordships.js','js/world.js','js/model.js',
+dependsOnRuntime(__filename,['js/bookmark_sources.js','js/government_aristocracy.js','js/lordships.js','js/world.js','js/model.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_guard.js','js/justice.js',
   'js/governments.js','js/government_recognition.js','js/politics.js','js/systems.js',
   'js/authority.js','js/actions.js','js/treasury.js','js/save.js','js/save_v4.js','js/mods.js','js/main.js',
   'js/bookmark_setup.js','js/starts.js','js/home_authority.js','js/day_phases.js','js/ecclesiastical_strategies.js']);
 
-for (const start of journey.starts) {
-  test('fiscal and office read reuse preserves ordinary and staged boundary days for '+start.scenario,async function ({page},info) {
+
+function preparedReadTest(title,prepare,body) {
+  test.describe(title,function () {
+    test.describe.configure({mode:'default'});
+    let context,page,guard;
+    test.beforeAll(async function ({browser},info) {
+      context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+      await prepare(page,info);
+    });
+    test.afterAll(async function () {
+      if(context)try {expect(guard.faults).toEqual([]);}finally {await context.close();}
+    });
+    test(title,async function ({},info) {await body({page:page},info);});
+  });
+}
+
+for (const start of journey.starts) for (const pass of ['native','diagnostic']) {
+  const title=pass==='native' ? 'fiscal and office read reuse preserves ordinary and staged boundary days for ' :
+    'diagnostic fiscal wrappers preserve ordinary and staged boundary days for ';
+  preparedReadTest(title+start.scenario,async function (page,info) {
+    await source.route(page,pass==='native',false);
+    await journey.begin(page,info,start);
+  },async function ({page},info) {
     const outputs = [], counts = [], diagnostics = [];
-    for (const mode of ['reference','candidate','diagnostic']) {
-      const reference = mode === 'reference', diagnostic = mode === 'diagnostic';
-      await source.route(page,reference,diagnostic);
-      await journey.begin(page,info,start);
+    const modes=pass==='native' ? ['reference','candidate'] : ['candidate','diagnostic'];
+    for (const mode of modes) {
+      const diagnostic = mode === 'diagnostic';
+      if(mode!==modes[0]) {
+        await source.route(page,mode==='reference',diagnostic);
+        await journey.begin(page,info,start);
+      }
       if (diagnostic) {
         await page.evaluate(audit.install);
         await page.evaluate(guard.observe);
@@ -69,28 +95,30 @@ for (const start of journey.starts) {
       else counts.push(result.counts);
     }
     expect(outputs[1]).toEqual(outputs[0]);
-    expect(outputs[2]).toEqual(outputs[1]);
-    expect(counts[1].requests).toBe(counts[0].requests);
-    // Compare native readers; diagnostic wrappers exercise the override fallback separately.
-    expect(counts[1].officeEntries).toBeLessThanOrEqual(counts[0].officeEntries);
-    expect(counts[0].slots).toBeGreaterThan(0);
-    expect(counts[1].slots).toBeLessThanOrEqual(counts[0].slots);
-    if (start.bookmark === '476') expect(counts[1].builds).toBeLessThan(counts[0].builds);
-    else expect(counts[1].fiscalReads).toBe(0);
-    if (start.bookmark !== '1096') expect(counts[1].leaders).toBeLessThan(counts[0].leaders);
-    await info.attach('read-reuse-counts',{body:JSON.stringify({start:start,reference:counts[0],candidate:counts[1]}),contentType:'application/json'});
-    for (const row of diagnostics[0].phases) {
-      expect(row.days).toBe(1);
-      expect(row.report.cadences[row.phase].days).toBe(1);
-      expect(row.report.total.mobileFilterArrays).toBe(0);
-      expect(row.report.total.mobileSlots).toBeLessThanOrEqual(row.report.total.mobileEntries*row.before.counts.governments);
-      expect(row.guards.inMobileRead).toBeLessThanOrEqual(row.guards.calls);
-      expect(row.guards.predicates).toBeLessThanOrEqual(row.guards.calls);
-      expect(row.before.bytes.state).toBeGreaterThan(row.before.bytes.governments);
+    if(pass==='native') {
+      expect(counts[1].requests).toBe(counts[0].requests);
+      // Compare native readers; diagnostic wrappers exercise the override fallback separately.
+      expect(counts[1].officeEntries).toBeLessThanOrEqual(counts[0].officeEntries);
+      expect(counts[0].slots).toBeGreaterThan(0);
+      expect(counts[1].slots).toBeLessThanOrEqual(counts[0].slots);
+      if (start.bookmark === '476') expect(counts[1].builds).toBeLessThan(counts[0].builds);
+      else expect(counts[1].fiscalReads).toBe(0);
+      if (start.bookmark !== '1096') expect(counts[1].leaders).toBeLessThan(counts[0].leaders);
+      await info.attach('read-reuse-counts',{body:JSON.stringify({start:start,reference:counts[0],candidate:counts[1]}),contentType:'application/json'});
+    } else {
+      for (const row of diagnostics[0].phases) {
+        expect(row.days).toBe(1);
+        expect(row.report.cadences[row.phase].days).toBe(1);
+        expect(row.report.total.mobileFilterArrays).toBe(0);
+        expect(row.report.total.mobileSlots).toBeLessThanOrEqual(row.report.total.mobileEntries*row.before.counts.governments);
+        expect(row.guards.inMobileRead).toBeLessThanOrEqual(row.guards.calls);
+        expect(row.guards.predicates).toBeLessThanOrEqual(row.guards.calls);
+        expect(row.before.bytes.state).toBeGreaterThan(row.before.bytes.governments);
+      }
+      expect(await page.evaluate(function () { return !window.__residualReadAudit && !window.__stopGuardRead; })).toBe(true);
+      await info.attach('guard-boundary-counts',{body:JSON.stringify({start:start,browser:page.context().browser().version(),
+        diagnostics:diagnostics}),contentType:'application/json'});
     }
-    expect(await page.evaluate(function () { return !window.__residualReadAudit && !window.__stopGuardRead; })).toBe(true);
-    await info.attach('guard-boundary-counts',{body:JSON.stringify({start:start,browser:page.context().browser().version(),
-      diagnostics:diagnostics}),contentType:'application/json'});
   });
 }
 
@@ -408,12 +436,16 @@ test('office world reuse preserves empty, null-state, override and retained revi
 
 for (const start of [journey.starts[0],journey.starts[4],
   {scenario:'harbor command',fixture:'harbor'},{scenario:'dune command',fixture:'dune'}]) {
-  test('mobile ruler reuse preserves live eligibility, complete scans and replaced leader readers in '+start.scenario,async function ({page},info) {
+  preparedReadTest('mobile ruler reuse preserves live eligibility, complete scans and replaced leader readers in '+start.scenario,async function (page,info) {
+    await source.route(page,'filter');
+    if(start.fixture)await openGame(page,info);
+    else await journey.begin(page,info,start);
+  },async function ({page},info) {
     const outputs = [], counts = [];
     for (const reference of [true,false]) {
-      await source.route(page,reference ? 'filter' : false);
+      if(!reference)await source.route(page,false);
       if (start.fixture) {
-        await openGame(page,info);
+        if(!reference)await openGame(page,info);
         if (reference) {
           await page.evaluate(function () { FB.ui.showMods(); });
           await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/mobile-command-'+start.fixture+'.json'));
@@ -421,7 +453,7 @@ for (const start of [journey.starts[0],journey.starts[4],
           await prepareGameContent(page);
         }
         await beginBookmarkFromTitle(page,start.fixture+'_world',start.fixture+'_household');
-      } else await journey.begin(page,info,start);
+      } else if(!reference)await journey.begin(page,info,start);
       const result = await page.evaluate(function () {
         const s = FB.state, M = FB.mobile, initial = JSON.stringify(s), native = M.leader, outputs = [];
         const active = M.active, custody = FB.justiceCustodyOf, guarded = FB.characterGuarded, filter = Array.prototype.filter;

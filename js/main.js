@@ -4055,6 +4055,8 @@ FB.CHANGELOG = [
     const directCrazyGamesStart = FB.platform.isCrazyGames &&
       !!(FB.quickStartOf(quickStartId) || {}).distributionDefault;
     FB.seedRng(FB.hashSeed(seedStr));
+    // Identities belong to this new campaign, just like its seeded stream.
+    FB.setUidCounter(1);
     const bookmark = FB.activeBookmark;
     const start = {
       id:bookmark.id, scenarioId:sc.id, year:bookmark.date.year,

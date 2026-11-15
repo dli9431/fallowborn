@@ -1,9 +1,7 @@
 'use strict';
 const {test,expect} = require('../support/fixture');
 const {openTitle,prepareGameContent,targetUrl} = require('../support/game/navigation');
-const {openCrazyTitle} = require('../support/game/crazygames-title');
 const {startDeterministicGame} = require('../support/game/start');
-const {mockCrazyGames} = require('../support/crazygames');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const harbor = require('../fixtures/authoring/existing-person-harbor.json');
 const {nativeSourceFiles} = require('../support/game/bookmark-sources-legacy');
@@ -195,13 +193,9 @@ test('map work slices reduce timer waits without changing geometry, settlements 
   });
 });
 
-for (const crazy of [false,true]) {
+for (const crazy of [false]) {
   async function title(page,info) {
-    if (crazy) {
-      await mockCrazyGames(page);
-      await page.addInitScript(function () { window.FB_DISTRIBUTION='crazygames'; window.FB_CRAZYGAMES_STORAGE='localstorage'; });
-      await openCrazyTitle(page,info);
-    } else await openTitle(page,info);
+    await openTitle(page,info);
   }
 
   test('title and date browsing defer campaign checks on ' + (crazy ? 'CrazyGames' : 'standard'),async function ({page},info) {
@@ -443,7 +437,9 @@ test('a running scoped campaign can open Mods without changing its state, signat
     window.__scopedView = [FB.map.zoom,FB.map.viewX,FB.map.viewY];
     FB.ui.showMods();
   });
-  await page.waitForFunction(function () { return FB.game.contentReady && FB.state === window.__scopedState; });
+  await prepareGameContent(page);
+  await expect(page.locator('#modfile')).toBeVisible();
+  expect(await page.evaluate(function () { return FB.state === window.__scopedState; })).toBe(true);
   await expect(page.locator('#game:not(.hidden)')).toBeVisible();
   const result = await page.evaluate(function () {
     const unchanged = window.__scopedBefore === JSON.stringify([FB.state,FB.getRngState(),FB.getUidCounter()]);

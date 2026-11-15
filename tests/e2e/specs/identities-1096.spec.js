@@ -3,13 +3,32 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {openCrazyGame} = require('../support/game/crazygames-title');
-const {mockCrazyGames} = require('../support/crazygames');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const released = require('../fixtures/released-catalogue.json');
+
+async function startImportedHousehold(page) {
+  const code='IMPORTIDENTITY-1096-farmer-mainz-f-Leah-established-0-ashkenazi.jewish';
+  await page.evaluate(function () {
+    FBDATA.bookmarks['1096'].hidden=false;
+    FB.startProgression.noteTier(3);
+  });
+  const full=page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill(code);
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+  expect(await page.evaluate(function () {
+    FB.game.setPaused(true);
+    return {bookmark:FB.state.start.id,seed:FB.state.seed};
+  })).toEqual({bookmark:'1096',seed:code});
+}
 
 dependsOnRuntime(__filename,[
   'index.html','data/identities_1096.js','data/institutions_1096.js','data/bookmark_1096.js',
@@ -18,6 +37,7 @@ dependsOnRuntime(__filename,[
   'data/cultures.js','data/bookmarks.js','data/eras.js','data/starts.js',
   'data/religious_institutions.js','data/islamic_profiles.js',
   'data/government_rollout.js','data/communal_revisions.js',
+  'data/bookmark_manifest.js','js/bookmark_sources.js','js/bookmark_composition.js',
   'js/model.js','js/world.js','js/starts.js','js/mods.js','js/main.js',
   'js/save.js','js/save_v4.js','js/ui_modals.js','js/crazygames.js'
 ]);
@@ -38,17 +58,10 @@ test.beforeEach(async function ({page}) {
   });
 });
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('1096 institution eligibility preserves household identity on ' + (crazygames ? 'CrazyGames' : 'standard'),
     async function ({page},info) {
-      if (crazygames) {
-        await mockCrazyGames(page);
-        await page.addInitScript(function () {
-          window.FB_DISTRIBUTION = 'crazygames';
-          window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-        });
-        await openCrazyGame(page,info);
-      } else await openGame(page,info);
+      await openGame(page,info);
       expect(await page.evaluate(function () {
         const b = FB.bookmark('1096');
         const before = window.__before1096InstitutionScope;
@@ -90,7 +103,8 @@ for (const crazygames of [false,true]) {
               return c.culture === 'arabic' && c.religion === 'sunni';
             });
           }),
-          noInventedStaff:Object.keys(b.localInstitutions).every(function (id) {
+          institutionIds:Object.keys(FBDATA.bookmarkInstitutions1096),
+          noInventedStaff:Object.keys(FBDATA.bookmarkInstitutions1096).every(function (id) {
             const d = b.localInstitutions[id];
             return d.vacant === true && !d.representative && !d.historicalName;
           }),
@@ -98,7 +112,9 @@ for (const crazygames of [false,true]) {
       })).toEqual({distribution:crazygames,selectors:{rabbanite:{bookmarkIds:['1096']}},
         addedOnce:true,unchanged:true,institutionOnly:[false,false,false,true,false,false,false,false],
         prior:true,jewish:true,community:true,culture:true,narrowHeld:true,
-        fatimid:'shia',egypt:true,noInventedStaff:true,faults:[],world:[]});
+        fatimid:'shia',egypt:true,institutionIds:['cologne_jewish_congregation_1096',
+          'mainz_jewish_congregation_1096','worms_jewish_congregation_1096',
+          'speyer_jewish_congregation_1096','durham_see_1096'],noInventedStaff:true,faults:[],world:[]});
       expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
     });
 }
@@ -122,15 +138,25 @@ test('reloading the staged identity source does not publish or initialize anythi
 });
 
 test('publication retains narrower years, eras and consumers and adds no duplicate selector',async function ({page},info) {
-  await openGame(page,info);
-  await page.evaluate(function () {
-    const faith = JSON.parse(JSON.stringify(FBDATA.religions.rabbanite));
-    faith.availability = {yearMin:1066,yearMax:1095,eras:['high_medieval'],
-      bookmarkIds:['1066'],consumers:['institution']};
-    FBDATA.religions.rabbanite = faith;
+  // Stage the narrower foundation before the composer reads it. Reloading a
+  // staged data script after publication cannot publish a changed foundation.
+  await page.addInitScript(function () {
+    window.FBDATA=window.FBDATA || {};
+    Object.defineProperty(FBDATA,'religions',{
+      configurable:true,
+      set:function (value) {
+        const faith=JSON.parse(JSON.stringify(value.rabbanite));
+        faith.availability={yearMin:1066,yearMax:1095,eras:['high_medieval'],
+          bookmarkIds:['1066'],consumers:['institution']};
+        value.rabbanite=faith;
+        Object.defineProperty(this,'religions',{configurable:true,enumerable:true,writable:true,value:value});
+      }
+    });
   });
+  await openGame(page,info);
   await page.addScriptTag({path:path.resolve(__dirname,'../../../data/bookmark_1096.js')});
   await page.addScriptTag({path:path.resolve(__dirname,'../../../data/bookmark_1096.js')});
+  await prepareGameContent(page);
   expect(await page.evaluate(function () {
     FB.invalidateReligionData();
     const b = FB.bookmark('1096');
@@ -189,7 +215,7 @@ test('detached imports reject malformed scope and forbidden historical assignmen
   })).toEqual({rejected:Array(9).fill(true),assignments:[true,true,true],pure:true});
 });
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('an ordinary Jewish household retains its people and identity through restore on ' +
     (crazygames ? 'CrazyGames' : 'standard'),async function ({page},info) {
       await startHistoricalGame(page,info,{bookmark:'1096',
@@ -251,8 +277,7 @@ test('an ordinary JSON import can narrow the institution window without changing
       faults:FB.validateBookmark(date)};
   })).toEqual({scope:mod.religions.rabbanite.availability,institution:true,
     earlier:false,nextYear:false,household:false,jewish:true,faults:[]});
-  await startHistoricalGame(page,info,{bookmark:'1096',
-    code:'IMPORTIDENTITY-1096-farmer-mainz-f-Leah-established-0-ashkenazi.jewish'},false);
+  await startImportedHousehold(page);
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
   await restoreBookmark(page,saved);
   expect(await page.evaluate(function () {

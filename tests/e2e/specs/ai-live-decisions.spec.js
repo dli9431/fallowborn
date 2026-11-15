@@ -36,6 +36,8 @@ for (const config of [{file:'ai-decisions-conservative.json',chance:0.01},{file:
       const s = FB.state, rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive && !s.realms[id].liege; });
       const person = FB.realmRulerCharacter(s,rid); person.traits = ['honest']; s.realms[rid].ruler.trait = 'honest';
       delete s.realms[rid].ruler.personality;
+      FB.ensureAgency(s);
+      s.agency.rulerAims[rid] = {id:'keep_peace',generation:FB.realmRulerGeneration(s,rid),sinceYear:s.date.year};
       const goals = FB.governments.call(s,rid,'ai','goals',{});
       const policy = JSON.parse(JSON.stringify(FB.aiDecisions.resolve(s,rid,'war').definition));
       policy.parameters.maximumCommitments = 0;

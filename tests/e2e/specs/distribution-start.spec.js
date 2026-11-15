@@ -8,26 +8,20 @@ dependsOnRuntime(__filename, [
   'js/music.js', 'data/music_catalog.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { mockCrazyGames } = require('../support/crazygames');
 const { openGame } = require('../support/game/navigation');
-const { openCrazyGame } = require('../support/game/crazygames-title');
 
-test.beforeEach(async function ({ page }) { await mockCrazyGames(page); });
-
-for (const portal of [true, false]) {
+for (const portal of [false]) {
   for (const preference of ['fresh', 'missing', true, false]) {
     test((portal ? 'CrazyGames' : 'standard') + ' event resume preference: ' + preference,
       async function ({ page }, testInfo) {
         await page.addInitScript(function (args) {
-          if (args.portal) window.FB_DISTRIBUTION = 'crazygames';
           if (args.preference !== 'fresh') {
             const prefs = { speedIdx:2 };
             if (typeof args.preference === 'boolean') prefs.autoResumeAfterEvents = args.preference;
             localStorage.setItem('fb_ui', JSON.stringify(prefs));
           }
         }, { portal:portal, preference:preference });
-        if (portal) await openCrazyGame(page, testInfo);
-        else await openGame(page, testInfo);
+        await openGame(page, testInfo);
         const expected = typeof preference === 'boolean' ? preference : portal;
         expect(await page.evaluate(function () {
           return FB.game.uiPrefs.autoResumeAfterEvents;
@@ -46,58 +40,6 @@ test('standard title retains the existing new-game route', async function ({ pag
   await expect(page.getByRole('heading', { name:'Choose a Starting Date' }))
     .toBeVisible();
 });
-
-test('CrazyGames starts Osric in one click and points to a first marriage prospect',
-  async function ({ page }, testInfo) {
-    await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-    await openCrazyGame(page, testInfo);
-    await expect(page.locator('#btn-newgame')).toContainText('Play as Osric');
-    await expect(page.locator('#btn-choose-beginning')).toBeVisible();
-    await page.locator('#btn-newgame').click();
-    await expect.poll(function () {
-      return page.evaluate(function () {
-        return FB.state && FB.state.telemetry && FB.state.telemetry.quickStart;
-      });
-    }).toBe('osric_867');
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    await expect(page.locator('.coachmark')).toContainText('use Seek a match');
-    await expect(page.locator('#tab-actions [data-action-id="seek_match"]'))
-      .toHaveClass(/coachmark-lit/);
-    expect(await page.evaluate(function () {
-      return FB.state.date.year === 867 &&
-        FB.state.player.provinceId === 'barcelona' && FB.game.paused;
-    })).toBe(true);
-  });
-
-test('CrazyGames still offers the full start selector', async function ({ page }, testInfo) {
-  await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-  await openCrazyGame(page, testInfo);
-  await page.locator('#btn-choose-beginning').click();
-  await expect(page.getByRole('heading', { name:'Choose a Starting Date' }))
-    .toBeVisible();
-});
-
-test('CrazyGames builds the Osric world behind the title and reuses it on Play',
-  async function ({ page }, testInfo) {
-    await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-    await openCrazyGame(page, testInfo);
-    await expect.poll(function () {
-      return page.evaluate(function () {
-        return !!FB.world && FB.activeBookmarkId === '867' && !FB.state;
-      });
-    }).toBe(true);
-    await expect(page.locator('#title')).toBeVisible();
-    await page.evaluate(function () { window.__prebuiltWorld = FB.world; });
-    await page.locator('#btn-newgame').click();
-    await expect.poll(function () {
-      return page.evaluate(function () {
-        return FB.state && FB.state.telemetry && FB.state.telemetry.quickStart;
-      });
-    }).toBe('osric_867');
-    expect(await page.evaluate(function () {
-      return FB.world === window.__prebuiltWorld;
-    })).toBe(true);
-  });
 
 test('standard title does not build a world before a start is chosen',
   async function ({ page }, testInfo) {

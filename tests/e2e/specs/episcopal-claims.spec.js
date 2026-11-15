@@ -1,13 +1,14 @@
 'use strict';
 const path = require('path');
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { openGame, prepareGameContent } = require('../support/game/navigation');
-const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const river = require('../fixtures/authoring/episcopal-river-rent.json');
 
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['js/bookmark_sources.js',
   'index.html','data/episcopal_claims.js','data/actions.js','data/technology.js',
   'data/bookmark_1204.js','data/ecclesiastical_profiles.js','data/economy.js',
   'js/episcopal_claims.js','js/actions.js','js/lordships.js','js/justice.js',
@@ -229,7 +230,7 @@ test('an ordinary fictional JSON import changes terms, uses shared NPC decisions
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/episcopal-river-rent.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
-  await beginBookmark(page,info,'1204','baron');
+  await beginBookmarkFromTitle(page,'1204','baron');
   await bind(page,'river_rent','spoleto');
   const result=await page.evaluate(function () {
     const s=FB.state,C=FB.episcopalClaims,a=rentAt,cid=s.player.charId;

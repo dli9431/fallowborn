@@ -110,8 +110,9 @@ for (const def of STARTS) {
       const facts = { sameActor:p.charId === w[def.worldField], age:FB.ageOf(me, s.date.year),
         name:me.name, owner:JSON.stringify(owned) === JSON.stringify(baseline),
         held:JSON.stringify(p.provs.slice().sort()) === JSON.stringify(baseline),
-        noDuplicate:!s.realms[def.realm], tier:p.tier, noAiFamily:!s.realms.player.succession &&
+        noDuplicate:!s.realms[def.realm], tier:p.tier, noAiFamily:!s.realms.player.succession.members &&
           family.concat([me.id]).every(function (id) { return !s.chars[id].royalLine; }),
+        succession:s.realms.player.succession,
         form:FB.political.government(s, { kind:'realm', id:'player' }).formId,
         noSoldierTrack:!s.stories.federate_track_476,
         normalizedHosts:s.armies.every(function (army) {
@@ -140,6 +141,7 @@ for (const def of STARTS) {
     expect(result).toMatchObject({ sameActor:true, age:def.age, name:def.name.replace(/_/g, ' '),
       owner:true, held:true, noDuplicate:true, noAiFamily:true, form:def.form, tier:def.tier,
       noSoldierTrack:true, normalizedHosts:true, track:!!def.track, host:true, identity:def.realm, definitions:true });
+    expect(result.succession).toEqual({playerDynasty:true,rulerGeneration:1,heirCharId:null});
     expect(result.after).toEqual(result.before);
     expect(result.seed).toContain('-' + def.id + '-');
   });

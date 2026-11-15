@@ -2,12 +2,13 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-program-harbor.json'),
   dune:require('../fixtures/authoring/expedition-program-dune.json')};
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['js/bookmark_sources.js',
   'js/story_expedition_program.js',
   'js/story_expedition_preparation.js','index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
   'js/expedition_programs.js','js/mobile_columns.js','js/mobile_confederations.js','js/mobile_command.js',
@@ -26,7 +27,7 @@ async function start(page,info,prefix,input) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await page.evaluate(function () {
     const s=FB.state,d=FB.campaignBookmark(s).realms.find(function (r) {return r.mobile;});
     window.programCase={rid:FB.startRealmId(s,d.id),definition:d,
@@ -58,9 +59,10 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
-test('detached validation rejects unsupported declarations atomically without RNG or registry changes',async function ({page},info) {
+for (const offset of [0,11,22]) test('detached validation rejects unsupported declarations atomically without RNG or registry changes, group '+(offset/11+1),async function ({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function (source) {
+  const result=await page.evaluate(function (input) {
+    const source=input.source,offset=input.offset;
     const changes=[function (p) {p.schema=2;},function (p) {p.extra=true;},function (p) {p.id='';},
       function (p) {p.commandId='missing';},function (p) {p.steps=[];},function (p) {p.steps=Array(17).fill(p.steps[0]);},
       function (p) {p.steps[1].id=p.steps[0].id;},function (p) {p.steps[0].after=['approach'];},
@@ -80,15 +82,16 @@ test('detached validation rejects unsupported declarations atomically without RN
       function (p) {p.steps[4].terms.causes[0].type='forced_victory';},
       function (p) {p.steps[4].terms.causes[0].enemy='missing';},
       function (p) {p.steps[4].terms.causes.push(p.steps[4].terms.causes[0]);}];
-    return changes.map(function (change) {
+    if(changes.length!==33)throw new Error('The declaration mutation inventory must contain exactly 33 cases.');
+    return changes.slice(offset,offset+11).map(function (change) {
       const mod=JSON.parse(JSON.stringify(source)),t=mod.bookmarks.dune_world.realms.find(function (r) {return r.mobile;}).mobile;
       change(t.expeditionProgram);
       const bytes=JSON.stringify(mod),before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter();
       return FB.mods.validate(mod).length>0 && bytes===JSON.stringify(mod) && before===JSON.stringify([FB.state,FBDATA]) &&
         rng===FB.getRngState() && uid===FB.getUidCounter();
     });
-  },examples.dune);
-  expect(result).toHaveLength(33);expect(result.every(Boolean)).toBe(true);
+  },{source:examples.dune,offset:offset});
+  expect(result).toHaveLength(11);expect(result.every(Boolean)).toBe(true);
 });
 
 test('finite boundaries and dependencies are observations and never advance or expire checkpoints',async function ({page},info) {
