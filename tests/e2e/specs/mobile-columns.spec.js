@@ -1,35 +1,40 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
+const {installRestoreFacts}=require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {installPageGuards}=require('../support/page-contract');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-columns-harbor.json'),
   dune:require('../fixtures/authoring/mobile-columns-dune.json')};
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js','js/federates.js',
   'js/governments.js','js/government_selection.js','js/government_continuity.js','js/government_support.js',
-  'js/bookmark_setup.js','js/world.js','js/mods.js','js/authority.js','js/treasury.js','js/armies.js',
+  'js/bookmark_setup.js','js/bookmark_composition.js','js/world.js','js/mods.js','js/authority.js','js/treasury.js','js/armies.js',
   'js/population.js','js/settlement.js','js/starts.js','js/util.js','js/save.js','js/save_v4.js',
   'js/ui_mobile.js','js/ui_misc.js','js/main.js','js/model.js','js/station.js','js/technology.js']);
 
 async function start(page,info,prefix,input) {
   await openGame(page,info);
+  await expectModAdmission(page,input || examples[prefix]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(input ? {name:'columns.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(input))} : path.resolve(__dirname,'../fixtures/authoring/mobile-columns-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
 }
 
 for (const prefix of ['harbor','dune']) {
   test(prefix+' ordinary import partitions one muster and stock without another population or account',async function ({page},info) {
     await start(page,info,prefix);
     const result=await page.evaluate(function (prefix) {
-      const s=FB.state,M=FB.mobile,rid=prefix+'_coalition',r=M.row(s,rid),snap=M.columnSnapshot(s,rid);
+      const s=FB.state,M=FB.mobile,rid=prefix==='harbor'?'harbor_following':'dune_coalition',r=M.row(s,rid),snap=M.columnSnapshot(s,rid);
       const d=FB.campaignBookmark(s).realms.find(function (v) {return v.id===rid;});
       const armyMen=snap.entries.map(function (c) {return c.host.men;});
       const rows=snap.entries.map(function (c) {return c.host.mobileRoster.reduce(function (n,v) {return n+v.count;},0);});
@@ -37,7 +42,8 @@ for (const prefix of ['harbor','dune']) {
       const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
       M.validate(s);M.columnSnapshot(s,rid);M.initialize(s,[d]);
       const pure=JSON.stringify(s)===before && rng===FB.getRngState() && uid===FB.getUidCounter();
-      const saved=JSON.stringify([r,M.migration(s,rid),s.armies,s.chars,FB.treasuryAvailable(s,rid),s.player.gold]);
+      function facts(t) {return [M.row(t,rid),M.migration(t,rid),t.armies,t.chars,FB.treasuryAvailable(t,rid),t.player.gold];}
+      const saved=restoreFacts(s,facts);
       FB.save.restore(JSON.parse(FB.save.serialize()));
       const restored=FB.state;
       return {men:armyMen,rows:rows,food:food,total:M.total(restored,rid),initial:r.accounting.initial,
@@ -47,8 +53,7 @@ for (const prefix of ['harbor','dune']) {
         correctUnits:snap.entries.every(function (c,i) {return d.mobile.columns.entries[i].muster.every(function (v) {
           return c.host.units[v.unitId]===d.mobile.columns.entries[i].muster.filter(function (v2) {return v2.unitId===v.unitId;})
             .reduce(function (n,v2) {return n+v2.count;},0);
-        });}),pure:pure,restored:saved===JSON.stringify([M.row(restored,rid),M.migration(restored,rid),
-          restored.armies,restored.chars,FB.treasuryAvailable(restored,rid),restored.player.gold]),valid:M.validate(restored)};
+        });}),pure:pure,restored:assertRestoreFacts(restoreFacts(restored,facts),saved),valid:M.validate(restored)};
     },prefix);
     expect(result).toEqual({men:prefix==='harbor' ? [40,120] : [110,50],rows:prefix==='harbor' ? [40,120] : [110,50],
       food:3200,total:prefix==='harbor' ? 1400 : 1600,initial:prefix==='harbor' ? 1400 : 1600,
@@ -57,36 +62,47 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
-test('detached declaration rejection is pure for duplicate, excessive, unbound and impossible partitions',async function ({page},info) {
-  await openGame(page,info);
-  const result=await page.evaluate(function (input) {
-    const changes=[
-      function (t) {t.columns=null;},function (t) {t.columns.schema=2;},
-      function (t) {delete t.columns.schema;},function (t) {t.columns.extra=true;},
-      function (t) {t.columns.entries=[];},function (t) {t.columns.entries.pop();},
-      function (t) {t.columns.entries=Array(5).fill(t.columns.entries[0]);},
-      function (t) {t.columns.entries[1].id=t.columns.entries[0].id;},
-      function (t) {t.columns.entries[1].commanderMemberId=t.columns.entries[0].commanderMemberId;},
-      function (t) {t.columns.entries[0].commanderMemberId='missing';},
-      function (t) {t.columns.entries[0].muster[0].count++;},
-      function (t) {t.columns.entries[0].muster[0].count--;},
-      function (t) {t.columns.entries[0].muster[0].count=0;},
-      function (t) {t.columns.entries[0].muster[0].count=0.5;},
-      function (t) {t.columns.entries[0].muster.push(t.columns.entries[0].muster[0]);},
-      function (t) {t.columns.entries[0].muster[0].unitId='missing';},
-      function (t) {t.columns.entries[0].muster[0].memberId='missing';},
-      function (t) {t.columns.entries[0].food=-1;},function (t) {t.columns.entries[0].food=100000;},
-      function (t) {t.food=1;},function (t) {delete t.command;},function (t) {delete t.opening;},
-      function (t) {t.columns.entries[0].hostId='foreign';},function (t) {t.columns.entries[0].at='dune_pass';}
-    ];
-    return changes.map(function (change) {
-      const source=JSON.parse(JSON.stringify(input));change(source.bookmarks.dune_world.realms.find(function (v) {return v.mobile;}).mobile);
-      const bytes=JSON.stringify(source),data=JSON.stringify(FBDATA),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
-      return FB.mods.validate(source).length>0 && bytes===JSON.stringify(source) && data===JSON.stringify(FBDATA) &&
-        state===JSON.stringify(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();
-    });
-  },examples.dune);
-  expect(result).toEqual(Array(24).fill(true));
+test.describe('detached column declaration validation',function () {
+  let context,page,guard;
+  test.beforeAll(async function ({browser},info) {
+    context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+    await openGame(page,info);
+  });
+  test.afterAll(async function () {
+    if(context)try {expect(guard.faults).toEqual([]);}finally {await context.close();}
+  });
+for (const range of [[0,8],[8,16],[16,24]]) {
+  test('detached declaration rejection is pure for duplicate, excessive, unbound and impossible partitions '+(range[0]+1)+'-'+range[1],async function () {
+    const result=await page.evaluate(function (input) {
+      const changes=[
+        function (t) {t.columns=null;},function (t) {t.columns.schema=2;},
+        function (t) {delete t.columns.schema;},function (t) {t.columns.extra=true;},
+        function (t) {t.columns.entries=[];},function (t) {t.columns.entries.pop();},
+        function (t) {t.columns.entries=Array(5).fill(t.columns.entries[0]);},
+        function (t) {t.columns.entries[1].id=t.columns.entries[0].id;},
+        function (t) {t.columns.entries[1].commanderMemberId=t.columns.entries[0].commanderMemberId;},
+        function (t) {t.columns.entries[0].commanderMemberId='missing';},
+        function (t) {t.columns.entries[0].muster[0].count++;},
+        function (t) {t.columns.entries[0].muster[0].count--;},
+        function (t) {t.columns.entries[0].muster[0].count=0;},
+        function (t) {t.columns.entries[0].muster[0].count=0.5;},
+        function (t) {t.columns.entries[0].muster.push(t.columns.entries[0].muster[0]);},
+        function (t) {t.columns.entries[0].muster[0].unitId='missing';},
+        function (t) {t.columns.entries[0].muster[0].memberId='missing';},
+        function (t) {t.columns.entries[0].food=-1;},function (t) {t.columns.entries[0].food=100000;},
+        function (t) {t.food=1;},function (t) {delete t.command;},function (t) {delete t.opening;},
+        function (t) {t.columns.entries[0].hostId='foreign';},function (t) {t.columns.entries[0].at='dune_pass';}
+      ];
+      return changes.slice(input.from,input.to).map(function (change) {
+        const source=JSON.parse(JSON.stringify(input.source));change(source.bookmarks.dune_world.realms.find(function (v) {return v.mobile;}).mobile);
+        const bytes=JSON.stringify(source),data=JSON.stringify(FBDATA),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
+        return FB.mods.validate(source).length>0 && bytes===JSON.stringify(source) && data===JSON.stringify(FBDATA) &&
+          state===JSON.stringify(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();
+      });
+    },{source:examples.dune,from:range[0],to:range[1]});
+    expect(result).toEqual(Array(range[1]-range[0]).fill(true));
+  });
+}
 });
 
 test('the four-column bound accepts four independently bound commanders and exact class partitions',async function ({page},info) {
@@ -201,7 +217,7 @@ test('saved column validation rejects broken identities and sums without repairi
 test('camp and host food are separate and each existing daily provisioning debit occurs once',async function ({page},info) {
   await start(page,info,'harbor');
   const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='harbor_coalition',r=M.row(s,rid),snap=M.columnSnapshot(s,rid);
+    const s=FB.state,M=FB.mobile,rid='harbor_following',r=M.row(s,rid),snap=M.columnSnapshot(s,rid);
     const a=s.armies.find(function (v) {return v.id===snap.entries[1].hostId;});
     a.at='harbor_ridge';a.from=a.at;s.turn++;
     const camp=r.food,food=a.mobileFood,men=a.men;

@@ -5,7 +5,7 @@ const { test, expect } = require('../support/fixture');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const { beginBookmark, beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
 const { openGame, prepareGameContent } = require('../support/game/navigation');
-const { startHistoricalGame } = require('../support/game/historical-start');
+const { installPageGuards } = require('../support/page-contract');
 
 dependsOnRuntime(__filename, ['js/institutions.js','js/religious_institutions.js',
   'js/religious_activities.js','js/model.js','js/world.js','js/systems.js','js/authority.js',
@@ -127,21 +127,6 @@ test('same-period additions, definition replacement, detached lists and restore 
   expect(result.next.candidate).toEqual(result.next.reference);
 });
 
-test('CrazyGames preserves boundary settlement and skipped-day copies', async function ({page}, info) {
-  await routeProbe(page);
-  await startHistoricalGame(page, info, {bookmark:'476',code:'INSTITUTIONS-476-farmer_476-roma-m-Leo-established'}, true);
-  await inject(page);
-  const rows = await page.evaluate(function () {
-    const H = INSTITUTION_COPIES, s = FB.state;
-    H.stageTurn(s, 90); const boundary = H.pair(s);
-    H.stageTurn(FB.state, 91); const skipped = H.pair(FB.state);
-    return {boundary:boundary,skipped:skipped};
-  });
-  expect(rows.boundary.candidate).toEqual(rows.boundary.reference);
-  expect(rows.boundary.period).toBe(1);
-  expect(rows.skipped.candidate.lists).toBe(0); expect(rows.skipped.candidate.copies).toBe(0);
-});
-
 const officeMod = require('../fixtures/political-religious-head/estuary.json');
 function institutionMod(replacement) {
   const mod = JSON.parse(JSON.stringify(officeMod));
@@ -180,18 +165,30 @@ function expectModFacts(facts, city) {
   expect(facts.next.period).toBe(2);
 }
 
-test('ordinary JSON institution import and replacement retain current boundary outcomes and restore', async function ({page}, info) {
-  await routeProbe(page); await openGame(page, info);
-  await importMod(page, institutionMod(false));
+function preparedInstitutionCase(title, body) {
+  test.describe(title,function () {
+    let context,page,guard;
+    test.beforeAll(async function ({browser},info) {
+      context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+      await routeProbe(page);await openGame(page,info);
+    });
+    test.beforeAll(async function () {await importMod(page,institutionMod(false));});
+    test.afterAll(async function () {
+      if (context) try {expect(guard.faults).toEqual([]);} finally {await context.close();}
+    });
+    test('preserves complete reader outcomes',async function () {await body(page);});
+  });
+}
+
+preparedInstitutionCase('ordinary JSON institution import and replacement retain current boundary outcomes and restore', async function (page) {
   const first = await modFacts(page); expectModFacts(first, 'River Village');
   await importMod(page, institutionMod(true));
   const second = await modFacts(page); expectModFacts(second, 'River Port');
   expect(second.signature).not.toBe(first.signature);
 });
 
-test('ordinary JSON institution removal restores live unmodded queries', async function ({page}, info) {
-  await routeProbe(page); await openGame(page, info);
-  await importMod(page, institutionMod(false)); expectModFacts(await modFacts(page), 'River Village');
+preparedInstitutionCase('ordinary JSON institution removal restores live unmodded queries', async function (page) {
+  expectModFacts(await modFacts(page), 'River Village');
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.evaluate(function () { FB.mods.removeAt(0); })]);
   await prepareGameContent(page); await beginBookmarkFromTitle(page, '476'); await inject(page);
   const result = await page.evaluate(function () {

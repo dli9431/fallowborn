@@ -270,19 +270,19 @@ test('stale principals, residence, status, age and occupied bindings reject admi
   }));
 });
 
-test('later candidate changes and new admissions invalidate designation and support reviews', async function ({page},info) {
-  await start(page,info,'consultation');
-  const result = await page.evaluate(function () {
-    const L = livingTest, s = FB.state, S = FB.governmentSelection, rid = L.rid, actor={kind:'realm',id:rid};
-    L.admit(); const c=s.chars[L.cid], id=L.id(), p=S.profile(s,rid);
-    const cases = [
-      ['age',function () { c.born=s.date.year-17; }], ['sex',function () { c.sex='f'; }],
-      ['faith',function () { c.religion='catholic'; }], ['unfree',function () { c.unfree=true; }],
-      ['captivity',function () { c.captive=true; }], ['death',function () { c.dead=true; }],
-      ['binding',function () { c.royalLine.memberId='occupied'; }]
-    ];
-    const out=[];
-    ['designate','support'].forEach(function (action) {
+for (const action of ['designate','support']) {
+  test('later candidate changes and new admissions invalidate '+action+' reviews', async function ({page},info) {
+    await start(page,info,'consultation');
+    const result = await page.evaluate(function (action) {
+      const L = livingTest, s = FB.state, S = FB.governmentSelection, rid = L.rid, actor={kind:'realm',id:rid};
+      L.admit(); const c=s.chars[L.cid], id=L.id(), p=S.profile(s,rid);
+      const cases = [
+        ['age',function () { c.born=s.date.year-17; }], ['sex',function () { c.sex='f'; }],
+        ['faith',function () { c.religion='catholic'; }], ['unfree',function () { c.unfree=true; }],
+        ['captivity',function () { c.captive=true; }], ['death',function () { c.dead=true; }],
+        ['binding',function () { c.royalLine.memberId='occupied'; }]
+      ];
+      const out=[];
       if (action==='support') S.apply(s,S.quote(s,rid,{action:'open',actor:actor,cause:'abdication'}));
       cases.forEach(function (row) {
         const person=JSON.parse(JSON.stringify(c)), m=S.constituency(s,rid)[0];
@@ -299,13 +299,13 @@ test('later candidate changes and new admissions invalidate designation and supp
       other.homeProvinceId='consultation_home';
       const prior=S.quote(s,rid,request), admitted=S.apply(s,S.quote(s,rid,L.request(other.id))), before=L.snapshot();
       out.push({action:action,case:'new admission',rejected:admitted && prior.allowed && !S.apply(s,prior) && S.quote(s,rid,request).allowed && L.same(before)});
-    });
-    return out;
+      return out;
+    },action);
+    expect(result).toEqual(['age','sex','faith','unfree','captivity','death','binding','new admission'].map(function (name) {
+      return {action:action,case:name,rejected:true};
+    }));
   });
-  expect(result).toEqual(['designate','support'].flatMap(function (action) {
-    return ['age','sex','faith','unfree','captivity','death','binding','new admission'].map(function (name) { return {action:action,case:name,rejected:true}; });
-  }));
-});
+}
 
 test('invalid boolean and unknown procedure members reject ordinary imports without publication', async function ({page},info) {
   await start(page,info,'river');
@@ -358,7 +358,7 @@ test('the existing candidate cap, foreign royal exclusion and optional office qu
   expect(result).toEqual({unavailable:true,pure:true,noOffice:true,admitted:64,cap:64,reason:'nomination_refused',rejected:true,validation:true});
 });
 
-test('strict detached restoration rejects forged bindings and exact changed mod content', async function ({page},info) {
+test('strict detached restoration rejects forged living nomination bindings', async function ({page},info) {
   await start(page,info,'river');
   const result = await page.evaluate(function () {
     const L=livingTest, S=FB.governmentSelection, rid=L.rid;
@@ -379,6 +379,11 @@ test('strict detached restoration rejects forged bindings and exact changed mod 
     return {out:out,signature:source.mods===FB.mods.sig(),valid:S.validate(FB.state,rid,S.state(FB.state,rid))};
   });
   expect(result).toEqual({out:Array.from({length:4},function () { return {migration:true,restore:true,pure:true,input:true}; }),signature:true,valid:true});
+});
+
+test('changed living nomination policy rejects the original save fingerprint without effects', async function ({page},info) {
+  await start(page,info,'river');
+  expect(await page.evaluate(function () {return livingTest.admit();})).toBe(true);
   const saved=await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
   const changed=JSON.parse(JSON.stringify(river));
   changed.governmentForms.river_consultation_demo.selectionProfile.procedure.livingNomination=false;

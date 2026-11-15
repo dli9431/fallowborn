@@ -1,4 +1,5 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
@@ -15,14 +16,17 @@ dependsOnRuntime(__filename, ['data/relay_services.js','js/relay_services.js',
   'data/eras.js', 'data/political_institutions.js'
 ]);
 
+const examples={estuary:require('../fixtures/authoring/opening-infrastructure-estuary.json'),
+  uplands:require('../fixtures/authoring/opening-infrastructure-uplands.json')};
 const fixtureDirectory = path.resolve(__dirname, '../fixtures/authoring');
 
 async function importWorld(page, info, name, revision) {
   await openGame(page, info);
+  await expectModAdmission(page,examples[name]);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.join(fixtureDirectory,
     'opening-infrastructure-' + name + '.json'));
-  await page.locator('#mod-apply').click();
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (name) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks['inventory_' + name];
@@ -316,7 +320,7 @@ test('removing the ordinary imported world rejects its marked save without adopt
   await importWorld(page, info, 'estuary');
   await startHousehold(page, 'estuary');
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
-  await page.evaluate(function () { FB.mods.clear(); });
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.evaluate(function () { FB.mods.clear(); })]);
   await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && !FBDATA.bookmarks.inventory_estuary;
