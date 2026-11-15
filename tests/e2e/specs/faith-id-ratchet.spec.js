@@ -16,6 +16,7 @@ test('faith id literals are limited to documented compatibility and historical s
   const expected = {}, actual = {};
   for (const row of allowlist.entries) {
     expect(row.reason).toBeTruthy();
+    expect(Number.isInteger(row.count) && row.count > 0, row.file + ':' + row.id).toBe(true);
     expect(ids.has(row.id), 'Stale faith allowlist id: ' + row.id).toBe(true);
     const key = row.file + ':' + row.id;
     expect(expected[key], 'Duplicate allowance: ' + key).toBeUndefined();

@@ -272,6 +272,7 @@ test('an added quoted content id in a real engine source fails the file review a
   const recorded = JSON.parse(fs.readFileSync(metricPath, 'utf8'));
   const sources = engineSources();
   const owners = new Map(allowlist.hooks.map(function (hook) { return [hook.id, ['reviewed']]; }));
+  expect(new Set(allowlist.hooks.map(function (hook) { return hook.id; })).size).toBe(allowlist.hooks.length);
   expect(metricProblems(contentIdMetric(sources, owners, allowlist.hooks), recorded)).toEqual([]);
   const hook = allowlist.hooks.find(function (entry) { return entry.id === 'abandon_claim'; });
   const source = sources.find(function (entry) { return entry.file === 'js/actions.js'; });

@@ -50,7 +50,8 @@ async function physicalSiteProbe(page,baseline) {
       expect(source.split(patch.current).length).toBe(2);
       source = source.replace(patch.current,patch.reference);
     }
-    expect(crypto.createHash('sha256').update(source).digest('hex')).toBe(physicalReference.sourceSha256);
+    expect(crypto.createHash('sha256').update(source).digest('hex'),
+      'Physical-site reference reconstructed from reviewed source ' + physicalReference.sourceCommit).toBe(physicalReference.sourceSha256);
   }
   const begin = '    var siteSlug = /^[a-z0-9]+(_[a-z0-9]+)*$/;\n    var siteGeography',
     end = '    var supportedKinds = { village:1, town:1, city:1 };';

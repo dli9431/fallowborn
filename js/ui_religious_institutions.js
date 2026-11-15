@@ -351,7 +351,7 @@
     return {charged:FB.T('Accused; no judgment'),offered:FB.T('Settlement offered'),referred:FB.T('Awaiting secular decision'),
       accepted:FB.T('Secular enforcement accepted'),dismissed:FB.T('Dismissed without penalty'),vindicated:FB.T('Successful defense; no penalty'),
       settled:FB.T('Settlement paid'),penance:FB.T('Penance imposed'),imprisoned:FB.T('Prison term imposed'),
-      confiscated:FB.T('Named fief confiscated'),enforced:FB.T('Secular sentence imposed'),interrupted:FB.T('Interrupted; no judgment')};
+      confiscated:FB.T('Named {term:fief} confiscated'),enforced:FB.T('Secular sentence imposed'),interrupted:FB.T('Interrupted; no judgment')};
   }
   function recipient(s,p,snap) {
     var id = p.settlementRecipient === 'victim' ? snap.victimId : snap.principals.courtRealmId;

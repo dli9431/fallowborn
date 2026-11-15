@@ -1,5 +1,6 @@
 {
   "sourceCommit": "bcc5b4a5513d5e1eb5e50f4c7840de5356f6c6f0",
+  "catalogueCommit": "5745f07ec4a7aa3e9ac9a28e2f83b78ab65a8f0a",
   "files": [
     {
       "path": "js/bookmark_sources.js",
@@ -14,7 +15,7 @@
   ],
   "facts": {
     "unmodded": {
-      "data": "0c61e0a6e01b3c2c5638a94504c99978aa0f00f40d1e7a12b9b279cd102a97cf",
+      "data": "8fbec77c099fed1af85eaede1fe568e287e400766a4f0844c5ea10fe992b39b1",
       "revisions": "9f3ecd203d2df4eddd2a42104346fe291d3450ead5b1455b37651734ef86c119",
       "signature": "",
       "fingerprint": "0fc4ae7fa04e4093f79d8d1dd6e62f69a30f13e98cb48bfe514e8efc48cb9fa1",
@@ -23,7 +24,7 @@
       "uid": 0
     },
     "household-overlay": {
-      "data": "b433eb17e04e54d565475333d7a7cdbffd0ffbb693fdd46d081e5ddc2e46234c",
+      "data": "cb074df33a2ae084309b99f435c7cb9bfd08ca4654a06a1b5c7225c1e003e484",
       "revisions": "9f3ecd203d2df4eddd2a42104346fe291d3450ead5b1455b37651734ef86c119",
       "signature": "effective-1-d85ba1411513c7af10f1ea8a12822afd053667d619e595fa22356e8d69d8e80a",
       "fingerprint": "0fc4ae7fa04e4093f79d8d1dd6e62f69a30f13e98cb48bfe514e8efc48cb9fa1",

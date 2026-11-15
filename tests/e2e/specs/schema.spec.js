@@ -163,7 +163,8 @@ for(const item of [{name:'industry laws',mod:laws,root:'industryLaws',id:'river_
 
 test('schema consumers keep exact reviewed content spelling counts',async function({page},info){
   await openGame(page,info);
-  const ids=await page.evaluate(function(){
+  const allowlist=JSON.parse(fs.readFileSync(path.join(root,'tests/e2e/fixtures/engine-ids/content-id-allowlist.json'),'utf8'));
+  const ids=await page.evaluate(function(ignored){
     const ids={};
     function object(v){return !!v && Object.prototype.toString.call(v)==='[object Object]';}
     function walk(v,depth){
@@ -173,11 +174,13 @@ test('schema consumers keep exact reviewed content spelling counts',async functi
       if(keys.length&&keys.every(function(k){return object(v[k]);})){keys.forEach(function(k){ids[k]=true;});return;}
       if(depth<2)keys.forEach(function(k){walk(v[k],depth+1);});
     }
-    Object.keys(FBDATA).forEach(function(k){walk(FBDATA[k],0);});return Object.keys(ids);
-  });
+    Object.keys(FBDATA).forEach(function(k){
+      if(ignored.indexOf(k)<0)walk(FBDATA[k],0);
+    });return Object.keys(ids);
+  },allowlist.ignoredTables.map(function(row){return row.table;}));
   const files=['js/schema.js','js/industry_laws.js','js/production.js'];
   const sources=files.map(function(file){return {file:file,scan:scanSource(fs.readFileSync(path.join(root,file),'utf8'))};});
-  const counts=quotedCounts(sources),allowlist=JSON.parse(fs.readFileSync(path.join(root,'tests/e2e/fixtures/engine-ids/content-id-allowlist.json'),'utf8'));
+  const counts=quotedCounts(sources);
   for(const entry of allowlist.hooks)for(const file of files){
     const actual=counts.get(file+'\n'+entry.id)||0;
     expect(actual,file+' '+entry.id).toBe(entry.uses[file]||0);

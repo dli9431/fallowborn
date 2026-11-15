@@ -708,7 +708,7 @@
           op.scope === 'self' ? FB.T('Only your own faith changes. Your relatives keep theirs.') : FB.T('Household members adopting this faith: {names}.',
             { names:FB.householdMembers(s).filter(function (c) { return !c.dead; }).map(function (c) { return FB.fullName(c); }).join(', ') }),
           FB.T('Popular opinion: {n}.', { n:terms.popularOpinion }),
-          FB.T('Old-fold Standing: {standing} with {n} courts. Vassal Standing: {vassal} with {count} courts.',
+          FB.T('Old-fold Standing: {standing} with {n} courts. {Term:vassal} Standing: {vassal} with {count} courts.',
             { standing:terms.foldStanding, n:terms.oldFoldRealmIds.length, vassal:terms.vassalStanding, count:terms.vassalIds.length }),
           op.scope === 'household' && q.facts.modifier ? FB.T('Household unrest for {days} days: {unrest}% unrest, {support} Popular support, {tax}% tax and {levy}% levy.',
             { days:q.facts.modifier.days, unrest:Math.round(100 * (q.facts.modifier.fx.unrest || 0)), support:q.facts.modifier.fx.commonVoice || 0,

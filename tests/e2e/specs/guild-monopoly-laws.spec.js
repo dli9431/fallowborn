@@ -23,7 +23,7 @@ test('changed law, account and presentation owners retain exact reviewed content
     const actual = counts.get(file + '\n' + entry.id) || 0, expected = entry.uses[file] || 0;
     if (actual !== expected) differences.push({file:file,id:entry.id,actual:actual,expected:expected});
   }); });
-  expect(differences).toEqual([]);
+  expect(differences, 'Exact law/account/presentation source reviews: ' + JSON.stringify(differences)).toEqual([]);
   const metric = require('../fixtures/engine-ids/content-id-metric.json');
   const categories = {};
   hooks.forEach(function (entry) {
