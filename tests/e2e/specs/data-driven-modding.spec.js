@@ -1147,7 +1147,7 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       };
     });
 
-    expect(result.counts).toEqual([28, 104]);
+    expect(result.counts).toEqual([28, 105]);
     expect(result.gamesOrder).toEqual([
       'take_road', 'games_calendar', 'host_games', 'travel_turn_back'
     ]);
@@ -1430,6 +1430,7 @@ test('milestone-four phase B rejects unsafe overrides before any catalogue mutat
           message = error.message;
         }
         return {
+          message:message,
           rejected:message.indexOf(expected) >= 0,
           unchanged:before === JSON.stringify({
             focuses:FBDATA.focuses, deeds:FBDATA.deeds
@@ -1446,7 +1447,7 @@ test('milestone-four phase B rejects unsafe overrides before any catalogue mutat
         attempt({ deeds:[{ id:'poach', handler:'poach' }] },
           'handler is not recognized'),
         attempt({ deeds:[{ id:'poach', constructor:true }] },
-          'constructor is not recognized'),
+          'constructor is a reserved key'),
         attempt({ deeds:[{ id:'poach', flow:'no_day' }] },
           'flow is not recognized'),
         attempt({ focuses:[{ id:'study', order:1 }] },
@@ -1485,9 +1486,10 @@ test('milestone-four phase B rejects unsafe overrides before any catalogue mutat
       ];
     });
 
-    expect(result.every(function (entry) {
-      return entry.rejected && entry.unchanged;
-    })).toBe(true);
+    for (const entry of result) {
+      expect(entry.rejected, entry.message).toBe(true);
+      expect(entry.unchanged, entry.message).toBe(true);
+    }
   });
 
 test('milestone-four phase C adds previewable declarative deeds with atomic execution',

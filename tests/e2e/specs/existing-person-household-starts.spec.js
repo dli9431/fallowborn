@@ -4,12 +4,13 @@ const path = require('path');
 const {test, expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const examples = {harbor:require('../fixtures/authoring/existing-person-harbor.json'),
   dune:require('../fixtures/authoring/existing-person-dune.json')};
 
 dependsOnRuntime(__filename, ['index.html', 'data/starts.js', 'data/technology.js',
   'data/economy.js', 'data/government_rollout.js', 'data/eras.js',
-  'js/starts.js', 'js/main.js', 'js/world.js', 'js/mods.js', 'js/model.js', 'js/items.js',
+  'js/starts.js', 'js/main.js', 'js/util.js', 'js/world.js', 'js/mods.js', 'js/model.js', 'js/items.js',
   'js/economy.js', 'js/station.js', 'js/governments.js', 'js/stories.js', 'js/story_household.js',
   'js/treasury.js', 'js/authority.js', 'js/population.js', 'js/travel.js', 'js/household_party_travel.js',
   'js/save.js', 'js/save_v4.js', 'js/ui_misc.js', 'js/ui_modals.js']);
@@ -150,7 +151,7 @@ for (const prefix of ['harbor', 'dune']) {
       ];
       const rejected = changes.map(function (change) {
         const candidate = clone(mod); change(candidate);
-        try { FB.mods.validate(candidate); return false; } catch (error) { return true; }
+        return FB.mods.validate(candidate).length > 0;
       });
       const wrong = clone(bm); wrong.revision = 'different'; delete wrong.realms[0].royalCourt;
       const absent = FB.existingPersonStartProfile(sc, wrong) === null;
@@ -164,16 +165,21 @@ for (const prefix of ['harbor', 'dune']) {
 
   test(prefix + ' matching saves preserve selection and actual later homes while forged provenance fails detached adoption', async function ({page}, info) {
     await importExample(page, info, prefix); await begin(page, prefix);
+    await installRestoreFacts(page);
     const result = await page.evaluate(function (prefix) {
       const s = FB.state, rid = prefix + '_house', b = s.start.existingPerson;
       const remote = prefix === 'harbor' ? 'harbor_ridge' : 'dune_pass';
       // Ordinary residence may diverge after the opening; provenance is historical.
       const mother = s.chars[b.household.find(function (r) { return r.memberId === 'mother'; }).charId];
       mother.homeProvinceId = remote; mother.householdResidenceId = remote;
+      // Settle the inherited roster after relocation, including its redundant
+      // home-at-the-household markers, before taking an exact checkpoint.
+      FB.ensureInheritedHousehold(s);
       s.player.gold = 2;
-      const before = JSON.stringify([s.chars, s.start, s.player.gold, s.realms[rid].treasury, s.stories]);
+      const facts = function (s) { return [s.chars, s.start, s.player.gold, s.realms[rid].treasury, s.stories]; };
+      const before = restoreFacts(s, facts);
       const saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
-      const matching = before === JSON.stringify([FB.state.chars, FB.state.start, FB.state.player.gold, FB.state.realms[rid].treasury, FB.state.stories]);
+      const matching = assertRestoreFacts(restoreFacts(FB.state, facts), before);
       const mutations = [function (b) { b.version = 0; }, function (b) { b.memberId = 'sibling'; },
         function (b) { b.charId = 'someone_else'; }, function (b) { b.realmId = 'other'; },
         function (b) { b.extra = 1; }, function (b) { b.household.pop(); },
@@ -199,7 +205,10 @@ for (const prefix of ['harbor', 'dune']) {
   });
 
   test(prefix + ' code replay and ordinary direct creation preserve deterministic world and family identity', async function ({page}, info) {
-    await importExample(page, info, prefix); await begin(page, prefix);
+    await importExample(page, info, prefix);
+    // Onboarding is once per browser profile, independently of the start code.
+    await page.evaluate(function () { FB.game.uiPrefs.onboardingStarted = true; FB.game.saveUiPrefs(); });
+    await begin(page, prefix);
     const snapshot = async function () {
       return page.evaluate(function () {
         const s = FB.state; return JSON.stringify([s.seed, s.chars, s.player, s.owner, s.holder, s.start, s.stories, FB.getRngState() >>> 0, FB.getUidCounter()]);
