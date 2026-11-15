@@ -36,15 +36,47 @@ async function observe(page, testInfo, id) {
   expect(error).toBe(null);
 }
 
+function declarationProblems(source, name) {
+  const problems = [];
+  const header = /^FB\.bookmarkSources\.stage\((\{[^\r\n]*\}), function \(FBDATA\) \{\r?\n/;
+  const match = source.match(header);
+  if (!match) return ['missing staged registration callback'];
+  const meta = JSON.parse(match[1]);
+  if (meta.source !== 'data/' + name + '.js' || JSON.stringify(meta.bookmarks) !== '["476"]')
+    problems.push('unexpected staged source identity');
+  if (!/\}\);\s*$/.test(source)) problems.push('unclosed staged callback');
+  const body = source.slice(match[0].length);
+  if (/\bfunction\b|=>|\.\s*(?:map|forEach)\s*\(|\bcuratedSites\b/.test(body))
+    problems.push('procedural declaration or remapping');
+  const withoutOwnReads = body.replace(/\bbookmarks\s*\[\s*(['"])476\1\s*\]/g, 'ownBookmark');
+  if (/\bbookmarks\s*[\[.]|\bFB\s*\.\s*bookmark\s*\(/.test(withoutOwnReads))
+    problems.push('cross-bookmark read');
+  return problems;
+}
+
 test('476 declarations do not read or remap another bookmark', async function ({}, testInfo) {
   test.skip(testInfo.project.name !== 'chromium-served', 'One source inspection is sufficient.');
   const root = path.resolve(__dirname, '../../..');
   for (const name of ['bookmark_476', 'bookmark_476_italy', 'bookmark_476_dalmatia_east',
     'bookmark_476_gaul_iberia', 'bookmark_476_africa', 'bookmark_476_outer']) {
     const source = fs.readFileSync(path.join(root, 'data', name + '.js'), 'utf8');
-    expect(source).not.toMatch(/bookmarks\s*\[\s*['"](?:867|1066)['"]\s*\]/);
-    expect(source).not.toMatch(/\bfunction\s*\(|\.map\s*\(|\.forEach\s*\(|\bcuratedSites\b/);
+    expect(declarationProblems(source, name), name).toEqual([]);
   }
+});
+
+test('476 declaration inspection permits only the staged callback and rejects cross-world transformations', function () {
+  const name = 'bookmark_476', header = 'FB.bookmarkSources.stage({"source":"data/bookmark_476.js","bookmarks":["476"]}, function (FBDATA) {\n';
+  const wrap = function (body) { return header + body + '\n});'; };
+  expect(declarationProblems(wrap("FBDATA.bookmarks['476'] = {id:'476'};"), name)).toEqual([]);
+  expect(declarationProblems(wrap('FBDATA.bookmarks [ "476" ] = {id:"476"};'), name)).toEqual([]);
+  for (const body of [
+    "FBDATA.bookmarks['867'];", 'FBDATA.bookmarks["1066"];',
+    "FBDATA.bookmarks['493'];", 'FBDATA.bookmarks[id];', 'FBDATA.bookmarks.other;',
+    "FB.bookmark('867');", 'rows.map(remap);', 'rows . forEach(remap);',
+    'const remap = function () {};', 'function remap() {}', 'const remap = row => row;',
+    'curatedSites;', header + '\n});'
+  ]) expect(declarationProblems(wrap(body), name).length, body).toBeGreaterThan(0);
+  expect(declarationProblems('function (FBDATA) {}', name)).toEqual(['missing staged registration callback']);
 });
 
 test('476 owns a complete stable grid and independent Roman hierarchy', async function ({ page }, testInfo) {

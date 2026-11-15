@@ -97,6 +97,12 @@
       "source": "return 'scripted_' + (FB.activeBookmarkId || '867') + '_' +",
       "kind": "identity_key",
       "reason": "Scripted-history identities include the bookmark id."
+    },
+    {
+      "file": "js/main.js",
+      "source": "const parts = value.trim().split('-'), codeBookmark = parts.length === 5 ? '867' : parts[1] && parts[1].toLowerCase();",
+      "kind": "legacy_default",
+      "reason": "Five-part released start codes omit the bookmark and retain the original 867 default when preparing the selected date."
     }
   ]
 }

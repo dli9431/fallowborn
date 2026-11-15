@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'index.html', 'data/eras.js', 'data/political_institutions.js',
+  'index.html', 'data/eras.js', 'data/political_institutions.js', 'data/starts_1241.js', 'data/starts_courts_800.js',
   'js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -24,6 +24,31 @@ const comparisons = [
     '\\s*\\(?\\s*[\\w$.\\[\\]()]*' + member),
   new RegExp('FB\\.(?:stationOf|playerStation)\\([^()]*\\)\\s*' + operator + '\\s*' + number)
 ];
+
+test('bound personal starts require the free unlanded station query without mutating campaign facts', async function ({page}, info) {
+  await openGame(page,info);
+  expect(await page.evaluate(function () {
+    const before = JSON.stringify(FB.state), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const query = FB.station.isFreeUnlanded, results = [];
+    try {
+      for (const kind of ['originalPrincipal','existingPerson']) {
+        const scenario = FBDATA.startScenarios.find(function (row) { return row[kind]; });
+        const bookmark = FB.bookmark(scenario.bookmarkIds[0]);
+        const profile = kind === 'originalPrincipal' ? FB.originalPrincipalStartProfile : FB.existingPersonStartProfile;
+        results.push(!!profile(scenario,bookmark));
+        for (const tier of [1,2])
+          results.push(!!profile(Object.assign({},scenario,{tier:tier}),bookmark));
+        for (const tier of [0,3,-1,1.5,'1',null])
+          results.push(profile(Object.assign({},scenario,{tier:tier}),bookmark) === null);
+        let calls = 0;
+        FB.station.isFreeUnlanded = function () { calls++; return false; };
+        results.push(profile(scenario,bookmark) === null && calls === 1);
+        FB.station.isFreeUnlanded = query;
+      }
+    } finally { FB.station.isFreeUnlanded = query; }
+    return {valid:results.every(Boolean), pure:JSON.stringify(FB.state) === before && FB.getRngState() === rng && FB.getUidCounter() === uid};
+  })).toEqual({valid:true,pure:true});
+});
 
 /* Every engine line outside js/station.js that compares a .tier, .rank or .station
    member with a number. */

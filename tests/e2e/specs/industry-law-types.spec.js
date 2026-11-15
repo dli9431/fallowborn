@@ -292,7 +292,7 @@ test('a real JSON press law checks acquisition fees, office scope, guild interes
   await roundTrip(page);
 });
 
-test('malformed suspension facts and changed imports reject atomically, while expiry ends a stop', async function ({page}, info) {
+test('malformed suspension facts reject atomically, while expiry ends a stop', async function ({page}, info) {
   await start(page,info,'1066','constantinople');
   expect(await page.evaluate(function () {
     const s = FB.state, L = FB.industryLaws, e = lawBusiness('workshop_business'), law = lawEnact('constantinople_workshop_permission');
@@ -316,6 +316,9 @@ test('malformed suspension facts and changed imports reject atomically, while ex
     L.validate(s); return bound && atomic && expired;
   })).toBe(true);
   await roundTrip(page);
+});
+
+test('changed imports reject atomically with an enacted operating law', async function ({page}, info) {
   await start(page,info,'1204','york',true);
   expect(await page.evaluate(function () {
     lawEnact('estuary_press_permission'); lawBusiness('press_business');

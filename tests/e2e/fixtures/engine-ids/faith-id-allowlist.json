@@ -1,6 +1,7 @@
 {
   "about": "Exact remaining faith-id literals in engine scripts. These are durable message selectors, legal strategy identifiers or authored historical story identities, never central-office dispatch.",
   "entries": [
+    {"file": "js/religious_cases.js", "id": "christian", "count": 1, "reason": "Discipline profile validation bounds the supported clerical-violence jurisdiction to the Christian religion group, independently of office identity."},
     {"file": "js/events.js", "id": "muslim", "count": 2, "reason": "Durable cleric/deity message selectors chosen from effective faith words."},
     {"file": "js/events.js", "id": "pagan", "count": 2, "reason": "Durable cleric/deity message selectors chosen from effective faith words."},
     {"file": "js/events.js", "id": "jewish", "count": 2, "reason": "Durable cleric/deity message selectors chosen from effective faith words."},

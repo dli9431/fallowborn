@@ -67,7 +67,7 @@
         scenario.governmentForm !== undefined || scenario.onboarding !== undefined ||
         !bookmark || !Array.isArray(scenario.bookmarkIds) || scenario.bookmarkIds.indexOf(bookmark.id) < 0 ||
         !scenario.familyPresets || Object.keys(scenario.familyPresets).join(',') !== 'standard' ||
-        !Number.isInteger(scenario.tier) || scenario.tier < 1 || scenario.tier > 2 ||
+        !Number.isInteger(scenario.tier) || !FB.station.isFreeUnlanded(scenario.tier, null) ||
         !FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories, bookmark).length) return null;
     var realm = (bookmark.realms || []).find(function (r) { return r && r.id === b.realmId; });
     var mobile = realm && realm.mobile, guard = mobile && mobile.guardedParty;
@@ -158,7 +158,7 @@
         scenario.rulerRealmId !== undefined || scenario.governmentForm !== undefined || scenario.onboarding !== undefined ||
         !Array.isArray(scenario.bookmarkIds) || !bookmark || scenario.bookmarkIds.indexOf(bookmark.id) < 0 ||
         !scenario.familyPresets || Object.keys(scenario.familyPresets).join(',') !== 'standard' ||
-        !Number.isInteger(scenario.tier) || scenario.tier < 1 || scenario.tier > 2 ||
+        !Number.isInteger(scenario.tier) || !FB.station.isFreeUnlanded(scenario.tier, null) ||
         !FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories, bookmark).length) return null;
     var realm = (bookmark.realms || []).find(function (r) { return r && r.id === binding.realmId; });
     var court = realm && realm.royalCourt, members = court && court.members;

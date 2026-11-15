@@ -85,6 +85,8 @@ test('engine code names bookmark ids only on the reviewed allowlist',
         problems.push('allowlist entry needs a known kind and a reason: ' +
           entry.file + ': ' + entry.source);
       }
+      const count = entry.count === undefined ? 1 : entry.count;
+      expect(Number.isInteger(count) && count > 0, entry.source).toBe(true);
       if (allowed.has(key)) problems.push('duplicate allowlist entry: ' + entry.file + ': ' + entry.source);
       allowed.set(key, entry);
     }

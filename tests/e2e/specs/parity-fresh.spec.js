@@ -9,9 +9,22 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const {
-  FRESH_JOURNEYS, captureWorldSnapshot, expectedScenarioTable, startParityGame, startScenarioTable
+  FRESH_JOURNEYS:RETAINED_JOURNEYS, captureWorldSnapshot, expectedScenarioTable, startParityGame, startScenarioTable
 } = require('../support/game/parity');
 const { parityMode, settleParityFixture } = require('../support/parity-fixtures');
+const addedOpenings = require('../fixtures/parity/declared-openings.json');
+const FRESH_JOURNEYS = RETAINED_JOURNEYS.concat(addedOpenings.map(function (row) {
+  return {id:'fresh-' + row.bookmark + '-' + row.scenario, bookmark:row.bookmark,
+    scenario:row.scenario, declaredOpening:true};
+}));
+function reviewedScenarioTable() {
+  const out = expectedScenarioTable();
+  addedOpenings.forEach(function (row) {
+    const dates = out[row.scenario] || (out[row.scenario] = []);
+    dates.push(row.bookmark); dates.sort();
+  });
+  return out;
+}
 
 /* Owner-run parity journeys: a fresh world per bookmark and start scenario,
    snapshotted at creation and after immediate save restore. They run
@@ -25,7 +38,7 @@ test('the fresh parity journeys cover every authored start scenario',
     await openGame(page, testInfo);
     expect(await startScenarioTable(page),
       'A start scenario was added or retargeted; add its fresh parity journey.')
-      .toEqual(expectedScenarioTable());
+      .toEqual(reviewedScenarioTable());
   });
 
 for (const journey of FRESH_JOURNEYS) {

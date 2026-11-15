@@ -343,6 +343,7 @@ const ALLOWED = new Map([
   ['market endowments name unknown duchy ', 'market schema diagnostic'],
   ['market duchy ', 'market schema diagnostic'],
   [' needs an island duchy and unique mainland duchies.', 'ambition schema diagnostic'],
+  ['A holy-war story must name an existing kingdom.', 'story schema diagnostic'],
   ['A holy-war story must name existing kingdoms.', 'story schema diagnostic'],
   ['unknown kingdom ', 'bookmark schema diagnostic'],
   ['declare one provinceIds or duchies list.', 'bookmark schema diagnostic'],
