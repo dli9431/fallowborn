@@ -4,10 +4,25 @@ const {bootInputs,prepareInputs}=require('../support/game/water-operation-inputs
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,['index.html','data/building_operations.js','data/production.js','data/building_profiles.js',
   'js/building_operations.js','js/production.js','js/production_economy.js','js/building_profiles.js','js/site_resources.js',
-  'js/building_seasons.js','js/actions.js','js/world.js','js/mods.js','js/save.js','js/save_v4.js','js/treasury.js','js/lordships.js','js/ui_modals.js']);
+  'js/building_seasons.js','js/actions.js','js/world.js','js/model.js','js/politics.js','js/mods.js','js/save.js','js/save_v4.js','js/treasury.js','js/lordships.js','js/ui_modals.js']);
 for(const kind of ['river','upland']){
   test(kind+' paid production supplies one conserved material-and-water service and matching restore',async function({page},info){
-    await bootInputs(page,info,kind,'water-operation-inputs');await prepareInputs(page,kind==='river'?1:2);
+    await bootInputs(page,info,kind,'water-operation-inputs');
+    const remote=await page.evaluate(function(){
+      const s=FB.state,P=FB.production,row=P.snapshot(s)[0],who=FB.settlementHolder(s,row.site.countyId,row.site.slot);
+      s.realms[who.id].treasury.gold=10000;
+      s.realms[who.id].capital=FB.campaignBookmark(s).provinces.find(function(p){return p.id!==row.site.countyId;}).id;
+      const before=JSON.stringify(s),q=P.aiQuote(s,row.site.id,'reserve',{recipeId:row.site.recipeIds[0],disposition:'store'});
+      return {allowed:q.allowed,reason:q.reason,committed:P.commit(s,q),pure:before===JSON.stringify(s)};
+    });
+    expect(remote).toEqual({allowed:false,reason:'work',committed:false,pure:true});
+    await prepareInputs(page,kind==='river'?1:2);
+    expect(await page.evaluate(function(){
+      const s=FB.state,row=FB.production.snapshot(s)[0],actor=FB.political.actor(s,FB.settlementHolder(s,row.site.countyId,row.site.slot));
+      return s.production.batches.every(function(b){const recipe=FBDATA.productionRecipes[b.recipeId];return b.status==='committed'&&
+        b.workerId===actor.characterId&&FB.characterLocation(s,s.chars[b.workerId])===row.site.countyId&&
+        b.workTurns.length===recipe.workDays&&b.paid===recipe.workPrice;});
+    })).toBe(true);
     const r=await page.evaluate(function(){
       const s=FB.state,O=FB.buildingOperations,a=O.compile(FB.campaignBookmark(s)).assignments[1],who=FB.settlementHolder(s,a.countyId,a.slot);
       const gold=s.realms[who.id].treasury.gold,people=JSON.stringify(s.population),dev=JSON.stringify(s.dev);
@@ -16,9 +31,9 @@ for(const kind of ['river','upland']){
       const q=O.quote(s,req),before=s.realms[who.id].treasury.gold,worked=O.commit(s,q),again=O.commit(s,q);
       const amount=FB.buildingBonusIn(s,a.countyId,'migrationAttraction');
       const paid=before-s.realms[who.id].treasury.gold,remaining=s.production.lots.filter(function(l){return l.goodId===a.profile.inputs[0].goodId;}).reduce(function(n,l){return n+l.remaining;},0);
-      const snapshot=JSON.stringify([s.production,s.buildingOperations,s.siteResources,s.buildings]);
+      const snapshot=restoreFacts(s,function(v){return [v.production,v.buildingOperations,v.siteResources,v.buildings];});
       FB.save.restore(JSON.parse(FB.save.serialize()));const t=FB.state;
-      const matching=snapshot===JSON.stringify([t.production,t.buildingOperations,t.siteResources,t.buildings]);
+      const matching=snapshot===restoreFacts(t,function(v){return [v.production,v.buildingOperations,v.siteResources,v.buildings];});
       const valid=FB.production.validate(t)&&O.validate(t),bad=JSON.parse(JSON.stringify(t));delete bad.production.waterInputs;
       let rejects=false;try{FB.production.validate(bad);}catch(e){rejects=true;}
       t.turn=q.untilTurn;FB.invalidateBuildingIndex(t,a.countyId);

@@ -2,9 +2,13 @@
 const {prepareGameContent} = require('./navigation');
 const path = require('path');
 const {openGame} = require('./navigation');
-const {beginBookmark} = require('./bookmark-acceptance');
+const {beginBookmarkFromTitle} = require('./bookmark-acceptance');
+const {expectModAdmission} = require('./mod-admission');
+const {installRestoreFacts} = require('./restore-facts');
 async function bootInputs(page,info,kind,prefix,custom) {
   await openGame(page,info);
+  const candidate=custom || require('../../fixtures/authoring/'+prefix+'-'+kind+'.json');
+  await expectModAdmission(page,candidate);
   await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(custom ? {name:'service.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(custom))} :
     path.resolve(__dirname,'../../fixtures/authoring/'+prefix+'-'+kind+'.json'));
@@ -12,12 +16,18 @@ async function bootInputs(page,info,kind,prefix,custom) {
   const key=kind==='river'?'river':'upland';
   await prepareGameContent(page);
   await page.waitForFunction(function(key){return window.FB&&FB.game&&FB.game.bootReady&&FBDATA.bookmarks['resource_'+key];},key);
-  await beginBookmark(page,info,'resource_'+key,'resource_'+key+'_household');
+  await beginBookmarkFromTitle(page,'resource_'+key,'resource_'+key+'_household');
+  await installRestoreFacts(page);
 }
 async function prepareInputs(page,count) {
   return page.evaluate(function(count){
     const s=FB.state,P=FB.production,row=P.snapshot(s)[0],who=FB.settlementHolder(s,row.site.countyId,row.site.slot);
     s.realms[who.id].treasury.gold=10000;
+    // A reigning worker lives at the realm capital, not an arbitrary home field.
+    // Stage that ordinary residence boundary without changing production eligibility.
+    s.realms[who.id].capital=row.site.countyId;
+    const actor=FB.political.actor(s,who);
+    if(FB.characterLocation(s,s.chars[actor.characterId])!==row.site.countyId)throw new Error('Fuel worker must be local');
     const recipeId=row.site.recipeIds[0],recipe=FBDATA.productionRecipes[recipeId];
     for(let i=0;i<count;i++){
       let q=P.aiQuote(s,row.site.id,'reserve',{recipeId:recipeId,disposition:'store'});
@@ -28,6 +38,8 @@ async function prepareInputs(page,count) {
       }
       q=P.aiQuote(s,row.site.id,'finish',{batchId:id});
       if(!P.commit(s,q))throw new Error('Finish fuel: '+JSON.stringify(q));
+      // The next batch or service starts after this worker's paid action day.
+      s.turn++;
     }
     return P.validate(s);
   },count||1);
