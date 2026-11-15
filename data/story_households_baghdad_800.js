@@ -17,7 +17,7 @@ FBDATA.householdTracks_baghdad_800 = {
       household:{ name:'A household among books',
         text:'Arabic texts pass through many hands in Baghdad. Your invented household begins with modest means and an apprentice’s career. A small order may offer work without an academy appointment or a famous teacher.',
         choices:[
-          { id:'keep_copying', label:'Keep copying as a livelihood', detail:'Select ordinary scholarly work and review a local order. Choosing work pays nothing by itself.', operation:{ kind:'set_focus', focusId:'scholarly_work' }, next:'offer' },
+          { id:'keep_copying', label:'Keep copying as a livelihood', detail:'Consider a funded copying order. This choice pays nothing and grants no scholarly license. Each paid shift needs its own review.', operation:{ kind:'record_decision' }, next:'offer' },
           { id:'seek_study', label:'Give attention to ordinary study', detail:'Close the opening story. Choose study and pursue training through the usual household decisions.', operation:{ kind:'record_decision' }, next:'study_intention' },
           { id:'decline_story', label:'Continue without the opening story', detail:'Keep your family, purse and current career without taking a commission.', operation:{ kind:'record_decision' }, next:'declined' }
         ], transitions:[] },

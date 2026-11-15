@@ -4,10 +4,10 @@ const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmark,beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={dry:require('../fixtures/authoring/building-seasons-dry.json'),pasture:require('../fixtures/authoring/building-seasons-pasture.json')};
-dependsOnRuntime(__filename,['index.html','data/production_fish_drying.js','data/buildings_seasonal_pasture.js','data/production_seasonal_pasture.js','data/building_seasons.js','data/production.js','data/production_economy.js','data/building_operations.js','data/building_profiles.js','data/climate.js','data/technology.js',
+dependsOnRuntime(__filename,['js/bookmark_sources.js','index.html','data/production_fish_drying.js','data/buildings_seasonal_pasture.js','data/production_seasonal_pasture.js','data/building_seasons.js','data/production.js','data/production_economy.js','data/building_operations.js','data/building_profiles.js','data/climate.js','data/technology.js',
   'js/building_seasons.js','js/production.js','js/production_economy.js','js/building_operations.js','js/building_profiles.js','js/site_resources.js','js/climate.js','js/world.js','js/mods.js',
   'js/main.js','js/save.js','js/save_v4.js','js/actions.js','js/population.js','js/settlement.js','js/lordships.js','js/treasury.js','js/home_authority.js','js/ui_modals.js','js/ui_misc.js']);
 async function boot(page,info,kind,ruler,custom) {
@@ -17,7 +17,7 @@ async function boot(page,info,kind,ruler,custom) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function(id){return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[id];},'season_'+kind);
-  if (!ruler) await beginBookmark(page,info,'season_'+kind,'season_'+kind+'_household');
+  if (!ruler) await beginBookmarkFromTitle(page,'season_'+kind,'season_'+kind+'_household');
   else {
     const full=page.locator('#btn-choose-beginning');
     if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
@@ -247,7 +247,8 @@ test('a seasonal window supplies no replacement for missing water and same-seed 
     return {allowed:q.allowed,apply:P.commit(s,q),pure:before===JSON.stringify(s),state:JSON.stringify([s.production,s.buildingSeasons,s.siteResources]),rng:FB.getRngState()>>>0,uid:FB.getUidCounter()};
   });}
   const first=await facts();expect(first).toMatchObject({allowed:false,apply:false,pure:true});
-  await beginBookmark(page,info,'season_dry','season_dry_household');expect(await facts()).toEqual(first);
+  await beginBookmark(page,info,'season_dry','season_dry_household');
+  expect(await facts()).toEqual(first);
 });
 
 function stockMarketExample() {

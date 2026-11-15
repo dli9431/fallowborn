@@ -27,7 +27,11 @@ async function begin(page,info,full) {
       FBDATA.bookmarks['634'].revisions.core_courts_v4.hidden = false;
     });
     await beginBookmarkFromTitle(page,'634','medina_household_634');
-  } else await beginBookmark(page,info,'634','medina_household_634');
+  } else {
+    await openGame(page,info);
+    await page.evaluate(function () { FBDATA.bookmarks['634'].revision = 'core_identities_v3'; });
+    await beginBookmarkFromTitle(page,'634','medina_household_634');
+  }
   await page.evaluate(function () {
     const id = 'medina_household_track_634';
     window.medinaReview = {
@@ -49,10 +53,10 @@ async function begin(page,info,full) {
   });
 }
 
-test('Medina remains offered in the selectable opening while the expanded courts stay hidden',async function ({page},info) {
+test('Medina remains offered in both the retained and complete openings',async function ({page},info) {
   await openGame(page,info); await prepareGameContent(page);
   expect(await page.evaluate(function () {
-    const b = FB.bookmark('634'), sc = FBDATA.startScenarios.find(function (r) { return r.id === 'medina_household_634'; });
+    const b = FB.bookmark('634','core_identities_v3'), sc = FBDATA.startScenarios.find(function (r) { return r.id === 'medina_household_634'; });
     const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
     const county = b.provinces.find(function (p) { return p.id === 'medina'; });
     const absent = JSON.parse(JSON.stringify(b));
@@ -60,7 +64,7 @@ test('Medina remains offered in the selectable opening while the expanded courts
     absent.revision = 'unsupported';
     const rejected = FB.mods.startDefinitionFaults(sc,absent,FB.stories);
     absent.startLocations.medina_household_634 = [];
-    return {errors:FB.validateBookmark(b),hidden:FB.bookmark('634','core_courts_v4').hidden,available:FB.bookmarkAvailable('634'),fresh:b.revision,
+    return {errors:FB.validateBookmark(b),hidden:FB.bookmark('634','core_courts_v4').hidden,available:FB.bookmarkAvailable('634'),retained:b.revision,fresh:FB.bookmark('634').revision,
       local:FB.startProvinceAllowed(sc,b,'medina'),away:FB.startProvinceAllowed(sc,b,'mecca'),
       tracks:FB.startStoryTracks(sc,'medina'),pair:county.communities.some(function (c) { return c.culture === sc.startCulture && c.religion === sc.startReligion; }),
       unsupported:rejected.length > 0,excluded:!FB.startProvinceAllowed(sc,absent,'medina'),
@@ -70,7 +74,7 @@ test('Medina remains offered in the selectable opening while the expanded courts
       }),
       noSources:!FBDATA.storyInstances.medina_household_track_634.requires,
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toEqual({errors:[],hidden:true,available:true,fresh:'core_identities_v3',local:true,away:false,tracks:['medina_household_track_634'],
+  })).toEqual({errors:[],hidden:false,available:true,retained:'core_identities_v3',fresh:'core_courts_v4',local:true,away:false,tracks:['medina_household_track_634'],
     pair:true,unsupported:true,excluded:true,fronts:[['syrian_front_634',true,false,true],['iraqi_front_634',true,false,true]],noSources:true,pure:true});
   await begin(page,info);
   expect(await page.evaluate(function () {

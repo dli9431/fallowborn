@@ -211,11 +211,7 @@ test('one world season retains regional institutions before staged Zeno and Theo
     await injectBrowserHarness(page);
     await page.evaluate(function () {
       FB.game.observe = true;
-      delete FB.state.stories.federate_track_476; delete FB.state.stories.opening_federate_476;
-      // This journey isolates the original eastern return and Italian rail.
-      // The full regional campaign journey lives in 476-balkans-anatolia.spec.js.
-      delete FB.state.stories.thracian_pressure_476;
-      delete FB.state.stories.amal_epirus_476;
+      // Keep every sealed record, including the later regional opportunities.
       // Isolate random diplomacy while real daily, seasonal, treasury,
       // institution and campaign transactions continue.
       window.east476OriginalChance = FB.chance;

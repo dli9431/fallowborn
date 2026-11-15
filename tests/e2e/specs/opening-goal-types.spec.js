@@ -41,11 +41,17 @@ test('JSON private goals distinguish earned work from savings and survive restor
     const retained = record === JSON.stringify(FB.state.stories[id]) && cash === FB.state.player.gold;
     const before = JSON.stringify(FB.state); FB.openingGoals.start(FB.state);
     const noIntroduction = before === JSON.stringify(FB.state);
-    delete saved.state.stories[id]; FB.save.restore(saved);
-    return { pure:pure, giftNotWork:giftNotWork, once:once, completed:t.goals.proof_earn.status, retained:retained,
+    delete saved.state.stories[id];
+    const current = FB.state, currentRng = FB.getRngState(), currentUid = FB.getUidCounter();
+    let sealedRejected = false; try { FB.save.restore(saved); } catch (_) { sealedRejected = true; }
+    sealedRejected = sealedRejected && current === FB.state && currentRng === FB.getRngState() && currentUid === FB.getUidCounter();
+    // An older campaign predates the sealed attachment inventory.
+    delete saved.storyAttachmentSchema;
+    delete saved.state.start.storyAttachments; FB.save.restore(saved);
+    return { sealedRejected:sealedRejected, pure:pure, giftNotWork:giftNotWork, once:once, completed:t.goals.proof_earn.status, retained:retained,
       noIntroduction:noIntroduction, absent:!FB.state.stories[id] };
   });
-  expect(result).toEqual({ pure:true, giftNotWork:true, once:true, completed:'completed', retained:true, noIntroduction:true, absent:true });
+  expect(result).toEqual({ sealedRejected:true, pure:true, giftNotWork:true, once:true, completed:'completed', retained:true, noIntroduction:true, absent:true });
 });
 
 for (const refusal of [false, true]) {

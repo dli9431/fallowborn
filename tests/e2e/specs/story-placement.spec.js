@@ -9,14 +9,14 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,[
   'index.html','data/actions.js','js/actions.js','js/stories.js','js/story_opening_goals.js',
   'js/story_household.js','js/ui_panels.js','js/ui_misc.js','js/mods.js','css/style.css',
-  'data/bookmark_634.js','data/starts_634_damascus.js','data/story_households_634_damascus.js',
+  'data/bookmark_manifest.js','data/bookmark_634.js','data/starts_634_damascus.js','data/story_households_634_damascus.js',
   'data/bookmark_1096.js','data/bookmark_1096_mainz.js','data/bookmark_1096_western_expeditions.js',
   'tests/e2e/support/game/story-placement.js',
   'tests/e2e/fixtures/authoring/story-placement-family.json',
   'tests/e2e/fixtures/authoring/story-placement-ledger.json'
 ]);
 
-const TRACK = 'damascus_household_track_634', GOALS = 'opening_damascus_634';
+const TRACK = 'damascus_household_full_634', GOALS = 'opening_damascus_full_634';
 
 async function beginDamascus(page,info) {
   await beginBookmark(page,info,'634','damascus_household_634');
@@ -68,7 +68,7 @@ test('Damascus entries lead Work & Wealth with goals beside the storyline and th
   await expect(work.locator('[data-story-card] .adesc')).toHaveCount(0);
   await expect(page.locator('#story-details-'+TRACK+' .deed-status-text')).toHaveText('Household and stores');
   await expect(page.locator('#story-details-'+GOALS+' .deed-status-text')).toHaveText('0 of 3 goals met');
-  await expect(page.locator('#story-details-'+TRACK)).toContainText('A craft household weighs its work');
+  await expect(page.locator('#story-details-'+TRACK)).toContainText('A Syriac Christian craft household considers work');
   // The story takes the section's first item key and opens the shared sheet.
   const sectionKey = await page.locator('#tab-actions [data-action-group="work"] .deed-section-keyhint').textContent();
   await page.keyboard.press('Digit' + sectionKey.trim());
@@ -146,9 +146,11 @@ for (const config of [
     await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring',config.file));
     await Promise.all([page.waitForEvent('load'),page.locator('#mod-apply').click()]);
     await prepareGameContent(page);
+    await page.evaluate(function () { FBDATA.bookmarks['634'].revision = 'core_identities_v3'; });
     await beginBookmarkFromTitle(page,'634','damascus_household_634');
-    expect([await storySection(page,TRACK),await storySection(page,GOALS)]).toEqual([config.track,config.goals]);
-    const card = await revealStoryCard(page,TRACK);
+    const track = 'damascus_household_track_634', goals = 'opening_damascus_634';
+    expect([await storySection(page,track),await storySection(page,goals)]).toEqual([config.track,config.goals]);
+    const card = await revealStoryCard(page,track);
     await expect(card).toContainText(config.icon + ' A living in Damascus');
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA.storyPlacements), signature = FB.mods.sig();

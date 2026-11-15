@@ -39,7 +39,7 @@ async function review(page,info,scenario,imported) {
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
     await prepareGameContent(page);
   } else await page.evaluate(function () {
-    // Owner review only in this browser context; shipped visibility stays hidden.
+    // Select the authored complete opening in this browser context.
     FBDATA.bookmarks['634'].revision='core_courts_v4';
     FBDATA.bookmarks['634'].revisions.core_courts_v4.hidden=false;
   });
@@ -53,11 +53,11 @@ function facts() {
       s.stories,s.holdings,s.property,s.population])};
 }
 
-test('complete hidden opening consumes each court once and preserves the selectable world',async function ({page},info) {
+test('complete opening consumes each court once and preserves the retained identity world',async function ({page},info) {
   await load(page,info);
   expect(await page.evaluate(function () { return Object.keys(FB.mods.retainedCatalogueRoots()); })).toContain('storyInstances');
   expect(await page.evaluate(function () {
-    const b=FB.bookmark('634','core_courts_v4'),old=FB.bookmark('634'),raw=FBDATA.bookmarks['634'];
+    const b=FB.bookmark('634','core_courts_v4'),old=FB.bookmark('634','core_identities_v3'),raw=FBDATA.bookmarks['634'];
     const rows=FBDATA.bookmarkRevisionContent_634_courts.realms.slice();
     'abcdefghijklmnopqrst'.split('').forEach(function (c) {
       Array.prototype.push.apply(rows,FBDATA['bookmarkRevisionContent_634_courts_'+c].realms);
@@ -65,7 +65,7 @@ test('complete hidden opening consumes each court once and preserves the selecta
     const same=function (a,b) { return JSON.stringify(a)===JSON.stringify(b); };
     const institutions=Object.keys(b.localInstitutions);
     const starts=FBDATA.startScenarios.filter(function (r) { return r.bookmarkIds && r.bookmarkIds.indexOf('634')>=0; });
-    return {fresh:old.revision,visible:FB.bookmarkAvailable('634'),hidden:b.hidden,
+    return {fresh:raw.revision,visible:FB.bookmarkAvailable('634'),hidden:b.hidden,
       counts:[b.provinces.length,b.provinces.filter(function (p) { return !p.wasteland; }).length,
         b.realms.length,Object.keys(b.duchies).length,Object.keys(b.kingdoms).length,Object.keys(b.empires).length],
       courts:rows.length===122 && new Set(rows.map(function (r) { return r.id; })).size===122 &&
@@ -82,15 +82,15 @@ test('complete hidden opening consumes each court once and preserves the selecta
       identities:starts.filter(function (r) { return ['umar_634','heraclius_634','damascus_household_634','ctesiphon_household_634'].indexOf(r.id)>=0; }).map(function (r) {
         const v=FB.startIdentity(r,b); return [r.id,v.startReligion,v.governmentForm || null];
       }).sort(),
-      held:!starts.some(function (r) { return /yazdegerd|jabala/.test(r.id); }),
+      held:!starts.some(function (r) { return /jabala/.test(r.id); }),
       fronts:['syrian_front_634','iraqi_front_634'].map(function (id) {
         return [id,!!FBDATA.storyInstances[id],b.stories.indexOf(id)>=0,old.stories.indexOf(id)>=0];
       }),
       baseline:raw.revisions.baseline};
-  })).toEqual({fresh:'core_identities_v3',visible:true,hidden:true,counts:[527,506,122,244,50,50],
+  })).toEqual({fresh:'core_courts_v4',visible:true,hidden:false,counts:[527,506,122,244,50,50],
     courts:true,landscape:true,layouts:true,earlierEmpty:true,
     institutions:['constantinople_see','jerusalem_see','rome_see','ctesiphon_catholicos_634','antioch_west_syriac_claim_634','alexandria_imperial_claim_634'],
-    scoped:true,actors:true,starts:['craftsman_634','ctesiphon_household_634','damascus_household_634','farmer_634','frontier_household_634','heraclius_634','medina_household_634','umar_634'],
+    scoped:true,actors:true,starts:['craftsman_634','ctesiphon_household_634','damascus_household_634','farmer_634','frontier_household_634','heraclius_634','medina_household_634','umar_634','yazdegerd_634'],
     identities:[['ctesiphon_household_634','east_syriac_local_634',null],['damascus_household_634','chalcedonian_local_634',null],
       ['heraclius_634','chalcedonian','administrative_monarchy'],['umar_634','medinan_court_634','medinan_selection_634']],held:true,fronts:[['syrian_front_634',true,true,false],['iraqi_front_634',true,true,false]],baseline:{}});
 });

@@ -47,6 +47,7 @@ async function beginCtesiphonFromTitle(page) {
 }
 async function beginBookmark(page,info) {
   await openGame(page,info); await prepareGameContent(page);
+  await page.evaluate(function () { FBDATA.bookmarks['634'].revision = 'core_identities_v3'; });
   await beginCtesiphonFromTitle(page);
 }
 
@@ -60,7 +61,7 @@ async function choose(page,choice) {
 test('selectable 634 owns a complete Ctesiphon household graph and actual resident identity', async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
-    const b = FB.bookmark('634'), raw = FBDATA.startScenarios.find(function (r) { return r.id === 'ctesiphon_household_634'; });
+    const b = FB.bookmark('634','core_identities_v3'), raw = FBDATA.startScenarios.find(function (r) { return r.id === 'ctesiphon_household_634'; });
     const sc = FB.startIdentity(raw,b);
     const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
     const errors = FB.validateBookmark(b), p = b.provinces.find(function (p) { return p.id === 'baghdad'; });
@@ -276,7 +277,7 @@ test('remote control and war context supply neither a local transfer notice nor 
 
 test('assembled Ctesiphon uses the actual ancient site, living court and resident faith without replay', async function ({page},info) {
   await openGame(page,info); await prepareGameContent(page);
-  expect(await page.evaluate(function () { return FB.bookmark('634','core_courts_v4').hidden; })).toBe(true);
+  expect(await page.evaluate(function () { return FB.bookmark('634','core_courts_v4').hidden; })).toBe(false);
   await page.evaluate(function () {
     FBDATA.bookmarks['634'].revision = 'core_courts_v4';
     FBDATA.bookmarks['634'].revisions.core_courts_v4.hidden = false;

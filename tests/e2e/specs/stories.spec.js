@@ -1,6 +1,15 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/bookmark_manifest.js',
+  'data/starts_568_ravenna.js','data/starts_rulers_568.js','data/starts_rulers_568_east.js',
+  'data/starts_634_ctesiphon.js','data/starts_634_rulers.js','data/starts_634_damascus.js',
+  'data/starts_634_frontier.js','data/starts_634_medina.js','data/start_ambitions_634.js',
+  'data/starts_pilgrim_1096.js','data/starts_valencia_1096.js','data/starts_antioch_1096.js',
+  'data/starts_western_rulers_1096.js','data/starts_eastern_rulers_1096.js','data/starts_mainz_1096.js','data/starts_tuscany_1096.js',
+  'data/starts_1241.js','data/starts_frederick_1241.js','data/starts_kyiv_refugees_1241.js',
+  'data/starts_novgorod_1241.js','data/starts_alexander_1241.js','data/starts_silesia_1241.js',
+  'data/starts_rulers_711.js','data/starts_rulers_800.js',
   'data/story_household_effects_711_800_1204.js',
   'data/story_household_effects_476_493.js', 'js/story_household_observer.js',
   'data/story_courts_476.js',
@@ -32,8 +41,8 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 
-async function startCode(page, testInfo, code) {
-  await openGame(page, testInfo);
+async function startCode(page, testInfo, code, loaded) {
+  if (!loaded) await openGame(page, testInfo);
   await page.evaluate(function () { FB.startProgression.noteTier(3); });
   const fullStartButton = page.locator('#btn-choose-beginning');
   if (await fullStartButton.isVisible()) await fullStartButton.click();
@@ -120,7 +129,61 @@ test('stories register in order at load time only and resolve by id',
     expect(result.late).toContain('load time only');
     expect(result.registered).toBe(false);
     expect(result.bookmark.filter(function (id) { return id.indexOf('household_effects_') !== 0; })).toEqual(WORLD_STORIES.concat(['cashel_recognition_476']));
-    expect(result.tracks).toEqual(['peroz_476:peroz_agenda_476','nepos_476:nepos_track_476','odoacer_476:odoacer_agenda_476','syagrius_476:syagrius_agenda_476','federate_476:federate_track_476','curialis_476:curialis_track_476','toledo_household_711:toledo_household_track_711','aachen_household_800:aachen_household_track_800','constantinople_household_1204:constantinople_household_track_1204','mobile_household_476:pontic_household_track_476','peroz_sasanian_476:peroz_agenda_476','muhammad_1204:muhammad_agenda_1204','siwa_delegate_1204:siwa_agenda_1204','constantinople_merchant_household_1204:constantinople_merchant_track_1204','thegn_household_1066:thegn_track_1066','york_household_867:york_household_track_867','crossing_soldier_711:crossing_soldier_track_711','baghdad_copyist_800:baghdad_copyist_track_800']);
+    expect(result.tracks).toEqual([
+      'peroz_476:peroz_agenda_476',
+      'nepos_476:nepos_track_476',
+      'odoacer_476:odoacer_agenda_476',
+      'syagrius_476:syagrius_agenda_476',
+      'federate_476:federate_track_476',
+      'curialis_476:curialis_track_476',
+      'toledo_household_711:toledo_household_track_711',
+      'aachen_household_800:aachen_household_track_800',
+      'constantinople_household_1204:constantinople_household_track_1204',
+      'mobile_household_476:pontic_household_track_476',
+      'peroz_sasanian_476:peroz_agenda_476',
+      'ravenna_household_568:ravenna_household_track_568',
+      'sigebert_568:sigebert_agenda_568',
+      'chilperic_568:chilperic_agenda_568',
+      'guntram_568:guntram_agenda_568',
+      'ctesiphon_household_634:ctesiphon_household_track_634',
+      'umar_634:umar_agenda_634',
+      'heraclius_634:heraclius_agenda_634',
+      'yazdegerd_634:yazdegerd_agenda_634',
+      'damascus_household_634:damascus_household_track_634',
+      'frontier_household_634:frontier_household_track_634',
+      'medina_household_634:medina_household_track_634',
+      'pilgrim_household_1096:pilgrim_household_track_1096',
+      'rodrigo_diaz_1096:valencia_agenda_1096',
+      'yaghi_siyan_1096:antioch_agenda_1096',
+      'godfrey_1096:godfrey_agenda_1096',
+      'raymond_1096:raymond_agenda_1096',
+      'bohemond_1096:bohemond_agenda_1096',
+      'alexios_1096:alexios_agenda_1096',
+      'kilij_arslan_1096:rum_agenda_1096',
+      'mainz_jewish_household_1096:mainz_household_track_1096,mainz_party_1096',
+      'matilda_1096:matilda_agenda_1096',
+      'muhammad_1204:muhammad_agenda_1204',
+      'siwa_delegate_1204:siwa_agenda_1204',
+      'hungarian_village_household_1241:hungarian_village_track_1241',
+      'koten_1241:koten_safety_1241',
+      'bela_1241:bela_agenda_1241',
+      'yaroslav_1241:yaroslav_agenda_1241',
+      'frederick_1241:frederick_agenda_1241',
+      'kyiv_refugee_household_1241:kyiv_refugee_track_1241',
+      'justin_568:justin_agenda_568',
+      'khosrow_568:khosrow_agenda_568',
+      'constantinople_merchant_household_1204:constantinople_merchant_track_1204',
+      'thegn_household_1066:thegn_track_1066',
+      'york_household_867:york_household_track_867',
+      'crossing_soldier_711:crossing_soldier_track_711',
+      'roderic_711:roderic_agenda_711',
+      'tariq_711:tariq_agenda_711',
+      'baghdad_copyist_800:baghdad_copyist_track_800',
+      'charlemagne_800:charlemagne_agenda_800',
+      'louis_800:louis_agenda_800',
+      'novgorod_household_1241:novgorod_household_track_1241',
+      'alexander_1241:alexander_household_1241',
+      'henry_pious_1241:silesia_agenda_1241']);
   });
 
 test('a branch save holding state.situation476 migrates once into both story records',
@@ -138,6 +201,8 @@ test('a branch save holding state.situation476 migrates once into both story rec
           copy.state.stories.federate_track_476, overrides || {});
         delete copy.state.situation476.railsSchema;
         delete copy.state.stories;
+        delete copy.state.start.storyAttachments;
+        delete copy.storyAttachmentSchema;
         // This legacy format predates opening records and their story references.
         delete copy.state.bookmarkSetup;
         return copy;
@@ -240,17 +305,21 @@ test('the start picker and family presets follow scenario data',
     await expect(federate).not.toHaveClass(/locked/);
     await expect(cards.filter({ hasText:'Observe' })).toHaveCount(1);
 
+    await page.locator('#btn-ng-back').click();
+    await page.locator('#btn-bm-back').click();
     for (const code of ['STORIES-476-serf-ravenna-m-Marcus',
       'STORIES-476-federate_476-ravenna-m-Marcus-elder-0-gothic.homoian',
       'STORIES-867-federate_476-ravenna-m-Marcus']) {
-      await startCode(page, testInfo, code);
+      await startCode(page, testInfo, code, true);
       await expect(page.locator('#ng-seed-err')).toHaveText(
         'That start code doesn’t parse — check it was copied whole.');
       await expect(page.locator('#chargen')).toHaveClass(/hidden/);
+      await page.locator('#ng-cancel').click();
+      await page.locator('#btn-bm-back').click();
     }
 
     /* Scenarios without a familyPresets map keep every shape. */
-    await startCode(page, testInfo, 'STORIES-867-farmer-london-m-Ada-elder');
+    await startCode(page, testInfo, 'STORIES-867-farmer-london-m-Ada-elder', true);
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await expect(page.locator('#cg-family label')).toHaveCount(3);
     await expect(page.locator('input[name=cg-family][value="elder"]')).toBeChecked();

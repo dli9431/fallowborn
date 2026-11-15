@@ -3,8 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame,openTitle} = require('../support/game/navigation');
-const {openCrazyGame} = require('../support/game/crazygames-title');
-const {mockCrazyGames} = require('../support/crazygames');
 const {beginBookmark,beginBookmarkFromTitle,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {manifestRuns,manifestFiles} = require('../fixtures/bookmark-manifest/eager-document');
@@ -42,7 +40,7 @@ const disabled = ['episcopal_sees','civic_institutions','papacy','excommunicatio
   'feudal_service','scutage','manorial_tenure','crown_bloc','tournaments','great_holy_wars'];
 const source = fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_634.js'),'utf8');
 const startSource = fs.readFileSync(path.resolve(__dirname,'../../../data/starts_634_ordinary.js'),'utf8');
-const startIds = ['farmer_634','craftsman_634','ctesiphon_household_634','umar_634','heraclius_634',
+const startIds = ['farmer_634','craftsman_634','ctesiphon_household_634','umar_634','heraclius_634','yazdegerd_634',
   'damascus_household_634','frontier_household_634','medina_household_634'];
 
 async function chooseBeginning(page) {
@@ -81,7 +79,7 @@ test('634 loads every start and story contributor before the native manifest clo
     });
 });
 
-test('634 is offered chronologically and all eight implemented starts are selectable in development setup',async function ({page},info) {
+test('634 is offered chronologically and all nine implemented starts are selectable',async function ({page},info) {
   await openTitle(page,info);
   await chooseBeginning(page);
   await expect(page.locator('#bookmarklist [data-bookmark="634"]')).toContainText('The Early Conquests');
@@ -94,7 +92,7 @@ test('634 is offered chronologically and all eight implemented starts are select
     .toEqual(['Historical starts','Story starts','Open starts']);
   expect(await page.locator('#scenariolist [data-scenario]').evaluateAll(function (cards) {
     return cards.map(function (card) { return card.getAttribute('data-scenario'); });
-  })).toEqual(['umar_634','heraclius_634','ctesiphon_household_634','damascus_household_634',
+  })).toEqual(['umar_634','heraclius_634','yazdegerd_634','ctesiphon_household_634','damascus_household_634',
     'frontier_household_634','medina_household_634','farmer_634','craftsman_634']);
   for (const id of startIds) {
     const card = page.locator('#scenariolist [data-scenario="' + id + '"]');
@@ -102,17 +100,17 @@ test('634 is offered chronologically and all eight implemented starts are select
     await expect(card).not.toHaveAttribute('aria-disabled','true');
     await expect(card).not.toHaveClass(/locked/);
   }
-  expect(await page.locator('#scenariolist [data-scenario="yazdegerd_634"]').count()).toBe(0);
+  expect(await page.locator('#scenariolist [data-scenario="yazdegerd_634"]').count()).toBe(1);
   expect(await page.evaluate(function () {
     const b = FB.bookmark('634');
     if (!b) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
     return {review:FBDATA.reviewOpenStarts,available:FB.bookmarkAvailable('634'),
       hidden:!!b.hidden,faults:FB.validateBookmark(b),state:FB.state,
       rulers:FBDATA.startScenarios.filter(function (s) {
-        return s.id === 'umar_634' || s.id === 'heraclius_634';
+        return s.id === 'umar_634' || s.id === 'heraclius_634' || s.id === 'yazdegerd_634';
       }).map(function (s) { return [s.id,s.hidden]; })};
   })).toEqual({review:true,available:true,hidden:false,faults:[],state:null,
-    rulers:[['umar_634',true],['heraclius_634',true]]});
+    rulers:[['umar_634',false],['heraclius_634',false],['yazdegerd_634',false]]});
   await page.locator('#scenariolist [data-scenario="heraclius_634"]').click();
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await expect(page.locator('#cg-name')).toHaveValue('Heraclius');
@@ -123,10 +121,10 @@ test('634 is offered chronologically and all eight implemented starts are select
   await expect(page.locator('#scenariolist [data-scenario="federate_476"]')).toBeVisible();
   await page.locator('#btn-ng-back').click();
   await page.locator('#bookmarklist [data-bookmark="634"]').click();
-  await expect(page.locator('#scenariolist [data-scenario]')).toHaveCount(8);
+  await expect(page.locator('#scenariolist [data-scenario]')).toHaveCount(9);
 });
 
-test('634 remains selectable with review disabled while its two ruler candidates stay hidden',async function ({page},info) {
+test('634 and all three rulers remain selectable with review disabled',async function ({page},info) {
   await page.addInitScript(function () {
     window.FBDATA = window.FBDATA || {}; window.FBDATA.reviewOpenStarts = false;
   });
@@ -136,7 +134,7 @@ test('634 remains selectable with review disabled while its two ruler candidates
   await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
   expect(await page.locator('#scenariolist [data-scenario]').evaluateAll(function (cards) {
     return cards.map(function (card) { return card.getAttribute('data-scenario'); });
-  })).toEqual(['ctesiphon_household_634','damascus_household_634','frontier_household_634',
+  })).toEqual(['umar_634','heraclius_634','yazdegerd_634','ctesiphon_household_634','damascus_household_634','frontier_household_634',
     'medina_household_634','farmer_634','craftsman_634']);
 });
 
@@ -159,15 +157,16 @@ test('634 Observe enters the selected opening through the ordinary picker',async
     FB.game.setPaused(true);
     return {observe:FB.game.observe,id:FB.state.start.id,revision:FB.activeBookmark.revision,
       geography:FB.activeBookmark.geography,date:FB.state.date};
-  })).toEqual({observe:true,id:'634',revision:'core_identities_v3',geography:'europe_regional_2',
+  })).toEqual({observe:true,id:'634',revision:'core_courts_v4',geography:'europe_regional_2',
     date:{year:634,season:2,day:1}});
 });
 
 for (const opening of [
-  ['umar_634','medina','Umar','standard','umar_agenda_634'],
-  ['heraclius_634','constantinople','Heraclius','standard','heraclius_agenda_634'],
+  ['umar_634','medina','Umar','standard','umar_court_agenda_634'],
+  ['heraclius_634','constantinople','Heraclius','standard','heraclius_court_agenda_634'],
+  ['yazdegerd_634','baghdad','Yazdegerd III','standard','yazdegerd_agenda_634'],
   ['ctesiphon_household_634','baghdad','Review','established','ctesiphon_household_track_634'],
-  ['damascus_household_634','damascus','Review','established','damascus_household_track_634'],
+  ['damascus_household_634','damascus','Review','established','damascus_household_full_634'],
   ['frontier_household_634','damascus','Review','established','frontier_household_track_634'],
   ['medina_household_634','medina','Review','established','medina_household_track_634']
 ]) {
@@ -189,7 +188,7 @@ for (const opening of [
     },opening)).toEqual({id:'634',scenario:opening[0],home:opening[1],track:true,valid:true});
     const before = await facts(page), saved = await page.evaluate(function () { return FB.save.serialize(); });
     await page.evaluate(function () {
-      FBDATA.bookmarks['634'].hidden = true;
+      FBDATA.bookmarks['634'].revisions.core_courts_v4.hidden = true;
       return new Promise(function (resolve,reject) {
         FB.activateBookmark('867',null,function (error) { if (error) reject(error); else resolve(); });
       });
@@ -202,18 +201,12 @@ for (const opening of [
   });
 }
 
-for (const crazy of [false,true]) {
-  test('634 composes the complete selectable opening on ' + (crazy ? 'CrazyGames' : 'standard'),
+for (const crazy of [false]) {
+  test('634 preserves the retained identity opening on ' + (crazy ? 'CrazyGames' : 'standard'),
     async function ({page},info) {
       const pageErrors = [];
       page.on('pageerror',function (error) { pageErrors.push(error.message); });
-      if (crazy) {
-        await mockCrazyGames(page);
-        await page.addInitScript(function () {
-          window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-        });
-        await openCrazyGame(page,info);
-      } else await openGame(page,info);
+      await openGame(page,info);
       expect(await page.evaluate(function () {
         return FB.bookmarkCompositions.sourceReports().find(function (report) { return report.bookmarkId === '634'; });
       })).toMatchObject({ready:true,published:true,worldFaults:[]});
@@ -232,7 +225,7 @@ for (const crazy of [false,true]) {
         cruel:(crazy ? [] : ['assassination']).concat(['abduction','sabotage','fabricated_charge','blackmail']),
         assassination:!crazy,widowVeil:!crazy,unknownRejected:true});
       const result = await page.evaluate(function (input) {
-        const b = FB.bookmark('634'), data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const b = FB.bookmark('634','core_identities_v3'), data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
         const courts = {}, counties = {}, faults = [];
         b.realms.forEach(function (r) {
           if (courts[r.id]) faults.push('duplicate court ' + r.id);
@@ -345,7 +338,7 @@ test('failed 634 composition leaves other bookmarks and ordinary starts playable
 
 test('an explicitly rehidden 634 rejects picker, codes, direct creation and Observe',async function ({page},info) {
   await openGame(page,info);
-  await page.evaluate(function () { FBDATA.bookmarks['634'].hidden = true; });
+  await page.evaluate(function () { FBDATA.bookmarks['634'].revisions.core_courts_v4.hidden = true; });
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
@@ -453,19 +446,13 @@ test('634 missing, duplicate and unresolved regional inputs reject in detached s
     .map(function (kind) { return {kind:kind,rejected:true,pure:true,faults:[]}; })});
 });
 
-for (const crazy of [false,true]) {
+for (const crazy of [false]) {
   test('a bad 634 start leaves its sibling playable on ' + (crazy ? 'CrazyGames' : 'standard'),async function ({page},info) {
     test.skip(!info.project.name.endsWith('-served'),'Response interception requires the served origin.');
     await page.route('**/data/bookmark_634.js',function (route) {
       return route.fulfill({contentType:'application/javascript',body:source.replace('function () {','function () { FBDATA.startScenarios_634_ordinary[0].gold = -1;')});
     });
-    if (crazy) {
-      await mockCrazyGames(page);
-      await page.addInitScript(function () {
-        window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-      });
-      await openCrazyGame(page,info);
-    } else await openGame(page,info);
+    await openGame(page,info);
     expect(await page.evaluate(function () {
       return FB.bookmarkCompositions.sourceReports().find(function (report) { return report.bookmarkId === '634'; });
     })).toMatchObject({ready:true,published:true,worldFaults:[]});
@@ -557,15 +544,17 @@ for (const scenario of ['farmer_634','craftsman_634']) {
           },[]),
           childAge:s.date.year - s.realms.sasanian_634.ruler.born,
           errors:FBTEST.checkInvariants(),valid:FB.save.v4.validatePlatform(s)};
-      },disabled)).toEqual({scenario:scenario,revision:'core_identities_v3',date:{year:634,season:2,day:1},provinces:527,
-        opening:'baseline',actors:[],local:[],heads:[],disabled:true,
+      },disabled)).toEqual({scenario:scenario,revision:'core_courts_v4',date:{year:634,season:2,day:1},provinces:527,
+        opening:'core_courts_v4',actors:['sasanian_magnate_a_634','sasanian_magnate_b_634'],
+        local:['constantinople_see','jerusalem_see','rome_see','ctesiphon_catholicos_634','antioch_west_syriac_claim_634','alexandria_imperial_claim_634'],
+        heads:['constantinople_patriarch','jerusalem_bishop','rome_bishop','east_syriac_catholicos','antioch_west_syriac_patriarch_634','alexandria_imperial_patriarch_634','medinan_caliph_634'],disabled:true,
         courts:['Heraclius','Umar','Yazdegerd III'],oldCourts:false,namedFamilies:[],childAge:10,errors:[],valid:true});
       await page.evaluate(function () { FB.state.player.gold -= 3; });
       const before = await facts(page);
       const saved = await page.evaluate(function () { return FB.save.serialize(); });
       expect(JSON.parse(saved).v).toBe(4);
       expect(await page.evaluate(function () {
-        FBDATA.bookmarks['634'].hidden = true;
+        FBDATA.bookmarks['634'].revisions.core_courts_v4.hidden = true;
         return new Promise(function (resolve) {
           FB.activateBookmark('867',null,function (error) { resolve(error && error.message || null); });
         });

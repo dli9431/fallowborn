@@ -285,7 +285,6 @@ test('daily accounting sustains the Amal host through one season with random ris
   await start(page, testInfo, '476');
   const opening = await page.evaluate(function () {
     FB.game.observe = true;
-    delete FB.state.stories.federate_track_476; delete FB.state.stories.opening_federate_476;
     // Isolate the funding journey from random mortality and diplomacy. Dates,
     // treasury, provisions and armies tick normally.
     window.wave5OriginalChance = FB.chance;
@@ -430,6 +429,9 @@ for (const commissioned of [false,true]) {
         const issuerGeneration = FB.realmRulerGeneration(s, 'byzantium');
         const saved = JSON.parse(FB.save.serialize());
         // This legacy campaign predates the declaration-owned opening actors.
+        // Older campaigns have no sealed attachment inventory.
+        delete saved.storyAttachmentSchema;
+        delete saved.state.start.storyAttachments;
         delete saved.state.bookmarkSetup;
         const old = saved.state.stories.western_court_476;
         delete old.railsSchema;

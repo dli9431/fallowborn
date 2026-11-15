@@ -1,10 +1,11 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['index.html', 'data/starts_claimants_1066.js', 'data/story_households_1066.js',
+dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html', 'data/starts_claimants_1066.js', 'data/story_households_1066.js',
   'data/starts.js', 'data/bookmarks.js', 'data/bookmark_1066_inhabited.js', 'data/government_rollout.js',
   'data/travel.js', 'data/events_travel.js', 'data/technology.js', 'data/actions.js',
   'js/starts.js', 'js/mods.js', 'js/world.js', 'js/main.js', 'js/stories.js', 'js/story_household.js',
@@ -17,6 +18,18 @@ const COURTS = [
   { id:'harald_1066', name:'Harald Hardrada', label:'Harald Hardrada of Norway', realm:'norway_1066', county:'trondheim', age:51, culture:'norse', tier:6, liege:null }
 ];
 
+// Keep activation outside the synchronous restore guard, then resume the proof.
+async function evaluateAcrossBookmark(page, compute, argument) {
+  await installRestoreFacts(page);
+  await page.evaluate(compute, argument);
+  const checkpoint = await page.evaluate(function () { return window.__startRestoreSave; });
+  await restoreBookmark(page, checkpoint);
+  expect(await page.evaluate(function () {
+    return [FB.getRngState() >>> 0, FB.getUidCounter()];
+  })).toEqual(await page.evaluate(function () { return window.__startRestoreSequence; }));
+  return page.evaluate(function () { return window.__afterStartRestore(); });
+}
+
 async function startCourt(page, info, court) {
   await useReleasedStartRules(page);
   await openGame(page, info);
@@ -24,12 +37,21 @@ async function startCourt(page, info, court) {
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#bookmarklist [data-bookmark="1066"]').click();
-  await expect(page.getByRole('button', { name:court.label, exact:true })).toBeVisible();
+  await expect(page.locator('[data-scenario="' + court.id + '"]')).toBeVisible();
+  await page.locator('#btn-ng-back').click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill('COURT-1066-' + court.id + '-' + court.county + '-m-' + court.name.replace(/ /g, '_'));
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#cg-name')).toHaveValue(court.name);
   await expect(page.locator('#cg-name')).toHaveAttribute('readonly', '');
+  await page.evaluate(function () {
+    const adopt = FB.adoptStartingRealm;
+    FB.adoptStartingRealm = function (s, scenario, options) {
+      window.__courtTerritory1066 = JSON.parse(JSON.stringify({ owner:s.owner, holder:s.holder }));
+      FB.adoptStartingRealm = adopt;
+      return adopt(s,scenario,options);
+    };
+  });
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
   await page.getByRole('button', { name:'Begin', exact:true }).click();
 }
@@ -37,15 +59,20 @@ async function startCourt(page, info, court) {
 for (const court of COURTS) {
   test(court.id + ' adopts the real court through the picker and code, preserving its realm and save', async function ({ page }, info) {
     await startCourt(page, info, court);
-    expect(await page.evaluate(function (def) {
+    expect(await evaluateAcrossBookmark(page, function (def) {
       const s = FB.state, me = s.chars[s.player.charId], p = s.player;
-      const territory = FB.campaignBookmark(s).provinces.filter(function (r) { return r.realm === def.realm; })
-        .map(function (r) { return r.id; }).sort();
-      const actual = Object.keys(s.owner).filter(function (id) { return s.owner[id] === 'player'; }).sort();
+      const territory = window.__courtTerritory1066;
+      function mapped(field) {
+        const keys = Object.keys(territory[field]);
+        return keys.length === Object.keys(s[field]).length && keys.every(function (id) {
+          const original = territory[field][id];
+          return s[field][id] === (original === def.realm ? 'player' : original);
+        });
+      }
       const unique = Object.values(s.chars).filter(function (c) { return c.name === def.name && !c.dead; }).length;
       const facts = { name:me.name, age:FB.ageOf(me,s.date.year), faith:me.religion, culture:me.culture,
         tier:p.tier, liege:p.liege, realm:p.realmId, source:s.start.rulerRealmId, unique,
-        noDuplicate:!s.realms[def.realm], territory:JSON.stringify(territory) === JSON.stringify(actual),
+        noDuplicate:!s.realms[def.realm], territory:mapped('owner') && mapped('holder'),
         mapped:FB.startRealmId(s, def.realm), form:FB.political.government(s,{ kind:'realm',id:'player' }).formId,
         noHousehold:!s.stories || !s.stories.thegn_track_1066 };
       const saved = JSON.parse(FB.save.serialize());
@@ -53,10 +80,14 @@ for (const court of COURTS) {
         const c = state.chars[state.player.charId];
         return [state.owner,state.holder,state.player.gold,state.player.liege,c.id,c.spouseId,c.childrenIds,state.realms.player];
       }
-      const before = JSON.stringify(snapshot(saved.state));
-      FB.activateBookmark('867'); FB.save.restore(saved);
-      facts.retained = before === JSON.stringify(snapshot(FB.state));
-      return facts;
+      const before = window.restoreFacts(FB.state,snapshot);
+      window.__startRestoreSave = JSON.stringify(saved);
+      window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+      FB.activateBookmark('867');
+      window.__afterStartRestore = function () {
+        facts.retained = before === window.restoreFacts(FB.state,snapshot);
+        return facts;
+      };
     }, court)).toMatchObject({ name:court.name, age:court.age, faith:'catholic', culture:court.culture,
       tier:court.tier, liege:court.liege, source:court.realm, unique:1, noDuplicate:true,
       territory:true, mapped:'player', form:'territorial', noHousehold:true, retained:true });

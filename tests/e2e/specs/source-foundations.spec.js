@@ -46,7 +46,7 @@ test('unchanged native foundations avoid full JSON scans throughout title boot',
   expect(result.scans).toBe(result.beforeSeal);
   expect(result.ready).toBe(true);
   expect(result.published).toBe(false);
-  expect(result.dates).toEqual(['476','568','711','800','867','1066','1096','1204','1241']);
+  expect(result.dates).toEqual(['476','568','634','711','800','867','1066','1096','1204','1241']);
 });
 
 test('foundation reuse still observes nested public edits and preserves private contributions',async function ({page},info) {

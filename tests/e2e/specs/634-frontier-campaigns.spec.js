@@ -119,12 +119,12 @@ async function roundTrip(page) {
   expect(second.facts===before.facts,'All campaign facts survive re-save and second restore exactly').toBe(true);
 }
 
-test('only the hidden assembled revision attaches two independent district opportunities',async function ({page},info) {
+test('only the complete revision attaches two independent district opportunities',async function ({page},info) {
   await load(page,info);
   expect(await page.evaluate(function () {
-    const b=FB.bookmark('634','core_courts_v4'),old=FB.bookmark('634');
+    const b=FB.bookmark('634','core_courts_v4'),old=FB.bookmark('634','core_identities_v3');
     const defs=['syrian_front_634','iraqi_front_634'].map(function (id) { return FB.stories.get(id).declaration; });
-    return {fresh:old.revision,hidden:b.hidden,available:FB.bookmarkAvailable('634'),
+    return {fresh:FB.bookmark('634').revision,hidden:b.hidden,available:FB.bookmarkAvailable('634'),
       older:FB.bookmarkRevisions('634').filter(function (r) { return r.revision!=='core_courts_v4'; }).every(function (r) {
         return !r.stories.some(function (id) { return /^(syrian|iraqi)_front_634$/.test(id); });
       }),sameOpening:JSON.stringify(b.provinces)===JSON.stringify(old.provinces),
@@ -132,11 +132,12 @@ test('only the hidden assembled revision attaches two independent district oppor
       owners:['damascus','kufa'].map(function (id) { return b.provinces.find(function (p) { return p.id===id; }).realm; }),
       attached:defs.every(function (d) { return b.stories.filter(function (id) { return id===d.id; }).length===1; }),
       tech:['campaign_ordinary_admission','period_634_syrian_front','period_634_iraqi_front'].map(function (id) { return FBDATA.techImpactReviews.features[id].mode; }),
-      excluded:!FBDATA.startScenarios.some(function (r) { return /yazdegerd|jabala/.test(r.id); })};
-  })).toEqual({fresh:'core_identities_v3',hidden:true,available:true,older:true,sameOpening:true,
+      excluded:!FBDATA.startScenarios.some(function (r) { return /jabala/.test(r.id); })};
+  })).toEqual({fresh:'core_courts_v4',hidden:false,available:true,older:true,sameOpening:true,
     targets:[['syrian_front_634','rashidun_634','damascus',['byzantium_634'],360,[],[],false],
       ['iraqi_front_634','rashidun_634','kufa',['sasanian_634'],180,[],[],false]],
     owners:['byzantium_634','sasanian_634'],attached:true,tech:['none','none','none'],excluded:true});
+  await page.evaluate(function () { FBDATA.bookmarks['634'].revision = 'core_identities_v3'; });
   await beginBookmarkFromTitle(page,'634','farmer_634');
   expect(await page.evaluate(function () { return ['syrian_front_634','iraqi_front_634'].every(function (id) { return !FB.state.stories[id]; }); })).toBe(true);
 });

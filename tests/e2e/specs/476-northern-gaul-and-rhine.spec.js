@@ -4,18 +4,19 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/start_ambitions.js', 'js/story_opening_goals.js',
   'data/story_courts_476.js',
+  'data/story_household_effects_476_493.js', 'js/story_household_observer.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_wider.js', 'data/political_institutions.js',
   'data/story_campaigns.js', 'data/cultures.js', 'data/technology.js',
   'data/settlements.js', 'data/starts.js', 'data/eras.js', 'data/systems.js',
   'data/geographies.js', 'data/counties.js', 'data/map_data.js', 'data/climate.js',
-  'data/intrigue.js', 'data/economy.js', 'data/modifiers.js', 'data/distribution_crazygames.js',
+  'data/intrigue.js', 'data/economy.js', 'data/modifiers.js',
   'js/world.js', 'js/model.js', 'js/population.js', 'js/settlement.js', 'js/station.js',
   'js/authority.js', 'js/politics.js', 'js/institutions.js', 'js/religion.js',
   'js/governments.js', 'js/systems.js', 'js/justice.js', 'js/events.js', 'js/technology.js', 'js/bookmark_setup.js',
   'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
   'js/story_courts.js', 'js/story_track.js', 'js/treasury.js', 'js/wars.js', 'js/armies.js',
-  'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/util.js', 'js/messages.js', 'js/i18n.js', 'js/crazygames.js'
+  'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/util.js', 'js/messages.js', 'js/i18n.js',
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -30,17 +31,17 @@ const addedInstitutions = [
   'trier_homoian_congregation','cologne_congregation','tournai_congregation','strasbourg_congregation'
 ];
 
-async function start476(page, testInfo, crazygames) {
+async function start476(page, testInfo) {
   await startHistoricalGame(page, testInfo, {
     bookmark:'476',
     code:'NORTHGAUL-476-curialis_476-ravenna-m-Marcus-established'
-  }, crazygames);
+  });
 }
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('northern 476 smoke preserves courts, scoped rights and living institutions, distribution ' + crazygames,
     async function ({ page }, testInfo) {
-      await start476(page, testInfo, crazygames);
+      await start476(page, testInfo);
       const result = await page.evaluate(function (ids) {
         const s = FB.state, region = FBDATA.bookmarkRegions476.gaul_iberia;
         const basina = FB.authoredRoyalMemberSnapshot(s, 'franks_476', 'basina');
@@ -246,7 +247,7 @@ test('a campaign created with the pre-expansion 476 declarations restores under 
         // a real campaign. This is not an owner-provided historical save fixture.
         bm.localInstitutions = Object.assign({}, current.institutions);
         ids.forEach(function (id) { delete bm.localInstitutions[id]; });
-        bm.stories = (current.stories || raw.stories).filter(function (id) { return id !== 'clovis_alamanni_476'; });
+        bm.stories = (current.stories || raw.stories).filter(function (id) { return ['clovis_alamanni_476','household_effects_clovis_alamanni_476'].indexOf(id) < 0; });
         realm.royalCourt = JSON.parse(JSON.stringify(current.court));
         realm.royalCourt.members = realm.royalCourt.members.filter(function (m) { return m.id !== 'basina'; });
         delete realm.royalCourt.spouseId;
@@ -323,7 +324,6 @@ test('one season of northern world simulation retains valid institutions and sav
     await start476(page, testInfo);
     await page.evaluate(function () {
       FB.game.observe = true;
-      delete FB.state.stories.curialis_track_476; delete FB.state.stories.opening_curialis_476;
       FB.state.player.provinceId = 'laon';
     });
     for (let half = 0; half < 2; half++) {

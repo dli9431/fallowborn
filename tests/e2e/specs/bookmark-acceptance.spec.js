@@ -1,7 +1,7 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark, advanceBookmark, restoreBookmark, facts } = require('../support/game/bookmark-acceptance');
+const { beginBookmark, beginBookmarkFromTitle, advanceBookmark, restoreBookmark, facts } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 // This whole-runtime smoke canary intentionally covers every registered date.
 dependsOnRuntime(__filename, ['index.html', 'data', 'js', 'css']);
@@ -14,7 +14,7 @@ const path = require('path');
 // and browser-storage overhead. Budgets are acceptance ceilings, not measured
 // claims. Each owner run attaches actual checkpoint and final byte counts.
 const SAVE_BUDGETS = { fresh:4 * 1024 * 1024, checkpoint:6 * 1024 * 1024, continued:6 * 1024 * 1024 };
-const BOOKMARK_IDS = ['476','493','568','711','800','867','1066','1096','1204','1241'];
+const BOOKMARK_IDS = ['476','493','568','634','711','800','867','1066','1096','1204','1241'];
 
 test('every authored bookmark data file is loaded and the authoring template is unloaded', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -95,7 +95,12 @@ for (const id of BOOKMARK_IDS) {
         FB.activateBookmark(other, null, function (error) { if (error) reject(error); else resolve(); });
       });
     }, ids.find(function (other) { return other !== id; }));
-    await page.evaluate(function (id) { FB.bookmark(id).hidden = true; }, id);
+    expect(await page.evaluate(function (id) {
+      const raw = FBDATA.bookmarks[id], selected = FB.bookmark(id);
+      if (raw.revisions && raw.revisions[selected.revision]) raw.revisions[selected.revision].hidden = true;
+      else raw.hidden = true;
+      return FB.bookmark(id).hidden;
+    }, id)).toBe(true);
     await restoreBookmark(page, checkpoint);
     expect(await facts(page)).toEqual(checkpointFacts);
     await advanceBookmark(page, 45);
@@ -177,12 +182,24 @@ test('711 public recognition remains serializable at the annual boundary', async
 
 test('a persisted data-only mod supplies a different campaign and independent institution seeds', async function ({ page }, testInfo) {
   await installStoryProof(page);
-  // Load the literal JSON through the ordinary stored-mod boot boundary.
-  await page.addInitScript(function (source) { localStorage.setItem('fb_mods', JSON.stringify([source])); }, JSON.stringify(proofMod));
-  await beginBookmark(page, testInfo, 'proof_bookmark', 'proof_coastal');
+  await openGame(page, testInfo);
+  // These ordinary roles keep their county bindings without claiming a personal storyline.
+  const mod = JSON.parse(JSON.stringify(proofMod)), world = mod.bookmarks.proof_bookmark;
+  world.startLocations = {};
+  mod.startScenarios.forEach(function (row) {
+    world.startLocations[row.id] = [row.fixedProvinceId];
+    delete row.fixedProvinceId;
+  });
+  // Keep the installed story source and add the independent campaign through Mods.
+  expect(await page.evaluate(function (input) { FB.mods.assertReady(); return FB.mods.validate(input); },mod)).toEqual([]);
+  await page.evaluate(function () { FB.ui.showMods(); });
+  await page.locator('#modfile').setInputFiles({name:'proof-mod.json',mimeType:'application/json',
+    buffer:Buffer.from(JSON.stringify(mod),'utf8')});
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await beginBookmarkFromTitle(page, 'proof_bookmark', 'proof_coastal');
   const opening = await page.evaluate(function () {
     const s = FB.state, bishop = FB.religiousOfficeSnapshot(s, 'rome_bishop');
-    return { date:s.date.year, owner:s.owner.rennes, culture:FB.world.byId.rennes.culture,
+    return { date:s.date.year, home:s.player.provinceId, owner:s.owner.rennes, culture:FB.world.byId.rennes.culture,
       playerCulture:s.chars[s.player.charId].culture,
       bishop:bishop.name, vacant:s.religiousHeads.constantinople_patriarch === null,
       stories:FB.stories.attached(s), signature:FB.mods.sig(),
@@ -190,11 +207,12 @@ test('a persisted data-only mod supplies a different campaign and independent in
       communities:FB.bookmark('proof_bookmark').provinces.filter(function (p) {
         return p.realm === 'proof_coast';
       }).map(function (p) { return { id:p.id, communities:p.communities }; }),
+      locations:FB.bookmark('proof_bookmark').startLocations,
       starts:FB.bookmark('proof_bookmark').starts, errors:FB.validateBookmark(FB.bookmark('proof_bookmark')) };
   });
-  expect(opening).toMatchObject({ date:500, owner:'proof_coast', culture:'proof_culture',
+  expect(opening).toMatchObject({ date:500, home:'rennes', owner:'proof_coast', culture:'proof_culture',
     playerCulture:'proof_culture', bishop:'Proof Roman bishop', vacant:true,
-    starts:['proof_farmer','proof_coastal'], errors:[] });
+    starts:['proof_farmer','proof_coastal'],locations:{proof_farmer:['ravenna'],proof_coastal:['rennes']}, errors:[] });
   // Independent attachments follow declaration registration anchors, not
   // the bookmark list's order. Require the exact declared story set.
   expect(opening.stories.slice().sort()).toEqual(proofMod.bookmarks.proof_bookmark.stories.slice().sort());

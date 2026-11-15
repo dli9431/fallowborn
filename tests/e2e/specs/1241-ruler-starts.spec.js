@@ -1,4 +1,6 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {useReleasedStartRules} = require('../support/game/released-starts');
@@ -7,7 +9,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,[
   'data/bookmark_1241_core_starts.js','data/story_koten_1241.js',
   'data/bookmark_1241_alexander.js','data/starts_alexander_1241.js','data/story_alexander_1241.js',
-  'data/bookmark_1241_operations.js','index.html','data/bookmark_1241.js','data/bookmark_1241_scaffold_a.js',
+  'data/bookmark_1241_operations.js','js/bookmark_composition.js','index.html','data/bookmark_1241.js','data/bookmark_1241_scaffold_a.js',
   'data/bookmark_1241_scaffold_b.js','data/bookmark_1241_scaffold_c.js','data/bookmark_1241_scaffold_d.js',
   'data/starts_1241.js','data/story_ruler_agendas_1241.js','data/identities_1241.js',
   'data/story_instances.js','data/story_ruler_agendas.js','data/eras.js','data/government_rollout.js',
@@ -25,11 +27,24 @@ const openings = [
     family:['Alexander Yaroslavich','Andrei Yaroslavich','Daughter of Bryachislav','Feodosia'],contacts:3}
 ];
 
-async function beginRuler(page,info,row,code) {
+// Keep activation outside the synchronous restore guard, then resume the proof.
+async function evaluateAcrossBookmark(page, compute, argument) {
+  await installRestoreFacts(page);
+  await page.evaluate(compute, argument);
+  const checkpoint = await page.evaluate(function () { return window.__startRestoreSave; });
+  await restoreBookmark(page, checkpoint);
+  expect(await page.evaluate(function () {
+    return [FB.getRngState() >>> 0, FB.getUidCounter()];
+  })).toEqual(await page.evaluate(function () { return window.__startRestoreSequence; }));
+  return page.evaluate(function () { return window.__afterStartRestore(); });
+}
+
+async function beginRuler(page,info,row,code,revision) {
   await useReleasedStartRules(page);
   await openGame(page,info);
-  await page.evaluate(function () {
+  await page.evaluate(function (revision) {
     FB.startProgression.noteTier(3);
+    if (revision) FBDATA.bookmarks['1241'].revision = revision;
     const adopt = FB.adoptStartingRealm;
     FB.adoptStartingRealm = function (s,sc,options) {
       const me = s.chars[s.player.charId], realm = s.realms[sc.rulerRealmId];
@@ -39,7 +54,7 @@ async function beginRuler(page,info,row,code) {
       FB.adoptStartingRealm = adopt;
       return adopt(s,sc,options);
     };
-  });
+  },revision || null);
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
@@ -49,14 +64,17 @@ async function beginRuler(page,info,row,code) {
     await page.locator('#ng-seed').press('Enter');
   } else {
     await page.locator('#bookmarklist [data-bookmark="1241"]').click();
-    await page.getByRole('button',{name:row.title,exact:true}).click();
+    await page.locator('[data-scenario="'+row.id+'"]').click();
   }
   await expect(page.locator('#cg-name')).toHaveValue(row.name);
   await expect(page.locator('#cg-name')).toHaveAttribute('readonly','');
   await expect(page.locator('input[name=cg-family]')).toHaveCount(1);
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
-  await page.evaluate(function () { FB.game.setPaused(true); });
+  await page.evaluate(function () {
+    FB.game.setPaused(true); FB.game.uiPrefs.hideTips = true;
+    FB.game.uiPrefs.hideBeginnerHints = true; delete FB.state.player.flags.tutorial;
+  });
 }
 
 test('the current and retained 1241 revisions validate with separate households and settlement slots',async function ({page},info) {
@@ -83,24 +101,28 @@ for (const row of openings) {
   for (const code of [false,true]) {
     test(row.id+' adopts its existing family through '+(code?'a shared code':'the historical card'),async function ({page},info) {
       await beginRuler(page,info,row,code);
-      expect(await page.evaluate(function (row) {
+      expect(await evaluateAcrossBookmark(page, function (row) {
         const s = FB.state, me = s.chars[s.player.charId], before = window.__rulerBeforeAdoption;
         const site = FB.settlementsOf(s,row.county)[s.player.homeSettlement];
         const goals = s.stories[row.profile], people = FB.stories.get(row.profile).people(s,goals);
         function identity(c) { return [c.id,c.name,c.born,c.dyn,c.skills,c.spouseId,c.childrenIds]; }
         const save = JSON.parse(FB.save.serialize());
-        function snapshot(state) { return JSON.stringify([state.start,state.owner,state.holder,state.player,state.chars,state.stories,state.bookmarkSetup]); }
-        const saved = snapshot(s);
-        FB.activateBookmark('867'); FB.save.restore(save);
-        return {name:me.name,born:me.born,tier:s.player.tier,rank:s.realms.player.rank,home:s.player.provinceId,site:site.site,
-          physical:FB.provinceAtGrid(site.x,site.y).id,
-          adopted:JSON.stringify(identity(me)) === JSON.stringify(identity(before.me)),treasury:s.player.gold === before.treasury,
-          sourceGone:!s.realms[row.realm],single:Object.values(s.chars).filter(function (c) { return c.name === row.name && !c.dead; }).length,
-          owners:JSON.stringify(before.owned) === JSON.stringify(Object.keys(s.owner).filter(function (id) { return s.owner[id] === 'player'; }).sort()),
-          holders:JSON.stringify(before.held) === JSON.stringify(Object.keys(s.holder).filter(function (id) { return s.holder[id] === 'player'; }).sort()),
-          family:row.family.map(function (name) { return Object.values(s.chars).filter(function (c) { return c.name === name && !c.dead; }).length; }),
-          contacts:people.length,linked:people.every(function (p) { return !!p.characterId && !!s.chars[p.characterId]; }),
-          agenda:s.stories[row.agenda].subjectId === me.id,restored:saved === snapshot(FB.state)};
+        function snapshot(state) { return [state.start,state.owner,state.holder,state.player,state.chars,state.stories,state.bookmarkSetup]; }
+        const saved = window.restoreFacts(s,snapshot);
+        window.__startRestoreSave = JSON.stringify(save);
+        window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+        FB.activateBookmark('867');
+        window.__afterStartRestore = function () {
+          return {name:me.name,born:me.born,tier:s.player.tier,rank:s.realms.player.rank,home:s.player.provinceId,site:site.site,
+            physical:FB.provinceAtGrid(site.x,site.y).id,
+            adopted:JSON.stringify(identity(me)) === JSON.stringify(identity(before.me)),treasury:s.player.gold === before.treasury,
+            sourceGone:!s.realms[row.realm],single:Object.values(s.chars).filter(function (c) { return c.name === row.name && !c.dead; }).length,
+            owners:JSON.stringify(before.owned) === JSON.stringify(Object.keys(s.owner).filter(function (id) { return s.owner[id] === 'player'; }).sort()),
+            holders:JSON.stringify(before.held) === JSON.stringify(Object.keys(s.holder).filter(function (id) { return s.holder[id] === 'player'; }).sort()),
+            family:row.family.map(function (name) { return Object.values(s.chars).filter(function (c) { return c.name === name && !c.dead; }).length; }),
+            contacts:people.length,linked:people.every(function (p) { return !!p.characterId && !!s.chars[p.characterId]; }),
+            agenda:s.stories[row.agenda].subjectId === me.id,restored:saved === window.restoreFacts(FB.state,snapshot)};
+        };
       },row)).toEqual({name:row.name,born:row.born,tier:6,rank:3,home:row.county,site:row.site,physical:row.county,
         adopted:true,treasury:true,sourceGone:true,single:1,owners:true,holders:true,family:row.family.map(function () { return 1; }),
         contacts:row.contacts,linked:true,agenda:true,restored:true});
@@ -165,7 +187,8 @@ for (const row of openings) {
 }
 
 test('Yaroslav’s family keeps reciprocal parentage, separate homes and one Alexander',async function ({page},info) {
-  await beginRuler(page,info,openings[1],true);
+  // The retained royal-household world predates the operational realms.
+  await beginRuler(page,info,openings[1],true,'royal_households_v2');
   expect(await page.evaluate(function () {
     const s = FB.state, me = s.chars[s.player.charId];
     function person(name) { return Object.values(s.chars).find(function (c) { return c.name === name; }); }

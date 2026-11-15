@@ -262,7 +262,7 @@ for (const id of lazyDates) {
       expect(await page.evaluate(function () {
         return {fresh:FB.bookmark('634').revision,hidden:FB.bookmark('634','core_courts_v4').hidden,
           faults:FB.validateBookmark(FB.bookmark('634','core_courts_v4'))};
-      })).toEqual({fresh:'core_identities_v3',hidden:true,faults:[]});
+      })).toEqual({fresh:'core_courts_v4',hidden:false,faults:[]});
     }
   });
 }

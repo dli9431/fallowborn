@@ -219,17 +219,17 @@
           !int(r.closedTurn,r.loadedTurn,s.turn)) || (r.status==='spent')!==(r.uses.length===p.pulses))fail();
       var source=sites.find(function(a){return a.id===r.siteId;});
       if(!source || source.countyId!==r.sourceCountyId)fail();
-      var seen={},total=0,previous=-1,end=r.loadedTurn+p.termDays;
+      var seen={},quantity=0,previous=-1,end=r.loadedTurn+p.termDays;
       r.inputs.forEach(function(x){
         var lot=x && s.production.lots.find(function(l){return l.id===x.lotId;});
         var batch=lot && lot.origin.kind==='batch' && s.production.batches.find(function(b){return b.id===lot.origin.batchId;});
         if(!keys(x,['lotId','quantity']) || seen[x.lotId] || !lot || lot.assetId!==r.assetId || lot.goodId!==p.goodId ||
           !batch || batch.recipeId!==p.recipeId || batch.status!=='committed' || batch.disposition!=='store' ||
           batch.closedTurn>r.loadedTurn || !int(x.quantity,1,lot.quantity) || r.loadedTurn>=FB.buildingSeasons.lotExpiry(s,lot))fail();
-        seen[x.lotId]=true;total+=x.quantity;
+        seen[x.lotId]=true;quantity+=x.quantity;
         end=Math.min(end,FB.buildingSeasons.lotExpiry(s,lot));
       });
-      if(total!==p.quantityPerPulse*p.pulses || r.endTurn!==end)fail();
+      if(quantity!==p.quantityPerPulse*p.pulses || r.endTurn!==end)fail();
       r.uses.forEach(function(u){if(!keys(u,['turn']) || !int(u.turn,r.loadedTurn,Math.min(s.turn,r.endTurn-1)) ||
         u.turn<=previous || r.closedTurn!==null && u.turn>r.closedTurn || root.records.slice(0,index).some(function(old){return old.warId===r.warId &&
           old.countyId===r.countyId && old.uses.some(function(v){return v.turn===u.turn;});}))fail();previous=u.turn;});

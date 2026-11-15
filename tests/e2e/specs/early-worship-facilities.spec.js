@@ -4,7 +4,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/early-worship-river.json'),
   upland:require('../fixtures/authoring/early-worship-upland.json')};
@@ -25,7 +25,7 @@ async function start(page,info,label,npc) {
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.monastic_house; });
   const world = label === 'river' ? 'inventory_estuary' : 'inventory_uplands';
-  await beginBookmark(page,info,world,world + '_household');
+  await beginBookmarkFromTitle(page,world,world + '_household');
   await installRestoreFacts(page);
   await page.evaluate(function (input) {
     const s = FB.state;

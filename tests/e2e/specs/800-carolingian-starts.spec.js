@@ -1,10 +1,12 @@
 'use strict';
+const {installRestoreFacts} = require('../support/game/restore-facts');
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename, ['index.html', 'data/starts_rulers_800.js', 'data/story_ruler_agendas_800.js',
+dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html', 'data/starts_rulers_800.js', 'data/story_ruler_agendas_800.js',
   'data/starts_courts_800.js', 'data/story_instances.js', 'data/bookmark_800.js',
   'data/bookmark_800_history.js', 'data/bookmark_800_expansion.js', 'data/government_rollout.js',
   'data/islamic_rollout.js', 'js/starts.js', 'js/main.js', 'js/world.js', 'js/stories.js',
@@ -19,6 +21,18 @@ const rulers = [
     capital:'bordeaux', site:'bordeaux', tier:6, rank:3, born:778, agenda:'louis_agenda_800',
     liege:'carolingian_800', children:['Lothair','Pippin'], spouse:true }
 ];
+
+// Keep activation outside the synchronous restore guard, then resume the proof.
+async function evaluateAcrossBookmark(page, compute, argument) {
+  await installRestoreFacts(page);
+  await page.evaluate(compute, argument);
+  const checkpoint = await page.evaluate(function () { return window.__startRestoreSave; });
+  await restoreBookmark(page, checkpoint);
+  expect(await page.evaluate(function () {
+    return [FB.getRngState() >>> 0, FB.getUidCounter()];
+  })).toEqual(await page.evaluate(function () { return window.__startRestoreSequence; }));
+  return page.evaluate(function () { return window.__afterStartRestore(); });
+}
 
 async function beginRuler(page, info, row, code) {
   await useReleasedStartRules(page);
@@ -80,7 +94,7 @@ for (const row of rulers) {
   for (const code of [false,true]) {
     test(row.id + ' adopts the existing ruler through ' + (code ? 'a code' : 'the picker'), async function ({ page }, info) {
       await beginRuler(page, info, row, code);
-      expect(await page.evaluate(function (r) {
+      expect(await evaluateAcrossBookmark(page, function (r) {
         const s = FB.state, me = s.chars[s.player.charId], old = window.__carolingianOpening;
         const currentChildren = me.childrenIds.map(function (id) { return s.chars[id] && s.chars[id].name; });
         const facts = { review:FBDATA.reviewOpenStarts, source:s.start.rulerRealmId,
@@ -88,7 +102,9 @@ for (const row of rulers) {
           form:FB.political.government(s,{kind:'realm',id:'player'}).formId,
           county:s.player.provinceId, site:FB.settlementsOf(s,r.county)[s.player.homeSettlement].site,
           capital:s.realms.player.capital, liege:s.player.liege, sourceGone:!s.realms[r.realm],
-          single:Object.values(s.chars).filter(function (c) { return c.name === r.name && !c.dead; }).length,
+          single:Object.values(s.chars).filter(function (c) {
+            return c.name === r.name && c.born === r.born && c.dyn === me.dyn && !c.dead;
+          }).length,
           family:old.spouse === me.spouseId && JSON.stringify(old.children) === JSON.stringify(me.childrenIds),
           children:r.children.every(function (name) { return currentChildren.indexOf(name) >= 0; }),
           spouse:!!me.spouseId, territory:JSON.stringify(old.owned) === JSON.stringify(Object.keys(s.owner).filter(function (id) {
@@ -98,11 +114,15 @@ for (const row of rulers) {
           cast:s.stories.divisio_800.cast[r.id === 'charlemagne_800' ? 'charlemagne' : 'louis'] === me.id,
           settlementFamily:!!(s.realms.player.succession && s.realms.player.succession.settlementGenealogy),
           noDuplicateCrown:!s.realms[r.realm], papalRome:s.owner.roma === 'papacy' };
-        const snapshot = JSON.stringify([s.start,s.player,s.chars,s.owner,s.holder,s.stories]);
-        const saved = JSON.parse(FB.save.serialize()); FB.activateBookmark('1066'); FB.save.restore(saved);
-        facts.restored = snapshot === JSON.stringify([FB.state.start,FB.state.player,FB.state.chars,
-          FB.state.owner,FB.state.holder,FB.state.stories]);
-        return facts;
+        const snapshotProject = function (s) { const me = s.chars[s.player.charId]; return [s.start,s.player,s.chars,s.owner,s.holder,s.stories]; };
+        const snapshot = window.restoreFacts(s,snapshotProject);
+        const saved = JSON.parse(FB.save.serialize()); window.__startRestoreSave = JSON.stringify(saved);
+        window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+        FB.activateBookmark('1066');
+        window.__afterStartRestore = function () {
+          facts.restored = snapshot === window.restoreFacts(FB.state,snapshotProject);
+          return facts;
+        };
       }, row)).toEqual({ review:false, source:row.realm, original:true, name:row.name,
         born:row.born, tier:row.tier, rank:row.rank, form:'territorial', county:row.county,
         site:row.site, capital:row.capital, liege:row.liege, sourceGone:true, single:1,

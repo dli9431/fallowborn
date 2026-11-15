@@ -1,5 +1,7 @@
 Autumn 634 selection and core identity coverage
 
+production-water-expiry.spec.js checks paid batch cancellation before, at and after renewable water expiry, retained source history, no refund or output, released material availability, repeated cancellation purity and exact matching restores. Current and retained expired claims still reject altered quantity, actor, worker or generation; a cancelled batch cannot retain a live claim.
+
 634-activation.spec.js checks the selected core_courts_v4 world through the
 ordinary picker with review enabled and disabled, all nine approved start codes
 and direct construction, and Observe without personal enrollment. It verifies
@@ -60,6 +62,34 @@ stories, authority, RNG, UID, fingerprints and stored configuration across
 reload and repeated restoration. Public Sasanian intrigue hearings use the declared civil policy while
 religious law remains the existing fallback. These bounded checks do not replace
 owner runtime, historical or device acceptance.
+
+Legacy bookmark source oracles
+
+The native, 568 and bootstrap composition specifications serve the former eager
+document for immutable source oracles. The manifest helper restores every dated
+script at its original deferred position before the stage-only legacy adapter
+runs; the native comparison also asserts the complete ordered script inventory.
+Source-boundary and fault-injection probes that prepend code to lazy 568 files
+use that same eager document, so their mutations observe the intended draft.
+The standard-edition cases retain exact catalogue, story order, retained-save
+and spent-resource comparisons.
+
+The frozen 634 assembler also runs against its frozen identities and regional
+inputs in a detached browser-only catalogue. Its complete predecessor world,
+ordinary starts and shared declarations are compared with the current assembler,
+accounting for the enumerated map corrections, visibility and added revisions.
+The live oracle uses the complete 634 assembler so later personal and world
+stories see their declared revisions. Full cross-page fingerprints include all
+current revisions and public roots; the predecessor fixture is never rewritten.
+The bootstrap restore explicitly selects the former baseline and hides the
+current destination before loading its spent-resource save.
+The 1096 oracle keeps both frozen pilgrim declarations and appends the later
+following group from its current owner, preserving exact registration order and
+the complete world's expedition dependencies without editing the fixture.
+The older Baghdad household choice is reconciled with the exact later correction
+that records a copying intention instead of selecting licensed scholarly work;
+both source spellings are checked before the correction is applied. Individual
+story fingerprints accompany the complete native catalogue comparison.
 
 Retained shared definitions and fixed-start identities
 
@@ -133,7 +163,7 @@ spec separately owns predecessor-proof selection, ambiguity, JSON order,
 raw JSON bytes, bundled content and public-root rejection. These checks do not
 establish packaged, visual or device acceptance.
 
-bookmark-composition-native.spec.js compares the exact retained projection of all public definition roots, native worlds, revisions, starts and story order against the unchanged native-before-shared fixtures. Only the enumerated 634 revision, fresh pointer, separately asserted visibility change and exact previously merged quadrant and technology-review deltas are reconciled. merged-corrections.json records the old/new map values, Aquitaine insertion and minority-stewardship technology-review rationale; both sides must match those declarations before full equality. Koten and its graph remain in the full equality comparison. Its unrelated-date spent-resource journeys use ordinary unmodded signatures rather than turning a diagnostic fingerprint application into a synthetic modded save. Current persisted 634 mod compatibility is covered by 634-scenery-revisions.spec.js. 634-first-playable.spec.js and 634-rulers.spec.js name core_identities_v3 as the selectable fresh revision while retaining baseline opening and diagnostic checks.
+bookmark-composition-native.spec.js compares all public definition roots, native worlds, revisions, starts and story order with the eager source oracle, including every current 634 revision. The detached predecessor proof checks the unchanged native-before-shared 634 assembler and inputs; merged-corrections.json pins the old/new map values, Aquitaine insertion and minority-stewardship technology-review rationale. Each correction requires its exact predecessor before reconciliation. Koten and its graph remain in the full equality comparison. Unrelated-date spent-resource journeys use ordinary unmodded signatures rather than turning a diagnostic fingerprint application into a synthetic modded save. Current persisted 634 mod compatibility is covered by 634-scenery-revisions.spec.js. 634-first-playable.spec.js and 634-rulers.spec.js distinguish the selected core_courts_v4 world from explicitly named core_identities_v3 campaigns. They retain earlier opening, personal-program and diagnostic checks alongside the complete world's three offered rulers, current agendas and hidden-save restoration.
 
 Office applicability and ruler-save regression coverage
 
@@ -147,9 +177,15 @@ adopted-public-treasury.spec.js additionally checks compact omitted and expanded
 
 ruler-start-restoration.spec.js uses real Godfrey, Raymond, Bohemond and Kilij Arslan starts, requires household succession and canonical vassal contracts before saving, checks idempotent local setup, and compares start, stories, people, ownership, holders, realms, player, hosts, authority, RNG, UID and signatures through two matching restores. The scenario-local rulers-1096.js helper preserves exact canonical seed assertions, including the ruler's nonprincipal identity suffix. western-rulers-1096.spec.js and eastern-rulers-1096.spec.js use that helper without changing universal parity or navigation. Eastern restore still crosses an actual different world through the supported load boundary, and its detached mod assertions use the current validation array contract.
 
+The eastern, western and Tuscan ruler reviews stage calendar dates together with their elapsed turns. A focused control preserves the original opening-call date, called turn, RNG and UID, and rejects an inconsistent calendar before restoring the valid checkpoint. Restore comparisons expand codec defaults and canonicalize object keys while retaining every selected value and ordered array. Independent Matilda and Bohemond JSON start imports omit personal tracks at creation; their pre-seal saves retain the original ruler and absent tracks without acquiring new programs. Native bound saves still reject erased required tracks. Jurisdiction loss uses actual territory transfers, and Godfrey's host-loss check accounts for the configured civilian defeat share with exact survivor/death conservation. Standard Matilda adoption retains household and personal-record restore coverage.
+
+Later-year western checkpoints prepare the existing dynastic court boundary without changing RNG or UID before comparing complete people and realm records. Public grant cases fund the actual public payer before testing conservation and stale terms. Route cases require preflight to reflect missing passage and obtain separate ordinary consent for any additional counties on the planner's actual path, then explicitly resume paused intent on a fresh program day. Exact payment, movement and home-presence checks remain. A landed command carries its ruler without relocating the permanent household anchor; other mobile carriage keeps its existing behavior. Tuscany's first story-sheet visit records only the onboarding flag, while cancellation after that visit changes no saved state.
+
 1096-world-stories.spec.js asserts the exact composed story list and five separately authored mobile declarations, while retaining the original call's empty seeded-host ledger, once-only behavior and no involuntary vow. It separately pins the retained baseline to its two world stories and no mobile declarations.
 
 Its current-save control retains the original campaign, required stories and attachment ledger. Current and legacy restores use the detached codec-expanded comparison with canonical object keys, exact values and ordered arrays. Missing current records or either paired provenance field reject before adoption without changing the input, live state, RNG or UID. The legacy control omits both storyAttachmentSchema and state.start.storyAttachments: a retained observer still requires its source call, while an older save lacking both optional records restores and re-saves twice with exact campaign, history, ownership, people, armies, cash, RNG and UID. Neither missing story nor attachment provenance is reconstructed. Independent imported muster, battle-credit and canonical-award checks retain their exact restore and once-only assertions.
+
+The historical, household, opening-goal and ruler-agenda specifications distinguish pre-seal campaigns from damaged current saves. Older fixtures omit both attachment provenance fields; current seasonal journeys retain every sealed record. Optional household tracks, observer notices, opening goals, agendas and holy-war preparations each reject a missing sealed record before proving that a pre-seal save preserves its absence. Historical declaration and pre-seal save reconstructions remove dependent household observers or opening profiles alongside their omitted source stories; declaration fixtures retain bookmark validation. Independent imported observer fixtures supply an authored inheritance court and an established household for heir review. Delayed holy-war preparation begins before its declared call window. Ruler agenda absence is created through an imported start that omits the track, preserving adopted-ruler provenance in current and pre-seal restores. Agenda fingerprint rejection uses the canonical mod installer after an ordinary JSON import. Merchant public-state comparisons canonicalize object keys only, retaining every field, value and ordered array through work and restore.
 
 political-religious-head.spec.js covers native and ordinary JSON political office
 configurations with distinct age/sex, constituency, polity and seat rules. It checks
@@ -227,7 +263,7 @@ support/game/navigation.js exposes openTitle for the actual lightweight title an
 
 AI decision integration coverage
 
-ai-decision-integration.spec.js exercises complete multi-family ordinary JSON imports with government overrides, spent-resource restore, a single seeded research boundary, current traits/aims and real ruler succession, state isolation, exact changed-content rejection, unsafe declarations, empty weighted retry lists, and neutral standard/CrazyGames behavior. It uses the real entrypoint and staged boundary hooks without long simulations. File, served Chromium, Firefox and WebKit select this suite. ai-decision-policies.spec.js covers the pure protocol/import/layer lifecycle and ai-live-decisions.spec.js covers individual live consumers. Exact commands and runtime, device, package and performance evidence requirements are in docs/research/ai-decision-acceptance.md.
+ai-decision-integration.spec.js exercises complete multi-family ordinary JSON imports with government overrides, spent-resource restore, a single seeded research boundary, current traits/aims and real ruler succession, state isolation, exact changed-content rejection, unsafe declarations, empty weighted retry lists, and neutral standard behavior. It uses the real entrypoint and staged boundary hooks without long simulations. File, served Chromium, Firefox and WebKit select this suite. ai-decision-policies.spec.js covers the pure protocol/import/layer lifecycle and ai-live-decisions.spec.js covers individual live consumers. Exact commands and runtime, device, package and performance evidence requirements are in docs/research/ai-decision-acceptance.md.
 
 The integration spec also compares ambitious/brave and zealous/patient/craven combinations across built-in war, tactics, investment, real research scoring, intrigue consideration and conversion resistance. Both ordinary examples select all nine families with current traits, retained aims and government scope. Matching restore preserves the retained revision, RNG and uid without replay; canonical death removes predecessor preferences. Independent content edits across intrigue, diplomacy, religion, investment, expansion and government parameters change exact save fingerprints, while reapplying the exact original restores matching eligibility. Mixed malformed declarations preserve data, messages, storage, state and counters. Disabled papal/holy-war/conversion hooks remain inert and explicit government zero-war preference wins even with legacy bellicose personality. All added boundaries are staged, with no daily simulation or elapsed-time performance threshold.
 
@@ -255,7 +291,7 @@ life-paths.spec.js stages and ends campaigns through the wars registry while ret
 
 The focused regression updates cover civic private-property isolation and pure fiscal previews, civic consent for mobile paid access with stale/refused confirmations, composed 1204 world stories, revision-scoped fixed starts, malformed institution diagnostics, and cardinal death retaining public appointment and recognition references. Retained-world fixtures select baseline explicitly; current opening assertions name the accepted revisions. Restore assertions compare structured facts and unsigned RNG bits, while phone civic reviews match the full cost-bearing accessible label. Religious fixtures prepare actual households, adult rulers and controlled project sponsors before testing their transactions.
 
-bookmark-acceptance.spec.js separates the seven dates into individual journeys of 45 days before restore and 45 days after it. The data-only proof journey uses 30 days before its checkpoint and two 30-day continuations. Annual 711 recognition uses two directly staged yearly hooks with an attached diagnostic record, and a separate cardinal-officer death regression checks retained votes, ineffective office service, papal archival and save restore. No extended timeouts or multi-year daily loops are used for these cases.
+bookmark-acceptance.spec.js separates the eleven registered dates into individual journeys of 45 days before restore and 45 days after it. The data-only proof journey uses 30 days before its checkpoint and two 30-day continuations. Annual 711 recognition uses two directly staged yearly hooks with an attached diagnostic record, and a separate cardinal-officer death regression checks retained votes, ineffective office service, papal archival and save restore. No extended timeouts or multi-year daily loops are used for these cases.
 
 Part A regression repairs
 
@@ -324,7 +360,7 @@ The Italy opening and follow-up specifications use tests/e2e/support/game/histor
 
 Long daily simulation journeys are bounded to one 90-day season in 476-africa.spec.js, 476-dalmatia-east.spec.js, 476-gaul-and-iberia.spec.js, 476-italy.spec.js, 476-map-and-hierarchy.spec.js, 476-ruler-starts.spec.js, 476-world-stories.spec.js, 493-bookmark.spec.js, 711-bookmark.spec.js, 800-bookmark.spec.js, bookmark-1204.spec.js, royal-relatives-succession.spec.js and title-levels-and-hierarchy.spec.js. They use the normal test timeout and preserve their invariant and save checks. Household midpoint saves occur after 45 days. Later Zeno and Theoderic outcomes use direct dated staging in the eastern regional specification. These smoke journeys do not establish multi-year stability or guarantee natural succession; targeted boundary tests and owner playthroughs cover those separately.
 
-CrazyGames onboarding coverage in tests/e2e/specs/crazygames-onboarding.spec.js includes the first-business review at desktop and phone widths, stale quotes, live savings and courtship progress, paid final service, saved-campaign previews, older metadata, optional preview failure and hidden guidance on Continue. tests/e2e/specs/distribution-start.spec.js covers fresh and older preference defaults plus explicitly saved event-resume choices in both distributions. Execution remains owner-controlled.
+Standard onboarding controls in tests/e2e/specs/crazygames-onboarding.spec.js retain ordinary courtship eligibility, rates and proposal chances with an SDK present, plus the phone build's town-first guidance and later family/business progression. tests/e2e/specs/distribution-start.spec.js covers fresh and older preference defaults plus explicitly saved event-resume choices in both distributions. Execution remains owner-controlled.
 
 `ai-treasury-transfers.spec.js` covers paired balances, accrued-bill protection,
 compulsory shortfalls, live peace quotes, noncash peace, prepaid saved courier gifts,
@@ -334,6 +370,16 @@ owner-controlled.
 Fallowborn has a development-only Playwright Test harness under `tests/e2e/`. The shipped game
 remains plain static JavaScript with no runtime dependencies or build step. Opening the committed
 `index.html` directly still works without installing Node packages or running a server.
+
+Imported policy journeys prepare their cold titles in separate bounded setup hooks, then retain real file imports and exact fingerprints, resources and seeded replay. Stored policy replacement and removal have independent cases; the ordered neutral protocol explicitly selects ordinary_expansion. Ruler-review declaration rejection and imported commitment/restore behavior have separate bounded cases with their original purity and save checks. Production consumers fund the actual public processing account while preserving its ordinary reserves, and reuse the already prepared imported title when starting a campaign.
+
+Start-code compatibility checks each legacy/current spelling in a fresh context with the same character and community assertions. Catalogue override phases retain genuine cold reloads for matching restoration, changed same-name rejection and return to the shipped fixture. Expedition declaration negatives run in three independent batches covering all 33 mutations, each retaining candidate/catalogue/state/RNG/UID nonpublication. Seasonal and episcopal imports reuse their already prepared titles; their cold replay and strict resource assertions remain intact.
+
+Fiscal boundary parity separates native reference/candidate comparison from diagnostic candidate/wrapper comparison. Each isolated case prepares its first campaign in a bounded guarded setup hook, then retains both starts, the original full-state/save/catalogue digests and three staged daily boundaries; native counters and diagnostic guard assertions keep their separate owners. Household import consumers reuse the accepted title. Death-refusal and survivor scenarios use canonical character death before purity snapshots, and the cross-party reservation control creates its distinct second invitation before reserving the first party's actor. Changed family fingerprints and exact same-seed camp requests have separate cases; the replay cold-boots the already installed matching JSON instead of importing it again.
+
+The production expiry control requires a real funded pending batch and validates both ledgers after staging the period boundary, before the pure work refusal. It retains cancellation and strict post-cancellation inventory validation, including the original finite-stock assertion.
+
+The fiscal reader-override pairs also prepare their first source variant in a bounded guarded hook. Imported command pairs still perform their real file import and cold-load the installed mod for the second source. Production and household seed replay controls prepare only their initial title in such a hook, retaining the original fresh matching boot and every exact replay assertion.
 
 ## First-time setup
 
@@ -520,6 +566,18 @@ Feature helpers live in leaf modules under `support/game/`; specifications impor
 directly so an unrelated helper change does not fan out through a barrel file. The automatic
 last-failed path deliberately favors a fast repair loop after a failure; run `test:all` for the
 authoritative whole-suite result.
+
+The water-operation input helper reuses the prepared Mods title and stages the
+paying ruler's capital at the production site so the ordinary local-worker gate
+can admit paid fuel preparation. Each completed batch retains its real worker,
+workdays, material debits and processing price; the next reservation uses a fresh
+action day. The water-operation input journeys also prove that a remote ruler
+cannot reserve or mutate production. Bath and water-service restore comparisons
+use detached codec-expanded facts with canonical object keys; only technology
+completion and exposure membership sets opt into sorting. Private bath setup
+founds an independent household realm, holds both the upstream intake and the
+downstream bath, and assigns its own research account. Occupation suspension is
+staged through a registered ordinary war rather than a detached occupation map.
 
 Before editing a shared helper, check how many specifications import it. Locale-, browser-,
 viewport-, and scenario-specific readiness belongs in the affected specification or in a new leaf
@@ -745,9 +803,9 @@ account preflight, suspended-law duplication, dead-head rejection and the
 auction's combined-price and stale-review gates before bidding advances.
 It does not establish device, appearance or owner play acceptance.
 
-634-local-notices.spec.js covers the hidden assembled revision's two five-beat campaign observers and enumerated sovereignty reports, ordinary farmer/craftsman delivery, quiet initial source snapshots, real campaign endings, scoped matching forces, actual residence/presence, personal control priority before dispatch and through expiry, shared victory/control receipts, costless acknowledgment, repeated current-content save/restore, absent observer preservation and atomic malformed-save rejection. The real 634-local-notices.json import varies source, reach and expiry, checks unsupported demands and pure rejection, retains exact mod content and rejects changed content. No historical siege, harm, population or payment is inferred by these reports.
+634-local-notices.spec.js covers the complete revision's two five-beat campaign observers and enumerated sovereignty reports, ordinary farmer/craftsman delivery, quiet initial source snapshots, real campaign endings, scoped matching forces, actual residence/presence, personal control priority before dispatch and through expiry, shared victory/control receipts, costless acknowledgment, repeated current-content save/restore, absent observer preservation and atomic malformed-save rejection. The real 634-local-notices.json import varies source, reach and expiry, checks unsupported demands and pure rejection, retains exact mod content and rejects changed content. No historical siege, harm, population or payment is inferred by these reports.
 
-634-frontier-campaigns.spec.js covers the hidden assembled Syrian and Iraqi
+634-frontier-campaigns.spec.js covers the complete revision's Syrian and Iraqi
 district opportunities, independent choices, finite offer and commitment
 boundaries, ordinary declaration permission, refused-start atomicity, political
 costs, current control, living courts, succession, adoption before and after story
@@ -757,7 +815,7 @@ matching restoration without another declaration, cost or historical event.
 Boundaries are staged; these checks establish no long campaign or device acceptance.
 
 634-rulers.spec.js additionally covers the full-revision-only Yazdegerd beginning:
-hidden visibility and earlier-start parity, age ten and the existing Ctesiphon
+offered visibility and earlier-revision exclusion, age ten and the existing Ctesiphon
 site, fixed court identity and empty royal household, single adoption and opening
 stewardship, incapable-steward blockers, stale negotiation, independent provincial
 assent, canonical replacement, funded terms and staged majority without accession
@@ -841,6 +899,23 @@ restore assertions.
 Specifications should import `test` and `expect` from `support/fixture.js`, not directly from
 `@playwright/test`. The shared fixture fails the test on page exceptions, console errors, failed
 requests, bad HTTP responses, or network traffic outside the expected local target.
+
+Historical start specifications select scenario cards by their stable `data-scenario`
+identity. Code journeys inspect the offered card, return to the date screen, and open
+the seed dialog there. Cross-bookmark checkpoints use `restoreBookmark` to enter
+`FB.game.loadData`; the synchronous restore guard remains enforced. Their detached
+`restore-facts` projections expand wire defaults and canonicalize object keys while
+retaining every projected value, array position, RNG bit and UID counter. Pre-seal
+campaign fixtures omit the attachment seal when intentionally omitting a story record.
+They also omit its envelope schema stamp; sealed current saves still reject a missing
+attached record without changing the campaign. Copyist openings check that the authored
+apprentice rank survives creation and matching restore in both resident communities.
+The commission entry is a costless review that preserves the apprentice's career and
+focus; licensed scholarly work remains unavailable, and the three paid shifts retain
+their exact reserved fee and replacement of Daily Focus.
+Family assertions distinguish generated genealogy from maintained dependants. Soldier
+journey cases retain the wartime departure refusal and stage civilian work through
+the career API before exercising ordinary travel.
 
 Leaf modules under `support/game/` own common player journeys such as navigation, deterministic
 game start, UI refresh waits, snapshots, and browser-harness injection. Import only the leaf helper
@@ -1171,9 +1246,9 @@ Bookmark authoring acceptance
 
 bookmark-requirements.spec.js authors named failures for the platform, identity, story, presentation, climate, knowledge, optional-system, role, legal, capability and balance gates, plus transactional activation/mod rejection, invalid stored-mod rejection and positive same-mod catalogue composition. bookmark-acceptance.spec.js checks that every authored bookmark data file loads while docs/bookmark-template.js stays unloaded, then discovers every registered date, including hidden definitions reviewed only inside isolated browser contexts.
 
-The registered-bookmark natural-day journey chooses a compatible ordinary non-ruler start, advances one year, exports normal v4 JSON at opening/year one, activates a different world and restores the year-one checkpoint with its bookmark hidden. It compares restored world facts, political quotes, religious institutions, stories and RNG/uid counters, then plays one more year, checks the exact turn and date advancement and exports a year-two save. Quarterly invariant checks cover both years. The persisted JSON-only proof-mod.json supplies year 500, an independent coastal realm and inherited culture, two starts and a reused campaign, plus its own episcopal incumbent and vacancy. Its separate reload and replay journey verifies that fresh seeds do not overwrite saved institution facts or the global catalogue.
+The registered-bookmark natural-day journey chooses a compatible ordinary non-ruler start, advances 45 days, exports normal v4 JSON at opening and midseason, activates a different world and restores the checkpoint with its bookmark hidden. It compares restored world facts, political quotes, religious institutions, stories and RNG/uid counters, then plays 45 more days, checks exact turn advancement and exports a season-end save. Invariant checks cover both halves of the season. The persisted JSON-only proof-mod.json supplies year 500, an independent coastal realm and inherited culture, two starts and a reused campaign, plus its own episcopal incumbent and vacancy. Its separate reload and replay journey verifies that fresh seeds do not overwrite saved institution facts or the global catalogue.
 
-Budgets are uncompressed UTF-8 JSON bytes: 4 MiB opening, 6 MiB years one and two, and 8 MiB for the separate proof-mod year-three checkpoint. Attachments record actual sizes and ceilings for each bookmark. These are owner-review ceilings, not measured baselines or browser-storage guarantees. Owner acceptance, historical review and device review remain necessary.
+Budgets are uncompressed UTF-8 JSON bytes: 4 MiB opening, 6 MiB for the midseason, season-end and separate proof-mod checkpoints. Attachments record actual sizes and ceilings for each bookmark. These are owner-review ceilings, not measured baselines or browser-storage guarantees. Owner acceptance, historical review and device review remain necessary.
 
 Administrative monarchy coverage
 
@@ -1238,19 +1313,19 @@ Marriage finder navigation
 
 tests/e2e/specs/marriage-discovery.spec.js bounds the court and character return journeys to twelve real candidate-query results per redraw. Character journeys select existing character rows before applying the limit. Native scope and availability changes still call the real query. Each journey checks a nonzero scroll offset and the originating action's focus after Back, together with retained filter values and their open disclosure. Separate cases cover the complete candidate query and shared realm detail reads per redraw.
 
-634-damascus-household.spec.js covers the hidden complete Damascus start, resident identity and layout, ordinary craft income, stationary six-review completion, costless and stale choices, protagonist-only departure, death/succession, absent legacy records, matching hidden save continuity, actual local-control notices and remote/war silence. An independent household-plan JSON fixture is imported through Mods and retains its own exact save identity. These bounded checks do not establish device or longer campaign acceptance.
+634-damascus-household.spec.js explicitly selects the retained core_identities_v3 Damascus start and covers its resident identity and layout, ordinary craft income, stationary six-review completion, costless and stale choices, protagonist-only departure, death/succession, absent legacy records, matching hidden save continuity, actual local-control notices and remote/war silence. An independent household-plan JSON fixture is imported through Mods and retains its own exact save identity. These bounded checks do not establish device or longer campaign acceptance.
 
-634-medina-household.spec.js covers the selectable resident start and hidden expanded-court visibility, both stationary conclusions, actual paid farming, the optional unpaid holding day, private provisions spending, stale reviews and protagonist interruption. Integrated-court cases distinguish the private household from public authority and baseline opening accession separately from later local sovereign-change notices. Current-content round trips retain decisions, spending and notice receipts; an independent provisions configuration enters through a real Mods JSON import and malformed progress rejects atomically. These checks do not establish visual, device or long-campaign acceptance.
+634-medina-household.spec.js covers the retained resident start and visible complete-court revision, both stationary conclusions, actual paid farming, the optional unpaid holding day, private provisions spending, stale reviews and protagonist interruption. Integrated-court cases distinguish the private household from public authority and baseline opening accession separately from later local sovereign-change notices. Current-content round trips retain decisions, spending and notice receipts; an independent provisions configuration enters through a real Mods JSON import and malformed progress rejects atomically. These checks do not establish visual, device or long-campaign acceptance.
 
-634-first-playable.spec.js checks canonical publication diagnostics and the standard/CrazyGames trait scheme preferences, including retained ordering, excluded plots and rejection of unknown references. ai-decision-integration.spec.js compares research records structurally across restore, normalizes completed/exposed set order and RNG bit representation, and retains exact active-slot, progress, reserve, priority and UID comparisons. Its neutral ruler fixture explicitly clears current character traits; trait-sensitive behavior remains covered by ai-war-preferences.spec.js.
+634-first-playable.spec.js checks canonical publication diagnostics and standard-edition trait scheme preferences, including retained ordering and rejection of unknown references. ai-decision-integration.spec.js compares research records structurally across restore, normalizes completed/exposed set order and RNG bit representation, and retains exact active-slot, progress, reserve, priority and UID comparisons. Its neutral ruler fixture explicitly clears current character traits; trait-sensitive behavior remains covered by ai-war-preferences.spec.js.
 
-story-placement.spec.js covers story cards placed inside their Deeds sections. It validates the shipped FBDATA.storyPlacements table, requires a record for every registered story type and rejects the retired stories renderer. Damascus 634 checks that the household track and its goals lead Work & Wealth, count in the header, carry the waiting marker and take the section's first item key. A collapsed section stays closed until a new stage waits. Mainz 1096 checks Affairs of the world, its Back to the list and Close focus return. The action-type layout and two ordinary JSON imports, story-placement-family.json and story-placement-ledger.json, move entries through type and single-story records, while malformed placement rejects without publication. The leaf helper support/game/story-placement.js opens a story's placed section for 476-presentation.spec.js and 476-world-stories.spec.js, and deeds-registry.spec.js now checks that story cards follow Daily Focus inside their section.
+story-placement.spec.js covers story cards placed inside their Deeds sections. It validates the shipped FBDATA.storyPlacements table, requires a record for every registered story type and rejects the retired stories renderer. Damascus 634 checks that the household track and its goals lead Work & Wealth, count in the header, carry the waiting marker and take the section's first item key. A collapsed section stays closed until a new stage waits. Mainz 1096 checks Affairs of the world, its Back to the list and Close focus return. The action-type layout and two ordinary JSON imports, story-placement-family.json and story-placement-ledger.json, explicitly select the retained identity revision and move its entries through type and single-story records, while malformed placement rejects without publication. The leaf helper support/game/story-placement.js opens a story's placed section for 476-presentation.spec.js and 476-world-stories.spec.js, and deeds-registry.spec.js now checks that story cards follow Daily Focus inside their section.
 
 634-scaffold-d.spec.js checks source replay without changing the selectable bookmark or published catalogues in standard and CrazyGames modes. Reference checks allow omitted or null title parents while rejecting unresolved supplied parents; the ownership assertions retain Mosul's Sasanian assignment. The Medinan form's JSON-import case waits for the apply-triggered navigation before preparing the reloaded catalogue. Nubian court faith, separate courts, unchanged residents and exact source allocation remain covered.
 
 Scenery integration repair coverage
 
-634-scenery-revisions.spec.js also creates real persisted-JSON predecessor campaigns in 476 and 867, retains spent resources through the unrelated 634 addition, reloads ordinary re-saves, and rejects missing revisions or changed unrelated definitions after a successful cached proof. bookmark-composition-native.spec.js preserves the frozen source fixtures and checks original-principal publication against candidate stories while the live registry lacks them. Its withheld-476 case verifies native tenure references, strict explicit/detached validation, unknown-id rejection and purity. protected-scenery.spec.js explicitly selects the ordinary retained baseline for its stale-quote transaction scenario. 634-rulers.spec.js keeps ruler starts hidden while recognizing the already selectable date. retained-catalogue-compatibility.spec.js identifies its own declarations by owner instead of assuming no native transitions exist.
+634-scenery-revisions.spec.js also creates real persisted-JSON predecessor campaigns in 476 and 867, retains spent resources through the unrelated 634 addition, reloads ordinary re-saves, and rejects missing revisions or changed unrelated definitions after a successful cached proof. bookmark-composition-native.spec.js preserves the frozen source fixtures and checks original-principal publication against candidate stories while the live registry lacks them. Its withheld-476 case verifies native tenure references, strict explicit/detached validation, unknown-id rejection and purity. protected-scenery.spec.js explicitly selects the ordinary retained baseline for its stale-quote transaction scenario. 634-rulers.spec.js verifies all three offered rulers and explicitly selects core_identities_v3 for the earlier Umar and Heraclius personal programs. retained-catalogue-compatibility.spec.js identifies its own declarations by owner instead of assuming no native transitions exist.
 
 Regional literal extraction
 
@@ -1545,7 +1620,32 @@ The mobile pledge button selector includes its explanatory accessible note while
 
 Building and technology catalogue restore regressions compare complete detached expanded facts rather than insertion-order-sensitive JSON text. Calculated cash differences allow only floating-point subtraction residue at eight decimal places; quoted prices, unchanged balances and rejection purity stay exact. Construction setup funds the actual private account, grants the declared technology and stages the actual sovereign, local patron and directly held county before testing player and AI parity. The windmill source-position oracle compares every original ID plus the exact six technology and ten building additions from later supplements, retaining complete catalogue equality.
 
+early-technology-refinements.spec.js and technology-prerequisite-corrections.spec.js
+check released world hashes after ordinary visible 867 and 1066 starts without
+adding a visibility override to the declarations. Restore comparisons use detached
+expanded facts with canonical object keys and technology membership sets; research
+queues, property order, numeric values, RNG bits and UID counters stay exact.
+The refinement source-order check names every intervening shared catalogue script.
+Both civic technology imports check rejection of single-source disputed chronology,
+then import their fictional graphs as modded JSON through the ordinary file picker.
+Matching restores and changed-content rejection remain covered for all four imports.
+
 The two coastal catalogue imports retain paid enterprise, upgrade, staffing and yard assertions in matching-restore cases. Separate changed-price cases create the same paid checkpoints, reload the stored JSON replacement and require exact fingerprint rejection without adopting state, world, RNG or UID. Both reuse their already prepared Mods title for the unchanged Barcelona seed, keeping each independent journey within the ordinary timeout.
+
+The expanded technology/building integration imports encode each fixed ruler
+with its authored character name. Catalogue comparisons normalize detached
+definitions on both sides of the deferred activation boundary. Matching restores
+retain every selected owner through expanded facts, canonical object keys and
+technology membership sets; building and ledger arrays keep their order.
+The bookmark platform sibling starts reuse the canonical civic journey code,
+including its family preset and principal-community spelling.
+The composed siege cases validate real loaded receipts and purely reject
+changed record identities or input quantities, keeping retained-record counts
+independent from material totals. Public industry buyers are funded above
+reserves, and staged seasonal expiry advances the matching calendar date.
+The river import scopes its parent-output profile to its renamed farm enterprise;
+the foundation scenario stages the county under its existing generated sovereign
+before checking lawful construction and conservation.
 
 Bounded import and restoration journeys
 

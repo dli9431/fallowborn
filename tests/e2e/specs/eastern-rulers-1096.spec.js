@@ -2,6 +2,7 @@
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {beginRuler1096} = require('../support/game/rulers-1096');
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -15,7 +16,7 @@ dependsOnRuntime(__filename,[
   'js/starts.js','js/bookmark_setup.js','js/world.js','js/model.js','js/main.js','js/mods.js',
   'js/government_lineage.js','js/government_administration.js','js/government_aristocracy.js','js/government_support.js',
   'js/authority.js','js/lordships.js','js/settlement.js','js/fiscal.js',
-  'js/stories.js','js/story_ruler_agenda.js','js/story_opening_goals.js',
+  'js/util.js','js/story_history.js','js/holywar.js','js/stories.js','js/story_ruler_agenda.js','js/story_opening_goals.js',
   'js/treasury.js','js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js'
 ]);
 
@@ -48,6 +49,7 @@ async function begin(page,info,def) {
     },{once:true});
   });
   await beginRuler1096(page,info,def.scenario);
+  await installRestoreFacts(page);
 }
 
 test('eastern starts validate against the actual dated courts and reject mismatched identity purely',async function ({page},info) {
@@ -80,14 +82,52 @@ test('the historical picker offers the two fixed eastern identities and one exis
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#bookmarklist [data-bookmark="1096"]').click();
-  await expect(page.getByRole('button',{name:'Alexios at Constantinople',exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'Kilij Arslan at Nicaea',exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'Kilij Arslan at Nicaea',exact:true}).click();
+  await expect(page.locator('#scenariolist [data-scenario="alexios_1096"]')).toBeVisible();
+  await expect(page.locator('#scenariolist [data-scenario="kilij_arslan_1096"]')).toBeVisible();
+  await expect(page.locator('#scenariolist [data-scenario="alexios_1096"]').getByRole('heading',
+    {name:'Alexios at Constantinople',level:3,exact:true})).toBeVisible();
+  await expect(page.locator('#scenariolist [data-scenario="kilij_arslan_1096"]').getByRole('heading',
+    {name:'Kilij Arslan at Nicaea',level:3,exact:true})).toBeVisible();
+  await page.locator('#scenariolist [data-scenario="kilij_arslan_1096"]').click();
   await expect(page.locator('#cg-name')).toHaveValue('Kilij Arslan I');
   await expect(page.locator('#cg-name')).toHaveAttribute('readonly','');
   await expect(page.locator('#cg-community')).toHaveClass(/hidden/);
   await expect(page.locator('input[name=cg-family]')).toHaveCount(1);
   await expect(page.locator('input[name=cg-family][value=standard]')).toBeChecked();
+});
+
+test('staged review boundaries preserve the opening call epoch and reject a mismatched calendar',async function ({page},info) {
+  await begin(page,info,openings[0]);
+  expect(await page.evaluate(function () {
+    const s=FB.state, original=JSON.parse(FB.save.serialize()), turn=s.turn,
+      date=FB.dateOrdinal(s.date), rng=FB.getRngState(), uid=FB.getUidCounter(),
+      call=s.stories.eastern_undertaking_1096.calledTurn,
+      callDate=FB.dateOrdinal(FB.dateAtTurn(s,call));
+    function facts(x) {return [x.date,x.turn,x.start,x.player,x.owner,x.holder,x.chars,x.stories,x.greatHolyWar];}
+    const originalFacts=restoreFacts(s,facts);
+    const boundaries=[{year:1096,season:1,day:1},{year:1097,season:0,day:1},{year:1097,season:3,day:1}];
+    const exact=boundaries.every(function (next) {
+      const before=JSON.parse(JSON.stringify(s));
+      stageRulerDate(s,next);
+      before.date=next;before.turn=turn+FB.dateOrdinal(next)-date;
+      return JSON.stringify(s)===JSON.stringify(before) &&
+        FB.dateOrdinal(FB.dateAtTurn(s,call))===callDate;
+    });
+    const saved=JSON.parse(FB.save.serialize()), before=JSON.stringify(s);
+    const invalid=JSON.parse(JSON.stringify(saved));invalid.state.date.year++;
+    let rejected=false;
+    try {FB.save.restore(invalid);} catch (error) {
+      rejected=/openingCall\.campaign/.test(error.message) && before===JSON.stringify(FB.state) &&
+        (rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter();
+    }
+    // Restore the opening checkpoint before the staged year, keeping unrelated annual setup out of this clock check.
+    FB.save.restore(original);
+    return {exact:exact,rejected:rejected,restored:assertRestoreFacts(restoreFacts(FB.state,facts),originalFacts),
+      call:FB.state.stories.eastern_undertaking_1096.calledTurn===call,
+      originalCall:JSON.stringify(saved.state.stories.eastern_undertaking_1096.openingCall)===
+        JSON.stringify(original.state.stories.eastern_undertaking_1096.openingCall),
+      rng:(rng>>>0)===(FB.getRngState()>>>0),uid:uid===FB.getUidCounter()};
+  })).toEqual({exact:true,rejected:true,restored:true,call:true,originalCall:true,rng:true,uid:true});
 });
 
 for (const def of openings) {
@@ -98,7 +138,8 @@ for (const def of openings) {
       const family = (me.childrenIds || []).map(function (id) {const c=s.chars[id];return [c.name,c.born,c.fatherId,c.motherId];});
       const profile = s.stories[d.profile], people = FB.stories.get(d.profile).people(s,profile);
       const contacts = people.map(function (p) {return s.chars[p.characterId].name;});
-      const snapshot = JSON.stringify([s.start,s.player,s.owner,s.holder,s.chars,s.stories]);
+      function facts(x) {return [x.start,x.player,x.owner,x.holder,x.chars,x.stories];}
+      const snapshot = restoreFacts(s,facts);
       const saved = JSON.parse(FB.save.serialize());
       await new Promise(function (resolve,reject) {
         FB.activateBookmark('867',null,function (error) {if(error) reject(error);else resolve();});
@@ -119,7 +160,7 @@ for (const def of openings) {
         spouse:me.spouseId ? s.chars[me.spouseId].name : null,children:family,contacts:contacts,
         pendingGoals:Object.keys(profile.goals).every(function (id) {return profile.goals[id].status === 'pending';}),
         tracks:!!s.stories[d.agenda] && !!profile && !s.stories.pilgrim_household_track_1096,
-        restored:snapshot === JSON.stringify([restored.start,restored.player,restored.owner,restored.holder,restored.chars,restored.stories])};
+        restored:assertRestoreFacts(restoreFacts(restored,facts),snapshot)};
     },def);
     expect(result).toMatchObject({identity:true,household:true,money:true,owned:true,held:true,sourceRemoved:true,single:1,
       name:def.name,age:def.age,culture:def.culture,religion:def.religion,tier:def.tier,rank:def.rank,form:def.form,site:def.site,
@@ -148,12 +189,12 @@ for (const def of openings) {
       const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
       const assets = JSON.stringify([s.owner,s.holder,s.player.gold,s.armies,s.wars,s.authority,s.player.provinceId,s.player.homeSettlement]);
       const first = declaration.stages[0].choices.find(function (c) {return c.operation === 'agenda_priority';});
-      const stale = FB.stories.quote(s,d.agenda,first.id); s.turn++;
+      const stale = FB.stories.quote(s,d.agenda,first.id); stageRulerDate(s,FB.dateAtTurn(s,s.turn+1));
       const refused = !FB.stories.apply(s,d.agenda,first.id,stale);
       const steps = [], repeats = [];
       declaration.stages.forEach(function (stage) {
         // Exercise dated boundaries directly, without simulating a year.
-        s.date = {year:stage.year,season:stage.season,day:1}; s.turn++;
+        stageRulerDate(s,{year:stage.year,season:stage.season,day:1});
         const c = stage.choices.find(function (row) {return row.operation === 'agenda_priority';});
         const q = FB.stories.quote(s,d.agenda,c.id);
         steps.push(FB.stories.apply(s,d.agenda,c.id,q));
@@ -209,15 +250,15 @@ for (const def of openings) {
   for (const ending of ['continue_rule','finish_review']) {
     test(def.scenario + ' preserves the earlier four-review completion with ' + ending,async function ({page},info) {
       await begin(page,info,def);
-      const result = await page.evaluate(function (input) {
+      const result = await page.evaluate(async function (input) {
         const d = input.def, s = FB.state, story = FB.stories.get(d.agenda), rec = s.stories[d.agenda];
         const prefix = d.scenario === 'alexios_1096' ? 'alexios_' : 'rum_';
         story.declaration.stages.slice(0,3).forEach(function (stage) {
-          s.date = {year:stage.year,season:stage.season,day:1}; s.turn++;
+          stageRulerDate(s,{year:stage.year,season:stage.season,day:1});
           const c = stage.choices.find(function (c) {return c.operation === 'agenda_priority';});
           if (!FB.stories.apply(s,d.agenda,c.id,FB.stories.quote(s,d.agenda,c.id))) throw new Error('Opening priority failed');
         });
-        s.date = {year:1097,season:0,day:1}; s.turn++;
+        stageRulerDate(s,{year:1097,season:0,day:1});
         // Exact semantic decision records written by the former four-stage declaration.
         // The old continue_rule priority also completed that program at its last stage.
         const legacy = d.scenario === 'alexios_1096' ? [
@@ -232,7 +273,12 @@ for (const def of openings) {
         rec.decisions.push({stageId:prefix + 'continuation',choiceId:prefix + input.ending,turn:s.turn});
         rec.step = 4; rec.status = 'agenda_complete'; rec.outcomeTurn = s.turn;
         const bytes = JSON.stringify([rec,s.stories[d.profile]]), saved = JSON.parse(FB.save.serialize());
-        FB.activateBookmark('867'); FB.save.restore(saved);
+        await new Promise(function (resolve,reject) {
+          FB.activateBookmark('867',null,function (error) {if(error) reject(error);else resolve();});
+        });
+        await new Promise(function (resolve,reject) {
+          if (FB.game.loadData(saved,resolve) === false) reject(new Error('Earlier review restore rejected'));
+        });
         const restored = FB.state;
         story.day(restored,restored.stories[d.agenda]);
         return {retained:bytes === JSON.stringify([restored.stories[d.agenda],restored.stories[d.profile]]),
@@ -248,7 +294,7 @@ for (const def of openings) {
     const result = await page.evaluate(function (d) {
       let s = FB.state; const story = FB.stories.get(d.agenda), prefix = d.scenario === 'alexios_1096' ? 'alexios_' : 'rum_';
       story.declaration.stages.slice(0,3).forEach(function (stage) {
-        s.date = {year:stage.year,season:stage.season,day:1}; s.turn++;
+        stageRulerDate(s,{year:stage.year,season:stage.season,day:1});
         const c = stage.choices.find(function (c) {return c.operation === 'agenda_priority';});
         if (!FB.stories.apply(s,d.agenda,c.id,FB.stories.quote(s,d.agenda,c.id))) throw new Error('Opening priority failed');
       });
@@ -256,11 +302,11 @@ for (const def of openings) {
       FB.save.restore(saved); s = FB.state;
       const retained = pending === JSON.stringify(s.stories[d.agenda]);
       const early = FB.stories.quote(s,d.agenda,prefix + 'extend_review').allowed;
-      s.date = {year:1097,season:0,day:1}; s.turn++;
+      stageRulerDate(s,{year:1097,season:0,day:1});
       const concluded = FB.stories.apply(s,d.agenda,prefix + 'continue_rule',FB.stories.quote(s,d.agenda,prefix + 'continue_rule')) &&
         s.stories[d.agenda].status === 'agenda_complete' && s.stories[d.agenda].step === 4;
       FB.save.restore(saved); s = FB.state;
-      s.date = {year:1097,season:0,day:1}; s.turn++;
+      stageRulerDate(s,{year:1097,season:0,day:1});
       const extend = FB.stories.apply(s,d.agenda,prefix + 'extend_review',FB.stories.quote(s,d.agenda,prefix + 'extend_review'));
       const stage = story.declaration.stages[4], c = stage.choices.find(function (c) {return c.operation === 'agenda_priority';});
       const continued = FB.stories.apply(s,d.agenda,c.id,FB.stories.quote(s,d.agenda,c.id));
@@ -281,7 +327,7 @@ for (const def of openings) {
     const result = await page.evaluate(function (d) {
       const s = FB.state, story = FB.stories.get(d.agenda), rec = s.stories[d.agenda];
       story.declaration.stages.slice(0,4).forEach(function (stage) {
-        s.date = {year:stage.year,season:stage.season,day:1}; s.turn++;
+        stageRulerDate(s,{year:stage.year,season:stage.season,day:1});
         const c = stage.choices.find(function (c) {return c.operation === 'agenda_priority';});
         if (!FB.stories.apply(s,d.agenda,c.id,FB.stories.quote(s,d.agenda,c.id))) throw new Error('Opening priority failed');
       });
@@ -324,7 +370,7 @@ test('Alexios records actual current service once and rejects a review after tha
     const row = FB.publicAppoint(s,appointment);
     if (!row) throw new Error('Appointment failed');
     story.declaration.stages.slice(0,4).forEach(function (stage) {
-      s.date = {year:stage.year,season:stage.season,day:1}; s.turn++;
+      stageRulerDate(s,{year:stage.year,season:stage.season,day:1});
       const c = stage.choices.find(function (c) {return c.operation === 'agenda_priority';});
       if (!FB.stories.apply(s,id,c.id,FB.stories.quote(s,id,c.id))) throw new Error('Opening priority failed');
     });

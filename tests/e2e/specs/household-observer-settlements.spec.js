@@ -1,25 +1,29 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
-const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
+const { expectModAdmission } = require('../support/game/mod-admission');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const example = require('../fixtures/authoring/household-settlement-observers.json');
 
 dependsOnRuntime(__filename, ['index.html','js/story_household_observer.js','js/story_household.js',
-  'js/story_settlements.js','js/story_history.js','js/story_polity_foundation.js','js/stories.js',
+  'js/story_settlements.js','js/royal_settlements.js','js/story_history.js','js/story_polity_foundation.js','js/stories.js',
   'js/mods.js','js/world.js','js/wars.js','js/holywar.js','js/starts.js','js/main.js',
   'js/save.js','js/save_v4.js','data/technology.js']);
 
 async function imported(page, info) {
   await openGame(page, info);
+  const candidate = JSON.parse(JSON.stringify(example));
+  candidate.bookmarks.dune_world.realms.find(function (r) { return r.id === 'dune_gate'; }).royalCourt = {members:[],spouseId:null};
+  await expectModAdmission(page, candidate);
   await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/household-settlement-observers.json'));
+  await page.locator('#modfile').setInputFiles({ name:'household-settlement-observers.json',
+    mimeType:'application/json', buffer:Buffer.from(JSON.stringify(candidate)) });
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('gift_household_notice'); });
-  await beginBookmark(page, info, 'dune_world', 'dune_household');
+  await beginBookmarkFromTitle(page, 'dune_world', 'dune_household');
 }
 
 test('JSON gift and inheritance observers keep planning, execution and expiry distinct', async function ({page}, info) {
@@ -79,9 +83,15 @@ test('a diplomatic notice restores once and absent observers remain absent', asy
     const again = FB.stories.apply(s,id,'records',q), finished = JSON.parse(FB.save.serialize());
     FB.save.restore(finished); s = FB.state; FB.stories.get(id).day(s,s.stories[id]);
     const closed = FB.stories.status(s,id) === null;
-    delete finished.state.stories[id]; FB.save.restore(finished);
-    return {retained:retained,applied:applied,again:again,closed:closed,missing:!FB.state.stories[id]};
-  })).toEqual({retained:true,applied:true,again:false,closed:true,missing:true});
+    delete finished.state.stories[id];
+    const current = FB.state, currentRng = FB.getRngState(), currentUid = FB.getUidCounter();
+    let sealedRejected = false; try { FB.save.restore(finished); } catch (_) { sealedRejected = true; }
+    sealedRejected = sealedRejected && current === FB.state && currentRng === FB.getRngState() && currentUid === FB.getUidCounter();
+    // An older campaign predates the sealed attachment inventory.
+    delete finished.storyAttachmentSchema;
+    delete finished.state.start.storyAttachments; FB.save.restore(finished);
+    return {sealedRejected:sealedRejected,retained:retained,applied:applied,again:again,closed:closed,missing:!FB.state.stories[id]};
+  })).toEqual({sealedRejected:true,retained:true,applied:true,again:false,closed:true,missing:true});
 });
 
 test('a refreshed review also withdraws a local report after its actual host leaves', async function ({page}, info) {

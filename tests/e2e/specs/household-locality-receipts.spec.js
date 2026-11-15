@@ -125,10 +125,16 @@ test('pending and closed local saves retain source facts, aliases and RNG withou
     const closedRetained = closed === JSON.stringify(s.stories);
     FB.stories.get(id).day(s,s.stories[id]);
     const quiet = FB.stories.status(s,id) === null;
-    delete done.state.stories[id]; FB.save.restore(done);
-    return {retained,first,repeated,closedRetained,quiet,missing:!FB.state.stories[id],
+    delete done.state.stories[id];
+    const current = FB.state, currentRng = FB.getRngState(), currentUid = FB.getUidCounter();
+    let sealedRejected = false; try { FB.save.restore(done); } catch (_) { sealedRejected = true; }
+    sealedRejected = sealedRejected && current === FB.state && currentRng === FB.getRngState() && currentUid === FB.getUidCounter();
+    // An older campaign predates the sealed attachment inventory.
+    delete done.storyAttachmentSchema;
+    delete done.state.start.storyAttachments; FB.save.restore(done);
+    return {sealedRejected,retained,first,repeated,closedRetained,quiet,missing:!FB.state.stories[id],
       sourceDecisions:Object.keys(FB.state.stories[source].decisions).length};
-  })).toEqual({retained:true,first:true,repeated:false,closedRetained:true,quiet:true,missing:true,sourceDecisions:1});
+  })).toEqual({sealedRejected:true,retained:true,first:true,repeated:false,closedRetained:true,quiet:true,missing:true,sourceDecisions:1});
 });
 
 test('version-two personal saves preserve mixed county and settlement tuples exactly', async function ({ page }, info) {

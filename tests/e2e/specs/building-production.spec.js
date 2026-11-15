@@ -2,22 +2,32 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+const {installPageGuards}=require('../support/page-contract');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmark,beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={fiber:require('../fixtures/authoring/production-fiber.json'),iron:require('../fixtures/authoring/production-iron.json')};
-dependsOnRuntime(__filename,['data/production_early_industry.js','data/production_fish_drying.js','data/buildings_seasonal_pasture.js','data/production_seasonal_pasture.js','data/relay_services.js','js/relay_services.js',
+dependsOnRuntime(__filename,['js/bookmark_sources.js','data/production_early_industry.js','data/production_fish_drying.js','data/buildings_seasonal_pasture.js','data/production_seasonal_pasture.js','data/relay_services.js','js/relay_services.js',
   'data/building_profiles.js','js/building_profiles.js','data/production_economy.js','js/production_economy.js','index.html','data/production.js','data/technology.js','js/production.js','js/site_resources.js',
   'js/world.js','js/title_ids.js','js/mods.js','js/main.js','js/save.js','js/save_v4.js','js/lordships.js','js/treasury.js',
   'js/politics.js','js/economy.js','js/model.js','js/technology.js','js/ui_modals.js','js/ui_misc.js','js/starts.js']);
 async function boot(page,info,kind,ruler) {
-  await openGame(page,info);
+  if(page.url()==='about:blank')await openGame(page,info);
   await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/production-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function(kind){return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks['production_'+kind];},kind);
-  if (!ruler) return beginBookmark(page,info,'production_'+kind,'production_'+kind+'_household');
+  if (!ruler) {
+    await beginBookmarkFromTitle(page,'production_'+kind,'production_'+kind+'_household');
+    await page.evaluate(function () {
+      // Processing must leave the real public construction and military reserves intact.
+      const s=FB.state,owner=s.production.assets[0].owner;
+      s.realms[owner.id].treasury.gold=10000;
+    });
+    return;
+  }
   const full=page.locator('#btn-choose-beginning');
   if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();
@@ -125,9 +135,17 @@ test('source expiry, competing use, exact funds and changed quotes fail atomical
       function(t){P.commit(t,P.aiQuote(t,site.id,'reserve',request));},function(t){t.production.lots[0].remaining=1;}];
     const checks=changes.map(function(change){const t=JSON.parse(JSON.stringify(original)),q=P.aiQuote(t,site.id,'reserve',request);change(t);const before=JSON.stringify(t);
       try{return !P.commit(t,q)&&before===JSON.stringify(t);}catch(error){return before===JSON.stringify(t);}});
-    const id=P.commit(s,P.aiQuote(s,site.id,'reserve',request));s.turn=7;s.date.day=8;
+    const id=P.commit(s,P.aiQuote(s,site.id,'reserve',request));
+    if(typeof id!=='number')throw new Error('Expiry requires a real funded pending batch.');
+    s.turn=7;s.date.day=8;
+    // An expired period with its retained old claim is valid before cancellation.
+    FB.siteResources.validate(s);P.validate(s);
     const before=JSON.stringify(s),expired=!P.commit(s,P.aiQuote(s,site.id,'work',{batchId:id}))&&before===JSON.stringify(s);
-    const cancel=P.commit(s,P.aiQuote(s,site.id,'cancel',{batchId:id}));P.validate(s);
+    const cancel=P.commit(s,P.aiQuote(s,site.id,'cancel',{batchId:id}));
+    try {P.validate(s);}catch(error){
+      throw new Error(error.message+' '+JSON.stringify({cancel:cancel,turn:s.turn,
+        batch:s.production.batches[0],source:s.siteResources.sources[site.sourceId]}));
+    }
     return {checks:checks,expired:expired,cancel:cancel,remaining:s.production.lots[0].remaining};
   });
   expect(r).toEqual({checks:Array(4).fill(true),expired:true,cancel:true,remaining:6});
@@ -193,13 +211,29 @@ test('one protagonist workday replaces focus and cannot duplicate enterprise lab
   expect(r.payer.kind).toBe('character');
 });
 
-test('same-seed replay retains exact production, accounts, source and RNG facts',async function({page},info){
-  await boot(page,info,'iron');
-  async function facts(){return page.evaluate(function(){
-    const s=FB.state,P=FB.production;P.commit(s,P.aiQuote(s,'iron_plant','reserve',{recipeId:'smelt_ore',disposition:'store'}));
-    return {state:JSON.stringify([s.production,s.siteResources,s.buildings,s.chars,s.owner,s.holder,s.realms]),rng:FB.getRngState()>>>0,uid:FB.getUidCounter()};
-  });}
-  const first=await facts();await beginBookmark(page,info,'production_iron','production_iron_household');expect(await facts()).toEqual(first);
+test.describe('cold production opening replay',function () {
+  test.describe.configure({mode:'default'});
+  let context,page,guard;
+  test.beforeAll(async function ({browser},info) {
+    context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+    await openGame(page,info);
+  });
+  test.afterAll(async function () {
+    if(context)try {expect(guard.faults).toEqual([]);}finally {await context.close();}
+  });
+  test('same-seed replay retains exact production, accounts, source and RNG facts',async function({},info){
+    await boot(page,info,'iron');
+    async function facts(){return page.evaluate(function(){
+      const s=FB.state,P=FB.production;
+      s.realms[s.production.assets[0].owner.id].treasury.gold=10000;
+      P.commit(s,P.aiQuote(s,'iron_plant','reserve',{recipeId:'smelt_ore',disposition:'store'}));
+      return {state:JSON.stringify([s.production,s.siteResources,s.buildings,s.chars,s.owner,s.holder,s.realms]),rng:FB.getRngState()>>>0,uid:FB.getUidCounter()};
+    });}
+    const first=await facts();
+    await beginBookmark(page,info,'production_iron','production_iron_household');
+    expect(await facts()).toEqual(first);
+  });
+  
 });
 
 test('advanced recipe technology gates new commitments but preserves funded work and exact mod saves',async function({page},info){

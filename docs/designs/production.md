@@ -39,6 +39,8 @@ The strict optional state.production version 1 contains definition, revision, ne
 
 Missing legacy owners remain absent. Restore neither calls initialization, performs work, fills inventory, consumes inputs, credits output, renews a source nor changes RNG. A water-backed completed batch must finish within the actual reservation's period; storage claims have no renewal. Detached matching saves can retain interrupted pending batches without repairing permission. The save envelope and other subsystem versions stay unchanged.
 
+Cancellation after a renewable water period expires preserves the inactive stored source row and the original batch claim reference without renewing capacity or consuming water. A cancelled batch may therefore retain its matching expired claim as history. Any retained claim still has to match the batch's original actor, worker, generation and exact recipe quantity; a current-period or storage claim can remain attached only to a reserved batch. Matching restores preserve these facts without releasing or recreating claims.
+
 Bounds are 128 goods, 128 recipes, 128 declared sites/assets, 16 recipes per site, eight inputs/outputs/opening goods, 10,000 units per recipe quantity, mass 1-1,000 per unit, 30 workdays, 10,000 processing gold, and 512 live lots and 512 live batches globally. Only live records and the provenance they need count against these caps; settled history folds under windowed retention below, never through unreviewed pruning. Compilation is cached per effective bookmark/revision/mod signature. Device performance and memory acceptance require owner measurements; source review does not establish a benchmark.
 
 Windowed retention
