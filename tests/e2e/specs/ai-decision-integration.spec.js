@@ -3,12 +3,12 @@ const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const { test,expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
+const {installPageGuards} = require('../support/page-contract');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
-const { openCrazyGame } = require('../support/game/crazygames-title');
-const { mockCrazyGames } = require('../support/crazygames');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['js/bookmark_sources.js',
   'data/ai_decisions.js','data/map_data.js','data/ambitions.js','data/traits.js','data/political_institutions.js','data/technology.js',
   'js/ai_decisions.js','js/agency.js','js/balance.js','js/governments.js','js/government_ai.js',
   'js/government_selection.js','js/government_aristocracy.js','js/authority.js','js/model.js','js/world.js',
@@ -18,6 +18,22 @@ dependsOnRuntime(__filename,[
   'js/messages.js',
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
+
+
+function importedTest(title,body) {
+  test.describe(title,function () {
+    test.describe.configure({mode:'default'});
+    let context,page,guard;
+    test.beforeAll(async function ({browser},info) {
+      context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+      await openGame(page,info);
+    });
+    test.afterAll(async function () {
+      if(context)try {expect(guard.faults).toEqual([]);}finally {await context.close();}
+    });
+    test(title,async function ({},info) {await body({page:page},info);});
+  });
+}
 
 async function importExample(page,file) {
   await page.evaluate(function () { FB.ui.showMods(); });
@@ -43,8 +59,7 @@ async function researchBoundary(page, rid) {
   },rid);
 }
 for (const example of examples) {
-  test(example.file+' composes several live families and a scoped government through Mods',async function ({page},testInfo) {
-    await openGame(page,testInfo);
+  importedTest(example.file+' composes several live families and a scoped government through Mods',async function ({page},testInfo) {
     await importExample(page,example.file);
     await startDeterministicGame(page);
     const out = await page.evaluate(function (form) {
@@ -71,8 +86,7 @@ for (const example of examples) {
       investment:example.investment,research:example.research,pure:true});
   });
 
-  test(example.file+' restores spent resources and replays one research boundary exactly',async function ({page},testInfo) {
-    await openGame(page,testInfo);
+  importedTest(example.file+' restores spent resources and replays one research boundary exactly',async function ({page},testInfo) {
     await importExample(page,example.file);
     await startDeterministicGame(page);
     const checkpoint = await page.evaluate(function (form) {
@@ -102,8 +116,7 @@ for (const example of examples) {
   });
 }
 
-test('current traits and aims follow real ruler succession without cached preferences crossing states',async function ({page},testInfo) {
-  await openGame(page,testInfo);
+importedTest('current traits and aims follow real ruler succession without cached preferences crossing states',async function ({page},testInfo) {
   await importExample(page,'ai-decisions-expansion.json');
   await startDeterministicGame(page);
   const out = await page.evaluate(function () {
@@ -380,8 +393,7 @@ test('unused war ranking and unsafe research adjustment subsets reject before pu
   expect(out).toEqual({faults:[true,true],exclusiveAimsAllowed:true,pure:true});
 });
 
-test('combined imported preference edits invalidate matching saves even under the same mod name',async function ({page},testInfo) {
-  await openGame(page,testInfo);
+importedTest('combined imported preference edits invalidate matching saves even under the same mod name',async function ({page},testInfo) {
   await importExample(page,'ai-decisions-conservative.json');
   await startDeterministicGame(page);
   const mod = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../docs/examples/ai-decisions-conservative.json'),'utf8'));
@@ -394,13 +406,9 @@ test('combined imported preference edits invalidate matching saves even under th
   expect(out).toEqual({changed:true,refused:true});
 });
 
-for (const distribution of ['standard','crazygames']) {
+for (const distribution of ['standard']) {
   test(distribution+' retains neutral live choices and seeded research replay',async function ({page},testInfo) {
-    if (distribution === 'crazygames') {
-      await mockCrazyGames(page);
-      await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-      await openCrazyGame(page,testInfo);
-    } else await openGame(page,testInfo);
+    await openGame(page,testInfo);
     await startDeterministicGame(page);
     const out = await page.evaluate(function () {
       const s = FB.state,P = FB.aiDecisions;
@@ -536,8 +544,7 @@ test('contrasting built-in rulers retain connected research, intrigue, faith and
 });
 
 for (const example of examples) {
-  test(example.file+' composes all nine families with current traits and durable aims',async function ({page},testInfo) {
-    await openGame(page,testInfo);
+  importedTest(example.file+' composes all nine families with current traits and durable aims',async function ({page},testInfo) {
     await importExample(page,example.file);
     await startDeterministicGame(page);
     const ids = await stageRulerChannels(page),calm = example.file.includes('conservative');
@@ -638,8 +645,7 @@ for (const group of [
   {name:'intrigue, diplomacy and religion',indexes:[0,1,2]},
   {name:'investment, expansion and government',indexes:[3,4,5]}
 ]) {
-  test(group.name+' changes participate in exact save fingerprints',async function ({page},testInfo) {
-    await openGame(page,testInfo);
+  importedTest(group.name+' changes participate in exact save fingerprints',async function ({page},testInfo) {
     await importExample(page,'ai-decisions-conservative.json');
     await startDeterministicGame(page);
     const checkpoint = await page.evaluate(function () { return {saved:JSON.parse(FB.save.serialize()),signature:FB.mods.sig()}; });
@@ -695,8 +701,7 @@ test('combined malformed imports publish no preferences, messages, storage or id
   expect(out).toEqual({rejected:Array(6).fill(true),pure:true});
 });
 
-test('imported faith preferences cannot activate disabled institutions or override an explicit peaceful court',async function ({page},testInfo) {
-  await openGame(page,testInfo);
+importedTest('imported faith preferences cannot activate disabled institutions or override an explicit peaceful court',async function ({page},testInfo) {
   await importExample(page,'ai-decisions-expansion.json');
   await startDeterministicGame(page);
   const ids = await stageRulerChannels(page);

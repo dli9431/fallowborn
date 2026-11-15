@@ -1,6 +1,6 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, [
+dependsOnRuntime(__filename, ['js/bookmark_sources.js',
   'data/bookmarks.js',
   'data/starts.js',
   'data/counties.js',
@@ -24,6 +24,7 @@ dependsOnRuntime(__filename, [
    (owner runs the harness). */
 
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame, unlockStartTier } = require('../support/game/start');
 
@@ -895,26 +896,21 @@ test('a ninth-part identity not authored for that bookmark county is rejected',
     await expect(page.locator('#ng-seed-err')).toContainText('doesn’t parse');
   });
 
-test('legacy five-part and current six-, seven-, and eight-part codes remain accepted',
-  async function ({ page }, testInfo) {
-    const codes = [
-      'CADENCE-farmer-london-f-Ada',
-      'CADENCE-867-farmer-london-f-Ada',
-      'CADENCE-867-farmer-london-f-Ada-established',
-      'CADENCE-867-farmer-london-f-Ada-standard-1'
-    ];
-    for (let i = 0; i < codes.length; i++) {
-      if (i) await openGame(page, testInfo);
-      await useStartCode(page, codes[i]);
-      await expect(page.locator('#cg-name')).toHaveValue('Ada');
-      // a single-community county has nothing to ask — the picker stays hidden
-      await expect(page.locator('#cg-community')).toBeHidden();
-      await expect(page.locator('input[name=cg-community]')).toHaveCount(0);
-      expect(await page.evaluate(function () {
-        return FB.game.pending.culture + '.' + FB.game.pending.religion;
-      })).toBe('english.catholic');
-    }
-  });
+for (const code of [
+  'CADENCE-farmer-london-f-Ada',
+  'CADENCE-867-farmer-london-f-Ada',
+  'CADENCE-867-farmer-london-f-Ada-established',
+  'CADENCE-867-farmer-london-f-Ada-standard-1'
+]) test('legacy and current start code remains accepted: '+code,async function ({page}) {
+  await useStartCode(page, code);
+  await expect(page.locator('#cg-name')).toHaveValue('Ada');
+  // a single-community county has nothing to ask — the picker stays hidden
+  await expect(page.locator('#cg-community')).toBeHidden();
+  await expect(page.locator('input[name=cg-community]')).toHaveCount(0);
+  expect(await page.evaluate(function () {
+    return FB.game.pending.culture + '.' + FB.game.pending.religion;
+  })).toBe('english.catholic');
+});
 
 test('867 Pamplona initializes with Basque Catholic primary identity and Iberian Catholic secondary community',
   async function ({ page }) {
