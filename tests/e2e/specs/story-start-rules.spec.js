@@ -3,6 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { expectModAdmission } = require('../support/game/mod-admission');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = require('../fixtures/authoring/household-graphs.json');
 
@@ -150,7 +151,14 @@ for (const fault of ['missing', 'profile']) test('the picker, start codes and di
     return { started:started, pure:before === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter() };
   })).toEqual({ started:false, pure:true });
   await expect(page.locator('#scenariolist [data-scenario="toledo_household_711"]')).toHaveCount(0);
-  await expect(page.locator('#scenariolist .scenario-story')).toHaveCount(0);
+  expect(await page.evaluate(function () {
+    const sc = FBDATA.startScenarios.find(function (row) { return row.id === 'serf'; });
+    return FB.mods.startDefinitionFaults(sc, FB.bookmark('711')).join(' ');
+  })).toContain('trackLocations.orphan_track');
+  await expect(page.locator('#scenariolist [data-scenario="serf"]')).toHaveCount(0);
+  const open = page.locator('#scenariolist [data-scenario="farmer"]');
+  await expect(open).toHaveCount(1);
+  await expect(open.locator('.scenario-story')).toHaveCount(0);
   await page.locator('#btn-ng-back').click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill('STORYRULE-711-toledo_household_711-toledo-m-Review-standard');
@@ -271,6 +279,7 @@ for (const profile of [
       });
       return mod;
     }, examples);
+    await expectModAdmission(page, mod);
     await page.evaluate(function () { FB.ui.showMods(); });
     await page.locator('#modfile').setInputFiles({ name:'fixed-household-story-rules.json', mimeType:'application/json',
       buffer:Buffer.from(JSON.stringify(mod)) });
@@ -288,6 +297,16 @@ for (const profile of [
     await beginBookmark(page, info, '867', profile.start);
     const result = await page.evaluate(function (profile) {
       const s = FB.state, t = s.stories[profile.track], opening = t.phase;
+      if (profile.track === 'hill_household_example') {
+        // This graph handles a local change of rule, not an opening invitation.
+        if (FB.stories.quote(s, profile.track, profile.choice).allowed) throw new Error('A control incident is required');
+        const owner = FB.topRealm(s, s.owner.aachen);
+        const successor = Object.keys(s.realms).sort().find(function (id) {
+          return s.realms[id].alive && !s.realms[id].liege && id !== owner && id !== 'player';
+        });
+        if (!successor) throw new Error('A second independent court is required');
+        FB.transferProvince(s, 'aachen', successor);
+      }
       const q = FB.stories.quote(s, profile.track, profile.choice);
       const applied = FB.stories.apply(s, profile.track, profile.choice, q);
       const record = JSON.stringify(s.stories[profile.track]), saved = JSON.parse(FB.save.serialize());

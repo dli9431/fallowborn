@@ -186,9 +186,12 @@ test('Muhammad accepts only a real outside-party offer and observes its canonica
     if (!act('offer',terms)) throw new Error('Offer failed');
     const q = FB.stories.quote(s,id,'muhammad_accept_offer'), publicGold = FB.treasuryAvailable(s,'player'), followingGold = FB.treasuryAvailable(s,rid);
     const owners = JSON.stringify([s.owner,s.holder]), total = M.total(s,rid), host = M.host(s,rid).men;
+    const originalOwner = s.owner.lower_syr_darya;
     s.owner.lower_syr_darya = 'ayyubid_1204';
+    FB.invalidateRealmCache();
     const before = JSON.stringify(s), stale = FB.stories.apply(s,id,'muhammad_accept_offer',q), pure = before === JSON.stringify(s);
-    s.owner.lower_syr_darya = 'player';
+    s.owner.lower_syr_darya = originalOwner;
+    FB.invalidateRealmCache();
     const accepted = apply('muhammad_accept_offer'), repeated = FB.stories.apply(s,id,'muhammad_accept_offer',q);
     const saved = JSON.parse(FB.save.serialize()), record = JSON.stringify(s.stories[id]);
     FB.save.restore(saved); s = FB.state;

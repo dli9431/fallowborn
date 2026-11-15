@@ -5372,13 +5372,25 @@ window.FB = window.FB || {};
      dies: the player's mortality pass leaves court characters alone unless the
      player has a tie to one, so nobody is rolled twice and nobody is immortal.
      A materialized member is rolled here exactly as a compact one is. */
+  let royalMortalityContext = null;
   function tickRoyalFamily(state, rid, familyLinks, preparedSuccession, annualContext) {
+    const previousContext = royalMortalityContext;
+    // Nested death callbacks repair the same house through public succession
+    // wrappers. Share only this court roll's existing snapshot with that repair;
+    // ordinary calls and the subsequent ruler-death phase keep live kin reads.
+    royalMortalityContext = { state:state, familyLinks:familyLinks };
     const timing = FB.game && FB.game._fastForwardTiming;
-    if (!timing) return tickRoyalFamilyUntimed(state, rid, familyLinks, preparedSuccession, annualContext);
-    const entry = timing.enter('World annual operation: royal family');
-    timing.count('World annual: royal families processed');
-    try { return tickRoyalFamilyUntimed(state, rid, familyLinks, preparedSuccession, annualContext); }
-    finally { timing.leave(entry); }
+    let entry;
+    try {
+      if (timing) {
+        entry = timing.enter('World annual operation: royal family');
+        timing.count('World annual: royal families processed');
+      }
+      return tickRoyalFamilyUntimed(state, rid, familyLinks, preparedSuccession, annualContext);
+    } finally {
+      royalMortalityContext = previousContext;
+      if (timing) timing.leave(entry);
+    }
   }
   function tickRoyalFamilyUntimed(state, rid, familyLinks, preparedSuccession,
       annualContext) {
@@ -6533,7 +6545,9 @@ window.FB = window.FB || {};
     if (!me || !c) return false;
     if (c.id === me.id || c.spouseId === me.id || me.spouseId === c.id ||
         c.betrothedId === me.id || me.betrothedId === c.id) return true;
-    const kin = FB.kinOf(state).byId;
+    const familyLinks = royalMortalityContext && royalMortalityContext.state === state &&
+      royalMortalityContext.familyLinks;
+    const kin = familyLinks && familyLinks.kinById || FB.kinOf(state).byId;
     if (kin[c.id] || kin[c.betrothedId]) return true;
     return FB.spousesSnapshot(state, c).some(function (spouse) {
       return spouse.id === me.id || !!kin[spouse.id];

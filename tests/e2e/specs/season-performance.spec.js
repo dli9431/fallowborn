@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'js/economy.js', 'js/politics.js', 'js/institutions.js', 'js/events.js',
   'js/travel.js', 'js/market.js', 'js/ui_modals.js', 'js/wars.js',
   'js/modifiers.js', 'js/model.js', 'js/armies.js', 'js/world.js', 'js/main.js', 'js/actions.js',
-  'data/economy.js', 'data/markets.js', 'data/political_institutions.js'
+  'data/economy.js', 'data/markets.js', 'data/political_institutions.js', 'js/ai_decisions.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -253,6 +253,7 @@ test('seasonal AI reuses border projections and refreshes them for the next deci
     FB.invalidateRealmCache(); FB.repairWars(s);
     const names = ['realmStrength', 'territorialWarRights', 'chance', 'sameFaithHeadWarPolicy', 'areAlliedSnapshot'];
     const saved = {}, strengthReads = {}, rightsReads = {};
+    const choose = FB.aiDecisions.choose;
     names.forEach(function (name) { saved[name] = FB[name]; });
     let enemyStrength = 10, rolls = 0;
     FB.realmStrength = function (state, id) {
@@ -267,19 +268,26 @@ test('seasonal AI reuses border projections and refreshes them for the next deci
     FB.sameFaithHeadWarPolicy = function () { return null; };
     FB.areAlliedSnapshot = function () { return false; };
     let objectives, firstStrengthReads, firstRightsReads, nextWars;
+    FB.aiDecisions.choose = function (state, rid, domain, candidates) {
+      if (rid === attacker && domain === 'expansion') {
+        // Candidate reuse ends at selection. Commit deliberately reads fresh
+        // authority and strength instead of borrowing the advisory snapshot.
+        firstStrengthReads = Object.assign({}, strengthReads);
+        firstRightsReads = Object.assign({}, rightsReads);
+      }
+      return choose.apply(this, arguments);
+    };
     try {
       FB.generateVassalCampaigns(s);
       const war = FB.realmWars(s, attacker)[0];
       objectives = war && war.objectives.map(function (o) { return o.target; }).sort();
-      firstStrengthReads = Object.assign({}, strengthReads);
-      firstRightsReads = Object.assign({}, rightsReads);
       FB.generateVassalCampaigns(s); // same-turn guard must not roll again
       if (war) FB.settleOrdinaryWar(s, war.id, 'invalid');
       enemyStrength = 100000;
       s.turn += 90;
       FB.generateVassalCampaigns(s);
       nextWars = FB.realmWars(s, attacker).length;
-    } finally { names.forEach(function (name) { FB[name] = saved[name]; }); }
+    } finally { names.forEach(function (name) { FB[name] = saved[name]; }); FB.aiDecisions.choose = choose; }
     return { objectives:objectives, expected:targets, strengths:Object.values(firstStrengthReads),
       rights:Object.values(firstRightsReads), attackerReads:strengthReads[attacker],
       enemyReads:strengthReads[enemy], rolls:rolls, nextWars:nextWars };
@@ -287,8 +295,8 @@ test('seasonal AI reuses border projections and refreshes them for the next deci
   expect(result.objectives).toEqual(result.expected);
   expect(result.strengths.every(function (n) { return n === 1; })).toBe(true);
   expect(result.rights).toEqual([1, 1]);
-  expect(result.attackerReads).toBe(2);
-  expect(result.enemyReads).toBe(2);
+  expect(result.attackerReads).toBe(3);
+  expect(result.enemyReads).toBe(3);
   expect(result.rolls).toBe(2);
   expect(result.nextWars).toBe(0);
 });

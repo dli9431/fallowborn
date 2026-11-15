@@ -722,12 +722,12 @@ test('annual household checks reuse reverse spouse links',
 
 test('a death-heavy realm rollover reuses one family snapshot',
   async function ({ page }, testInfo) {
-    test.skip(testInfo.project.name !== 'chromium-file',
-      'The rollover shape check runs against the primary file target.');
+    test.skip(['chromium-file', 'chromium-served'].indexOf(testInfo.project.name) < 0,
+      'The rollover shape check runs against both Chromium origins.');
     await openGame(page, testInfo);
     await startDeterministicGame(page);
 
-    expect(await page.evaluate(function () {
+    const result = await page.evaluate(function () {
       const s = FB.state;
       const originalSnapshot = FB.familyLinksSnapshot;
       const originalKin = FB.kinOf;
@@ -735,6 +735,7 @@ test('a death-heavy realm rollover reuses one family snapshot',
       const originalMortality = FBDATA.balance.mortalityBase;
       let snapshots = 0;
       let kinReads = 0;
+      const kinCallers = {};
       let deaths = 0;
       for (const rid in s.realms) {
         const succession = s.realms[rid] && s.realms[rid].succession;
@@ -752,6 +753,8 @@ test('a death-heavy realm rollover reuses one family snapshot',
       };
       FB.kinOf = function (state) {
         kinReads++;
+        const caller = (new Error().stack || '').split('\n')[2] || 'unknown caller';
+        kinCallers[caller] = (kinCallers[caller] || 0) + 1;
         return originalKin(state);
       };
       FBDATA.balance.mortalityBase = 0.024;
@@ -764,10 +767,13 @@ test('a death-heavy realm rollover reuses one family snapshot',
         }
         return false;
       };
+      const started = performance.now();
+      let elapsedMs;
       try {
         s.date.year++;
         s.turn += 360;
         FB.worldTick(s);
+        elapsedMs = performance.now() - started;
       } finally {
         FB.familyLinksSnapshot = originalSnapshot;
         FB.kinOf = originalKin;
@@ -777,9 +783,121 @@ test('a death-heavy realm rollover reuses one family snapshot',
       return {
         manyDeaths:deaths > 20,
         snapshots:snapshots,
-        kinReads:kinReads
+        kinReads:kinReads,
+        kinCallers:kinCallers,
+        deaths:deaths,
+        elapsedMs:elapsedMs,
+        rng:FB.getRngState(),
+        uid:FB.getUidCounter(),
+        state:JSON.stringify(s)
       };
-    })).toEqual({ manyDeaths:true, snapshots:1, kinReads:1 });
+    });
+    const digest = require('crypto').createHash('sha256').update(result.state).digest('hex');
+    console.log('Death-heavy rollover: ' + JSON.stringify({ deaths:result.deaths,
+      snapshots:result.snapshots, kinReads:result.kinReads, kinCallers:result.kinCallers,
+      elapsedMs:result.elapsedMs, rng:result.rng, uid:result.uid, stateDigest:digest }));
+    await testInfo.attach('rollover-state', { body:result.state, contentType:'application/json' });
+    expect({manyDeaths:result.manyDeaths,snapshots:result.snapshots,kinReads:result.kinReads},
+      JSON.stringify(result.kinCallers)).toEqual({ manyDeaths:true, snapshots:1, kinReads:1 });
+  });
+
+test('death-heavy court repairs preserve the live-kin reference state, deaths, RNG and identities',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'Source interception for the live-read reference requires the served origin.');
+    const outcomes = [];
+    for (const liveKin of [true, false]) {
+      if (liveKin) {
+        await page.route('**/js/world.js', async function (route) {
+          const response = await route.fetch();
+          const source = await response.text();
+          const lookup = /const familyLinks = royalMortalityContext && royalMortalityContext\.state === state &&\s+royalMortalityContext\.familyLinks;/g;
+          expect(source.match(lookup)).toHaveLength(1);
+          await route.fulfill({ response:response, body:source.replace(lookup, 'const familyLinks = null;') });
+        });
+      } else await page.unroute('**/js/world.js');
+      await openGame(page, testInfo);
+      await startDeterministicGame(page);
+      outcomes.push(await page.evaluate(function () {
+        const s = FB.state, chance = FB.chance, mortality = FBDATA.balance.mortalityBase;
+        let deaths = 0;
+        for (const rid in s.realms) {
+          const succession = s.realms[rid] && s.realms[rid].succession;
+          if (!succession) continue;
+          for (const id in succession.members) {
+            const member = succession.members[id];
+            if (member && id !== succession.rulerMemberId) member.born = s.date.year - 90;
+          }
+        }
+        FBDATA.balance.mortalityBase = 0.024;
+        FB.chance = function (q) {
+          if (Math.abs(q - 0.5) < 0.0000001) { deaths++; return true; }
+          return false;
+        };
+        try {
+          s.date.year++;
+          s.turn += 360;
+          FB.worldTick(s);
+        } finally {
+          FB.chance = chance;
+          FBDATA.balance.mortalityBase = mortality;
+        }
+        return { state:JSON.stringify(s), deaths:deaths, rng:FB.getRngState(), uid:FB.getUidCounter() };
+      }));
+    }
+    expect(outcomes[0].deaths).toBeGreaterThan(20);
+    expect(outcomes[1]).toEqual(outcomes[0]);
+  });
+
+test('an interrupted court mortality pass releases its snapshot before ordinary succession repair',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'The court mortality exception boundary runs against the served origin.');
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state, chance = FB.chance, died = FB.courtMemberDied;
+      const mortality = FBDATA.balance.mortalityBase, fault = new Error('Court mortality interrupted');
+      for (const rid in s.realms) {
+        const line = s.realms[rid] && s.realms[rid].succession;
+        if (!line) continue;
+        for (const id in line.members) {
+          if (id !== line.rulerMemberId) line.members[id].born = s.date.year - 90;
+        }
+      }
+      let propagated = false;
+      FBDATA.balance.mortalityBase = 0.024;
+      FB.chance = function (q) { return Math.abs(q - 0.5) < 0.0000001; };
+      FB.courtMemberDied = function () { throw fault; };
+      try { s.date.year++; s.turn += 360; FB.worldTick(s); }
+      catch (error) { if (error !== fault) throw error; propagated = true; }
+      finally { FB.chance = chance; FB.courtMemberDied = died; FBDATA.balance.mortalityBase = mortality; }
+      const rid = Object.keys(s.realms).find(function (id) {
+        const r = s.realms[id], line = r.succession;
+        const root = line && line.members && line.members[line.rulerMemberId];
+        const policy = FB.governments.successionForRealm(s, id);
+        return id !== 'player' && r.alive && root && root.charId && !line.authoredCourt &&
+          !s.chars[root.charId].dead && !policy.selectionManaged && policy.repairEmpty !== false &&
+          !(FB.mobile && FB.mobile.settledPrincipal(s, id));
+      });
+      if (!rid) throw new Error('A living ordinary court is required');
+      const line = s.realms[rid].succession;
+      // Stage an exhausted frontier without changing the living ruler.
+      for (const id in line.members) {
+        if (id === line.rulerMemberId) continue;
+        const member = line.members[id];
+        member.alive = false;
+        if (member.charId) s.chars[member.charId].dead = true;
+      }
+      line.order = []; line.heirId = null;
+      const kin = FB.kinOf;
+      let liveReads = 0;
+      FB.kinOf = function (state) { liveReads++; return kin(state); };
+      try { FB.refreshRealmSuccession(s, rid); }
+      finally { FB.kinOf = kin; }
+      return { propagated:propagated, liveRead:liveReads > 0, repaired:!!line.heirId };
+    });
+    expect(result).toEqual({ propagated:true, liveRead:true, repaired:true });
   });
 
 test('home pestilence mortality does not follow extended kin to another county',
