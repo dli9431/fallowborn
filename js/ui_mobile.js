@@ -164,6 +164,8 @@
     function add(label,action,terms,details,columnReview,campReview) {
       var transition=action==='appoint' || action==='recall';
       var permission=action==='load' || action==='unload' ? 'trade' : action==='decline' ? 'accept' : action;
+      if (columnReview) permission=action==='assign' || action==='stop' ? 'march' :
+        action==='merge' ? 'demuster' : action==='split' ? 'recruit' : permission;
       if (r.command && !transition && command.operations.indexOf(permission)<0) return;
       if (r.command && !campReview && ['offer','war','peace','land','contract','settle','service'].indexOf(action)>=0) {
         label=action==='offer' ? terms.kind==='access' ? FB.T('Offer seasonal access') : terms.kind==='tribute' ? FB.T('Offer tribute') : FB.T('Offer protection service') :

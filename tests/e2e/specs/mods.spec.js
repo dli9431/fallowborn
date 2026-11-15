@@ -9,6 +9,9 @@ dependsOnRuntime(__filename, [
   'js/events.js',
   'js/model.js',
   'js/mods.js',
+  'js/main.js',
+  'js/bookmark_sources.js',
+  'js/balance.js',
   'js/world.js',
   'js/population.js',
   'js/technology.js',
@@ -17,7 +20,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openGame, prepareGameContent } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('community policies and event fields validate against the combined mod catalogue',
@@ -369,6 +372,7 @@ test('save fingerprints stamp and refuse a life from another mod set',
     });
     await page.reload({ waitUntil:'domcontentloaded' });
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
+    await prepareGameContent(page);
 
     expect(await page.evaluate(function (data) {
       return {
@@ -415,6 +419,7 @@ test('bundled mod toggles persist and apply across reloads',
       page.locator('#mod-bundled-0').click()
     ]);
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
+    await prepareGameContent(page);
     expect(await page.evaluate(function () {
       return {
         enabled:FB.mods.isEnabled('e2e-bundled'),
@@ -430,6 +435,7 @@ test('bundled mod toggles persist and apply across reloads',
       page.locator('#mod-bundled-0').click()
     ]);
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
+    await prepareGameContent(page);
     expect(await page.evaluate(function () {
       return {
         enabled:FB.mods.isEnabled('e2e-bundled'),
@@ -461,6 +467,7 @@ test('invalid mod currency falls back without discarding the rest of the mod',
     });
     await page.reload({ waitUntil:'domcontentloaded' });
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
+    await prepareGameContent(page);
 
     expect(await page.evaluate(function () {
       return {

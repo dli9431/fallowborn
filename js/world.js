@@ -6543,6 +6543,7 @@ window.FB = window.FB || {};
   function makeHeirIfEmpty(state, r, s) {
     if (s.order.length) return null;
     if (FB.governments.successionForRealm(state,r.id).repairEmpty === false) return null;
+    if (FB.mobile && FB.mobile.settledPrincipal(state,r.id)) return null;
     const ruler = s.rulerMemberId && s.members[s.rulerMemberId];
     const rulerAge = ruler ? state.date.year - ruler.born : r.ruler.age;
     const ancestor = ruler && ruler.parentId && s.members[ruler.parentId];

@@ -3,7 +3,9 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {expectModAdmission}=require('../support/game/mod-admission');
+const {installRestoreFacts}=require('../support/game/restore-facts');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
   'js/expedition_programs.js','js/mobile_columns.js','js/mobile_confederations.js','js/mobile_command.js','js/federates.js',
@@ -16,17 +18,22 @@ async function start(page,info,prefix,singleHost) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   const fixture=path.resolve(__dirname,'../fixtures/authoring/mobile-columns-'+prefix+'.json');
+  const input=JSON.parse(JSON.stringify(require(fixture)));
   if (singleHost) {
-    const input=JSON.parse(JSON.stringify(require(fixture)));
-    delete input.bookmarks[prefix+'_world'].realms.find(function (r) {return r.mobile;}).mobile.columns;
-    await page.locator('#modfile').setInputFiles({name:'single-host.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))});
-  } else await page.locator('#modfile').setInputFiles(fixture);
+    const following=input.bookmarks[prefix+'_world'].realms.find(function (r) {return r.mobile;}).mobile;
+    delete following.columns;
+    // The independent retained-principal variant explicitly permits settlement;
+    // its ordinary imported harbor mandate otherwise covers hosting work only.
+    if (prefix==='harbor') following.command.operations.push('settle');
+  }
+  await expectModAdmission(page,input);
+  await page.locator('#modfile').setInputFiles({name:'columns.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await page.evaluate(function (prefix) {
-    const M=FB.mobile,rid=prefix+'_coalition';
+    const M=FB.mobile,rid=FB.campaignBookmark(FB.state).realms.find(function (r) {return r.mobile;}).id;
     window.columnTest={rid:rid,
       review:function (action,terms,actor) {return M.reviewColumns(FB.state,{realmId:rid,action:action,terms:terms,
         actor:actor || {kind:'character',id:M.row(FB.state,rid).leaderId}});},
@@ -88,11 +95,14 @@ test('one escort carries the camp through actual secondary-host arrival and rest
   await start(page,info,'dune');
   const result=await page.evaluate(function () {
     const C=columnTest,s=FB.state,M=FB.mobile,r=M.row(s,C.rid),[a,b]=r.columns.entries,m=M.migration(s,C.rid);
-    // Stage a lawful owned destination. The reviewed order and ordinary
+    // Agree lawful passage. The reviewed order and ordinary
     // movement own the route and arrival, with no daily years-long journey.
-    s.owner.dune_flats=C.rid;s.holder.dune_flats=C.rid;FB.invalidateRealmCache();
-    const route=FB.armyOrderPlan(s,C.host(1),'dune_flats');
-    route.path.forEach(function (pid) {s.owner[pid]=C.rid;s.holder[pid]=C.rid;});FB.invalidateRealmCache();
+    const offer=M.review(s,{realmId:C.rid,action:'offer',actor:{kind:'realm',id:C.rid},
+      terms:{kind:'access',partnerId:'dune_oasis',countyIds:['dune_well','dune_flats'],
+        capacity:M.total(s,C.rid),allowRecruit:false,price:0,duration:20}});
+    if (!M.commit(s,offer) || !M.commit(s,M.review(s,{realmId:C.rid,action:'accept',
+        terms:{agreementId:r.agreements[r.agreements.length-1].id},actor:{kind:'realm',id:'dune_oasis'}})))
+      throw new Error('Lawful passage was not agreed');
     function position(a) {return JSON.stringify([a.id,a.at,a.path,a.warId,a.men]);}
     const first=position(C.host(0)),camp=m.at,totals=C.totals();
     const moved=C.apply('move',{columnId:b.id,countyId:'dune_flats'}),notTeleport=m.at===camp && C.host(1).at===camp;
@@ -104,7 +114,8 @@ test('one escort carries the camp through actual secondary-host arrival and rest
     const arrived=escort.at!==camp && M.migration(restored,C.rid).at===escort.at;
     const other=position(C.host(0))===first;
     const one=restored.armies.filter(function (v) {return v.realm===C.rid && v.mobileCourt;}).length===1;
-    const stopped=C.apply('stop',{columnId:b.id});
+    const returning=C.apply('move',{columnId:b.id,countyId:camp});
+    const stopped=returning && C.apply('stop',{columnId:b.id});
     return {moved:moved,notTeleport:notTeleport,matched:matched,arrived:arrived,other:other,one:one,stopped:stopped,
       people:C.totals().people===totals.people,privateGold:C.totals().privateGold===totals.privateGold,valid:M.validate(restored)};
   });
@@ -273,20 +284,21 @@ test('final settlement waits for all surviving columns and transfers people once
 test('independent column campaigns preserve other host war references and truthful permissions',async function ({page},info) {
   await start(page,info,'dune');
   const result=await page.evaluate(function () {
-    const C=columnTest,s=FB.state,M=FB.mobile,r=M.row(s,C.rid),a=C.host(0),b=C.host(1),column=r.columns.entries[0];
+    const C=columnTest,s=FB.state,M=FB.mobile,r=M.row(s,C.rid),a=C.host(0),b=C.host(1),column=r.columns.entries[0],camp=M.migration(s,C.rid).at;
     // The fictional gate already controls this adjacent physical county.
+    a.at='dune_flats';a.from=a.at;
     const target=Object.keys(FB.world.adj[a.at] || {}).find(function (pid) {return s.owner[pid]==='dune_gate';});
     if (!target) throw new Error('The fictional command has no adjacent gate objective');
-    const existing=FB.registerOrdinaryWar(s,'dune_oasis',{enemy:C.rid,target:'dune_well',
-      objectives:[{type:'aggression',target:'dune_well'}],legacy:false});
-    if (!existing) throw new Error('The separate defensive war did not register');
-    b.warId=existing.id;const before=b.warId;
+    const separate=C.review('war',{columnId:r.columns.entries[1].id,
+      causes:[{type:'aggression',enemy:'dune_oasis',target:'dune_flats'}]});
+    if (!separate.review.allowed || !M.commit(s,separate)) throw new Error('The separate column campaign did not begin');
+    const before=b.warId;
     const q=C.review('war',{columnId:column.id,causes:[{type:'aggression',enemy:'dune_gate',target:target}]}),
       accepted=q.review.allowed && M.commit(s,q),repeat=!M.commit(s,q);
     const war=FB.ordinaryWarById(s,a.warId),same=b.warId===before;
     const denied=C.review('merge',{columnId:r.columns.entries[0].id,otherColumnId:r.columns.entries[1].id});
     return {accepted:accepted,repeat:repeat,war:!!war && war.attacker===C.rid,same:same,
-      merge:!denied.review.allowed,route:!a.path.length,camp:M.migration(s,C.rid).at===a.at,valid:M.validate(s)};
+      merge:!denied.review.allowed,route:!a.path.length,camp:M.migration(s,C.rid).at===camp,valid:M.validate(s)};
   });
   expect(result).toEqual({accepted:true,repeat:true,war:true,same:true,merge:true,route:true,camp:true,valid:true});
 });
@@ -305,21 +317,40 @@ test('matching restore replays the same reviewed reorganization without identity
   expect(result).toEqual({same:true,rng:true,uid:true,valid:true});
 });
 
-test('single-host command settlement retains its living principal and archived mandate across restore',async function ({page},info) {
-  await start(page,info,'dune',true);
-  const result=await page.evaluate(function () {
+for (const prefix of ['harbor','dune']) test(prefix+' single-host command settlement retains its living principal and archived mandate across restore',async function ({page},info) {
+  await start(page,info,prefix,true);
+  await installRestoreFacts(page);
+  const result=await page.evaluate(function (prefix) {
     const C=columnTest,s=FB.state,M=FB.mobile,r=M.row(s,C.rid),m=M.migration(s,C.rid),leader=r.leaderId;
-    s.owner[m.at]=C.rid;s.holder[m.at]=C.rid;FB.invalidateRealmCache();
-    const mandate=JSON.stringify(r.command),count=M.total(s,C.rid),ids=JSON.stringify(Object.keys(s.chars).sort());
+    const county=prefix==='harbor' ? 'harbor_ridge' : 'dune_pass';
+    FB.transferProvince(s,county,C.rid);
+    const host=M.host(s,C.rid);host.at=county;host.from=host.at;host.mobileCourt=true;FB.federateDay(s);
+    const mandate=JSON.stringify(r.command),count=M.total(s,C.rid),ids=Object.keys(s.chars).sort();
     const q=M.review(s,{realmId:C.rid,action:'settle',terms:{countyId:m.at,count:count,final:true},actor:{kind:'character',id:leader}});
     const accepted=q.review.allowed && M.commit(s,q);
     if (!accepted) return {accepted:false};
-    const saved=FB.save.serialize();FB.save.restore(JSON.parse(saved));const v=FB.state;
+    const settledIds=Object.keys(s.chars).sort();
+    const family=s.realms[C.rid].succession;
+    const knownFamily=Object.keys(family.members).every(function (id) {return ids.indexOf(family.members[id].charId)>=0;});
+    function facts(state) {return [state.chars,state.realms,state.authority,state.owner,state.holder,
+      state.armies,state.player,state.population,state.treasuryAccounting];}
+    const before=restoreFacts(s,facts);
+    const restores=[];
+    for (let i=0;i<2;i++) {
+      const saved=JSON.parse(FB.save.serialize()),bytes=JSON.stringify(saved);
+      FB.save.restore(saved);
+      restores.push(bytes===JSON.stringify(saved) && assertRestoreFacts(restoreFacts(FB.state,facts),before));
+    }
+    const v=FB.state;
     return {accepted:accepted,leader:FB.realmRulerCharacterSnapshot(v,C.rid).id===leader,
       sameMandate:JSON.stringify(M.row(v,C.rid).command)===mandate,inactive:!M.commandValid(v,C.rid),
-      noPeople:M.total(v,C.rid)===0,identities:JSON.stringify(Object.keys(v.chars).sort())===ids,valid:M.validate(v)};
-  });
-  expect(result).toEqual({accepted:true,leader:true,sameMandate:true,inactive:true,noPeople:true,identities:true,valid:true});
+      restores:restores,knownFamily:knownFamily,
+      noPeople:M.total(v,C.rid)===0,settlementAdded:settledIds.filter(function (id) {return ids.indexOf(id)<0;}),
+      restoreAdded:Object.keys(v.chars).sort().filter(function (id) {return settledIds.indexOf(id)<0;}),identities:{
+        removed:ids.filter(function (id) {return !v.chars[id];}),
+        added:Object.keys(v.chars).sort().filter(function (id) {return ids.indexOf(id)<0;})},valid:M.validate(v)};
+  },prefix);
+  expect(result).toEqual({accepted:true,leader:true,sameMandate:true,inactive:true,restores:[true,true],knownFamily:true,noPeople:true,settlementAdded:[],restoreAdded:[],identities:{removed:[],added:[]},valid:true});
 });
 
 for (const viewport of [{width:1280,height:900},{width:390,height:844}]) {
@@ -333,7 +364,8 @@ for (const viewport of [{width:1280,height:900},{width:390,height:844}]) {
     await page.locator('#mobile-column').selectOption(second);
     await page.locator('#mobile-other-column').selectOption(first);
     await expect(page.locator('#mobile-column')).toHaveValue(second);
-    const label=page.getByRole('button',{name:'Reunite into selected column',exact:true});
+    const label=page.locator('button[data-mobile-review]').filter({hasText:'Reunite into selected column'});
+    await expect(label).toBeEnabled();
     await label.click();await expect(page.locator('#mobile-confirm')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.locator('#mobile-column')).toHaveValue(second);

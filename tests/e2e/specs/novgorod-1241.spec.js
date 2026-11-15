@@ -59,7 +59,7 @@ test('the selectable date has a complete fictional Novgorod household without ad
     return {phase:t.phase,actor:t.actorId === c.id,home:s.player.provinceId,
       site:FB.world.byId.novgorod.settlements[s.player.homeSettlement].site,
       age:FB.ageOf(c,s.date.year),culture:c.culture,faith:c.religion,
-      family:FB.householdMembers(s).length > 1,profession:s.player.profession,gold:s.player.gold,
+      family:FB.kinOf(s).parents.length === 2 && FB.kinOf(s).siblings.length > 0,profession:s.player.profession,gold:s.player.gold,
       noLand:s.player.landPlots.length === 0 && s.player.holdings.length === 0 && s.player.provs.length === 0,
       contacts:s.stories.opening_novgorod_1241.contacts,errors:FBTEST.checkInvariants()};
   })).toEqual({phase:'household',actor:true,home:'novgorod',site:'novgorod',age:24,culture:'rus',faith:'orthodox',
@@ -158,7 +158,7 @@ test('death, succession and a year of deferral close once; missing records remai
     s.player.dead = true; update();
     if (s.stories[id].phase !== 'interrupted' || s.stories[opening].goals.craft_income.status !== 'archived') throw new Error('Death did not archive the opening');
     FB.save.restore(saved); s = FB.state;
-    s.player.charId = FB.householdMembers(s).find(function (c) { return c.id !== s.player.charId && !c.dead; }).id;
+    s.player.charId = FB.kinOf(s).siblings.find(function (row) { return !row.c.dead; }).c.id;
     update();
     if (s.stories[id].phase !== 'interrupted') throw new Error('Successor inherited the opening');
     FB.save.restore(saved); s = FB.state;
@@ -166,6 +166,13 @@ test('death, succession and a year of deferral close once; missing records remai
     const records = JSON.stringify(s.stories), gold = s.player.gold; update();
     if (s.stories[id].phase !== 'postponed' || records !== JSON.stringify(s.stories) || gold !== s.player.gold) throw new Error('Deferral replayed an effect');
     delete saved.state.stories[id]; delete saved.state.stories[opening];
+    const candidate=JSON.stringify(saved),live=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+    let rejected=false;
+    try { FB.save.restore(saved); } catch (_) { rejected=true; }
+    if (!rejected || candidate!==JSON.stringify(saved) || FB.state!==s || live!==JSON.stringify(s) ||
+        rng!==FB.getRngState() || uid!==FB.getUidCounter()) throw new Error('Missing sealed stories did not reject purely');
+    // This fixture predates attachment sealing; current sealed saves remain strict.
+    delete saved.state.start.storyAttachments; delete saved.storyAttachmentSchema;
     FBDATA.bookmarks['1241'].hidden = true;
     return JSON.stringify(saved);
   });

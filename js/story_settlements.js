@@ -378,24 +378,33 @@
     var plan = rec.plan;
     if (!id(plan.rulerId) || !integer(plan.generation) || !id(plan.primaryId) || !Array.isArray(plan.shares) ||
         !plan.shares.length || plan.shares.length > (def.shares || def.regions).length) bad('plan');
-    var actorRealm = s.realms[def.actor.realmId], actorFamily = actorRealm && actorRealm.succession;
-    var priorRealm = def.originalActorRealmId && s.realms[def.originalActorRealmId];
+    // Genealogy references may use the codec's omitted royal charId and
+    // royalLine defaults. Resolve them on a detached snapshot; raw plan fields
+    // above and explicit conflicting identities retain their strict checks.
+    var familyState = FB.save.expandedSnapshot(s);
+    var actorRealm = familyState.realms[def.actor.realmId], actorFamily = actorRealm && actorRealm.succession;
+    var priorRealm = def.originalActorRealmId && familyState.realms[def.originalActorRealmId];
     var priorFamily = priorRealm && priorRealm.succession;
     function memberKnown(memberId) {
       if (actorFamily && actorFamily.members && actorFamily.members[memberId] ||
           priorFamily && priorFamily.members && priorFamily.members[memberId]) return true;
       if (memberId.indexOf('royal_player_person_') !== 0 || !actorFamily || !actorFamily.settlementGenealogy) return false;
       var charId = memberId.slice('royal_player_person_'.length);
-      if (!s.chars[charId]) return false;
+      if (!familyState.chars[charId]) return false;
       var seen = {}, queue = Object.keys(actorFamily.members).map(function (key) {
         return actorFamily.members[key].charId;
-      }).filter(function (id) { return !!s.chars[id]; });
+      }).filter(function (id) { return !!familyState.chars[id]; });
+      // Adopted court members can be intentionally detached from their people.
+      // The declaration's original actor is the same canonical genealogy root
+      // used by the player-family projection, including after later succession.
+      var original = expected(familyState, rec, def);
+      if (def.actor.realmId === 'player' && plan.rulerId === original && familyState.chars[original]) queue.push(original);
       for (var i = 0; i < queue.length; i++) {
         var current = queue[i];
         if (seen[current]) continue;
         seen[current] = true;
         if (current === charId) return true;
-        FB.childrenOf(s, s.chars[current]).forEach(function (child) {
+        FB.childrenOf(familyState, familyState.chars[current]).forEach(function (child) {
           if (!seen[child.id]) queue.push(child.id);
         });
       }

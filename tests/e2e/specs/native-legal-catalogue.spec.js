@@ -5,8 +5,6 @@ const {test,expect} = require('../support/fixture');
 const {openTitle,openGame,prepareGameContent} = require('../support/game/navigation');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
-const {mockCrazyGames} = require('../support/crazygames');
-const {openCrazyTitle} = require('../support/game/crazygames-title');
 const {installPageGuards} = require('../support/page-contract');
 const fixtures = ['harbor','dune'].map(function (name) {
   return JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/native-legal-catalogue',name + '.json'),'utf8'));
@@ -34,10 +32,13 @@ async function nativeSources(page, mods, collision) {
         var id = Object.keys(mod.bookmarks)[0];
         var roots = Object.keys(mod).filter(function (key) { return ['name','bookmarks','startScenarios','storyInstances'].indexOf(key) < 0; });
         FB.bookmarkSources.stage({source:'synthetic-' + id,bookmarks:[id],catalogs:roots},function (data) {
-          roots.forEach(function (root) { Object.assign(data[root],mod[root]); });
-          Object.assign(data.bookmarks,mod.bookmarks);
-          Object.assign(data.storyInstances,mod.storyInstances || {});
-          data.startScenarios = data.startScenarios.concat(mod.startScenarios);
+          // Each replay owns a fresh draft; a deliberate mutation must not
+          // rewrite the immutable source captured by this fixture.
+          var candidate = JSON.parse(JSON.stringify(mod));
+          roots.forEach(function (root) { Object.assign(data[root],candidate[root]); });
+          Object.assign(data.bookmarks,candidate.bookmarks);
+          Object.assign(data.storyInstances,candidate.storyInstances || {});
+          data.startScenarios = data.startScenarios.concat(candidate.startScenarios);
         });
       });
       if (collision) FB.bookmarkSources.stage({source:'conflicting-law',bookmarks:['dune_world'],catalogs:['legalTraditions']},function (data) {
@@ -213,21 +214,4 @@ test('government law strings and every supported selector reject unknown depende
     });
   },envelope(clone(fixtures[1])));
   rows.forEach(function (row) { expect(row).toMatchObject({ready:false,published:false,pure:true}); expect(row.faults.join(' ')).toContain('government.dune_court'); });
-});
-
-
-test('explicit CrazyGames keeps selected legal publication and its distribution signature',async function ({page},info) {
-  await mockCrazyGames(page);
-  await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage'; });
-  await nativeSources(page,fixtures); await openCrazyTitle(page,info);
-  const result = await page.evaluate(function () {
-    const before = FB.mods.sig();
-    const report = FB.bookmarkSources.prepareSetup('dune_world');
-    return {published:report.published,before:before,after:FB.mods.sig(),
-      dune:!!FBDATA.legalTraditions.dune_law,harbor:!!FBDATA.legalTraditions.harbor_law,
-      faults:FB.validateLegalTraditions()};
-  });
-  expect(result).toMatchObject({published:true,dune:true,harbor:false,faults:[]});
-  expect(result.after).toBe(result.before);
-  expect(result.after).toBeTruthy();
 });

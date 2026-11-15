@@ -131,7 +131,7 @@ native-legal-catalogue.spec.js uses independent harbor and dune JSON fixtures un
 fixtures/native-legal-catalogue. Served source interception stages both through
 the normal native manifest before engine validation. Assertions cover private
 staging, selected-date publication, source switching, retained-world dependencies,
-full preparation, explicit CrazyGames signature isolation, canonical justice consumer parity with real JSON storage/import,
+full preparation, canonical justice consumer parity with real JSON storage/import,
 and matching save restoration. Invalid faith, governing identity and jurisdiction
 references, every government law selector, foreign cultures, malformed procedures and missing dependencies must
 leave detached data, messages, story registry, RNG and uid unchanged. Repeated
@@ -1750,3 +1750,51 @@ constitution cases retain exact fingerprint rejection and input/state/storage/
 RNG/UID purity without adding a second cold reload to the matching journey.
 Each court case owns a fresh guarded context and prepares its ordinary import in
 a separate bounded hook before adoption, restoration or rejection assertions.
+
+Column, household and retained-world regression fixtures
+
+Mobile column operations resolve the imported following by its declared realm,
+reuse the prepared Mods title and retain exact people, units, food, public/private
+accounts, stable identities, RNG and UID. Escort setup obtains ordinary outside
+passage, and single-host settlement setup uses a real county transfer outside an unrelated
+constituency. Opening-location restores compare detached decoded facts without
+changing ordered arrays; peace is concluded by the ordinary war owner.
+
+Native legal source interception copies each immutable fixture into its replay
+draft, so a deliberate collision cannot rewrite its own later source declaration.
+Map survey imports declare crossings only between their inhabited endpoints and
+validate the exact ordinary JSON before storage. Mod reload assertions wait for
+complete content preparation before reading balance, currency and fingerprints.
+
+Novgorod family checks use generated parents and siblings separately from
+maintained dependants; succession uses an existing living sibling. Its deliberately
+pre-seal absent-story fixture omits both attachment metadata fields, after proving
+that the same missing records reject purely in a sealed current save. Pontic travel
+checks use an inhabited county in the selected map and retain actual arrival,
+private travel costs, family residence and once-only payment assertions. Beginning
+groups and mobile review selectors follow the current shared cards while retaining
+selection and focus checks. The island authority and native legal publication
+cases cover the standard distribution.
+
+Adopted dynastic designation restores resolve genealogy references from the
+canonical detached codec expansion and the declaration-bound original actor when
+adopted member records have intentionally detached character pointers. Tests retain the named living sons, heir
+designation and regional grant, and reject missing or unrelated personal-member
+references without changing the candidate, live campaign, RNG or UID. Interrupted
+partitions compare complete ownership, holders and the pre-review regional liege
+through restoration, independently of ordinary succession's earlier effects.
+
+Mobile command sheets expose column reorganization, assignment and halt reviews
+under the same demuster, recruit and march mandate permissions as their canonical
+transactions. Desktop and narrow-screen cases keep retained selectors, an enabled
+merge review and originating focus after Escape. Independent campaigns begin
+through each column's ordinary reviewed war action. Camp work uses a real county
+inside the following's declared livelihood scope.
+
+Single-host settlement in both imported worlds retains the same living principal
+and the archived command, without creating a compact fallback relative or a new
+character. The retained-principal harbor variant imports explicit settlement
+permission; the external-command dune variant keeps its declared permission.
+Two matching restores preserve decoded characters, courts, authority,
+ownership, holders, armies, household, population and treasury accounting, plus
+RNG and UID; the caller's save candidate also remains unchanged.

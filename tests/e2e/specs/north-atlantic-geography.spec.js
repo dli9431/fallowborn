@@ -3,6 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const {test, expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
+const {expectModAdmission} = require('../support/game/mod-admission');
 const {startDeterministicGame} = require('../support/game/start');
 
 dependsOnRuntime(__filename, [
@@ -33,7 +34,7 @@ async function activate(page, id, revision, geography) {
 /* Import a complete fictional physical survey through the ordinary JSON store.
    None of its people, sites or habitation is a production historical claim. */
 async function importSurvey(page) {
-  expect(await page.evaluate(function () {
+  const mod = await page.evaluate(function () {
     const g = FB.geography('europe_north_atlantic_2');
     const inhabited = ['iceland_southwest','iceland_west','iceland_northwest',
       'iceland_north','iceland_east','iceland_south','faroes','orkney','shetland',
@@ -64,6 +65,14 @@ async function importSurvey(page) {
       sites[id] = {x:p[2],y:p[3]};
       layout[p[0]].push({site:id,name:'Survey ' + p[1],kind:'village'});
     });
+    const straits = g.straits.filter(function (pair) {
+      return pair.every(function (id) { return inhabited.indexOf(id) >= 0; });
+    });
+    const crossingClasses = {};
+    straits.forEach(function (pair) {
+      const key = pair.slice().sort().join('|');
+      if (g.crossingClasses[key]) crossingClasses[key] = g.crossingClasses[key];
+    });
     const b = {id:'na_survey',name:'Physical survey',desc:'A fictional map survey.',
       date:{year:867,season:0,day:1},era:'early_medieval',geography:'europe_north_atlantic_2',
       provinces:rows,realms:[{id:'na_survey_court',name:'Survey court',color:'#607d8b',
@@ -72,13 +81,17 @@ async function importSurvey(page) {
       duchies:{na_survey_district:{name:'Survey district',kingdom:null}},kingdoms:{},empires:{},
       localInstitutions:{},religiousHeads:{},systems:{disable:['papacy','great_holy_wars']},
       starts:['farmer'],stories:[],scripted:[],settlementLayout:'na_survey',
-      straits:g.straits,crossingClasses:g.crossingClasses};
-    const text = JSON.stringify({name:'North Atlantic physical survey',bookmarks:{na_survey:b},
-      settlementSites:sites,settlementLayouts:{na_survey:layout}});
-    const errors = FB.mods.validate(JSON.parse(text));
-    if (errors.length) throw new Error(errors.join('\n'));
-    return FB.mods.store(text);
-  })).not.toBe(false);
+      straits:straits,crossingClasses:crossingClasses};
+    return {name:'North Atlantic physical survey',bookmarks:{na_survey:b},
+      settlementSites:sites,settlementLayouts:{na_survey:layout}};
+  });
+  await expectModAdmission(page,mod);
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),
+    page.evaluate(function (candidate) {
+      const text = JSON.stringify(candidate);
+      if (FB.mods.store(text) === false || JSON.parse(localStorage.getItem('fb_mods')).indexOf(text) < 0)
+        throw new Error('Survey import was not stored');
+    },mod)]);
   await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && !!FBDATA.bookmarks.na_survey;

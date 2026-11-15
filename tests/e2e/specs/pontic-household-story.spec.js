@@ -4,7 +4,7 @@ const { openGame } = require('../support/game/navigation');
 const { beginBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename, ['index.html','data/story_households_pontic_476.js','data/story_instances.js',
+dependsOnRuntime(__filename, ['index.html','data/story_households_pontic_476.js','data/story_instances.js','data/start_ambitions.js',
   'data/mobile_confederations.js','data/bookmark_476.js','data/bookmark_476_wider.js',
   'data/bookmark_476_wider_identities.js','data/communal_revisions.js','data/government_rollout.js',
   'data/starts.js','data/technology.js','data/travel.js','data/events_travel.js','js/story_household.js',
@@ -29,15 +29,18 @@ async function road(page, info) {
   await waiting(page, info);
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'pontic_household_track_476', rid = 'pontic_following_476';
+    // A real county transfer relocates the old court, leaving an ordinary
+    // journey destination for this following rather than two courts at one capital.
+    FB.transferProvince(s,'constantinople',rid);
     // Stage the field host's arrival, then let its ordinary owner move the civilian court.
     const host = FB.mobile.host(s, rid);
-    host.at = 'tomis'; host.from = 'tomis'; host.path = []; host.goal = null; host.moveLeft = 0; host.mobileCourt = true;
+    host.at = 'constantinople'; host.from = 'constantinople'; host.path = []; host.goal = null; host.moveLeft = 0; host.mobileCourt = true;
     FB.federateDay(s);
     FB.stories.get(id).day(s, s.stories[id]);
     const departed = s.stories[id].phase === 'departure';
     const planned = FB.stories.apply(s, id, 'seek_camp', FB.stories.quote(s, id, 'seek_camp'));
     s.player.gold = 1000;
-    return departed && planned && s.stories[id].phase === 'road_review' && FB.mobile.migration(s, rid).at === 'tomis';
+    return departed && planned && s.stories[id].phase === 'road_review' && FB.mobile.migration(s, rid).at === 'constantinople';
   })).toBe(true);
 }
 
@@ -56,7 +59,7 @@ test('only the Pontic opening at Cherson attaches the household track across its
   const result = await page.evaluate(function () {
     const sc = FBDATA.startScenarios.find(function (r) { return r.id === 'mobile_household_476'; });
     const bm = FBDATA.bookmarks['476'];
-    return { here:FB.startTracks(sc, 'cherson'), elsewhere:FB.startTracks(sc, 'tomis'),
+    return { here:FB.startTracks(sc, 'cherson'), elsewhere:FB.startTracks(sc, 'constantinople'),
       unrelated:FBDATA.startScenarios.filter(function (r) { return r.id !== sc.id && (r.tracks || []).indexOf('pontic_household_track_476') >= 0; }).length,
       resources:[sc.tier,sc.profession,sc.gold,sc.prestige,sc.piety,sc.startEffects.landPlots,sc.startCulture,sc.startReligion],
       revisions:Object.keys(bm.revisions).filter(function (revision) {
@@ -64,7 +67,7 @@ test('only the Pontic opening at Cherson attaches the household track across its
         return (!world.starts || world.starts.indexOf(sc.id) >= 0) && FB.startProvinceAllowed(sc, world, 'cherson');
       }).map(function (revision) { return FB.validateBookmark(FB.bookmark('476', revision)); }) };
   });
-  expect(result).toMatchObject({ here:[ID], elsewhere:[], unrelated:0,
+  expect(result).toMatchObject({ here:[ID,'opening_pontic_476'], elsewhere:[], unrelated:0,
     resources:[1,'farmer',20,5,0,1,'greek','chalcedonian'] });
   expect(result.revisions.length).toBeGreaterThan(1); expect(result.revisions.every(function (r) { return r.length === 0; })).toBe(true);
   await beginBookmark(page, info, '476', 'mobile_household_476');
@@ -136,7 +139,7 @@ test('a field-host march leaves the household waiting, while court carriage open
   await waiting(page, info);
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'pontic_household_track_476', rid = 'pontic_following_476', host = FB.mobile.host(s, rid), module = FB.stories.get(id);
-    host.path = ['tomis']; host.moveLeft = 1; host.mobileCourt = false;
+    host.path = ['constantinople']; host.moveLeft = 1; host.mobileCourt = false;
     module.day(s, s.stories[id]); const field = s.stories[id].phase;
     host.mobileCourt = true;
     const obsolete = FB.stories.quote(s, id, 'finish').allowed;
@@ -161,7 +164,7 @@ test('the actual journey reaches the camp before work and restores without famil
       retained:record === JSON.stringify(s.stories[id]), home:s.player.provinceId,
       kin:kin.every(function (row) { return s.chars[row[0]].homeProvinceId === row[1]; }) };
   });
-  expect(started).toMatchObject({ begun:true, noRestart:true, retained:true, home:'cherson', kin:true }); expect(started.price).toBeCloseTo(started.quote);
+  expect(started).toMatchObject({ begun:true, noRestart:true, retained:true, home:'cherson', kin:true }); expect(started.price).toBeCloseTo(started.quote,8);
   expect(await arrive(page)).toBe('camp_work');
   const paid = await page.evaluate(function () {
     let s = FB.state; const id = 'pontic_household_track_476', before = s.player.gold;
@@ -170,7 +173,7 @@ test('the actual journey reaches the camp before work and restores without famil
     return { applied:applied, delta:gold-before, phase:s.stories[id].phase, home:s.player.provinceId,
       location:s.player.travel.currentId, noReplay:gold === s.player.gold, repeated:FB.stories.apply(s, id, 'work', q) };
   });
-  expect(paid).toMatchObject({ applied:true, phase:'road_worker', home:'cherson', location:'tomis', noReplay:true, repeated:false }); expect(paid.delta).toBeCloseTo(0.2);
+  expect(paid).toMatchObject({ applied:true, phase:'road_worker', home:'cherson', location:'constantinople', noReplay:true, repeated:false }); expect(paid.delta).toBeCloseTo(0.2,8);
 });
 
 test('stale, blocked and moving-camp travel reviews start no journey', async function ({ page }, info) {
@@ -193,7 +196,7 @@ test('stale, blocked and moving-camp travel reviews start no journey', async fun
 
 test('camp movement after arrival allows an ordinary return and records completion only at home', async function ({ page }, info) {
   await road(page, info);
-  await page.evaluate(function () { const s = FB.state, id = 'pontic_household_track_476'; FB.stories.apply(s, id, 'go', FB.stories.quote(s, id, 'go')); });
+  expect(await page.evaluate(function () { const s = FB.state, id = 'pontic_household_track_476'; return FB.stories.apply(s, id, 'go', FB.stories.quote(s, id, 'go')); })).toBe(true);
   expect(await page.evaluate(function () {
     const s = FB.state, t = s.player.travel;
     // Stage the arrival boundary for this return-focused test.
@@ -205,7 +208,7 @@ test('camp movement after arrival allows an ordinary return and records completi
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'pontic_household_track_476', module = FB.stories.get(id), host = FB.mobile.host(s, 'pontic_following_476');
     const early = FB.stories.quote(s, id, 'return').allowed;
-    host.at = 'constantinople'; host.mobileCourt = true; FB.federateDay(s);
+    host.at = 'silistra'; host.mobileCourt = true; FB.federateDay(s);
     module.day(s, s.stories[id]); const lost = s.stories[id].phase;
     // Stage minimum residence directly; do not simulate a season of ordinary life.
     s.turn = s.player.travel.stayStartTurn + 90;
