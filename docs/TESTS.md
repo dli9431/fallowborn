@@ -1570,6 +1570,16 @@ The mobile pledge button selector includes its explanatory accessible note while
 
 Building and technology catalogue restore regressions compare complete detached expanded facts rather than insertion-order-sensitive JSON text. Calculated cash differences allow only floating-point subtraction residue at eight decimal places; quoted prices, unchanged balances and rejection purity stay exact. Construction setup funds the actual private account, grants the declared technology and stages the actual sovereign, local patron and directly held county before testing player and AI parity. The windmill source-position oracle compares every original ID plus the exact six technology and ten building additions from later supplements, retaining complete catalogue equality.
 
+early-technology-refinements.spec.js and technology-prerequisite-corrections.spec.js
+check released world hashes after ordinary visible 867 and 1066 starts without
+adding a visibility override to the declarations. Restore comparisons use detached
+expanded facts with canonical object keys and technology membership sets; research
+queues, property order, numeric values, RNG bits and UID counters stay exact.
+The refinement source-order check names every intervening shared catalogue script.
+Both civic technology imports check rejection of single-source disputed chronology,
+then import their fictional graphs as modded JSON through the ordinary file picker.
+Matching restores and changed-content rejection remain covered for all four imports.
+
 The two coastal catalogue imports retain paid enterprise, upgrade, staffing and yard assertions in matching-restore cases. Separate changed-price cases create the same paid checkpoints, reload the stored JSON replacement and require exact fingerprint rejection without adopting state, world, RNG or UID. Both reuse their already prepared Mods title for the unchanged Barcelona seed, keeping each independent journey within the ordinary timeout.
 
 The expanded technology/building integration imports encode each fixed ruler

@@ -5,12 +5,15 @@ const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
-const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { startParityGame } = require('../support/game/parity');
+const { installRestoreFacts } = require('../support/game/restore-facts');
+const { expectModAdmission } = require('../support/game/mod-admission');
 const { releasedCatalogue } = require('../support/released-catalogue');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
-  'data/technology.js', 'data/technology_civic_military.js',
+  'index.html', 'data/technology.js', 'data/technology_civic_military.js',
   'data/map_data.js', 'data/buildings_civic_military.js', 'data/units.js',
   'data/bookmarks.js', 'data/geographies.js', 'data/eras.js',
   'js/technology.js', 'js/actions.js', 'js/fortifications.js', 'js/lordships.js',
@@ -200,7 +203,9 @@ test('the three facilities retain paid construction, troop quantities and existi
 for (const bookmark of ['867','1066']) {
   test(bookmark + ' keeps released world hashes and its starting knowledge without re-recording fixtures',
     async function ({ page }, info) {
-      await beginBookmark(page, info, bookmark, 'farmer');
+      // Preserve the authored visibility field while exercising ordinary activation.
+      await startParityGame(page,info,{bookmark:bookmark,scenario:'farmer',
+        code:'BOOKMARKSMOKE-' + bookmark + '-farmer-london-m-Review-established'});
       const fixture = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
       const released = await page.evaluate(releasedCatalogue, fixture.selection);
       for (const key of ['bookmark/867/baseline','bookmark/1066/baseline','geography/europe_regional']) {
@@ -235,6 +240,7 @@ for (const bookmark of ['867','1066']) {
 test('matching restore preserves old completed knowledge, partial research and existing property without seeding',
   async function ({ page }, info) {
     await openGame(page, info); await startDeterministicGame(page); await stageSovereign(page);
+    await installRestoreFacts(page);
     const before = await page.evaluate(function () {
       const s = FB.state, pid = s.player.provinceId;
       s.realmTech.player = {completed:['geometry','torsion_artillery','urban_markets','merchant_guilds','annual_fairs'],
@@ -244,16 +250,20 @@ test('matching restore preserves old completed knowledge, partial research and e
       FB.invalidateBuildingIndex(s,pid);
       // A later current year must not install all historically adopted knowledge on load.
       s.date.year = 1300;
-      return {record:JSON.stringify(s.realmTech.player),assets:JSON.stringify(s.buildings[pid]),save:FB.save.serialize()};
+      return {facts:restoreFacts(s,function (v) {
+        return {record:v.realmTech.player,assets:v.buildings[v.player.provinceId]};
+      },{technologySets:true}),save:FB.save.serialize()};
     });
     await restoreBookmark(page, before.save);
     const after = await page.evaluate(function () {
       const s = FB.state;
-      return {record:JSON.stringify(s.realmTech.player),assets:JSON.stringify(s.buildings[s.player.provinceId]),
+      return {facts:restoreFacts(s,function (v) {
+        return {record:v.realmTech.player,assets:v.buildings[v.player.provinceId]};
+      },{technologySets:true}),
         candidate:FB.techCandidate(s,'siege_engineering').available,
         acquired:FB.hasTech(s,'siege_engineering')};
     });
-    expect(after).toEqual({record:before.record,assets:before.assets,candidate:false,acquired:false});
+    expect(after).toEqual({facts:before.facts,candidate:false,acquired:false});
   });
 
 for (const sample of [
@@ -264,13 +274,21 @@ for (const sample of [
     async function ({ page }, info) {
       await openGame(page,info);
       await page.evaluate(function () { FB.ui.showMods(); });
-      await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+sample.file));
+      const mod = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/'+sample.file),'utf8'));
+      const disputed = await page.evaluate(function (candidate) { return FB.mods.validate(candidate); },mod);
+      expect(disputed.join('\n')).toContain('Technology ' + sample.id + ': disputed chronology requires multiple sources.');
+      // These independent graphs are fictional mod examples, not historical evidence.
+      mod.tech[sample.id].confidence = 'modded';
+      await expectModAdmission(page,mod,sample.file);
+      await page.locator('#modfile').setInputFiles({name:sample.file,mimeType:'application/json',
+        buffer:Buffer.from(JSON.stringify(mod),'utf8')});
       await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
       await prepareGameContent(page);
       await page.waitForFunction(function (input) {
         return window.FB && FB.game && FB.game.bootReady && FBDATA.tech[input.id].cost === input.cost;
       },sample);
       await startDeterministicGame(page); await stageSovereign(page);
+      await installRestoreFacts(page);
       const before = await page.evaluate(function (input) {
         const s = FB.state, record = s.realmTech.player;
         const bad = {tech:{}}; bad.tech[input.id] = JSON.parse(JSON.stringify(FBDATA.tech[input.id]));
@@ -285,12 +303,15 @@ for (const sample of [
         const started = FB.selectTechProject(s,input.id);
         FB.addResearch(s,FB.techCost(s,input.id));
         return {errors:errors,pure:pure,locked:locked,available:available,started:started,
-          bonus:FB.techBonus(s,input.fx),record:JSON.stringify(record),save:FB.save.serialize()};
+          bonus:FB.techBonus(s,input.fx),
+          record:restoreFacts(s,function (v) { return v.realmTech.player; },{technologySets:true}),save:FB.save.serialize()};
       },sample);
       expect(before.errors.join('\n')).toContain('review_missing_prerequisite'); expect(before.pure).toBe(true);
       expect(before).toMatchObject({locked:true,available:true,started:true,bonus:sample.amount});
       await restoreBookmark(page,before.save);
-      expect(await page.evaluate(function () { return JSON.stringify(FB.state.realmTech.player); })).toBe(before.record);
+      expect(await page.evaluate(function () {
+        return restoreFacts(FB.state,function (v) { return v.realmTech.player; },{technologySets:true});
+      })).toBe(before.record);
       await page.evaluate(function (input) {
         const mods = JSON.parse(localStorage.getItem('fb_mods'));
         const mod = JSON.parse(mods[0]); mod.tech[input.id].cost++;
