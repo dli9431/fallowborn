@@ -134,8 +134,8 @@
       (!r.institutionBinding || FB.buildingInstitutionOperating(s,pid,r));
   }
   /* Only this projection supplies ongoing values for an opted-in record. */
-  O.effects = function (s,pid,r) {
-    var d = FB.buildingProfiles.assetDefinition(r) || {};
+  O.effects = function (s,pid,r,buildingId) {
+    var d = FB.buildingProfiles.assetDefinition(r,buildingId) || {};
     if (r.buildingProfile && !FB.buildingProfiles.operationReady(s,pid,r) ||
         FB.buildingInstitutionRequiresBinding(d) && !FB.buildingInstitutionOperating(s,pid,r)) {
       var dormant = Object.assign({},d);

@@ -228,6 +228,15 @@ test('death and succession archive the opening and matching hidden restore attac
     FB.stories.get(id).day(s,s.stories[id]); FB.stories.get(opening).day(s,s.stories[opening]);
     if (s.stories[id].phase !== 'interrupted' || s.stories[opening].goals.craft_income.status !== 'archived') throw new Error('Opening followed an heir');
     delete saved.state.stories[id]; delete saved.state.stories[opening];
+    const before=JSON.stringify(saved.state),rng=FB.getRngState(),uid=FB.getUidCounter();
+    let rejected=false;
+    try { FB.save.v4.validatePlatform(saved.state); } catch (e) {
+      rejected=e.message.indexOf('state.start.storyAttachments')>=0;
+    }
+    if (!rejected || before!==JSON.stringify(saved.state) || rng!==FB.getRngState() || uid!==FB.getUidCounter())
+      throw new Error('Erased current attachments must reject purely');
+    // Only a campaign predating both attachment provenance fields can omit them.
+    delete saved.state.start.storyAttachments; delete saved.storyAttachmentSchema;
     FBDATA.bookmarks['1241'].hidden = true;
     return JSON.stringify(saved);
   });

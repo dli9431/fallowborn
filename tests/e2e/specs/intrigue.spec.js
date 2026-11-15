@@ -681,8 +681,12 @@ test('legacy regional projections remain readable but hearings cannot fine an un
       };
       const ctx = { hearingId:'test-hearing', studentId:target.id };
       s.player.gold = 500;
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
       const canPay = FB.fns.intrigue_hearing_can_pay(s, ctx);
       const paid = FB.fns.intrigue_hearing_pay(s, ctx);
+      const queriesPure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      // The ordinary normalization boundary imports legacy hearings; queries do not.
+      FB.ensureJustice(s);
       return {
         forms:[latin.form, byzantine.form, muslim.form, customary.form],
         outcomes:[latin.outcome, byzantine.outcome,
@@ -691,6 +695,7 @@ test('legacy regional projections remain readable but hearings cannot fine an un
         aliveBeforeChoice:!me.dead,
         canPay:canPay,
         paid:paid,
+        queriesPure:queriesPure,
         hearingCleared:!s.intrigue.hearing,
         gold:s.player.gold
       };
@@ -706,6 +711,7 @@ test('legacy regional projections remain readable but hearings cannot fine an un
     expect(result.aliveBeforeChoice).toBe(true);
     expect(result.canPay).toBe(false);
     expect(result.paid).toBe(false);
+    expect(result.queriesPure).toBe(true);
     expect(result.hearingCleared).toBe(true);
     expect(result.gold).toBe(500);
   });

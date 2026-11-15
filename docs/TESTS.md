@@ -1330,6 +1330,26 @@ elective-monarchy.spec.js covers compact candidate identity and public-account v
 
 Era and retained-world fixtures are covered by era-content-gating.spec.js, era-technology-and-military.spec.js, eras-and-governments.spec.js, geography-base.spec.js, government-rollout.spec.js, hindu-jain-traditions.spec.js, historical-ambitions.spec.js, indexeddb-storage.spec.js, islamic-traditions.spec.js, journeys.spec.js, lexicon.spec.js and lineage-kingship.spec.js. Legacy storage inputs begin in their retained baseline; CrazyGames reloads use their distribution-specific title flow. These fixtures preserve authored profiles and explicit revisions instead of treating the current fresh world as a historical save.
 
+The ordinary start journey compares the complete original story-attachment stamp.
+Kyiv's hidden restore distinguishes rejected erased current attachments from a
+pre-seal campaign that never acquired them. Household world notices retain the
+original grant baseline even when its timestamp changes, and separately exercise
+a newly witnessed grant and stale possession. Legacy intrigue payment queries
+remain pure before the ordinary justice boundary imports the hearing. Local
+council ordinance coverage names the three passive motions exactly; operating-law
+reviews and their separate ledgers remain covered by industry-laws.spec.js.
+The market charter journey follows the financial-only charter entry before
+checking the commodity and corridor choices.
+Mainz also checks the exact retained slot order and visibility of an authored
+refuge following geographic fill presentations. Shelter entry and active-save
+round trips retain that same physical site without renumbering the older slots.
+The late-game building aggregate regression retains its exact four-record cold
+ID-read budget, warm reuse, direct-append detection and demolition invalidation.
+Its diagnostic reports the deterministic fixture's counts and focused projection
+duration without a timing threshold. Separate aggregate checks retain selected
+profile replacement values, unbound defaults and dormant water/institution
+guards, with pure state, RNG and UID reads.
+
 Marriage finder navigation
 
 tests/e2e/specs/marriage-discovery.spec.js bounds the court and character return journeys to twelve real candidate-query results per redraw. Character journeys select existing character rows before applying the limit. Native scope and availability changes still call the real query. Each journey checks a nonzero scroll offset and the originating action's focus after Back, together with retained filter values and their open disclosure. Separate cases cover the complete candidate query and shared realm detail reads per redraw.

@@ -1,14 +1,19 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['js/save.js', 'js/save_v4.js', 'js/main.js', 'js/messages.js', 'js/ui_modals.js']);
+dependsOnRuntime(__filename, ['js/save.js', 'js/save_v4.js', 'js/main.js', 'js/messages.js', 'js/ui_modals.js',
+  'data/bookmarks.js', 'data/government_rollout.js']);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
-async function start(page, testInfo) {
+async function start(page, testInfo, revision) {
   await openGame(page, testInfo);
+  if (revision) await page.evaluate(function (revision) {
+    FBDATA.bookmarks['867'].revision = revision;
+  }, revision);
   await startDeterministicGame(page);
+  if (revision) expect(await page.evaluate(function () { return FB.state.start.revision; })).toBe(revision);
   test.skip(await page.evaluate(function () { return FB.save.storageBackend() !== 'indexeddb'; }),
     'This origin does not support IndexedDB; localStorage fallback is covered separately.');
 }
@@ -49,12 +54,8 @@ test('manual saves confirm committed data and survive reload without a localStor
 
 for (const version of [3, 'prototype-v4', 4]) {
   test(version + ' slots copy exact bytes only after commit and a local recovery copy wins', async function ({ page }, testInfo) {
-    if (version !== 4) await page.addInitScript(function () {
-      document.addEventListener('DOMContentLoaded',function () {
-        FBDATA.bookmarks['867'].revision = 'baseline';
-      },{once:true});
-    });
-    await start(page, testInfo);
+    // Legacy unstamped slots must originate in the actual retained world.
+    await start(page, testInfo, version !== 4 ? 'baseline' : null);
     await page.evaluate(function () {
       FB.state.player.gold = 100;
       return new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
