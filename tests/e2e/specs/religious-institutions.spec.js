@@ -2,7 +2,6 @@
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
-const { startHistoricalGame } = require('../support/game/historical-start');
 const { restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
@@ -12,12 +11,12 @@ dependsOnRuntime(__filename, [
   'js/local_office_appointments.js', 'js/mods.js', 'js/save.js', 'js/save_v4.js',
   'js/treasury.js', 'js/abbeys.js', 'js/justice.js', 'js/intrigue.js', 'js/systems.js',
   'data/actions.js', 'data/economy.js', 'data/lexicons.js', 'data/systems.js',
-  'data/distribution_crazygames.js', 'js/actions.js', 'js/economy.js', 'js/events.js',
+  'js/ledger_retention.js', 'js/actions.js', 'js/economy.js', 'js/events.js',
   'js/governments.js', 'js/government_administration.js', 'js/government_ecclesiastical.js',
   'js/ecclesiastical_strategies.js', 'js/ecclesiastical_validation.js', 'js/government_selection.js',
   'js/government_recognition.js', 'js/papacy.js', 'js/lexicon.js',
   'js/ui_misc.js', 'js/ui_ecclesiastical.js', 'js/ui_religious_institutions.js',
-  'js/main.js', 'js/i18n.js', 'js/crazygames.js', 'js/station.js', 'js/progression.js',
+  'js/main.js', 'js/i18n.js', 'js/station.js', 'js/progression.js',
   'js/politics.js', 'js/religion.js', 'js/messages.js', 'css/style.css'
 ]);
 
@@ -92,12 +91,8 @@ function installInstitutions() {
   };
 }
 test.beforeEach(async function ({ page }, testInfo) {
-  if (testInfo.title.includes('CrazyGames restore')) {
-    await startHistoricalGame(page, testInfo, { bookmark:'867', code:'CADENCE-867-farmer-london-f-Ada' }, true);
-  } else {
-    await openGame(page, testInfo);
-    await startDeterministicGame(page);
-  }
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
   await page.evaluate(function () { FB.game.setPaused(true); });
   await page.evaluate(installInstitutions);
 });
@@ -382,11 +377,12 @@ test('loss of worship protection suspends existing scoped support without revoki
 
 test('member, affiliation and outstanding-decision limits reject without partial writes', async function ({ page }) {
   const result = await page.evaluate(function () {
-    var s = FB.state, f = institutionFixture, members = s.localInstitutions.test_school.members;
+    var s = FB.state, f = institutionFixture;
     for (var i = 0; i < 64; i++) {
-      var cid = 'test_retained_' + i;
-      s.chars[cid] = { id:cid, dead:true };
-      members[cid] = { roleId:'learner', status:'withdrawn', joinedTurn:0, changedTurn:0 };
+      var member = FB.makeCharacter(s, { name:'Fictional Learner ' + i, religion:'jewish', culture:'frankish',
+        sex:'m', born:s.date.year - 30, role:'notable', station:2 });
+      member.skills.int = 8; member.homeProvinceId = f.pid;
+      institutionAct('test_school', { kind:'character', id:member.id }, 'admit', { roleId:'learner' });
     }
     var full = FB.religiousInstitutionQuote(s, 'test_school', { kind:'character', id:f.teacher }, 'admit', { roleId:'specialist' });
     var actor = { kind:'character', id:f.lantern };
@@ -400,7 +396,11 @@ test('member, affiliation and outstanding-decision limits reject without partial
     }
     var aff = FB.religiousInstitutionQuote(s, 'test_lantern', actor, 'affiliate', { affiliationId:'test_learning' });
     var targets = Object.keys(s.realms).filter(function (rid) { return s.realms[rid].alive; });
-    for (var v = 0; v < 16; v++) s.localInstitutions.test_lantern.assents['recognize:realm:' + targets[v]] = {};
+    for (var v = 0; v < 16; v++) institutionAct('test_lantern', actor, 'assent', {
+      decision:'recognize', subject:{ kind:'realm', id:targets[v] } });
+    var counts = FB.religiousInstitutionLiveCounts(s, 'test_lantern');
+    if (FB.religiousInstitutionLiveCounts(s, 'test_school').members !== 64 || counts.decisions !== 16)
+      throw new Error('Expected live membership and outstanding-decision limits');
     var assent = FB.religiousInstitutionQuote(s, 'test_lantern', actor, 'assent', { decision:'recognize', subject:{ kind:'realm', id:targets[16] } });
     var before = JSON.stringify(s);
     return { members:full.reason, affiliations:aff.reason, decisions:assent.reason,
@@ -842,7 +842,7 @@ function retainedInstitutionFacts() {
     }) }));
 }
 
-for (const distribution of ['standard','CrazyGames']) {
+for (const distribution of ['standard']) {
   test(distribution + ' restore after another bookmark retains exact institutions and replays withdrawal', async function ({ page }) {
     await page.evaluate(installHouseholdRoutes);
     const original = await page.evaluate(function () {

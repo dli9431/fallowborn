@@ -2,7 +2,9 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {expectModAdmission}=require('../support/game/mod-admission');
+const {installRestoreFacts}=require('../support/game/restore-facts');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const sources={harbor:require('../fixtures/authoring/mobile-preparation-harbor.json'),
   upland:require('../fixtures/authoring/mobile-preparation-upland.json')};
@@ -11,7 +13,8 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','js/ma
   'js/story_expedition_participation.js','js/story_household_party.js','js/story_expedition_preparation.js',
   'js/household_party_travel.js','js/household_party_camp.js','js/story_opening_goals.js',
   'js/story_government_selection.js','js/home_authority.js','js/mobile_confederations.js',
-  'js/mobile_command.js','js/model.js','js/population.js','js/market.js','js/treasury.js']);
+  'js/mobile_command.js','js/model.js','js/population.js','js/market.js','js/treasury.js','js/bookmark_composition.js',
+  'js/economy.js','js/lordships.js','js/government_selection.js']);
 
 function configuration(label) {
   const input=JSON.parse(JSON.stringify(sources[label])),prefix=label==='harbor'?'harbor':'dune';
@@ -34,6 +37,7 @@ function configuration(label) {
 async function prepare(page,info,label,older) {
   const input=configuration(label),prefix=label==='harbor'?'harbor':'dune';
   await openGame(page,info);
+  await expectModAdmission(page,input);
   await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles({name:'retained-attachments-'+label+'.json',
     mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))});
@@ -52,7 +56,8 @@ async function prepare(page,info,label,older) {
     start.tracks=start.tracks.slice(0,2);
     Object.keys(start.trackLocations).forEach(function(id){if(start.tracks.indexOf(id)<0)delete start.trackLocations[id];});
   },prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
 }
 
 for(const label of ['harbor','upland']) {
@@ -66,15 +71,16 @@ for(const label of ['harbor','upland']) {
         FBDATA.bookmarks[prefix+'_world']=window.expandedAttachments.bookmark;
         const start=FBDATA.startScenarios.find(function(r){return r.id===prefix+'_household';});
         start.tracks=window.expandedAttachments.tracks;start.trackLocations=window.expandedAttachments.locations;
-        function inventory(s){return JSON.stringify([s.stories,s.chars,s.player.gold,s.player.provinceId,
-          s.player.travel,s.authority,s.armies,s.population,s.treasuryAccounting]);}
+        function inventory(s){return restoreFacts(s,function(t){return [t.stories,t.chars,t.player.gold,t.player.provinceId,
+          t.player.travel,t.authority,t.armies,t.population,t.treasuryAccounting];});}
         const old=inventory(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
         let stable=true;
         for(let i=0;i<3;i++){
           FB.save.restore(save);
-          stable=stable&&old===inventory(FB.state);
+          stable=stable&&assertRestoreFacts(inventory(FB.state),old);
           const next=JSON.parse(FB.save.serialize());
-          stable=stable&&next.mods===sig&&JSON.stringify(next.state.stories)===JSON.stringify(save.state.stories);
+          stable=stable&&next.mods===sig&&assertRestoreFacts(restoreFacts(next.state,function(s){return s.stories;}),
+            restoreFacts(save.state,function(s){return s.stories;}));
           save.state=next.state;
         }
         return {originalTracks:originalTracks.length,expandedTracks:start.tracks.length,stable:stable,
@@ -128,17 +134,22 @@ test('succession retains the founder attachments and does not enroll or pay for 
       successor=Object.keys(s.chars).map(function(id){return s.chars[id];}).find(function(c){
         return c.id!==founder&&!c.dead&&c.role==='sibling'&&FB.ageOf(c,s.date.year)>=16;
       });
-    s.chars[founder].dead=true;s.player.charId=successor.id;s.player.dead=false;s.player.travel=null;
+    if(!successor)throw new Error('Expected an adult sibling successor');
+    FB.game.die('A bounded succession fixture.');FB.ui.closeModal();
+    const succeeded=FB.game.succeedTo(successor.id),cash=s.player.gold,accounts=JSON.stringify(s.treasuryAccounting);
+    FB.ui.closeModal();
     ['harbor_admission','harbor_family_plan'].forEach(function(id){FB.stories.get(id).day(s,s.stories[id]);});
-    const before=JSON.stringify([s.stories,s.chars,s.player.gold,s.player.provinceId,s.player.travel,s.authority,s.armies]);
+    function facts(s){return [s.stories,s.chars,s.player.gold,s.player.provinceId,s.player.travel,s.authority,s.armies];}
+    const before=restoreFacts(s,facts);
     for(let i=0;i<3;i++)FB.save.restore(JSON.parse(FB.save.serialize()));
     const now=FB.state;
-    return {snapshot:original===JSON.stringify(now.start.storyAttachments),
-      stable:before===JSON.stringify([now.stories,now.chars,now.player.gold,now.player.provinceId,now.player.travel,now.authority,now.armies]),
+    return {succeeded:succeeded,snapshot:original===JSON.stringify(now.start.storyAttachments),
+      stable:assertRestoreFacts(restoreFacts(now,facts),before),
       actor:now.stories.harbor_admission.actorId===founder&&now.stories.harbor_family_plan.actorId===founder,
+      unpaid:now.player.gold===cash&&accounts===JSON.stringify(now.treasuryAccounting),
       noEnrollment:now.player.travel===null&&now.stories.harbor_admission.roleId===null};
   });
-  expect(result).toEqual({snapshot:true,stable:true,actor:true,noEnrollment:true});
+  expect(result).toEqual({succeeded:true,snapshot:true,stable:true,actor:true,unpaid:true,noEnrollment:true});
 });
 
 test('a different imported configuration still fails the exact mod fingerprint',async function({page},info){
