@@ -2,8 +2,7 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {openCrazyGame} = require('../support/game/crazygames-title');
-const {mockCrazyGames} = require('../support/crazygames');
+const {expectModAdmission} = require('../support/game/mod-admission');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {harbor:require('../fixtures/authoring/existing-person-harbor.json'),
   dune:require('../fixtures/authoring/existing-person-dune.json')};
@@ -17,6 +16,7 @@ dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','js/mods.
 
 function inputFor(prefix) {
   const source = JSON.parse(JSON.stringify(examples[prefix])), bookmark = source.bookmarks[prefix + '_world'];
+  source.startScenarios[1].sex = 'm';
   const catalogs = {};
   Object.keys(source).forEach(function (key) {
     if (['name','bookmarks','startScenarios'].indexOf(key) < 0) catalogs[key] = source[key];
@@ -38,7 +38,8 @@ function inputFor(prefix) {
     }}};
     if (index === 1) {
       unit.storyInstances = {}; unit.storyInstances[freshTrack] = declaration;
-      unit.bindings.revisions.fresh.trackOverride = {tracks:[freshTrack],trackLocations:{}};
+      const places = {}; places[freshTrack] = [home];
+      unit.bindings.revisions.fresh.trackOverride = {tracks:[freshTrack],trackLocations:places};
     }
     return unit;
   });
@@ -46,15 +47,9 @@ function inputFor(prefix) {
     bookmark:bookmark,catalogs:catalogs,starts:units};
 }
 
-for (const prefix of ['harbor','dune']) for (const crazy of [false,true]) {
-  test(prefix + ' explicit revision bindings preserve eligibility on ' + (crazy ? 'CrazyGames' : 'standard'),async function ({page},info) {
-    if (crazy) {
-      await mockCrazyGames(page);
-      await page.addInitScript(function () {
-        window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-      });
-      await openCrazyGame(page,info);
-    } else await openGame(page,info);
+for (const prefix of ['harbor','dune']) {
+  test(prefix + ' explicit revision bindings preserve eligibility on standard',async function ({page},info) {
+    await openGame(page,info);
     const result = await page.evaluate(function (input) {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter(), state = FB.state;
       const ticket = FB.bookmarkCompositions.prepare(input), detached = before === JSON.stringify(FBDATA), preview = ticket.preview();
@@ -72,7 +67,8 @@ for (const prefix of ['harbor','dune']) for (const crazy of [false,true]) {
     },inputFor(prefix));
     expect(result).toMatchObject({report:{published:true},detached:true,repeated:{published:true,reused:true},
       unchanged:true,importFaults:[],pure:true});
-    expect(result.report.starts.every(function (unit) { return unit.ready && !unit.faults.length; })).toBe(true);
+    expect(result.report.starts.map(function (unit) { return {id:unit.id,ready:unit.ready,faults:unit.faults}; })).toEqual(
+      examples[prefix].startScenarios.map(function (start) { return {id:start.id,ready:true,faults:[]}; }));
     expect(result.raw.starts).toEqual([]);
     expect(result.raw.startLocations).toEqual({});
     expect(result.revisions[0]).toMatchObject({revision:'baseline',starts:[prefix + '_ordinary_household'],
@@ -105,7 +101,7 @@ test('bad start bindings withhold only their own lists, locations and track poli
   },inputFor('harbor'));
   result.forEach(function (row) {
     expect(row).toMatchObject({report:{ready:true},validPreview:[],pure:true});
-    expect(row.report.starts.map(function (unit) { return unit.ready; })).toEqual([false,true,true]);
+    expect(row.report.starts.map(function (unit) { return unit.ready; }),JSON.stringify(row.report.starts)).toEqual([false,true,true]);
     const world = row.preview.bookmarks.harbor_world;
     expect(world.revisions.fresh.starts).toEqual(['harbor_ordinary_household','harbor_existing_ruler']);
     expect(world.revisions.fresh.startLocations.harbor_existing_household).toBeUndefined();
@@ -125,8 +121,10 @@ for (const prefix of ['harbor','dune']) {
       const ticket = FB.bookmarkCompositions.prepare(input);
       return {report:ticket.report(),preview:ticket.preview()};
     },inputFor(prefix));
+    expect(candidate.report.starts.map(function (unit) { return unit.faults; })).toEqual([[],[],[]]);
     expect(candidate.report.ready).toBe(true);
     candidate.preview.name = prefix + ' explicit revision bindings';
+    await expectModAdmission(page,candidate.preview);
     await page.evaluate(function () { FB.ui.showMods(); });
     await page.locator('#modfile').setInputFiles({name:prefix + '-bindings.json',mimeType:'application/json',
       buffer:Buffer.from(JSON.stringify(candidate.preview))});

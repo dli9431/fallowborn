@@ -20,13 +20,45 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { openCrazyGame } = require('../support/game/crazygames-title');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 const { advanceBookmark } = require('../support/game/bookmark-acceptance');
 
-async function startBookmark(page, testInfo, scenario, county, identity, crazygames) {
-  if (crazygames) await openCrazyGame(page, testInfo);
-  else await openGame(page, testInfo);
+const WORLD_STORIES = [
+  'venetian_offices_1204',
+  'latin_thessalonica_1204',
+  'latin_bithynia_1204',
+  'nicaean_return_1204',
+  'bulgarian_thrace_1204',
+  'epirote_macedonia_1204',
+  'castilian_frontier_1204',
+  'portuguese_algarve_1204',
+  'aragonese_valencia_1204',
+  'capetian_normandy_1204',
+  'thessalonica_partition_1204',
+  'athens_partition_1204',
+  'achaia_partition_1204',
+  'latin_athens_1204',
+  'latin_achaia_1204',
+  'fifth_crusade_call_1204',
+  'household_effects_latin_thessalonica_1204',
+  'household_effects_latin_bithynia_1204',
+  'household_effects_nicaean_return_1204',
+  'household_effects_bulgarian_thrace_1204',
+  'household_effects_epirote_macedonia_1204',
+  'household_effects_castilian_frontier_1204',
+  'household_effects_portuguese_algarve_1204',
+  'household_effects_aragonese_valencia_1204',
+  'household_effects_capetian_normandy_1204',
+  'household_effects_latin_athens_1204',
+  'household_effects_latin_achaia_1204',
+  'household_effects_thessalonica_partition_1204',
+  'household_effects_athens_partition_1204',
+  'household_effects_achaia_partition_1204',
+  'household_effects_fifth_crusade_call_1204',
+];
+
+async function startBookmark(page, testInfo, scenario, county, identity) {
+  await openGame(page, testInfo);
   const faults = await page.evaluate(function () {
     FB.startProgression.noteTier(3);
     return FB.validateBookmark(FB.bookmark('1204'));
@@ -63,15 +95,15 @@ test('1204 is offered in the picker and ordinary start codes reach character cre
   await openGame(page, testInfo);
   const state = await page.evaluate(function () {
     const b = FB.bookmark('1204');
-    return { registered:FBDATA.bookmarks['1204'] === FBDATA.bookmarkCandidates['1204'], offered:FB.bookmarks().map(function (b) { return b.id; }),
+    return { registered:FB.bookmarkSources.reports().some(function (row) { return row.bookmarkId === '1204' && row.published; }), offered:FB.bookmarks().map(function (b) { return b.id; }),
       faults:FB.validateBookmark(b), diagnostics:FB.communityShareDiagnostics(b),
       date:b.date, era:b.era, geography:b.geography, scripted:b.scripted,
-      stories:b.stories.length, civicStory:b.stories.indexOf('venetian_offices_1204') >= 0,
+      stories:b.stories, civicStory:b.stories.indexOf('venetian_offices_1204') >= 0,
       storiesRegistered:b.stories.every(function (id) { return !!FB.stories.get(id); }) };
   });
   expect(state).toMatchObject({ registered:true, faults:[], diagnostics:[],
     date:{ year:1204, season:0, day:76 }, era:'high_medieval', geography:'europe_regional_2',
-    scripted:[], stories:31, civicStory:true, storiesRegistered:true });
+    scripted:[], stories:WORLD_STORIES, civicStory:true, storiesRegistered:true });
   expect(state.offered).toContain('1204');
   const fullStart = page.locator('#btn-choose-beginning');
   if (await fullStart.isVisible()) await fullStart.click();
@@ -109,8 +141,7 @@ for (const scenario of ['serf','farmer','apprentice','monk','soldier','knight','
       expect(result.before.start).toMatchObject({ id:'1204', era:'high_medieval', geography:'europe_regional_2', revision:'inhabited_v2' });
       expect(result.faults).toEqual([]);
       expect(result.sourceUnchanged).toBe(true);
-      expect(result.storyIds).toHaveLength(16);
-      expect(result.storyIds.every(function (id) { return id.endsWith('_1204'); })).toBe(true);
+      expect(result.storyIds).toEqual(WORLD_STORIES.slice().sort());
     });
 }
 
@@ -165,27 +196,24 @@ test('spring possession, court faiths, technology, holder chains and settlement 
     expect(result.code).toBe('REVIEW1204-1204-serf-constantinople-m-Leo');
   });
 
-test('the silent English distribution retains the same world and save identity',
+test('enabled papal office strength keeps its investiture policy effects without mutating projections',
   async function ({ page }, testInfo) {
-    await page.addInitScript(function () {
-      window.FB_DISTRIBUTION = 'crazygames';
-      window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-    });
-    await startBookmark(page, testInfo, null, null, null, true);
+    await startBookmark(page, testInfo);
     const result = await page.evaluate(function () {
-      const source = JSON.parse(FB.save.serialize());
-      FB.save.restore(source);
-      return { flag:FB.platform.isCrazyGames, bookmark:FB.state.start.id,
-        owner:FB.state.owner.constantinople, head:FB.religiousHeadOf(FB.state, 'catholic').id,
-        registered:!!FB.bookmark('1204'),
-        stories:Object.keys(FB.state.stories).length,
-        message:FB.renderMessage(FB.msg('news.1204.latin_thessalonica_1204.won',
-          FBDATA.bookmarkContent['1204'].campaigns.latin_thessalonica_1204.news.won.text,
-          { realm:'Latin Empire', province:'Thessalonica' }), { state:FB.state }) };
+      const s = FB.state, rid = 'england_1204';
+      return ['lay','canonical','concordat'].map(function (policy) {
+        const changed = !!FB.setInvestiturePolicy(s, policy, rid, false);
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const multiplier = FB.papacyRealmStrengthMultiplier(s, rid);
+        return {policy:policy,changed:changed,multiplier:multiplier,
+          pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+      });
     });
-    expect(result).toEqual({ flag:true, bookmark:'1204', owner:'latin_1204', head:'papacy_1204',
-      registered:true, stories:31,
-      message:'The court of Latin Empire secures Thessalonica through its campaign.' });
+    expect(result).toEqual([
+      {policy:'lay',changed:true,multiplier:1.05,pure:true},
+      {policy:'canonical',changed:true,multiplier:0.95,pure:true},
+      {policy:'concordat',changed:true,multiplier:1,pure:true}
+    ]);
   });
 
 test('holy-war calls resolve only current hostile objectives and remain durable through save',

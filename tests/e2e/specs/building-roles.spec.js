@@ -7,7 +7,10 @@ dependsOnRuntime(__filename, [
   'js/mods.js',
   'js/world.js',
   'js/population.js',
-  'data/map_data.js',
+  'data/map_data.js', 'data/buildings_learning_care.js', 'data/buildings_waterworks.js',
+  'data/buildings_baths_headworks.js', 'data/buildings_early_worship.js',
+  'data/buildings_early_industry.js', 'data/buildings_boathouses.js',
+  'data/buildings_fish_drying.js', 'data/buildings_seasonal_pasture.js',
   'data/events_noble.js'
 ]);
 
@@ -15,14 +18,16 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
-/* The AI construction order and settlement-draw set that engine code
-   listed by building id before roles; data must reproduce them exactly. */
-const LEGACY_AI_ORDER = [
+/* Exact authored priority order, including the later regional buildings. */
+const AI_ORDER = [
   'cathedral', 'university', 'guildhall', 'arsenal', 'foundry', 'exchange',
   'hospital', 'mill', 'windmill', 'market', 'harbor', 'granary', 'bridge',
-  'temple', 'library', 'keep', 'barracks'
+  'temple', 'library', 'keep', 'barracks', 'hospice', 'aqueduct',
+  'qanat_waterworks', 'urban_cisterns', 'public_bath', 'monastic_house',
+  'diversion_headworks', 'paper_workshop', 'bloomery_smithy', 'boathouse',
+  'fish_drying_station', 'shieling'
 ];
-const LEGACY_SETTLEMENT_DRAW = ['bridge', 'harbor', 'market', 'mill'];
+const SETTLEMENT_DRAW = ['bridge', 'harbor', 'market', 'mill'];
 
 test('shipped buildings declare known roles and exactly one fortification',
   async function ({ page }, testInfo) {
@@ -48,7 +53,7 @@ test('shipped buildings declare known roles and exactly one fortification',
     expect(result.roleNamedLikeBuilding).toEqual([]);
   });
 
-test('AI construction order and settlement draw keep their former sets',
+test('AI construction order and settlement draw match their authored sets',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     const result = await page.evaluate(function () {
@@ -64,8 +69,8 @@ test('AI construction order and settlement draw keep their former sets',
         }).sort()
       };
     });
-    expect(result.order).toEqual(LEGACY_AI_ORDER);
-    expect(result.draw).toEqual(LEGACY_SETTLEMENT_DRAW);
+    expect(result.order).toEqual(AI_ORDER);
+    expect(result.draw).toEqual(SETTLEMENT_DRAW);
   });
 
 test('a regional building with an existing role acts in that role',

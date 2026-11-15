@@ -2,7 +2,6 @@
 const { test, expect } = require('../support/fixture');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const { startParityGame, advanceTo } = require('../support/game/parity');
-const { startHistoricalGame } = require('../support/game/historical-start');
 
 dependsOnRuntime(__filename, [
   'index.html', 'data/assembly_polities.js', 'data/bookmark_476_outer.js', 'data/bookmark_476_wider.js',
@@ -11,16 +10,15 @@ dependsOnRuntime(__filename, [
   'js/government_continuity.js', 'js/government_levy.js', 'js/government_revenue.js',
   'js/government_selection.js', 'js/government_lineage.js',
   'js/governments.js', 'js/authority.js', 'js/world.js', 'js/station.js', 'js/lexicon.js',
-  'js/treasury.js', 'js/wars.js', 'js/armies.js', 'js/fortifications.js', 'js/events.js', 'js/economy.js',
+  'js/papacy.js', 'data/papacy.js', 'js/treasury.js', 'js/wars.js', 'js/armies.js', 'js/fortifications.js', 'js/events.js', 'js/economy.js',
   'js/modifiers.js', 'js/actions.js', 'js/ui_assembly.js', 'js/ui_misc.js',
   'js/ui_modals.js', 'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/mods.js'
 ]);
 
-async function start(page, testInfo, fictional, crazygames) {
+async function start(page, testInfo, fictional) {
   const journey = { bookmark:'476',
     code:'ASSEMBLY-476-farmer_476-tallinn-m-Review-established' };
-  if (crazygames) await startHistoricalGame(page, testInfo, journey, true);
-  else await startParityGame(page, testInfo, journey);
+  await startParityGame(page, testInfo, journey);
   return page.evaluate(function (fictional) {
     const s = FB.state, C = FB.governments.support;
     let rid = 'north_coast_476';
@@ -91,13 +89,13 @@ for (const fictional of [false, true]) {
         noCrown:!FB.station.rulesRealm(s.player, s) && !FB.station.maySeekCounty(s.player, s),
         ordinary:!delegate.royalLine && !delegate.dyn && !s.realms[rid].succession,
         influence:r.members.map(function (m) { return m.weight; }), fee:p.selection.nominationCost,
-        service:p.eligibility.minServiceYears, term:p.selection.termDays, levy:levy, maxLevy:p.obligations.maxLevy,
+        service:p.eligibility.minServiceYears, term:p.selection.termDays, levy:levy, maxLevy:p.obligations.maxLevy, neutralPapalStrength:FB.papacyRealmStrengthMultiplier(s,rid),
         income:income, maxDues:p.obligations.maxDues,
         coastalCounty:{ inhabited:!coastal.wasteland, realm:coastal.realm },
         visible:FB.instantStatus(s, 'community_assembly').shown };
     }, rid);
     expect(result).toMatchObject({ errors:[], technology:[], review:'none', pure:true, noGrant:true,
-      household:true, noCrown:true, ordinary:true,
+      household:true, noCrown:true, ordinary:true, neutralPapalStrength:1,
       coastalCounty:{ inhabited:true, realm:'north_coast_476' }, visible:true,
       influence:fictional ? [2,2,1] : [3,2,1], fee:fictional ? 3 : 0,
       service:fictional ? 2 : 0, term:fictional ? 720 : null });
@@ -524,10 +522,10 @@ test('an ordinary household replays a season across restore', async function ({ 
   expect(await snapshot()).toEqual(first);
 });
 
-for (const crazygames of [false, true]) {
-  test('assembly review retains navigation and rejects stale confirmation with distribution flag ' + crazygames, async function ({ page }, testInfo) {
+{
+  test('assembly review retains navigation and rejects stale confirmation on standard', async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:720 });
-    const rid = await start(page, testInfo, false, crazygames);
+    const rid = await start(page, testInfo, false);
     await electPlayer(page, rid);
     await page.evaluate(function (rid) { FB.ui.showCommunityAssembly(rid); }, rid);
     const tribute = page.getByRole('button', { name:/^Review tribute/ });

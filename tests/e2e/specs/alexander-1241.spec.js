@@ -3,6 +3,7 @@ const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {startParityGame}=require('../support/game/parity');
 const {restoreBookmark}=require('../support/game/bookmark-acceptance');
+const {installRestoreFacts}=require('../support/game/restore-facts');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -22,6 +23,7 @@ const ID='alexander_household_1241';
 async function start(page,info) {
   await startParityGame(page,info,{bookmark:'1241',scenario:'alexander_1241',declaredOpening:true});
   await page.evaluate(function () { FB.game.setPaused(true); });
+  await installRestoreFacts(page);
 }
 async function choose(page,id) {
   return page.evaluate(function (choice) {
@@ -51,7 +53,7 @@ test('only the fresh revision offers Alexander and preserves all earlier familie
     const p=FB.existingPersonStartProfile(sc,fresh);
     const prior=['baseline','royal_households_v2','frederick_v2'].map(function (id) {
       const b=FB.bookmark('1241',id);
-      return {id:id,excluded:b.starts.indexOf(sc.id)<0,offered:FB.startProvinceAllowed(sc,b,'rostov'),
+      return {id:id,excluded:b.starts.indexOf(sc.id)<0,offered:FB.startRuntimeReport(sc,b).available && FB.startProvinceAllowed(sc,b,'rostov'),
         head:FBDATA.settlementLayouts[b.settlementLayout].rostov[0].site,valid:FB.validateBookmark(b)};
     });
     const layouts=FBDATA.settlementLayouts;
@@ -80,8 +82,8 @@ test('the ordinary start code adopts the original Alexander and all four contact
     const mother=person('feodosia'),wife=person('alexander_wife'),brother=person('andrei');
     const father=FB.realmRulerCharacterSnapshot(s,rid);
     const contacts=s.stories.opening_alexander_1241.contacts;
-    const site=FB.world.byId.rostov.settlements[0],coord=FBDATA.settlementSites.pereslavl_zalessky_1241;
-    const county=FB.provinceAtGrid(Math.round(FB.lonToX(coord.x)),Math.round(FB.latToY(coord.y)));
+    const site=FB.world.sitesByProv.rostov.list[0],coord=FBDATA.settlementSites.pereslavl_zalessky_1241;
+    const county=FB.provinceAtGrid(site.x,site.y);
     return {same:me===person('alexander'),one:Object.values(s.chars).filter(function (c) {return c.name==='Alexander Yaroslavich';}).length,
       identity:[me.name,me.born,FB.ageOf(me,s.date.year),me.culture,me.religion],
       parents:me.fatherId===father.id && me.motherId===mother.id,spouse:me.spouseId===wife.id && wife.spouseId===me.id,
@@ -93,12 +95,15 @@ test('the ordinary start code adopts the original Alexander and all four contact
       home:[s.player.provinceId,s.player.homeSettlement,site.site,county.id,FB.provinceAtGrid(site.x,site.y).id],
       father:father.name,publicRealm:!!s.realms.player,sourceRealm:!!s.realms.vladimir_1241,
       private:[s.player.tier,s.player.profession,s.player.gold,s.player.provs.length,s.player.landPlots.length,s.player.holdings.length],
-      phase:s.stories.alexander_household_1241.phase,marker:s.start.existingPerson.memberId};
+      phase:s.stories.alexander_household_1241.phase,marker:s.start.existingPerson.memberId,
+      coordinate:[coord.x,coord.y],snap:site.snap,snapLimit:FB.mapScale('siteSnapMax')};
   });
   expect(result).toMatchObject({same:true,one:1,identity:['Alexander Yaroslavich',1221,20,'rus','orthodox'],parents:true,spouse:true,brother:true,
     homes:['rostov','rostov','suzdal','suzdal'],household:true,home:['rostov',0,'pereslavl_zalessky_1241','rostov','rostov'],
     father:'Yaroslav Vsevolodovich',publicRealm:false,sourceRealm:true,private:[2,'soldier',25,0,0,0],phase:'household',marker:'alexander'});
   expect(result.contacts).toEqual(result.expectedContacts);
+  expect(result.coordinate).toEqual([38.856153,56.738133]);
+  expect(result.snap).toBeLessThanOrEqual(result.snapLimit);
 });
 
 test('the Story card fixes Alexander and starts the same original household through the picker',async function ({page},info) {
@@ -194,11 +199,17 @@ test('a paid journey reaches Novgorod once while kin, public offices and the per
   const result=await page.evaluate(function () {
     let s=FB.state;const id='alexander_household_1241';s.player.gold=1000;
     const kin=s.start.existingPerson.household.slice(1).map(function (r) {return [r.charId,FB.characterResidence(s,s.chars[r.charId])];});
-    const authority=JSON.stringify([s.realms,s.owner,s.holder,s.armies]),people=Object.keys(s.chars).length;
+    function authorityFacts(state) {
+      const v=FB.save.expandedSnapshot(state);
+      return FB.contentValues.canonical([v.realms,v.owner,v.holder,v.armies]);
+    }
+    const authority=authorityFacts(s),people=Object.keys(s.chars).length;
     const q=FB.stories.quote(s,id,'go_north'),money=s.player.gold,began=FB.stories.apply(s,id,'go_north',q);
     const cost=money-s.player.gold,repeated=FB.stories.apply(s,id,'go_north',q);
-    const journey=JSON.stringify(s.player.travel),funds=s.player.gold;FB.save.restore(JSON.parse(FB.save.serialize()));s=FB.state;
-    const retained=journey===JSON.stringify(s.player.travel) && funds===s.player.gold && people===Object.keys(s.chars).length;
+    const journey=JSON.stringify(s.player.travel),funds=s.player.gold,rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
+    FB.save.restore(JSON.parse(FB.save.serialize()));s=FB.state;
+    const retained=journey===JSON.stringify(s.player.travel) && funds===s.player.gold && people===Object.keys(s.chars).length &&
+      rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter();
     let days=0;for (;days<90 && s.player.travel.phase==='outbound';days++) {s.turn++;FB.travelTick(s);}
     FB.stories.get(id).day(s,s.stories[id]);const arrived=s.stories[id].phase;
     const committed=FB.stories.apply(s,id,'begin_visit',FB.stories.quote(s,id,'begin_visit'));
@@ -206,7 +217,7 @@ test('a paid journey reaches Novgorod once while kin, public offices and the per
     return {began:began,cost:cost,quoted:q.facts.terms.cost,repeated:repeated,retained:retained,arrived:arrived,
       committed:committed,phase:s.stories[id].phase,home:s.player.provinceId,present:s.player.travel.currentId,
       kinStayed:kin.every(function (r) {return FB.characterResidence(s,s.chars[r[0]])===r[1];}),
-      sameAuthority:authority===JSON.stringify([s.realms,s.owner,s.holder,s.armies]),capstone:capstone,days:days};
+      sameAuthority:assertRestoreFacts(authorityFacts(s),authority),capstone:capstone,days:days};
   });
   expect(result.cost).toBe(result.quoted);
   expect(result.days).toBeLessThanOrEqual(90);
@@ -230,19 +241,26 @@ test('cancelled travel and unrelated departure cannot become a recalled appointm
 test('midpoint, terminal and absent records restore without people, requests or rewards being replayed',async function ({page},info) {
   await waitForRequest(page,info);
   const saved=await page.evaluate(function () {
+    FB.ensureInheritedHousehold(FB.state);
     FB.state.player.gold=2;
-    return {save:FB.save.serialize(),facts:JSON.stringify([FB.state.start,FB.state.chars,FB.state.stories,FB.state.player.gold])};
+    return {save:FB.save.serialize(),facts:restoreFacts(FB.state,function (s) { return [s.start,s.chars,s.stories,s.player.gold]; })};
   });
   await restoreBookmark(page,saved.save);
-  expect(await page.evaluate(function (before) {return before===JSON.stringify([FB.state.start,FB.state.chars,FB.state.stories,FB.state.player.gold]);},saved.facts)).toBe(true);
+  expect(await page.evaluate(function (before) {return assertRestoreFacts(restoreFacts(FB.state,function (s) { return [s.start,s.chars,s.stories,s.player.gold]; }),before);},saved.facts)).toBe(true);
   expect(await choose(page,'refuse_recall')).toBe(true);
   const final=await page.evaluate(function () {
-    const s=FB.state,save=JSON.parse(FB.save.serialize()),record=JSON.stringify([s.chars,s.stories,s.player.gold]);
-    FB.save.restore(save);const exact=record===JSON.stringify([FB.state.chars,FB.state.stories,FB.state.player.gold]);
+    const s=FB.state,save=JSON.parse(FB.save.serialize()),record=restoreFacts(s,function (v) { return [v.chars,v.stories,v.player.gold]; });
+    FB.save.restore(save);const exact=assertRestoreFacts(restoreFacts(FB.state,function (v) { return [v.chars,v.stories,v.player.gold]; }),record);
     delete save.state.stories.alexander_household_1241;delete save.state.stories.opening_alexander_1241;
-    FBDATA.bookmarks['1241'].hidden=true;return {exact:exact,save:JSON.stringify(save)};
+    const live=FB.state, facts=restoreFacts(live,function (v) { return v; });
+    let rejected=false;
+    try { FB.save.restore(save); } catch (error) { rejected=error.message.indexOf('state.start.storyAttachments')>=0; }
+    const currentRejected=rejected && live===FB.state && assertRestoreFacts(restoreFacts(FB.state,function (v) { return v; }),facts);
+    delete save.state.start.storyAttachments;delete save.storyAttachmentSchema;
+    FBDATA.bookmarks['1241'].hidden=true;return {exact:exact,currentRejected:currentRejected,save:JSON.stringify(save)};
   });
   expect(final.exact).toBe(true);
+  expect(final.currentRejected).toBe(true);
   await restoreBookmark(page,final.save);
   expect(await page.evaluate(function () {return !FB.state.stories.alexander_household_1241 && !FB.state.stories.opening_alexander_1241;})).toBe(true);
 });
@@ -256,12 +274,14 @@ test('a campaign begun in frederick_v2 keeps its original Rostov slots when the 
   await page.locator('[data-bookmark="1241"]').click();
   await expect(page.locator('[data-scenario="alexander_1241"]')).toHaveCount(0);
   await page.locator('[data-scenario="novgorod_household_1241"]').click();
+  await page.locator('#btn-pick-random').click();
+  await installRestoreFacts(page);
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   const saved=await page.evaluate(function () {
     FB.game.setPaused(true);const s=FB.state;
     const prior={revision:s.start.revision,slots:FB.world.byId.rostov.settlements.map(function (r) {return r.site;}),
-      chars:JSON.stringify(s.chars),stories:JSON.stringify(s.stories)};
+      facts:restoreFacts(s,function (v) { return [v.chars,v.stories]; })};
     FBDATA.bookmarks['1241'].revision='alexander_v2';
     return {save:FB.save.serialize(),prior:prior};
   });
@@ -271,7 +291,7 @@ test('a campaign begun in frederick_v2 keeps its original Rostov slots when the 
     return {old:before.revision==='frederick_v2' && s.start.revision===before.revision,
       fresh:FB.bookmark('1241').revision,head:FB.world.byId.rostov.settlements[0].site,
       same:JSON.stringify(before.slots)===JSON.stringify(FB.world.byId.rostov.settlements.map(function (r) {return r.site;})) &&
-        before.chars===JSON.stringify(s.chars) && before.stories===JSON.stringify(s.stories),
+        assertRestoreFacts(restoreFacts(s,function (v) { return [v.chars,v.stories]; }),before.facts),
       absent:!s.stories.alexander_household_1241 && !s.stories.opening_alexander_1241 && !s.start.existingPerson};
   },saved.prior)).toEqual({old:true,fresh:'alexander_v2',head:'rostov_head',same:true,absent:true});
 });
