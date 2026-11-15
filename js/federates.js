@@ -201,7 +201,11 @@
       FB.invalidateRealmCache();
       if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     }
+    // A home ruler travels with this command without relocating the landed household.
+    var homeCommand = army.mobileFollowing && FB.mobile && FB.mobile.landedLink &&
+      FB.mobile.landedLink(s,row.realmId);
     if (army.mobileFollowing && army.mobileCourt && s.player && !s.player.travel &&
+        !(homeCommand && homeCommand.characterId === s.player.charId) &&
         s.player.provinceId === row.at && row.courtIds.indexOf(s.player.charId) >= 0)
       s.player.provinceId = army.at;
     row.at = army.at;

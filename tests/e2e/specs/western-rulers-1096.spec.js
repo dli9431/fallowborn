@@ -1,7 +1,8 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginRuler1096 } = require('../support/game/rulers-1096');
+const { beginRuler1096, installRuler1096Dates, importRuler1096WithoutTracks } = require('../support/game/rulers-1096');
+const { installRestoreFacts } = require('../support/game/restore-facts');
 const { startParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
@@ -11,7 +12,7 @@ dependsOnRuntime(__filename, [
   'data/units.js','data/technology.js','data/political_institutions.js',
   'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js','data/bookmark_1096.js','data/starts.js',
   'data/government_rollout.js','data/story_instances.js','data/communal_revisions.js',
-  'js/main.js','js/world.js','js/starts.js','js/model.js','js/stories.js',
+  'js/main.js','js/world.js','js/starts.js','js/model.js','js/stories.js','js/util.js','js/story_history.js','js/mods.js',
   'js/story_ruler_agenda.js','js/story_opening_goals.js','js/save.js','js/save_v4.js',
   'js/story_expedition_preparation.js','js/story_expedition_program.js','js/story_expedition_agreements.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/expedition_programs.js',
@@ -66,7 +67,10 @@ for (const row of openings) {
     const result = await page.evaluate(function (r) {
       const s = FB.state, me = s.chars[s.player.charId], p = s.player;
       const kin = r.kin.map(function (name) {
-        return Object.keys(s.chars).map(function (id) { return s.chars[id]; }).filter(function (c) { return c.name === name && !c.dead; });
+        return Object.keys(s.chars).map(function (id) { return s.chars[id]; }).filter(function (c) {
+          return c.name === name && !c.dead && (c.id === me.motherId || c.id === me.spouseId || c.fatherId === me.id ||
+            me.motherId && c.motherId === me.motherId);
+        });
       });
       const profile = s.stories[r.profile], other = FB.realmRulerCharacterSnapshot(s,r.other);
       const b = FB.bookmark('1096'), definition = b.realms.find(function (d) { return d.id === r.realm; });
@@ -80,7 +84,7 @@ for (const row of openings) {
           kin[1][0].fatherId === me.id && kin[1][0].motherId !== kin[0][0].id && me.childrenIds.length === 1;
       return { name:me.name, born:me.born, count:Object.values(s.chars).filter(function (c) { return c.name === r.name && !c.dead; }).length,
         home:p.provinceId, site:home.site, adopted:!s.realms[r.realm] && !!s.realms.player,
-        ruler:FB.realmRulerCharacterSnapshot(s,'player').id === me.id,
+        ruler:FB.stories.ruler(s,'player').id === me.id,
         holdings:p.provs.slice().sort(), expected:expected, liege:p.liege,
         expectedLiege:definition.liege || null, kin:kin.map(function (list) { return list.length; }), familyOK:familyOK,
         localStories:openingsIgnored(), goals:Object.keys(profile.goals).length,
@@ -107,7 +111,7 @@ for (const row of openings) {
       FB.stories.cards(s); FB.stories.choices(s,id); FB.stories.quote(s,id,d.stages[0].choices[0].id);
       const pure = pureBefore === JSON.stringify(s) && rng === FB.getRngState();
       const advanced = d.stages.map(function (stage) {
-        s.date = { year:stage.year, season:stage.season, day:1 }; s.turn++;
+        stageRulerDate(s,{year:stage.year,season:stage.season,day:1});
         const c = stage.choices.find(function (choice) { return choice.operation === 'agenda_priority'; });
         return FB.stories.apply(s,id,c.id,FB.stories.quote(s,id,c.id));
       });
@@ -202,9 +206,10 @@ test('foreign household members remain at their declared homes and no later infa
 });
 
 // Historical declarations consume the same canonical owners as the independent JSON specs.
-async function expedition(page,info,row,revision) {
+async function expedition(page,info,row,revision,withoutTracks) {
   if (revision) {
     await openGame(page,info);
+    if (withoutTracks) await importRuler1096WithoutTracks(page,row.scenario);
     await page.evaluate(function (revision) {FBDATA.bookmarks['1096'].revision=revision;},revision);
     await page.evaluate(function () {return new Promise(function (resolve,reject) {
       FB.activateBookmark('1096',null,function (error) {if (error) reject(error);else resolve();});
@@ -215,11 +220,19 @@ async function expedition(page,info,row,revision) {
       FB.game.start();FB.game.setPaused(true);
     },row);
   } else await start(page,info,row);
+  await installRuler1096Dates(page);
+  await installRestoreFacts(page);
   await page.evaluate(function (r) {
     const prefix=r.scenario.split('_')[0];
     window.westernCase={rid:prefix+'_host_1096',prep:prefix+'_preparation_1096',program:prefix+'_program_1096',row:r,
-      next:function (s) {s.date=FB.dateAtTurn(s,s.turn+1);s.turn++;},
-      turn:function (s,n) {s.date=FB.dateAtTurn(s,n);s.turn=n;},
+      next:function (s) {stageRulerDate(s,FB.dateAtTurn(s,s.turn+1));},
+      turn:function (s,n) {
+        const year=s.date.year,rng=FB.getRngState(),uid=FB.getUidCounter();
+        stageRulerDate(s,FB.dateAtTurn(s,n));
+        // Stage the native court boundary too, before capturing a later-year checkpoint.
+        if (s.date.year!==year) FB.ensureDynasticState(s,{restore:true});
+        if (rng!==FB.getRngState() || uid!==FB.getUidCounter()) throw new Error('Court boundary changed RNG or UID');
+      },
       run:function (s,action,step) {return FB.expeditionStoryPrograms.commit(s,
         FB.expeditionStoryPrograms.review(s,this.program,action,s.stories[this.program].actorId,step));},
       form:function (s,source) {
@@ -227,11 +240,11 @@ async function expedition(page,info,row,revision) {
         if (!this.run(s,source || 'contribute')) return false;this.next(s);
         return this.run(s,'form');
       },
-      owners:function () {const s=FB.state;return JSON.stringify([s.start,s.stories,s.chars,s.realms,s.armies,
-        s.authority.migrations,s.population,s.market,s.owner,s.holder,s.player.gold]);},
+      owners:function () {return restoreFacts(FB.state,function (s) {return [s.start,s.stories,s.chars,s.realms,s.armies,
+        s.authority.migrations,s.population,s.market,s.owner,s.holder,s.player.gold];});},
       restore:function () {const before=this.owners(),saved=JSON.parse(FB.save.serialize()),rng=FB.getRngState(),uid=FB.getUidCounter();
         FB.save.restore(saved);FB.save.restore(JSON.parse(JSON.stringify(saved)));
-        return before===this.owners() && (rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter();},
+        return assertRestoreFacts(this.owners(),before) && (rng>>>0)===(FB.getRngState()>>>0) && uid===FB.getUidCounter();},
       fundRoad:function (s) {const q=FB.homeAuthority.fundingQuote(s,{source:{kind:'private',characterId:s.player.charId},
         recipientRealmId:this.rid,amount:8,characterId:s.player.charId});return FB.homeAuthority.fund(s,q);},
       homeAnswer:function (s,action) {
@@ -255,6 +268,32 @@ async function expedition(page,info,row,revision) {
           else FB.expeditionPrograms.day(s);
         }
         return FB.mobile.row(s,this.rid).expeditionProgram.steps[0].status==='complete';
+      },
+      roadAccess:function (s) {
+        const M=FB.mobile,host=M.host(s,this.rid),step=FB.campaignBookmark(s).realms.find(function (d) {
+          return d.id===this.rid;
+        },this).mobile.expeditionProgram.steps.find(function (step) {return step.id==='first_leg';}),
+          plan=FB.armyOrderPlan(s,host,step.terms.waypoints[0]);
+        if (!plan.ok) throw new Error('No ordinary road: '+plan.reason);
+        const missing=plan.path.filter(function (pid) {return !M.passage(s,this.rid,pid,true);},this),
+          before=this.owners(),q=FB.expeditionPrograms.review(s,this.rid,'first_leg');
+        if ((missing.length>0 ? q.allowed || q.reason!=='access' : !q.allowed) || before!==this.owners())
+          throw new Error('Route preflight did not reflect actual passage');
+        missing.forEach(function (pid) {
+          const holder=s.holder[pid],terms={kind:'access',partnerId:holder,countyIds:[pid],
+            capacity:M.total(s,this.rid),allowRecruit:false,price:1,duration:360};
+          const offer=M.review(s,{realmId:this.rid,action:'offer',terms:terms,actor:{kind:'character',id:s.player.charId}});
+          if (!M.commit(s,offer)) throw new Error('Road permission offer refused: '+pid+' '+offer.review.reason);
+          const agreement=M.row(s,this.rid).agreements.filter(function (a) {return a.status==='offered' && a.countyIds[0]===pid;})[0];
+          const answer=M.review(s,{realmId:this.rid,action:'accept',terms:{agreementId:agreement.id},
+            actor:holder==='player' ? {kind:'character',id:s.player.charId} : {kind:'realm',id:holder}});
+          if (!M.commit(s,answer)) throw new Error('Road permission response refused: '+pid+' '+answer.review.reason);
+        },this);
+        if (missing.length) {
+          this.next(s);
+          if (!this.run(s,'resume')) throw new Error('Road program did not resume after ordinary permission offers');
+        }
+        return plan.path.every(function (pid) {return M.passage(s,this.rid,pid,true);},this);
       }};
   },row);
 }
@@ -324,9 +363,12 @@ for (const row of openings) {
   test(row.scenario+' stale formation and public grant quotes reject without touching resources',async function ({page},info) {
     await expedition(page,info,row);
     const result=await page.evaluate(function () {
-      const C=westernCase,s=FB.state,P=FB.expeditionPreparation,actor=s.player.charId,
-        privateGold=s.player.gold,home=FB.treasuryAvailable(s,'player'),q=P.review(s,C.prep,'grant',actor),
-        granted=P.commit(s,q),separate=s.player.gold===privateGold && s.stories[C.prep].authorizedTurn===null &&
+      const C=westernCase,s=FB.state,P=FB.expeditionPreparation,actor=s.player.charId;
+      if (!FB.treasuryCredit(s,'player',500)) throw new Error('Public grant funding failed');
+      const privateGold=s.player.gold,home=FB.treasuryAvailable(s,'player'),q=P.review(s,C.prep,'grant',actor);
+      if (!q.allowed) throw new Error('Public grant refused: '+JSON.stringify({reason:q.reason,cost:q.cost,
+        funds:home,homeDecision:q.funding && q.funding.homeDecision}));
+      const granted=P.commit(s,q),separate=s.player.gold===privateGold && s.stories[C.prep].authorizedTurn===null &&
           Math.abs(FB.treasuryAvailable(s,'player')-home+q.cost)<1e-8 && FB.treasuryAvailable(s,C.rid)===q.cost;
       C.next(s);const authorized=C.run(s,'authorize');C.next(s);
       const changes=[function (x) {x.chars[actor].dead=true;},function (x) {x.realms.player.ruler.generation++;},
@@ -355,10 +397,16 @@ for (const row of openings) {
         pending=C.restore();s=FB.state;C.next(s);E.day(s);
       const withheld=M.row(s,C.rid).agreements[0].status==='offered',homeAccepted=C.homeAnswer(s),
         accepted=M.row(s,C.rid).agreements[0].status==='active',bounded=JSON.stringify(s);E.day(s);
-      const once=bounded===JSON.stringify(s),complete=C.permission(s),agreements=M.row(s,C.rid).agreements,
-        paid=Math.abs(cash-FB.treasuryAvailable(s,C.rid)-agreements.reduce(function (n,a) {return n+a.price;},0))<1e-8;
-      C.next(s);const q=E.review(s,C.rid,'first_leg'),
-        path=q.allowed && q.operation.review.path.every(function (pid) {return M.passage(s,C.rid,pid,true);}),
+      const once=bounded===JSON.stringify(s),complete=C.permission(s),agreements=M.row(s,C.rid).agreements;
+      C.next(s);
+      const road=C.roadAccess(s),paid=Math.abs(cash-FB.treasuryAvailable(s,C.rid)-agreements.reduce(function (n,a) {return n+a.price;},0))<1e-8;
+      C.next(s);const q=E.review(s,C.rid,'first_leg');
+      if (!q.allowed) {
+        const host=M.host(s,C.rid),plan=FB.armyOrderPlan(s,host,q.operation ? q.operation.request.terms.countyId : C.row.county);
+        throw new Error('First route unavailable: '+JSON.stringify({reason:q.reason,plan:plan,
+          access:plan.path && plan.path.map(function (pid) {return [pid,M.passage(s,C.rid,pid,true),s.owner[pid],s.holder[pid]];})}));
+      }
+      const path=q.allowed && q.operation.review.path.every(function (pid) {return M.passage(s,C.rid,pid,true);}),
         issued=E.commit(s,q),host=M.host(s,C.rid),target=host.goal,noTeleport=host.at===origin && M.migration(s,C.rid).at===origin;
       let days=0;
       while (days<60 && (host.at!==target || host.moveLeft>0 || (host.path || []).length)) {
@@ -366,13 +414,13 @@ for (const row of openings) {
       }
       const arrived=host.at===target && target!==origin && M.migration(s,C.rid).at===target;
       return {formed:formed,funded:funded,offered:offered,waiting:waiting,pending:pending,withheld:withheld,homeAccepted:homeAccepted,accepted:accepted,once:once,
-        complete:complete,paid:paid,path:path,issued:issued,noTeleport:noTeleport,arrived:arrived,days:days,
+        complete:complete,road:road,paid:paid,path:path,issued:issued,noTeleport:noTeleport,arrived:arrived,days:days,
         conserved:people===M.total(s,C.rid) && land===JSON.stringify([s.owner,s.holder]) && s.player.gold===privateGold,
         home:s.player.provinceId===home,remoteHome:arrived && !FB.homeAuthority.quote(s,'player','grant').allowed,
         original:M.row(s,C.rid).leaderId===s.player.charId,valid:M.validate(s),restored:C.restore()};
     });
     expect(r).toMatchObject({formed:true,funded:true,offered:true,waiting:true,pending:true,withheld:true,homeAccepted:true,accepted:true,once:true,
-      complete:true,paid:true,path:true,issued:true,noTeleport:true,arrived:true,conserved:true,home:true,remoteHome:true,
+      complete:true,road:true,paid:true,path:true,issued:true,noTeleport:true,arrived:true,conserved:true,home:true,remoteHome:true,
       original:true,valid:true,restored:true});
     expect(r.days).toBeLessThanOrEqual(60);
   });
@@ -383,12 +431,12 @@ for (const row of openings) {
       const C=westernCase,s=FB.state,E=FB.expeditionPrograms,M=FB.mobile,formed=C.form(s);
       C.next(s);const offered=C.run(s,'step','local_permission');C.next(s);E.day(s);
       const row=M.row(s,C.rid),a=row.agreements[0],qPay=M.review(s,{realmId:C.rid,action:'accept',terms:{agreementId:a.id},
-        actor:{kind:'character',id:s.player.charId}}),unpaid=a.status==='offered' && !qPay.allowed && qPay.reason==='funds' &&
+        actor:{kind:'character',id:s.player.charId}}),unpaid=a.status==='offered' && !qPay.review.allowed && qPay.review.reason==='funds' &&
         FB.treasuryAvailable(s,C.rid)<a.price && !M.provisioningAccess(s,C.rid,a.countyIds[0]),funded=C.fundRoad(s);C.next(s);
       const q=M.review(s,{realmId:C.rid,action:'accept',terms:{agreementId:a.id},actor:{kind:'character',id:s.player.charId}}),
         x=JSON.parse(JSON.stringify(s));
       x.chars[a.accessOrigin.chain[0].personId].dead=true;
-      const before=JSON.stringify(x),rejected=q.allowed && !M.commit(x,q) && before===JSON.stringify(x),
+      const before=JSON.stringify(x),rejected=q.review.allowed && !M.commit(x,q) && before===JSON.stringify(x),
         denied=!E.review(x,C.rid,'first_leg').allowed,position=M.host(x,C.rid).at===C.row.county;
       return {formed:formed,offered:offered,unpaid:unpaid,funded:funded,rejected:rejected,denied:denied,position:position,restored:C.restore()};
     })).toEqual({formed:true,offered:true,unpaid:true,funded:true,rejected:true,denied:true,position:true,restored:true});
@@ -459,15 +507,16 @@ test('actual field losses preserve Godfrey’s civilian camp and cannot create a
     const C=westernCase,s=FB.state,M=FB.mobile,formed=C.form(s),host=M.host(s,C.rid),row=M.row(s,C.rid),
       civilians=row.members.reduce(function (n,m) {return n+m.civilians.reduce(function (n,c) {return n+c.count;},0);},0),
       camp=M.migration(s,C.rid).at,food=row.food,money=FB.treasuryAvailable(s,C.rid),men=host.men,
-      land=JSON.stringify([s.owner,s.holder]);
+      land=JSON.stringify([s.owner,s.holder]),civilianLoss=Math.floor(civilians*M.profile(s,C.rid).defeatShare);
     FB.applyHostLosses(host,men,s);FB.mobileHostDisband(s,host);
     s.armies=s.armies.filter(function (a) {return a.id!==host.id;});C.next(s);
     return {formed:formed,noHost:M.host(s,C.rid)===null,camp:M.migration(s,C.rid).at===camp,
-      people:M.total(s,C.rid)===civilians,civilianCount:civilians,accounted:row.accounting.dead===men,
+      people:M.total(s,C.rid)===civilians-civilianLoss,civilianCount:civilians,accounted:row.accounting.dead===men+civilianLoss,
+      conserved:M.total(s,C.rid)+row.accounting.dead===men+civilians,
       retained:row.food===food && FB.treasuryAvailable(s,C.rid)===money && land===JSON.stringify([s.owner,s.holder]),
       noRoute:!FB.expeditionPrograms.review(s,C.rid,'first_leg').allowed,
       valid:M.validate(s),restored:C.restore(),noReplay:!M.host(FB.state,C.rid)};
-  })).toEqual({formed:true,noHost:true,camp:true,people:true,civilianCount:320,accounted:true,retained:true,
+  })).toEqual({formed:true,noHost:true,camp:true,people:true,civilianCount:320,accounted:true,conserved:true,retained:true,
     noRoute:true,valid:true,restored:true,noReplay:true});
 });
 
@@ -561,17 +610,18 @@ test('fresh original expedition records and ration receipts cannot be erased or 
 });
 
 test('an unstamped legacy baseline keeps absent personal records and never acquires the fresh expedition world',async function ({page},info) {
-  await expedition(page,info,openings[2],'baseline');
+  await expedition(page,info,openings[2],'baseline',true);
   expect(await page.evaluate(function () {
     const C=westernCase,saved=JSON.parse(FB.save.serialize()),person=FB.state.player.charId;
     delete saved.storyAttachmentSchema;delete saved.state.start.storyAttachments;
-    delete saved.state.stories[C.row.agenda];delete saved.state.stories[C.row.profile];
     FBDATA.bookmarks['1096'].revision='western_expeditions_v1';FB.save.restore(saved);
     const s=FB.state;
     return {retained:s.start.revision==='baseline',same:s.player.charId===person,
+      original:s.start.rulerRealmId===C.row.realm,
+      legacy:!s.start.storyAttachments && JSON.parse(FB.save.serialize()).storyAttachmentSchema===undefined,
       absent:!s.stories[C.row.agenda] && !s.stories[C.row.profile] && !s.stories[C.prep] && !s.stories[C.program],
       noAccount:!s.start.publicTreasury && !s.homeAuthorityPolicies && !s.realms[C.rid],restored:C.restore()};
-  })).toEqual({retained:true,same:true,absent:true,noAccount:true,restored:true});
+  })).toEqual({retained:true,same:true,original:true,legacy:true,absent:true,noAccount:true,restored:true});
 });
 
 test('an ordinary 1096 household attaches no western ruler program or profile', async function ({ page }, info) {
@@ -590,7 +640,7 @@ test('Bohemond can consider the road and finish without creating a journey, comm
     const before = JSON.stringify([s.owner,s.holder,s.player.provs,s.player.provinceId,s.player.gold,
       s.player.travel,s.armies,s.authority.contracts,Object.keys(s.chars)]);
     const chosen = d.stages.map(function (stage, i) {
-      s.date = {year:stage.year,season:stage.season,day:1}; s.turn++;
+      stageRulerDate(s,{year:stage.year,season:stage.season,day:1});
       const c = i === 3 ? 'bohemond_consider_road' : i === 7 ? 'bohemond_finish' : stage.choices[0].id;
       const quote = FB.stories.quote(s,id,c), ok = FB.stories.apply(s,id,c,quote);
       return [c,ok,FB.stories.apply(s,id,c,quote)];
