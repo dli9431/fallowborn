@@ -2,12 +2,13 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-story-harbor.json'),
   upland:require('../fixtures/authoring/expedition-story-upland.json')};
-dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/technology.js','data/units.js',
+dependsOnRuntime(__filename,['js/bookmark_sources.js','index.html','data/mobile_confederations.js','data/technology.js','data/units.js',
   'js/story_expedition_program.js','js/story_expedition_preparation.js','js/expedition_programs.js','js/stories.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/government_selection.js',
   'js/governments.js','js/authority.js','js/home_authority.js','js/treasury.js','js/population.js','js/market.js',
@@ -18,7 +19,7 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
 
 async function begin(page,info,label,modified,importFile) {
   if (modified || importFile) {
-    await openGame(page,info);
+    if(page.url()==='about:blank')await openGame(page,info);
     expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},modified || examples[label]),
       label+' ordinary import validation').toEqual([]);
     await page.evaluate(function () {FB.ui.showMods();});

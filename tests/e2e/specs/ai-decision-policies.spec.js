@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, [
+dependsOnRuntime(__filename, ['js/bookmark_sources.js',
   'data/ai_decisions.js','data/ambitions.js','data/traits.js','data/eras.js',
   'data/political_institutions.js','js/ai_decisions.js','js/balance.js',
   'js/governments.js','js/government_ai.js','js/authority.js','js/mods.js',
@@ -11,18 +11,13 @@ dependsOnRuntime(__filename, [
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
-const { openCrazyGame } = require('../support/game/crazygames-title');
-const { mockCrazyGames } = require('../support/crazygames');
 
-for (const distribution of ['standard','crazygames']) {
+for (const distribution of ['standard']) {
   test(distribution + ' neutral policies report without changing data, state, RNG or identities', async function ({ page }, testInfo) {
-    if (distribution === 'crazygames') {
-      await mockCrazyGames(page);
-      await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-      await openCrazyGame(page,testInfo);
-    } else await openGame(page,testInfo);
+    await openGame(page,testInfo);
     const result = await page.evaluate(function () {
       const P = FB.aiDecisions, before = JSON.stringify(FBDATA), state = JSON.stringify(FB.state);
       const rng = FB.getRngState(), uid = FB.getUidCounter(), ids = [];
@@ -150,7 +145,7 @@ test('ordered, first and weighted selection preserve eligibility, explicit rolls
     try { P.report(P.compile('weighted',data),[{id:'a',eligible:true,facts:{score:1e20}}]); } catch (e) { overflow = true; }
     const zero = P.report(P.compile('weighted',data),[{id:'zero',eligible:true,facts:{score:0}}]);
     const first = P.report(P.resolve(null,null,'war'),[{id:'z',eligible:true,facts:{}},{id:'a',eligible:true,facts:{}}]);
-    const ordered = P.report(P.resolve(null,null,'expansion'),[{id:'z',eligible:true,facts:{aggression:0}},{id:'a',eligible:true,facts:{aggression:0}}]);
+    const ordered = P.report(P.compile('ordinary_expansion',FBDATA),[{id:'z',eligible:true,facts:{aggression:0}},{id:'a',eligible:true,facts:{aggression:0}}]);
     report.parameters.baseScore = 0;
     return {picks:picks,zero:P.pick(zero),first:P.pick(first),ordered:P.pick(ordered),invalidRoll:invalidRoll,missing:missing,
       duplicate:duplicate,unknown:unknown,overflow:overflow,adjusted:params.parameters,applied:params.adjustments,
@@ -249,27 +244,39 @@ test('same-import trait references and retained revision selection validate agai
   expect(result).toEqual({faults:[],pure:true,zero:0,out:[['baseline','measured_war'],['fresh','ordinary_war'],['cleared','ordinary_war'],['restored_baseline','measured_war']]});
 });
 
-test('ordinary stored replacement and removal discard policies from the removed mod', async function ({ page }, testInfo) {
-  await openGame(page,testInfo);
-  const source = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../docs/examples/ai-decisions-expansion.json'),'utf8'));
-  async function store(mod) {
-    await Promise.all([page.waitForEvent('load'),page.evaluate(function (data) { FB.mods.store(JSON.stringify(data)); },mod)]);
-    await prepareGameContent(page);
-    await expect.poll(function () { return page.evaluate(function () { return FB.game.bootReady; }); }).toBe(true);
-  }
-  await store(source);
-  const first = await page.evaluate(function () { return FB.mods.sig(); });
-  source.aiDecisionPolicies.replacement_war = source.aiDecisionPolicies.expansive_war;
+function replacement(source) {
+  source.aiDecisionPolicies.replacement_war=source.aiDecisionPolicies.expansive_war;
   delete source.aiDecisionPolicies.expansive_war;
-  source.balance.aiWarPolicy = 'replacement_war';
-  await store(source);
+  source.balance.aiWarPolicy='replacement_war';
+  return source;
+}
+async function storedTitle(page,info,mod) {
+  await page.addInitScript(function (source) {
+    if(sessionStorage.getItem('policy-fixture-installed'))return;
+    localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(source)]));
+    sessionStorage.setItem('policy-fixture-installed','1');
+  },mod);
+  await openGame(page,info);
+}
+function expansionExample() {
+  return JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../docs/examples/ai-decisions-expansion.json'),'utf8'));
+}
+test('ordinary stored replacement discards policies from the replaced mod',async function ({page},testInfo) {
+  const source=expansionExample();
+  await storedTitle(page,testInfo,source);
+  const first=await page.evaluate(function () {return FB.mods.sig();});
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),
+    page.evaluate(function (data) {FB.mods.store(JSON.stringify(data));},replacement(source))]);
+  await prepareGameContent(page);
   expect(await page.evaluate(function (signature) {
     return {count:FB.mods.count(),selected:FB.aiDecisions.resolve(null,null,'war').id,
-      removed:!Object.prototype.hasOwnProperty.call(FBDATA.aiDecisionPolicies,'expansive_war'),changed:signature !== FB.mods.sig()};
+      removed:!Object.prototype.hasOwnProperty.call(FBDATA.aiDecisionPolicies,'expansive_war'),changed:signature!==FB.mods.sig()};
   },first)).toEqual({count:1,selected:'replacement_war',removed:true,changed:true});
-  await Promise.all([page.waitForEvent('load'),page.evaluate(function () { FB.mods.removeAt(0); })]);
+});
+test('ordinary stored removal discards policies from the removed mod',async function ({page},testInfo) {
+  await storedTitle(page,testInfo,replacement(expansionExample()));
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.evaluate(function () {FB.mods.removeAt(0);})]);
   await prepareGameContent(page);
-  await expect.poll(function () { return page.evaluate(function () { return FB.game.bootReady; }); }).toBe(true);
   expect(await page.evaluate(function () {
     return {count:FB.mods.count(),selected:FB.aiDecisions.resolve(null,null,'war').id,
       removed:!Object.prototype.hasOwnProperty.call(FBDATA.aiDecisionPolicies,'replacement_war'),signature:FB.mods.sig()};

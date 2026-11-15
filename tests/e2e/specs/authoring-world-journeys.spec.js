@@ -2,10 +2,11 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark, advanceBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle, advanceBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['index.html','js/mods.js','js/world.js','js/stories.js','js/story_campaign.js',
+dependsOnRuntime(__filename, ['js/bookmark_sources.js','index.html','js/mods.js','js/world.js','js/stories.js','js/story_campaign.js',
   'js/story_government_selection.js','js/model.js','js/main.js','js/save.js','js/save_v4.js',
   'js/government_civic.js','js/civic_validation.js','js/civic_transactions.js','js/ui_civic.js',
   'js/government_support.js','js/mobile_confederations.js','js/treasury.js','js/governments.js',
@@ -15,12 +16,12 @@ async function beginExample(page, info, prefix) {
   await openGame(page, info);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/' + prefix + '-mod.json'));
-  await page.locator('#mod-apply').click();
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix + '_world'];
   }, prefix);
-  await beginBookmark(page, info, prefix + '_world', prefix + '_household');
+  await beginBookmarkFromTitle(page, prefix + '_world', prefix + '_household');
   const identities = await page.evaluate(function () {
     const s = FB.state, c = s.chars[s.player.charId];
     return { counties:FB.world.provs.length, home:s.player.provinceId, culture:c.culture, faith:c.religion };
