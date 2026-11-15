@@ -1691,6 +1691,23 @@ Institution and office replacement/removal journeys prepare their own guarded
 browser contexts in separate bounded hooks; ordinary government visibility
 imports retain the same isolation and complete reader/restore assertions.
 
+The religious-office-tables family separates table snapshots and input invalidation
+from incumbent readers (`-readers`), political recognition and ordinary JSON office
+replacement/removal (`-recognition`), and legitimacy lists (`-legitimacy`). Each
+oracle comparison keeps its complete outputs and exact validation counters in one
+case, including directly staged season/year boundaries, qualification and exception
+recovery. Its leaf helper shares source text and page operations only; live worlds
+and saved envelopes belong to the individual case or guarded import context.
+
+opening-infrastructure-schema.spec.js retains independent estuary/upland admission,
+revision policy, slot order, matching restore and changed-content rejection.
+opening-infrastructure-schema-rejection.spec.js owns the complete malformed-policy,
+placement, fort, site-identity and scoped-limit matrices. opening-infrastructure.spec.js
+covers fresh household, observer and ruler initialization; its `-restore` sibling
+keeps atomic live rejection, strict saved markers, paid repair/transfer, legacy
+migration and ordinary import removal. Every case starts its own ordinary JSON
+import, with boot observations and dependent restore phases kept on that page.
+
 The 1096 identity publication check stages its narrower faith foundation before
 composition, retains repeated source loading, and checks the exact five dated
 institution declarations for absent invented staff. Other regional institutions
