@@ -1,9 +1,10 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={river:require('../fixtures/authoring/household-refuge-river.json'),hill:require('../fixtures/authoring/household-refuge-hill.json')};
 dependsOnRuntime(__filename,['index.html','data/technology.js','data/travel.js','data/starts.js','js/story_household_refuge.js',
@@ -15,13 +16,14 @@ dependsOnRuntime(__filename,['index.html','data/technology.js','data/travel.js',
 
 async function start(page,info,label,input) {
   await openGame(page,info);
+  await expectModAdmission(page,input || examples[label]);
   await page.evaluate(function() { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(input ? {name:'refuge.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))} :
     path.resolve(__dirname,'../fixtures/authoring/household-refuge-'+label+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function() { return window.FB && FB.game && FB.game.bootReady; });
-  await beginBookmark(page,info,label==='river'?'inventory_estuary':'shelter_hill_estuary',
+  await beginBookmarkFromTitle(page,label==='river'?'inventory_estuary':'shelter_hill_estuary',
     label==='river'?'inventory_estuary_household':'shelter_hill_estuary_household');
   await page.evaluate(function(label) {
     window.refugeLabel=label;
@@ -338,7 +340,7 @@ test('the shared review names exact people and costs and Back retains the shelte
 });
 
 test('unopted retained campaigns keep their absent shelter records',async function({page},info) {
-  await openGame(page,info);await beginBookmark(page,info,'867','farmer');
+  await openGame(page,info);await beginBookmarkFromTitle(page,'867','farmer');
   expect(await page.evaluate(function() {
     const s=FB.state,before=JSON.stringify(s.stories || null),saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
     return {unchanged:before===JSON.stringify(FB.state.stories || null),absent:Object.keys(FB.state.stories || {}).every(function(id) {

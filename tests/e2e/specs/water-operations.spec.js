@@ -1,20 +1,23 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
+const {installRestoreFacts}=require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmark,beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/water-operations-river.json'),
   catchment:require('../fixtures/authoring/water-operations-catchment.json')};
 dependsOnRuntime(__filename,[
   'data/building_profiles.js','js/building_profiles.js','index.html','data/building_operations.js','data/site_resources.js','data/technology.js',
-  'js/building_operations.js','js/site_resources.js','js/world.js','js/actions.js','js/fortifications.js',
+  'js/bookmark_composition.js','js/building_operations.js','js/site_resources.js','js/world.js','js/actions.js','js/fortifications.js',
   'js/population.js','js/technology.js','js/lordships.js','js/treasury.js','js/home_authority.js',
   'js/building_institutions.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);
 
 async function importExample(page,info,name,custom,ruler) {
   await openGame(page,info);
+  await expectModAdmission(page,custom || examples[name]);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(custom ? {name:'water-example.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(custom))} :
     path.resolve(__dirname,'../fixtures/authoring/water-operations-' + name + '.json'));
@@ -22,7 +25,8 @@ async function importExample(page,info,name,custom,ruler) {
   const origin = name === 'river' ? 'river' : 'upland';
   await prepareGameContent(page);
   await page.waitForFunction(function (id) { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[id]; },'resource_' + origin);
-  if (!ruler) return beginBookmark(page,info,'resource_' + origin,'resource_' + origin + '_household');
+  await installRestoreFacts(page);
+  if (!ruler) return beginBookmarkFromTitle(page,'resource_' + origin,'resource_' + origin + '_household');
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
@@ -80,9 +84,10 @@ for (const name of ['river','catchment']) {
       const freshRival=O.quote(s,Object.assign({},req,{buildingId:'water_rival_plant'}));
       const stillReserved=R.snapshot(s).some(function(row){return row.reservations.some(function(c){return c.id===claim;});});
       O.validate(s);
-      const saved=JSON.stringify([s.buildingOperations,s.siteResources,s.buildings,s.realms[who.id].treasury,s.population]),rng=FB.getRngState(),uid=FB.getUidCounter();
+      function facts(t) {return [t.buildingOperations,t.siteResources,t.buildings,t.realms[who.id].treasury,t.population];}
+      const saved=restoreFacts(s,facts),rng=FB.getRngState(),uid=FB.getUidCounter();
       FB.save.restore(JSON.parse(FB.save.serialize()));
-      const t=FB.state,matching=saved===JSON.stringify([t.buildingOperations,t.siteResources,t.buildings,t.realms[who.id].treasury,t.population]);
+      const t=FB.state,matching=assertRestoreFacts(restoreFacts(t,facts),saved);
       const receipt=t.buildingOperations.receipts[asset.waterOperation.id];
       const afterRestore=FB.buildingBonusIn(t,a.countyId,'populationCapacity');
       t.turn=receipt.untilTurn;

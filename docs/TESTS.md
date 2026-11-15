@@ -105,7 +105,7 @@ and UID through repeat restores, revision switches and fresh-page re-save loads.
 Typed evidence negatives cover both declaration sides, missing/foreign roots,
 foreign starts, duplicate ids, record limits, duplicate proofs and stale live
 definitions. The spec also retains raw JSON/order, bundle payload/order,
-non-authorized definition, ordinary JSON forgery, empty-signature and CrazyGames
+non-authorized definition, ordinary JSON forgery, empty-signature and foreign-edition
 controls. Canonical normalization counts bound warm proof replay without raising
 timeouts. Multi-load journeys own fresh browser contexts and prepare their cold
 catalogue in a separate bounded hook before the restore/reload assertions.
@@ -1646,3 +1646,30 @@ reserves, and staged seasonal expiry advances the matching calendar date.
 The river import scopes its parent-output profile to its renamed farm enterprise;
 the foundation scenario stages the county under its existing generated sovereign
 before checking lawful construction and conservation.
+
+Bounded import and restoration journeys
+
+Refuge, mobile opening, occupation, infrastructure and water imports reuse their prepared
+Mods title. Import application and removal synchronize with the actual document
+navigation before preparing content. Independent mobile declaration mutations,
+living designation/support reviews and retained transition/government evidence
+run in bounded cases with the complete original rejection and purity matrices.
+Institution and office replacement/removal journeys prepare their own guarded
+browser contexts in separate bounded hooks; ordinary government visibility
+imports retain the same isolation and complete reader/restore assertions.
+
+The 1096 identity publication check stages its narrower faith foundation before
+composition, retains repeated source loading, and checks the exact five dated
+institution declarations for absent invented staff. Other regional institutions
+keep their independent definitions. Mobile column and water restoration compare complete
+decoded selected facts, preserving ordered arrays, original identities, funds,
+RNG and UID. Scenery rejection moves the independent ruler beginning to a settled
+seat and proves the empty-inventory control valid before rejecting the original
+unavailable inventory site.
+
+Both imported court configurations retain picker/code adoption, two matching
+restores and a cold reload for every constitutional revision. Separate changed
+constitution cases retain exact fingerprint rejection and input/state/storage/
+RNG/UID purity without adding a second cold reload to the matching journey.
+Each court case owns a fresh guarded context and prepares its ordinary import in
+a separate bounded hook before adoption, restoration or rejection assertions.

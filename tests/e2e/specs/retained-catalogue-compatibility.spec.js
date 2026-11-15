@@ -6,8 +6,6 @@ const {openGame,openTitle,prepareGameContent} = require('../support/game/navigat
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {startDeterministicGame} = require('../support/game/start');
-const {openCrazyGame} = require('../support/game/crazygames-title');
-const {mockCrazyGames} = require('../support/crazygames');
 const {installPageGuards} = require('../support/page-contract');
 const fixtures = [require('../fixtures/retained-catalogue-compatibility/estuary.json'),
   require('../fixtures/retained-catalogue-compatibility/upland.json')];
@@ -267,41 +265,54 @@ for (const fixture of fixtures) {
 }
 
 function registerContractCases(fixture,getOld) {
-if (fixture === fixtures[0]) test('native transition declarations fail closed for missing, ambiguous, foreign, invalid and unbounded proofs',async function ({page},info) {
-  const old = getOld();
-  await currentPage(page,fixture,null,info,old);
-  // Exercise descriptor validation independently from the sealed source seam.
-  // The ordinary JSON path cannot replace this native accessor.
-  const results = await page.evaluate(function (data) {
-    var original = FB.bookmarkSources.retainedCatalogueTransitions, valid = original().find(function (row) { return row.bookmarkId === data.state.start.id; }), rows, called = false;
-    var cases = ['missing','ambiguous','unknown','predecessor','retained','unlisted','default','callback','limits','foreign','root missing','root forged',
-      'retained list duplicate','retained list foreign','retained list malformed','retained list limit'];
-    return cases.map(function (kind) {
-      rows = [JSON.parse(JSON.stringify(valid))];
-      if (kind === 'missing') rows = [];
-      if (kind === 'ambiguous') rows.push(rows[0]);
-      if (kind === 'unknown') rows[0].allowSignatures = [data.mods];
-      if (kind === 'predecessor') rows[0].predecessor.realms[0].rank = 1;
-      if (kind === 'retained') rows[0].current.revisions.baseline = {balance:{levyPerDev:12}};
-      if (kind === 'unlisted') rows[0].addedRevisions = ['unknown'];
-      if (kind === 'default') rows[0].current.revision = 'baseline';
-      if (kind === 'callback') rows[0].callback = function () { called = true; throw new Error('Never call'); };
-      if (kind === 'limits') rows[0].addedRevisions = ['a','b','c','d','e','f','g','h','i'];
-      if (kind === 'foreign') rows[0].bookmarkId = 'foreign';
-      if (kind === 'root missing') delete rows[0].predecessorRoots.authoringDefaults;
-      if (kind === 'root forged') rows[0].predecessorRoots.authoringDefaults = Array(65).join('0');
-      if (kind === 'retained list duplicate') rows[0].retainedRevision = [valid.retainedRevision,valid.retainedRevision];
-      if (kind === 'retained list foreign') rows[0].retainedRevision = [valid.retainedRevision,'missing_revision'];
-      if (kind === 'retained list malformed') rows[0].retainedRevision = [valid.retainedRevision,{}];
-      if (kind === 'retained list limit') rows[0].retainedRevision = [valid.retainedRevision].concat(Array.from({length:32},function (_,i) { return 'other_' + i; }));
-      FB.bookmarkSources.retainedCatalogueTransitions = function () { return rows; };
-      var before = JSON.stringify([FBDATA,localStorage,FB.getRngState(),FB.getUidCounter(),FB.stories.list()]), result;
-      try { result = FB.mods.saveCompatibility(data); }
-      finally { FB.bookmarkSources.retainedCatalogueTransitions = original; }
-      return {kind:kind,compatible:result.compatible,path:result.path,pure:!called && before === JSON.stringify([FBDATA,localStorage,FB.getRngState(),FB.getUidCounter(),FB.stories.list()])};
-    });
-  },old.save);
-  for (const result of results) expect(result,result.kind).toMatchObject({compatible:false,path:expect.any(String),pure:true});
+if (fixture === fixtures[0]) test.describe('native transition declaration boundaries',function () {
+  let context,page,guard;
+  test.beforeAll(async function ({browser},info) {
+    context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+    await currentPage(page,fixture,null,info,getOld());
+  });
+  test.afterAll(async function () {
+    if(context)try {expect(guard.faults).toEqual([]);}finally {await context.close();}
+  });
+  for (const range of [[0,4],[4,8],[8,12],[12,16]]) {
+  test('native transition declarations fail closed for missing, ambiguous, foreign, invalid and unbounded proofs '+(range[0]+1)+'-'+range[1],async function () {
+    const old = getOld();
+    // Exercise descriptor validation independently from the sealed source seam.
+    // The ordinary JSON path cannot replace this native accessor.
+    const results = await page.evaluate(function (batch) {
+      var data=batch.save;
+      var original = FB.bookmarkSources.retainedCatalogueTransitions, valid = original().find(function (row) { return row.bookmarkId === data.state.start.id; }), rows, called = false;
+      var cases = ['missing','ambiguous','unknown','predecessor','retained','unlisted','default','callback','limits','foreign','root missing','root forged',
+        'retained list duplicate','retained list foreign','retained list malformed','retained list limit'];
+      return cases.slice(batch.from,batch.to).map(function (kind) {
+        rows = [JSON.parse(JSON.stringify(valid))];
+        if (kind === 'missing') rows = [];
+        if (kind === 'ambiguous') rows.push(rows[0]);
+        if (kind === 'unknown') rows[0].allowSignatures = [data.mods];
+        if (kind === 'predecessor') rows[0].predecessor.realms[0].rank = 1;
+        if (kind === 'retained') rows[0].current.revisions.baseline = {balance:{levyPerDev:12}};
+        if (kind === 'unlisted') rows[0].addedRevisions = ['unknown'];
+        if (kind === 'default') rows[0].current.revision = 'baseline';
+        if (kind === 'callback') rows[0].callback = function () { called = true; throw new Error('Never call'); };
+        if (kind === 'limits') rows[0].addedRevisions = ['a','b','c','d','e','f','g','h','i'];
+        if (kind === 'foreign') rows[0].bookmarkId = 'foreign';
+        if (kind === 'root missing') delete rows[0].predecessorRoots.authoringDefaults;
+        if (kind === 'root forged') rows[0].predecessorRoots.authoringDefaults = Array(65).join('0');
+        if (kind === 'retained list duplicate') rows[0].retainedRevision = [valid.retainedRevision,valid.retainedRevision];
+        if (kind === 'retained list foreign') rows[0].retainedRevision = [valid.retainedRevision,'missing_revision'];
+        if (kind === 'retained list malformed') rows[0].retainedRevision = [valid.retainedRevision,{}];
+        if (kind === 'retained list limit') rows[0].retainedRevision = [valid.retainedRevision].concat(Array.from({length:32},function (_,i) { return 'other_' + i; }));
+        FB.bookmarkSources.retainedCatalogueTransitions = function () { return rows; };
+        var before = JSON.stringify([FBDATA,localStorage,FB.getRngState(),FB.getUidCounter(),FB.stories.list()]), result;
+        try { result = FB.mods.saveCompatibility(data); }
+        finally { FB.bookmarkSources.retainedCatalogueTransitions = original; }
+        return {kind:kind,compatible:result.compatible,path:result.path,pure:!called && before === JSON.stringify([FBDATA,localStorage,FB.getRngState(),FB.getUidCounter(),FB.stories.list()])};
+      });
+    },{save:old.save,from:range[0],to:range[1]});
+    for (const result of results) expect(result,result.kind).toMatchObject({compatible:false,path:expect.any(String),pure:true});
+    expect(await page.evaluate(function (data) {return FB.mods.saveCompatibility(data).compatible;},old.save)).toBe(true);
+  });
+}
 });
 
 if (fixture === fixtures[1]) {
@@ -395,18 +406,4 @@ test('unchanged modded controls and empty standard signatures need no transition
   expect(await page.evaluate(function (data) { return FB.mods.saveCompatibility(data); },old.save)).toEqual({compatible:true,path:null,transition:null});
 });
 
-test('the CrazyGames edition retains its ordinary signature and cannot use standard catalogue transitions',async function ({page},info) {
-  await mockCrazyGames(page);
-  await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-  await openCrazyGame(page,info);
-  await startDeterministicGame(page);
-  const result = await page.evaluate(function () {
-    var data = JSON.parse(FB.save.serialize()), before = JSON.stringify([FBDATA,FB.state,localStorage,FB.getRngState(),FB.getUidCounter()]);
-    var same = FB.mods.saveCompatibility(data), migrated = FB.save.v4.migrate(data), bad = Object.assign({},data,{mods:'effective-1-' + Array(65).join('0')}), rejected = false;
-    try { FB.save.v4.migrate(bad); } catch (error) { rejected = /edition/.test(error.message); }
-    return {signature:FB.mods.sig(),same:same,migrated:migrated.mods,foreign:FB.mods.saveCompatibility(bad),rejected:rejected,
-      pure:before === JSON.stringify([FBDATA,FB.state,localStorage,FB.getRngState(),FB.getUidCounter()])};
-  });
-  expect(result).toEqual({signature:'crazygames-content-1',same:{compatible:true,path:null,transition:null},migrated:'crazygames-content-1',
-    foreign:{compatible:false,path:'edition',transition:null},rejected:true,pure:true});
-});
+

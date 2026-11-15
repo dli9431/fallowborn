@@ -1,9 +1,11 @@
 'use strict';
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
+const {installPageGuards}=require('../support/page-contract');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = {
   harbor:require('../fixtures/authoring/mobile-opening-harbor.json'),
@@ -18,6 +20,7 @@ dependsOnRuntime(__filename, [
 
 async function importExample(page, info, prefix) {
   await openGame(page, info);
+  await expectModAdmission(page,examples[prefix]);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/mobile-opening-' + prefix + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
@@ -30,7 +33,7 @@ async function importExample(page, info, prefix) {
 for (const prefix of ['harbor','dune']) {
   test(prefix + ' JSON opening binds one person and conserves an independently composed muster', async function ({page}, info) {
     await importExample(page, info, prefix);
-    await beginBookmark(page, info, prefix + '_world', prefix + '_household');
+    await beginBookmarkFromTitle(page, prefix + '_world', prefix + '_household');
     const result = await page.evaluate(function (prefix) {
       const s=FB.state, M=FB.mobile, bm=FB.campaignBookmark(s), d=bm.realms.find(function (r) {return r.mobile;});
       const r=M.row(s,d.id), host=M.host(s,d.id), profile=M.profile(s,d.id), o=d.mobile.opening;
@@ -93,36 +96,47 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
-test('detached malformed opening imports reject without publication or identity consumption', async function ({page}, info) {
-  await openGame(page, info);
-  const result=await page.evaluate(function (source) {
-    const changes=[
-      function (d,o) {o.principals[0].person.actorId='absent_actor';},
-      function (d,o) {o.principals[1].memberId=o.principals[0].memberId;},
-      function (d,o) {o.leaderMemberId='absent_member';},
-      function (d,o) {o.muster[0].count++;},
-      function (d,o) {o.muster.push(o.muster[0]);},
-      function (d,o) {o.muster[0].unitId='mercs';},
-      function (d,o) {o.muster[0].unitId='absent_class';},
-      function (d,o) {o.muster[0].count=0;},
-      function (d,o) {o.muster[0].memberId='absent_member';},
-      function (d,o) {o.muster[0].count=1000;d.mobile.fighters=1120;},
-      function (d,o,b) {b.opening.actors.harbor_leader.born=899;},
-      function (d,o,b) {b.opening.actors.harbor_leader.home='harbor_hill';},
-      function (d,o) {o.principals[0].person={kind:'realm_ruler',realmId:'harbor_commune',actorId:'harbor_companion',generation:1};},
-      function (d,o) {o.muster[0].extra=true;},
-      function (d,o) {o.principals[1].person.actorId=o.principals[0].person.actorId;},
-      function (d,o) {o.muster[0].memberId='constructor';}
-    ];
-    return changes.map(function (change) {
-      const input=JSON.parse(JSON.stringify(source)), bm=input.bookmarks.harbor_world, d=bm.realms.find(function (r) {return r.mobile;});
-      change(d,d.mobile.opening,bm);
-      const state=JSON.stringify(FB.state), data=JSON.stringify(FBDATA), rng=FB.getRngState(), uid=FB.getUidCounter(), bytes=JSON.stringify(input);
-      return FB.mods.validate(input).length>0 && state===JSON.stringify(FB.state) && data===JSON.stringify(FBDATA) &&
-        rng===FB.getRngState() && uid===FB.getUidCounter() && bytes===JSON.stringify(input);
-    });
-  }, examples.harbor);
-  expect(result).toEqual(Array(16).fill(true));
+test.describe('detached opening declaration validation',function () {
+  let context,page,guard;
+  test.beforeAll(async function ({browser},info) {
+    context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+    await openGame(page,info);
+  });
+  test.afterAll(async function () {
+    if(context)try {expect(guard.faults).toEqual([]);}finally {await context.close();}
+  });
+for (const range of [[0,8],[8,16]]) {
+  test('detached malformed opening imports reject without publication or identity consumption '+(range[0]+1)+'-'+range[1], async function () {
+    const result=await page.evaluate(function (batch) {
+      const changes=[
+        function (d,o) {o.principals[0].person.actorId='absent_actor';},
+        function (d,o) {o.principals[1].memberId=o.principals[0].memberId;},
+        function (d,o) {o.leaderMemberId='absent_member';},
+        function (d,o) {o.muster[0].count++;},
+        function (d,o) {o.muster.push(o.muster[0]);},
+        function (d,o) {o.muster[0].unitId='mercs';},
+        function (d,o) {o.muster[0].unitId='absent_class';},
+        function (d,o) {o.muster[0].count=0;},
+        function (d,o) {o.muster[0].memberId='absent_member';},
+        function (d,o) {o.muster[0].count=1000;d.mobile.fighters=1120;},
+        function (d,o,b) {b.opening.actors.harbor_leader.born=899;},
+        function (d,o,b) {b.opening.actors.harbor_leader.home='harbor_hill';},
+        function (d,o) {o.principals[0].person={kind:'realm_ruler',realmId:'harbor_commune',actorId:'harbor_companion',generation:1};},
+        function (d,o) {o.muster[0].extra=true;},
+        function (d,o) {o.principals[1].person.actorId=o.principals[0].person.actorId;},
+        function (d,o) {o.muster[0].memberId='constructor';}
+      ];
+      return changes.slice(batch.from,batch.to).map(function (change) {
+        const input=JSON.parse(JSON.stringify(batch.source)), bm=input.bookmarks.harbor_world, d=bm.realms.find(function (r) {return r.mobile;});
+        change(d,d.mobile.opening,bm);
+        const state=JSON.stringify(FB.state), data=JSON.stringify(FBDATA), rng=FB.getRngState(), uid=FB.getUidCounter(), bytes=JSON.stringify(input);
+        return FB.mods.validate(input).length>0 && state===JSON.stringify(FB.state) && data===JSON.stringify(FBDATA) &&
+          rng===FB.getRngState() && uid===FB.getUidCounter() && bytes===JSON.stringify(input);
+      });
+    }, {source:examples.harbor,from:range[0],to:range[1]});
+    expect(result).toEqual(Array(range[1]-range[0]).fill(true));
+  });
+}
 });
 
 test('incumbent imports require the exact opening person and generation', async function ({page}, info) {
@@ -146,7 +160,7 @@ test('incumbent imports require the exact opening person and generation', async 
 
 test('fresh eligibility refuses stale, captive, displaced, duplicate and ineligible principals atomically', async function ({page}, info) {
   await importExample(page, info, 'dune');
-  await beginBookmark(page, info, 'dune_world', 'dune_household');
+  await beginBookmarkFromTitle(page, 'dune_world', 'dune_household');
   const result=await page.evaluate(function () {
     const source=FB.state, bm=FB.campaignBookmark(source), definition=bm.realms.find(function (r) {return r.mobile;});
     function fresh() {
@@ -192,7 +206,7 @@ test('fresh eligibility refuses stale, captive, displaced, duplicate and ineligi
 
 test('matching saves preserve casualties and original bindings, and malformed provenance rejects before adoption', async function ({page}, info) {
   await importExample(page, info, 'harbor');
-  await beginBookmark(page, info, 'harbor_world', 'harbor_household');
+  await beginBookmarkFromTitle(page, 'harbor_world', 'harbor_household');
   const result=await page.evaluate(function () {
     const s=FB.state,M=FB.mobile,rid='harbor_following',army=M.host(s,rid),initial=M.total(s,rid);
     FB.applyHostLosses(army,20,s);
@@ -224,7 +238,7 @@ test('matching saves preserve casualties and original bindings, and malformed pr
 
 test('changed opening composition under the same mod name invalidates the saved fingerprint', async function ({page}, info) {
   await importExample(page, info, 'harbor');
-  await beginBookmark(page, info, 'harbor_world', 'harbor_household');
+  await beginBookmarkFromTitle(page, 'harbor_world', 'harbor_household');
   const result=await page.evaluate(function (mod) {
     const saved=JSON.parse(FB.save.serialize()),matching=!FB.save.otherWorld(saved);
     const changed=JSON.parse(JSON.stringify(mod)),d=changed.bookmarks.harbor_world.realms.find(function (r) {return r.mobile;});
