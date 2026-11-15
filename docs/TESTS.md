@@ -93,18 +93,22 @@ story fingerprints accompany the complete native catalogue comparison.
 
 Retained shared definitions and fixed-start identities
 
-Additional estuary-governments.json and upland-governments.json inputs cover additive government forms, administration profiles and aristocratic profiles through trusted native evidence and real ordinary JSON file imports. retained-shared-identities.spec.js checks missing evidence, attempted replacement, forged current rows and warmed stale-live definitions independently for each root, with pure rejection and exact subsequent proof. A hidden new revision preserves visible retained raw/effective worlds, menu visibility, spent resources, exact people, RNG and uid through repeated loads and cold re-saves. Boolean visibility overrides also validate through ordinary JSON; malformed values remain rejected. Existing three-root evidence, configuration, edition and forgery controls remain in place.
+Additional estuary-governments.json and upland-governments.json inputs cover additive government forms, administration profiles and aristocratic profiles through trusted native evidence and real ordinary JSON file imports. The retained-shared-identities-*-government.spec.js specifications check missing evidence, attempted replacement, forged current rows and warmed stale-live definitions independently for each root, with pure rejection and exact subsequent proof. A hidden new revision preserves visible retained raw/effective worlds, menu visibility, spent resources, exact people, RNG and uid through repeated loads and cold re-saves. Boolean visibility overrides also validate through ordinary JSON; malformed values remain rejected. Existing three-root evidence, configuration, edition and forgery controls remain in place.
 
 western-rulers-1096.spec.js additionally requires Raymond's existing Elvira/Bertrand stepfamily link before the first save, preserves biological parentage and named ids, and checks idempotent normalization and exact people, RNG and uid through repeated restore.
 
-retained-shared-identities.spec.js uses two independent fictional native
-predecessor/current catalogues and actual JSON file imports. It creates genuine
-predecessor envelopes, retains spent resources and converted settlements, and
-checks saved people, communities, stories, start ids, faith/law resolution, RNG
+The retained-shared-identities specifications use two independent fictional native
+predecessor/current catalogues and actual JSON file imports. Each configuration
+has separate baseline, rejection, revision-switch and government specifications.
+The original retained-shared-identities.spec.js owns the empty-signature and
+failed selected-source rollback control. Family-only leaf helpers under
+support/game/retained-shared-identities-*.js prepare genuine
+predecessor envelopes, retain spent resources and converted settlements, and
+check saved people, communities, stories, start ids, faith/law resolution, RNG
 and UID through repeat restores, revision switches and fresh-page re-save loads.
 Typed evidence negatives cover both declaration sides, missing/foreign roots,
 foreign starts, duplicate ids, record limits, duplicate proofs and stale live
-definitions. The spec also retains raw JSON/order, bundle payload/order,
+definitions. The family also retains raw JSON/order, bundle payload/order,
 non-authorized definition, ordinary JSON forgery, empty-signature and foreign-edition
 controls. Canonical normalization counts bound warm proof replay without raising
 timeouts. Multi-load journeys own fresh browser contexts and prepare their cold
@@ -112,7 +116,10 @@ catalogue in a separate bounded hook before the restore/reload assertions.
 Atomic rejection batches share only their journey's prepared context; every
 batch checks rejection purity, restores its mutations and rechecks the valid
 proof before the next batch.
-Pure validation cases reuse the independent configuration's current proof page;
+Each specification prepares its own predecessor envelopes and only the variants
+its cases consume. Revision-switch specifications retain the complete supported
+revision sequence; government restore and rejection phases remain ordered in
+their original journey. Pure validation cases reuse their group's current proof page;
 their before/after snapshots enforce isolation, while cold restore, import and
 revision journeys retain separate fresh contexts.
 These focused checks do not establish full-suite or owner runtime
