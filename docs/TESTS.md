@@ -525,6 +525,18 @@ directly so an unrelated helper change does not fan out through a barrel file. T
 last-failed path deliberately favors a fast repair loop after a failure; run `test:all` for the
 authoritative whole-suite result.
 
+The water-operation input helper reuses the prepared Mods title and stages the
+paying ruler's capital at the production site so the ordinary local-worker gate
+can admit paid fuel preparation. Each completed batch retains its real worker,
+workdays, material debits and processing price; the next reservation uses a fresh
+action day. The water-operation input journeys also prove that a remote ruler
+cannot reserve or mutate production. Bath and water-service restore comparisons
+use detached codec-expanded facts with canonical object keys; only technology
+completion and exposure membership sets opt into sorting. Private bath setup
+founds an independent household realm, holds both the upstream intake and the
+downstream bath, and assigns its own research account. Occupation suspension is
+staged through a registered ordinary war rather than a detached occupation map.
+
 Before editing a shared helper, check how many specifications import it. Locale-, browser-,
 viewport-, and scenario-specific readiness belongs in the affected specification or in a new leaf
 helper with only those importers. In particular, `support/game/navigation.js`, `support/fixture.js`,
