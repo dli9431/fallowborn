@@ -3,7 +3,8 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {installRestoreFacts}=require('../support/game/restore-facts');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/opening-column-locations-harbor.json'),
   dune:require('../fixtures/authoring/opening-column-locations-dune.json')};
@@ -23,7 +24,8 @@ async function imported(page,info,prefix,input) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
 }
 
 for (const prefix of ['harbor','dune']) {
@@ -35,7 +37,8 @@ for (const prefix of ['harbor','dune']) {
       const original=JSON.stringify([s.chars,s.authority,s.armies,s.treasuryAccounting]),rng=FB.getRngState(),uid=FB.getUidCounter();
       M.initialize(s,[d]);M.columnSnapshot(s,rid);M.validate(s);
       const repeat=original===JSON.stringify([s.chars,s.authority,s.armies,s.treasuryAccounting]) && rng===FB.getRngState() && uid===FB.getUidCounter();
-      const record=JSON.stringify([r,moving,s.armies,s.chars,s.treasuryAccounting,s.player]);
+      function facts(state) {return [M.row(state,rid),M.migration(state,rid),state.armies,state.chars,state.treasuryAccounting,state.player];}
+      const record=restoreFacts(s,facts);
       FB.save.restore(JSON.parse(FB.save.serialize()));
       const restored=FB.state;
       return {positions:snap.entries.map(function (c) {return c.host.at;}),
@@ -47,7 +50,7 @@ for (const prefix of ['harbor','dune']) {
         food:r.food+snap.entries.reduce(function (n,c) {return n+c.host.mobileFood;},0),
         bindings:r.columns.entries.map(function (c) {return c.openingLocation || null;}),
         noLand:FB.realmTerritory(s,rid).length===0,repeat:repeat,
-        same:record===JSON.stringify([M.row(restored,rid),M.migration(restored,rid),restored.armies,restored.chars,restored.treasuryAccounting,restored.player]),
+        same:assertRestoreFacts(restoreFacts(restored,facts),record),
         valid:M.validate(restored)};
     });
     expect(result).toEqual({positions:prefix==='harbor' ? ['harbor_gardens','harbor_quay'] : ['dune_flats','dune_well'],
@@ -123,7 +126,9 @@ test('an existing ordinary war permits a hostile opening footprint while peace a
     const hostile=M.openingPlan(fresh,candidate).allowed;
     const pure=before===JSON.stringify(fresh) && rng===FB.getRngState() && uid===FB.getUidCounter();
     const peace=JSON.parse(JSON.stringify(fresh));
-    Object.keys(peace.realms).forEach(function (id) {peace.realms[id].war=null;});peace.player.war=null;
+    FB.ordinaryWars(peace).forEach(function (war) {
+      if (!FB.settleOrdinaryWar(peace,war.id,'white_peace')) throw new Error('Ordinary peace refused');
+    });
     const noPeace=!M.openingPlan(peace,candidate).allowed;
     const transit=JSON.parse(JSON.stringify(candidate));transit.mobile.hostedAccess.countyIds=['dune_well'];
     return {hostile:hostile,pure:pure,noPeace:noPeace,noTransit:!M.openingPlan(fresh,transit).allowed};
@@ -145,10 +150,11 @@ test('matching restore preserves moved and retired columns after access expires 
     s.date=FB.dateAtTurn(s,91);s.turn=91;
     const grant=r.agreements.find(function (v) {return v.kind==='access';});grant.status='ended';
     M.validate(s);
-    const before=JSON.stringify([r,s.armies,s.chars,s.treasuryAccounting]),rng=FB.getRngState(),uid=FB.getUidCounter();
+    function facts(state) {return [M.row(state,rid),state.armies,state.chars,state.treasuryAccounting];}
+    const before=restoreFacts(s,facts),rng=FB.getRngState(),uid=FB.getUidCounter();
     FB.save.restore(JSON.parse(FB.save.serialize()));
     const restored=FB.state,row=M.row(restored,rid);
-    return {same:before===JSON.stringify([row,restored.armies,restored.chars,restored.treasuryAccounting]),
+    return {same:assertRestoreFacts(restoreFacts(restored,facts),before),
       moved:restored.armies.find(function (v) {return v.id===first.hostId;}).at===d.mobile.origin,
       retired:row.columns.entries[1].status==='retired' && !restored.armies.some(function (v) {return v.id===second.hostId;}),
       original:row.columns.entries[0].openingLocation.countyId==='harbor_gardens',

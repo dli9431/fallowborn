@@ -150,16 +150,25 @@ test('adopted beneficiary uses ordinary sons for later designation and rejects d
     try { FB.chance = function () { return true; }; FB.stories.get('ordinatio_800').season(s, s.stories.ordinatio_800); }
     finally { FB.chance = chance; }
     const plan = s.stories.ordinatio_800.plan;
-    const saved = JSON.parse(FB.save.serialize());
+    const outsider = FB.materializeRealmRuler(s,'byzantium').id;
+    const saved = JSON.parse(FB.save.serialize()), bytes = JSON.stringify(saved);
+    const liveBytes = JSON.stringify(s), savedRng = FB.getRngState(), savedUid = FB.getUidCounter();
+    const malformed = ['royal_player_person_missing', 'royal_player_person_' + outsider].map(function (primaryId) {
+      const candidate = JSON.parse(bytes);candidate.state.stories.ordinatio_800.plan.primaryId = primaryId;
+      const before = JSON.stringify(candidate);let refused = false;
+      try { FB.save.restore(candidate); } catch (_) { refused = true; }
+      return refused && before === JSON.stringify(candidate) && liveBytes === JSON.stringify(s) &&
+        savedRng === FB.getRngState() && savedUid === FB.getUidCounter();
+    });
     FB.save.restore(saved);
-    return { sons:ordinary.map(function (c) { return c.name; }), allowed:current.allowed,
-      primary:current.facts.check.plan.primaryId === 'royal_aquitaine_authored_lothair',
+    return { malformed:malformed, sons:ordinary.map(function (c) { return c.name; }), allowed:current.allowed,
+      primary:FB.royalSettlementFamily(s,'player').members[current.facts.check.plan.primaryId].charId === ordinary[0].id,
       rejected:rejected, detached:detached, consent:valid, agreed:FB.state.stories.ordinatio_800.result === 'agreed',
       named:FB.state.player.namedHeirId === ordinary[0].id,
       grant:plan.shares.length === 1 && FB.state.realms[plan.shares[0].realmId].liege === 'player',
       restored:FB.state.stories.ordinatio_800.plan.shares[0].charId === ordinary[1].id };
   });
-  expect(result).toEqual({ sons:['Lothair','Pippin'], allowed:true, primary:true,
+  expect(result).toEqual({ malformed:[true,true], sons:['Lothair','Pippin'], allowed:true, primary:true,
     rejected:true, detached:true, consent:true, agreed:true, named:true,
     grant:true, restored:true });
 });
@@ -225,13 +234,14 @@ test('a dead original beneficiary leaves an interrupted saved partition', async 
     const planned = rec.phase === 'planned';
     FB.killChar(s, s.chars[cast.pippin]);
     FB.killChar(s, s.chars[cast.charlemagne]);
+    const beforeReview = JSON.stringify([s.owner,s.holder,s.realms.italy.liege]);
     FB.stories.get('divisio_800').day(s, rec);
     const interrupted = rec.result === 'interrupted';
     const saved = JSON.parse(FB.save.serialize());
     FB.save.restore(saved);
     return { planned:planned, interrupted:interrupted,
       restored:FB.state.stories.divisio_800.result === 'interrupted',
-      noFalseRelease:FB.state.realms.italy.liege === 'player' };
+      noFalseRelease:JSON.stringify([FB.state.owner,FB.state.holder,FB.state.realms.italy.liege]) === beforeReview };
   });
   expect(result).toEqual({ planned:true, interrupted:true, restored:true, noFalseRelease:true });
 });

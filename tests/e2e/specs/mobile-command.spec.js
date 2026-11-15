@@ -284,7 +284,9 @@ test('command sheet shows the real mandate and retains inputs through review Bac
   await expect(page.locator('#gm-body')).not.toContainText('living member weight');
   await expect(page.locator('button[data-mobile-review]').filter({hasText:'Support Sela Vey'})).toHaveCount(0);
   await page.locator('#mobile-count').fill('23');
+  await page.locator('#mobile-count').press('Tab');
   await page.locator('button[data-mobile-review]').filter({hasText:'Commission Ravi Sen'}).click();
+  await expect(page.locator('#mobile-confirm')).toBeVisible();
   await expect(page.locator('#gm-body')).toContainText('Immediate cost');
   await page.keyboard.press('Escape');
   await expect(page.locator('#mobile-count')).toHaveValue('23');

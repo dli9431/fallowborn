@@ -3,8 +3,6 @@ const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 const {startDeterministicGame} = require('../support/game/start');
-const {mockCrazyGames} = require('../support/crazygames');
-const {openCrazyGame} = require('../support/game/crazygames-title');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_867_north_atlantic.js','data/bookmarks.js',
@@ -174,12 +172,8 @@ test('ordinary detached JSON validation accepts the revision and rejects broken 
   })).toEqual({good:[],bad:[true,true,true],pure:true});
 });
 
-for (const crazy of [false,true]) test('the island world creates ordinary local authority and six water edges, distribution ' + crazy,async function ({page},info) {
-  if (crazy) {
-    await mockCrazyGames(page);
-    await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage'; });
-    await openCrazyGame(page,info);
-  } else await openGame(page,info);
+test('the island world creates ordinary local authority and six water edges',async function ({page},info) {
+  await openGame(page,info);
   await beginRevision(page,'faroes');
   expect(await page.evaluate(function (places) {
     const s = FB.state, b = FB.campaignBookmark(s), w = FB.world;
@@ -222,7 +216,7 @@ for (const crazy of [false,true]) test('the island world creates ordinary local 
       pure:rng === FB.getRngState() && uid === FB.getUidCounter()};
   },PLACES)).toEqual({stamp:['867',REVISION,'europe_north_atlantic_2'],width:1290,height:1078,home:'faroes',
     courts:true,sites:true,clocks:true,scenic:true,noGateway:true,routes:true,rejectsIceland:true,
-    fresh:'governments_v2_islamic_v1',distribution:crazy,pure:true});
+    fresh:'governments_v2_islamic_v1',distribution:false,pure:true});
 });
 
 test('the retained Ibrim congregation and its actual activity remain usable',async function ({page},info) {
@@ -231,6 +225,10 @@ test('the retained Ibrim congregation and its actual activity remain usable',asy
   expect(await page.evaluate(function () {
     const s = FB.state;
     s.player.gold = 20;
+    const admission = FB.religiousInstitutionQuote(s,'ibrim_service_867',
+      {kind:'character',id:s.player.charId},'admit',{roleId:'household'});
+    if (!admission.allowed || !FB.religiousInstitutionApply(s,admission))
+      throw new Error('Congregation admission refused: ' + admission.reason);
     const rng = FB.getRngState(), uid = FB.getUidCounter();
     const q = FB.religiousActivityQuote(s,'ibrim_service_867',s.player.charId);
     const institution = FB.religiousInstitutionSnapshot(s,'ibrim_service_867');

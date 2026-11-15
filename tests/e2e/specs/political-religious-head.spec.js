@@ -4,6 +4,7 @@ const {test, expect} = require('../support/fixture');
 const {openGame, prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle, restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+const {expectModAdmission} = require('../support/game/mod-admission');
 const southern = require('../fixtures/political-religious-head/southern.json');
 const estuary = require('../fixtures/political-religious-head/estuary.json');
 
@@ -39,10 +40,8 @@ function revisionedOffices(mod, world, revision) {
   });
   b.revisions = {baseline:earlier, current:{realms:b.realms, provinces:b.provinces, religiousHeads:b.religiousHeads}};
   b.revision = revision;
-  mod.startScenarios.forEach(function (sc) {
-    sc.revisionIdentities = {};
-    sc.revisionIdentities[world] = {baseline:{startReligion:faiths[sc.startReligion]}};
-  });
+  // These unrestricted households take the chosen county's community; they
+  // do not bind a fixed personal identity across revisions.
 }
 
 async function start(page, info, kind, vacancy, revision) {
@@ -62,7 +61,7 @@ async function start(page, info, kind, vacancy, revision) {
       FB.invalidateReligionData(); FB.governments.invalidate();
     },mod);
   } else {
-    expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },mod)).toEqual([]);
+    await expectModAdmission(page,mod);
     await page.evaluate(function () { FB.ui.showMods(); });
     await page.locator('#modfile').setInputFiles(vacancy || revision ?
       {name:'vacant-offices.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))} :

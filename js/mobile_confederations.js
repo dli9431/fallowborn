@@ -95,6 +95,17 @@
     var r = M.row(s, rid), c = r && s.chars[r.leaderId];
     return availablePerson(s,c) && (!r.command || M.commandValid && M.commandValid(s,rid)) ? c : null;
   };
+  /* Territorial binding keeps the settled principal's actual family. An empty
+     line is not a new generated house: neither binding nor matching restore
+     may invent a collateral while that same living person still reigns.
+     Death or a later successor returns empty-line recovery to its usual owner. */
+  M.settledPrincipal = function (s, rid) {
+    var r=M.row(s,rid), realm=s.realms[rid], family=realm && realm.succession;
+    var root=family && family.members && family.members[family.rulerMemberId];
+    var c=r && s.chars[r.leaderId];
+    return r && r.status==='settled' && root && root.alive!==false &&
+      root.charId===r.leaderId && c && !c.dead ? c : null;
+  };
   var nativeLeader = M.leader;
   M.members = function (s, rid) {
     var r = M.row(s, rid);

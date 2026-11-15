@@ -155,10 +155,10 @@ test('fixed-place households are story starts shown on their own county',
     await useReleasedStartRules(page);
     await openGame(page, testInfo);
     await newGame(page);
-    for (const date of [{ id:'711', start:'Toledo Household' }, { id:'800', start:'Aachen Household' }]) {
+    for (const date of [{ id:'711', scenario:'toledo_household_711', start:'Toledo Household' }, { id:'800', scenario:'aachen_household_800', start:'Aachen Household' }]) {
       await chooseDate(page, date.id);
-      await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Story starts', 'Open starts']);
-      await expect(page.locator('#scenariolist .scencard h3').first()).toHaveText(date.start);
+      await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts', 'Story starts', 'Open starts']);
+      await expect(page.locator('#scenariolist [data-scenario="' + date.scenario + '"] h3')).toHaveText(date.start);
       // Fresh profiles still see why the general ladder is locked.
       await expect(page.locator('#scenariolist .scen-note')).toHaveText(
         'Locked beginnings open when any of your lives reaches their station. Beginnings written for a specific date are always open.');
