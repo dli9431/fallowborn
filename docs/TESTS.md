@@ -1,5 +1,31 @@
 Autumn 634 selection and core identity coverage
 
+ruler-agendas.spec.js restores the exact original county owner after a stale
+outside-party offer review. season-performance.spec.js counts shared border
+projections during candidate selection separately from the fresh strength check
+before declaration, and still requires the next seasonal decision to refresh.
+siege-equipment-support.spec.js admits both ordinary JSON examples before import
+and funds NPC processing through the public treasury while retaining the normal
+reserve and exact paid cost. Its carriage, siege, strict-save and phone return
+checks retain their original assertions.
+
+story-start-rules.spec.js rejects orphan track metadata and checks that a valid
+open role has no Story badge without excluding other valid Story starts. The
+Aachen import requires a real ordinary control transfer before its incident-bound
+decision. Toledo pins both
+its household track and optional opening profile. Valencia distinguishes the
+ordinary household succession record from a compact royal court and compares
+all selected restore facts through detached codec expansion and canonical object
+keys, retaining array order, RNG and UID. The death-heavy simulation probe keeps
+its one-snapshot and one-kin-read bounds on both Chromium origins and reports
+callers when those bounds fail. It retains the focused diagnostic duration,
+death count, full state, RNG and UID. A served-origin live-read reference checks
+identical complete state and succession outcomes, deaths, RNG and UID. An
+interrupted mortality pass must release its transient snapshot before ordinary
+succession repair. The snapshot is scoped to one court mortality roll and its
+nested death callbacks; ruler-death phases and later repairs retain live kin
+queries. These diagnostics do not establish season-speed improvement.
+
 production-water-expiry.spec.js checks paid batch cancellation before, at and after renewable water expiry, retained source history, no refund or output, released material availability, repeated cancellation purity and exact matching restores. Current and retained expired claims still reject altered quantity, actor, worker or generation; a cancelled batch cannot retain a live claim.
 
 634-activation.spec.js checks the selected core_courts_v4 world through the

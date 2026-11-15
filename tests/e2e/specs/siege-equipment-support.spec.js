@@ -4,6 +4,7 @@ const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {expectModAdmission}=require('../support/game/mod-admission');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={light:require('../fixtures/authoring/siege-support-light.json'),heavy:require('../fixtures/authoring/siege-support-heavy.json')};
 dependsOnRuntime(__filename,['index.html','data/siege_support.js','data/production.js','data/technology.js','data/technology_civic_military.js',
@@ -13,7 +14,7 @@ dependsOnRuntime(__filename,['index.html','data/siege_support.js','data/producti
   'js/ui_wars.js','js/ui_misc.js','js/ui_modals.js','js/technology.js','js/politics.js']);
 
 async function boot(page,info,kind,npc) {
-  await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
+  await openGame(page,info);await expectModAdmission(page,examples[kind]);await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/siege-support-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
@@ -36,7 +37,13 @@ async function stage(page,kind,npc) {
   return page.evaluate(function(args){
     const kind=args.kind,s=FB.state,P=FB.production,S=FB.siegeSupport,profileId=kind+'_equipment',p=FBDATA.siegeSupportProfiles[profileId];
     const source=P.snapshot(s)[0],recipe=FBDATA.productionRecipes[p.recipeId];
-    const request={recipeId:p.recipeId,disposition:'store'},reserve=P.aiQuote(s,source.site.id,'reserve',request);
+    const request={recipeId:p.recipeId,disposition:'store'};
+    let reserve=P.aiQuote(s,source.site.id,'reserve',request);
+    if(args.npc && !reserve.allowed && reserve.reason==='funds') {
+      // The public workshop must retain its ordinary reserve after paying.
+      FB.treasuryCredit(s,source.asset.owner.id,recipe.workPrice+reserve.funds.reserve-reserve.funds.available);
+      reserve=P.aiQuote(s,source.site.id,'reserve',request);
+    }
     const before=FB.production.account(s,reserve.request.actor).funds.available,batch=P.commit(s,reserve);
     const afterReserve=FB.production.account(s,reserve.request.actor).funds.available;
     if(!batch)throw new Error('Expected actual funded production reserve: '+JSON.stringify(reserve));

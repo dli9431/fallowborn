@@ -5,7 +5,7 @@ const { beginBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['index.html','data/story_households_711.js','data/story_instances.js',
   'data/starts.js','data/bookmark_711.js','data/bookmark_711_terrain.js','data/government_rollout.js',
-  'data/technology.js','data/travel.js','data/events_travel.js','data/story_campaigns_711.js',
+  'data/technology.js','data/travel.js','data/events_travel.js','data/story_campaigns_711.js','data/start_ambitions.js',
   'js/story_household.js','js/stories.js','js/starts.js','js/bookmark_setup.js','js/story_campaign.js',
   'js/story_polity_foundation.js','js/actions.js','js/travel.js','js/events.js','js/main.js',
   'js/world.js','js/model.js','js/modifiers.js','js/save.js','js/save_v4.js','js/i18n.js',
@@ -30,7 +30,7 @@ test('Toledo attaches its track on retained and fresh worlds without changing ca
       }), windows:['strait_crossing_711','toledo_campaign_711','asturias_foundation_711'].map(function (id) {
         var d = FBDATA.storyInstances[id]; return [d.firstYear,d.lastYear];
       }), unrelated:FBDATA.startScenarios.filter(function (r) { return r.id !== sc.id && (r.tracks || []).indexOf('toledo_household_track_711') >= 0; }).length };
-  })).toEqual({ tracks:[ID], away:[], revisions:[[],[],[],[]], windows:[[711,714],[714,718],[718,730]], unrelated:0 });
+  })).toEqual({ tracks:[ID,'opening_toledo_711'], away:[], revisions:[[],[],[],[]], windows:[[711,714],[714,718],[718,730]], unrelated:0 });
   await beginBookmark(page, info, '711', 'toledo_household_711');
   expect(await page.evaluate(function () { return {
     phase:FB.state.stories.toledo_household_track_711.phase,

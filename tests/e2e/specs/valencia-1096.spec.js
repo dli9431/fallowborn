@@ -2,6 +2,7 @@
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startParityGame } = require('../support/game/parity');
+const { installRestoreFacts } = require('../support/game/restore-facts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
@@ -54,7 +55,8 @@ test('new play adopts the seeded Rodrigo and exactly the existing named family, 
     return { seeded:me.id === FB.courtCharacterId('royal_valencia_1096_authored_ruler'), name:me.name,
       born:me.born, age:FB.ageOf(me,1096), faith:me.religion, culture:me.culture, home:s.player.provinceId,
       tier:s.player.tier, identity:s.start.rulerRealmId, owner:s.owner.valencia, holder:s.holder.valencia,
-      counties:s.player.provs.slice().sort(), duplicate:!!s.realms.valencia_1096, compact:!!s.realms.player.succession,
+      counties:s.player.provs.slice().sort(), duplicate:!!s.realms.valencia_1096,
+      compact:!!(s.realms.player.succession && s.realms.player.succession.members), succession:s.realms.player.succession,
       names:names, children:me.childrenIds.length,
       marriage:s.chars[me.spouseId].spouseId === me.id,
       parentage:me.childrenIds.every(function (id) { return s.chars[id].fatherId === me.id && s.chars[id].motherId === me.spouseId; }),
@@ -66,7 +68,8 @@ test('new play adopts the seeded Rodrigo and exactly the existing named family, 
   });
   expect(result).toEqual({ seeded:true, name:'Rodrigo Diaz', born:1048, age:48, faith:'catholic', culture:'iberian',
     home:'valencia', tier:4, identity:'valencia_1096', owner:'player', holder:'player', counties:['valencia'],
-    duplicate:false, compact:false, names:['Cristina Rodriguez','Diego Rodriguez','Jimena Diaz','Maria Rodriguez'],
+    duplicate:false, compact:false, succession:{playerDynasty:true,rulerGeneration:1,heirCharId:null},
+    names:['Cristina Rodriguez','Diego Rodriguez','Jimena Diaz','Maria Rodriguez'],
     children:3, marriage:true, parentage:true, unmarried:true, resident:true, contacts:true, noFriend:true, agenda:true, pure:true });
 });
 
@@ -153,12 +156,14 @@ for (const funds of [1,5]) {
 
 test('matching restore preserves the family and pending program, and malformed records reject without adoption', async function ({ page }, info) {
   await start(page, info);
+  await installRestoreFacts(page);
   const result = await page.evaluate(function () {
     const s = FB.state, id = 'valencia_agenda_1096';
     FB.stories.apply(s,id,'city_retain',FB.stories.quote(s,id,'city_retain'));
-    const before = JSON.stringify([s.player.charId,s.chars,s.owner,s.holder,s.stories,s.player.gold]);
+    function facts(state) { return [state.player.charId,state.chars,state.owner,state.holder,state.stories,state.player.gold,state.realms.player.succession]; }
+    const before = restoreFacts(s, facts);
     const saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
-    const restored = before === JSON.stringify([FB.state.player.charId,FB.state.chars,FB.state.owner,FB.state.holder,FB.state.stories,FB.state.player.gold]);
+    const restored = assertRestoreFacts(restoreFacts(FB.state, facts), before);
     const source = JSON.stringify(FBDATA), live = JSON.stringify(FB.state), rng = FB.getRngState(), uid = FB.getUidCounter();
     const rejected = [
       function (x) { x.state.stories[id].decisions[0].choiceId = 'not_a_choice'; },
