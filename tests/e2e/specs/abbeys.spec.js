@@ -408,8 +408,9 @@ for (const width of [390, 1280]) {
       FB.ui.showAbbeys(h.id);
     });
     const rents = page.locator('#abbey-action-rents');
-    await rents.scrollIntoViewIfNeeded();
-    await rents.focus();
+    await rents.evaluate(function (el) {
+      el.scrollIntoView({block:'center'}); el.focus({preventScroll:true});
+    });
     const top = await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
     expect(top).toBeGreaterThan(0);
     await rents.click();
@@ -419,8 +420,11 @@ for (const width of [390, 1280]) {
     await expect.poll(async function () {
       return page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
     }).toBe(top);
+    await expect(rents).toBeFocused();
     await rents.click();
-    await page.locator('[id^="abbey-person-"]').scrollIntoViewIfNeeded();
+    await page.locator('[id^="abbey-person-"]').evaluate(function (el) {
+      el.scrollIntoView({block:'center'}); el.focus({preventScroll:true});
+    });
     const reviewTop = await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
     await page.locator('[id^="abbey-person-"]').click();
     await page.keyboard.press('Escape');
@@ -428,6 +432,7 @@ for (const width of [390, 1280]) {
     await expect.poll(async function () {
       return page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
     }).toBe(reviewTop);
+    await expect(page.locator('[id^="abbey-person-"]')).toBeFocused();
     /* The footer Back must return to the retained review, not close the modal. */
     await page.locator('[id^="abbey-person-"]').click();
     await expect(page.locator('#cm-close')).toHaveText('Back');

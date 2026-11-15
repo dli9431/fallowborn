@@ -359,7 +359,8 @@ for (const width of [390,1280]) {
       FB.ui.refresh();
     });
     await page.locator('[data-tab="actions"]').click();
-    await page.locator('[data-action-section="offices"]').click();
+    const offices = page.locator('[data-action-section="offices"]');
+    if (await offices.getAttribute('aria-expanded') !== 'true') await offices.click();
     await page.locator('[data-action-id="offices_legitimacy"]').click();
     await page.locator('#office-court').selectOption('croatia');
     await page.locator('#office-kind').selectOption('defensor_civitatis');

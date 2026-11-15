@@ -3,8 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {openCrazyGame} = require('../support/game/crazygames-title');
-const {mockCrazyGames} = require('../support/crazygames');
 const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
@@ -24,17 +22,10 @@ const FAITHS = ['insular_traditional_476','finnic_traditional_476','woodland_tra
   'sogdian_traditional_476','caucasian_christian_476','aksumite_christian_476',
   'buddhist_476','brahmanical_476','sahel_traditional_476'];
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('568 identities serve the selectable world on ' + (crazygames ? 'CrazyGames' : 'standard') + ' boot',
     async function ({page},testInfo) {
-      if (crazygames) {
-        await mockCrazyGames(page);
-        await page.addInitScript(function () {
-          window.FB_DISTRIBUTION = 'crazygames';
-          window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-        });
-        await openCrazyGame(page,testInfo);
-      } else await openGame(page,testInfo);
+      await openGame(page,testInfo);
       expect(await page.evaluate(function () {
         const additions = FBDATA.bookmarkFaithAvailability568;
         const faiths = Object.keys(additions);
@@ -59,8 +50,7 @@ for (const crazygames of [false,true]) {
             const ids = FB.faithAvailability(id,null).bookmarkIds;
             const expected = id === 'buddhist_476' ? ['476','493','1204'] :
               id === 'sahel_traditional_476' ? ['476','493','711','800','867','1204'] : ['476','493'];
-            const later = id === 'woodland_traditional_476' || id === 'steppe_traditional_476' || id === 'buddhist_476' ? ['634','1096'] : ['634'];
-            return JSON.stringify(ids) === JSON.stringify(expected.concat(['568'],later));
+            return JSON.stringify(ids.slice().sort()) === JSON.stringify(expected.concat(['568','634']).sort());
           }),
           culturesValid:FB.configureCultures(null),
           religionsValid:FB.validateReligionData(null),

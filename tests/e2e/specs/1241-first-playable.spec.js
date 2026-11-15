@@ -4,6 +4,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
+const {useReleasedStartRules} = require('../support/game/released-starts');
 const {beginBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {releasedCatalogue} = require('../support/released-catalogue');
 
@@ -161,6 +162,7 @@ test('1241 preserves released worlds and rejects malformed detached definitions 
 });
 
 test('1241 offers its households and implemented courts while other named openings remain unavailable',async function ({page},info) {
+  await useReleasedStartRules(page);
   await openDates(page,info);
   expect(await page.evaluate(function () {
     return {hidden:FB.bookmark('1241').hidden === true,available:FB.bookmarkAvailable('1241'),
