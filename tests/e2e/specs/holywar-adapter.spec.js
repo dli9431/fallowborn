@@ -8,6 +8,9 @@ dependsOnRuntime(__filename, [
   'js/settlement.js',
   'js/population.js',
   'js/world.js',
+  'js/model.js',
+  'js/treasury.js',
+  'js/i18n.js',
   'data/events_world.js'
 ]);
 
@@ -722,8 +725,10 @@ test('settlement Chronicle exports name actual rulers, county grants, custody an
       var entries = terms();
       var grants = captured.map(function (pid) {
         var realm = s.realms[s.holder[pid]];
-        return { county:FB.world.byId[pid].name, realm:realm.name,
-          ruler:realm.ruler.name, liege:realm.liege ? s.realms[realm.liege].name : null };
+        return { county:FB.world.byId[pid].name, realm:FB.realmNameParam(s,realm),
+          realmText:realm.name,ruler:realm.ruler.name,
+          liege:realm.liege ? FB.realmNameParam(s,s.realms[realm.liege]) : null,
+          liegeText:realm.liege ? s.realms[realm.liege].name : null };
       });
       FB.resolveGreatHolyWar(s, 'attackers', 'repeat');
       var serialized = JSON.parse(FB.save.serialize());
@@ -734,12 +739,16 @@ test('settlement Chronicle exports name actual rulers, county grants, custody an
     expect(result.after).toEqual(result.entries);
     for (const grant of result.grants) {
       const entry = result.entries.find(function (e) {
-        return e.message.params.realm === grant.realm && e.message.params.counties &&
+        return JSON.stringify(e.message.params.realm) === JSON.stringify(grant.realm) && e.message.params.counties &&
           e.message.params.counties.indexOf(grant.county) >= 0;
       });
       expect(entry).toBeTruthy();
       expect(entry.text).toContain(grant.ruler);
-      if (grant.liege) expect(entry.message.params.liege).toBe(grant.liege);
+      expect(entry.text).toContain(grant.realmText);
+      if (grant.liege) {
+        expect(entry.message.params.liege).toEqual(grant.liege);
+        expect(entry.text).toContain(grant.liegeText);
+      }
       else expect(entry.message.key).toBe('news.holywar.award_independent');
     }
     expect(result.entries.some(function (e) {

@@ -189,6 +189,13 @@
   FBTEST.setLocalHolder = function (realmId, counties, extraCounties) {
     var state = FB.state;
     var realm = state.realms[realmId];
+    // Some current openings keep this county directly at the sovereign court.
+    // Create the same ordinary county vassal that older openings supplied.
+    var countyId = counties && counties[0], province = FB.world.byId[countyId];
+    if (!realm && province && realmId === 'c_' + countyId) {
+      realm = FB.makeVassalRealm(state, {id:realmId,titleKind:'county',titleId:countyId,
+        titlePlace:province.name,capital:countyId,rank:1,liege:state.owner[countyId],religion:'catholic'});
+    }
     if (!realm) throw new Error('Unknown local realm ' + realmId);
     realm.religion = 'catholic';
     var ids = (counties || []).concat(extraCounties || []);

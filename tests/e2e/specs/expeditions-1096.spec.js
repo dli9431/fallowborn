@@ -5,6 +5,7 @@ const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
+const {installRestoreFacts}=require('../support/game/restore-facts');
 
 dependsOnRuntime(__filename,[
   'index.html','data/expeditions_1096.js','data/bookmark_1096.js',
@@ -18,7 +19,7 @@ dependsOnRuntime(__filename,[
   'js/government_selection.js','js/governments.js','js/government_support.js','js/authority.js',
   'js/population.js','js/market.js','js/treasury.js','js/armies.js','js/federates.js','js/logistics.js',
   'js/holywar.js','js/wars.js','js/religion.js','js/technology.js','js/stories.js','js/mods.js',
-  'js/world.js','js/bookmark_setup.js','js/starts.js','js/model.js','js/station.js','js/util.js',
+  'js/world.js','js/bookmark_composition.js','js/bookmark_setup.js','js/starts.js','js/model.js','js/station.js','js/util.js',
   'js/save.js','js/save_v4.js','js/main.js'
 ]);
 
@@ -63,16 +64,17 @@ test('later dates alone cannot fund western formations or dispatch a road or sea
 
 test('matching historical restore retains people, accounts and unformed sources at a later boundary',async function ({page},info) {
   await beginBookmark(page,info,'1096','pilgrim_household_1096');
+  await installRestoreFacts(page);
   const result=await page.evaluate(function () {
     const s=FB.state;s.date=FB.dateAtTurn(s,210);s.turn=210;
-    const owners=function () {const x=FB.state;return JSON.stringify([x.chars,x.realms,x.armies,
+    const owners=function () {return restoreFacts(FB.state,function (x) {return [x.chars,x.realms,x.armies,
       Object.keys(x.authority.governments).map(function (id) {return FB.mobile.row(x,id);}),
-      x.authority.migrations,x.population,x.market,x.owner,x.holder,x.stories,x.player.gold]);};
+      x.authority.migrations,x.population,x.market,x.owner,x.holder,x.stories,x.player.gold];});};
     const before=owners(),rng=FB.getRngState(),uid=FB.getUidCounter(),saved=FB.save.serialize();
     FB.save.restore(JSON.parse(saved));
-    const exact=before===owners();FB.stories.start(FB.state);
+    const exact=assertRestoreFacts(owners(),before);FB.stories.start(FB.state);
     FB.mobile.initialize(FB.state,FB.campaignBookmark(FB.state).realms);FB.expeditionPrograms.day(FB.state);
-    return {exact:exact,noReplay:before===owners(),rng:(rng>>>0)===(FB.getRngState()>>>0),
+    return {exact:exact,noReplay:assertRestoreFacts(owners(),before),rng:(rng>>>0)===(FB.getRngState()>>>0),
       uid:uid===FB.getUidCounter(),date:FB.state.date,valid:FB.mobile.validate(FB.state)};
   });
   expect(result).toEqual({exact:true,noReplay:true,rng:true,uid:true,date:{year:1096,season:2,day:31},valid:true});
@@ -91,6 +93,7 @@ async function imported(page,info,label) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];
   },prefix);
   await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
   await page.evaluate(function (label) {
     const s=FB.state,prefix=label==='harbor' ? 'harbor' : 'dune';
     window.expeditionCase={
@@ -120,9 +123,9 @@ async function imported(page,info,label) {
         return s.greatHolyWar.phase==='active';
       },
       owners:function () {
-        const x=FB.state;return JSON.stringify([x.stories[this.id],x.stories[this.preparationId],x.realms,x.chars,
-          FB.mobile.row(x,this.rid),FB.mobile.host(x,this.rid),FB.mobile.migration(x,this.rid),
-          x.population,x.market,x.owner,x.holder,x.player.gold,x.greatHolyWar]);
+        const C=this;return restoreFacts(FB.state,function (x) {return [x.stories[C.id],x.stories[C.preparationId],x.realms,x.chars,
+          FB.mobile.row(x,C.rid),FB.mobile.host(x,C.rid),FB.mobile.migration(x,C.rid),
+          x.population,x.market,x.owner,x.holder,x.player.gold,x.greatHolyWar];});
       }
     };
   },label);
@@ -133,14 +136,15 @@ for (const label of ['harbor','upland']) {
     await imported(page,info,label);
     const result=await page.evaluate(function () {
       const C=expeditionCase,s=FB.state,people=JSON.stringify(Object.keys(s.chars).sort());
-      const owners=JSON.stringify([s.population,s.market,s.realms,s.armies,s.player.gold]);
+      function conserved(x) {return [x.population,x.market,x.realms,x.armies,x.player.gold];}
+      const owners=restoreFacts(s,conserved);
       const q=FB.expeditionStoryPrograms.review(s,C.id,'form',C.actor(s)),before=JSON.stringify(s),
         refused=!q.allowed && !FB.expeditionStoryPrograms.commit(s,q) && before===JSON.stringify(s),
         wait=C.run(s,'wait'),checkpoint=C.owners(),rng=FB.getRngState(),uid=FB.getUidCounter();
       FB.save.restore(JSON.parse(FB.save.serialize()));
       const x=FB.state;
-      return {refused:refused,wait:wait,noHost:!FB.mobile.host(x,C.rid),same:checkpoint===C.owners(),
-        conserved:owners===JSON.stringify([x.population,x.market,x.realms,x.armies,x.player.gold]),
+      return {refused:refused,wait:wait,noHost:!FB.mobile.host(x,C.rid),same:assertRestoreFacts(C.owners(),checkpoint),
+        conserved:assertRestoreFacts(restoreFacts(x,conserved),owners),
         people:people===JSON.stringify(Object.keys(x.chars).sort()),
         rng:(rng>>>0)===(FB.getRngState()>>>0),uid:uid===FB.getUidCounter()};
     });
@@ -173,7 +177,7 @@ for (const label of ['harbor','upland']) {
       return {formed:formed,launched:launched,blocked:pure,issued:issued,noTeleport:noTeleport,moved:a.at!==origin,
         camp:M.migration(FB.state,C.rid).at===camp,commander:M.row(FB.state,C.rid).leaderId===commander,
         privateGold:FB.state.player.gold===privateGold,people:people===JSON.stringify(Object.keys(FB.state.chars).sort()),
-        exact:checkpoint===C.owners(),rng:(rngAfter>>>0)===(FB.getRngState()>>>0),uid:uidAfter===FB.getUidCounter(),
+        exact:assertRestoreFacts(C.owners(),checkpoint),rng:(rngAfter>>>0)===(FB.getRngState()>>>0),uid:uidAfter===FB.getUidCounter(),
         valid:M.validate(FB.state),days:days};
     });
     expect(result).toMatchObject({formed:true,launched:true,blocked:true,issued:true,noTeleport:true,moved:true,camp:true,
