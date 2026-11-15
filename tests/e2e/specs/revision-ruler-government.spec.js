@@ -4,6 +4,7 @@ const {test,expect}=require('../support/fixture');
 const {openGame,prepareGameContent}=require('../support/game/navigation');
 const {useReleasedStartRules}=require('../support/game/released-starts');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
+const {installPageGuards}=require('../support/page-contract');
 const examples={estuary:require('../fixtures/authoring/revision-ruler-government-estuary.json'),
   uplands:require('../fixtures/authoring/revision-ruler-government-uplands.json')};
 
@@ -24,6 +25,37 @@ async function importCourt(page,info,label,revision) {
     FBDATA.bookmarks[input.id].revision=input.revision;
     FB.startProgression.noteTier(6);
   },{id:Object.keys(examples[label].bookmarks)[0],revision:revision});
+}
+
+async function beginCourt(page,id,start,route) {
+  const full=page.locator('#btn-choose-beginning');
+  if(await full.isVisible())await full.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+  if(route==='picker') {
+    await page.locator('[data-bookmark="'+id+'"]').click();
+    await page.locator('[data-scenario="'+start.id+'"]').click();
+  } else {
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('CONSTITUTION-'+id+'-'+start.id+'-'+start.fixedProvinceId+'-m-'+start.characterName.replace(/ /g,'_')+'-standard');
+    await page.locator('#ng-seed').press('Enter');
+  }
+  await expect(page.locator('#cg-name')).toHaveValue(start.characterName);
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+}
+
+function preparedCourtCase(title,label,revision,body) {
+  test.describe(title,function () {
+    let context,page,guard;
+    test.beforeAll(async function ({browser},info) {
+      context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+      await importCourt(page,info,label,revision);
+    });
+    test.afterAll(async function () {
+      if(context)try {expect(guard.faults).toEqual([]);}finally {await context.close();}
+    });
+    test('preserves complete court facts',async function () {await body(page);});
+  });
 }
 
 for(const label of ['estuary','uplands']) {
@@ -52,8 +84,7 @@ for(const label of ['estuary','uplands']) {
   });
 
   for(const revision of ['baseline','constitution']) for(const route of ['picker','code']) {
-    test(label+' '+revision+' '+route+' adopts its exact constitution and restores without accession replay',async function({page},info){
-      await importCourt(page,info,label,revision);
+    preparedCourtCase(label+' '+revision+' '+route+' adopts its exact constitution and restores without accession replay',label,revision,async function(page){
       const projection=await page.evaluate(function(input){
         const world=FB.bookmark(input.id),sc=FBDATA.startScenarios.find(function(s){return s.id===input.start;}),
           before=JSON.stringify([sc,world]),rng=FB.getRngState(),uid=FB.getUidCounter(),effective=FB.startIdentity(sc,world);
@@ -67,20 +98,7 @@ for(const label of ['estuary','uplands']) {
           pure:before===JSON.stringify([sc,world])&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
       },{id:id,start:start.id});
       expect(projection).toMatchObject({faults:[],pure:true,form:revision==='baseline'?start.governmentForm:start.revisionIdentities[id].constitution.governmentForm});
-      const full=page.locator('#btn-choose-beginning');
-      if(await full.isVisible())await full.click();
-      else await page.getByRole('button',{name:'New Game',exact:true}).click();
-      if(route==='picker') {
-        await page.locator('[data-bookmark="'+id+'"]').click();
-        await page.locator('[data-scenario="'+start.id+'"]').click();
-      } else {
-        await page.locator('#btn-bm-seed').click();
-        await page.locator('#ng-seed').fill('CONSTITUTION-'+id+'-'+start.id+'-'+start.fixedProvinceId+'-m-'+start.characterName.replace(/ /g,'_')+'-standard');
-        await page.locator('#ng-seed').press('Enter');
-      }
-      await expect(page.locator('#cg-name')).toHaveValue(start.characterName);
-      await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
-      await page.getByRole('button',{name:'Begin',exact:true}).click();
+      await beginCourt(page,id,start,route);
       const result=await page.evaluate(function(){
         FB.game.setPaused(true);
         const s=FB.state,sc=FB.campaignStart(s),c=s.chars[s.player.charId],raw=JSON.parse(FB.save.serialize()),
@@ -108,21 +126,24 @@ for(const label of ['estuary','uplands']) {
       expect(await page.evaluate(function(){return {revision:FB.state.start.revision,
         form:FB.campaignStart(FB.state).governmentForm,actual:FB.political.government(FB.state,{kind:'realm',id:'player'}).formId};}))
         .toEqual({revision:revision,form:projection.form,actual:projection.form});
-      if(revision==='constitution'&&route==='code') {
-        const changed=JSON.parse(JSON.stringify(input));
-        changed.bookmarks[id].revisions.constitution.realms[0].government=start.governmentForm;
-        changed.startScenarios[0].revisionIdentities[id].constitution.governmentForm=start.governmentForm;
-        await page.evaluate(function(){FB.game.toTitle();FB.ui.showMods();});
-        await page.locator('#modfile').setInputFiles({name:'revision-ruler-government-'+label+'.json',mimeType:'application/json',
-          buffer:Buffer.from(JSON.stringify(changed))});
-        await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-        await prepareGameContent(page);
-        expect(await page.evaluate(function(raw){
-          const before=JSON.stringify([FBDATA,FB.state,localStorage,raw]),rng=FB.getRngState(),uid=FB.getUidCounter();
-          let rejected=false;try{FB.save.restore(raw);}catch(error){rejected=true;}
-          return !FB.mods.saveCompatibility(raw).compatible&&rejected&&before===JSON.stringify([FBDATA,FB.state,localStorage,raw])&&rng===FB.getRngState()&&uid===FB.getUidCounter();
-        },saved)).toBe(true);
-      }
     });
   }
+  preparedCourtCase(label+' changed constitution content rejects the original save without effects',label,'constitution',async function(page){
+    await beginCourt(page,id,start,'code');
+    const saved=await page.evaluate(function(){FB.game.setPaused(true);return JSON.parse(FB.save.serialize());});
+    expect(await page.evaluate(function(raw){return FB.mods.saveCompatibility(raw).compatible;},saved)).toBe(true);
+    const changed=JSON.parse(JSON.stringify(input));
+    changed.bookmarks[id].revisions.constitution.realms[0].government=start.governmentForm;
+    changed.startScenarios[0].revisionIdentities[id].constitution.governmentForm=start.governmentForm;
+    await page.evaluate(function(){FB.game.toTitle();FB.ui.showMods();});
+    await page.locator('#modfile').setInputFiles({name:'revision-ruler-government-'+label+'.json',mimeType:'application/json',
+      buffer:Buffer.from(JSON.stringify(changed))});
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+    expect(await page.evaluate(function(raw){
+      const before=JSON.stringify([FBDATA,FB.state,localStorage,raw]),rng=FB.getRngState(),uid=FB.getUidCounter();
+      let rejected=false;try{FB.save.restore(raw);}catch(error){rejected=true;}
+      return !FB.mods.saveCompatibility(raw).compatible&&rejected&&before===JSON.stringify([FBDATA,FB.state,localStorage,raw])&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+    },saved)).toBe(true);
+  });
 }

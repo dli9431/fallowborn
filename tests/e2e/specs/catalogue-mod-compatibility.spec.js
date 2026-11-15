@@ -2,12 +2,14 @@
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+const {installPageGuards} = require('../support/page-contract');
+test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
 const {startDeterministicGame} = require('../support/game/start');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename,['js/mods.js','js/world.js','js/model.js','js/governments.js',
+dependsOnRuntime(__filename,['js/bookmark_sources.js','js/mods.js','js/world.js','js/model.js','js/governments.js',
   'js/save.js','js/save_v4.js','js/main.js','data/cultures.js','data/eras.js',
   'data/bookmarks.js','data/geographies.js','data/political_institutions.js']);
 
@@ -27,12 +29,20 @@ test('canonical effective fingerprints match SHA-256 for Unicode and multi-block
   })).toEqual([true,true,true,true,true,true,true]);
 });
 
-test('imported overrides leave the shipped fixture intact and round trip only under their exact effective catalogue',
-  async function ({page},testInfo) {
-    const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-    await openGame(page,testInfo);
+test.describe('exact imported override catalogue',function () {
+  test.describe.configure({mode:'default'});
+  let context,page,guard,sourceMod,save;
+  const fixture=JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
+  test.beforeAll(async function ({browser},info) {
+    context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+    await openGame(page,info);
+  });
+  test.afterAll(async function () {
+    if(context)try {expect(guard.faults).toEqual([]);}finally {await context.close();}
+  });
+  test('imported overrides leave the shipped fixture intact and stamp exact effective saves',async function ({},testInfo) {
     expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
-    const sourceMod = await page.evaluate(function () {
+    sourceMod = await page.evaluate(function () {
       const faith = JSON.parse(JSON.stringify(FBDATA.religions.catholic));
       faith.name = 'Modded Latin tradition';
       const form = JSON.parse(JSON.stringify(FBDATA.governmentForms.territorial));
@@ -46,14 +56,18 @@ test('imported overrides leave the shipped fixture intact and round trip only un
     });
     await openGame(page,testInfo);
     await startDeterministicGame(page);
-    const save = await page.evaluate(function () { return FB.save.serialize(); });
+    save = await page.evaluate(function () { return FB.save.serialize(); });
     expect(JSON.parse(save).mods).toMatch(/^effective-1-[a-f0-9]{64}$/);
+  });
+  test('matching imported overrides restore only under their exact effective catalogue',async function ({},testInfo) {
     await openGame(page,testInfo);
     await restoreBookmark(page,save);
     expect(await page.evaluate(function () { return FB.religionOf('catholic').name; })).toBe('Modded Latin tradition');
     expect(await page.evaluate(function (saved) {
       return JSON.parse(FB.save.serialize()).mods === JSON.parse(saved).mods;
     },save)).toBe(true);
+  });
+  test('changed same-name imported overrides reject the saved catalogue purely',async function ({},testInfo) {
     // Same named JSON mod with different effective content is a different world.
     await page.evaluate(function (text) {
       const mod = JSON.parse(text); mod.religions.catholic.name = 'Changed modded tradition';
@@ -66,11 +80,14 @@ test('imported overrides leave the shipped fixture intact and round trip only un
       return FB.game.loadData(source) === false && before === JSON.stringify(source) &&
         live === FB.state && world === FB.world && rng === FB.getRngState() && uid === FB.getUidCounter();
     },save)).toBe(true);
+  });
+  test('removing imported overrides restores the shipped fixture and rejects the modded save',async function ({},testInfo) {
     await page.evaluate(function () { localStorage.removeItem('fb_mods'); });
     await openGame(page,testInfo);
     expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
     expect(await page.evaluate(function (text) { return FB.game.loadData(JSON.parse(text)); },save)).toBe(false);
   });
+});
 
 test('bundled payload changes cannot reuse an id-only fingerprint',async function ({page},testInfo) {
   await openGame(page,testInfo);

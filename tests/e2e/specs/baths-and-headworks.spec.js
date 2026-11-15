@@ -9,8 +9,8 @@ const traditions=['default','latin','byzantine','islamic','persianate','slavic',
 dependsOnRuntime(__filename,['index.html','data/technology.js','data/technology_baths_headworks.js','data/buildings_baths_headworks.js',
   'data/production.js','data/building_operations.js','data/building_profiles.js','data/buildings_waterworks.js','data/technology_waterworks.js',
   'data/bookmarks.js','data/bookmark_711.js','data/cultures.js','data/eras.js','js/fortifications.js','js/building_operations.js','js/building_profiles.js','js/production.js',
-  'js/production_economy.js','js/building_seasons.js','js/site_resources.js','js/actions.js','js/world.js','js/lordships.js',
-  'js/treasury.js','js/population.js','js/mods.js','js/technology.js','js/save.js','js/save_v4.js','js/ui_modals.js']);
+  'js/production_economy.js','js/building_seasons.js','js/site_resources.js','js/actions.js','js/world.js','js/model.js','js/politics.js','js/lordships.js',
+  'js/treasury.js','js/population.js','js/wars.js','js/home_authority.js','js/mods.js','js/technology.js','js/save.js','js/save_v4.js','js/ui_modals.js']);
 async function start(page,info,kind,revision){
   let custom;
   if(revision){custom=JSON.parse(JSON.stringify(examples[kind]));Object.values(custom.bookmarks)[0].revision=revision;}
@@ -68,10 +68,10 @@ for(const kind of ['river','upland'])for(const heated of [false,true]){
       const s=FB.state,O=FB.buildingOperations,a=O.compile(FB.campaignBookmark(s)).assignments[heated?1:0],who=FB.settlementHolder(s,a.countyId,a.slot);
       const req={countyId:a.countyId,settlement:a.slot,buildingId:a.buildingId,actor:who},q=O.quote(s,req),gold=s.realms[who.id].treasury.gold,privateGold=s.player.gold;
       const population=JSON.stringify(s.population),worked=O.commit(s,q),again=O.commit(s,q),record=s.buildings[a.countyId].find(function(b){return b.id==='public_bath';});
-      const before=JSON.stringify([s.production,s.buildingOperations,s.siteResources,s.buildings]),active=FB.buildingBonusIn(s,a.countyId,'migrationAttraction');
+      const before=restoreFacts(s,function(v){return [v.production,v.buildingOperations,v.siteResources,v.buildings];}),active=FB.buildingBonusIn(s,a.countyId,'migrationAttraction');
       const noOther=['health','populationCapacity','populationFamineProtection','populationCrisisProtection','research','tax'].every(function(k){return !(O.effects(s,a.countyId,record)[k]);});
       const review=O.reason(q),valid=FB.production.validate(s)&&O.validate(s);FB.save.restore(JSON.parse(FB.save.serialize()));const t=FB.state;
-      const matching=before===JSON.stringify([t.production,t.buildingOperations,t.siteResources,t.buildings]);
+      const matching=before===restoreFacts(t,function(v){return [v.production,v.buildingOperations,v.siteResources,v.buildings];});
       t.turn=q.untilTurn;FB.invalidateBuildingIndex(t,a.countyId);
       return {worked:worked,again:again,active:active,paid:gold-s.realms[who.id].treasury.gold,cost:q.cost,noOther:noOther,valid:valid,matching:matching,
         private:privateGold===s.player.gold,population:population===JSON.stringify(t.population),records:s.buildings[a.countyId].filter(function(b){return b.id==='public_bath';}).length,
@@ -212,8 +212,11 @@ test('private construction and unheated service debit the household rather than 
   const r=await page.evaluate(function(){
     const s=FB.state,a=FB.buildingOperations.compile(FB.campaignBookmark(s)).assignments[0],pid=a.countyId;
     const old=FB.settlementHolder(s,pid,a.slot),treasury=s.realms[old.id].treasury.gold;
-    FB.setPlayerTier(s,4,{stationFarewell:false});s.player.provs=[pid];s.owner[pid]=s.holder[pid]='player';s.player.gold=10000;
-    FB.foundPlayerRealm(s);FB.rememberSettlementSites(s,pid);FB.invalidateSettlementLordships(s);FB.invalidateBuildingIndex(s,pid);
+    const source=FB.siteResources.compile(FB.campaignBookmark(s)).sources.find(function(v){return v.id===a.sourceId;});
+    // The household must hold the upstream intake as well as the downstream bath.
+    FB.setPlayerTier(s,4,{stationFarewell:false});s.player.provs=[pid,source.countyId];s.player.gold=10000;
+    s.player.provs.forEach(function(id){s.owner[id]=s.holder[id]='player';});
+    s.player.liege=null;FB.foundPlayerRealm(s);FB.rememberSettlementSites(s,pid);FB.invalidateSettlementLordships(s);FB.invalidateBuildingIndex(s,pid);
     s.realmTech.player={completed:['lime_mortar'],exposed:['lime_mortar'],active:[],progress:{},reserve:0,priorities:{},historicalSeeded:1};FB.invalidateTechBonuses();
     const gold=s.player.gold,cost=FB.buildCost(s,pid,'public_bath'),built=FB.build(s,pid,a.slot,'public_bath');
     const q=FB.buildingOperations.quote(s,{countyId:pid,settlement:a.slot,buildingId:'public_bath',actor:FB.settlementActor(s)}),worked=FB.buildingOperations.commit(s,q);
@@ -227,7 +230,9 @@ test('paid heat suspends on live authority or water loss while preserving proper
     const s=FB.state,O=FB.buildingOperations,a=O.compile(FB.campaignBookmark(s)).assignments[1],who=FB.settlementHolder(s,a.countyId,a.slot);
     const req={countyId:a.countyId,settlement:a.slot,buildingId:a.buildingId,actor:who};if(!O.commit(s,O.quote(s,req)))throw new Error('Paid heat required');
     const source=FB.siteResources.compile(FB.campaignBookmark(s)).sources.find(function(v){return v.id===a.sourceId;});
-    const stopped=[function(t){t.occupier[a.countyId]='other';},function(t){t.holder[source.countyId]='other';},
+    const stopped=[function(t){const war=FB.registerOrdinaryWar(t,'player',{enemy:who.id,target:a.countyId,legacy:false});
+        if(!war)throw new Error('Occupation setup requires an ordinary war');
+        war.occupations[a.countyId]={occupied:true,progress:0};},function(t){t.holder[source.countyId]='other';},
       function(t){t.chars[FB.political.actor(t,who).characterId].captive=true;},
       function(t){t.buildings[a.countyId].find(function(b){return b.id==='public_bath';}).ruined=true;}
     ].map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t);return FB.buildingBonusIn(t,a.countyId,'migrationAttraction')===0&&before===JSON.stringify(t)&&t.production.waterInputs.records.length===1&&t.buildings[a.countyId].some(function(b){return b.id==='public_bath';});});
@@ -246,8 +251,8 @@ test('renewed heat preserves both historical debits and strict saved provenance 
       function(t){t.production.waterInputs.records[0].turn=0;},function(t){t.production.waterInputs.records[1].operationRevision=t.production.waterInputs.records[0].operationRevision;},
       function(t){delete t.buildingOperations;},function(t){t.production.revision++;}
     ].map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t);let rejected=false;try{FB.production.validate(t);O.validate(t);}catch(e){rejected=true;}return rejected&&before===JSON.stringify(t);});
-    const before=JSON.stringify([s.production,s.buildingOperations,s.siteResources,s.buildings]);FB.save.restore(JSON.parse(FB.save.serialize()));const t=FB.state;
-    return {first:first,second:second,valid:valid,count:t.production.waterInputs.records.length,changes:changes,matching:before===JSON.stringify([t.production,t.buildingOperations,t.siteResources,t.buildings])};
+    const before=restoreFacts(s,function(v){return [v.production,v.buildingOperations,v.siteResources,v.buildings];});FB.save.restore(JSON.parse(FB.save.serialize()));const t=FB.state;
+    return {first:first,second:second,valid:valid,count:t.production.waterInputs.records.length,changes:changes,matching:before===restoreFacts(t,function(v){return [v.production,v.buildingOperations,v.siteResources,v.buildings];})};
   });
   expect(r).toEqual({first:true,second:true,valid:true,count:2,changes:[true,true,true,true,true,true,true],matching:true});
 });
@@ -256,8 +261,8 @@ test('matching retained knowledge preserves an existing partial project and new 
   const r=await page.evaluate(function(ids){
     const s=FB.state,pid=s.player.provinceId;s.player.tier=4;s.player.provs=[pid];s.player.gold=10000;s.owner[pid]=s.holder[pid]='player';FB.foundPlayerRealm(s);s.realms.player.liege=null;
     s.realmTech.player={completed:['lime_mortar','irrigation_channels'],exposed:[],active:['scriptoria'],progress:{scriptoria:7},reserve:3,priorities:{},historicalSeeded:1};
-    s.date.year=1300;FB.invalidateTechBonuses();const record=JSON.stringify(s.realmTech.player);FB.save.restore(JSON.parse(FB.save.serialize()));const t=FB.state;
-    const retained=record===JSON.stringify(t.realmTech.player),before=JSON.stringify([t.population,t.buildings,t.production,t.player.gold]);
+    s.date.year=1300;FB.invalidateTechBonuses();const record=restoreFacts(s,function(v){return v.realmTech.player;},{technologySets:true});FB.save.restore(JSON.parse(FB.save.serialize()));const t=FB.state;
+    const retained=record===restoreFacts(t,function(v){return v.realmTech.player;},{technologySets:true}),before=JSON.stringify([t.population,t.buildings,t.production,t.player.gold]);
     t.realmTech.player.active=[];t.realmTech.player.reserve=0;
     const rows=ids.map(function(id){const started=FB.selectTechProject(t,id),cost=FB.techCost(t,id);FB.addResearch(t,cost-1);const pending=!FB.hasTech(t,id);FB.addResearch(t,1);return {started:started,pending:pending,done:FB.hasTech(t,id)};});
     return {retained:retained,rows:rows,partial:t.realmTech.player.progress.scriptoria,unchanged:before===JSON.stringify([t.population,t.buildings,t.production,t.player.gold])};
