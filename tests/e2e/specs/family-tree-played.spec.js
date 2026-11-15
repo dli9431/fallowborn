@@ -59,10 +59,13 @@ for (const kind of ['descendant', 'collateral', 'adopted']) {
     }
     if (kind === 'descendant') {
       const toggle = tree.locator('[data-ft-toggle="' + ids.prior + '"]');
-      await toggle.click();
+      await toggle.focus();
+      await toggle.press('Enter');
       await expect(tree.locator('.ftplayed-drop')).toHaveCount(1);
-      await toggle.click();
+      await expect(toggle).toHaveAttribute('aria-expanded','false');
+      await toggle.press('Enter');
       await expect(tree.locator('.ftplayed-drop')).toHaveCount(2);
+      await expect(toggle).toHaveAttribute('aria-expanded','true');
     }
   });
 }

@@ -15,6 +15,7 @@ dependsOnRuntime(__filename, [
   'js/ui_modals.js',
   'js/ui_panels.js',
   'js/world.js',
+  'js/mobile_confederations.js',
   'data/map_data.js',
   'data/political_institutions.js',
   'css/style.css'
@@ -1326,7 +1327,12 @@ test('a family grantee absorbs the appointed fief on player succession despite a
         playerLiege:s.player.liege || null,
         realmLiege:s.realms.player.liege || null,
         appointedRealmAlive:!!(s.realms[rid] && s.realms[rid].alive),
-        secondThrone:FB.realmIdForRulerCharacter(s, heir)
+        secondThrone:FB.realmIdForRulerCharacter(s, heir) || null,
+        foreignThrones:Object.keys(s.realms).filter(function (id) {
+          if (id === 'player' || !s.realms[id].alive) return false;
+          var ruler = FB.realmRulerCharacterSnapshot(s,id);
+          return ruler && ruler.id === heir.id;
+        })
       };
     });
 
@@ -1340,7 +1346,8 @@ test('a family grantee absorbs the appointed fief on player succession despite a
       playerLiege:null,
       realmLiege:null,
       appointedRealmAlive:false,
-      secondThrone:null
+      secondThrone:null,
+      foreignThrones:[]
     });
   });
 

@@ -8,7 +8,7 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/settlements.js', 'data/settlements_real.js',
   'data/geographies.js', 'data/eras.js', 'data/cultures.js',
-  'js/util.js', 'js/world.js', 'js/title_ids.js', 'js/mods.js', 'js/mapview.js',
+  'js/util.js', 'js/world.js', 'js/bookmark_composition.js', 'js/title_ids.js', 'js/mods.js', 'js/mapview.js',
   'js/actions.js', 'js/main.js', 'js/save.js', 'js/save_v4.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -29,23 +29,25 @@ async function activate(page, id, revision) {
   }, {id:id,revision:revision});
 }
 
-test('europe_regional owns the legacy geometry and every core bookmark names it',
+test('europe_regional retains the legacy geometry and every core baseline names it',
   async function ({ page }, testInfo) {
     test.setTimeout(120 * 1000);
     await openGame(page, testInfo);
     expect(await activate(page, '867', 'baseline')).toBe(null);
     const result = await page.evaluate(function () {
       const g = FBDATA.geographies.europe_regional;
+      const baseline = FB.bookmark('867','baseline');
+      function equal(a,b) {return FB.contentValues.canonical(a)===FB.contentValues.canonical(b);}
       return {
         defaultGeography:FBDATA.defaultGeography,
-        references:[g.bounds === FBDATA.bounds, g.land === FBDATA.land,
-          g.seas === FBDATA.seas, g.rivers === FBDATA.rivers,
-          g.straits === FBDATA.bookmarks['867'].straits,
-          g.crossingClasses === FBDATA.bookmarks['867'].crossingClasses,
-          g.provinces === FBDATA.bookmarks['867'].provinces],
+        references:[equal(g.bounds,FBDATA.bounds), equal(g.land,FBDATA.land),
+          equal(g.seas,FBDATA.seas), equal(g.rivers,FBDATA.rivers),
+          equal(g.straits,baseline.straits),
+          equal(g.crossingClasses,baseline.crossingClasses),
+          equal(g.provinces,baseline.provinces)],
         gridWidth:g.gridWidth,
         declared:['867', '1066', '476'].map(function (id) {
-          return FBDATA.bookmarks[id].geography;
+          return FB.bookmark(id,'baseline').geography;
         }),
         faults:FB.validateGeography('europe_regional'),
         active:FB.activeGeographyId,

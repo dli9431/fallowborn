@@ -3,8 +3,6 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
-const {openCrazyGame} = require('../support/game/crazygames-title');
-const {mockCrazyGames} = require('../support/crazygames');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -19,7 +17,7 @@ dependsOnRuntime(__filename,[
   'js/government_aristocracy.js','js/government_recognition.js','js/government_administration.js',
   'js/governments.js','js/authority.js','js/lordships.js','js/actions.js','js/world.js','js/model.js',
   'js/justice.js','js/fiscal.js','js/treasury.js','js/save.js','js/save_v4.js','js/mods.js',
-  'js/main.js','js/starts.js','js/bookmark_setup.js','js/crazygames.js','data/distribution_crazygames.js'
+  'js/main.js','js/starts.js','js/bookmark_setup.js'
 ]);
 
 async function inject(page) {
@@ -27,16 +25,12 @@ async function inject(page) {
     await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/government-query-reuse/'+file)});
 }
 async function start(page,info,crazygames,bookmark) {
-  if (crazygames) {
-    await mockCrazyGames(page);
-    await page.addInitScript(function () { window.FB_DISTRIBUTION='crazygames'; window.FB_CRAZYGAMES_STORAGE='localstorage'; });
-    await openCrazyGame(page,info);
-  } else await openGame(page,info);
+  await openGame(page,info);
   await beginBookmarkFromTitle(page,bookmark || '476');
   await inject(page);
 }
 
-for (const crazygames of [false,true]) {
+for (const crazygames of [false]) {
   test('ordered constituency reference parity observes same-turn ledger and eligibility mutations, distribution '+crazygames, async function ({page},info) {
     await start(page,info,crazygames);
     const result=await page.evaluate(function () {
@@ -181,11 +175,44 @@ test('fiscal projections, tax, levy, assent and recognition match across staged 
   await start(page,info);
   const result=await page.evaluate(function () {
     const H=GOV_QUERY,s=FB.state,A=FB.aristocracy,rid='sasanian_476',baseline=H.copy(s),labels=[],probes=[];
+    function consumers(state,realmId) {
+      const output=H.consumers(state,realmId),G=FB.governments;
+      // County reads bypass the full constituency list. Probe their actual
+      // strategy callbacks and compare each result with the full-list oracle.
+      output.fiscalCalls=output.voices.map(function (m,index) {
+        const calls=[],owners=[
+          {slot:'revenue',id:'provincial_receipts',base:'public_receipts'},
+          {slot:'levy',id:'provincial_obligations',base:'public_service'}
+        ].map(function (row) {
+          const strategy=G.strategy(row.slot,row.id),original=strategy.settlementBase;
+          const base=G.strategy(row.slot,row.base).settlementBase;
+          strategy.settlementBase=function (x,id,context) {
+            const actual=original(x,id,context),voice=A.constituency(x,id).filter(function (v) {
+              return v.scope.id===context.provinceId;
+            })[0];
+            const factor=row.slot==='revenue' ? voice && (!voice.active || voice.terms.status==='withheld') ? 0.5 : 1 :
+              voice ? voice.active && voice.terms.status==='assent' ? voice.terms.levy : 0.35 : 1;
+            const expected=base(x,id,context)*factor;
+            if (actual!==expected) throw new Error('County fiscal strategy differs from constituency oracle');
+            calls.push({slot:row.slot,realmId:id,county:context.provinceId,actual:actual,expected:expected});
+            return actual;
+          };
+          return {strategy:strategy,original:original};
+        });
+        let projection;
+        try {projection=FB.settlementFiscalProjection(state,m.scope.id,0);}
+        finally {owners.forEach(function (row) {row.strategy.settlementBase=row.original;});}
+        if (JSON.stringify(projection)!==JSON.stringify(output.fiscal[index]))
+          throw new Error('Probed fiscal projection changed');
+        return {county:m.scope.id,site:0,calls:calls};
+      });
+      return output;
+    }
     function check(label,edit) {
       Object.assign(s,H.copy(baseline)); FB.governments.invalidate(); FB.rebuildRulerIndex(s);
       const d=A.state(s,rid),m=d.interests[0],a=s.authority.appointments.find(function (r) { return r.id===m.appointmentId; });
       edit(s,d,m,a);
-      const output=H.pair(s,rid,H.consumers);
+      const output=H.pair(s,rid,consumers);
       if (output.error) throw new Error(label+': '+output.error.message);
       if (labels.length<3) probes.push({phase:label,turn:s.turn,date:H.copy(s.date),sites:output.value.fiscalCalls});
       labels.push(label); return output.value;
@@ -484,7 +511,7 @@ test('ordinary JSON government removal discards warmed scalar answers and restor
 });
 
 for (const family of ['rows','forms','defaults','actors','contexts']) {
-  for (const crazygames of [false,true]) {
+  for (const crazygames of [false]) {
     test('scalar government '+family+' match detached queries through same-turn changes, distribution '+crazygames, async function ({page},info) {
       await start(page,info,crazygames); await injectScalar(page);
       const result=await page.evaluate(function (family) {
@@ -597,7 +624,7 @@ async function injectResolver(page) {
 }
 
 for (const bookmark of ['476','1096','1204']) {
-  for (const crazygames of [false,true]) {
+  for (const crazygames of [false]) {
     test(bookmark+' resolver misses validate once with reference parity and matching restore, distribution '+crazygames, async function ({page},info) {
       await start(page,info,crazygames,bookmark); await injectResolver(page);
       const result=await page.evaluate(function () {

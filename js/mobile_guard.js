@@ -185,6 +185,16 @@
     })[0];
     return entry ? entry.realmId : null;
   };
+  var locals=M.localRealms;
+  M.localRealms=function (s) {
+    var result=locals(s);
+    entries(s).forEach(function (v) {
+      if (v.guard.declaration.location.countyId===s.player.provinceId &&
+          (v.guard.authority.characterId===s.player.charId || v.guard.characterIds.indexOf(s.player.charId)>=0) &&
+          result.indexOf(v.realmId)<0) result.push(v.realmId);
+    });
+    return result;
+  };
   var initialize=M.initialize;
   M.initialize=function (s,defs) {
     defs.forEach(function (d) {

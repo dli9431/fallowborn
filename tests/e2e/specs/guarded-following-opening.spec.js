@@ -56,7 +56,7 @@ for (const prefix of ['harbor','dune']) {
   test(prefix+' compact guards retain indexed identities and reject forged people before adoption',async function ({page},info) {
     await imported(page,info,prefix);
     const result=await page.evaluate(function (prefix) {
-      const M=FB.mobile,rid=prefix+'_following',saved=JSON.parse(FB.save.serialize());
+      const M=FB.mobile,rid=prefix==='harbor'?'harbor_following':'dune_coalition',saved=JSON.parse(FB.save.serialize());
       const s=saved.state,g=M.row(s,rid).guardedParty,host=g.authority.characterId,person=g.characterIds[0];
       const bytes=JSON.stringify(saved),active=FB.state,before=JSON.stringify(active);
       const rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -84,29 +84,32 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
-test('guard declarations reject malformed references, parties, sites and policies without mutation',async function ({page},info) {
-  await openGame(page,info);
-  const result=await page.evaluate(function (source) {
-    const changes=[function (g) {g.schema=2;},function (g) {g.extra=true;},function (g) {g.kind='conviction';},
-      function (g) {g.release='automatic';},function (g) {g.duration=0;},function (g) {g.duration=1441;},
-      function (g) {g.actorIds=[];},function (g) {g.actorIds.push(g.actorIds[0]);},
-      function (g) {g.actorIds[0]='missing';},function (g) {g.actorIds.push('harbor_companion');},
-      function (g) {g.actorIds.push('harbor_guard_ruler');},function (g) {g.actorIds.reverse();},
-      function (g) {g.hostRealmId='missing';},function (g) {g.hostActorId='harbor_leader';},
-      function (g) {g.location.countyId='harbor_gardens';},function (g) {g.location.siteId='missing';},
-      function (g) {g.location.extra=true;},function (g,d) {delete d.mobile.command;},
-      function (g,d) {d.mobile.preparationId='unformed';},function (g,d,b) {b.opening.actors.harbor_leader.home='harbor_quay';}];
-    return changes.map(function (change) {
-      const input=JSON.parse(JSON.stringify(source)),b=input.bookmarks.harbor_world,d=b.realms.find(function (v) {return v.mobile;});
-      change(d.mobile.guardedParty,d,b);
-      const bytes=JSON.stringify(input),data=JSON.stringify(FBDATA),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
-      const rejected=FB.mods.validate(input).length>0;
-      return rejected && bytes===JSON.stringify(input) && data===JSON.stringify(FBDATA) && state===JSON.stringify(FB.state) &&
-        rng===FB.getRngState() && uid===FB.getUidCounter();
-    });
-  },examples.harbor);
-  expect(result).toEqual(Array(20).fill(true));
-});
+for (const batch of [0,1,2,3]) {
+  test('guard declarations reject malformed references, parties, sites and policies without mutation, batch '+(batch+1),async function ({page},info) {
+    await openGame(page,info);
+    const result=await page.evaluate(function (input) {
+      const source=input.source;
+      const changes=[function (g) {g.schema=2;},function (g) {g.extra=true;},function (g) {g.kind='conviction';},
+        function (g) {g.release='automatic';},function (g) {g.duration=0;},function (g) {g.duration=1441;},
+        function (g) {g.actorIds=[];},function (g) {g.actorIds.push(g.actorIds[0]);},
+        function (g) {g.actorIds[0]='missing';},function (g) {g.actorIds.push('harbor_companion');},
+        function (g) {g.actorIds.push('harbor_guard_ruler');},function (g) {g.actorIds.reverse();},
+        function (g) {g.hostRealmId='missing';},function (g) {g.hostActorId='harbor_leader';},
+        function (g) {g.location.countyId='harbor_gardens';},function (g) {g.location.siteId='missing';},
+        function (g) {g.location.extra=true;},function (g,d) {delete d.mobile.command;},
+        function (g,d) {d.mobile.preparationId='unformed';},function (g,d,b) {b.opening.actors.harbor_leader.home='harbor_quay';}];
+      return changes.slice(input.first,input.first+5).map(function (change) {
+        const input=JSON.parse(JSON.stringify(source)),b=input.bookmarks.harbor_world,d=b.realms.find(function (v) {return v.mobile;});
+        change(d.mobile.guardedParty,d,b);
+        const bytes=JSON.stringify(input),data=JSON.stringify(FBDATA),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
+        const rejected=FB.mods.validate(input).length>0;
+        return rejected && bytes===JSON.stringify(input) && data===JSON.stringify(FBDATA) && state===JSON.stringify(FB.state) &&
+          rng===FB.getRngState() && uid===FB.getUidCounter();
+      });
+    },{source:examples.harbor,first:batch*5});
+    expect(result).toEqual(Array(5).fill(true));
+  });
+}
 
 test('fresh guard preflight rejects unavailable people and changed control before any initialization',async function ({page},info) {
   await imported(page,info,'harbor');
@@ -307,12 +310,27 @@ test('protective release uses the shared zero-cost review and retains mobile she
   await page.locator('#ng-seed').press('Enter');
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
-  await page.evaluate(function () {FB.game.setPaused(true);FB.ui.showMobileConfederation('harbor_following');});
-  await page.getByRole('button',{name:'Review protective release',exact:true}).click();
+  const reach=await page.evaluate(function () {
+    FB.game.setPaused(true);
+    const s=FB.state,M=FB.mobile,before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+    const local=M.localRealms(s),single=M.localRealm(s),guard=M.row(s,'harbor_following').guardedParty;
+    const remote=JSON.parse(before);remote.player.provinceId='harbor_gardens';
+    const unrelated=JSON.parse(before);unrelated.player.charId=FB.bookmarkActor(s,'harbor_host_ruler').id;
+    const result={host:guard.authority.characterId===s.player.charId,single:single,
+      count:local.filter(function(id){return id==='harbor_following';}).length,
+      remote:M.localRealms(remote).indexOf('harbor_following')>=0,
+      unrelated:M.localRealms(unrelated).indexOf('harbor_following')>=0,
+      pure:before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter()};
+    FB.ui.showMobileConfederation('harbor_following');return result;
+  });
+  expect(reach).toEqual({host:true,single:'harbor_following',count:1,remote:false,unrelated:false,pure:true});
+  const release=page.getByRole('button',{name:/^Review protective release Immediate cost:/});
+  await expect(release).toBeEnabled();
+  await release.click();
   await expect(page.locator('#gm-body')).toContainText('Nobody moves.');
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('button',{name:'Review protective release',exact:true})).toBeFocused();
-  await page.getByRole('button',{name:'Review protective release',exact:true}).click();
+  await expect(release).toBeFocused();
+  await release.click();
   await page.locator('#mobile-confirm').click();
   await page.locator('#mobile-continue').click();
   await expect(page.locator('#gm-body')).toContainText('Released');

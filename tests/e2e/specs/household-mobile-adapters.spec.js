@@ -81,21 +81,43 @@ test('optional admission at a visited camp conserves people and leaves named rel
   await importedStart(page, info);
   expect(await page.evaluate(function () {
     const s = FB.state, rid = 'pontic_following_476', M = FB.mobile, host = M.host(s, rid);
-    host.at = 'tomis'; host.from = 'tomis'; host.path = []; host.goal = null; host.moveLeft = 0; host.mobileCourt = true;
-    FB.federateDay(s); FB.transferProvince(s, 'tomis', rid);
-    s.player.gold = 1000;
-    const journey = FB.travelStart(s, 'service', 'tomis', rid);
-    const request = { realmId:rid, action:'join', terms:{ countyId:'tomis', count:10 }, actor:{ kind:'character', id:s.player.charId } };
+    s.player.gold=1000;
+    const destination=FB.travelDestinations(s,'service').find(function(c){
+      const county=s.population.counties[c.destinationId];
+      return county && Math.floor(county.count*0.15)>=M.total(s,rid)+10 && c.cost<=s.player.gold;
+    });
+    if (!destination) throw new Error('No reachable inhabited service capital for the visited camp');
+    const pid=destination.destinationId,partner=s.holder[pid] || s.owner[pid],terms={kind:'access',partnerId:partner,
+      countyIds:[pid],capacity:M.total(s,rid)+10,allowRecruit:true,price:4,duration:90};
+    function act(action,terms,actor) {
+      const q=M.review(s,{realmId:rid,action:action,terms:terms,actor:actor || {kind:'realm',id:rid}});
+      if (!q.review.allowed || !M.commit(s,q)) throw new Error('Camp access '+action+' refused: '+q.review.reason);
+    }
+    act('propose',{operation:'agreement',proposal:terms});
+    M.members(s,rid).forEach(function(m){act('assent',{assent:true},m.principal);});
+    act('offer',terms);
+    const agreement=M.agreements(s,rid).find(function(a){return a.status==='offered' && a.partnerId===partner;});
+    if (!agreement) throw new Error('Camp access offer was not recorded');
+    act('accept',{agreementId:agreement.id},{kind:'realm',id:partner});
+    const owners=JSON.stringify([s.owner[pid],s.holder[pid]]);
+    host.at = pid; host.from = pid; host.path = []; host.goal = null; host.moveLeft = 0; host.mobileCourt = true;
+    FB.federateDay(s);
+    // Use the road picker's actual court; admission to the civilian
+    // following is a separate voluntary decision at that destination.
+    const journey = FB.travelStart(s, 'service', pid, destination.destinationRealm);
+    if (!journey) throw new Error('Camp service journey refused');
+    const request = { realmId:rid, action:'join', terms:{ countyId:pid, count:10 }, actor:{ kind:'character', id:s.player.charId } };
     const remote = M.review(s, request).review.allowed;
     // Stage actual arrival through the journey owner, without simulating its outbound route.
-    s.player.travel.currentId = 'tomis'; s.player.travel.remainingRoute = []; FB.travelTick(s);
-    const people = s.population.counties.tomis.count + M.total(s, rid);
+    s.player.travel.currentId = pid; s.player.travel.remainingRoute = []; FB.travelTick(s);
+    const people = s.population.counties[pid].count + M.total(s, rid);
     const kin = FB.householdMembers(s).filter(function (c) { return c.id !== s.player.charId; }).map(function (c) { return [c.id,c.homeProvinceId]; });
     const admitted = M.commit(s, M.review(s, request));
     return { journey:journey, remote:remote, admitted:admitted,
-      conserved:people === s.population.counties.tomis.count + M.total(s, rid), home:s.player.provinceId,
+      conserved:people === s.population.counties[pid].count + M.total(s, rid), home:s.player.provinceId,
+      sovereignty:owners===JSON.stringify([s.owner[pid],s.holder[pid]]),
       relatives:kin.every(function (row) { return s.chars[row[0]].homeProvinceId === row[1]; }) };
-  })).toEqual({ journey:true, remote:false, admitted:true, conserved:true, home:'cherson', relatives:true });
+  })).toEqual({ journey:true, remote:false, admitted:true, conserved:true, home:'cherson', sovereignty:true, relatives:true });
 });
 
 for (const fault of ['leader_operation','extra_work_terms','missing_realm','bad_purpose','unbounded_wait','bad_clock','unknown_mobile_condition','mixed_mobile_fields']) {

@@ -5,11 +5,12 @@ const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+const {installRestoreFacts} = require('../support/game/restore-facts');
 const examples = {timber:require('../fixtures/authoring/fort-profiles-timber.json'),
   masonry:require('../fixtures/authoring/fort-profiles-masonry.json')};
 dependsOnRuntime(__filename,['index.html','data/map_data.js','data/technology.js','data/building_profiles.js',
   'data/fort_profiles.js','data/buildings_circuit_profiles.js','js/fort_profiles.js','js/building_profiles.js','js/fortifications.js',
-  'js/actions.js','js/world.js','js/technology.js','js/mods.js','js/home_authority.js',
+  'js/actions.js','js/world.js','js/bookmark_composition.js','js/technology.js','js/mods.js','js/home_authority.js',
   'js/lordships.js','js/settlement.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);
 
 async function start(page,info,kind) {
@@ -184,14 +185,17 @@ test('annual fort AI buys one material project from the existing work budget and
 
 test('matching pending restore and conquest retain paid work without replay or reconstruction',async function({page},info){
   await start(page,info,'timber');await hold(page,'timber');
+  await installRestoreFacts(page);
   const pending=await page.evaluate(function(){
     const s=FB.state,pid=s.player.provinceId;
     FB.startFortProject(s,pid,0,1,{profileId:'sample_timber_fort'});
-    return {save:FB.save.serialize(),gold:s.player.gold,fort:JSON.parse(JSON.stringify(FB.fortAt(s,pid)))};
+    return {save:FB.save.serialize(),gold:s.player.gold,
+      fort:restoreFacts(s,function(x){return FB.fortAt(x,pid);})};
   });
   await restoreBookmark(page,pending.save);
   const r=await page.evaluate(function(expected){
-    const s=FB.state,pid=s.player.provinceId,b=FB.fortAt(s,pid),same=JSON.stringify(b)===JSON.stringify(expected.fort),gold=s.player.gold;
+    const s=FB.state,pid=s.player.provinceId,b=FB.fortAt(s,pid),
+      same=assertRestoreFacts(restoreFacts(s,function(x){return FB.fortAt(x,pid);}),expected.fort),gold=s.player.gold;
     s.owner[pid]=s.holder[pid]='inventory_ridge_court';s.date.year=1200;
     const valid=FB.fortProfiles.validate(s);s.turn=b.completeTurn;
     const prestige=s.player.prestige,completed=FB.fortificationDay(s),again=FB.fortificationDay(s);
