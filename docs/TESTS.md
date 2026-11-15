@@ -146,8 +146,9 @@ repeat restoration and cross-revision switching. Explicit and inferred forms
 share one fresh context within each bounded restore or switching test; every
 form still restores twice or makes its own round trip. Exact state, resource,
 RNG, UID and input-purity assertions remain local to those journeys. Generic
-predecessor proof and raw-configuration rejection coverage lives in
-retained-catalogue-compatibility.spec.js.
+predecessor proof and raw-configuration rejection coverage lives in the
+retained-catalogue-compatibility-*-journeys.spec.js and
+retained-catalogue-compatibility-*-mutations.spec.js specifications.
 
 634-scenery-revisions.spec.js compares the current manifest and eager catalogues,
 checks all five 634 revisions, and preserves the exact 21 scenic source ids, all
@@ -159,7 +160,7 @@ switching and fresh-page reload. Two independent JSON imports cover matching
 signatures and atomic rejection of changed definitions; foreign signatures,
 missing saved revisions and malformed protected conversions reject without
 changing state, storage, RNG or UID. The generic retained-catalogue compatibility
-spec separately owns predecessor-proof selection, ambiguity, JSON order,
+specifications separately own predecessor-proof selection, ambiguity, JSON order,
 raw JSON bytes, bundled content and public-root rejection. These checks do not
 establish packaged, visual or device acceptance.
 
@@ -214,8 +215,15 @@ selects ordinary_expansion explicitly; the focused spec covers the strategic def
 These staged boundaries establish no full-suite, long-run balance, performance or device
 acceptance claim.
 
-retained-catalogue-compatibility.spec.js authors two independent native estuary and
-upland transitions with different retained/fresh revisions, worlds and defaults.
+The retained-catalogue-compatibility-estuary-*.spec.js and
+retained-catalogue-compatibility-upland-*.spec.js specifications author independent
+native transitions with different retained/fresh revisions, worlds and defaults.
+Each configuration has separate journeys, mutations and admission specifications.
+Their bounded retained-catalogue-compatibility.js leaf derives a fresh predecessor
+per group; only the journey group prepares the normal retained re-save.
+The parent retained-catalogue-compatibility.spec.js owns the standard empty-signature
+and selected-source rollback control exactly once. Every specification registers
+the original focused runtime inputs.
 Both import actual ordinary JSON overlays through Mods and enable bundled
 overlays, create predecessor envelopes with their actual signatures, spend
 resources and convert an ordinary scenic region. Cases cover pure direct
@@ -1327,7 +1335,7 @@ story-placement.spec.js covers story cards placed inside their Deeds sections. I
 
 Scenery integration repair coverage
 
-634-scenery-revisions.spec.js also creates real persisted-JSON predecessor campaigns in 476 and 867, retains spent resources through the unrelated 634 addition, reloads ordinary re-saves, and rejects missing revisions or changed unrelated definitions after a successful cached proof. bookmark-composition-native.spec.js preserves the frozen source fixtures and checks original-principal publication against candidate stories while the live registry lacks them. Its withheld-476 case verifies native tenure references, strict explicit/detached validation, unknown-id rejection and purity. protected-scenery.spec.js explicitly selects the ordinary retained baseline for its stale-quote transaction scenario. 634-rulers.spec.js verifies all three offered rulers and explicitly selects core_identities_v3 for the earlier Umar and Heraclius personal programs. retained-catalogue-compatibility.spec.js identifies its own declarations by owner instead of assuming no native transitions exist.
+634-scenery-revisions.spec.js also creates real persisted-JSON predecessor campaigns in 476 and 867, retains spent resources through the unrelated 634 addition, reloads ordinary re-saves, and rejects missing revisions or changed unrelated definitions after a successful cached proof. bookmark-composition-native.spec.js preserves the frozen source fixtures and checks original-principal publication against candidate stories while the live registry lacks them. Its withheld-476 case verifies native tenure references, strict explicit/detached validation, unknown-id rejection and purity. protected-scenery.spec.js explicitly selects the ordinary retained baseline for its stale-quote transaction scenario. 634-rulers.spec.js verifies all three offered rulers and explicitly selects core_identities_v3 for the earlier Umar and Heraclius personal programs. The retained-catalogue-compatibility specifications identify their own declarations by owner instead of assuming no native transitions exist.
 
 Regional literal extraction
 
