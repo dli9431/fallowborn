@@ -403,10 +403,8 @@
         paid:recipe.workPrice,payer:copy(payer(s,request.actor)),waterClaimId:claim,waterPeriod:claim === null ? null : FB.siteResources.snapshot(t,a.countyId,a.siteId).find(function (row) { return row.id === a.sourceId; }).period,status:'reserved',openedTurn:s.turn,closedTurn:null,workTurns:[]});
     } else if (request.operation === 'work') batch.workTurns.push(s.turn);
     else if (request.operation === 'cancel') {
-      if (q.water && q.water.allowed) {
-        var release = FB.siteResources.quote(t,{operation:'release',sourceId:a.sourceId,actor:request.actor,reservationId:batch.waterClaimId});
-        if (release.allowed && !FB.siteResources.commit(t,release)) return false;
-      }
+      // Expired claims are inactive history; only a still-live reviewed claim is released.
+      if (q.water && q.water.allowed && !FB.siteResources.commit(t,q.water)) return false;
       batch.status = 'cancelled'; batch.closedTurn = s.turn;
     } else {
       if (q.water && !FB.siteResources.commit(t,q.water)) return false;
@@ -677,7 +675,8 @@
             b.status === 'committed' && periodDays && Math.floor(b.closedTurn/periodDays) !== b.waterPeriod) fail();
         var sourceState=s.siteResources.sources[site.sourceId];
         var claim=sourceState && sourceState.period===b.waterPeriod && sourceState.reservations.find(function(c){return c.id===b.waterClaimId;});
-        if (claim && (b.status!=='reserved' || claim.amount!==recipe.water || !eq(claim.actor,b.actor) || claim.characterId!==b.workerId || claim.generation!==b.generation)) fail();
+        var currentPeriod=periodDays ? Math.floor(s.turn/periodDays) : null;
+        if (claim && (b.status!=='reserved' && b.waterPeriod===currentPeriod || claim.amount!==recipe.water || !eq(claim.actor,b.actor) || claim.characterId!==b.workerId || claim.generation!==b.generation)) fail();
         claims[waterKey]=true;
       } else if (b.waterClaimId !== null || b.waterPeriod !== null) fail();
       var amounts={},inputIds={};

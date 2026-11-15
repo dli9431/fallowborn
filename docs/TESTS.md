@@ -1,5 +1,7 @@
 Autumn 634 selection and core identity coverage
 
+production-water-expiry.spec.js checks paid batch cancellation before, at and after renewable water expiry, retained source history, no refund or output, released material availability, repeated cancellation purity and exact matching restores. Current and retained expired claims still reject altered quantity, actor, worker or generation; a cancelled batch cannot retain a live claim.
+
 634-activation.spec.js checks the selected core_courts_v4 world through the
 ordinary picker with review enabled and disabled, all nine approved start codes
 and direct construction, and Observe without personal enrollment. It verifies
