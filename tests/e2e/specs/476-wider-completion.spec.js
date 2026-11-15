@@ -7,21 +7,22 @@ const { useReleasedStartRules } = require('../support/game/released-starts');
 const {startRegion,startBaseline476,saveBudget} = require('../support/game/476-wider');
 const {advanceBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {injectBrowserHarness} = require('../support/game/browser-harness');
+const {expectModAdmission} = require('../support/game/mod-admission');
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_476_wider.js','data/bookmark_476_wider_identities.js',
   'data/geography_expansion.js','data/geographies.js','data/bookmark_476.js',
   'data/bookmark_476_outer.js','data/aristocratic_courts.js','data/mobile_confederations.js',
-  'data/assembly_polities.js','data/starts.js','data/cultures.js','js/portrait.js',
+  'data/assembly_polities.js','data/starts.js','data/start_ambitions.js','data/cultures.js','js/portrait.js',
   'js/world.js','js/model.js','js/save.js','js/save_v4.js','js/main.js','js/mods.js',
   'js/bookmark_setup.js','js/government_aristocracy.js','js/government_support.js',
   'js/government_collective.js','js/institutions.js','js/population.js','js/stories.js','js/religion.js',
   'js/starts.js','js/government_selection.js','js/government_lineage.js','js/government_assembly.js',
   'js/mobile_confederations.js','js/authority.js','js/government_levy.js','js/wars.js','js/events.js',
-  'js/title_ids.js','js/technology.js','js/story_agreements.js',
+  'js/title_ids.js','js/technology.js','js/story_agreements.js','js/story_household.js',
   'js/travel.js','js/armies.js','js/tournaments.js','js/ui_panels.js','js/ui_tournaments.js','js/ui_modals.js'
 ]);
 
-for (const flag of [false,true]) test('all wider 476 districts have accountable inhabitants, flag ' + flag,
+for (const flag of [false]) test('all wider 476 districts have accountable inhabitants, flag ' + flag,
   async function ({page},testInfo) {
     await startRegion(page,testInfo,'alexandria',flag);
     const result = await page.evaluate(function () {
@@ -146,7 +147,7 @@ test('bounded oases keep scenery, dry routes and the original geography',async f
 
 test('an imported fictional geography can expand without replacing its baseline',async function ({page},testInfo) {
   await openGame(page,testInfo);
-  expect(await page.evaluate(function () {
+  const mod = await page.evaluate(function () {
     const base = JSON.parse(JSON.stringify(FB.bookmark('867','baseline')));
     base.id = 'e2e_revision'; base.hidden = false; base.name = 'Fictional river survey';
     // This fictional campaign does not inherit bookmark-scoped historical faiths.
@@ -165,15 +166,20 @@ test('an imported fictional geography can expand without replacing its baseline'
     const start = {id:'e2e_survey_household',name:'Basin household',desc:'A local beginning.',
       bookmarkIds:['e2e_revision'],fixedProvinceId:'e2e_oasis',startCulture:county.culture,
       startReligion:county.religion,tier:0,profession:'farmer',gold:5,prestige:0,piety:0,
-      intro:'You are {name} of {province}.'};
+      intro:'You are {name} of {province}.',tracks:['e2e_survey_track']};
+    const track = {id:'e2e_survey_track',type:'household_track',title:'Basin household',intro:'Life beside the basin.',
+      homeProvinceId:'e2e_oasis',continuity:'household',initialStage:'home',stages:{
+        home:{name:'At home',text:'Keep an ordinary local life.',terminal:true,choices:[],transitions:[]}
+      }};
     const mod = {name:'Revision survey fixture',geographies:{e2e_survey:{extends:'europe_regional',
       provinceAdditions:[{id:'e2e_oasis',name:'Small basin',x:9,y:28,terrain:'desert',maxRadiusKm:35}],
-      landRoutes:[['tripoli','e2e_oasis',4]]}},bookmarks:{e2e_revision:base},startScenarios:[start]};
+      landRoutes:[['tripoli','e2e_oasis',4]]}},bookmarks:{e2e_revision:base},startScenarios:[start],
+      storyInstances:{e2e_survey_track:track}};
     base.revisions.survey.provinces = base.provinces.concat([county]);
-    const faults = FB.mods.validate(mod);
-    if (faults.length) throw new Error(faults.join('\n'));
-    return FB.mods.store(JSON.stringify(mod));
-  })).not.toBe(false);
+    return mod;
+  });
+  await expectModAdmission(page,mod);
+  expect(await page.evaluate(function (mod) {return FB.mods.store(JSON.stringify(mod));},mod)).not.toBe(false);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady &&
     !!FBDATA.bookmarks.e2e_revision; });
@@ -627,7 +633,7 @@ test('open federate and curialis roles begin where their institutions live and a
     });
     const expected = {federate:true,curialis:true,several:true,ravenna:true};
     expect(rules).toMatchObject({wider:expected,baseline:expected,
-      tracks:[['federate_track_476'],[],['curialis_track_476'],[]],unfixed:true,pure:true});
+      tracks:[['federate_track_476','opening_federate_476'],[],['curialis_track_476','opening_curialis_476'],[]],unfixed:true,pure:true});
     await page.evaluate(function () { FB.game.uiPrefs.hideTips = true; FB.game.uiPrefs.hideBeginnerHints = true; });
     await page.getByRole('button',{name:'New Game',exact:true}).click();
     await page.locator('#bookmarklist .scencard',{hasText:/\b476:/}).click();

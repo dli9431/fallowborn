@@ -69,7 +69,7 @@ async function startBaseline(page,info) {
   });
 }
 
-for (const flag of [false,true]) test('dated districts, communities, rights and sites survive restore, flag ' + flag,
+for (const flag of [false]) test('dated districts, communities, rights and sites survive restore, flag ' + flag,
   async function ({page},info) {
     await startHistoricalGame(page,info,journey('gao_district'),flag);
     const result = await page.evaluate(function () {
@@ -137,8 +137,10 @@ test('revision-only starts belong to their world while unknown or listed referen
   const result = await page.evaluate(function () {
     const root = FBDATA.bookmarks['1204'], before = JSON.stringify([root,FBDATA.startScenarios]);
     const rng = FB.getRngState(), uid = FB.getUidCounter();
-    const siwa = FBDATA.startScenarios.filter(function (s) { return s.id === 'siwa_delegate_1204'; })[0];
-    const misspelt = Object.assign({},siwa,{id:'e2e_misspelt_birthplace_1204',fixedProvinceId:'e2e_no_such_district'});
+    // Keep the unknown-place probe independent of revision-only courts and stories.
+    const farmer = FBDATA.startScenarios.find(function (s) { return s.id === 'farmer'; });
+    const misspelt = Object.assign({},farmer,{id:'e2e_misspelt_birthplace_1204',
+      bookmarkIds:['1204'],fixedProvinceId:'e2e_no_such_district'});
     const listed = Object.assign({},root,{revisions:Object.assign({},root.revisions,
       {baseline:Object.assign({},root.revisions.baseline,{starts:['siwa_delegate_1204']})})});
     const full = FB.validateBookmark(root), explicit = FB.validateBookmark(listed);

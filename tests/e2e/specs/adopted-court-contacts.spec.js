@@ -38,11 +38,13 @@ test('an imported profile resolves the adopted court child once and retains that
     const retained = record === JSON.stringify(FB.state.stories.adopted_contact_proof);
     FB.killChar(FB.state, FB.state.chars[contact]); FB.openingGoals.start(FB.state);
     const people = story.people(FB.state,FB.state.stories.adopted_contact_proof);
-    return { compactRemoved:!s.realms.player.succession, resolved:resolved, missing:missing, unchanged:unchanged,
+    return { compactRemoved:!s.realms.player.succession.members && !child.royalLine && !me.royalLine,
+      succession:s.realms.player.succession, resolved:resolved, missing:missing, unchanged:unchanged,
       pure:pure, retained:retained, deadLink:FB.state.stories.adopted_contact_proof.contacts.child === contact &&
         people[0].characterId === contact && !!people[0].reason,
       noFriend:!(FB.state.player.friendContacts || {})[contact] };
   });
-  expect(result).toEqual({ compactRemoved:true, resolved:true, missing:true, unchanged:true,
+  expect(result).toEqual({ compactRemoved:true, succession:{playerDynasty:true,rulerGeneration:1,heirCharId:null},
+    resolved:true, missing:true, unchanged:true,
     pure:true, retained:true, deadLink:true, noFriend:true });
 });

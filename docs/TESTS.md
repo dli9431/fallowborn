@@ -1596,3 +1596,18 @@ reserves, and staged seasonal expiry advances the matching calendar date.
 The river import scopes its parent-output profile to its renamed farm enterprise;
 the foundation scenario stages the county under its existing generated sovereign
 before checking lawful construction and conservation.
+
+Historical opening regressions distinguish the standard preset's wider family
+from maintained household members, retain exact player-dynasty succession
+metadata after court adoption, and compare guarded-party restores through the
+detached decoded facts. Missing current attachment records reject purely;
+genuinely legacy controls omit both provenance markers and retain absent tracks.
+The fictional geography import declares its fixed-home household track and
+checks detached mod admission before publication. Exact Ravenna role attachment
+lists include their companion opening profiles. AI baseline cases select neutral
+policies for every family and an explicit generation-matching aim where needed.
+Ravenna's goal-boundary case imports a fixed craft routine through Mods and
+checks four paid days below the goal and completion on the fifth, with exact
+private income and no goal reward. Native craft payments keep separate coverage.
+Office disclosures open conditionally, and abbey return checks retain keyboard
+focus and nonzero scroll positions at phone and desktop widths.

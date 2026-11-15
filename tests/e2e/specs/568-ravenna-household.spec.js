@@ -1,7 +1,8 @@
 'use strict';
 const {test,expect} = require('../support/fixture');
-const {openGame} = require('../support/game/navigation');
-const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {openGame,prepareGameContent} = require('../support/game/navigation');
+const {beginBookmark,beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {expectModAdmission} = require('../support/game/mod-admission');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -14,8 +15,8 @@ dependsOnRuntime(__filename,[
   'data/communal_revisions.js','data/eras.js','data/technology.js',
   'js/story_household.js','js/story_opening_goals.js','js/stories.js','js/starts.js',
   'js/bookmark_setup.js','js/actions.js','js/travel.js','js/events.js','js/economy.js',
-  'js/main.js','js/world.js','js/model.js','js/save.js','js/save_v4.js',
-  'js/i18n.js','js/ui_misc.js','js/ui_panels.js'
+  'js/main.js','js/world.js','js/model.js','js/mods.js','js/save.js','js/save_v4.js',
+  'js/i18n.js','js/ui_misc.js','js/ui_panels.js','js/ui_modals.js'
 ]);
 
 const ID = 'ravenna_household_track_568';
@@ -95,19 +96,34 @@ test('supplies charge once and selecting craft work does not certify paid work',
 });
 
 test('goals distinguish a reserve from actual earnings and pay no reward', async function ({page},info) {
-  await beginBookmark(page,info,'568','ravenna_household_568');
+  await openGame(page,info);
+  const mod = {name:'Ravenna household fixed craft income',
+    focusRoutines:{craft_work:[{kind:'resource',resource:'gold',base:90}]}};
+  await expectModAdmission(page,mod);
+  await page.evaluate(function () {FB.ui.showMods();});
+  await page.locator('#modfile').setInputFiles({name:'ravenna-craft-income.json',mimeType:'application/json',
+    buffer:Buffer.from(JSON.stringify(mod))});
+  await Promise.all([page.waitForEvent('load'),page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
+  await beginBookmarkFromTitle(page,'568','ravenna_household_568');
   expect(await choose(page,'seek_customers')).toBe(true);
   expect(await choose(page,'work_bench')).toBe(true);
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'opening_ravenna_568', profile = FB.stories.get(id), t = s.stories[id];
     s.player.gold = 25; profile.day(s,t);
     const reserve = t.goals.household_reserve.status, notEarned = t.goals.craft_income.status;
-    for (let day = 0; day < 30 && t.goals.craft_income.status === 'pending'; day++) { s.turn++; FB.tickFocus(s); }
+    for (let day = 0; day < 4; day++) {
+      s.date = FB.dateAtTurn(s,s.turn + 1); s.turn++; FB.tickFocus(s);
+    }
+    const beforeGoal = t.goals.craft_income.status, earningsBefore = t.earnings.craft_work;
+    s.date = FB.dateAtTurn(s,s.turn + 1); s.turn++; FB.tickFocus(s);
     const cash = s.player.gold, record = JSON.stringify(t);
     profile.day(s,t); profile.day(s,t);
     return {reserve:reserve,notEarned:notEarned,earned:t.goals.craft_income.status,
+      beforeGoal:beforeGoal,earningsBefore:earningsBefore,actual:cash - 25,recorded:t.earnings.craft_work,
       noReward:cash === s.player.gold,once:record === JSON.stringify(t)};
-  })).toEqual({reserve:'completed',notEarned:'pending',earned:'completed',noReward:true,once:true});
+  })).toEqual({reserve:'completed',notEarned:'pending',earned:'completed',beforeGoal:'pending',
+    earningsBefore:4,actual:5,recorded:5,noReward:true,once:true});
 });
 
 test('stale, poor and remote supply reviews preserve the purse and a free fallback', async function ({page},info) {
@@ -224,15 +240,25 @@ test('death and succession archive personal plans and hidden restore never initi
     s.player.charId = FB.householdMembers(s).find(function (c) { return c.id !== s.player.charId && !c.dead; }).id;
     FB.stories.get(id).day(s,s.stories[id]); FB.stories.get('opening_ravenna_568').day(s,s.stories.opening_ravenna_568);
     if (s.stories[id].phase !== 'interrupted' || s.stories.opening_ravenna_568.goals.craft_income.status !== 'archived') throw new Error('Personal plans survived succession');
+    const invalid = JSON.parse(JSON.stringify(saved));
+    delete invalid.state.stories[id]; delete invalid.state.stories.opening_ravenna_568;
+    const live = FB.state, before = JSON.stringify(live), rng = FB.getRngState(), uid = FB.getUidCounter();
+    let rejected = false;
+    try { FB.save.restore(invalid); } catch (error) { rejected = true; }
+    if (!rejected || FB.state !== live || before !== JSON.stringify(live) ||
+        rng !== FB.getRngState() || uid !== FB.getUidCounter()) throw new Error('Erased current attachments were accepted');
+    delete saved.storyAttachmentSchema; delete saved.state.start.storyAttachments;
     delete saved.state.stories[id]; delete saved.state.stories.opening_ravenna_568;
     FBDATA.bookmarks['568'].hidden = true;
     return JSON.stringify(saved);
   });
   await restoreBookmark(page,saved);
   expect(await page.evaluate(function () {
+    const saved = JSON.parse(FB.save.serialize());
     return {hidden:FB.bookmark('568').hidden,home:FB.state.player.provinceId,
+      legacy:!saved.storyAttachmentSchema && !saved.state.start.storyAttachments,
       absent:!FB.state.stories.ravenna_household_track_568 && !FB.state.stories.opening_ravenna_568};
-  })).toEqual({hidden:true,home:'ravenna',absent:true});
+  })).toEqual({hidden:true,home:'ravenna',legacy:true,absent:true});
 });
 
 test('the shared supply review cancels freely and confirms only one private purchase', async function ({page},info) {

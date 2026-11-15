@@ -1,6 +1,7 @@
 'use strict';
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
+const {installRestoreFacts}=require('../support/game/restore-facts');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -157,12 +158,14 @@ test('the shared personal review cancels without changing guard, money or decisi
 
 test('matching guarded and released saves retain depleted resources and reject erased or forged personal bindings',async function ({page},info) {
   await begin(page,info,'direct');
+  await installRestoreFacts(page);
   expect(await page.evaluate(function (ids) {
     let s=FB.state;const M=FB.mobile,r=M.row(s,ids.following),original=s.player.charId;
     s.player.gold=2;r.camps.entries[0].food-=7;s.realms[ids.following].treasury.gold-=3;
     FB.stories.apply(s,ids.track,'postpone',FB.stories.quote(s,ids.track,'postpone'));
-    function material(s) {return JSON.stringify([s.start,s.player,s.chars,s.stories,s.realms,
-      Object.assign({},s.authority,{schema:undefined}),s.armies,s.bookmarkSetup]);}
+    function material(s) {return window.restoreFacts(s,function (d) {
+      return [d.start,d.player,d.chars,d.stories,d.realms,d.authority,d.armies,d.bookmarkSetup];
+    });}
     const before=material(s),save=JSON.parse(FB.save.serialize());FB.save.restore(save);s=FB.state;
     const guarded=before===material(s),stable=s,rng=FB.getRngState(),uid=FB.getUidCounter();
     const rejected=[function (s) {delete s.start.originalPrincipal;},function (s) {s.start.originalPrincipal.actorId='other';},
@@ -224,7 +227,7 @@ test('the fictional rural site uses actual farm property and contextual reviews 
     const story=JSON.stringify(s.stories);FB.save.restore(JSON.parse(FB.save.serialize()));s=FB.state;
     return {site:site.site,physical:FB.provinceAtGrid(site.x,site.y).id,slot:s.player.homeSettlement,
       plot:FB.landPlots(s).map(function (p) {return [p.provinceId,p.settlement];}),
-      family:FB.householdMembers(s).length>1,choices:choices,actualWar:actualWar,noIncident:noIncident,
+      family:FB.familyTreeMembers(s).length>1,choices:choices,actualWar:actualWar,noIncident:noIncident,
       unchanged:unchanged,phase:s.stories[id].phase,retained:story===JSON.stringify(s.stories),
       noOffice:!s.start.originalPrincipal && !s.realms.player};
   })).toEqual({site:'royal_heartland_farm_1241',physical:'szekesfehervar',slot:1,plot:[['szekesfehervar',1]],

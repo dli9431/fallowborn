@@ -15,7 +15,7 @@ dependsOnRuntime(__filename,[
   'data/story_instances.js','data/settlements.js','data/settlements_real.js',
   'js/story_household.js','js/story_opening_goals.js','js/stories.js','js/starts.js',
   'js/bookmark_setup.js','js/actions.js','js/travel.js','js/events.js','js/wars.js',
-  'js/main.js','js/world.js','js/model.js','js/save.js','js/save_v4.js',
+  'js/main.js','js/world.js','js/model.js','js/economy.js','js/save.js','js/save_v4.js',
   'js/ui_misc.js','js/ui_panels.js'
 ]);
 
@@ -62,7 +62,7 @@ test('the fictional farm has a complete place-bound story and ordinary farmer pr
     const physical = FB.provinceAtGrid(site.x,site.y);
     return {phase:s.stories.hungarian_village_track_1241.phase,home:s.player.provinceId,
       age:FB.ageOf(c,s.date.year),identity:[c.culture,c.religion],profession:s.player.profession,
-      gold:s.player.gold,family:FB.householdMembers(s).length > 1,
+      gold:s.player.gold,family:FB.familyTreeMembers(s).length > 1,
       plots:FB.landPlots(s).map(function (r) { return [r.provinceId,r.settlement]; }),
       physical:physical && physical.id,noContract:!s.stories.hungarian_village_track_1241.jobs,
       goals:Object.keys(s.stories.opening_hungarian_village_1241.goals).length,errors:FBTEST.checkInvariants()};
@@ -243,20 +243,33 @@ test('death and succession archive the personal opening and hidden restore creat
     s.player.dead = true; FB.stories.get(id).day(s,s.stories[id]); FB.stories.get(goals).day(s,s.stories[goals]);
     if (s.stories[id].phase !== 'interrupted' || s.stories[goals].goals.farm_income.status !== 'archived') throw new Error('Death retained a personal opening');
     FB.save.restore(saved); s = FB.state;
-    s.player.charId = FB.householdMembers(s).find(function (c) { return c.id !== s.player.charId && !c.dead; }).id;
+    const heir = FB.familyTreeMembers(s).map(function (row) { return row.c; })
+      .find(function (c) { return !c.dead && c.role === 'sibling'; });
+    if (!heir) throw new Error('The ordinary family has no living sibling');
+    FB.game.die('A bounded succession fixture.'); FB.game.succeedTo(heir.id);
     FB.stories.get(id).day(s,s.stories[id]); FB.stories.get(goals).day(s,s.stories[goals]);
     if (s.stories[id].phase !== 'interrupted' || s.stories[goals].goals.farm_income.status !== 'archived') throw new Error('Succession inherited personal opening');
+    const invalid = JSON.parse(JSON.stringify(saved));
+    delete invalid.state.stories[id]; delete invalid.state.stories[goals];
+    const live = FB.state, before = JSON.stringify(live), rng = FB.getRngState(), uid = FB.getUidCounter();
+    let rejected = false;
+    try { FB.save.restore(invalid); } catch (error) { rejected = true; }
+    if (!rejected || FB.state !== live || before !== JSON.stringify(live) ||
+        rng !== FB.getRngState() || uid !== FB.getUidCounter()) throw new Error('Erased current attachments were accepted');
     // A legacy campaign without an attachment manifest may lack optional tracks.
     // Manifest-bearing current saves must instead reject erased original records.
     delete saved.state.start.storyAttachments;
+    delete saved.storyAttachmentSchema;
     delete saved.state.stories[id]; delete saved.state.stories[goals];
     FBDATA.bookmarks['1241'].hidden = true; return JSON.stringify(saved);
   });
   await restoreBookmark(page,saved);
   expect(await page.evaluate(function () {
+    const saved = JSON.parse(FB.save.serialize());
     return {hidden:FB.bookmark('1241').hidden,home:FB.state.player.provinceId,
+      legacy:!saved.storyAttachmentSchema && !saved.state.start.storyAttachments,
       absent:!FB.state.stories.hungarian_village_track_1241 && !FB.state.stories.opening_hungarian_village_1241};
-  })).toEqual({hidden:true,home:'szekesfehervar',absent:true});
+  })).toEqual({hidden:true,home:'szekesfehervar',legacy:true,absent:true});
 });
 
 test('the shared supply review cancels without payment and restores focus', async function ({page},info) {
