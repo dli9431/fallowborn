@@ -2,7 +2,9 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {expectModAdmission}=require('../support/game/mod-admission');
+const {installRestoreFacts}=require('../support/game/restore-facts');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/preparation-review-harbor.json'),
   upland:require('../fixtures/authoring/preparation-review-upland.json')};
@@ -12,10 +14,11 @@ dependsOnRuntime(__filename,['index.html','data/technology.js','data/mobile_conf
   'js/home_authority.js','js/treasury.js','js/market.js','js/population.js','js/federates.js',
   'js/governments.js','js/government_civic.js','js/government_selection.js','js/civic_transactions.js',
   'js/authority.js','js/world.js','js/starts.js','js/model.js','js/armies.js','js/mods.js',
-  'js/save.js','js/save_v4.js','js/main.js','js/ui_misc.js','js/ui_panels.js','js/i18n.js']);
+  'js/save.js','js/save_v4.js','js/bookmark_composition.js','js/main.js','js/ui_misc.js','js/ui_panels.js','js/i18n.js']);
 
 async function begin(page,info,label,modified) {
   await openGame(page,info);
+  await expectModAdmission(page,modified || examples[label]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles({name:'formation-review.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(modified || examples[label]))});
@@ -23,7 +26,8 @@ async function begin(page,info,label,modified) {
   const prefix=label==='harbor' ? 'harbor' : 'dune';
   await prepareGameContent(page);
   await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
   await page.evaluate(function (label) {
     FB.game.setPaused(true);
     window.reviewCase={id:label+'_formation_review',preparationId:label+'_preparation',
@@ -82,9 +86,10 @@ for (const label of ['harbor','upland']) {
     const result=await page.evaluate(function () {
       const C=reviewCase;
       function roundTrip() {
-        const before=JSON.stringify([FB.state.stories,FB.state.armies,FB.state.population,FB.state.realms,FB.state.chars]);
+        function facts(s) {return [s.stories,s.armies,s.population,s.realms,s.chars];}
+        const before=restoreFacts(FB.state,facts);
         FB.save.restore(JSON.parse(FB.save.serialize()));
-        return before===JSON.stringify([FB.state.stories,FB.state.armies,FB.state.population,FB.state.realms,FB.state.chars]);
+        return assertRestoreFacts(restoreFacts(FB.state,facts),before);
       }
       const waiting=roundTrip();C.turn(FB.state,2);const formed=C.form(FB.state),unobserved=roundTrip(),
         stillWaiting=FB.state.stories[C.id].status==='waiting';
@@ -197,10 +202,11 @@ test('a refusal disposition restores without retrying formation or acknowledgmen
     const C=reviewCase,s=FB.state,P=FB.expeditionPreparation,t=s.stories[C.preparationId],
       refused=P.commit(s,P.review(s,C.preparationId,'refuse',t.provider.characterId));
     C.module().day(s,s.stories[C.id]);
-    const before=JSON.stringify([s.stories,s.armies,s.population,s.realms]);
+    function facts(s) {return [s.stories,s.armies,s.population,s.realms];}
+    const before=restoreFacts(s,facts);
     FB.save.restore(JSON.parse(FB.save.serialize()));
     return refused && FB.state.stories[C.id].reason==='preparation_refused' &&
-      before===JSON.stringify([FB.state.stories,FB.state.armies,FB.state.population,FB.state.realms]);
+      assertRestoreFacts(restoreFacts(FB.state,facts),before);
   });
   expect(result).toBe(true);
 });

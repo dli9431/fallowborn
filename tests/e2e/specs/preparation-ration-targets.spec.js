@@ -3,7 +3,9 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {expectModAdmission}=require('../support/game/mod-admission');
+const {installRestoreFacts}=require('../support/game/restore-facts');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/ration-preparation-harbor.json'),
   upland:require('../fixtures/authoring/ration-preparation-upland.json')};
@@ -12,10 +14,12 @@ dependsOnRuntime(__filename,['index.html','data/technology.js','data/units.js','
   'js/logistics.js','js/climate.js','js/technology.js','js/treasury.js','js/home_authority.js','js/market.js',
   'js/population.js','js/federates.js','js/armies.js','js/authority.js','js/governments.js','js/bookmark_setup.js',
   'js/world.js','js/mods.js','js/starts.js','js/stories.js','js/model.js','js/government_selection.js',
-  'js/justice.js','js/intrigue.js','js/main.js','js/save.js','js/save_v4.js']);
+  'js/justice.js','js/intrigue.js','js/main.js','js/save.js','js/save_v4.js','js/bookmark_composition.js']);
 
 async function begin(page,info,label,fixed,source) {
+  const input=source || require('../fixtures/authoring/'+(fixed ? 'mobile-preparation-' : 'ration-preparation-')+label+'.json');
   await openGame(page,info);
+  await expectModAdmission(page,input);
   await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(source ? {name:'exact-preparation-'+label+'.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(source))} : path.resolve(__dirname,'../fixtures/authoring/'+
@@ -24,7 +28,8 @@ async function begin(page,info,label,fixed,source) {
   const prefix=label==='harbor' ? 'harbor' : 'dune';
   await prepareGameContent(page);
   await page.waitForFunction(function(prefix){return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+  await installRestoreFacts(page);
   await page.evaluate(function(input){
     window.rationCase={id:input.label+'_preparation',rid:input.prefix==='harbor' ? 'harbor_following' : 'dune_coalition',
       origin:input.prefix==='harbor' ? 'harbor_quay' : 'dune_well',
@@ -35,10 +40,14 @@ async function begin(page,info,label,fixed,source) {
       authorize:function(s){const P=FB.expeditionPreparation;return P.commit(s,P.review(s,this.id,'authorize',this.record(s).provider.characterId));},
       grant:function(s){const P=FB.expeditionPreparation;return P.commit(s,P.review(s,this.id,'grant',this.record(s).provider.characterId));},
       form:function(s){const P=FB.expeditionPreparation;return P.commit(s,P.review(s,this.id,'form',this.leader(s)));},
-      facts:function(s){return JSON.stringify([this.record(s),s.realms,s.market,s.population,s.authority,s.armies,s.player.gold,s.realmTech]);},
+      facts:function(s){const id=this.id;return restoreFacts(s,function(t){
+        return [t.stories[id],t.realms,t.market,t.population,t.authority,t.armies,t.player.gold,t.realmTech];},{technologySets:true});},
       restore:function(){const before=this.facts(FB.state),save=JSON.parse(FB.save.serialize());
-        FB.save.restore(save);FB.save.restore(JSON.parse(JSON.stringify(save)));return before===this.facts(FB.state);}
+        FB.save.restore(save);assertRestoreFacts(this.facts(FB.state),before);
+        FB.save.restore(JSON.parse(JSON.stringify(save)));return assertRestoreFacts(this.facts(FB.state),before);}
     };
+    // Public grants spend the provider's real account, independently of gifts.
+    FB.state.realms[rationCase.record(FB.state).provider.realmId].treasury.gold=10000;
   },{label:label,prefix:prefix});
 }
 
@@ -202,8 +211,10 @@ for(const label of ['harbor','upland']) {
       host.men-=10;host.units[unit]-=10;M.losses(s,host,10);
       const other=FB.world.provs.find(function(p){return p.id!==C.origin && !p.wasteland;});host.at=other.id;
       s.date=FB.dateAtTurn(s,1);s.turn=1;
-      const stock=host.mobileFood,paid=FB.provisionArmy(s,host),changed=stock-host.mobileFood===paid;
-      return {formed:true,consumed:paid>0 && changed,valid:M.validate(s),restored:C.restore(),
+      const stock=host.mobileFood,camp=M.row(s,C.rid).food,daily=M.hostSupplySnapshot(s,host).daily,
+        paid=FB.provisionArmy(s,host),changed=host.mobileFood===stock-paid;
+      return {formed:true,consumed:paid>0 && paid===Math.min(stock,daily) && changed && M.row(s,C.rid).food===camp,
+        valid:M.validate(s),restored:C.restore(),
         original:before===JSON.stringify(C.record(FB.state).formed),once:!C.form(FB.state)};
     });
     expect(result).toEqual({formed:true,consumed:true,valid:true,restored:true,original:true,once:true});
