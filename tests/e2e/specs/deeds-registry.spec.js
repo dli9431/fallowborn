@@ -18,7 +18,7 @@ const { startParityGame } = require('../support/game/parity');
 const { waitForUiRefresh } = require('../support/game/ui');
 
 const COMMON_SECTIONS = [
-  'tutorial', 'stories', 'commitments', 'campaigns', 'holy_campaign',
+  'tutorial', 'commitments', 'campaigns', 'holy_campaign',
   'household_summary', 'next_steps', 'focus'
 ];
 // Ungated government sections are available everywhere; empty ones render no heading.

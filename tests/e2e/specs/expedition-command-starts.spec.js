@@ -8,7 +8,7 @@ const examples={harbor:require('../fixtures/authoring/expedition-command-harbor.
   dune:require('../fixtures/authoring/expedition-command-dune.json')};
 
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/eras.js',
-  'js/main.js','js/starts.js','js/world.js','js/bookmark_setup.js','js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js',
+  'js/main.js','js/util.js','js/starts.js','js/world.js','js/bookmark_setup.js','js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js',
   'js/mods.js','js/model.js','js/station.js','js/governments.js','js/government_selection.js',
   'js/government_continuity.js','js/government_support.js','js/authority.js','js/federates.js',
   'js/population.js','js/market.js','js/treasury.js','js/home_authority.js', 'js/armies.js','js/fortifications.js',
@@ -117,6 +117,8 @@ for (const prefix of ['harbor','dune']) {
 
   test(prefix+' command start replays its exact people, resources and opening from its code',async function ({page},info) {
     await importExample(page,info,prefix);
+    // Hold the browser-profile onboarding precondition constant for both lives.
+    await page.evaluate(function () {FB.game.uiPrefs.onboardingStarted=true;FB.game.saveUiPrefs();});
     await beginCommand(page,prefix);
     async function snapshot() {
       return page.evaluate(function () {
@@ -126,7 +128,11 @@ for (const prefix of ['harbor','dune']) {
       });
     }
     const first=await snapshot();
-    await page.evaluate(function () {FB.ui.closeModal();FB.ui.showScreen('title');});
+    await page.evaluate(function () {
+      FB.ui.closeModal();FB.ui.showScreen('title');
+      // A previous campaign's identity allocations cannot affect code replay.
+      FB.uid();FB.uid();
+    });
     await beginCommand(page,prefix);
     expect(await snapshot()).toBe(first);
   });
