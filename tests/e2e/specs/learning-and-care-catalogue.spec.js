@@ -28,7 +28,8 @@ async function prepareLord(page, imported) {
   if (imported) {
     await page.evaluate(function () { FB.ui.showMods(); });
     await page.locator('#modfile').setInputFiles(importPath);
-    await page.locator('#mod-apply').click();
+    await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }),
+      page.locator('#mod-apply').click()]);
     await prepareGameContent(page);
     await page.waitForFunction(function () {
       return FB.game.bootReady && !!FBDATA.buildings.review_manuscript_room;
@@ -396,7 +397,8 @@ test('ordinary imported facilities differ in knowledge, payment, research and ca
   changed.buildings.review_manuscript_room.research = 0.75;
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modpaste').fill(JSON.stringify(changed));
-  await page.locator('#mod-apply').click();
+  await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }),
+    page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return FB.game.bootReady && FBDATA.buildings.review_manuscript_room.research===0.75; });
   const mismatch = await page.evaluate(function (saved) {
