@@ -1,7 +1,8 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { startParityGame } = require('../support/game/parity');
+const { startParityGame, FRESH_JOURNEYS } = require('../support/game/parity');
+const { installRestoreFacts } = require('../support/game/restore-facts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
@@ -15,10 +16,19 @@ dependsOnRuntime(__filename, [
   'js/world.js', 'js/model.js', 'js/mods.js', 'js/main.js', 'js/institutions.js',
   'js/progression.js', 'js/religion.js', 'js/authority.js', 'js/politics.js',
   'js/stories.js', 'js/story_courts.js', 'js/systems.js', 'js/bookmark_setup.js',
-  'js/save.js', 'js/save_v4.js', 'js/technology.js'
+  'js/bookmark_composition.js', 'js/save.js', 'js/save_v4.js', 'js/technology.js'
 ]);
 
-const REVIEW_CODE = 'SIBLING-sibling_review-sibling_commoner-ravenna-m-Marcus-standard-0-roman.nicene';
+const CIVIC_CODE = FRESH_JOURNEYS.find(function (row) { return row.id === 'fresh-476-curialis_476'; }).code;
+async function reviewCode(page) {
+  const county = await page.evaluate(function () {
+    const bm = FB.bookmark('sibling_review');
+    const scenario = FBDATA.startScenarios.find(function (s) { return s.id === 'sibling_commoner'; });
+    return bm.provinces.find(function (p) { return FB.startProvinceAllowed(scenario,bm,p.id); }).id;
+  });
+  return CIVIC_CODE.replace('PARITY-476-curialis_476-ravenna-',
+    'SIBLING-sibling_review-sibling_commoner-' + county + '-');
+}
 
 test('data-only starts accept an empty track list and reject malformed or unknown tracks atomically',
   async function ({ page }, testInfo) {
@@ -108,7 +118,7 @@ async function beginReview(page) {
   await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showScreen('title'); });
   await chooseDate(page);
   await page.locator('#btn-bm-seed').click();
-  await page.locator('#ng-seed').fill(REVIEW_CODE);
+  await page.locator('#ng-seed').fill(await reviewCode(page));
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
@@ -137,7 +147,7 @@ test('hidden bookmarks reject picker, start codes, Quick Start, direct creation 
     await expect(page.locator('#bookmarklist button').filter({ hasText:'Sibling review' })).toHaveCount(0);
     await expect(page.locator('[data-quick-start="osric_867"]')).toHaveCount(0);
     await page.locator('#btn-bm-seed').click();
-    await page.locator('#ng-seed').fill(REVIEW_CODE);
+    await page.locator('#ng-seed').fill(await reviewCode(page));
     await page.locator('#ng-seed').press('Enter');
     await expect(page.locator('#ng-seed-err')).toContainText('hidden for new campaigns');
     await page.locator('#ng-cancel').click();
@@ -165,7 +175,7 @@ test('data-only institutions remain independent across activation orders and mat
   async function ({ page }, testInfo) {
     test.setTimeout(120 * 1000);
     await startParityGame(page, testInfo, {
-      bookmark:'476', code:'PLATFORM-476-curialis_476-ravenna-m-Marcus'
+      bookmark:'476', code:CIVIC_CODE
     });
     const original = await page.evaluate(function () { return FB.save.serialize(); });
     expect(await registerReview(page, false)).toEqual([]);
@@ -183,6 +193,7 @@ test('data-only institutions remain independent across activation orders and mat
     });
     expect(facts).toEqual({ rome:'Roman reviewer', born:453, role:'priest', learning:12,
       east:'Eastern reviewer', vacant:true, isolated:true, cast:true, opening:true, catalogue:'Simplicius' });
+    await installRestoreFacts(page);
     const saved = await page.evaluate(function () {
       const s = FB.state;
       FB.localInstitutionSettle(s, 'milan_council', { kind:'realm', id:'italy' },
@@ -209,9 +220,9 @@ test('data-only institutions remain independent across activation orders and mat
     const restored = await page.evaluate(function (json) {
       const before = JSON.parse(json).state, s = FB.state;
       FB.ensureLocalInstitutions(s); FB.ensureLocalInstitutions(s);
-      return { ledger:JSON.stringify(s.localInstitutions) === JSON.stringify(before.localInstitutions),
-        vacancies:JSON.stringify(s.religiousHeadVacancies) === JSON.stringify(before.religiousHeadVacancies),
-        heads:JSON.stringify(s.religiousHeads) === JSON.stringify(before.religiousHeads),
+      return { ledger:restoreFacts(s,function (v) { return v.localInstitutions; }) === restoreFacts(before,function (v) { return v.localInstitutions; }),
+        vacancies:restoreFacts(s,function (v) { return v.religiousHeadVacancies; }) === restoreFacts(before,function (v) { return v.religiousHeadVacancies; }),
+        heads:restoreFacts(s,function (v) { return v.religiousHeads; }) === restoreFacts(before,function (v) { return v.religiousHeads; }),
         dead:s.chars[s.localInstitutions.rome_see.representativeId].dead,
         east:FB.religiousOfficeSnapshot(s, 'constantinople_patriarch').name,
         error:FB.game.lastLoadError && FB.game.lastLoadError.message,
