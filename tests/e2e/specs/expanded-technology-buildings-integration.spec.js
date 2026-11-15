@@ -1,9 +1,9 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
-const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { installRestoreFacts } = require('../support/game/restore-facts');
 const { releasedCatalogue } = require('../support/released-catalogue');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const released = require('../fixtures/released-catalogue.json');
@@ -36,7 +36,7 @@ dependsOnRuntime(__filename, ['index.html'].concat(dataInputs, [
   'js/production_economy.js','js/building_seasons.js','js/building_institutions.js',
   'js/building_profiles.js','js/fort_profiles.js','js/siege_support.js','js/maritime_work.js',
   'js/relay_services.js','js/actions.js','js/world.js','js/mods.js','js/save.js','js/save_v4.js',
-  'js/main.js','js/starts.js','js/fortifications.js','js/lordships.js','js/settlement.js',
+  'js/bookmark_composition.js','js/main.js','js/starts.js','js/fortifications.js','js/lordships.js','js/settlement.js',
   'js/treasury.js','js/population.js','js/economy.js','js/market.js','js/armies.js',
   'js/wars.js','js/climate.js','js/institutions.js','js/religious_institutions.js',
   'js/religious_activities.js','js/abbeys.js','js/model.js','js/ui_modals.js'
@@ -84,6 +84,10 @@ test.beforeEach(async function ({ page }) {
 test('the full catalogue has one source per correction and an unchanged retained graph outside the approved corrections', async function ({ page }, info) {
   await openGame(page,info);
   const r = await page.evaluate(function () {
+    // Activation installs legacy defaults after admission; compare detached
+    // normalized definitions on both sides without changing the live catalogue.
+    const tech = JSON.parse(JSON.stringify(FBDATA.tech));
+    Object.keys(tech).forEach(function (id) { FB.normalizeTechDefinition(id,tech[id]); });
     const base = window.__expandedBase, counts = {}, owners = {}, stale = [], untouched = [];
     Object.keys(base.tech).forEach(function (id) { FB.normalizeTechDefinition(id,base.tech[id]); });
     Object.keys(FBDATA).filter(function (key) { return key.indexOf('techCorrections_') === 0; }).forEach(function (key) {
@@ -91,15 +95,15 @@ test('the full catalogue has one source per correction and an unchanged retained
       Object.keys(FBDATA[key]).forEach(function (id) {
         (owners[id] || (owners[id] = [])).push(key);
         const d = JSON.parse(JSON.stringify(FBDATA[key][id])); FB.normalizeTechDefinition(id,d);
-        if (JSON.stringify(d) !== JSON.stringify(FBDATA.tech[id])) stale.push(id);
+        if (FB.contentValues.canonical(d) !== FB.contentValues.canonical(tech[id])) stale.push(id);
       });
     });
     Object.keys(base.tech).forEach(function (id) {
-      if (!owners[id] && JSON.stringify(base.tech[id]) !== JSON.stringify(FBDATA.tech[id])) untouched.push(id);
+      if (!owners[id] && JSON.stringify(base.tech[id]) !== JSON.stringify(tech[id])) untouched.push(id);
     });
     const scalar = Object.keys(base.tech).filter(function (id) {
       return ['domain','cost','fx','capabilities'].some(function (key) {
-        return JSON.stringify(base.tech[id][key]) !== JSON.stringify(FBDATA.tech[id][key]);
+        return JSON.stringify(base.tech[id][key]) !== JSON.stringify(tech[id][key]);
       });
     });
     const buildingOwners = {},buildingChanges = [];
@@ -114,10 +118,10 @@ test('the full catalogue has one source per correction and an unchanged retained
     });
     const req = {}, reqAny = {};
     Object.keys(base.tech).forEach(function (id) {
-      if (JSON.stringify(base.tech[id].req) !== JSON.stringify(FBDATA.tech[id].req)) req[id] = FBDATA.tech[id].req;
-      if (JSON.stringify(base.tech[id].reqAny) !== JSON.stringify(FBDATA.tech[id].reqAny)) reqAny[id] = FBDATA.tech[id].reqAny;
+      if (JSON.stringify(base.tech[id].req) !== JSON.stringify(tech[id].req)) req[id] = tech[id].req;
+      if (JSON.stringify(base.tech[id].reqAny) !== JSON.stringify(tech[id].reqAny)) reqAny[id] = tech[id].reqAny;
     });
-    return {base:base,tech:FBDATA.tech,buildings:FBDATA.buildings,profiles:FBDATA.buildingProfiles,
+    return {base:base,tech:tech,buildings:FBDATA.buildings,profiles:FBDATA.buildingProfiles,
       counts:counts,owners:owners,buildingOwners:buildingOwners,buildingChanges:buildingChanges,
       stale:stale,untouched:untouched,scalar:scalar,req:req,reqAny:reqAny,
       caps:FBDATA.techCaps,grants:FBDATA.capabilities,forts:FBDATA.fortLevels,
@@ -240,6 +244,7 @@ for (const year of ['476','493','568','711','800','867','1066']) for (const revi
     await openGame(page,info);
     if (revision) await page.evaluate(function (id) { FBDATA.bookmarks[id].revision = 'baseline'; },year);
     await beginBookmark(page,info,year);
+    await installRestoreFacts(page);
     const before = await page.evaluate(function (ids) {
       const s = FB.state, table = FBDATA.tech, copy = JSON.parse(JSON.stringify(s)); copy.realmTech = {};
       const declarations = JSON.stringify([FBDATA.bookmarks,FBDATA.geographies]);
@@ -264,7 +269,7 @@ for (const year of ['476','493','568','711','800','867','1066']) for (const revi
         row.actualComplete = row.completed.filter(function (id) { return ids.indexOf(id)>=0; }).sort();
       });
       return {actual:actual,unchanged:table === FBDATA.tech && declarations === JSON.stringify([FBDATA.bookmarks,FBDATA.geographies]),
-        knowledge:JSON.parse(JSON.stringify(s.realmTech)),assets:JSON.parse(JSON.stringify(s.buildings)),save:FB.save.serialize()};
+        facts:restoreFacts(s,function (v) { return {knowledge:v.realmTech,assets:v.buildings}; },{technologySets:true}),save:FB.save.serialize()};
     },newIds);
     expect(before.unchanged).toBe(true); expect(before.actual.length).toBeGreaterThan(10);
     for (const realm of before.actual) {
@@ -276,8 +281,9 @@ for (const year of ['476','493','568','711','800','867','1066']) for (const revi
       }
     }
     await restoreBookmark(page,before.save);
-    expect(await page.evaluate(function () { return {knowledge:FB.state.realmTech,assets:FB.state.buildings}; }))
-      .toEqual({knowledge:before.knowledge,assets:before.assets});
+    expect(await page.evaluate(function () {
+      return restoreFacts(FB.state,function (v) { return {knowledge:v.realmTech,assets:v.buildings}; },{technologySets:true});
+    })).toBe(before.facts);
   });
 }
 
@@ -303,16 +309,29 @@ test('mixed traditions select one pair, break an emergence tie by widespread, an
 
 async function imported(page, info, kind, sector) {
   await openGame(page,info); await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/expanded-catalogue-' + kind + '.json'));
+  const source = JSON.parse(JSON.stringify(examples[kind]));
+  if (kind === 'river') {
+    // The composed farm has its own enterprise id, so give its typed producer
+    // an equally scoped profile through the ordinary JSON import.
+    const profile = await page.evaluate(function () { return FBDATA.productionProducerProfiles.shieling_parent_allocation; });
+    profile.enterpriseType = 'river_pasture_field_strip';
+    source.productionProducerProfiles.river_pasture_parent_allocation = profile;
+    source.bookmarks.expanded_river.productionProducerAssignments.find(function (a) {
+      return a.id === 'river_pasture_parent_share';
+    }).profileId = 'river_pasture_parent_allocation';
+  }
+  expect(await page.evaluate(function (candidate) { return FB.mods.validate(candidate); },source)).toEqual([]);
+  await page.locator('#modfile').setInputFiles({name:'expanded-catalogue-'+kind+'.json',mimeType:'application/json',
+    buffer:Buffer.from(JSON.stringify(source))});
   await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
-  const source = examples[kind], world = 'expanded_' + kind;
+  const world = 'expanded_' + kind;
   const scenario = source.startScenarios.find(function (s) { return s.id.indexOf(kind+'_'+sector+'_') === 0 && !!s.rulerRealmId; });
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click(); else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();
-  await page.locator('#ng-seed').fill('EXPANDED-'+world+'-'+scenario.id+'-'+scenario.fixedProvinceId+'-'+(scenario.sex || 'm')+'-Review-standard');
+  await page.locator('#ng-seed').fill('EXPANDED-'+world+'-'+scenario.id+'-'+scenario.fixedProvinceId+'-'+(scenario.sex || 'm')+'-'+scenario.characterName.replace(/\s+/g,'_')+'-standard');
   await page.locator('#ng-seed').press('Enter'); await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
@@ -321,6 +340,7 @@ async function imported(page, info, kind, sector) {
     FB.game.uiPrefs.hideTips = true; FB.game.uiPrefs.hideBeginnerHints = true;
     FB.state.player.gold = 10000;
   });
+  await installRestoreFacts(page);
 }
 
 for (const kind of ['river','upland']) {
@@ -339,9 +359,10 @@ for (const kind of ['river','upland']) {
       const done = O.commit(s,q),again = O.commit(s,q),active = FB.buildingBonusAt(s,a.countyId,a.slot,field);
       const competing = kind==='river' ? O.quote(s,Object.assign({},req,{buildingId:'qanat_waterworks'})).allowed : false;
       O.validate(s); FB.production.validate(s);
-      const saved = JSON.parse(FB.save.serialize()),facts = JSON.stringify([s.siteResources,s.buildingOperations,s.production,s.buildings]);
+      const project = function (v) { return [v.siteResources,v.buildingOperations,v.production,v.buildings]; };
+      const saved = JSON.parse(FB.save.serialize()),facts = restoreFacts(s,project);
       FB.save.restore(saved); const t = FB.state;
-      const same = facts===JSON.stringify([t.siteResources,t.buildingOperations,t.production,t.buildings]);
+      const same = assertRestoreFacts(restoreFacts(t,project),facts);
       const corruptions = [function (v) { delete v.buildingOperations; },function (v) { delete v.siteResources; },
         function (v) { const key = Object.keys(v.buildingOperations.receipts)[0]; v.buildingOperations.receipts[key].amount++; },
         function (v) { v.production.lots[0].remaining = v.production.lots[0].quantity+1; },
@@ -354,7 +375,7 @@ for (const kind of ['river','upland']) {
       return {protectedFunds:protectedFunds,idle:idle,done:done,again:again,active:active,competing:competing,
         paid:gold-account.gold,cost:q.cost,same:same,rejected:rejected,expired:FB.buildingBonusAt(t,a.countyId,a.slot,field),
         private:privateGold===t.player.gold,people:people===JSON.stringify(t.population),
-        property:JSON.stringify(s.buildings)===JSON.stringify(t.buildings)};
+        property:FB.contentValues.canonical(s.buildings)===FB.contentValues.canonical(t.buildings)};
     },kind);
     expect(r).toMatchObject({protectedFunds:true,idle:0,done:true,again:false,active:kind==='river'?0.03:0.05,
       competing:false,same:true,rejected:Array(5).fill(true),expired:0,private:true,people:true,property:true});
@@ -395,12 +416,16 @@ for (const kind of ['river','upland']) {
       const s = FB.state,bm = FB.campaignBookmark(s),binding = bm.buildingInstitutionAssignments.find(function (a) { return a.profileId==='episcopal_foundation'; });
       const institution = bm.localInstitutions[binding.institutionId],pid = institution.provinceId;
       const slot = FB.settlementsOf(s,pid).findIndex(function (row) { return row.site===institution.site; });
+      // Shared de jure districts can generate a sovereign across composed
+      // sectors. Stage this county under that actual existing sovereign.
+      s.owner[pid] = FB.topRealm(s,FB.settlementCountyHolder(s,pid));
       const actor = FB.settlementHolder(s,pid,slot); s.realms[actor.id].treasury.gold = 10000;
       const rec = FB.realmTechRecord(s,actor.id); if (rec.completed.indexOf('lime_mortar')<0) rec.completed.push('lime_mortar');
       FB.invalidateTechBonuses();
       const req = {countyId:pid,settlement:slot,buildingId:'temple',profileId:'episcopal_complex',actor:actor};
       const facts = JSON.stringify([s.chars,s.localInstitutions,s.religiousHeads,s.authority,s.population,s.realmTech]);
       const q = FB.buildingProfiles.quote(s,req),gold = s.realms[actor.id].treasury.gold;
+      if (!q.allowed) throw new Error('Expected lawful foundation: '+JSON.stringify({reason:q.reason,dev:s.dev[pid]}));
       const built = FB.buildingProfiles.commit(s,q),again = FB.buildingProfiles.commit(s,q);
       const occupied = FB.buildingProfiles.quote(s,Object.assign({},req,{profileId:'congregational_mosque'})).allowed;
       return {built:built,again:again,occupied:occupied,paid:gold-s.realms[actor.id].treasury.gold,cost:q.cost,
@@ -431,15 +456,21 @@ for (const kind of ['river','upland']) {
       const req = {profileId:profileId,siteId:site,hostId:host.id,warId:war.id,countyId:target};
       const q = S.quote(s,req),people = JSON.stringify(s.chars),gold = s.player.gold;
       const loaded = S.commit(s,q),again = S.commit(s,q),beforeArrival = war.occupations[target].progress;
+      S.validate(s);
+      const malformed = [function (r) { r.id++; },function (r) { r.inputs[0].quantity++; }].map(function (change) {
+        const candidate = JSON.parse(JSON.stringify(s)); change(candidate.siegeSupport.records[0]);
+        const before = JSON.stringify(candidate);
+        try { S.validate(candidate); return false; } catch (error) { return before===JSON.stringify(candidate); }
+      });
       host.at = target; const record = war.occupations[target];
       FB.advanceFortSiegePulse(s,target,record,{hosts:[host],progressAmount:1}); const first = record.progress;
       FB.advanceFortSiegePulse(s,target,record,{hosts:[host],progressAmount:1});
       const uses = s.siegeSupport.records[0].uses.length; P.validate(s); S.validate(s);
-      return {loaded:!!loaded,again:again,beforeArrival:beforeArrival,first:first,uses:uses,
+      return {loaded:!!loaded,again:again,beforeArrival:beforeArrival,first:first,uses:uses,malformed:malformed,
         people:people===JSON.stringify(s.chars),noCharge:gold===s.player.gold,
         remaining:s.production.lots.find(function (l) { return l.id===q.inputs[0].lotId; }).remaining};
     },kind);
-    expect(r).toEqual({loaded:true,again:false,beforeArrival:0,first:kind==='river'?1.25:1.75,uses:1,people:true,noCharge:true,remaining:0});
+    expect(r).toEqual({loaded:true,again:false,beforeArrival:0,first:kind==='river'?1.25:1.75,uses:1,malformed:[true,true],people:true,noCharge:true,remaining:0});
   });
 
   test(kind + ' relay service buys existing stock once after a real canonical arrival and preserves people and hosts', async function ({ page }, info) {
@@ -485,11 +516,17 @@ for (const kind of ['river','upland']) {
       const opened = S.commit(s,S.quote(s,{operation:'open',assignmentId:a.id,actor:who,lotId:null}));
       const site = prefix+'farm_outpost';
       const recipeId = FB.compileProduction(FB.campaignBookmark(s)).sites.find(function (a) { return a.id===site; }).recipeIds[0];
-      const batch = P.commit(s,P.aiQuote(s,site,'reserve',{recipeId:recipeId,disposition:'store'}));
-      for (let n=0;n<FBDATA.productionRecipes[recipeId].workDays;n++)
-        if (!P.perform(s,P.aiQuote(s,site,'work',{batchId:batch}))) throw new Error('Expected funded outpost work');
+      const reserve = P.aiQuote(s,site,'reserve',{recipeId:recipeId,disposition:'store'});
+      if (!reserve.allowed) throw new Error('Expected funded outpost reserve: '+JSON.stringify({reason:reserve.reason,short:reserve.short,missingTech:reserve.missingTech}));
+      const batch = P.commit(s,reserve);
+      for (let n=0;n<FBDATA.productionRecipes[recipeId].workDays;n++) {
+        const work = P.aiQuote(s,site,'work',{batchId:batch});
+        if (!work.allowed || !P.perform(s,work)) throw new Error('Expected funded outpost work: '+JSON.stringify({reason:work.reason,allowed:work.allowed}));
+      }
       const done = P.commit(s,P.aiQuote(s,site,'finish',{batchId:batch})),lot = s.production.lots.find(function (l) { return l.origin.kind==='batch'; });
       const expires = S.lotExpiry(s,lot),remaining = lot.remaining;
+      const elapsed = expires-s.turn,calendar = s.date.season*90+s.date.day-1+elapsed;
+      s.date.year += Math.floor(calendar/360); s.date.season = Math.floor(calendar/90)%4; s.date.day = calendar%90+1;
       s.turn = expires; S.boundary(s); const expired = s.production.lots.find(function (l) { return l.id===lot.id; }).remaining;
       P.validate(s); S.validate(s);
       return {first:first,repeat:repeat,moved:!!moved,opened:opened,batch:!!batch,done:done,
@@ -556,10 +593,11 @@ for (const kind of ['river','upland']) {
         FB.compileProduction(bm).errors,FB.buildingSeasons.compile(bm).errors,FB.buildingInstitutionDefinitionFaults(bm,FBDATA));
       FB.production.validate(s); FB.buildingProfiles.validate(s); FB.validateBuildingInstitutionState(s);
       const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
-      const facts = JSON.stringify([s.production,s.buildings,s.openingInfrastructureState,s.chars,s.authority,s.localInstitutions,s.realmTech]);
+      const project = function (v) { return [v.production,v.buildings,v.openingInfrastructureState,v.chars,v.authority,v.localInstitutions,v.realmTech]; };
+      const facts = restoreFacts(s,project,{technologySets:true});
       FB.save.restore(JSON.parse(FB.save.serialize()));
       const t = FB.state,second = FB.initializeOpeningInfrastructure(t);
-      return {errors:errors,pure:pure,matching:facts === JSON.stringify([t.production,t.buildings,t.openingInfrastructureState,t.chars,t.authority,t.localInstitutions,t.realmTech]),
+      return {errors:errors,pure:pure,matching:assertRestoreFacts(restoreFacts(t,project,{technologySets:true}),facts),
         second:second,resources:bm.siteResourceAssignments.length,operations:bm.buildingOperationAssignments.length,
         producers:bm.productionProducerAssignments.length,seasons:bm.buildingSeasonAssignments.length,
         institutions:bm.buildingInstitutionAssignments.length,maritime:bm.maritimeWorkAssignments.length,
@@ -574,6 +612,11 @@ for (const kind of ['river','upland']) {
     await imported(page,info,kind,'industry');
     const r = await page.evaluate(function (kind) {
       const s = FB.state,P = FB.production,E = FB.productionEconomy,prefix = kind+'_industry_';
+      // The declared public buyer must retain its real reserves after payment.
+      const buyerSite = P.snapshot(s).find(function (row) {
+        return row.site.id === prefix+(kind==='river'?'paper_buyer':'metal_supplier');
+      });
+      s.realms[buyerSite.asset.owner.id].treasury.gold = 10000;
       function move(id,quantity,operation) {
         const q = E.aiQuote(s,prefix+id,quantity,operation); if (!q.allowed) throw new Error(q.reason);
         const id0 = E.commit(s,q); if (!id0) throw new Error('Expected finite input'); return id0;
@@ -588,6 +631,7 @@ for (const kind of ['river','upland']) {
         return s.production.assets.find(function (a) { return a.id === lot.assetId; }).siteId.indexOf(prefix) !== 0;
       }).map(function (lot) { return [lot.id,lot.remaining]; });
       const q = P.aiQuote(s,plant,'reserve',{recipeId:recipeId,disposition:'store'}),before = s.player.gold;
+      if (!q.allowed) throw new Error('Expected paid industrial reserve: '+JSON.stringify({reason:q.reason,missingTech:q.missingTech}));
       const batch = P.commit(s,q),paid = before-s.player.gold,repeat = P.commit(s,q);
       const early = P.commit(s,P.aiQuote(s,plant,'finish',{batchId:batch}));
       const shifts = []; for (let n=0;n<recipe.workDays;n++) shifts.push(P.perform(s,P.aiQuote(s,plant,'work',{batchId:batch})));
@@ -629,7 +673,7 @@ for (const kind of ['river','upland']) {
         remaining:s.production.lots.filter(function (l) { return l.goodId===profile.goodId && l.origin.kind==='batch'; }).reduce(function (v,l) { return v+l.remaining; },0)};
     },kind);
     expect(r).toMatchObject({batch:true,id:true,before:0,reserved:0,after:1,paid:true,again:false,remaining:0});
-    expect(r.spent).toBe(r.due); expect(r.credit).toBeGreaterThan(0); expect(r.credit).toBeLessThanOrEqual(Math.floor(r.base*0.1));
+    expect(r.spent).toBeCloseTo(r.due,8); expect(r.credit).toBeGreaterThan(0); expect(r.credit).toBeLessThanOrEqual(Math.floor(r.base*0.1));
   });
 
   test(kind + ' malformed combined declarations reject before publication or resource initialization', async function ({ page }, info) {

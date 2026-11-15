@@ -1565,3 +1565,18 @@ The mobile pledge button selector includes its explanatory accessible note while
 Building and technology catalogue restore regressions compare complete detached expanded facts rather than insertion-order-sensitive JSON text. Calculated cash differences allow only floating-point subtraction residue at eight decimal places; quoted prices, unchanged balances and rejection purity stay exact. Construction setup funds the actual private account, grants the declared technology and stages the actual sovereign, local patron and directly held county before testing player and AI parity. The windmill source-position oracle compares every original ID plus the exact six technology and ten building additions from later supplements, retaining complete catalogue equality.
 
 The two coastal catalogue imports retain paid enterprise, upgrade, staffing and yard assertions in matching-restore cases. Separate changed-price cases create the same paid checkpoints, reload the stored JSON replacement and require exact fingerprint rejection without adopting state, world, RNG or UID. Both reuse their already prepared Mods title for the unchanged Barcelona seed, keeping each independent journey within the ordinary timeout.
+
+The expanded technology/building integration imports encode each fixed ruler
+with its authored character name. Catalogue comparisons normalize detached
+definitions on both sides of the deferred activation boundary. Matching restores
+retain every selected owner through expanded facts, canonical object keys and
+technology membership sets; building and ledger arrays keep their order.
+The bookmark platform sibling starts reuse the canonical civic journey code,
+including its family preset and principal-community spelling.
+The composed siege cases validate real loaded receipts and purely reject
+changed record identities or input quantities, keeping retained-record counts
+independent from material totals. Public industry buyers are funded above
+reserves, and staged seasonal expiry advances the matching calendar date.
+The river import scopes its parent-output profile to its renamed farm enterprise;
+the foundation scenario stages the county under its existing generated sovereign
+before checking lawful construction and conservation.
