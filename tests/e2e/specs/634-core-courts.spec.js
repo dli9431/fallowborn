@@ -20,7 +20,7 @@ dependsOnRuntime(__filename,['data/bookmark_manifest.js',
 ].concat(manifestFiles(manifestRuns(fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_manifest.js'),'utf8')))
   .filter(function (file) { return /634/.test(file); })));
 
-// Select the assembled catalogue only in this isolated review; shipping visibility stays hidden.
+// Import the assembled catalogue while preserving every retained world.
 function candidate() {
   const copy=function (v) { return JSON.parse(JSON.stringify(v)); };
   const table=FBDATA.bookmarkRevisionContent_634_courts, raw=copy(FBDATA.bookmarks['634']);
@@ -97,8 +97,8 @@ test('core companions stay inert and preserve every preceding ruler projection',
     const projections=FBDATA.startScenarios_634_rulers.every(function (row) {
       const old=FBDATA.startScenarios.find(function (r) { return r.id===row.id; });
       const expected=JSON.parse(JSON.stringify(row));
-      const companion=row.id==='umar_634'?'opening_umar_634':'opening_heraclius_634';
-      expected.tracks.push(companion); expected.trackLocations[companion]=[row.fixedProvinceId];
+      const companion=row.id==='yazdegerd_634'?null:row.id==='umar_634'?'opening_umar_634':'opening_heraclius_634';
+      if (companion) { expected.tracks.push(companion); expected.trackLocations[companion]=[row.fixedProvinceId]; }
       return Object.keys(raw.revisions).every(function (revision) {
         const a=FB.startIdentity(expected,FB.bookmark('634',revision)),b=FB.startIdentity(old,FB.bookmark('634',revision));
         const fields=Object.keys(a).concat(Object.keys(b).filter(function (key) { return !Object.prototype.hasOwnProperty.call(a,key); }));
@@ -123,9 +123,9 @@ test('core companions stay inert and preserve every preceding ruler projection',
     return {faults:faults,rejected:rejected,projections:projections,projectionFaults:projectionFaults,retained:retained,
       fresh:raw.revision,head:FBDATA.religions.early_islam_634.properties.head,
       assembled:!!FBDATA.religions.medinan_court_634 && !!FBDATA.governmentForms.medinan_selection_634 &&
-        !!FBDATA.administrationProfiles.byzantine_634 && raw.revisions.core_courts_v4.hidden===true,
+        !!FBDATA.administrationProfiles.byzantine_634 && raw.revisions.core_courts_v4.hidden===false,
       pure:before===JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter()])};
-  },mod)).toEqual({faults:[],rejected:Array(9).fill(true),projections:true,projectionFaults:[],retained:true,fresh:'core_identities_v3',head:null,
+  },mod)).toEqual({faults:[],rejected:Array(9).fill(true),projections:true,projectionFaults:[],retained:true,fresh:'core_courts_v4',head:null,
     assembled:true,pure:true});
 });
 

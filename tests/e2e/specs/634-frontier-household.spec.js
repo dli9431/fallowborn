@@ -1,7 +1,7 @@
 'use strict';
 const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
-const {beginBookmark,beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,['data/bookmark_manifest.js',
@@ -19,6 +19,12 @@ dependsOnRuntime(__filename,['data/bookmark_manifest.js',
 ]);
 
 const ID = 'frontier_household_track_634';
+
+async function beginBookmark(page,info,id,scenario) {
+  await openGame(page,info);
+  await page.evaluate(function () { FBDATA.bookmarks['634'].revision = 'core_identities_v3'; });
+  await beginBookmarkFromTitle(page,id,scenario);
+}
 async function choose(page,choice) {
   return page.evaluate(function (choice) {
     const s = FB.state, id = 'frontier_household_track_634';
@@ -33,14 +39,14 @@ async function connections(page) {
 test('complete selectable frontier start preserves identity, layout and exclusions', async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
-    const b = FB.bookmark('634');
+    const b = FB.bookmark('634','core_identities_v3');
     if (!b) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
     const sc = FBDATA.startScenarios.find(function (r) { return r.id === 'frontier_household_634'; });
     const data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
     const errors = FB.validateBookmark(b), p = b.provinces.find(function (p) { return p.id === 'damascus'; });
     const def = FBDATA.storyInstances.frontier_household_track_634;
     return {errors:errors,hidden:!!b.hidden,available:FB.bookmarkAvailable('634'),
-      fresh:b.revision,fullHidden:FB.bookmark('634','core_courts_v4').hidden,
+      retained:b.revision,fresh:FB.bookmark('634').revision,fullHidden:FB.bookmark('634','core_courts_v4').hidden,
       tracks:FB.startStoryTracks(sc,'damascus'),away:FB.startTracks(sc,'baghdad'),
       home:FB.startProvinceAllowed(sc,b,'damascus'),remote:FB.startProvinceAllowed(sc,b,'baghdad'),
       pair:p.communities.some(function (c) { return c.culture === sc.startCulture && c.religion === sc.startReligion && c.populationShare0 > 0; }),
@@ -49,7 +55,7 @@ test('complete selectable frontier start preserves identity, layout and exclusio
       disabled:b.systems,independent:!def.requires && !def.jobs,
       beats:Object.keys(def.stages).filter(function (id) { return id !== 'left' && id !== 'interrupted'; }),
       pure:data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toMatchObject({errors:[],hidden:false,available:true,fresh:'core_identities_v3',fullHidden:true,tracks:[ID],away:[],home:true,remote:false,pair:true,
+  })).toMatchObject({errors:[],hidden:false,available:true,retained:'core_identities_v3',fresh:'core_courts_v4',fullHidden:false,tracks:[ID],away:[],home:true,remote:false,pair:true,
     family:['established'],age:30,resources:[1,'craftsman',20,5,0],site:{site:'damascus_493',name:'Damascus',kind:'city'},
     heads:{},institutions:{},independent:true,pure:true,
     disabled:{disable:['episcopal_sees','civic_institutions','papacy','excommunication','abbeys',

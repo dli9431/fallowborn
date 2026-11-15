@@ -59,7 +59,7 @@ const cases = [
   ['frontier_household_634','opening_frontier_634',null]
 ];
 
-test('every offered revision resolves one profile per story start and preserves hidden world visibility',async function ({page},info) {
+test('every offered revision resolves one profile per story start and preserves complete world visibility',async function ({page},info) {
   await load(page,info);
   expect(await page.evaluate(function () {
     const errors = [], counts = [], rootProfiles = [];
@@ -76,8 +76,8 @@ test('every offered revision resolves one profile per story start and preserves 
     return {errors:errors,oneEach:counts.length > 0 && counts.every(function (n) { return n === 1; }),rootProfiles:rootProfiles.sort(),
       fullHidden:FBDATA.bookmarks['634'].revisions.core_courts_v4.hidden,
       selected:FB.bookmark('634').revision,
-      held:FBDATA.startScenarios.some(function (s) { return s.id === 'yazdegerd_634' || s.id === 'jabala_634'; })};
-  })).toEqual({errors:[],oneEach:true,rootProfiles:['opening_heraclius_634','opening_umar_634'],fullHidden:true,selected:'core_identities_v3',held:false});
+      held:FBDATA.startScenarios.some(function (s) { return s.id === 'jabala_634'; })};
+  })).toEqual({errors:[],oneEach:true,rootProfiles:['opening_heraclius_634','opening_umar_634'],fullHidden:false,selected:'core_courts_v4',held:false});
 });
 
 for (const entry of cases) {

@@ -1,6 +1,5 @@
 'use strict';
 const {test,expect} = require('../support/fixture');
-const path = require('path');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
@@ -69,7 +68,7 @@ test('every offered revision retains a resident identity and complete revision-s
       })};
   })).toEqual({revisions:['baseline','scenery_protected_v1','ordinary_settlement_v2','core_identities_v3','core_courts_v4'].map(function (revision) {
     return {revision:revision,errors:[],resident:true,tracks:revision === 'core_courts_v4' ? [ID,'opening_damascus_full_634'] : ['damascus_household_track_634','opening_damascus_634']};
-  }),pure:true,stages:7,hidden:true,selected:'core_identities_v3',noCampaign:true,journeys:false});
+  }),pure:true,stages:7,hidden:false,selected:'core_courts_v4',noCampaign:true,journeys:false});
 });
 
 test('no work and no change still conclude peacefully with minority identity and exact repeated saves',async function ({page},info) {
@@ -160,8 +159,19 @@ test('departure closes only the local program and preserves family, funds and cu
 
 test('ordinary JSON import offers an independent household program with exact saved mod identity',async function ({page},info) {
   await load(page,info);
+  const mod = JSON.parse(JSON.stringify(require('../fixtures/authoring/damascus-local-program.json')));
+  mod.bookmarks = {'634':await page.evaluate(function () {
+    const raw = JSON.parse(JSON.stringify(FBDATA.bookmarks['634']));
+    const full = raw.revisions.core_courts_v4;
+    full.starts.push('damascus_apprentice_example');
+    full.startLocations = Object.assign({},FB.bookmark('634','core_courts_v4').startLocations,
+      {damascus_apprentice_example:['damascus']});
+    return raw;
+  })};
+  expect(await page.evaluate(function (input) { return FB.mods.validate(input); },mod)).toEqual([]);
   await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/damascus-local-program.json'));
+  await page.locator('#modfile').setInputFiles({name:'damascus-local-program.json',mimeType:'application/json',
+    buffer:Buffer.from(JSON.stringify(mod),'utf8')});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page); await start(page,'damascus_apprentice_example');
   expect(await page.evaluate(function () {
