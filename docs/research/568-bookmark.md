@@ -82,7 +82,7 @@ The iran_caucasus block supplies ordinary administrationProfiles and aristocrati
 
 Each copied district group receives a quadrant-local 568 id; no kingdom or empire title parent is inferred from a source date. Customary Peace and Revenue seeds use possession rather than earlier tenure evidence. Unresearched local courts use ordinary regnum continuity and no authored relatives. This limited model makes no claim to have reconstructed local kin recognition or assemblies. Historical migration, war, succession, personal faith, named households, exact borders and institutional rights retain their own evidence and gameplay gates. No new capability or technology-impact entry is introduced by this staged content.
 
-index.html loads the scaffold after data/bookmark_493_world.js. Both standard and CrazyGames data-directory allowlists include the script; no distribution-specific behavior is added. tests/e2e/specs/568-scaffold-a.spec.js covers loading in both distributions, inert reload, exact coverage, scenery, identities, shared courts and outside capitals, settlement references, redating, independent source objects, Sasanian profile prerequisites and Hira's resident choices, ordinary household creation and conserved opening population. tools/test_i18n_catalog.py covers its display owners, including policy and provincial-interest labels. Complete-world tests cover seeded creation and save/restore.
+index.html loads the scaffold after data/bookmark_493_world.js. Both standard and CrazyGames data-directory allowlists include the script; no distribution-specific behavior is added. tools/test_i18n_catalog.py covers its display owners, including policy and provincial-interest labels. Complete-world tests cover seeded creation and save/restore.
 
 Quadrant b: southwestern Gaul, Rhine and Alps, southeastern Britain, Ireland, Danube and Arabia
 
@@ -162,7 +162,7 @@ Every unnamed principal and assembly representative is a new campaign person wit
 
 Title ids use the d_568_c_, k_568_c_ and e_568_c_ prefixes to avoid collisions with other quadrants. They group counties for the existing title system without asserting sovereign historical empires. Composition preserves the four named courts, external Metz capital, generated-principal holds and absence of institutions. Historical starts still need their own accepted people, household, place and storyline declarations. No new capability, saved field, technology gate or runtime JSON root is introduced.
 
-tests/e2e/specs/568-scaffold-c.spec.js covers exact disjoint county coverage, retained scenery, inert reload, unchanged active catalogues and RNG, physical sites and seeds, owner and capital references, dated faith eligibility, complete community shares, title ancestry, named-court redating and district exceptions. It also checks the corrections in the composed bookmark, the retained disputed rows, real campaign sovereignty versus local holding, Man's conserved community partition and matching save/restore with distinct surviving court identities. Complete-world tests cover seeded creation and save/restore. No new script, loader, schema, capability or technology-impact entry is required by these data corrections; all other quadrant-c fields retain their scaffold values, including the imperial and Scandinavian declarations.
+Complete-world tests cover seeded creation and save/restore. No new script, loader, schema, capability or technology-impact entry is required by these data corrections; all other quadrant-c fields retain their scaffold values, including the imperial and Scandinavian declarations.
 
 Quadrant d: first-pass regional world
 
@@ -194,7 +194,7 @@ De jure group ids are date-owned and region-prefixed. They retain source physica
 
 index.html loads the quadrant after data/bookmark_493_world.js, when all reused physical sites exist. Its FBDATA.bookmarkRegions568 and literal bookmarkRevisionContent_568_* inputs feed the complete composer, which resolves the four external courts and publishes the normalized world fields. Regional inputs are bundled authoring data under the existing bookmark schema, not new runtime JSON roots or saved state. No new independently gateable capability or technology review is introduced.
 
-tests/e2e/specs/568-scaffold-d.spec.js covers exact coverage and scenery, inert and repeatable script loading, retained source definitions, physical/layout/community provenance, local and external references, dated faith eligibility after staged publication, generated court ages and the reconstructed territorial choices. It also covers the five corrected counties, retained neighboring assumptions, the Nobadian Christian character-creation option and conserved community populations in a fresh campaign. Complete composition owns save/restore and cross-quadrant validation.
+Complete composition owns save/restore and cross-quadrant validation.
 
 Shared composition conversion
 
