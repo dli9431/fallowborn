@@ -25,7 +25,8 @@ const ID = 'damascus_household_track_634';
 async function beginBookmarkFromTitle(page) {
   await prepareGameContent(page);
   const code = await page.evaluate(function () {
-    const b = FB.bookmark('634');
+    const b = FB.bookmark('634','core_identities_v3');
+    FBDATA.bookmarks['634'].revision = b.revision;
     FBDATA.bookmarks['634'].hidden = false;
     const raw = FBDATA.startScenarios.find(function (r) { return r.id === 'damascus_household_634'; });
     const sc = FB.startIdentity(raw,b);
@@ -58,10 +59,10 @@ async function choose(page,choice) {
   },choice);
 }
 
-test('selectable 634 owns a complete Damascus household graph and actual resident identity', async function ({page},info) {
+test('retained identity revision owns its Damascus household graph and actual resident identity', async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
-    const b = FB.bookmark('634');
+    const b = FB.bookmark('634','core_identities_v3');
     if (!b) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
     const raw = FBDATA.startScenarios.find(function (r) { return r.id === 'damascus_household_634'; });
     const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -69,7 +70,7 @@ test('selectable 634 owns a complete Damascus household graph and actual residen
     const errors = FB.validateBookmark(b), p = b.provinces.find(function (p) { return p.id === 'damascus'; });
     const slots = FBDATA.settlementLayouts[b.settlementLayout].damascus;
     return {errors:errors,hidden:!!b.hidden,available:FB.bookmarkAvailable('634'),
-      fresh:b.revision,fullHidden:FB.bookmark('634','core_courts_v4').hidden,
+      retained:b.revision,fresh:FB.bookmark('634').revision,fullHidden:FB.bookmark('634','core_courts_v4').hidden,
       tracks:FB.startTracks(sc,'damascus'),storyline:FB.startStoryTracks(sc,'damascus'),away:FB.startTracks(sc,'hira'),
       local:FB.startProvinceAllowed(sc,b,'damascus'),elsewhere:FB.startProvinceAllowed(sc,b,'hira'),
       resident:p.communities.some(function (c) { return c.culture === sc.startCulture && c.religion === sc.startReligion && c.populationShare0 > 0; }),
@@ -78,7 +79,7 @@ test('selectable 634 owns a complete Damascus household graph and actual residen
       institutions:b.localInstitutions,heads:b.religiousHeads,
       independent:!FBDATA.storyInstances.damascus_household_track_634.requires,
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toMatchObject({errors:[],hidden:false,available:true,fresh:'core_identities_v3',fullHidden:true,
+  })).toMatchObject({errors:[],hidden:false,available:true,retained:'core_identities_v3',fresh:'core_courts_v4',fullHidden:false,
     tracks:[ID,'opening_damascus_634'],storyline:[ID],away:[],local:true,elsewhere:false,resident:true,
     family:['established'],age:24,resources:[1,'craftsman',20,5,0],site:'damascus_493',
     coordinates:{x:36.29,y:33.51},institutions:{},heads:{},independent:true,pure:true});

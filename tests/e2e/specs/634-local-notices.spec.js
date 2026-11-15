@@ -61,7 +61,7 @@ async function start(page,province,scenario) {
   });
 }
 
-test('the hidden assembled world attaches two five-beat campaigns and an enumerated authority source only',async function ({page},info) {
+test('the complete world attaches two five-beat campaigns and an enumerated authority source only',async function ({page},info) {
   await load(page,info);
   expect(await page.evaluate(function () {
     const ids = ['syrian_households_634','iraqi_households_634','district_authority_households_634'];
@@ -87,7 +87,7 @@ test('the hidden assembled world attaches two five-beat campaigns and an enumera
   })).toEqual({definitions:[['syrian_front_634',30],['iraqi_front_634',20]].map(function (r) {
     return {source:r[0],expiry:r[1],triggers:['started','won','failed','diverted','interrupted'],
       reach:['local','previous','previous','previous','previous'],costless:true};
-  }),once:true,fresh:'core_identities_v3',hidden:true,older:true,
+  }),once:true,fresh:'core_courts_v4',hidden:false,older:true,
   authority:Array(4).fill(['local_control','rule_changed']),tech:'none',pure:true});
 });
 

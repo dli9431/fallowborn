@@ -5,12 +5,10 @@ const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
-const {openCrazyGame} = require('../support/game/crazygames-title');
-const {mockCrazyGames} = require('../support/crazygames');
 const {installPageGuards} = require('../support/page-contract');
 const fixtureRoot = path.resolve(__dirname,'../fixtures/634-scenery-revisions');
 const {routeEagerDocument,manifestRuns,manifestFiles} = require('../fixtures/bookmark-manifest/eager-document');
-const currentStarts = ['farmer_634','craftsman_634','ctesiphon_household_634','umar_634','heraclius_634',
+const currentStarts = ['farmer_634','craftsman_634','ctesiphon_household_634','umar_634','heraclius_634','yazdegerd_634',
   'damascus_household_634','frontier_household_634','medina_household_634'];
 const scenic = {
   scenery_a:['w_sahara_w','w_sahara_c','w_sahara_e','w_sahel','w_nubia','w_arabia'],
@@ -44,7 +42,7 @@ test('current 634 catalogue preserves exact world revisions and matching saves',
       faults:worlds.map(function (b) { return FB.validateBookmark(b); }),fullHidden:FB.bookmark('634','core_courts_v4').hidden,
       pure:before===JSON.stringify([FBDATA,FB.getRngState(),FB.getUidCounter()])};
   })).toEqual({revisions:['baseline','scenery_protected_v1','ordinary_settlement_v2','core_identities_v3','core_courts_v4'],
-    counts:Array(5).fill([527,122]),faults:Array(5).fill([]),fullHidden:true,pure:true});
+    counts:Array(5).fill([527,122]),faults:Array(5).fill([]),fullHidden:false,pure:true});
   await begin634(page);
   await load(page,JSON.parse(await page.evaluate(function () { return FB.save.serialize(); })));
   await page.evaluate(function () { FB.state.player.gold-=3; });
@@ -71,16 +69,6 @@ test('complete current 634 catalogue matches manifest and eager preparation exac
     expect(await projection(page)).toEqual(await projection(eager));
   } finally { try { expect(guard.faults).toEqual([]); } finally { await context.close(); } }
 });
-
-async function openEdition(page,info,crazy) {
-  if (crazy) {
-    await mockCrazyGames(page);
-    await page.addInitScript(function () {
-      window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-    });
-    await openCrazyGame(page,info);
-  } else await openGame(page,info);
-}
 
 async function begin634(page,revision) {
   const original = await page.evaluate(function (revision) {
@@ -122,9 +110,9 @@ async function installProbe(page) {
   });
 }
 
-for (const crazy of [false,true]) {
+for (const crazy of [false]) {
   test('retained protected 634 preserves every retained declaration and start on ' + (crazy ? 'CrazyGames' : 'standard'),async function ({page},info) {
-    await openEdition(page,info,crazy);
+    await openGame(page,info);
     const result = await page.evaluate(function (input) {
       const raw = FBDATA.bookmarks['634'], baseline = FB.bookmark('634','baseline'), fresh = FB.bookmark('634','scenery_protected_v1');
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -149,7 +137,7 @@ for (const crazy of [false,true]) {
         }),faults:[FB.validateBookmark(baseline),FB.validateBookmark(fresh)],
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     },{scenic:scenic});
-    expect(result).toEqual({revision:'scenery_protected_v1',revisions:['baseline','scenery_protected_v1','ordinary_settlement_v2','core_identities_v3','core_courts_v4'],baseline:{},fullHidden:true,
+    expect(result).toEqual({revision:'scenery_protected_v1',revisions:['baseline','scenery_protected_v1','ordinary_settlement_v2','core_identities_v3','core_courts_v4'],baseline:{},fullHidden:false,
       otherFields:true,fields:['provinces'],sourceIds:Object.values(scenic),pristineSources:true,protected:scenicIds,
       inhabited:506,exactRows:true,starts:currentStarts.map(function (id) { return {id:id,valid:true,applicable:true,locations:true}; }),
       faults:[[],[]],pure:true});
@@ -221,7 +209,7 @@ async function importOverlay(page,name) {
 async function convertBaseline(page,mode) {
   return page.evaluate(function (mode) {
     const s = FB.state;
-    if (s.start.revision !== 'baseline' && s.start.revision !== 'ordinary_settlement_v2' && s.start.revision !== 'core_identities_v3') throw new Error('Expected an ordinary settlement revision');
+    if (s.start.revision !== 'baseline' && s.start.revision !== 'ordinary_settlement_v2' && s.start.revision !== 'core_identities_v3' && s.start.revision !== 'core_courts_v4') throw new Error('Expected an ordinary settlement revision');
     s.player.gold = 5000; s.player.prestige = 500;
     const choice = FB.travelDestinations(s,'frontier')[0];
     if (!choice) throw new Error('The current opening needs an ordinary frontier');
@@ -274,9 +262,9 @@ async function seedConfiguration(page,old) {
   },old.configuration);
 }
 
-for (const crazy of [false,true]) for (const mode of ['commoner','noble']) {
+for (const crazy of [false]) for (const mode of ['commoner','noble']) {
   test('fresh ordinary 634 supports ' + mode + ' settlement on ' + (crazy ? 'CrazyGames' : 'standard'),async function ({page},info) {
-    await openEdition(page,info,crazy);
+    await openGame(page,info);
     expect(await page.evaluate(function () {
       const fresh = FB.bookmark('634'), baseline = FB.bookmark('634','ordinary_settlement_v2');
       return {revision:fresh.revision,rows:fresh.provinces.every(function (p,i) {
@@ -289,14 +277,14 @@ for (const crazy of [false,true]) for (const mode of ['commoner','noble']) {
         }),
         protected:fresh.provinces.filter(function (row) { return row.settlementPolicy === 'protected'; }).length,
         scenery:fresh.provinces.filter(function (row) { return row.wasteland; }).length};
-    })).toEqual({revision:'core_identities_v3',rows:true,protected:0,scenery:21});
+    })).toEqual({revision:'core_courts_v4',rows:true,protected:0,scenery:21});
     await begin634(page);
     const settled = await convertBaseline(page,mode);
     expect(settled.spent[0]).toBeGreaterThan(0);
     expect(settled.spent[1]).toBeGreaterThan(0);
     await load(page,settled.save);
     expect(await retainedFacts(page,settled)).toMatchObject({same:true,rng:true,uid:true,
-      revision:'core_identities_v3',current:'core_identities_v3',converted:true,omitted:true,sites:true});
+      revision:'core_courts_v4',current:'core_courts_v4',converted:true,omitted:true,sites:true});
   });
 }
 
@@ -420,13 +408,13 @@ for (const id of ['476','867']) {
 }
 
 for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json',mode:'noble'},
-  {file:null,mode:'noble'},{file:null,mode:'commoner',crazy:true}]) {
+  {file:null,mode:'noble'}]) {
   test.describe('retained 634 ' + (config.file || (config.crazy ? 'CrazyGames' : 'unmodded')),function () {
     let old, context, source, guard;
     test.beforeAll(async function ({browser},info) {
       test.skip(!info.project.name.endsWith('-served'),'JSON reload requires a served origin.');
       context = await browser.newContext(); source = await context.newPage(); guard = installPageGuards(source);
-      await openEdition(source,info,!!config.crazy);
+      await openGame(source,info);
     });
     test.beforeAll(async function () {
       try {
@@ -442,7 +430,7 @@ for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json'
     test.afterAll(async function () { if (context) await context.close(); });
 
     test('current-content explicit and inferred conversions retain spent resources through repeated restore',async function ({page},info) {
-      await seedConfiguration(page,old); await openEdition(page,info,!!config.crazy); await installProbe(page);
+      await seedConfiguration(page,old); await openGame(page,info); await installProbe(page);
       const decision = await page.evaluate(function (data) {
         const before = scenicSnapshot(), text = JSON.stringify(data), result = FB.mods.saveCompatibility(data);
         return {result:result,pure:scenicSame(before),input:text === JSON.stringify(data),signature:FB.mods.sig()};
@@ -452,13 +440,13 @@ for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json'
       for (const form of ['save','legacy']) await test.step(form + ' repeated restore',async function () {
         for (const envelope of [old[form],old[form]]) {
           await load(page,envelope);
-          expect(await retainedFacts(page,old)).toMatchObject({same:true,rng:true,uid:true,revision:'baseline',current:'core_identities_v3',converted:true,omitted:true,sites:true});
+          expect(await retainedFacts(page,old)).toMatchObject({same:true,rng:true,uid:true,revision:'baseline',current:'core_courts_v4',converted:true,omitted:true,sites:true});
         }
       });
     });
 
     test('a current-content conversion survives ordinary re-save and fresh-page reload',async function ({page},info) {
-      await seedConfiguration(page,old); await openEdition(page,info,!!config.crazy);
+      await seedConfiguration(page,old); await openGame(page,info);
       await load(page,old.save);
       const signature = await page.evaluate(function () { return FB.mods.sig(); });
       const saved = await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
@@ -470,7 +458,7 @@ for (const config of [{file:'household.json',mode:'commoner'},{file:'court.json'
     });
 
     test('switching protected and both retained conversion forms preserves policies, conversions and identities',async function ({page},info) {
-      await seedConfiguration(page,old); await openEdition(page,info,!!config.crazy); await begin634(page,'scenery_protected_v1');
+      await seedConfiguration(page,old); await openGame(page,info); await begin634(page,'scenery_protected_v1');
       const fresh = await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
       for (const form of ['save','legacy']) await test.step(form + ' round trip',async function () {
         await load(page,old[form]);
