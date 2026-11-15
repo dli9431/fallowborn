@@ -155,7 +155,7 @@ jobs:
           npx playwright test ${{ steps.select.outputs.args }}
           --shard=${{ matrix.shard }}/${{ inputs.shards }}
           --workers=${{ inputs.workers }}
-          --reporter=blob
+          --reporter=blob,line
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
