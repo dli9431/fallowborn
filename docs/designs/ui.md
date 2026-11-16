@@ -4258,3 +4258,7 @@ The existing mobile source sheet enumerates each county receipt and its original
 Mobile command focus after refreshed reviews
 
 When a refreshed mobile command action becomes disabled after confirmation, returning to its list focuses that action’s existing focusable review card. Enabled actions retain button focus. Inputs, disclosures and scroll positions remain retained; the disabled control is never enabled merely to restore focus.
+
+Event canonical review return
+
+A review-bearing event option opens a retained confirmation within the existing event sheet. Shared fact/action cards show the selected canonical decision, actual cost and blocker. Confirm delegates to the original owner with the exact reviewed quote. Cancel, Back and Escape restore the same mounted choice nodes, open disclosures, list position and originating focus; a stale confirmation returns a review-again message and spends nothing. The event remains unanswered until a successful confirmation or its explicit refusal. Existing event input guards, full-width controls and keyboard/mobile navigation apply.

@@ -200,12 +200,17 @@
     return -Math.min(0.20,C.privateAccount(s,o.accusedId).gold / 2000) +
       FB.clamp(relation(s,o.accusedId,actor),-100,100) / 1000;
   };
+  function judgmentMoment(s,r) {
+    FB.publishEventMoment(s,'case_judged',{caseId:r.id,profileId:r.profileId,offenseId:r.offenseId,
+      characterId:r.accusation.accusedId,locationId:profile(r.profileId).provinceId,status:r.status});
+  }
   R.judged = function (s,o,sentence) {
     var r = record(s,o.id);
-    if (!r) return [];
+    if (!r || CLOSED.indexOf(r.status) >= 0) return [];
     var p = profile(r.profileId), status = r.status === 'accepted' ? 'enforced' : sentence === p.penanceSentence ? 'penance' : 'imprisoned';
     finish(s,r,status);
     r.lastSupport = fallout(s,r,-2).support;
+    judgmentMoment(s,r);
     return r.lastSupport ? [{type:'commonVoice',pid:p.provinceId,amount:r.lastSupport}] : [];
   };
   R.quote = function (s,pid,oid,actor,action,slot) {
@@ -332,6 +337,7 @@
       release(s,r); finish(s,r,'confiscated'); fallout(s,r,-2);
     }
     r.changedTurn = s.turn;
+    if (a === 'confiscate') judgmentMoment(s,r);
     r.lastSupport = FB.countySupportBase(s,p.provinceId) - supportBefore;
     if (q.actorId === o.accusedId && a !== 'charge') r.answered = true;
     FB.news(s,FB.message('news.religious.case',{defendant:FB.fullName(s.chars[o.accusedId]),place:FB.world.byId[p.provinceId].name,support:r.lastSupport}),

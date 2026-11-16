@@ -199,7 +199,7 @@
     if (!q.allowed || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
     var policy = R.policy(s, reviewed.realmId);
     var member = R.candidateMember(s,reviewed.realmId,q.memberId);
-    var result = apply(q);
+    var result = FB.withLegitimacyMoments(s,function () {return apply(q);});
     if (!result) return false;
     var row = record(s, reviewed.realmId) || record(s, 'player');
     if (row) {

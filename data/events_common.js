@@ -512,7 +512,9 @@ FBDATA.events.push(
   weight:2, cooldown:4,
   options:[
     { label:'Keep the terms in mind.', desc:'No payment or change of permission.', effects:{} },
-    { label:'Set the notice aside.', desc:'No payment or change of permission.', effects:{} }
+    { label:'Set the notice aside.', desc:'No payment or change of permission.', effects:{} },
+    { label:'Review business permission.', desc:'Review the first affected owned stall and its actual private payment before confirming. Cancel keeps the notice open.',
+      review:{type:'industry_operation',args:{definitionId:'london_stall_license',action:'pay'},refusalOption:1} }
   ]},
 
 /* ---------- courtship & marriage ---------- */

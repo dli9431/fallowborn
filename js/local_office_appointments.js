@@ -49,6 +49,7 @@
     var q = reviewed && FB.localOfficeQuote(s,reviewed.institutionId,reviewed.action,reviewed.terms);
     if (!q || !q.allowed || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
     var at = scope(s,q.institutionId), id = at.def.officeId;
+    var formerHolder = s.religiousHeads[id];
     if (q.cost && !FB.treasurySpend(s,q.payer,q.cost)) return false;
     if (q.action === 'appoint') {
       s.religiousHeads[id] = q.terms.candidateId;
@@ -59,6 +60,8 @@
       s.religiousHeadVacancies[id] = { turn:s.turn,formerHolder:s.religiousHeads[id] };
       s.religiousHeads[id] = null; at.row.representativeId = null;
     }
+    if (formerHolder) FB.religiousOfficeMoment(s,id,formerHolder,'office_lost');
+    if (q.action === 'appoint') FB.religiousOfficeMoment(s,id,q.terms.candidateId,'office_appointed');
     return true;
   };
 })();

@@ -136,3 +136,7 @@ configurations use identical definition validation and transactions.
 Technology impact `named_ecclesiastical_discipline` is **none**: actual conduct,
 local office, law, custody and resources supply the gates. Ordinary economic and
 military technology rules remain independent.
+
+Committed judgment observation
+
+An imposed canonical penance, imprisonment, enforcement or exact-fief confiscation publishes case_judged with the existing case, profile, offense, defendant, county and settled status. Repeated judgment notifications on a closed case are inert. Accusation, dismissal, voluntary settlement and restore publish no judgment. This is the ordinary event subscription surface described in events.md, with no new prosecution or queue.

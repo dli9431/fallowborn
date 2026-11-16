@@ -58,6 +58,7 @@ test('every event pack and registered semantic fixture has a valid declaration',
         if (fixture.rows.some(function (row) {return row.eventId===ev.id && (row.readers || []).length===0;}) &&
             !subscriptions.length && !ev.contextValidator) faults.push(ev.id + ': missing moment assertion');
         if ((ev.options || []).some(function (option) {
+          if (option.review) return true;
           return [option.effects,option.success && option.success.effects,option.failure && option.failure.effects].some(function (fx) {
             return fx && Object.keys(fx).some(function (key) {return scalar.indexOf(key)<0;});
           });
@@ -113,3 +114,10 @@ for (const entry of fixtureFiles) {
     for (const example of result) {expect(example.actual).toBe(example.expected);expect(example.pure).toBe(true);}
   });
 }
+
+// Empty declarations share the normal period validator and add no random pool members.
+dependsOnRuntime(__filename,['index.html','data/bookmark_manifest.js',
+  'data/events_imperial_office.js','data/events_federate_life.js','data/events_civic_assembly.js',
+  'data/events_religious_life.js','data/events_kingship_succession.js','data/events_works_technology.js',
+  'data/events_493.js','data/events_568.js','data/events_634.js','data/events_711.js','data/events_800.js',
+  'data/events_1096.js','data/events_1204.js','data/events_1241.js','data/events_mobile_life.js','data/events_imperial_service.js']);

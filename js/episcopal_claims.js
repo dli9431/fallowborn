@@ -259,6 +259,8 @@
       r.terms = null;
     }
     r.revision++; r.changedTurn = s.turn;
+    if (a === 'accept' || a === 'adjudicate') FB.publishEventMoment(s,'claim_settled',{
+      claimId:r.id,profileId:r.profileId,realmId:r.realmId,locationId:r.provinceId,settlement:r.settlement});
     FB.invalidateSettlementLordships(s,x.profile.provinceId);
     FB.news(s,r.status === 'settled' ? FB.message('news.episcopal.settled', {
       place:FB.world.byId[x.profile.provinceId].name, amount:r.terms.cost,

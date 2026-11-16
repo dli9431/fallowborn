@@ -538,3 +538,7 @@ Corridor decisions reuse the existing literal FB.T county, payment, capacity, du
 
 
 Static JavaScript lexical scanning treats regular-expression literals as opaque source, including quotes, character classes, escaped slashes and text resembling localization calls. Arithmetic division remains an operator, and genuine unterminated strings still fail with their source line. Lexer regressions and structured/static HTML extraction checks run together in CI. This source-tooling repair does not regenerate catalogues.
+
+Canonical event review presentation
+
+Review option label/desc retain ordinary event field ownership and authored indexes. Canonical terms reuse literal FB.T chrome and the story owner's existing choice detail/review text; industry reviews disclose actual private payment through named placeholders. Moment names, payload ids and typed review args are protocol data, never translated or saved prose. The static EVENT_FILES events_*.js registration already includes every empty shared and dated event pack. Source work does not regenerate catalogs.
