@@ -1,3 +1,93 @@
+Member cohesion and receipt distribution
+
+Optional mobileProfiles.cohesionPolicy schema 1 keeps one support value on each
+existing member record, alongside its allegiance, pledge and ordinary election
+vote. There is no parallel loyalty registry. Native Pontic and river policies
+and the complete ordinary mobile-cohesion-glassroad.json import select different
+coefficients, thresholds, idle windows and AI distribution preferences. These
+are game-scale political abstractions, not reconstructed historical quotas.
+Profiles without the policy retain their original records and behavior.
+
+A resolved field battle shifts each participating coalition once, regardless of
+how many of its hosts fought. Victory and defeat have separate declared effects;
+a bounded raid uses its actual sortie outcome. Casualties and host loss keep
+their existing demographic owners. A scarce day means camp food before ordinary
+consumption is below one day's actual camp ration. Consecutive scarce days incur
+the declared daily support loss after the grace window. For dispersed camps,
+any underfed camp establishes scarcity; its food remains local. At a new
+ninety-day boundary, members whose last actual personal gain is old enough lose
+the idle amount, and current leader Standing relative to the policy target adds
+its coefficient. Standing uses the game's existing ruler Standing snapshot,
+including its existing household-relative and faith-adjusted meaning; this is
+not a new universal reputation. Missing leadership contributes no Standing
+change. A skipped seasonal boundary applies once, without simulating past days.
+
+Raids, accepted incoming agreement payments, initial service pay and seasonal
+service pay register receipts only after their canonical resource transfer.
+Opening stocks, purchases, pasture, private contributions and public funding
+are not spoils. Each receipt describes already available public coin and camp
+food; it is not an escrow account or a second stockpile. The current leader's
+ordinary Mobile coalition review can keep it, divide by living allegiant member
+weight, or favor an explicitly selected nonempty set of those members, weighted
+within that set. Equal weights therefore divide equally. Coin enters the actual
+member principals' private purses, including the existing player purse. Food
+allotments are immediate household consumption, deducted once from camp stock.
+They neither replace subsequent ordinary daily rations nor create another food
+inventory. The exact costs and per-member support projections precede approval.
+
+For each living allegiant member, let ratio be its actual fraction of the total
+receipt (coin plus food units) divided by its ordinary weight fraction. Support
+changes by receiptShare * (min(2, ratio) - 0.5), clamped to [0,100]. Keeping gives
+ratio zero; an exact proportional share gives ratio one. Coin and food units are
+an intentionally simple allocation index, not a market exchange price. Whole
+food units round down in stable member order, with the final selected member
+receiving the remainder. Any positive personal allotment resets that member's
+last-gain turn. Retention never resets it. Replacing a dead principal preserves
+the existing member's support and gain history; a newly joined member receives
+the declared initial support and current turn.
+
+Pending receipts remain spendable public resources. A sharing review rejects if
+those resources have since been consumed; retention remains possible. There are
+at most 32 unresolved receipts. A full queue blocks a new raid or incoming
+agreement payment before mutation, refuses initial service payment before either
+consent or money changes, and leaves seasonal service collection pending under
+its existing period marker. It creates no arrears balance or retroactive multi-
+season payout. Resolving a receipt frees one slot. AI leaders use the same review
+and commit immediately, selecting keep, weight or the declared number of
+highest-support favorites with stable member-id ties. If sharing is unaffordable,
+they review retention instead. Protagonist leaders retain personal choice.
+
+NPC members at or below the withhold threshold use the existing pledge review
+to set recruitment service to zero and answer pending proposals without assent.
+When support recovers above that threshold, an allegiant NPC with zero service
+renews its profile member's declared pledge through the same review. This
+creates no fighters and leaves deployment and existing obligations unchanged;
+newly joined members without a declared pledge retain their voluntary zero.
+At or below depart they first attempt the ordinary local departure review:
+deployed fighters, external commitments, lawful access and population gates
+remain binding. No one demusters, cancels a contract or teleports to depart.
+The protagonist chooses their own pledge, assent, departure and vote. During an
+elected vacancy, NPCs above the rival threshold rally to the ordinary live
+candidate preference; dissatisfied eligible members back themselves through the
+existing support review. Each candidate still needs the original weighted
+threshold. Leadership can therefore resolve smoothly or remain contested.
+Commanded followings retain their original appointment rules; cohesion never
+creates an election or a new command permission. Distribution there requires
+its existing trade permission. Civilian-camp and column departure blockers are
+unchanged.
+
+Current-content saves retain the optional cohesion checkpoint, bounded pending
+receipts, latest distribution, member support and last-gain turns under existing
+mobile schemas. Strict validation rejects missing opted-in facts, duplicates,
+future turns, bad support and inconsistent distribution totals. Restore never
+allocates, pays, consumes or elects. Exact content/mod fingerprints remain
+binding. No envelope or version change is introduced.
+
+Technology impacts mobile_member_cohesion and mobile_spoils_distribution are
+both none: association and sharing actual stocks have no credible discovery
+prerequisite. Ordinary unit, command, authority, access and commitment gates
+remain authoritative.
+
 Column supply policies
 
 The mobile owner registers event readers for active allegiant personal

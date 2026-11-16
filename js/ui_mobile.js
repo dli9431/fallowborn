@@ -83,6 +83,18 @@
   }
   function extractionHtml(s,q) {
     var text='';
+    if (q.distribution) {
+      var d=q.distribution, names={raid:FB.T('Raid spoils'),agreement:FB.T('Agreement payment'),
+        service_initial:FB.T('Initial service pay'),service_season:FB.T('Seasonal service pay')};
+      text+=kv(FB.T('Receipt'),names[d.receipt.source])+kv(FB.T('Received coin'),FB.money(d.receipt.gold,s))+
+        kv(FB.T('Received food'),d.receipt.food)+kv(FB.T('Food consumed in household allotments'),d.food)+
+        '<p>'+esc(FB.T('Shared coin enters the named members’ private purses. Shared food is consumed by their households now. Retained resources remain available to the coalition.'))+'</p>';
+      d.rows.forEach(function (part) {
+        text+=SH.reviewPersonHtml(s.chars[part.characterId],FB.T('Member allotment'))+
+          kv(FB.T('Private coin'),FB.money(part.gold,s))+kv(FB.T('Household food'),part.food)+
+          kv(FB.T('Support after distribution'),part.support.toFixed(1));
+      });
+    }
     if (q.raid) text+=kv(FB.T('Raid outcome'),q.raid.success ? FB.T('Local defenders overcome') : FB.T('Repelled; no spoils'))+
       kv(FB.T('Defending fighters'),q.raid.defenders)+kv(FB.T('Fighters lost'),q.raid.casualties)+
       kv(FB.T('Coin transferred'),FB.money(q.raid.gold,s))+kv(FB.T('Food transferred'),q.raid.food);
@@ -185,7 +197,7 @@
     });
     function add(label,action,terms,details,columnReview,campReview) {
       var transition=action==='appoint' || action==='recall';
-      var permission=action==='load' || action==='unload' ? 'trade' : action==='decline' ? 'accept' : action;
+      var permission=action==='load' || action==='unload' || action==='distribute' ? 'trade' : action==='decline' ? 'accept' : action;
       if (columnReview) permission=action==='assign' || action==='stop' ? 'march' :
         action==='merge' ? 'demuster' : action==='split' ? 'recruit' : permission;
       if (r.command && !transition && command.operations.indexOf(permission)<0) return;
@@ -200,7 +212,8 @@
       var review = transition ? M.reviewCommand(s,request) : (campReview ? M.reviewCamp : columnReview ? M.reviewColumns : M.review)(s,{realmId:rid,action:action,terms:terms || {},actor:actor}), q = review.review, i = actions.length;
       actions.push({label:label,review:review,details:details});
       parts += SH.reviewActionCardHtml({id:'mobile-action-'+i,label:label,disabled:!q.allowed,warn:!q.allowed,
-        note:q.allowed ? FB.T('Immediate cost: {money:cost}. Review before committing.',{cost:q.cost || 0}) : reason(q.reason),
+        note:q.allowed ? q.distribution ? FB.T('Public coin: {money:cost}; food consumed: {food}. Review member support.',
+          {cost:q.cost || 0,food:q.distribution.food}) : FB.T('Immediate cost: {money:cost}. Review before committing.',{cost:q.cost || 0}) : reason(q.reason),
         details:'<p>'+esc(details)+'</p>'+termsHtml(s,q.terms,rid)+routeHtml(s,q)+extractionHtml(s,q),data:{mobileReview:i}});
     }
     var guard=M.guardSnapshot && M.guardSnapshot(s,rid);
@@ -315,9 +328,31 @@
     var membership = r.members.map(function (m) {
       var c = s.chars[m.principal.id];
       var values={weight:m.weight,percent:Math.round(m.pledge*100),status:m.allegiance ? FB.T('Allegiant') : FB.T('Withheld')};
-      return kv(c ? c.name : FB.T('Unavailable member'),r.command ? FB.T('Pledge {percent}%; {status}',values) :
-        FB.T('Weight {weight}; pledge {percent}%; {status}',values));
+      return (r.cohesion && c ? SH.reviewPersonHtml(c,FB.T('Member principal')) : '')+
+        kv(c ? c.name : FB.T('Unavailable member'),r.command ? FB.T('Pledge {percent}%; {status}',values) :
+        FB.T('Weight {weight}; pledge {percent}%; {status}',values))+
+        (r.cohesion ? kv(FB.T('Member support'),m.support.toFixed(1)) : '');
     }).join('');
+    if (r.cohesion) {
+      var policy=profile.cohesionPolicy, selected=view['mobile-favorites'] || [];
+      membership+=kv(FB.T('Scarcity days'),r.cohesion.scarcityDays)+
+        kv(FB.T('Leader Standing'),M.cohesionSnapshot(s,rid).standing.toFixed(1))+
+        kv(FB.T('Support thresholds'),FB.T('Withhold service at {withhold}; depart at {depart}; rival vote at {rival}',policy.thresholds))+
+        '<p>'+esc(FB.T('Victory, defeat, actual receipt shares, scarce rations, seasons without gain and leader Standing change member support. Departure still requires recovered fighters and lawful local settlement.'))+'</p>';
+      controls+='<label>'+esc(FB.T('Favored members (select one or more)'))+'<select id="mobile-favorites" multiple size="3">'+
+        M.members(s,rid).filter(function (m) {return m.allegiance;}).map(function (m) {
+          return '<option value="'+esc(m.id)+'"'+(selected.indexOf(m.id)>=0 ? ' selected' : '')+'>'+esc(s.chars[m.principal.id].name)+'</option>';
+        }).join('')+'</select></label>';
+      r.cohesion.receipts.forEach(function (receipt,index) {
+        var number=index+1, detail=FB.T('Review already received resources. This decision is free to cancel. Sharing spends public coin and consumes camp food once; keeping changes support without moving resources. Unreviewed receipts remain spendable. Review one of the 32 pending receipts before collecting another payment or raid.');
+        add(FB.T('Keep receipt {number} in the treasury',{number:number}),'distribute',{receiptId:receipt.id,mode:'keep',memberIds:[]},detail);
+        add(FB.T('Share receipt {number} by weight',{number:number}),'distribute',{receiptId:receipt.id,mode:'weight',memberIds:[]},detail);
+        add(FB.T('Give receipt {number} to favored members',{number:number}),'distribute',{receiptId:receipt.id,mode:'favor',memberIds:selected},detail);
+      });
+      if (r.cohesion.lastDistribution) membership+=SH.reviewFactsCard(FB.T('Last distribution'),
+        extractionHtml(s,{distribution:{receipt:r.cohesion.lastDistribution.receipt,rows:r.cohesion.lastDistribution.rows,
+          food:r.cohesion.lastDistribution.rows.reduce(function (n,part) {return n+part.food;},0)}}));
+    }
     if (r.command && command.superior && !external) {
       r.members.forEach(function (m) {
         var person=s.chars[m.principal.id];
@@ -430,6 +465,7 @@
       var list = SH.$('mobile-list'), body=SH.$('gm-body'), v = {scroll:list ? list.scrollTop : 0,bodyScroll:body.scrollTop,details:[],focus:document.activeElement && document.activeElement.id};
       if (list) list.querySelectorAll('.settcard-info[aria-expanded="true"]').forEach(function (d) {v.details.push(d.getAttribute('aria-controls'));});
       ['mobile-count','mobile-county','mobile-price','mobile-days','mobile-column','mobile-other-column','mobile-unit','mobile-commander','mobile-funding','mobile-public-source','mobile-camp'].forEach(function (id) {if(SH.$(id)) v[id]=SH.$(id).value;});
+      if (SH.$('mobile-favorites')) v['mobile-favorites']=Array.prototype.filter.call(SH.$('mobile-favorites').options,function (o) {return o.selected;}).map(function (o) {return o.value;});
       return v;
     }
     UI.openModal(r.command ? FB.T('Mobile command') : FB.T('Mobile coalition'),'<div id="mobile-list" data-modal-scroll>'+
@@ -445,6 +481,7 @@
     ['mobile-count','mobile-county','mobile-price','mobile-days','mobile-column','mobile-other-column','mobile-unit','mobile-commander','mobile-funding','mobile-public-source','mobile-camp'].forEach(function (id) {
       if (SH.$(id)) SH.$(id).onchange=function () {var v=position();v.replace=true;UI.showMobileConfederation(rid,v);};
     });
+    if (SH.$('mobile-favorites')) SH.$('mobile-favorites').onchange=function () {var v=position();v.replace=true;UI.showMobileConfederation(rid,v);};
     if(SH.$('mobile-leader')) SH.$('mobile-leader').onclick=function () {UI.showCharModal(leader.id);};
     list.querySelectorAll('[data-mobile-review]').forEach(function (button) {
       button.onclick=function () {

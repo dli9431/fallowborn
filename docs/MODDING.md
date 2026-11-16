@@ -6689,6 +6689,51 @@ FB.mobile.openingPlan(state, realmDefinition) is a pure fresh-opening eligibilit
 
 FBDATA.mobileProfiles and the top-level mod mobileProfiles table select reusable policies for explicitly declared mobile_confederation realms. A realm mobile object requires profileId, patronRealmId, origin, target, food, fighters and treasury. Its realm supplies culture, religion, capital, rank and nonTerritorial:true. Origin and target must be inhabited; patron must be a distinct authored realm. Initial fighters are withdrawn from the first member following, not added to local population or fabricated from county levies. See data/mobile_confederations.js and docs/designs/mobile-confederation.md for complete profile fields and bounds.
 
+Optional `cohesionPolicy` has exactly `schema:1` and these required fields:
+
+- `initialSupport`: finite [0,100]; `victory`: [0,100]; `defeat`: [-100,0];
+  `receiptShare`: [0,100].
+- `scarcity:{days,support}`: integer days 1-90, support [-100,0] per consecutive
+  scarce day after the grace window.
+- `idle:{seasons,support}`: integer seasons 1-40, support [-100,0] per observed
+  seasonal boundary without a sufficiently recent personal allotment.
+- `standing:{target,factor}`: target [-100,100], factor [0,1], applied to the
+  current leader's existing ruler Standing difference once per seasonal boundary.
+- `thresholds:{depart,withhold,rival}`: finite [0,100], in that ascending order.
+  Comparisons include equality. Departure and service/vote changes retain the
+  existing canonical reviews and authority/resource gates.
+- `distribution:{mode,favorites}`: mode keep, weight or favor; favorites is an
+  integer 1-24. AI favor selects up to that many living allegiant members by
+  descending current support and stable member id; unaffordable shares fall back
+  to a separately reviewed keep. Players select their own favorite member ids.
+
+Unknown/reserved fields reject through the pure shared schema. No identity or
+calendar collapse fields are supported. Omission retains original behavior.
+`mobile.cohesionSnapshot(state,realmId)` is a detached read of policy, current
+support, scarcity, leader Standing, idle seasons and pending receipts.
+`mobile.review` action `distribute` requires exactly
+`{receiptId,mode,memberIds}`; memberIds is empty for keep/weight and a nonempty
+unique list of current living allegiant member ids for favor. Only the current
+leader may commit. A command additionally needs its existing trade scope.
+Reviews project exact public coin, immediate household food consumption and
+per-member support before committing once. Weight sharing uses member weights;
+favor sharing uses the weights within the selected set. See mobile-confederation.md
+for the allocation formula, resource semantics, receipt capacity, live member
+responses and succession behavior.
+
+The optional saved `mobile.cohesion` has schema 1, scarcityDays, lastPeriod,
+receipts (at most 32) and optional lastDistribution. Member records require
+support [0,100] and lastGainTurn when opted in, and reject them otherwise.
+A receipt has id, source (raid, agreement, service_initial or service_season),
+sourceId, turn, gold and food; gold is finite [0,1000000000000], food an integer
+in that range, at least one positive. Ids use the mobile serial; sources identify
+already committed transfers and never grant resources on restoration.
+lastDistribution contains receipt, mode, rows and turn; each row has memberId,
+characterId, gold, food and resulting support. Its totals must exactly match
+retention or the allocated receipt (coin allows only floating-point tolerance).
+Historical recipients remain character references. The existing mobile/save
+schemas and exact JSON fingerprints do not change.
+
 Optional `extractionPolicy` has exactly `schema:1` and at least one of:
 
 - `demand:{kinds,maxPayment,maxDays}`: kinds is 1-2 unique values from tribute

@@ -1,3 +1,13 @@
+Mobile battle cohesion
+
+Resolved field battles notify opted-in mobile support once per participating
+coalition on each side before casualties can disband a host. Several columns in
+one camp do not multiply the result. Victory and defeat coefficients belong to
+the same mobileProfiles cohesionPolicy as receipt sharing and scarcity. This
+notification creates no loot, soldiers, claims or battle outcome. Bounded raids
+use their actual sortie result through the mobile transaction. See
+mobile-confederation.md for the none technology decision and member responses.
+
 # Wars
 
 Ordinary seasonal declarations use the shared war preference projection. The default policy declares ambitious/wrathful versus content/kind/patient consideration and aggression-appetite multipliers, while current ruler aims adjust the strength margin through a separate channel. Exact values, neutral defaults, legacy personality compatibility and import examples are in docs/designs/ai-decisions.md. A consideration roll is separate from legal target selection, aggression support/revolt review and real treasury-backed muster. Preferences grant no permission, troops or money, and do not alter historical openings or direct player declarations. This numeric preference change creates no new technology-gated capability.

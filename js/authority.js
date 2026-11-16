@@ -663,8 +663,10 @@
     var other = rid === row.patronRealmId ? row.federateRealmId : row.patronRealmId;
     if (row.approvals[other] === FB.realmRulerGeneration(s, other) &&
         row.initialPay && row.initialPaidTurn === undefined) {
+      if (FB.mobile && !FB.mobile.receiptCapacity(s,row.federateRealmId)) return false;
       if (!FB.treasuryTransfer(s, row.patronRealmId, row.federateRealmId, row.initialPay)) return false;
       row.initialPaidTurn = s.turn;
+      if (FB.mobile) FB.mobile.recordReceipt(s,row.federateRealmId,'service_initial',row.id,row.initialPay,0);
       FB.news(s, FB.msg('news.federate.initial_payment',
         '💰 {patron} pays {money:amount} to equip {federate} for the agreed service.',
         { patron:FB.realmNameParam(s, row.patronRealmId),
@@ -1527,6 +1529,7 @@
         row.status = 'expired'; contractNotice(s, row, ended); continue;
       }
       if (period <= row.paidThroughPeriod) continue;
+      if (row.payPerSeason && FB.mobile && !FB.mobile.receiptCapacity(s,row.federateRealmId)) continue;
       var payer = FB.treasuryCounterparty(s, row.patronRealmId);
       var payee = FB.treasuryCounterparty(s, row.federateRealmId);
       if (row.payPerSeason > 0 && (!payer || !payee ||
@@ -1537,6 +1540,7 @@
       }
       row.paidThroughPeriod = period;
       row.serviceThroughPeriod = period;
+      if (FB.mobile && row.payPerSeason) FB.mobile.recordReceipt(s,row.federateRealmId,'service_season',row.id+':'+period,row.payPerSeason,0);
       if (row.templateId && row.payPerSeason) FB.news(s, FB.msg('news.federate.payment',
         '💰 {patron} pays {money:amount} to {federate} for the season’s service.',
         { patron:FB.realmNameParam(s, row.patronRealmId),
