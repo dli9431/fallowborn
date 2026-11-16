@@ -10,6 +10,7 @@ const {openCrazyGame} = require('../support/game/crazygames-title');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {engineSources} = require('../support/source-literals');
 const {contentIdMetric,metricProblems} = require('../support/content-id-reviews');
+const {quotedCounts} = require('../support/content-id-reviews');
 const imported = require('../fixtures/authoring/event-system-moments-fictional.json');
 const fixturePath = path.resolve(__dirname,'../fixtures/authoring/event-system-moments-fictional.json');
 const sharedPacks=['imperial_office','federate_life','civic_assembly','religious_life','kingship_succession','works_technology','mobile_life','imperial_service'];
@@ -83,6 +84,11 @@ test('moment and review adapters preserve the closed content-id metric',async fu
   });
   expect(metricProblems(contentIdMetric(engineSources(),owners,reviews.hooks),
     require('../fixtures/engine-ids/content-id-metric.json'))).toEqual([]);
+  const counts=quotedCounts(engineSources());
+  for (const hook of reviews.hooks) for (const file of ['js/mobile_confederations.js','js/ui_mobile.js']) {
+    if (Object.prototype.hasOwnProperty.call(hook.uses || {},file))
+      expect(counts.get(file+'\n'+hook.id) || 0,file+': '+hook.id).toBe(hook.uses[file]);
+  }
 });
 
 test('ordinary imported moments validate atomically and every dispatch is typed, ordered and free of effects or RNG',async function ({page},info) {
@@ -387,4 +393,96 @@ for (const file of [false,true]) for (const crazy of [false,true]) test('empty p
   const extractor=fs.readFileSync(path.resolve(__dirname,'../../../tools/i18n_catalog.py'),'utf8');
   expect(extractor).toContain('EVENT_FILES = sorted(DATA.glob("events_*.js"))');
   for (const file of packFiles) expect(fs.existsSync(path.resolve(__dirname,'../../..',file))).toBe(true);
+});
+
+// These inputs own the shared proposal route and extraction transactions below.
+dependsOnRuntime(__filename,['js/ui_mobile.js','js/ai_decisions.js','js/actions.js']);
+
+test('extraction schemas preserve proposal validation and the mobile sheet uses the canonical proposal route',async function ({page},info) {
+  await start(page,info);
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='pontic_following_476',moving=M.migration(s,rid),p=M.profile(s,rid);
+    const examples=[{kind:'demand',countyId:moving.at,agreementKind:'tribute',threat:'raid',price:3,duration:30,levy:0},
+      {kind:'raid',countyId:moving.at},
+      {kind:'hire',partnerId:moving.patronRealmId,templateId:p.extractionPolicy.hire.templateIds[0]}];
+    function proposal(t) {return M.review(s,{realmId:rid,action:'propose',actor:{kind:'realm',id:rid},terms:{operation:'extraction',proposal:t}}).review;}
+    const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+    const valid=examples.map(function (t) {return proposal(t).allowed;});
+    const bad=[Object.assign({},examples[0],{levy:'0'}),Object.assign({},examples[0],{templateId:examples[2].templateId}),
+      Object.assign({},examples[1],{price:1}),Object.assign({},examples[2],{countyId:moving.at}),
+      Object.assign({},examples[0],{unknown:1}),{kind:'unregistered',countyId:moving.at}];
+    const rejected=bad.map(function (t) {return !proposal(t).allowed;});
+    const pure=before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+    const captured=[],review=M.review;
+    M.review=function (state,request) {
+      if (request.action==='propose') captured.push(JSON.parse(JSON.stringify(request)));
+      return review.apply(this,arguments);
+    };
+    try {FB.ui.showMobileConfederation(rid);} finally {M.review=review;}
+    const extraction=captured.filter(function (r) {return r.terms.operation==='extraction';});
+    function act(action,terms,actor) {
+      const q=M.review(s,{realmId:rid,action:action,terms:terms,actor:actor || {kind:'realm',id:rid}});
+      if (!q.review.allowed || !M.commit(s,q)) throw new Error(action+': '+q.review.reason);
+    }
+    act('propose',{operation:'extraction',proposal:examples[0]});
+    M.members(s,rid).forEach(function (m) {act('assent',{assent:true},m.principal);});
+    act('extract',examples[0]);
+    const offer=M.row(s,rid).agreements.slice(-1)[0],outside=s.realms[offer.partnerId].treasury;
+    outside.gold=0;outside.militaryAccrued=0;
+    const funds=[FB.treasuryAvailable(s,rid),FB.treasuryAvailable(s,offer.partnerId)];
+    const answered=M.answerDemandAI(s,rid,offer.id);
+    const refused=answered&&offer.status==='ended'&&funds[0]===FB.treasuryAvailable(s,rid)&&funds[1]===FB.treasuryAvailable(s,offer.partnerId);
+    return {valid:valid,rejected:rejected,pure:pure,refused:refused,
+      access:captured.some(function (r) {return r.terms.operation==='agreement'&&r.terms.proposal.kind==='access';}),
+      operations:Array.from(new Set(extraction.map(function (r) {return r.terms.proposal.kind;}))).sort(),
+      shape:extraction.length>0&&extraction.every(function (r) {return r.realmId===rid&&r.actor.id===s.player.charId&&
+        Object.keys(r.terms).sort().join(',')==='operation,proposal';})};
+  });
+  expect(result).toEqual({valid:[true,true,true],rejected:Array(6).fill(true),pure:true,refused:true,
+    access:true,operations:['demand','hire','raid'],shape:true});
+});
+
+test('coalition contract refusal and raid receipt validation retain the canonical transactions and exact saved fields',async function ({page},info) {
+  await start(page,info);
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='pontic_following_476',r=M.row(s,rid),moving=M.migration(s,rid),host=M.host(s,rid);
+    function act(action,terms,actor) {
+      const q=M.review(s,{realmId:rid,action:action,terms:terms,actor:actor || {kind:'realm',id:rid}});
+      if (!q.review.allowed || !M.commit(s,q)) throw new Error(action+': '+q.review.reason);
+      return q;
+    }
+    function approve(t) {
+      act('propose',{operation:'extraction',proposal:t});
+      M.members(s,rid).forEach(function (m) {act('assent',{assent:true},m.principal);});
+    }
+    const hire={kind:'hire',partnerId:moving.patronRealmId,templateId:M.profile(s,rid).extractionPolicy.hire.templateIds[0]};
+    approve(hire);act('extract',hire);
+    const c=s.authority.contracts[s.authority.contracts.length-1],answer=Object.assign(M.contractTerms(s,c.id),{accept:false});
+    const expected=JSON.parse(JSON.stringify(s)),rng=FB.getRngState(),uid=FB.getUidCounter();
+    const canonical=FB.authorityContractTransition(expected,c.id,'release',c.patronRealmId);
+    const released=act('hire_answer',answer,{kind:'realm',id:c.patronRealmId});
+    const parity=canonical&&JSON.stringify(expected.authority.contracts)===JSON.stringify(s.authority.contracts)&&
+      rng===FB.getRngState()&&uid===FB.getUidCounter();
+    const repeat=!M.commit(s,released);
+    const missingService=M.review(s,{realmId:rid,action:'service',actor:{kind:'realm',id:rid},terms:{agreementId:'missing',warId:'missing'}}).review;
+    const holder=s.holder[host.at],stock=s.market.goods.indexOf('provisions');
+    s.realms[holder].treasury.gold=7.5;s.realms[holder].treasury.militaryAccrued=0;s.market.counties[host.at][0][stock]=17.5;
+    const raid={kind:'raid',countyId:host.at};approve(raid);act('extract',raid);
+    const valid=M.validate(s),receipt=JSON.stringify(r.lastRaid),record=JSON.stringify(r),afterRng=FB.getRngState(),afterUid=FB.getUidCounter();
+    const mutations=[function (v) {v.unknown=true;},function (v) {delete v.gold;},function (v) {v.holderId=[v.holderId];},
+      function (v) {v.gold=-1;},function (v) {v.gold=10001;},function (v) {v.food=0.5;},
+      function (v) {v.casualties=v.men+1;},function (v) {v.turn=s.turn+1;},function (v) {v.schema=2;}];
+    const rejected=mutations.map(function (mutate) {
+      const bad=Object.assign({},s,{authority:Object.assign({},s.authority,{governments:Object.assign({},s.authority.governments)})});
+      const row=JSON.parse(record);mutate(row.lastRaid);
+      bad.authority.governments[rid]=Object.assign({},s.authority.governments[rid],{mobile:row});
+      const before=JSON.stringify(row);let rejected=false;
+      try {M.validate(bad);} catch (error) {rejected=true;}
+      return rejected&&before===JSON.stringify(row)&&record===JSON.stringify(r)&&
+        afterRng===FB.getRngState()&&afterUid===FB.getUidCounter();
+    });
+    return {parity:parity,repeat:repeat,service:!missingService.allowed&&missingService.reason==='commitment',valid:valid,
+      receipt:!!JSON.parse(receipt),rejected:rejected,expired:c.status==='expired'};
+  });
+  expect(result).toEqual({parity:true,repeat:true,service:true,valid:true,receipt:true,rejected:Array(9).fill(true),expired:true});
 });

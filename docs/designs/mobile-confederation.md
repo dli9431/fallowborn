@@ -26,7 +26,11 @@ hire operations independently. The Mobile coalition deed exposes only declared
 kinds. Each uses the existing exact extraction proposal, weighted assent and
 coalition review/commit boundary. NPC principals answer pending extraction
 proposals through the same assent transaction; the protagonist supplies only
-their own assent. Membership, terms, leadership, stocks and public accounts are
+their own assent. Extraction request keys come from the typed operation
+schemas rather than a separate field list. The retained raid receipt has a closed
+schema; its existing numeric, identity and resource checks still apply. Canonical
+realm actors, service matching, contract release and proposal cards share their
+owning transaction paths. Membership, terms, leadership, stocks and public accounts are
 rechecked before commitment. Cancel and stale confirmation spend nothing.
 
 Demand creates an ordinary tribute or protection offer carrying a named county

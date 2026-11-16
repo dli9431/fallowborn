@@ -334,7 +334,7 @@
       assent:['assent'],recruit:['count','unitId','provisioning'],demuster:[],move:['countyId'],offer:['kind','partnerId','countyIds','capacity','allowRecruit','price','duration','levy'],
       accept:['agreementId'],decline:['agreementId'],join:['countyId','count'],replace_member:['memberId','candidateId'],leave:['memberId','countyId'],settle:['countyId','count','final'],
       work:[],trade:['countyId','count','direction','provisioning'],war:['causes'],peace:['warId'],service:['agreementId','warId'],march:['countyId'],
-      extract:['kind','countyId','partnerId','agreementKind','threat','price','duration','levy','templateId'],hire_answer:['contractId','signature','accept'],
+      extract:extractionFields,hire_answer:['contractId','signature','accept'],
       land:['countyId'],contract:['contractId','signature']};
     if (action==='offer') fields.offer.push('programStepId');
     if (!fields[action] || !keys(t,fields[action]) || JSON.stringify(t).length>4096) return false;
@@ -355,6 +355,20 @@
     hire:{type:'object',fields:{kind:{value:'hire'},partnerId:{type:'string',minLength:1,maxLength:80},
       templateId:{type:'string',minLength:1,maxLength:80}}}
   };
+  // The operation schemas own the request keys, including the outer shape gate.
+  var extractionFields = [];
+  Object.keys(extractionTerms).forEach(function (operation) {
+    Object.keys(extractionTerms[operation].fields).forEach(function (field) {
+      if (extractionFields.indexOf(field) < 0) extractionFields.push(field);
+    });
+  });
+  var raidReceiptSpec = {type:'object',fields:{
+    schema:{value:1},turn:{type:'number'},countyId:{type:'string'},holderId:{type:'string'},
+    hostId:{type:'string'},men:{type:'number'},defenders:{type:'number'},success:{type:'boolean'},
+    casualties:{type:'number'},gold:{type:'number'},food:{type:'number'}
+  }};
+  function protectionService(action) {return action === 'service';}
+  function releaseContract(s,id,rid) {return FB.authorityContractTransition(s,id,'release',rid);}
   M.extractionOperations = function (s,rid) {
     var p=M.profile(s,rid), policy=p && p.extractionPolicy;
     return policy ? Object.keys(extractionTerms).filter(function (kind) {return !!policy[kind];}) : [];
@@ -708,7 +722,7 @@
     } else if (action === 'peace') {
       q.war = copy(FB.ordinaryWarById(s,t.warId) || null);
       if (!leader || !q.war || [q.war.attacker,q.war.defender].indexOf(rid)<0 || !decision(s,rid,'treaty',t)) return no('withheld');
-    } else if (action === 'service') {
+    } else if (protectionService(action)) {
       var service = M.agreements(s,rid).filter(function (a) {return a.id===t.agreementId && a.kind==='protection' && a.status==='active' && a.endTurn>s.turn;})[0];
       q.war = copy(FB.ordinaryWarById(s,t.warId) || null);
       if (!leader || !service || !q.war || !army || army.men<service.levy || FB.isRealmAtWar(s,rid) ||
@@ -822,7 +836,7 @@
     }
     else if (q.action === 'hire_answer') {
       if (!(t.accept ? FB.authorityConsentContract(s,t.contractId,q.contract.patronRealmId) :
-          FB.authorityContractTransition(s,t.contractId,'release',q.contract.patronRealmId))) return false;
+          releaseContract(s,t.contractId,q.contract.patronRealmId))) return false;
     }
     else if (q.action === 'offer') {
       if (t.programStepId!==undefined && !FB.expeditionPrograms.recordingAccess(s)) return false;
@@ -904,7 +918,7 @@
         s.realms[rid].nonTerritorial = false; s.realms[rid].capital = t.countyId;
         if (leader) FB.assignRealmRulerCharacter(s, rid, leader.id, {replaceAuthored:true});
         M.agreements(s,rid).forEach(function (a) { a.status = 'ended'; });
-        if (moving.contractId) FB.authorityContractTransition(s, moving.contractId, 'release', rid);
+        if (moving.contractId) releaseContract(s,moving.contractId,rid);
         if (leader && leader.id===s.player.charId && FB.absorbRealm(s,rid,leader)) FB.authoritySetGovernment(s,'player',moving.settlementForm);
       }
     } else if (q.action === 'work') {
@@ -924,7 +938,7 @@
     } else if (q.action === 'peace') {
       if (!FB.settleOrdinaryWar(s,t.warId,'white_peace')) return false;
       r.decision=null;
-    } else if (q.action === 'service') {
+    } else if (protectionService(q.action)) {
       var service = M.agreements(s,rid).filter(function (a) {return a.id===t.agreementId;})[0];
       var enemy = q.war.attacker===service.partnerId ? q.war.defender : q.war.attacker;
       var war = FB.registerOrdinaryWar(s,rid,{enemy:enemy,defending:true,target:q.war.target,legacy:false,
@@ -1103,8 +1117,9 @@
   FB.mobileInitializeAuthored = function (s,defs) {
     M.initialize(s,defs.filter(function (d) {return d.mobile && d.mobile.opening!==undefined;}));
   };
+  function realmActor(id) {return {kind:'realm',id:id};}
   function enact(s, rid, action, terms, actor) {
-    var review = M.review(s, {realmId:rid,action:action,terms:terms || {},actor:actor || {kind:'realm',id:rid}});
+    var review = M.review(s, {realmId:rid,action:action,terms:terms || {},actor:actor || realmActor(rid)});
     return review && review.review.allowed && M.commit(s, review);
   }
   function approvalAI(s, rid, operation, terms) {
@@ -1120,7 +1135,7 @@
     var a=M.agreement(s,rid,id), partner=a && (a.partnerId==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,a.partnerId));
     if (!a || !a.extraction || a.status!=='offered' || !availablePerson(s,partner) || partner.id===s.player.charId) return false;
     var response=FB.aiDecisions.mobileDemandResponse(s,a.partnerId,rid,a);
-    var actor={kind:'realm',id:a.partnerId}, terms={agreementId:id};
+    var actor=realmActor(a.partnerId), terms={agreementId:id};
     if (response.accept) {
       var accepted=M.review(s,{realmId:rid,action:'accept',terms:terms,actor:actor});
       if (accepted.review.allowed) return M.commit(s,accepted);
@@ -1150,7 +1165,7 @@
       if (!availablePerson(s,person) || person.id===s.player.charId) return;
       var terms=M.contractTerms(s,c.id);
       terms.accept=FB.aiDecisions.willing(s,c.patronRealmId,'government','serviceWillingness');
-      var actor={kind:'realm',id:c.patronRealmId}, reviewed=M.review(s,{realmId:rid,action:'hire_answer',terms:terms,actor:actor});
+      var actor=realmActor(c.patronRealmId), reviewed=M.review(s,{realmId:rid,action:'hire_answer',terms:terms,actor:actor});
       if (terms.accept && !reviewed.review.allowed) {
         terms.accept=false;reviewed=M.review(s,{realmId:rid,action:'hire_answer',terms:terms,actor:actor});
       }
@@ -1773,8 +1788,7 @@
           r.defeatKey !== undefined && (typeof r.defeatKey !== 'string' || r.defeatKey.length > 512)) fault(rid);
       if (r.lastRaid!==undefined || r.lastRaidTurn!==undefined) {
         var raid=r.lastRaid;
-        if (!keys(raid,['schema','turn','countyId','holderId','hostId','men','defenders','success','casualties','gold','food']) ||
-            Object.keys(raid).length!==11 || raid.schema!==1 || !whole(raid.turn) || raid.turn>s.turn || r.lastRaidTurn!==raid.turn ||
+        if (!FB.schema.valid(raid,raidReceiptSpec) || raid.schema!==1 || !whole(raid.turn) || raid.turn>s.turn || r.lastRaidTurn!==raid.turn ||
             !s.owner[raid.countyId] || !s.realms[raid.holderId] || typeof raid.hostId!=='string' || !raid.hostId ||
             !whole(raid.men) || !raid.men || !boundedNumber(raid.defenders,1000000000000) || typeof raid.success!=='boolean' ||
             !whole(raid.casualties) || raid.casualties>raid.men || !whole(raid.gold) || raid.gold>10000 || !whole(raid.food) || raid.food>100000 ||
