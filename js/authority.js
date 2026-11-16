@@ -5,6 +5,10 @@
   var Q = FB.political;
   var priorOffices = Q.offices, priorPermission = Q.permission, baseActor = Q.actor;
 
+  // Reference construction and kind checks do not resolve an actor or grant authority.
+  Q.realmReference = function (id) { return {kind:'realm',id:id}; };
+  Q.isRealmReference = function (value) { return !!value && value.kind === 'realm'; };
+
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
   function records(s) {
@@ -48,7 +52,7 @@
     return !!row && (kind === 'realm' ? !!row.alive : !row.dead);
   }
   function ref(s, value) {
-    return value && (value.kind === 'character' || value.kind === 'realm') &&
+    return value && (value.kind === 'character' || Q.isRealmReference(value)) &&
       typeof value.id === 'string' && actorExists(s, value.kind, value.id) ?
       { kind:value.kind, id:value.id } : null;
   }
@@ -66,8 +70,8 @@
       ? { kind:'host', id:value.id } : null;
     if (value.kind === 'county') return FB.world && own(FB.world.byId, value.id)
       ? { kind:'county', id:value.id } : null;
-    if (value.kind === 'realm') return actorExists(s, 'realm', value.id)
-      ? { kind:'realm', id:value.id } : null;
+    if (Q.isRealmReference(value)) return actorExists(s, 'realm', value.id)
+      ? Q.realmReference(value.id) : null;
     return null;
   }
   /* A realm without a row takes the campaign's stamped default form;
@@ -96,12 +100,12 @@
     return !!(realms && typeof id === 'string' && id && own(realms, id) && realms[id] && realms[id].alive);
   }
   Q.governmentFormId = function (s, realmRef) {
-    if (!realmRef || realmRef.kind !== 'realm' || !livingRealmRef(s, realmRef)) return null;
+    if (!realmRef || !Q.isRealmReference(realmRef) || !livingRealmRef(s, realmRef)) return null;
     var formId = selectedForm(s, governmentRecord(s, realmRef));
     return FBDATA.governmentForms[formId] ? formId : null;
   };
   Q.government = function (s, realmRef) {
-    if (!realmRef || realmRef.kind !== 'realm' || !Q.actor(s, realmRef)) return null;
+    if (!realmRef || !Q.isRealmReference(realmRef) || !Q.actor(s, realmRef)) return null;
     var stored = governmentRecord(s, realmRef);
     var formId = selectedForm(s, stored);
     var rules = FBDATA.governmentForms[formId];
@@ -116,7 +120,7 @@
         ? stored.sinceTurn : null } : null;
   };
   FB.authoritySetGovernment = function (s, rid, formId) {
-    var current = Q.government(s, { kind:'realm', id:rid });
+    var current = Q.government(s, Q.realmReference(rid));
     if (!current || !FBDATA.governmentForms[formId] ||
         FB.governments.problems(formId).length || current.formId === formId) return false;
     ensure(s).governments[rid] = Object.assign({},
@@ -138,9 +142,9 @@
   };
   /* Identity reads never change community partitions or materialize rulers. */
   Q.governingIdentity = function (s, rid) {
-    var g = Q.government(s, { kind:'realm', id:rid });
+    var g = Q.government(s, Q.realmReference(rid));
     if (!g) return null;
-    var actor = Q.actor(s, { kind:'realm', id:rid });
+    var actor = Q.actor(s, Q.realmReference(rid));
     return Object.assign({}, g, {
       eliteCultureId:g.eliteCultureId || actor.cultureId,
       eliteFaithId:g.eliteFaithId || actor.realmReligionId || actor.religionId,
@@ -156,7 +160,7 @@
       ['personal','elite'].indexOf(value.justicePolicy) >= 0);
   };
   FB.authoritySetIdentity = function (s, rid, value) {
-    var g = Q.government(s, { kind:'realm', id:rid });
+    var g = Q.government(s, Q.realmReference(rid));
     if (!g || !FB.authorityIdentityValid(s, value)) return false;
     var a = ensure(s), prior = a.governments[rid] || { formId:g.formId, sinceTurn:s.turn };
     var changed = false;
@@ -237,7 +241,7 @@
       var cleric = s.chars && s.chars[issuer.id];
       return !!(cleric && !cleric.dead && (definition.characterRoles || []).indexOf(cleric.role) >= 0);
     }
-    if (issuer.kind === 'realm')
+    if (Q.isRealmReference(issuer))
       return !!Q.actor(s, issuer);
     if (issuer.kind === 'host')
       return !!host(s, issuer.id);
@@ -259,7 +263,7 @@
   function generation(s, issuer, readOffices) {
     if (issuer.kind === 'religious-institution') return FB.religiousInstitutionIssuerGeneration(s, issuer.id);
     if (issuer.kind === 'character') return issuer.id;
-    if (issuer.kind === 'realm') return FB.realmRulerGeneration(s, issuer.id);
+    if (Q.isRealmReference(issuer)) return FB.realmRulerGeneration(s, issuer.id);
     if (issuer.kind === 'county') {
       var rid = FB.settlementCountyHolder(s, issuer.id);
       return rid ? rid + ':' + FB.realmRulerGeneration(s, rid) : null;
@@ -378,7 +382,7 @@
         if (priorRight) {
           FB.authorityRecordCustom(s, priorRight.id, 'recognition', row.id);
           priorRight.basisRef = row.id;
-        } else FB.authorityEstablishRight(s, { issuer:{ kind:'realm', id:holder },
+        } else FB.authorityEstablishRight(s, { issuer:Q.realmReference(holder),
           beneficiary:subject, scope:at, power:power, basis:'recognition', basisRef:row.id });
       }
     }
@@ -449,14 +453,14 @@
       }));
     }
     if (at.kind === 'county') return FB.realmTerritory(s, rid).indexOf(at.id) >= 0;
-    return at.kind === 'realm' && at.id === rid;
+    return Q.isRealmReference(at) && at.id === rid;
   }
   FB.authorityAppoint = function (s, terms) {
     terms = terms || {};
     var def = FBDATA.authorityOffices[terms.officeId];
     var grantor = ref(s, terms.appointer), holder = ref(s, terms.holder);
     var at = scope(s, terms.scope), rid = terms.institutionId;
-    if (!def || !grantor || grantor.kind !== 'realm' || grantor.id !== rid ||
+    if (!def || !grantor || !Q.isRealmReference(grantor) || grantor.id !== rid ||
         def.mandate && (!holder || holder.kind !== 'character') ||
         !holder || !at || def.scopes.indexOf(at.kind) < 0 ||
         !within(s, rid, at) || terms.endTurn !== undefined &&
@@ -565,8 +569,8 @@
     return !!(row && row.status === 'active' && row.succession &&
       row.endTurn > s.turn &&
       (!row.recognitionId || activeRecognition(s, recognition(s, row.recognitionId))) &&
-      Q.actor(s, { kind:'realm', id:row.patronRealmId }) &&
-      Q.actor(s, { kind:'realm', id:row.federateRealmId }) &&
+      Q.actor(s, Q.realmReference(row.patronRealmId)) &&
+      Q.actor(s, Q.realmReference(row.federateRealmId)) &&
       row.succession.patron === FB.realmRulerGeneration(s, row.patronRealmId) &&
       row.succession.federate === FB.realmRulerGeneration(s, row.federateRealmId) &&
       (!row.hostId || (host(s, row.hostId) &&
@@ -575,8 +579,8 @@
   function contractReason(s, row) {
     if (row.status !== 'active') return row.status;
     if (row.endTurn <= s.turn) return 'term_ended';
-    if (!Q.actor(s, { kind:'realm', id:row.patronRealmId }) ||
-        !Q.actor(s, { kind:'realm', id:row.federateRealmId })) return 'party_lost';
+    if (!Q.actor(s, Q.realmReference(row.patronRealmId)) ||
+        !Q.actor(s, Q.realmReference(row.federateRealmId))) return 'party_lost';
     if (row.succession.patron !== FB.realmRulerGeneration(s, row.patronRealmId) ||
         row.succession.federate !== FB.realmRulerGeneration(s, row.federateRealmId))
       return 'ruler_succession';
@@ -633,7 +637,7 @@
     });
   };
   FB.authorityRekeyInstitution = function (s,from,to) {
-    function rekey(ref) { if (ref && ref.kind === 'realm' && ref.id === from) ref.id = to; }
+    function rekey(ref) { if (ref && Q.isRealmReference(ref) && ref.id === from) ref.id = to; }
     var a = records(s);
     if (!a) return;
     if (own(a.governments,from)) { a.governments[to] = a.governments[from]; delete a.governments[from]; }
@@ -668,8 +672,8 @@
     }});
   Q.contractQuote = function (s, terms) {
     terms = terms || {};
-    var patron = Q.actor(s, { kind:'realm', id:terms.patronRealmId });
-    var federate = Q.actor(s, { kind:'realm', id:terms.federateRealmId });
+    var patron = Q.actor(s, Q.realmReference(terms.patronRealmId));
+    var federate = Q.actor(s, Q.realmReference(terms.federateRealmId));
     var army = terms.hostId ? host(s, terms.hostId) : null;
     var acknowledged = terms.recognitionId ? recognition(s, terms.recognitionId) : null;
     var definition = terms.templateId && FBDATA.federateContractTerms[terms.templateId];
@@ -684,10 +688,10 @@
         (definition.recognition !== 'required' || acknowledged)) &&
       (!terms.recognitionId || acknowledged && activeRecognition(s, acknowledged) &&
         FBDATA.legitimacySources[acknowledged.source].mandate === 'court' &&
-        same(acknowledged.issuer, { kind:'realm', id:patron.realmId }) &&
-        same(acknowledged.subject, { kind:'realm', id:federate.realmId }) &&
+        same(acknowledged.issuer, Q.realmReference(patron.realmId)) &&
+        same(acknowledged.subject, Q.realmReference(federate.realmId)) &&
         (!acknowledged.scope ||
-          same(acknowledged.scope, { kind:'realm', id:federate.realmId }))) &&
+          same(acknowledged.scope, Q.realmReference(federate.realmId)))) &&
       Number.isFinite(terms.payPerSeason) && terms.payPerSeason >= 0 &&
       (terms.initialPay === undefined || Number.isFinite(terms.initialPay) && terms.initialPay >= 0) &&
       (!(terms.payPerSeason || terms.initialPay) ||
@@ -771,9 +775,11 @@
       usePublic = row.publicPayer || publicPayer === true && rid === row.patronRealmId;
     if (row.approvals[other] === FB.realmRulerGeneration(s, other) &&
         row.initialPay && row.initialPaidTurn === undefined) {
+      if (FB.mobile && !FB.mobile.receiptCapacity(s,row.federateRealmId)) return false;
       if (!(usePublic ? FB.treasuryFundingTransfer(s,{kind:'public',realmId:row.patronRealmId},row.federateRealmId,row.initialPay) :
           FB.treasuryTransfer(s, row.patronRealmId, row.federateRealmId, row.initialPay))) return false;
       row.initialPaidTurn = s.turn;
+      if (FB.mobile) FB.mobile.recordReceipt(s,row.federateRealmId,'service_initial',row.id,row.initialPay,0);
       FB.news(s, FB.msg('news.federate.initial_payment',
         '💰 {patron} pays {money:amount} to equip {federate} for the agreed service.',
         { patron:FB.realmNameParam(s, row.patronRealmId),
@@ -792,7 +798,7 @@
     var row = contract(s, id);
     var priorStatus = row && row.status;
     if (!row || rid !== row.patronRealmId && rid !== row.federateRealmId ||
-        !Q.actor(s, { kind:'realm', id:rid })) return false;
+        !Q.actor(s, Q.realmReference(rid))) return false;
     if (action === 'breach' && (row.status === 'active' || row.status === 'offered'))
       row.status = 'breached';
     else if (action === 'release' && ['active','offered','expired'].indexOf(row.status) >= 0 &&
@@ -842,11 +848,11 @@
     terms = terms || {};
     var issuer = ref(s, terms.issuer), beneficiary = ref(s, terms.beneficiary);
     var at = scope(s, terms.scope);
-    if (!issuer || issuer.kind !== 'realm' || !beneficiary || !at ||
+    if (!issuer || !Q.isRealmReference(issuer) || !beneficiary || !at ||
         at.kind !== 'county' || !FBDATA.customaryBases[terms.basis] ||
         ['peace','revenue','consent'].indexOf(terms.power) < 0 ||
         !within(s, issuer.id, at)) return null;
-    var held = beneficiary.kind === 'realm'
+    var held = Q.isRealmReference(beneficiary)
       ? FB.settlementCountyHolder(s, at.id) === beneficiary.id
       : FB.holdsSettlementInCounty(s, beneficiary, at.id);
     var proof = recognition(s, terms.basisRef);
@@ -877,7 +883,7 @@
     if ((event === 'tenure' || event === 'judgment') &&
         (typeof evidence !== 'string' || !evidence)) return false;
     if (event === 'possession' &&
-        !(row.beneficiary.kind === 'realm'
+        !(Q.isRealmReference(row.beneficiary)
           ? FB.settlementCountyHolder(s, row.scope.id) === row.beneficiary.id
           : FB.holdsSettlementInCounty(s, row.beneficiary, row.scope.id))) return false;
     if (event === 'recognition') {
@@ -905,7 +911,7 @@
     return true;
   };
   FB.authorityJudgment = function (s, beneficiary, pid, evidence) {
-    var issuer = { kind:'realm', id:FB.settlementCountyHolder(s, pid) };
+    var issuer = Q.realmReference(FB.settlementCountyHolder(s, pid));
     if (!ref(s, issuer) || !ref(s, beneficiary) || !scope(s, { kind:'county', id:pid }) ||
         !Q.power(s, beneficiary, 'peace', { provinceId:pid }).allowed) return false;
     var existing = list(s, 'rights').filter(function (row) {
@@ -930,7 +936,7 @@
     for (var office of list(s, 'appointments')) {
       var def = FBDATA.authorityOffices[office.officeId];
       if (same(office.holder, actor) && def && def.powers.indexOf(power) >= 0 && activeAppointment(s, office)) {
-        var counties = office.scope.kind === 'realm' ? FB.realmTerritory(s, office.scope.id) :
+        var counties = Q.isRealmReference(office.scope) ? FB.realmTerritory(s, office.scope.id) :
           office.scope.kind === 'county' ? [office.scope.id] : [];
         for (var pid of counties) if (out.indexOf(pid) < 0) out.push(pid);
       }
@@ -948,7 +954,7 @@
     if (power === 'revenue' && context.contractId) {
       var obligation = contract(s, context.contractId);
       return obligation && activeContract(s, obligation) &&
-        a.kind === 'realm' && a.id === obligation.federateRealmId
+        Q.isRealmReference(a) && a.id === obligation.federateRealmId
         ? basis('federate_pay', obligation.id) : denied('no_contract_receipt');
     }
     var at = power === 'ban'
@@ -965,7 +971,7 @@
     for (var office of list(s, 'appointments')) {
       var def = FBDATA.authorityOffices[office.officeId];
       if (same(office.holder, a) && (same(office.scope, at) ||
-          at.kind === 'county' && office.scope.kind === 'realm' &&
+          at.kind === 'county' && Q.isRealmReference(office.scope) &&
             FB.realmTerritory(s, office.scope.id).indexOf(at.id) >= 0) &&
           def && def.powers.indexOf(power) >= 0 && activeAppointment(s, office))
         return basis('appointment', office.id);
@@ -975,7 +981,7 @@
       return basis('custom', custom.id);
     if (power === 'ban') {
       var army = host(s, at.id);
-      if (a.kind === 'realm' && army.realm === a.id ||
+      if (Q.isRealmReference(a) && army.realm === a.id ||
           a.kind === 'character' && a.id === s.player.charId &&
           army.realm === 'player') return basis('territory', army.realm);
       if (a.kind === 'character' && a.id === s.player.charId) {
@@ -986,12 +992,12 @@
           return basis('legacy_command', army.id);
       }
       for (var agreement of list(s, 'contracts')) if (activeContract(s, agreement) &&
-          agreement.hostId === army.id && a.kind === 'realm' &&
+          agreement.hostId === army.id && Q.isRealmReference(a) &&
           a.id === agreement.patronRealmId)
         return basis('federate_service', agreement.id);
       return denied('no_command');
     }
-    var pid = at.id, rid = a.kind === 'realm' ? a.id :
+    var pid = at.id, rid = Q.isRealmReference(a) ? a.id :
       a.id === s.player.charId ? (FB.station.rulesRealm(s.player, s) ? 'player' : null) :
       FB.realmIdForRulerCharacter(s, s.chars[a.id]);
     if (power === 'peace') {
@@ -1022,8 +1028,8 @@
     terms = terms || {};
     var collector = ref(s, actor), payer =
       terms.payerRealmId === 'player' && s.player
-        ? { kind:'realm', id:'player' }
-        : ref(s, { kind:'realm', id:terms.payerRealmId });
+        ? Q.realmReference('player')
+        : ref(s, Q.realmReference(terms.payerRealmId));
     var permission = collector && Q.power(s, collector, 'revenue',
       { provinceId:terms.provinceId });
     var basisRow = permission && permission.allowed && permission.basis[0];
@@ -1032,9 +1038,9 @@
       var office = appointment(s, basisRow.id);
       payee = office && office.institutionId;
     } else if (basisRow && basisRow.kind === 'custom' &&
-        collector.kind === 'realm') payee = collector.id;
+        Q.isRealmReference(collector)) payee = collector.id;
     else if (basisRow && basisRow.kind === 'direct_receipt' &&
-        collector.kind === 'realm') payee = collector.id;
+        Q.isRealmReference(collector)) payee = collector.id;
     var existing = list(s, 'receipts').some(function (row) {
       return row.obligationId === terms.obligationId;
     });
@@ -1070,14 +1076,14 @@
     if (!a) return denied('invalid_actor');
     if (operation === 'federate_contract') {
       var row = contract(s, context && context.contractId);
-      if (!row || a.kind !== 'realm' ||
+      if (!row || !Q.isRealmReference(a) ||
           a.id !== row.patronRealmId && a.id !== row.federateRealmId)
         return denied('missing_contract');
       return row ? { allowed:activeContract(s, row), reason:row.status,
         required:[row.patronRealmId, row.federateRealmId],
         approvals:copy(row.approvals) } : denied('missing_contract');
     }
-    if (operation === 'extraordinary_tax' && a.kind === 'realm' &&
+    if (operation === 'extraordinary_tax' && Q.isRealmReference(a) &&
         a.id === 'player') {
       var needed = !!(FB.councilActive(s) && s.council &&
         FB.effectiveCrownAuthority(s) < (FBDATA.balance.councilConsentBelow || 35));
@@ -1117,7 +1123,7 @@
   };
   function officeCatalogue(s, rid) {
     if (s.realms[rid] && s.realms[rid].rebelFaction) return [];
-    var government = Q.government(s, { kind:'realm', id:rid });
+    var government = Q.government(s, Q.realmReference(rid));
     // Profile-owned commissions use publicAppointmentQuote/publicAppoint,
     // including their dated catalogue, source, remuneration and continuity.
     // The legacy petition path cannot grant a commission without those terms.
@@ -1127,7 +1133,7 @@
   }
   FB.officeCourts = function (s) {
     return Object.keys(s.realms).filter(function (rid) {
-      return Q.actor(s, { kind:'realm', id:rid }) && officeCatalogue(s, rid).length;
+      return Q.actor(s, Q.realmReference(rid)) && officeCatalogue(s, rid).length;
     }).sort().map(function (rid) {
       return { id:rid, offices:officeCatalogue(s, rid).slice() };
     });
@@ -1136,7 +1142,7 @@
     var def = FBDATA.authorityOffices[officeId];
     if (!def || officeCatalogue(s, rid).indexOf(officeId) < 0) return [];
     var out = [];
-    if (def.scopes.indexOf('realm') >= 0) out.push({ kind:'realm', id:rid });
+    if (def.scopes.indexOf('realm') >= 0) out.push(Q.realmReference(rid));
     if (def.scopes.indexOf('host') >= 0) for (var army of s.armies || []) {
       if (army.men > 0 && within(s, rid, {kind:'host',id:army.id})) out.push({ kind:'host', id:army.id });
     }
@@ -1149,17 +1155,17 @@
   }
   function courtActor(s, actor, rid) {
     var ruler = courtRuler(s, rid);
-    return actor && (actor.kind === 'realm' && actor.id === rid ||
+    return actor && (Q.isRealmReference(actor) && actor.id === rid ||
       actor.kind === 'character' && ruler && ruler.id === actor.id);
   }
   function officeFunds(s, actor) {
-    return actor.kind === 'realm' && actor.id !== 'player' ? FB.treasuryAvailable(s, actor.id) :
-      actor.kind === 'realm' && actor.id === 'player' || actor.kind === 'character' && actor.id === s.player.charId
+    return Q.isRealmReference(actor) && actor.id !== 'player' ? FB.treasuryAvailable(s, actor.id) :
+      Q.isRealmReference(actor) && actor.id === 'player' || actor.kind === 'character' && actor.id === s.player.charId
         ? s.player.gold : 0;
   }
   function officeFee(s, actor, cost) {
     if (!cost) return;
-    if (actor.kind === 'realm' && actor.id !== 'player') FB.treasurySpend(s, actor.id, cost);
+    if (Q.isRealmReference(actor) && actor.id !== 'player') FB.treasurySpend(s, actor.id, cost);
     else s.player.gold -= cost;
   }
   function sameQuote(a, b) { return !!a && !!b && JSON.stringify(a) === JSON.stringify(b); }
@@ -1192,8 +1198,8 @@
       c && FB.skillSnapshot(s, c, requirement && requirement.skill || 'dip'), s.player.prestige,
       s.player.flags && s.player.flags.in_prison, s.player.travel,
       imperialMandate,
-      rid && Q.actor(s, { kind:'realm', id:rid }) ? FB.realmTerritory(s, rid) : []]);
-    if (!issuer || !applicant || !requirement || !Q.actor(s, { kind:'realm', id:rid }) ||
+      rid && Q.actor(s, Q.realmReference(rid)) ? FB.realmTerritory(s, rid) : []]);
+    if (!issuer || !applicant || !requirement || !Q.actor(s, Q.realmReference(rid)) ||
         !FB.systemEnabled(s, 'roman_offices', { realm:rid }) ||
         officeCatalogue(s, rid).indexOf(terms.officeId) < 0 || !at ||
         def.scopes.indexOf(at.kind) < 0 || !within(s, rid, at) || !c)
@@ -1234,7 +1240,7 @@
     if (!reviewed || !reviewed.actor) return false;
     var q = FB.officeAppointmentQuote(s, reviewed.actor, reviewed.terms);
     if (!q.allowed || !sameQuote(q, reviewed)) return false;
-    var t = q.terms, patron = { kind:'realm', id:t.institutionId };
+    var t = q.terms, patron = Q.realmReference(t.institutionId);
     var source = officeCommissionSource(FBDATA.authorityOffices[t.officeId]);
     if (!source) return false;
     var proof = Q.legitimacy(s, t.holder, t.scope, source).filter(function (row) {
@@ -1309,7 +1315,7 @@
     if (!FB.systemAvailable(s, 'roman_offices')) return [];
     var out = [], claimOffices = FB.officeMandates ? FB.officeMandates.claimOffices() : {};
     for (var row of list(s, 'appointments')) if ((row.officeId === 'imperial_office' || claimOffices[row.officeId]) &&
-        row.scope.kind === 'realm' && ref(s, row.holder)) {
+        Q.isRealmReference(row.scope) && ref(s, row.holder)) {
       if (out.some(function (prior) { return prior.officeId === row.officeId && prior.institutionId === row.institutionId && same(prior.holder, row.holder); })) continue;
       var claims = list(s, 'appointments').filter(function (other) {
         return (other.officeId === 'imperial_office' || claimOffices[other.officeId]) &&
@@ -1339,7 +1345,7 @@
   };
   FB.officeRecognitionMandates = function (s, actor) {
     var a = ref(s, actor), out = [];
-    if (!a || !FB.systemEnabled(s, 'roman_offices', a.kind === 'realm' ? { realm:a.id } : { character:a.id })) return out;
+    if (!a || !FB.systemEnabled(s, 'roman_offices', Q.isRealmReference(a) ? { realm:a.id } : { character:a.id })) return out;
     if (a.kind === 'character' && (FB.justiceCustodyOf(s, a.id) || s.chars[a.id].unfree ||
         FB.ageOf(s.chars[a.id], s.date.year) < 16)) return out;
     function addMandates(policy, issuer) {
@@ -1348,8 +1354,8 @@
           out.push({ source:id, issuer:copy(issuer) });
       });
     }
-    var rid = a.kind === 'realm' ? a.id : Object.keys(s.realms).filter(function (id) { return courtActor(s, a, id); })[0];
-    if (rid && officeCatalogue(s, rid).length) addMandates('court', { kind:'realm', id:rid });
+    var rid = Q.isRealmReference(a) ? a.id : Object.keys(s.realms).filter(function (id) { return courtActor(s, a, id); })[0];
+    if (rid && officeCatalogue(s, rid).length) addMandates('court', Q.realmReference(rid));
     for (var army of s.armies || []) if (Q.power(s, a, 'ban', { hostId:army.id }).allowed && army.men > 0)
       addMandates('command', { kind:'host', id:army.id });
     var counties = Q.grantedCounties(s, a, 'consent');
@@ -1397,7 +1403,7 @@
     if (!reviewed) return false;
     var q = FB.officeClaimQuote(s, reviewed.actor, reviewed.claimant, reviewed.mandate, reviewed.action);
     if (!q.allowed || !sameQuote(q, reviewed)) return false;
-    var at = { kind:'realm', id:q.claimant.institutionId };
+    var at = Q.realmReference(q.claimant.institutionId);
     var mine = list(s, 'recognitions').filter(function (row) {
       return row.source === q.mandate.source && same(row.issuer, q.mandate.issuer) &&
         same(row.scope, at) && row.status === 'active';
@@ -1432,7 +1438,7 @@
     /* Materialization is a mutation at the AI boundary, never in a quote. */
     var ruler = courtRuler(s, rid) || FB.materializeRealmRuler(s, rid);
     if (!ruler) return;
-    var actor = { kind:'realm', id:rid }, holder = { kind:'character', id:ruler.id };
+    var actor = Q.realmReference(rid), holder = { kind:'character', id:ruler.id };
     for (var row of list(s, 'appointments').slice()) if (row.institutionId === rid &&
         officeStatus(s, row) === 'contested') {
       /* A displaced emperor remains a claimant; an ordinary officer is
@@ -1452,7 +1458,7 @@
     });
     var claims = FB.officeClaimants(s).filter(function (row) { return row.institutionId === rid; });
     if (claims.length || successionClaim) {
-      var at = { kind:'realm', id:rid }, source = FB.legitimacySourceFor(s,'succession',actor,FBDATA.authorityOffices.imperial_office.recognitionSources);
+      var at = Q.realmReference(rid), source = FB.legitimacySourceFor(s,'succession',actor,FBDATA.authorityOffices.imperial_office.recognitionSources);
       var proof = source && Q.legitimacy(s,holder,at,source)[0];
       /* An explicit deposition or vacancy is not undone just because a
          seasonal AI pass found no active emperor. */
@@ -1689,10 +1695,11 @@
         row.status = 'expired'; contractNotice(s, row, ended); continue;
       }
       if (period <= row.paidThroughPeriod) continue;
+      if (row.payPerSeason && FB.mobile && !FB.mobile.receiptCapacity(s,row.federateRealmId)) continue;
       var payer = FB.treasuryCounterparty(s, row.patronRealmId);
       var payee = FB.treasuryCounterparty(s, row.federateRealmId);
       if (row.payPerSeason > 0 && (!payer || !payee ||
-          !Q.permission(s, { kind:'realm', id:row.federateRealmId },
+          !Q.permission(s, Q.realmReference(row.federateRealmId),
             'collect_service_pay', { contractId:row.id }).allowed ||
           !(row.publicPayer ? FB.treasuryFundingTransfer(s,{kind:'public',realmId:payer},payee,row.payPerSeason) :
             FB.treasuryTransfer(s, payer, payee, row.payPerSeason)))) {
@@ -1700,6 +1707,7 @@
       }
       row.paidThroughPeriod = period;
       row.serviceThroughPeriod = period;
+      if (FB.mobile && row.payPerSeason) FB.mobile.recordReceipt(s,row.federateRealmId,'service_season',row.id+':'+period,row.payPerSeason,0);
       if (row.templateId && row.payPerSeason) FB.news(s, FB.msg('news.federate.payment',
         '💰 {patron} pays {money:amount} to {federate} for the season’s service.',
         { patron:FB.realmNameParam(s, row.patronRealmId),
@@ -1716,8 +1724,8 @@
     for (var realm of realms) if (realm.governingIdentity)
       FB.authoritySetIdentity(s, realm.id, realm.governingIdentity);
     for (var pr of provinces) for (var seed of pr.customaryRights || []) {
-      FB.authorityEstablishRight(s, { issuer:{ kind:'realm', id:pr.realm },
-        beneficiary:{ kind:'realm', id:seed.realmId || pr.realm },
+      FB.authorityEstablishRight(s, { issuer:Q.realmReference(pr.realm),
+        beneficiary:Q.realmReference(seed.realmId || pr.realm),
         scope:{ kind:'county', id:pr.id }, power:seed.power, basis:seed.basis,
         basisRef:seed.basisRef });
     }
@@ -1729,11 +1737,11 @@
        for every county. Repeated annual calls cannot manufacture more rights. */
     var possessed = {};
     for (var existing of list(s, 'rights')) if (existing.status === 'active' &&
-        existing.basis === 'possession' && existing.beneficiary.kind === 'realm')
+        existing.basis === 'possession' && Q.isRealmReference(existing.beneficiary))
       possessed[existing.beneficiary.id + '|' + existing.scope.id + '|' + existing.power] = true;
     for (var pr of FB.world.provs) {
       if (pr.wasteland) continue;
-      var rid = FB.settlementCountyHolder(s, pr.id), actor = { kind:'realm', id:rid };
+      var rid = FB.settlementCountyHolder(s, pr.id), actor = Q.realmReference(rid);
       if (!rid || !Q.actor(s, actor)) continue;
       for (var power of ['peace','revenue']) {
         if (possessed[rid + '|' + pr.id + '|' + power]) continue;
@@ -1750,7 +1758,7 @@
     a.lastCustomYear = s.date.year;
     for (var row of list(s, 'rights')) {
       if (row.status !== 'active') continue;
-      var held = row.beneficiary.kind === 'realm'
+      var held = Q.isRealmReference(row.beneficiary)
         ? FB.settlementCountyHolder(s, row.scope.id) === row.beneficiary.id
         : FB.holdsSettlementInCounty(s, row.beneficiary, row.scope.id);
       if (row.basis === 'possession' || row.basis === 'tenure') {

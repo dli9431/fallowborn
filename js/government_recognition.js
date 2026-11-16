@@ -2,7 +2,7 @@
    succession tree remain canonical; this stores only bounded support. */
 (function () {
   'use strict';
-  var R = FB.governmentRecognition = {};
+  var R = FB.governmentRecognition = {}, Q = FB.political;
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
   function record(s, rid) { return s.authority && s.authority.governments && s.authority.governments[rid]; }
   function votes(s, rid) { var row = record(s, rid); return row && row.recognition || {}; }
@@ -31,8 +31,8 @@
     if (policy) return policy.members(s, rid);
     var profile = FB.administrationProfile(s, rid), realm = s.realms[rid];
     if (!profile || !realm || !realm.alive) return [];
-    var out = [{ id:'court', principal:{ kind:'realm', id:rid },
-      scope:{ kind:'realm', id:rid }, basis:'designation', weight:1 }];
+    var out = [{ id:'court', principal:Q.realmReference(rid),
+      scope:Q.realmReference(rid), basis:'designation', weight:1 }];
     var offices = FB.publicOfficeRows(s, rid);
     profile.accession.interests.forEach(function (interest) {
       offices.filter(function (office) {
@@ -264,7 +264,7 @@
       if (!FB.absorbRealm(s,rid,c)) return false;
       claim.currentCourtId = 'player';
     }
-    var current = claim.currentCourtId, at = {kind:'realm',id:current}, issuer = {kind:'realm',id:current},
+    var current = claim.currentCourtId, at = Q.realmReference(current), issuer = Q.realmReference(current),
       def = FBDATA.authorityOffices[claimant.officeId], source = FB.legitimacySourceFor(s,'court',issuer,def.recognitionSources);
     if (source) {
       var proof = FB.political.legitimacy(s,r.holder,at,source).filter(function (p) { return same(p.issuer,issuer); })[0] ||
@@ -280,7 +280,7 @@
     if (FB.administrationProfile(s,r.institutionId)) {
       var fromPlayer = r.institutionId === 'player';
       r.mandate.claim.status = 'succeeded';
-      var result = FB.publicAccede(s,FB.publicAccessionQuote(s,{kind:'realm',id:r.institutionId},r.institutionId,current.cause));
+      var result = FB.publicAccede(s,FB.publicAccessionQuote(s,Q.realmReference(r.institutionId),r.institutionId,current.cause));
       if (result) {
         r.mandate.claim.currentCourtId = r.holder.id === s.player.charId ? 'player' : r.institutionId;
         if (fromPlayer) FB.authorityRekeyInstitution(s,'player',result.id);

@@ -101,7 +101,7 @@
   function claimSupport(s,r) {
     var t = terms(r), claim = r && r.mandate && r.mandate.claim;
     if (!t || !t.acclamation || !claim) return [];
-    return Q.legitimacy(s,r.holder,{kind:'realm',id:r.institutionId}).filter(function (p) {
+    return Q.legitimacy(s,r.holder,Q.realmReference(r.institutionId)).filter(function (p) {
       var d = definition(row(s,claim.appointmentId));
       var force = p.issuer.kind === 'host' && host(s,p.issuer.id);
       return !!d && (p.issuer.kind !== 'host' || force && force.men > 0) && (d.recognitionSources || []).indexOf(p.source) >= 0;
@@ -140,7 +140,7 @@
   };
   function appointmentReview(s,r,target) {
     if (!target || target.holderId === r.holder.id) return null;
-    var a = {kind:'realm',id:r.institutionId};
+    var a = Q.realmReference(r.institutionId);
     return FB.administrationProfile(s,r.institutionId) ? FB.publicAppointmentQuote(s,a,{
       institutionId:r.institutionId,officeId:target.officeId,holderId:target.holderId,
       scope:target.scope,provinceId:target.sourceProvinceId}) : FB.officeAppointmentQuote(s,a,{
@@ -234,7 +234,7 @@
       else if (rows(s).some(function (p) { return p.officeId === t.acclamation.officeId && p.institutionId === r.institutionId &&
           equal(p.holder,r.holder) && ['active','contested'].indexOf(p.status) >= 0; })) q.reason = FB.T('This person already has a recorded claim.');
       else if (FB.administrationProfile(s,r.institutionId)) {
-        owner = FB.governmentRecognition.nominationQuote(s,{kind:'realm',id:r.institutionId},r.institutionId,r.holder.id);
+        owner = FB.governmentRecognition.nominationQuote(s,Q.realmReference(r.institutionId),r.institutionId,r.holder.id);
         if (!owner.allowed) q.reason = owner.reason;
       }
       if (!q.reason && FB.homeAuthority) {
@@ -272,7 +272,7 @@
       operation === 'offer' && owner && [FB.realmRulerGeneration(s,owner.federateRealmId),FBDATA.federateContractTerms[input.templateId]],
       operation === 'acclaim' && validInput && (s.authority.recognitions || []).filter(function (p) {
         return p.issuer.kind === 'host' && p.issuer.id === input.hostId && t && t.acclamation && p.source === t.acclamation.sourceId &&
-          equal(p.scope,{kind:'realm',id:r.institutionId});
+          equal(p.scope,Q.realmReference(r.institutionId));
       }),
       r && FB.governments.publicAuthorityReadiness(s,r.institutionId)]);
     return q;
@@ -307,12 +307,12 @@
     if (op === 'dismiss' || op === 'confirm') return r.publicTerms ? FB.publicOfficeApply(s,q.owner) : FB.officeTransition(s,q.owner);
     if (op === 'accept_loss') { m.response = {choice:'accept',turn:s.turn}; return true; }
     if (op === 'acclaim') {
-      var a = terms(r).acclamation, at = {kind:'realm',id:r.institutionId};
+      var a = terms(r).acclamation, at = Q.realmReference(r.institutionId);
       var proof = Q.legitimacy(s,r.holder,at,a.sourceId).filter(function (p) { return p.issuer.kind === 'host' && p.issuer.id === input.hostId; })[0] ||
         FB.authorityRecognize(s,{issuer:{kind:'host',id:input.hostId},subject:r.holder,source:a.sourceId,scope:at});
       if (!proof) return false;
       var appointment = FB.authorityAppoint(s,{officeId:a.officeId,institutionId:r.institutionId,
-        appointer:{kind:'realm',id:r.institutionId},holder:r.holder,scope:at,recognitionId:proof.id,contested:true});
+        appointer:Q.realmReference(r.institutionId),holder:r.holder,scope:at,recognitionId:proof.id,contested:true});
       if (!appointment) throw new Error('Reviewed acclamation appointment failed.');
       (s.authority.recognitions || []).filter(function (p) {
         return p.id !== proof.id && p.status === 'active' && p.source === a.sourceId && p.issuer.kind === 'host' && p.issuer.id === input.hostId && equal(p.scope,at);
@@ -320,7 +320,7 @@
       m.claim = {appointmentId:appointment.id,recognitionId:proof.id,generation:FB.realmRulerGeneration(s,r.institutionId),
         turn:s.turn,status:'claimed',warId:null,factionId:null,forces:[],currentCourtId:r.institutionId};
       if (FB.administrationProfile(s,r.institutionId)) {
-        var nomination = FB.governmentRecognition.nominationQuote(s,{kind:'realm',id:r.institutionId},r.institutionId,r.holder.id);
+        var nomination = FB.governmentRecognition.nominationQuote(s,Q.realmReference(r.institutionId),r.institutionId,r.holder.id);
         if (nomination.allowed) FB.governmentRecognition.nominate(s,nomination);
       }
       FB.news(s,FB.msg('news.office.mandate_acclaimed',
@@ -345,7 +345,7 @@
     var humanCourt = court(s,{kind:'character',id:s.player.charId},rid);
     rows(s).slice().forEach(function (r) {
       if (!r.mandate || r.institutionId !== rid) return;
-      var actor = r.holder, patron = {kind:'realm',id:rid}, q;
+      var actor = r.holder, patron = Q.realmReference(rid), q;
       if (!humanCourt && r.mandate.proposal && r.mandate.proposal.status === 'pending') {
         q = M.review(s,patron,r.id,'accept_proposal'); if (q.allowed) M.commit(s,q);
       }
@@ -407,7 +407,7 @@
           currentCourtId:idSpec(),forces:{type:'array',maxItems:9,uniqueBy:['hostId'],items:{type:'object',fields:{hostId:idSpec(),realmId:idSpec()}}}}}) ||
           !row(s,c.appointmentId) || row(s,c.appointmentId).officeId !== a.officeId ||
           !M.institutionMatches(s,row(s,c.appointmentId).institutionId,r.institutionId) ||
-          !equal(row(s,c.appointmentId).scope,{kind:'realm',id:row(s,c.appointmentId).institutionId}) ||
+          !equal(row(s,c.appointmentId).scope,Q.realmReference(row(s,c.appointmentId).institutionId)) ||
           !equal(row(s,c.appointmentId).holder,r.holder) || row(s,c.appointmentId).recognitionId !== c.recognitionId ||
           !s.realms[c.currentCourtId] || c.factionId && !s.realms[c.factionId] ||
           c.status === 'claimed' && (c.warId !== null || c.factionId !== null || c.forces.length) ||

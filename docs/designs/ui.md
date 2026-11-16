@@ -4084,6 +4084,17 @@ For an aristocratic court the same sheet additionally shows actual royal eligibi
 
 Mobile coalition review
 
+Opted-in member cohesion adds support beside each existing member principal,
+scarcity days, leader Standing and the service/departure/vote thresholds.
+Pending receipts offer keep, share by weight and favor selected named members.
+A native multiple selector retains favorites through review, Escape and result
+returns. Action faces disclose public coin and consumed food; the exact review
+shows each recipient's portrait, private coin, household food and resulting
+support. Food allotments explicitly mean immediate consumption. The latest
+settled distribution remains readable without replay. Costs, cancellation,
+stock/leadership blockers and existing modal view preservation apply equally
+in both explicit distribution flag paths.
+
 The Mobile coalition Deed uses shared governance fact cards, person cards, action cards and modal history. It labels the court/civilian camp, separate field host, civilian following, resting fighters, local inhabitants, ownership, treasury and both camp and carried food. Proposal, member assent, outside acceptance and execution are distinct actions. Immediate costs and the first concrete blocker remain visible. Review and result sheets preserve inputs, body/list scroll, expanded shared disclosures and the originating focus through Back, Escape and Continue. A stale confirmation spends nothing and transfers no people.
 
 

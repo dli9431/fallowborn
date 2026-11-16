@@ -1,3 +1,13 @@
+Mobile battle cohesion
+
+Resolved field battles notify opted-in mobile support once per participating
+coalition on each side before casualties can disband a host. Several columns in
+one camp do not multiply the result. Victory and defeat coefficients belong to
+the same mobileProfiles cohesionPolicy as receipt sharing and scarcity. This
+notification creates no loot, soldiers, claims or battle outcome. Bounded raids
+use their actual sortie result through the mobile transaction. See
+mobile-confederation.md for the none technology decision and member responses.
+
 # Wars
 
 Declared Roman office disputes register ordinary `office_acclamation` campaigns.

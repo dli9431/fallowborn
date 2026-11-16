@@ -1,3 +1,19 @@
+Mobile member support authoring
+
+Optional mobileProfiles.cohesionPolicy declares battle results, actual receipt
+shares, consecutive scarcity, idle seasons and current leader Standing as the
+only support drivers. Pure schema validation and ordinary Mods imports share
+native runtime consumers; identity-triggered rebellion and calendar collapse
+fields reject. Pontic and river policies contrast with the complete fictional
+mobile-cohesion-glassroad.json import, which uses equal member weights,
+shorter scarcity/idle windows and AI favorite allocation. Existing canonical
+pledge, departure, assent and election transactions remain authoritative.
+Receipt distribution reviews spend actual public coin or consume actual camp
+food once. No executable mod handler, parallel loyalty meter or new resource
+inventory is supported. Exact schema and persistence are in docs/MODDING.md;
+allocation semantics, bounded receipt collection and none technology decisions
+are in docs/designs/mobile-confederation.md.
+
 Retained shared identity authoring
 
 Use revisionIdentities for the fixed start's faith and, for an existing ruler start, its governmentForm in explicitly named bookmark revisions. Each record supplies one or both fields; omitted fields keep the start default. Keep every other start field stable. The two independent ordinary imports revision-ruler-government-estuary.json and revision-ruler-government-uplands.json retain their older constitutions and select different current forms, with a combined faith/form projection in the uplands. Pure validation, codes, picker, ordinary adoption and matching retained saves share the same projection. This preserves existing ruler identity under the existing existing_ruler_starts technology decision of none; it adds no political action, discovery or eligibility exception.

@@ -335,7 +335,7 @@
       accept:['agreementId'],decline:['agreementId'],join:['countyId','count'],replace_member:['memberId','candidateId'],leave:['memberId','countyId'],settle:['countyId','count','final'],
       work:[],trade:['countyId','count','direction','provisioning'],war:['causes'],peace:['warId'],service:['agreementId','warId'],march:['countyId'],
       extract:extractionFields,hire_answer:['contractId','signature','accept'],
-      land:['countyId'],contract:['contractId','signature']};
+      land:['countyId'],contract:['contractId','signature'],distribute:['receiptId','mode','memberIds']};
     if (action==='offer') fields.offer.push('programStepId');
     if (!fields[action] || !keys(t,fields[action]) || JSON.stringify(t).length>4096) return false;
     if (t.provisioning!==undefined && t.provisioning!==true) return false;
@@ -345,6 +345,115 @@
   }
   function proposalAction(operation) {
     return {settle:'settle',agreement:'offer',war:'war',treaty:'peace',land:'land',contract:'contract',extraction:'extract'}[operation];
+  }
+  /* Support belongs to the member, alongside its existing pledge and vote.
+     Receipts describe already credited resources; they are never inventories. */
+  function shiftSupport(m,amount) { m.support=FB.clamp(m.support+amount,0,100); }
+  function cohesionMember(p,m,turn) {
+    if (p.cohesionPolicy) {m.support=p.cohesionPolicy.initialSupport;m.lastGainTurn=turn;}
+    return m;
+  }
+  function memberAssents(s,rid,m) {
+    var policy=M.profile(s,rid).cohesionPolicy;
+    return m.allegiance && (!policy || m.support>policy.thresholds.withhold);
+  }
+  M.cohesionSnapshot = function (s,rid) {
+    var r=M.row(s,rid), p=M.profile(s,rid), c=r && r.cohesion;
+    if (!c || !p.cohesionPolicy) return null;
+    return {scarcityDays:c.scarcityDays,standing:FB.realmRulerStandingSnapshot(s,rid),
+      policy:copy(p.cohesionPolicy),receipts:copy(c.receipts),members:r.members.map(function (m) {
+        return {id:m.id,characterId:m.principal.id,support:m.support,
+          seasonsWithoutGain:Math.floor((s.turn-m.lastGainTurn)/90)};
+      })};
+  };
+  function distributionPlan(s,rid,t) {
+    var r=M.row(s,rid), receipt=r.cohesion && r.cohesion.receipts.filter(function (a) {return a.id===t.receiptId;})[0];
+    if (!receipt || ['keep','weight','favor'].indexOf(t.mode)<0 || !Array.isArray(t.memberIds) ||
+        t.memberIds.length>r.members.length || new Set(t.memberIds).size!==t.memberIds.length ||
+        t.mode!=='favor' && t.memberIds.length || t.mode==='favor' && !t.memberIds.length) return null;
+    var live=M.members(s,rid).filter(function (m) {return m.allegiance;});
+    if (!live.length || t.memberIds.some(function (id) {return !live.some(function (m) {return m.id===id;});})) return null;
+    var weight=live.reduce(function (n,m) {return n+m.weight;},0), selected=live.filter(function (m) {
+      return t.mode==='weight' || t.mode==='favor' && t.memberIds.indexOf(m.id)>=0;
+    }), total=selected.reduce(function (n,m) {return n+m.weight;},0), gold=0, food=0;
+    var rows=live.map(function (m) {
+      var part=selected.indexOf(m)>=0, last=part && selected[selected.length-1]===m;
+      var coin=part ? last ? receipt.gold-gold : Math.min(receipt.gold-gold,receipt.gold*m.weight/total) : 0;
+      var ration=part ? last ? receipt.food-food : Math.floor(receipt.food*m.weight/total) : 0;
+      gold+=coin;food+=ration;
+      // A tiny indivisible food receipt still gives a proportional actual share.
+      var actual=receipt.gold+receipt.food, share=actual ? (coin+ration)/actual : 0;
+      return {memberId:m.id,characterId:m.principal.id,gold:coin,food:ration,
+        support:FB.clamp(m.support+M.profile(s,rid).cohesionPolicy.receiptShare*(Math.min(2,share/(m.weight/weight))-0.5),0,100)};
+    });
+    return {receipt:copy(receipt),rows:rows,gold:gold,food:food};
+  }
+  M.receiptCapacity = function (s,rid) {
+    var r=M.row(s,rid);
+    return !r || !r.cohesion || r.status!=='active' || r.cohesion.receipts.length<32;
+  };
+  M.recordReceipt = function (s,rid,source,sourceId,gold,food) {
+    var r=M.row(s,rid), p=M.profile(s,rid);
+    if (!r || !p || !p.cohesionPolicy || !r.cohesion || r.status!=='active' || !(gold || food)) return;
+    if (!M.receiptCapacity(s,rid)) return false;
+    r.cohesion.receipts.push({id:next(r,'spoils_'),source:source,sourceId:sourceId,turn:s.turn,gold:gold,food:food});
+    r.revision++;
+    M.distributionAI(s,rid);
+  };
+  M.distributionAI = function (s,rid) {
+    var r=M.row(s,rid), p=M.profile(s,rid), leader=M.leader(s,rid);
+    if (!r || !r.cohesion || !leader || leader.id===s.player.charId) return false;
+    var mode=p.cohesionPolicy.distribution.mode, ids=[];
+    if (mode==='favor') ids=M.members(s,rid).filter(function (m) {return m.allegiance;}).sort(function (a,b) {
+      return b.support-a.support || (a.id<b.id ? -1 : a.id>b.id ? 1 : 0);
+    }).slice(0,p.cohesionPolicy.distribution.favorites).map(function (m) {return m.id;});
+    var acted=false;
+    r.cohesion.receipts.slice().forEach(function (a) {
+      var done=enact(s,rid,'distribute',{receiptId:a.id,mode:mode,memberIds:ids});
+      if (!done && mode!=='keep') done=enact(s,rid,'distribute',{receiptId:a.id,mode:'keep',memberIds:[]});
+      acted=done || acted;
+    });
+    return acted;
+  };
+  M.cohesionBattle = function (s,hosts,won) {
+    var seen={};
+    hosts.forEach(function (a) {
+      var r=a.mobileFollowing && M.row(s,a.realm), p=r && M.profile(s,a.realm);
+      if (!r || !r.cohesion || !p.cohesionPolicy || r.status!=='active' || seen[a.realm]) return;
+      seen[a.realm]=true;
+      r.members.forEach(function (m) {shiftSupport(m,won ? p.cohesionPolicy.victory : p.cohesionPolicy.defeat);});
+      r.revision++;
+    });
+  };
+  M.memberResponses = function (s,rid) {
+    var r=M.row(s,rid), p=M.profile(s,rid), policy=p && p.cohesionPolicy, moving=M.migration(s,rid);
+    if (!r || !policy || !moving || r.status!=='active') return;
+    M.members(s,rid).forEach(function (m) {
+      if (m.principal.id===s.player.charId || m.principal.id===r.leaderId) return;
+      if (m.support<=policy.thresholds.depart && enact(s,rid,'leave',{memberId:m.id,countyId:moving.at},m.principal)) return;
+      if (m.support<=policy.thresholds.withhold && m.pledge>0)
+        enact(s,rid,'pledge',{memberId:m.id,allegiance:m.allegiance,pledge:0},m.principal);
+      var declared=p.members.filter(function (a) {return a.id===m.id;})[0];
+      if (m.allegiance && m.support>policy.thresholds.withhold && m.pledge===0 && declared && declared.pledge>0)
+        enact(s,rid,'pledge',{memberId:m.id,allegiance:true,pledge:declared.pledge},m.principal);
+      if (r.decision) enact(s,rid,'assent',{assent:memberAssents(s,rid,m)},m.principal);
+    });
+  };
+  function cohesionDay(s,rid,scarce) {
+    var r=M.row(s,rid), p=M.profile(s,rid), policy=p.cohesionPolicy, c=r.cohesion;
+    if (!c) return;
+    c.scarcityDays=scarce ? Math.min(1000000000,c.scarcityDays+1) : 0;
+    var period=Math.floor(s.turn/90), seasonal=period>c.lastPeriod;
+    var standing=M.leader(s,rid) ? FB.realmRulerStandingSnapshot(s,rid) : policy.standing.target;
+    r.members.forEach(function (m) {
+      if (scarce && c.scarcityDays>=policy.scarcity.days) shiftSupport(m,policy.scarcity.support);
+      if (seasonal) {
+        if (s.turn-m.lastGainTurn>=policy.idle.seasons*90) shiftSupport(m,policy.idle.support);
+        shiftSupport(m,(standing-policy.standing.target)*policy.standing.factor);
+      }
+    });
+    c.lastPeriod=period;r.revision++;
+    M.distributionAI(s,rid);M.memberResponses(s,rid);
   }
   /* Optional policy selects operations, never a second resource or war owner. */
   var extractionTerms = {
@@ -474,7 +583,7 @@
       s.authority.contracts, s.authority.governments, s.player && [s.player.charId, s.player.provinceId, s.player.gold, s.player.travel || null],
       s.market && s.market.counties && s.market.counties[t.countyId],
       r.command ? M.commandSnapshot(s,rid) : null, t.provisioning ? M.profile(s,rid).supplyPolicy : null,
-      M.profile(s,rid).extractionPolicy || null,t.countyId && [s.realms[s.holder[t.countyId]],
+      M.profile(s,rid).extractionPolicy || null,M.profile(s,rid).cohesionPolicy || null,t.countyId && [s.realms[s.holder[t.countyId]],
         FB.treasuryAvailable(s,s.holder[t.countyId])]]);
   }
   /* All requests, including AI requests, carry an actual acting principal.
@@ -494,7 +603,7 @@
         (s.armies || []).some(function (a) {return a.realm===rid && a.mobileCourt && (a.moveLeft>0 || (a.path || []).length); }))) {
       q.reason='commitment';return q;
     }
-    if (r.command && !M.commandPermits(s,rid,action==='decline' ? 'accept' : action)) {q.reason='command';return q;}
+    if (r.command && !M.commandPermits(s,rid,action==='decline' ? 'accept' : action==='distribute' ? 'trade' : action)) {q.reason='command';return q;}
     if (t.provisioning) {
       var supply=M.supplySnapshot(s,rid), expected=supply && (action==='trade' ? supply.purchase : supply.replacement);
       if (!expected || !expected.count || Object.keys(expected).some(function (k) {return t[k]!==expected[k];})) {
@@ -508,7 +617,14 @@
     q.signature = stamp(s, rid, t, request.actor);
     function no(reason) { q.reason = reason; return q; }
     var m = member(s, rid, t.memberId), moving = M.migration(s, rid), army = M.host(s, rid);
-    if (action === 'pledge') {
+    if (action === 'distribute') {
+      if (!leader || !p.cohesionPolicy || !r.cohesion) return no('principal');
+      q.distribution=distributionPlan(s,rid,t);
+      if (!q.distribution) return no('policy');
+      q.cost=q.distribution.gold;
+      if (q.cost>FB.treasuryAvailable(s,rid)) return no('funds');
+      if (q.distribution.food>r.food) return no('food');
+    } else if (action === 'pledge') {
       if (!m || !am || am.id !== m.id || typeof t.allegiance !== 'boolean' ||
           !Number.isFinite(t.pledge) || t.pledge < 0 || t.pledge > p.recruitShare) return no('principal');
     } else if (action === 'support') {
@@ -557,6 +673,7 @@
     } else if (action === 'extract') {
       var policy=p.extractionPolicy, kind=t.kind, spec=extractionTerms[kind];
       if (!leader || r.command || r.columns || r.camps || !spec || !FB.schema.valid(t,spec) || !policy || !policy[kind]) return no('policy');
+      if (kind==='raid' && !M.receiptCapacity(s,rid)) return no('capacity');
       if (!decision(s,rid,'extraction',t)) return no('withheld');
       if (!army || !army.men || committed(s,rid) || FB.isRealmAtWar(s,rid) || army.warId || army.moveLeft || (army.path || []).length) return no('commitment');
       if (kind==='hire') {
@@ -591,6 +708,7 @@
           q.contract.succession.federate!==FB.realmRulerGeneration(s,rid) ||
           t.signature!==M.contractTerms(s,t.contractId).signature || !Q.contractQuote(s,q.contract).allowed) return no('partner');
       if (t.accept) {
+        if (q.contract.initialPay && !M.receiptCapacity(s,rid)) return no('capacity');
         q.partnerConsent=Q.consent(s,request.actor,'treaty',{externalRealmId:rid,kind:'service',price:q.contract.initialPay || 0});
         if (!q.partnerConsent.allowed) return no('partner');
         q.cost=q.contract.initialPay || 0;
@@ -644,6 +762,7 @@
           .reduce(function (n,b) {return n+b.levy;},0)>(army && army.men || 0)) return no('following');
       var payer = a.kind === 'protection' || a.extraction ? a.partnerId : rid;
       if (FB.treasuryAvailable(s, payer) < a.price) return no('funds');
+      if (payer!==rid && a.price && !M.receiptCapacity(s,rid)) return no('capacity');
       q.cost = a.price; q.payer = payer;
     } else if (action === 'join') {
       var c = request.actor && s.chars[request.actor.id], access = activeAccess(s, rid, t.countyId);
@@ -681,6 +800,9 @@
           q.contract.succession.patron!==FB.realmRulerGeneration(s,q.contract.patronRealmId) ||
           q.contract.succession.federate!==FB.realmRulerGeneration(s,q.contract.federateRealmId)) return no('partner');
       q.cost=q.contract.patronRealmId===rid && q.contract.initialPaidTurn===undefined ? q.contract.initialPay || 0 : 0;
+      var other=q.contract.patronRealmId===rid ? q.contract.federateRealmId : q.contract.patronRealmId;
+      if (q.contract.initialPay && q.contract.initialPaidTurn===undefined && q.contract.approvals[other]!==undefined &&
+          !M.receiptCapacity(s,q.contract.federateRealmId)) return no('capacity');
       if (FB.treasuryAvailable(s,rid)<q.cost) return no('funds');
     } else if (action === 'settle') {
       if (!leader || !moving || !whole(t.count) || !t.count || typeof t.final !== 'boolean' ||
@@ -789,7 +911,22 @@
     var q = M.quote(s, request);
     if (!q.allowed || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
     var rid = q.realmId, r = M.row(s, rid), t = q.terms, m = member(s, rid, t.memberId), moving = M.migration(s, rid), army = M.host(s, rid);
-    if (q.action === 'pledge') { m.pledge = t.pledge; m.allegiance = t.allegiance; r.decision = null; if (r.selection) delete r.selection.votes[m.id]; }
+    if (q.action === 'distribute') {
+      var distribution=q.distribution;
+      if (distribution.gold && !FB.treasurySpend(s,rid,distribution.gold)) return false;
+      r.food-=distribution.food;
+      distribution.rows.forEach(function (part) {
+        var recipient=member(s,rid,part.memberId);
+        if (part.gold) {
+          if (part.characterId===s.player.charId) s.player.gold+=part.gold;
+          else s.chars[part.characterId].gold=(s.chars[part.characterId].gold || 0)+part.gold;
+        }
+        recipient.support=part.support;
+        if (part.gold || part.food) recipient.lastGainTurn=s.turn;
+      });
+      r.cohesion.receipts=r.cohesion.receipts.filter(function (a) {return a.id!==t.receiptId;});
+      r.cohesion.lastDistribution={receipt:copy(distribution.receipt),mode:t.mode,rows:copy(distribution.rows),turn:s.turn};
+    } else if (q.action === 'pledge') { m.pledge = t.pledge; m.allegiance = t.allegiance; r.decision = null; if (r.selection) delete r.selection.votes[m.id]; }
     else if (q.action === 'support') r.selection.votes[actorMember(s, rid, request.actor).id] = t.candidateId;
     else if (q.action === 'select') install(s, rid, t.candidateId);
     else if (q.action === 'propose') r.decision = { operation:t.operation, terms:copy(t.proposal), approvals:{} };
@@ -821,6 +958,8 @@
       if (t.kind==='raid') {
         if (!FB.commitBoundedPillage(s,army,t.countyId,M.profile(s,rid).extractionPolicy.raid,M.leader(s,rid),q.raid)) return false;
         r.lastRaidTurn=s.turn;
+        M.cohesionBattle(s,[army],q.raid.success);
+        M.recordReceipt(s,rid,'raid',String(r.lastRaidTurn),q.raid.gold,q.raid.food);
       } else if (t.kind==='hire') {
         var hired=FB.authorityOfferContractTemplate(s,t.templateId,q.serviceTerms);
         if (!hired) return false;
@@ -855,13 +994,14 @@
       var a = M.agreements(s,rid).filter(function (a) { return a.id === t.agreementId; })[0], to = q.payer === rid ? a.partnerId : rid;
       if (!FB.treasuryTransfer(s, q.payer, to, a.price)) return false;
       a.status = 'active'; a.startTurn = s.turn; a.endTurn = s.turn + a.duration;
+      if (to===rid) M.recordReceipt(s,rid,'agreement',a.id,a.price,0);
       if (FB.expeditionPrograms) FB.expeditionPrograms.recordCorridorResponse(s,rid,a);
     } else if (q.action === 'join') {
       var joined = [];
       if (!FB.populationPoolApply(s, joined, q.transfer)) return false;
       r.accounting.arrivals += t.count;
-      r.members.push({ id:next(r, 'member_'), principal:copy(request.actor), scope:{kind:'realm', id:rid},
-        basis:'following', continuity:'member', weight:1, pledge:0, allegiance:true, civilians:joined, reserve:[] });
+      r.members.push(cohesionMember(M.profile(s,rid),{ id:next(r, 'member_'), principal:copy(request.actor), scope:{kind:'realm', id:rid},
+        basis:'following', continuity:'member', weight:1, pledge:0, allegiance:true, civilians:joined, reserve:[] },s.turn));
       if (moving.courtIds.indexOf(request.actor.id) < 0) moving.courtIds.push(request.actor.id); r.decision = null;
     } else if (q.action === 'replace_member') {
       var formerId=m.principal.id;
@@ -1022,6 +1162,7 @@
     var r = g.mobile = {schema:plan ? 2 : 1,profileId:d.mobile.profileId,migrationId:null,status:'active',serial:0,revision:0,
       leaderId:null,selection:null,decision:null,food:food,lastDay:s.turn,worked:{},agreements:[],
       accounting:{initial:0,arrivals:0,dead:0,settled:0,dispersed:0},members:[]};
+    if (p.cohesionPolicy) r.cohesion={schema:1,scarcityDays:0,lastPeriod:Math.floor(s.turn/90),receipts:[]};
     if (plan) r.openingBindings=copy(plan.bindings);
     if (M.initializeGuard) M.initializeGuard(s,d,plan);
     p.members.forEach(function (a) {
@@ -1032,6 +1173,7 @@
       r.members.push({id:a.id,principal:{kind:'character',id:c.id},scope:{kind:'realm',id:d.id},basis:'following',
         continuity:'member',weight:a.weight,pledge:a.pledge,allegiance:true,
         civilians:pools ? copy(pools[a.id]) : [{culture:d.culture,religion:d.religion,count:a.population}],reserve:[]});
+      cohesionMember(p,r.members[r.members.length-1],s.turn);
       if (pools) r.accounting.arrivals += a.population;
       else r.accounting.initial += a.population;
     });
@@ -1127,7 +1269,8 @@
     if (M.row(s,rid).command) return decision(s,rid,operation,terms);
     if (!enact(s, rid, 'propose', {operation:operation,proposal:terms})) return false;
     M.members(s, rid).forEach(function (m) {
-      if (m.allegiance && m.principal.id !== s.player.charId) enact(s, rid, 'assent', {assent:true}, m.principal);
+      if (m.principal.id !== s.player.charId && (m.allegiance || M.profile(s,rid).cohesionPolicy))
+        enact(s, rid, 'assent', {assent:memberAssents(s,rid,m)}, m.principal);
     });
     return decision(s, rid, operation, terms);
   }
@@ -1147,8 +1290,10 @@
     if (!r || r.status!=='active') return;
     if (r.decision && r.decision.operation==='extraction' && FB.aiDecisions.willing(s,rid,'government','agreementWillingness')) {
       M.members(s,rid).forEach(function (m) {
-        if (m.allegiance && m.principal.id!==s.player.charId && !r.decision.approvals[m.id])
-          enact(s,rid,'assent',{assent:true},m.principal);
+        var assent=memberAssents(s,rid,m);
+        if (m.principal.id!==s.player.charId && (assent && !r.decision.approvals[m.id] ||
+            p.cohesionPolicy && !assent && r.decision.approvals[m.id]))
+          enact(s,rid,'assent',{assent:assent},m.principal);
       });
     }
     M.agreements(s,rid).forEach(function (a) {
@@ -1229,8 +1374,14 @@
       });
       if (candidates.length) {
         var cid = candidates[0].principal.id;
-        M.members(s, rid).forEach(function (m) { if (m.principal.id !== s.player.charId) enact(s, rid, 'support', {candidateId:cid}, m.principal); });
-        enact(s, rid, 'select', {candidateId:cid});
+        M.members(s, rid).forEach(function (m) {
+          if (m.principal.id===s.player.charId) return;
+          var preferred=cid;
+          if (p.cohesionPolicy && m.support<=p.cohesionPolicy.thresholds.rival && eligible(s,rid,m.principal.id)) preferred=m.principal.id;
+          enact(s,rid,'support',{candidateId:preferred},m.principal);
+        });
+        if (p.cohesionPolicy) candidates.some(function (m) {return enact(s,rid,'select',{candidateId:m.principal.id});});
+        else enact(s,rid,'select',{candidateId:cid});
       }
       return true;
     }
@@ -1331,10 +1482,14 @@
       if (!r || !p || r.status !== 'active' || !M.active(s,rid) || r.lastDay === s.turn) return;
       r.lastDay = s.turn; r.worked = {};
       M.extractionResponses(s,rid);
+      M.distributionAI(s,rid);
       expireAccess(s,rid);
       r.agreements=r.agreements.filter(function (a) {return a.kind==='corridor' || a.accessOrigin || a.endTurn>s.turn;});
       if (!r.command && !M.leader(s,rid) && !r.selection) { r.leaderId = null; r.selection = {votes:{}}; r.decision = null; r.revision++; }
-      if (r.camps) {M.campDay(s,rid);return;}
+      if (r.camps) {
+        var scarce=M.campSnapshot(s,rid).some(function (c) {return c.food<c.daily;});
+        M.campDay(s,rid);cohesionDay(s,rid,scarce);return;
+      }
       var m = M.migration(s,rid), period = Math.floor(s.turn / 90), a = m && activeAccess(s,rid,m.at);
       if (a && a.harvestPeriod !== period) {
         if (!s.mobilePastures || s.mobilePastures.period!==period) s.mobilePastures={schema:1,period:period,used:{}};
@@ -1351,6 +1506,9 @@
         else M.commit(s,M.supplyReview(s,rid,'recruit'));
       }
       var need = campRation(civilians(r) + reserve(r),p);
+      cohesionDay(s,rid,r.food<need);
+      if (r.status!=='active') return;
+      need=campRation(civilians(r)+reserve(r),p);
       if (r.food < need) {
         var left = Math.min(civilians(r)+reserve(r), Math.ceil((need - r.food) / p.foodPerPerson * p.starvationShare)), lost = left;
         r.members.forEach(function (member) {
@@ -1608,12 +1766,57 @@
     return Object.keys(s.authority && s.authority.governments || {}).some(function (rid) {
       var r = M.row(s,rid);
       var moving=r && M.migration(s,rid);
-      return r && (r.members.some(function (m) {return m.principal.id === cid;}) || moving && moving.courtIds.indexOf(cid)>=0);
+      return r && (r.members.some(function (m) {return m.principal.id === cid;}) ||
+        r.cohesion && r.cohesion.lastDistribution && r.cohesion.lastDistribution.rows.some(function (part) {return part.characterId===cid;}) || moving && moving.courtIds.indexOf(cid)>=0);
     });
   };
   function plain(v) {return !!v && typeof v === 'object' && !Array.isArray(v);}
   function keys(v,allowed) {return plain(v) && Object.keys(v).every(function (k) {return allowed.indexOf(k) >= 0;});}
   function boundedNumber(n,max) {return Number.isFinite(n) && n >= 0 && n <= max;}
+  var cohesionPolicySpec={type:'object',fields:{schema:{value:1},initialSupport:{type:'number',min:0,max:100},
+    victory:{type:'number',min:0,max:100},defeat:{type:'number',min:-100,max:0},receiptShare:{type:'number',min:0,max:100},
+    scarcity:{type:'object',fields:{days:{type:'integer',min:1,max:90},support:{type:'number',min:-100,max:0}}},
+    idle:{type:'object',fields:{seasons:{type:'integer',min:1,max:40},support:{type:'number',min:-100,max:0}}},
+    standing:{type:'object',fields:{target:{type:'number',min:-100,max:100},factor:{type:'number',min:0,max:1}}},
+    thresholds:{type:'object',fields:{depart:{type:'number',min:0,max:100},withhold:{type:'number',min:0,max:100},
+      rival:{type:'number',min:0,max:100}},test:function (t) {return t.depart<=t.withhold && t.withhold<=t.rival;}},
+    distribution:{type:'object',fields:{mode:{enum:['keep','weight','favor']},favorites:{type:'integer',min:1,max:24}}}}};
+  function validateCohesion(s,rid,p) {
+    var r=M.row(s,rid), c=r.cohesion;
+    function fail() {throw new Error(FB.T('Invalid mobile cohesion or distribution in this save.'));}
+    if (!p.cohesionPolicy) {if (c!==undefined) fail();return;}
+    if (!keys(c,['schema','scarcityDays','lastPeriod','receipts','lastDistribution']) || c.schema!==1 ||
+        !whole(c.scarcityDays) || c.scarcityDays>1000000000 || !whole(c.lastPeriod) || c.lastPeriod>Math.floor(s.turn/90) ||
+        !Array.isArray(c.receipts) || c.receipts.length>32) fail();
+    var ids={};
+    function receipt(a) {
+      var suffix=a && typeof a.id==='string' && a.id.indexOf('spoils_')===0 ? a.id.slice(7) : '';
+      if (!keys(a,['id','source','sourceId','turn','gold','food']) || Object.keys(a).length!==6 ||
+          !/^[1-9][0-9]*$/.test(suffix) || !whole(Number(suffix)) || Number(suffix)>r.serial || ids[a.id] ||
+          ['raid','agreement','service_initial','service_season'].indexOf(a.source)<0 ||
+          typeof a.sourceId!=='string' || !a.sourceId || a.sourceId.length>160 ||
+          !whole(a.turn) || a.turn>s.turn || !boundedNumber(a.gold,1000000000000) || !whole(a.food) || a.food>1000000000000 ||
+          !(a.gold || a.food)) fail();
+      ids[a.id]=true;
+    }
+    c.receipts.forEach(receipt);
+    var d=c.lastDistribution;
+    if (d!==undefined) {
+      if (!keys(d,['receipt','mode','rows','turn']) || Object.keys(d).length!==4 || ['keep','weight','favor'].indexOf(d.mode)<0 ||
+          !whole(d.turn) || d.turn>s.turn || !Array.isArray(d.rows) || !d.rows.length || d.rows.length>p.maxMembers) fail();
+      receipt(d.receipt);
+      if (d.turn<d.receipt.turn) fail();
+      var members={},gold=0,food=0;
+      d.rows.forEach(function (part) {
+        if (!keys(part,['memberId','characterId','gold','food','support']) || Object.keys(part).length!==5 ||
+            typeof part.memberId!=='string' || !part.memberId || part.memberId.length>160 || members[part.memberId] ||
+            typeof part.characterId!=='string' || !s.chars[part.characterId] || !boundedNumber(part.gold,d.receipt.gold) ||
+            !whole(part.food) || part.food>d.receipt.food || !boundedNumber(part.support,100)) fail();
+        members[part.memberId]=true;gold+=part.gold;food+=part.food;
+      });
+      if (Math.abs(gold-(d.mode==='keep' ? 0 : d.receipt.gold))>0.000001 || food!==(d.mode==='keep' ? 0 : d.receipt.food)) fail();
+    }
+  }
   var extractionPolicySpec={type:'object',fields:{schema:{value:1},
     demand:{optional:'absent',type:'object',fields:{kinds:{type:'array',minItems:1,maxItems:2,unique:true,items:{enum:['tribute','protection']}},
       maxPayment:{type:'integer',min:1,max:10000},maxDays:{type:'integer',min:1,max:1440}}},
@@ -1628,7 +1831,7 @@
     Object.keys(profiles).forEach(function (id) {
       var p = profiles[id], seen = [];
       if (!keys(p,['minAge','threshold','maxMembers','maxAgreements','recruitShare','recruitCost','foodPerPerson','pasturePerPerson',
-          'accessDays','accessPrice','starvationShare','defeatShare','settlementForm','regions','members','supplyPolicy','extractionPolicy']) ||
+          'accessDays','accessPrice','starvationShare','defeatShare','settlementForm','regions','members','supplyPolicy','extractionPolicy','cohesionPolicy']) ||
           !whole(p.minAge) || p.minAge < 16 || p.minAge > 80 || !Number.isFinite(p.threshold) || p.threshold <= 0.5 || p.threshold > 1 ||
           !whole(p.maxMembers) || !p.maxMembers || p.maxMembers > 24 || !whole(p.maxAgreements) || !p.maxAgreements || p.maxAgreements > 12 ||
           !boundedNumber(p.recruitShare,0.5) || !boundedNumber(p.recruitCost,100) || !boundedNumber(p.foodPerPerson,1) || !p.foodPerPerson ||
@@ -1641,6 +1844,8 @@
                 !whole(m.weight) || !m.weight || m.weight > 100 || !boundedNumber(m.pledge,p.recruitShare) || !whole(m.population) || !m.population || m.population > 10000000) return true;
             seen.push(m.id); return false;
           }) || p.supplyPolicy!==undefined && !supplyPolicyValid(p.supplyPolicy,units)) errors.push(FB.T('Invalid mobile profile {id}.',{id:id}));
+      if (p && p.cohesionPolicy!==undefined) errors=errors.concat(FB.schema.faults(p.cohesionPolicy,cohesionPolicySpec,
+        'mobileProfiles.'+id+'.cohesionPolicy'));
       if (p && p.extractionPolicy!==undefined) errors=errors.concat(FB.schema.faults(p.extractionPolicy,extractionPolicySpec,
         'mobileProfiles.'+id+'.extractionPolicy',{data:{federateContractTerms:contracts || FBDATA.federateContractTerms}}));
     });
@@ -1778,7 +1983,7 @@
       var p = M.profile(s,rid), moving = M.migration(s,rid), ids = {}, principals = {};
       if (moving && !M.migrationSponsorshipValid(s,moving)) fault(rid,'sponsorship');
       if (!keys(r,['schema','profileId','migrationId','status','serial','revision','leaderId','selection','decision','food','lastDay','lastAI',
-          'worked','agreements','accounting','members','defeatKey','openingBindings','openingReserves','command','openingAccess','columns','openingCampaigns','expeditionProgram','guardedParty','camps','lastRaid','lastRaidTurn']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
+          'worked','agreements','accounting','members','defeatKey','openingBindings','openingReserves','command','openingAccess','columns','openingCampaigns','expeditionProgram','guardedParty','camps','lastRaid','lastRaidTurn','cohesion']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
           !['active','settled','dispersed'].includes(r.status) || !whole(r.serial) || !whole(r.revision) || !whole(r.lastDay) || r.lastDay > s.turn ||
           r.lastAI !== undefined && (!whole(r.lastAI) || r.lastAI>Math.floor(s.turn/90)) || !boundedNumber(r.food,1000000000000) ||
           !keys(r.accounting,['initial','arrivals','dead','settled','dispersed']) || Object.keys(r.accounting).length !== 5 ||
@@ -1823,15 +2028,18 @@
           r.status === 'settled' && (strategy.mobileFollowing || moving.status !== 'settled' || M.total(s,rid) !== 0) ||
           r.status === 'dispersed' && (s.realms[rid].alive !== false || M.total(s,rid) !== 0)) fault(rid,'status');
       r.members.forEach(function (m) {
-        if (!keys(m,['id','principal','scope','basis','continuity','weight','pledge','allegiance','civilians','reserve']) ||
+        if (!keys(m,['id','principal','scope','basis','continuity','weight','pledge','allegiance','civilians','reserve','support','lastGainTurn']) ||
             typeof m.id !== 'string' || !m.id || m.id.length>160 || ids[m.id] || !keys(m.principal,['kind','id']) || m.principal.kind !== 'character' ||
             !s.chars[m.principal.id] || principals[m.principal.id] || !keys(m.scope,['kind','id']) || m.scope.kind !== 'realm' || m.scope.id !== rid ||
             m.basis !== 'following' || m.continuity !== 'member' || !whole(m.weight) || !m.weight || m.weight > 100 ||
             !boundedNumber(m.pledge,p.recruitShare) || typeof m.allegiance !== 'boolean') fault(rid,'members');
+        if (p.cohesionPolicy ? !boundedNumber(m.support,100) || !whole(m.lastGainTurn) || m.lastGainTurn>s.turn :
+            m.support!==undefined || m.lastGainTurn!==undefined) fault(rid,'support');
         if(r.status==='active' && moving.courtIds.indexOf(m.principal.id)<0 &&
             !(M.separatePartyMember && M.separatePartyMember(s,rid,m.principal.id))) fault(rid,'court');
         ids[m.id]=true; principals[m.principal.id]=true; pool(rid,m.civilians,false); pool(rid,m.reserve,false);
       });
+      validateCohesion(s,rid,p);
       if (r.leaderId !== null && (!principals[r.leaderId] || !s.chars[r.leaderId])) fault(rid,'leader');
       if (r.selection !== null) {
         if (!keys(r.selection,['votes']) || !plain(r.selection.votes) || Object.keys(r.selection.votes).some(function (mid) {

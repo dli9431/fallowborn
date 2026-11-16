@@ -1,5 +1,7 @@
 Roman offices and imperial claims
 
+The political owner constructs fresh realm references with Q.realmReference(id) and checks their kind with Q.isRealmReference(value). These helpers do not resolve a living actor, validate an institution, grant permission or alter a saved record. Office mandates and recognition use the same reference constructor; ordinary actor, scope, treasury and transaction reviews retain their existing validation.
+
 Optional personal court mandates compose the existing appointment, recognition,
 contract and treasury owners. Declared powers, favor, tenure, dismissal,
 proposals and officer acclamation are documented in

@@ -21,6 +21,9 @@ FB.bookmarkSources.stage({"source":"data/mobile_confederations.js","bookmarks":[
       recruitShare:0.2, recruitCost:0.02, foodPerPerson:0.01,
       pasturePerPerson:1.8, accessDays:360, accessPrice:4,
       starvationShare:0.001, defeatShare:0.02, settlementForm:'regnum',
+      cohesionPolicy:{schema:1,initialSupport:65,victory:6,defeat:-12,receiptShare:24,
+        scarcity:{days:7,support:-1},idle:{seasons:2,support:-8},standing:{target:0,factor:0.05},
+        thresholds:{depart:15,withhold:35,rival:50},distribution:{mode:'weight',favorites:1}},
       extractionPolicy:{schema:1,demand:{kinds:['tribute','protection'],maxPayment:8,maxDays:90},
         raid:{maxGold:12,maxFood:120,stockShare:0.1,cooldownDays:90},hire:{templateIds:['paid_service']}},
       regions:['cherson','tomis','constantinople'], members:[
@@ -32,6 +35,9 @@ FB.bookmarkSources.stage({"source":"data/mobile_confederations.js","bookmarks":[
       recruitShare:0.15, recruitCost:0.03, foodPerPerson:0.01,
       pasturePerPerson:1.5, accessDays:270, accessPrice:6,
       starvationShare:0.001, defeatShare:0.03, settlementForm:'regnum',
+      cohesionPolicy:{schema:1,initialSupport:70,victory:4,defeat:-8,receiptShare:16,
+        scarcity:{days:10,support:-0.5},idle:{seasons:3,support:-6},standing:{target:0,factor:0.03},
+        thresholds:{depart:10,withhold:30,rival:45},distribution:{mode:'keep',favorites:1}},
       extractionPolicy:{schema:1,hire:{templateIds:['paid_service']}},
       regions:[], members:[
         { id:'first_following', weight:2, pledge:0.15, population:900 },
@@ -52,6 +58,10 @@ FB.bookmarkSources.stage({"source":"data/mobile_confederations.js","bookmarks":[
     rationale:'Binding an existing living opening person creates no new office or military technology. Custody, age, location and incumbent generation remain authoritative.'};
   FBDATA.techImpactReviews.features.mobile_principal_start = {mode:'none',
     rationale:'Selecting an existing coalition member as a private protagonist requires no discovery. Current member selection, conserved people, public accounts, passage and ordinary unit gates retain their owners.'};
+  FBDATA.techImpactReviews.features.mobile_member_cohesion={mode:'none',
+    rationale:'Member support responds to real receipts, food, service, military outcomes and current leadership Standing. Political association needs no discovery; ordinary deployment, departure, consent and military gates remain binding.'};
+  FBDATA.techImpactReviews.features.mobile_spoils_distribution={mode:'none',
+    rationale:'Sharing already received public money and food with living members needs no discovery. Exact current resources, leadership and once-only receipt reviews remain binding.'};
   ['mobile_tribute_demand','mobile_bounded_raid','mobile_hired_service'].forEach(function (id) {
     FBDATA.techImpactReviews.features[id]={mode:'none',
       rationale:'Member assent, actual military strength, outside consent and conserved stocks govern this baseline operation. Existing equipment, crossing and service requirements remain binding.'};
