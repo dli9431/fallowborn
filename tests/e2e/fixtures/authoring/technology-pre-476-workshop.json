@@ -1,0 +1,14 @@
+{
+  "name": "Early grinding workshop schedule",
+  "tech": {
+    "quern_stones": {
+      "name": "Rotary Querns", "icon": "Q", "domain": "crafts", "cost": 20, "req": [],
+      "history": {"attested": [-500, 500], "adoption": {
+        "default": [350, 500], "latin": [200, 450], "byzantine": [250, 400]
+      }},
+      "desc": "An independent workshop schedule for rotary grinding knowledge.",
+      "confidence": "modded", "sources": ["MOD"], "unlocks": ["practice:rotary_grinding"],
+      "capabilities": [], "fx": {"tax": 0.005}
+    }
+  }
+}

@@ -1,5 +1,5 @@
 /* =========================================================================
-   Fallowborn — historical technology catalogue, 476–1300
+   Fallowborn — historical technology catalogue, 375–1300
 
    Technology is a prerequisite graph with soft historical timing. Definitions
    are expanded here from compact authored rows so every live entry exposes the
@@ -14,7 +14,7 @@ window.FBDATA = window.FBDATA || {};
      authored for. A bookmark dated outside them is rejected rather than
      seeded from windows nobody wrote; an earlier or later start needs its
      technologies authored first. Each era's technology window lies inside. */
-  FBDATA.techCoverage = { from:476, to:1300 };
+  FBDATA.techCoverage = { from:375, to:1300 };
 
   FBDATA.techDomains = {
     agriculture:{ name:'Agriculture and animal power', icon:'🌾', order:0 },
@@ -1527,4 +1527,47 @@ window.FBDATA = window.FBDATA || {};
   add('dry_docks','Graving Docks','⚓','seafaring',[900,1250],[1070,1280],['harbor_works','stone_bridgebuilding'],
     'Drainable basins expose hulls for inspection and major repair.',
     { leaders:['byzantine','islamic','latin'], unlocks:['rule:dry_docks','building:arsenal'], fx:{ seaMovement:0.01 } });
+
+  /* Earlier contact with inherited foundations. These are emergence dates,
+     not universal adoption or permission to create an institution or asset.
+     Keep the relative order of whole regional pairs and every widespread date.
+     See docs/research/technology-before-476.md for evidence and retained limits. */
+  var foundationEmergence = {
+    quern_stones:{
+      latin:230, byzantine:210, islamic:210, persianate:220, slavic:245,
+      nordic:250, steppe:240, baltic_finnic:265, caucasian:235, northeast_african:245
+    },
+    surgical_instruments:{
+      latin:270, byzantine:250, islamic:250, persianate:260, caucasian:275
+    },
+    census_records:{
+      latin:250, byzantine:230, islamic:230, persianate:240, slavic:265,
+      nordic:270, steppe:260, caucasian:255, northeast_african:265
+    },
+    land_registers:{
+      latin:250, byzantine:230, islamic:230, persianate:240, slavic:265,
+      nordic:270, steppe:260, caucasian:255, northeast_african:265
+    },
+    tax_assessment:{
+      latin:270, byzantine:250, islamic:250, persianate:260, caucasian:275
+    },
+    bureaucratic_offices:{
+      latin:250, byzantine:230, islamic:230, persianate:240, slavic:265,
+      nordic:270, steppe:260, caucasian:255, northeast_african:265
+    },
+    torsion_artillery:{ latin:270, byzantine:250, islamic:250 }
+  };
+  var foundationSources = {
+    quern_stones:'VITRUVIUS_X_5', surgical_instruments:'CELSUS_VII_4_5',
+    census_records:'CODEX_THEODOSIANUS_XI', land_registers:'CODEX_THEODOSIANUS_XI',
+    tax_assessment:'CODEX_THEODOSIANUS_XI', bureaucratic_offices:'CODEX_THEODOSIANUS_XI',
+    torsion_artillery:'AMMIANUS_XXIII_4'
+  };
+  for (var foundationId in foundationEmergence) {
+    var foundation = FBDATA.tech[foundationId];
+    for (var traditionId in foundationEmergence[foundationId]) {
+      foundation.history.adoption[traditionId][0] = foundationEmergence[foundationId][traditionId];
+    }
+    foundation.sources.push(foundationSources[foundationId]);
+  }
 })();

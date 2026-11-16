@@ -13,7 +13,7 @@ adopted courts and ordinary household controls.
 
 Composed catalogue
 
-The catalogue retains its 187 original technology ids and their 37 corrections across the foundation, learning, civic/military, maritime, wind and transmission supplements. Feltmaking and Regularized Bookhands bring the total to 189. The original entries keep their costs, scalar effects and capability grants; their regional adoption pairs are unchanged except for the five transmission changes described below. National caps remain unchanged. Source maps retain one correction owner per id; JSON uses the ordinary tech root. Fresh historical knowledge closes the effective graph, while matching saves retain completion, exposure and partial projects without reseeding. The composition and its independent construction/property boundaries are documented in docs/research/technology-and-buildings.md.
+The catalogue retains its 187 original technology ids and their 37 corrections across the foundation, learning, civic/military, maritime, wind and transmission supplements. Feltmaking and Regularized Bookhands bring the total to 189. The original entries keep their costs, scalar effects and capability grants; their regional adoption pairs are unchanged except for the five transmission changes and earlier foundation emergence described below. National caps remain unchanged. Source maps retain one correction owner per id; JSON uses the ordinary tech root. Fresh historical knowledge closes the effective graph, while matching saves retain completion, exposure and partial projects without reseeding. The composition and its independent construction/property boundaries are documented in docs/research/technology-and-buildings.md.
 
 Material and bookhand refinements
 
@@ -116,7 +116,7 @@ usable. See [items.md](items.md) for shared regional restrictions and balance.
 
 Technology belongs to sovereign nations, not dynasties. It models durable knowledge and
 institutional practice from inherited late-antique foundations through the medieval
-diffusions of 476–1300. The campaign remains playable after 1300: projects do not acquire
+diffusions of 375–1300. The campaign remains playable after 1300: projects do not acquire
 hard calendar locks, exposure continues, and the historical cost curve becomes a catch-up
 discount rather than stopping.
 
@@ -232,15 +232,36 @@ the inherited late-antique foundations, whose regional adoption precedes that ye
 The shipped windows are 476–649 (late_antique), 650–999 (early_medieval) and 1000–1300
 (high_medieval).
 
-`FBDATA.techCoverage` (476–1300) records the years the catalogue's attested and
+`FBDATA.techCoverage` (375–1300) records the years the catalogue's attested and
 regional windows are authored for. Bookmark validation rejects, with a named error, a
 start year outside that coverage or outside its era's technology window, and a realm
 `techTraditions` entry or `techSeed` reference the catalogue does not know. A start
-before 476 or after 1300 therefore needs its technologies authored first rather than
+before 375 or after 1300 therefore needs its technologies authored first rather than
 being seeded from windows nobody wrote; this also applies to an older mod bookmark
 without a declared era. Era data validation requires each technology window to lie
 inside its era and inside the coverage, and the policy to be registered. Eras and the
 coverage are engine tables, not runtime-mod roots.
+
+Earlier catalogue coverage
+
+The shared catalogue supports historical seeding from 375. The existing era
+technology windows remain separate validation requirements; coverage alone does
+not register or activate a bookmark. Seven retained foundations have earlier
+regional emergence: quern_stones, surgical_instruments, census_records,
+land_registers, tax_assessment, bureaucratic_offices and torsion_artillery.
+Their 50 changed pairs retain every widespread date and the relative ordering
+used to choose a whole pair for mixed traditions. Consequently all fresh 476
+and later completion, exposure and empty project records remain identical.
+Earlier contact exposes research rather than granting a facility, office,
+equipment or completion. Existing national caps, base costs and cost floors stand.
+
+The normal prerequisite closure and complete/expose/omit exceptions apply at
+375–475. Matching current-content campaigns retain their actual knowledge and
+partial projects without reseeding, including through repeated save/load.
+This is historical timing data, with no new independently gateable capability
+or technology-impact decision. The exact pairs, retained windows, consumer
+audit and evidence qualifications are in
+[technology before 476](../research/technology-before-476.md).
 
 ## Soft historical cost
 
