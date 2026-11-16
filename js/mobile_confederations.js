@@ -305,30 +305,64 @@
       treasury:FB.treasuryAvailable(s, rid), marketFood:market ? market.stock : 0,
       access:access ? copy(access) : null };
   };
+  function eventFollowing(s,rid) {
+    var r=M.row(s,rid), realm=s.realms && s.realms[rid];
+    return !!(r && r.status==='active' && realm && realm.alive && M.active(s,rid));
+  }
   function eventMember(s,rid) {
-    var r = M.row(s,rid);
-    return r && r.status === 'active' && M.active(s,rid) &&
-      s.realms[rid] && s.realms[rid].alive && M.members(s,rid).some(function (m) {
-        return m.principal.id === s.player.charId && !!m.allegiance;
-      });
+    return eventFollowing(s,rid) && M.members(s,rid).some(function (m) {
+      return m.principal.id===s.player.charId && !!m.allegiance;
+    });
+  }
+  function eventHousehold(s,rid) {
+    var r=M.row(s,rid), c=s.chars[s.player.charId], m=M.migration(s,rid);
+    if (!eventFollowing(s,rid) || r.camps || !availablePerson(s,c) || !m ||
+        m.realmId!==rid || ['settled','failed'].indexOf(m.status)>=0) return false;
+    // A dispersed set needs an exact camp selector, not the migration anchor.
+    // A nonallegiant principal remains outside the household audience.
+    if (r.members.some(function (v) {return v.principal.id===c.id;})) return false;
+    var host=r.columns && M.columnCampHost ? M.columnCampHost(s,rid) : M.host(s,rid);
+    if (host && host.mobileCourt && (host.moveLeft>0 || (host.path || []).length)) return false;
+    // Local residence and actual presence allow conversation, never membership.
+    return FB.characterResidence(s,c)===m.at && FB.characterLocation(s,c)===m.at;
+  }
+  function eventRealm(s,a,ctx) {
+    if (a.realmId!==undefined) return a.realmId;
+    if (a.following==='moment') return ctx && typeof ctx.realmId==='string' &&
+      eventFollowing(s,ctx.realmId) ? ctx.realmId : null;
+    var ids=Object.keys(s.authority && s.authority.governments || {}).filter(function (rid) {
+      return eventMember(s,rid) || eventHousehold(s,rid);
+    });
+    return ids.length===1 ? ids[0] : null;
+  }
+  function eventArgs(role) {
+    var fields={realmId:{type:'string',minLength:1,maxLength:80,optional:'absent'},
+      following:{enum:['current','moment'],optional:'absent'}};
+    if (role) fields.role={enum:['leader','member']};
+    return {type:'object',fields:fields,test:function (a) {
+      return (a.realmId!==undefined)!==(a.following!==undefined);
+    }};
   }
   FB.eventStateReaders.register({id:'mobile_coalition_member',system:'mobile_confederations',
-    args:{type:'object',fields:{realmId:{type:'string',minLength:1,maxLength:80}}},
-    read:function (s,a) { return !!eventMember(s,a.realmId); }});
+    args:eventArgs(false),read:function (s,a,ctx) {
+      return !!eventMember(s,eventRealm(s,a,ctx));
+    }});
   FB.eventStateReaders.register({id:'mobile_role',system:'mobile_confederations',
-    args:{type:'object',fields:{realmId:{type:'string',minLength:1,maxLength:80},role:{enum:['leader','member']}}},
-    read:function (s,a) {
-      return !!eventMember(s,a.realmId) && (a.role === 'leader'
-        ? !!M.leader(s,a.realmId) && M.leader(s,a.realmId).id === s.player.charId
-        : M.row(s,a.realmId).leaderId !== s.player.charId);
+    args:eventArgs(true),read:function (s,a,ctx) {
+      var rid=eventRealm(s,a,ctx);
+      return !!eventMember(s,rid) && (a.role==='leader'
+        ? !!M.leader(s,rid) && M.leader(s,rid).id===s.player.charId
+        : M.row(s,rid).leaderId!==s.player.charId);
+    }});
+  FB.eventStateReaders.register({id:'mobile_camp_household',system:'mobile_confederations',
+    args:eventArgs(false),read:function (s,a,ctx) {
+      return !!eventHousehold(s,eventRealm(s,a,ctx));
     }});
   FB.eventStateReaders.register({id:'mobile_scarcity',system:'mobile_confederations',
-    args:{type:'object',fields:{realmId:{type:'string',minLength:1,maxLength:80}}},
-    read:function (s,a) {
-      var r = M.row(s,a.realmId), p = M.profile(s,a.realmId);
-      return !!(r && p && r.status === 'active' && M.active(s,a.realmId) &&
-        s.realms[a.realmId] && s.realms[a.realmId].alive &&
-        r.food < M.total(s,a.realmId) * p.foodPerPerson * 30);
+    args:eventArgs(false),read:function (s,a,ctx) {
+      var rid=eventRealm(s,a,ctx), r=M.row(s,rid), p=M.profile(s,rid);
+      return !!(p && eventFollowing(s,rid) &&
+        r.food < M.total(s,rid) * p.foodPerPerson * 30);
     }});
   M.passage = function (s, rid, pid, court) {
     return s.owner[pid] === rid || !!activeAccess(s, rid, pid) ||

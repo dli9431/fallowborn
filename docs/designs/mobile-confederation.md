@@ -473,3 +473,36 @@ Corridor storage envelopes occupy the existing bounded agreement slots while hol
 Committed event observations
 
 Leader installation, successful membership addition/departure, actual civilian-court county arrival, casualty loss below the ordinary field minimum and active access ending publish the generic system moments in MODDING.md. Access records close before existing daily/seasonal pruning, so the owner transition is idempotent, including individual corridor receipts and original-authority loss. Field movement without the civilian court, voluntary demuster and reads publish no arrival or defeat. No daily moment-detection scan, second queue or saved dispatch marker is added.
+
+Personal camp decisions
+
+The mobile_life pack contains 24 personal decisions during 1204?1240 in the
+high-medieval era. Leader and nonleader audiences use current coalition roles;
+four scarcity conversations serve ordinary resident camp households instead of
+asserting principal membership. The same pack serves native and imported
+coalitions. Six queued observations answer leadership, membership, civilian
+arrival, host-loss and access-ending moments in the protagonist's own following.
+Household conversations bind an actual local witness through the ordinary
+participant owner. Neither culture, religion nor terrain selects these events.
+
+The coalition readers accept either their existing explicit realmId or the typed
+following selector current or moment. Current requires exactly one live relevant
+following, from allegiant principal membership or resident camp locality. Moment
+uses the existing context's realmId and still checks the requested audience.
+Missing, ambiguous, inactive and settled contexts fail without mutation. Ordinary
+camp households must be available, resident and physically present at the actual
+single-camp migration county, outside the principal registry; a moving civilian court does
+not establish resident presence. Host loss alone does not erase a surviving camp.
+Dispersed civilian camps fail closed because this reader selects no exact camp.
+Local conversation creates no membership, vote, military or command authority.
+The existing event-observation none technology decision covers these pure reader
+repairs; no new transaction or saved record is introduced.
+
+Choices distinguish private preparation from public action. Account notes help
+a later personal share argument; notes on terms, voices, access and settlement
+help a later service explanation through declared eventChances. A successful
+practice attempt improves personal Diplomacy. Rest improves personal health.
+Every decision has an unconditional refusal. No choice transfers public food,
+money, people, land, access, pledges or service obligations. Binding proposals,
+outside acceptance and settlement remain separate canonical Mobile coalition
+reviews in Deeds. This is content using existing flags, skill checks and moments.

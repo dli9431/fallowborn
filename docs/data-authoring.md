@@ -423,6 +423,16 @@ and unknown static catalogue references reject the complete candidate import.
 Realm and institution instance ids are bounded strings resolved in the live world;
 missing instances return false. No JavaScript or saved reader results belong in JSON.
 
+For mobile audiences, use exactly one of an explicit `realmId` or
+`following:"current"` / `following:"moment"`. Current selection requires one
+unambiguous live following related by principal membership or resident camp
+locality. Moment selection reads the committed context's realm id, then checks
+the audience again. `mobile_camp_household` serves available nonprincipal
+households resident and physically present at the single camp's actual county;
+it grants no principal role. A moving civilian court or dispersed camp set does
+not establish that context. Keep membership/role readers for principal decisions.
+See the reader table for exact arguments and fail-closed boundaries.
+
 Use explicit pack era membership and year windows. A condition observes existing
 facts; it grants no office, control, membership, permission, case or story stage.
 Use existing effects and canonical reviews for decisions. Bind exact participants
