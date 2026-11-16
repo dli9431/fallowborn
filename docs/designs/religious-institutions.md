@@ -170,3 +170,7 @@ holder qualification. Borrowed tables and heads are never edited or exposed by
 these reads; legitimacy results remain detached copies. No query context
 survives return, restore or a catalogue change. Focused reference and structural
 validation-count coverage lives in religious-office-tables.spec.js.
+
+Committed event observation
+
+The institution owner prepares fallible changes on a detached copy and publishes office_appointed, office_lost and recognition-band changes only after its successful live-ledger adoption. Discarded staging queues never become live notifications. Failed or repeated reviews, read projections and restore publish nothing. The same rule covers eligibility-driven vacancy following a membership change. Event subscriptions remain pure, availability-gated observers; see events.md and MODDING.md.

@@ -538,3 +538,7 @@ An external command issuer can be represented as a generation-tagged finite warr
 Home office presence
 
 Opted-in homeAuthority forms use FB.homeAuthority.quote for new levies, appointments, discretionary grants, war and spending. Each homePowers entry is an exact supported operation on an existing effective civil appointment. Local presence, issuer generation, scope, term, recall and custody remain live facts; host command supplies no civil delegation. Appointment and grant reviews retain this evidence for stale rejection. Existing accepted service awards retain their exact contract-owned consent, recipient and site; they cannot authorize a new discretionary grant. The full design and independent none technology decisions are in docs/designs/home-authority.md.
+
+Committed event observations
+
+Successful scoped appointments and confirmations publish office_appointed; contest, removal and expiry publish office_lost once. Explicit spiritual assignments and vacancies share those ids. Recognition-source band changes are observed around canonical recognition, succession and death writes, with nested writes coalesced. Fixed-term recognitions close at the existing seasonal authority boundary. A contract signs only on the second current approval and publishes its terminal breach or expiry once; repeated reads, refusal, restore and release of an already expired record publish nothing. A successful government-form write publishes government_transformed. Payloads and availability are defined in events.md and MODDING.md; these observations grant no authority.

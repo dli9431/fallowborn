@@ -705,6 +705,23 @@
     return true;
   };
 
+  // Detached preparation adopts only its successful final owner ledgers.
+  // Observe the live commit, never its fallible staging copy.
+  var commitInstitution = FB.religiousInstitutionApply;
+  FB.religiousInstitutionApply = function (s,reviewed) {
+    return FB.withLegitimacyMoments(s,function () {
+      var a = reviewed && at(s,reviewed.institutionId), oid = a && a.def.officeId;
+      var before = oid && s.religiousHeads && s.religiousHeads[oid];
+      var result = commitInstitution(s,reviewed);
+      var after = oid && s.religiousHeads && s.religiousHeads[oid];
+      if (result && before !== after) {
+        if (before) FB.religiousOfficeMoment(s,oid,before,'office_lost');
+        if (after) FB.religiousOfficeMoment(s,oid,after,'office_appointed');
+      }
+      return result;
+    });
+  };
+
   FB.validateReligiousInstitutionState = function (s) {
     function fail(path) { throw new Error(FB.T('Invalid v4 save field at {path}.', { path:path })); }
     Object.keys(s.chars || {}).forEach(function (cid) {

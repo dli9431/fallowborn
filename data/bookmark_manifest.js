@@ -150,6 +150,16 @@ if (FB.bookmarkSources && FB.bookmarkSources.manifest) FB.bookmarkSources.manife
       ['data/story_frederick_1241.js',['1241']],
       ['data/story_eastern_rulers_1096.js',['1096']]
     ]},
+    {after:'data/events_common.js', files:[
+      ['data/events_493.js',['493']],
+      ['data/events_568.js',['568']],
+      ['data/events_634.js',['634']],
+      ['data/events_711.js',['711']],
+      ['data/events_800.js',['800']],
+      ['data/events_1096.js',['1096']],
+      ['data/events_1204.js',['1204']],
+      ['data/events_1241.js',['1241']]
+    ]},
     {after:'data/events_tutorial.js', files:[
       ['data/story_households_711.js',['711']],
       ['data/story_households_800.js',['800']],

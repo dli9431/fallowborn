@@ -40,6 +40,7 @@ window.FB = window.FB || {};
     }
     check(ev.trigger,'events.' + ev.id + '.trigger');
     (ev.options || []).forEach(function (option,i) { check(option.require,'events.' + ev.id + '.options[' + i + '].require'); });
+    errors.push.apply(errors,FB.validateEventReviews(ev,context));
     return errors;
   };
   FB.compileEventContent = function (era) {
@@ -1841,7 +1842,7 @@ window.FB = window.FB || {};
     return null;
   };
 
-  FB.bindEventParticipants = function (state, ev, ctx) {
+  FB.bindEventParticipants = function (state, ev, ctx, existingOnly) {
     ctx = ctx || {};
     if (!ev || !ev.participants || !ev.participants.length) return ctx;
     ctx.participants = ctx.participants && typeof ctx.participants === 'object'
@@ -1861,7 +1862,8 @@ window.FB = window.FB || {};
         }
         continue;
       }
-      const c = FB.resolveEventParticipant(state, spec, ctx);
+      const c = existingOnly ? FB.eventParticipantCandidates(state,spec,ctx)[0] :
+        FB.resolveEventParticipant(state, spec, ctx);
       if (!c) {
         if (spec.required) return false;
         if (spec.kindParam) ctx[spec.kindParam] = '';
@@ -5577,11 +5579,11 @@ window.FB = window.FB || {};
     return true;
   }
 
-  FB.eventContextFor = function (state, ev, ctx) {
+  FB.eventContextFor = function (state, ev, ctx, existingOnly) {
     if (!FB.eventPeriodEnabled(state, ev)) return false;
     const out = FB.eventContext(state, ctx);
     snapshotTenureAwareContext(state, ev, out);
-    const bound = FB.bindEventParticipants(state, ev, out);
+    const bound = FB.bindEventParticipants(state, ev, out,existingOnly);
     if (!bound || !FB.eventParticipantsStillValid(state, ev, bound)) return false;
     return bound;
   };
@@ -5603,11 +5605,53 @@ window.FB = window.FB || {};
     return FB.bindEventParticipants(state, ev, ctx);
   };
 
+  /* Commit moments carry canonical identities only. Publication observes a
+     completed owner transaction; subscribers never execute effects here. */
+  const momentId = {type:'string',minLength:1,maxLength:200};
+  const momentKinds = {};
+  function moment(name, owner, fields) {
+    momentKinds[name] = {owner:owner, payload:{type:'object',fields:fields}};
+  }
+  function nullableId() { return {test:function (v) {return v === null || typeof v === 'string' && v.length > 0 && v.length <= 200;}}; }
+  const holderFields = {officeId:momentId, institutionId:momentId,
+    holderId:momentId, holderKind:{type:'string',pattern:'^(character|realm)$'}, appointmentId:nullableId()};
+  moment('office_appointed','authority',holderFields);
+  moment('office_lost','authority',holderFields);
+  moment('legitimacy_band_changed','authority',{subjectId:momentId,subjectKind:{type:'string',pattern:'^(character|realm)$'},
+    before:{enum:['none','single_source','multiple_sources']},after:{enum:['none','single_source','multiple_sources']}});
+  const contractFields = {contractId:momentId,patronRealmId:momentId,federateRealmId:momentId,hostId:nullableId()};
+  moment('federate_contract_signed','federates',contractFields);
+  moment('federate_contract_breached','federates',contractFields);
+  moment('federate_contract_expired','federates',contractFields);
+  moment('coalition_leader_selected','mobile_confederations',{realmId:momentId,characterId:momentId,formerCharacterId:nullableId()});
+  const memberFields = {realmId:momentId,memberId:momentId,characterId:momentId};
+  moment('coalition_member_joined','mobile_confederations',memberFields);
+  moment('coalition_member_departed','mobile_confederations',memberFields);
+  moment('field_host_lost','mobile_confederations',{realmId:momentId,hostId:momentId});
+  moment('camp_arrived','mobile_confederations',{realmId:momentId,migrationId:momentId,hostId:momentId,
+    fromProvinceId:momentId,locationId:momentId});
+  moment('access_expired','mobile_confederations',{realmId:momentId,agreementId:momentId,partnerRealmId:momentId});
+  const lawFields = {lawId:momentId,definitionId:momentId,realmId:momentId,locationId:momentId};
+  moment('law_enacted','industry_laws',lawFields);
+  moment('law_repealed','industry_laws',lawFields);
+  moment('case_judged','religious_cases',{caseId:momentId,profileId:momentId,offenseId:momentId,
+    characterId:momentId,locationId:momentId,status:momentId});
+  moment('claim_settled','episcopal_claims',{claimId:momentId,profileId:momentId,realmId:momentId,
+    locationId:momentId,settlement:{type:'integer',min:0,max:7}});
+  moment('government_transformed','governments',{realmId:momentId,beforeFormId:momentId,formId:momentId});
+  FB.eventMomentDefinitions = function () {return JSON.parse(JSON.stringify(momentKinds));};
+  FB.publishEventMoment = function (s,id,payload) {
+    const d = momentKinds[id];
+    if (!d || !FB.schema.valid(payload,d.payload)) throw new Error('Invalid event moment: ' + id);
+    if (!s || !s.player || !FB.eventStateReaders.ownerEnabled(s,d.owner)) return [];
+    return FB.queueLifecycleEvents(s,id,payload);
+  };
+
   /* Lifecycle names describe engine moments, never event identities. The
      subscriptions are compiled once and retain catalogue declaration order. */
   const lifecycleHooks = ['household_birth','child_education','child_adulthood',
     'player_education','player_adulthood','home_raid','protection_offer',
-    'justice_arrest','justice_hearing','travel_arrival'];
+    'justice_arrest','justice_hearing','travel_arrival'].concat(Object.keys(momentKinds));
   let lifecycleIndex = null;
   FB.validateEventLifecycle = function (table, events) {
     const errors = [], counts = {};
@@ -5663,7 +5707,9 @@ window.FB = window.FB || {};
         (lifecycleIndex[row.hook] || (lifecycleIndex[row.hook] = [])).push({ event:ev, require:row.require });
       }
     }
-    const queued = [], snapshot = {};
+    const queued = [], snapshot = {}, momentDef = momentKinds[hook];
+    if (momentDef && (!FB.schema.valid(ctx,momentDef.payload) ||
+        !FB.eventStateReaders.ownerEnabled(state,momentDef.owner))) return queued;
     for (const row of lifecycleIndex[hook] || []) {
       const ev = row.event;
       if (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev) ||
@@ -5672,18 +5718,18 @@ window.FB = window.FB || {};
             state.turn - state.player.cooldowns[ev.id] < ev.cooldown * 90 ||
           ev.trigger && ev.trigger.state && !FB.eventStateReaders.test(state,ev.trigger.state,ctx,snapshot) ||
           !FB.checkTrigger(state, row.require, ctx, snapshot)) continue;
-      const eventCtx = row.require && row.require.state
+      const eventCtx = momentDef || row.require && row.require.state
         ? Object.assign({},ctx || {},{eventLifecycleHook:hook}) : ctx;
-      const item = FB.queueEvent(state, ev.id, eventCtx, extra);
+      const item = FB.queueEvent(state, ev.id, eventCtx, extra,true);
       if (item) queued.push(item);
     }
     return queued;
   };
 
-  FB.queueEvent = function (state, id, ctx, extra) {
+  FB.queueEvent = function (state, id, ctx, extra, existingOnly) {
     const ev = FB.eventById(id);
     if (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev)) return null;
-    const eventCtx = FB.eventContextFor(state, ev, ctx);
+    const eventCtx = FB.eventContextFor(state, ev, ctx,existingOnly);
     if (!eventCtx) return null;
     const item = { id:id, ctx:eventCtx };
     extra = extra || {};
@@ -5707,6 +5753,8 @@ window.FB = window.FB || {};
     if (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev)) return false;
     if (ev.trigger && ev.trigger.state && !FB.eventStateReaders.test(state,ev.trigger.state,ctx)) return false;
     if (ctx && ctx.eventLifecycleHook) {
+      const momentDef = momentKinds[ctx.eventLifecycleHook];
+      if (momentDef && !FB.eventStateReaders.ownerEnabled(state,momentDef.owner)) return false;
       const rows = (FBDATA.eventSubscriptions || {})[ev.id] || [];
       const row = rows.filter(function (r) { return r.hook === ctx.eventLifecycleHook; })[0];
       if (!row || row.require && row.require.state && !FB.eventStateReaders.test(state,row.require.state,ctx)) return false;
@@ -10413,6 +10461,7 @@ window.FB = window.FB || {};
       });
     }
     const guaranteed = visible(previewEffects(state, option.effects, ctx, ev));
+    if (option.review) guaranteed.push(impact('system',{system:'story',review:true}));
     const success = visible(previewEffects(state,
       option.success && option.success.effects, ctx, ev));
     const failure = visible(previewEffects(state,
@@ -10491,7 +10540,7 @@ window.FB = window.FB || {};
   // Conservative post-event invalidation: custom effects and named chance
   // handlers keep the full reconciliation path, including unchosen branches.
   FB.eventOptionHouseholdLocal = function (state, option) {
-    if (!option || (option.chance !== undefined && typeof option.chance !== 'number')) return false;
+    if (!option || option.review || (option.chance !== undefined && typeof option.chance !== 'number')) return false;
     return localImpactOnly(state, option.effects || {}) &&
       localImpactOnly(state, option.success && option.success.effects || {}) &&
       localImpactOnly(state, option.failure && option.failure.effects || {});
@@ -12531,6 +12580,18 @@ window.FB = window.FB || {};
 
     if (ev && !FB.eventContextStillValid(state, ev, ctx)) return false;
 
+    let eventReviewed = null;
+    if (option.review) {
+      const current = FB.eventReviews.quote(state,option,ctx);
+      if (meta.automated && (!current || !current.quote.allowed)) {
+        const refusal = ev.options[option.review.refusalOption];
+        if (!refusal || refusal.review) return false;
+        return FB.resolveEventOption(state,ev,refusal,ctx,meta);
+      }
+      if (!FB.eventOptionStatus(state,ev,option,ctx).ready) return false;
+      eventReviewed = meta.automated ? current : meta.reviewed;
+    }
+
     if (ctx && ctx._tenureResolved) return false;
 
     const optionIndex = ev.options ? ev.options.indexOf(option) : -1;
@@ -12553,6 +12614,10 @@ window.FB = window.FB || {};
     const oldUiSuppression = FB.ui && FB.ui.suppressEventEffectToasts;
     if (FB.ui) FB.ui.suppressEventEffectToasts = true;
     try {
+      if (option.review) {
+        if (!FB.eventReviews.commit(state,option,ctx,eventReviewed)) return false;
+        ledgers.push(FB.eventReviews.report(state,eventReviewed));
+      }
       if (option.chance !== undefined) {
         const probability = typeof option.chance === 'string'
           ? FB.namedChance(state, option.chance, ctx) : Number(option.chance);

@@ -351,6 +351,22 @@ Example-only rows for an existing shared pack may omit `packId`.
 The shared spec discovers unregistered fixture files,
 validates every registered pack and checks all rows without pack-specific code.
 
+Use the **Committed system moments** table in MODDING.md for commit-driven
+subscriptions. A hook's context carries its canonical ids, not a writable state
+path. Require the relevant state readers to narrow an audience and bind exact
+people through normal participants. Restore never republishes a transition.
+
+A choice may instead declare `review:{type,args,refusalOption}`. Supported types
+are `industry_operation` (declared law and pay/pause/resume/close) and
+`story_choice` (an existing registered story and offered choice). Use a distinct,
+unconditional ordinary refusal index; do not add effects or chance to the review
+option. Display its purpose in label/desc; the confirmation obtains real costs,
+consent and blockers from the canonical owner. Cancel retains the event unchanged.
+Automation uses the same quote/commit or that declared refusal. Household work
+and other day-advancing story operations retain their ordinary Deeds path.
+The event-system-moments-fictional.json example contrasts imported finite business
+permission with an independently registered household decision.
+
 Lifecycle and tournament authoring
 
 eventSubscriptions and tournamentRules are public behaviour catalogues. The former binds existing or same-import events to typed simulation moments. The latter supplies tournament resolution, participation, capability, prize routing, team support and AI/default selection alongside the existing tournament content tables. The harbor-contracts.json and dune-contracts.json subsystem fixtures add different subscriptions, contest rules, tactics, programmes and scales. Definitions are validated against their effective counterpart tables before application. Detailed fields and limits are in docs/MODDING.md.

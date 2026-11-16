@@ -7023,6 +7023,81 @@ eventSubscriptions maps an existing event id to a complete list of subscriptions
 
 require supports numeric goldMin, goldMax, prestigeMin, pietyMin, minAge, maxAge, yearMin and yearMax; boolean married, hasChildren and atWar; and lists flags, notFlags, cultures, professions, holdings and notHoldings. Numeric magnitudes are bounded to 1000000; lists contain 1-16 unique ids. References use the effective catalogues. There are at most 32 subscriptions per hook and one subscription per event per hook. Queuing retains event catalogue order, period and system availability, once/cooldown gates, participant binding and the ordinary saved event context. It does not roll a probability or run effects. Birth and education hooks retain their ordinary simulation eligibility. Travel arrival subscriptions are marked as travel events and clear with that journey.
 
+Committed system moments
+
+The following additional hooks carry these exact canonical payload fields in the
+ordinary event context. All ids are nonempty strings of at most 200 characters;
+nullable ids are explicitly null. They are facts about the completed write, not
+instructions to the interpreter. `eventLifecycleHook` retains the original hook.
+
+| Hook | Payload fields | Observation owner |
+| --- | --- | --- |
+| `office_appointed`, `office_lost` | `officeId`, `institutionId`, `holderId`, `holderKind` (`character` or `realm`), nullable `appointmentId` | authority |
+| `legitimacy_band_changed` | `subjectId`, `subjectKind` (`character` or `realm`), `before`, `after` (`none`, `single_source`, `multiple_sources`) | authority |
+| `federate_contract_signed`, `federate_contract_breached`, `federate_contract_expired` | `contractId`, `patronRealmId`, `federateRealmId`, nullable `hostId` | federates |
+| `coalition_leader_selected` | `realmId`, `characterId`, nullable `formerCharacterId` | mobile_confederations |
+| `coalition_member_joined`, `coalition_member_departed` | `realmId`, `memberId`, `characterId` | mobile_confederations |
+| `field_host_lost` | `realmId`, `hostId` | mobile_confederations |
+| `camp_arrived` | `realmId`, `migrationId`, `hostId`, `fromProvinceId`, `locationId` | mobile_confederations |
+| `access_expired` | `realmId`, `agreementId`, `partnerRealmId` | mobile_confederations |
+| `law_enacted`, `law_repealed` | `lawId`, `definitionId`, `realmId` (original issuer), `locationId` | industry_laws |
+| `case_judged` | `caseId`, `profileId`, `offenseId`, `characterId` (defendant), `locationId`, `status` | religious_cases |
+| `claim_settled` | `claimId`, `profileId`, `realmId`, `locationId`, integer `settlement` (0-7) | episcopal_claims |
+| `government_transformed` | `realmId`, `beforeFormId`, `formId` | governments |
+
+Office appointment means an active appointment or confirmed spiritual incumbent;
+loss includes contest, removal, expiry and explicit vacancy. Recognition bands
+observe distinct effective sources rather than an aggregate political score.
+A fully approved contract signs once; renewal needs both new approvals. Release
+of an already expired contract does not expire it again. Access expiry includes
+an active receipt ending when its original authority becomes unavailable. Each
+receipt in a corridor is observed individually. Imposed penance, imprisonment,
+enforcement and confiscation are judgments; accusation, dismissal and voluntary
+settlement are not. A settlement-form change uses the same generic government
+hook as another reviewed form change. These hooks have no date or polity filter.
+
+Owners publish from successful writes, never restore or a moment-detection daily
+scan. Disabled observation owners deliver nothing, even without a `state`
+condition. Queued contexts recheck that owner. Subscribers retain ordinary
+period, system, participant, once and cooldown gates; delivery does not roll
+chance or execute option effects. Binding uses existing participants only;
+missing required participants skip delivery even when an ordinary event permits
+creation. There is no additional queue or saved cursor.
+
+Canonical review options
+
+```json
+{"label":"Review the permission", "desc":"Confirm the current private payment or cancel.",
+ "review":{"type":"industry_operation",
+   "args":{"definitionId":"market_permission","action":"pay"},"refusalOption":1}}
+```
+
+`review` has exactly `type`, `args` and zero-based `refusalOption` (0-31).
+The indexed alternative must exist, differ from this option, and have no review,
+requirement, technology gate, system restriction, chance or manual-only flag.
+Review options accept only label, desc, ordinary require/technology presentation,
+manualOnly and review; they cannot combine effects, success/failure, chance or
+child naming. Native and ordinary JSON imports use the same pure validator.
+
+| Type | Exact args | Canonical review |
+| --- | --- | --- |
+| `industry_operation` | `definitionId` (industryLaws id), `action`: `pay`, `pause`, `resume`, `close` | `industryLaws.quoteOperation/commitOperation`; first matching owned business, or exact context `enterpriseUid` |
+| `story_choice` | `storyId`, `choiceId` (bounded lowercase choice id) | existing registered story's currently offered `stories.quote/apply` choice |
+
+Story references resolve against the complete effective candidate, including
+same-import stories. Declarative choices must exist and cannot be household
+start_job, work_job, spend_day or a settle_job hearing. Other unregistered review
+types and executable callbacks reject atomically. The runtime does not create
+missing records, substitute another choice or grant another principal's consent.
+The story owner retains the real quote's eligibility, cost and commitment.
+
+Opening and cancellation change no gameplay state. Manual confirmation supplies
+the original `FB.eventReviews.quote` result to `resolveEventOption` as
+`meta.reviewed`; missing or changed quotes refuse. Automation makes the same quote
+and commit in one synchronous call, taking `refusalOption` on a blocked or missing
+review. It never invents consent or silently pays a different price. The ordinary
+receipt and queue remain authoritative; quotes are not saved.
+
 Tournament behaviour
 
 tournaments now accepts new ids in scales, programmes, tracks and tactics as well as its existing partial field updates. Each new id also supplies a same-id record in tournamentRules under the matching group. tournamentRules group records replace completely; its four default fields replace individually. Neither root registers code. Each group is limited to 64 definitions.

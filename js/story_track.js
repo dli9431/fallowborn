@@ -10,6 +10,43 @@
       var row = FB.stories.record(s,a.storyId);
       return !!(row && row.phase === a.stage && !row.result);
     }});
+  FB.eventReviews.register('story_choice',{
+    owner:'story_tracks',
+    args:{type:'object',fields:{storyId:{type:'string',minLength:1,maxLength:80},
+      choiceId:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/}},test:function (args,c) {
+      const data = c.data || FBDATA;
+      const registry = c.runtime ? FB.stories : FB.stories.compile(data.storyInstances || {});
+      const story = registry.get(args.storyId), d = story && story.declaration;
+      if (!story || !story.quote || !story.apply) return false;
+      if (!d) return (story.choiceIds || []).indexOf(args.choiceId) >= 0;
+      let found = false, unsafe = false;
+      function choices(value) {
+        if (!value || typeof value !== 'object') return;
+        if (value.id === args.choiceId && value.operation) {
+          found = true;
+          unsafe = ['start_job','work_job','spend_day'].indexOf(value.operation.kind) >= 0 ||
+            value.operation.kind === 'settle_job' && value.operation.resolution === 'hearing';
+        }
+        Object.keys(value).forEach(function (key) {choices(value[key]);});
+      }
+      choices(d.choices); choices(d.stages);
+      return found && !unsafe;
+    }},
+    quote:function (s,args) {
+      if (!FB.stories.choices(s,args.storyId).some(function (c) {return c.id === args.choiceId;})) return null;
+      return FB.stories.quote(s,args.storyId,args.choiceId);
+    },
+    apply:function (s,args,q) {return FB.stories.apply(s,args.storyId,args.choiceId,q);},
+    details:function (s,args,q) {
+      const story = FB.stories.get(args.storyId), rec = FB.stories.record(s,args.storyId);
+      const choice = FB.stories.choices(s,args.storyId).filter(function (c) {return c.id === args.choiceId;})[0];
+      let lines = choice ? [choice.label,choice.detail] : [];
+      if (story && story.review) lines = lines.concat(story.review(s,rec,args.choiceId,q) || []);
+      if (!q.allowed) lines.push(story && story.blocker ? story.blocker(s,rec,q.reason) :
+        FB.T('The current people, territory, route, or mandate no longer allows this choice.'));
+      return lines;
+    }
+  });
   function service_negotiation(def, context) {
     function cast(s, role) { return FB.stories.resolve(s, def.cast[role]); }
     function operation(id) { return choiceOperation(def, id); }

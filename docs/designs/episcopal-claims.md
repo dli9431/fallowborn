@@ -107,3 +107,7 @@ ordinary JSON import and retained mobile review navigation.
 Claim capacity
 
 The 32 claim slots intentionally remain permanent civil source records. Each stable id combines a declaration and settlement slot; a stale pending review updates that slot instead of appending a claim for each ruler or year. Settled compensation and its authority receipt prove the retained rent disposition. Deleting them to free a slot would erase a property agreement rather than retire routine history. The declaration/source capacity remains unchanged.
+
+Committed settlement observation
+
+Successful acceptance or competent adjudication publishes claim_settled with the existing claim/profile ids, original public realm and exact county/settlement. Refusal, stale quotes, repeated acceptance and restore publish nothing. The shared event queue observes the completed agreement without replaying its payment or granting another right; see events.md.
