@@ -20,10 +20,11 @@
       capacity:FB.T('The site lacks unallocated capacity, or the commitment limit has been reached.'),
       partner:FB.T('The living outside court must accept an unchanged offer.'),
       population:FB.T('The transfer exceeds available people or would deplete the local population floor.'),
-      award:FB.T('Settlement requires owned land or an ordinary consented land award.'), food:FB.T('The seller lacks the requested food stock.'),
+      award:FB.T('Settlement requires owned land or an ordinary consented land award.'), food:FB.T('The relevant food stock cannot cover this transaction.'),
       funding:FB.T('Funding requires consent, a permitted source, distinct available accounts and an active command.'),
       policy:FB.T('The profile does not permit these operation terms.'),
       cooldown:FB.T('This host must finish the interval after its last raid.'),
+      ground:FB.T('Select a declared neighboring seasonal ground.'),
       guard:FB.T('Release requires the original available hosting ruler, unchanged lawful local authority and presence with the original party.')
     };
     return messages[id] || FB.T('Review the current terms again.');
@@ -37,6 +38,11 @@
       if (agreement) return termsHtml(s,agreement,rid);
     }
     var row=rid && M.row(s,rid),entries=row && row.columns && row.columns.entries;
+    if (rid && t.groundId) {
+      var policy=M.profile(s,rid).seasonalRound;
+      var ground=policy && policy.grounds.filter(function (g) {return g.id===t.groundId;})[0];
+      if (ground) text+=kv(FB.T('Seasonal ground'),groundName(s,rid,ground))+kv(FB.T('County'),county(ground.countyId));
+    }
     function columnName(id) {var i=entries ? entries.map(function (c) {return c.id;}).indexOf(id) : -1;return FB.T('Column {number}',{number:i+1});}
     if (t.columnId) text+=kv(FB.T('Field command'),columnName(t.columnId));
     if (t.campId && row && row.camps) text+=kv(FB.T('Civilian camp'),FB.T('Camp {number}',{
@@ -80,6 +86,19 @@
   function routeHtml(s,q) {
     return q.path && q.stop!==undefined ? kv(FB.T('Reviewed route'),q.path.length ? q.path.map(county).join(', ') : FB.T('Remain at the current location'))+
       kv(FB.T('Route ends at'),county(q.stop))+kv(FB.T('Travel time'),FB.T('{days} days',{days:q.days})) : '';
+  }
+  function groundName(s,rid,g) {return FB.dataText(s,null,'mobileGround',M.row(s,rid).profileId+'.'+g.id,g,'name',{});}
+  function roundHtml(s,q) {
+    if (!q.round) return '';
+    var p=q.round.pasture, neighbors=Object.keys(FB.world.adj[q.round.countyId] || {}).filter(function (pid) {return !!s.owner[pid];});
+    return kv(FB.T('Travel food surcharge'),q.round.food)+
+      kv(FB.T('Daily pasture food at present'),p.food.toFixed(2))+
+      kv(FB.T('Remaining shared grazing capacity'),p.remaining)+
+      kv(FB.T('Ground suited to the local season'),p.suited ? FB.T('Yes') : FB.T('No'))+
+      kv(FB.T('Neighboring counties and courts'),neighbors.map(function (pid) {
+        return FB.T('{place}: {realm}',{place:county(pid),realm:s.realms[s.holder[pid]].name});
+      }).join('; '))+
+      '<p>'+esc(FB.T('Travel food is spent on departure, in addition to ordinary daily rations. The camp follows actual host arrivals. Daily grazing consumes finite shared capacity; remaining here can exhaust it. No animals are tracked.'))+'</p>';
   }
   function extractionHtml(s,q) {
     var text='';
@@ -200,6 +219,7 @@
       var permission=action==='load' || action==='unload' || action==='distribute' ? 'trade' : action==='decline' ? 'accept' : action;
       if (columnReview) permission=action==='assign' || action==='stop' ? 'march' :
         action==='merge' ? 'demuster' : action==='split' ? 'recruit' : permission;
+      if (action==='round') permission='move';
       if (r.command && !transition && command.operations.indexOf(permission)<0) return;
       if (r.command && !campReview && ['offer','war','peace','land','contract','settle','service'].indexOf(action)>=0) {
         label=action==='offer' ? terms.kind==='access' ? FB.T('Offer seasonal access') : terms.kind==='tribute' ? FB.T('Offer tribute') : FB.T('Offer protection service') :
@@ -211,10 +231,17 @@
       if (terms && terms.candidateId) request.candidateId=terms.candidateId;
       var review = transition ? M.reviewCommand(s,request) : (campReview ? M.reviewCamp : columnReview ? M.reviewColumns : M.review)(s,{realmId:rid,action:action,terms:terms || {},actor:actor}), q = review.review, i = actions.length;
       actions.push({label:label,review:review,details:details});
+      var accessTerms=q.terms.proposal || q.terms;
+      var note=q.allowed ? q.round ? FB.T('Travel: {days} days; food surcharge: {food}; daily pasture: {yield}.',
+        {days:q.days,food:q.round.food,yield:q.round.pasture.food.toFixed(2)}) : q.distribution ?
+        FB.T('Public coin: {money:cost}; food consumed: {food}. Review member support.',{cost:q.cost || 0,food:q.distribution.food}) :
+        accessTerms.kind==='access' ? FB.T('On acceptance: {money:price}; capacity {capacity}; term {days} days. No payment now.',
+          {price:accessTerms.price,capacity:accessTerms.capacity,days:accessTerms.duration}) :
+        FB.T('Immediate cost: {money:cost}. Review before committing.',{cost:q.cost || 0}) : reason(q.reason);
+      if (!q.allowed && q.round) note+=' '+FB.T('Travel: {days} days; food surcharge: {food}.',{days:q.round.days,food:q.round.food});
       parts += SH.reviewActionCardHtml({id:'mobile-action-'+i,label:label,disabled:!q.allowed,warn:!q.allowed,
-        note:q.allowed ? q.distribution ? FB.T('Public coin: {money:cost}; food consumed: {food}. Review member support.',
-          {cost:q.cost || 0,food:q.distribution.food}) : FB.T('Immediate cost: {money:cost}. Review before committing.',{cost:q.cost || 0}) : reason(q.reason),
-        details:'<p>'+esc(details)+'</p>'+termsHtml(s,q.terms,rid)+routeHtml(s,q)+extractionHtml(s,q),data:{mobileReview:i}});
+        note:note,
+        details:'<p>'+esc(details)+'</p>'+termsHtml(s,q.terms,rid)+routeHtml(s,q)+roundHtml(s,q)+extractionHtml(s,q),data:{mobileReview:i}});
     }
     var guard=M.guardSnapshot && M.guardSnapshot(s,rid);
     if (guard) {
@@ -236,6 +263,21 @@
         details:termsHtml(s,guardReview.review.terms,rid),data:{mobileReview:guardIndex}});
     }
     function number(id,fallback) { return view[id] !== undefined ? view[id] : fallback; }
+    var seasonal=M.roundSnapshot(s,rid);
+    if (seasonal) {
+      facts+=kv(FB.T('Seasonal round'),seasonal.due ? FB.T('Review this season’s ground') : FB.T('Choice recorded this season'));
+      profile.seasonalRound.grounds.forEach(function (g) {
+        var name=groundName(s,rid,g), pasture=M.roundPasture(s,rid,g.countyId), access=M.roundAccessTerms(s,rid,g.id);
+        add(FB.T('Review ground: {name}',{name:name}),'round',{groundId:g.id},
+          FB.T('Stay here or move along a declared neighboring route. Current access, food and the ordinary route must permit departure. Cancellation spends nothing.'));
+        if (!pasture.access) {
+          add(FB.T('Propose ground access: {name}',{name:name}),'propose',{operation:'agreement',proposal:access},
+            FB.T('Members review the ground’s declared capacity, price, recruitment permission and finite term. The actual local holder decides separately.'));
+          add(FB.T('Seek approved ground access: {name}',{name:name}),'offer',access,
+            FB.T('Record the approved offer without moving or paying. Only outside acceptance transfers the stated public payment and grants finite access; refusal leaves another ground to choose.'));
+        }
+      });
+    }
     if (s.greatHolyWar && r.command && FB.mobileGreatHolyWarReview) {
       var holyTarget=FBDATA.kingdoms[s.greatHolyWar.targetKingdom];
       facts+=kv(FB.T('Religious campaign'),FB.holyWarName(s,s.greatHolyWar.callingReligion))+
@@ -432,8 +474,8 @@
     M.agreements(s,rid).forEach(function (a) {
       membership += SH.reviewFactsCard(FB.T('Outside agreement'),termsHtml(s,a,rid)+kv(FB.T('Status'),a.status==='active' ? FB.T('Active') : a.status==='offered' ? FB.T('Awaiting outside consent') : FB.T('Ended')));
       if (a.status==='offered') add(FB.T('Accept as the outside court'),'accept',{agreementId:a.id},FB.T('Only the actual outside ruler can accept. Current ownership, capacity, rulers and funds are checked again.'));
-      if (a.status==='offered' && (a.accessOrigin || a.extraction)) add(FB.T('Decline as the outside court'),'decline',{agreementId:a.id},
-        FB.T('Only the original outside ruler can decline this request. No payment or passage is granted, and the program will not ask a replacement ruler.'));
+      if (a.status==='offered' && (a.accessOrigin || a.extraction || a.kind==='access')) add(FB.T('Decline as the outside court'),'decline',{agreementId:a.id},
+        FB.T('Only the actual outside ruler can decline this request. Refusal grants no payment or passage.'));
       if(a.kind==='protection' && a.status==='active') FB.realmWars(s,a.partnerId).forEach(function (war) {
         add(FB.T('Fulfil protection service'),'service',{agreementId:a.id,warId:war.id},FB.T('The existing host joins an ordinary defensive campaign. No troops are created or drawn from the protected county.'));
       });
@@ -494,7 +536,7 @@
         button.focus({preventScroll:true}); pos.focus=button.id;
         UI.openModal(entry.label,SH.reviewFactsCard(FB.T('Exact terms'),(entry.holy ?
           '<p>'+esc(FB.T('This binds the current commander and existing field host to the current religious campaign, requesting honor for four seasons of service. The civilian camp remains separate. No troops, supplies, land or personal vow are created. Withdrawal preserves casualties and earlier service.'))+'</p>' :
-          '<p>'+esc(entry.details || '')+'</p>'+termsHtml(s,q.terms,rid)+routeHtml(s,q)+extractionHtml(s,q))+
+          '<p>'+esc(entry.details || '')+'</p>'+termsHtml(s,q.terms,rid)+routeHtml(s,q)+roundHtml(s,q)+extractionHtml(s,q))+
           kv(FB.T('Following'),s.realms[rid].name)+kv(FB.T('Immediate cost'),FB.money(q.cost || 0,s)))+SH.reviewActionsHtml(SH.reviewActionCardHtml({
             id:'mobile-confirm',label:FB.T('Confirm decision'),note:FB.T('Current people, principals, position, ownership, stock and funds are checked again.'),
             details:'<p>'+esc(FB.T('A stale review spends nothing and transfers no people.'))+'</p>'})),

@@ -1,3 +1,8 @@
+Seasonal mobile ground names render through FB.dataText with the mobileGround
+owner, profileId.groundId identity and name field. Imported and bundled names
+retain English fallback; costs, seasons, access and blockers use literal FB.T
+chrome. Saved seasonal choices contain only ground ids and numeric turns.
+
 Native legal literal presentation
 
 Literal bookmarkRevisionContent_<suffix>.legalTraditions records use the existing

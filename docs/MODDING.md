@@ -1,3 +1,69 @@
+Seasonal mobile grounds
+
+Optional mobileProfiles.seasonalRound has exactly schema:1, automate (boolean),
+travelFoodRate (finite >0 through 3) and grounds (2-16 records). Each ground has
+exactly id, name, countyId, climateZone, seasonKinds, capacity, offSeasonYield,
+access and neighbors. Ground ids match [a-z][a-z0-9_]{0,47}; names are nonblank
+strings up to 160 characters. Ids and counties are independently unique.
+countyId is an inhabited county in every consuming effective world and the
+opening origin must be one ground. climateZone names an effective climateZones
+entry; seasonKinds contains 1-4 unique effective kinds occurring in that zone's
+season mapping, including same-import definitions. Runtime reads the actual
+local climate, rather than inferring a season from an ethnonym or global index.
+capacity is an integer 1-100000000; offSeasonYield is finite [0,1].
+
+access has exactly capacity (integer 1-100000000), allowRecruit (boolean), price
+(integer 0-1000000) and duration (integer 1-1440). It projects an ordinary access
+offer to the current actual holder of this ground's county. A current concession
+must supply at least that capacity and any requested recruitment permission;
+owned and directly held ground needs no outside concession. Current shared
+capacity still bounds production. An offer itself grants no right. neighbors
+contains 1-15 unique {groundId,distanceDays} records, with integer days 1-90.
+Each edge names a different ground and has an equal reciprocal edge; the graph
+must be connected. Distances are minimum effective journey days, not a replacement
+for physical adjacency, transport or permission. Columns and civilianCamps cannot
+consume this single-camp round. Profiles without it retain prior behavior.
+
+FB.mobile.roundSnapshot(state,realmId) projects due, canonical at and current
+ground plans. roundPasture(state,realmId,countyId) projects current access,
+climate/season match, shared used/remaining capacity and exact daily food.
+roundAccessTerms(state,realmId,groundId) projects existing bilateral offer terms.
+The canonical mobile review action round requires exactly {groundId}; only the
+actual leader may commit, and a command additionally needs ordinary move scope.
+Review returns round with path, effective days, first-leg delay, camp food cost
+and pasture facts. Cancellation and stale confirmation spend nothing. Daily
+production and exact movement arithmetic are in designs/mobile-confederation.md.
+
+Optional saved mobile.round has exactly schema:1, reviewedSeason and lastChoice.
+reviewedSeason is -1 before a review, otherwise year*4+calendar season at the
+last choice. lastChoice is null before a review, otherwise exactly groundId and
+turn. Its known ground, bounded past turn and original-calendar season must
+agree. This marker is required only for opted-in profiles. Food and people
+retain aggregate owners; no animals, separate forage inventory, new mobile outer
+schema or save-envelope version are introduced. Exact imported content remains
+part of the normal fingerprint.
+
+An elected independent opening uses mobile.sponsorship:{schema:1,kind:'independent'},
+patronRealmId:null, the ordinary authored opening and a mobileLeadership succession
+strategy without commandLeadership. It is nonTerritorial and initially countyless,
+with no liege, command, columns, civilianCamps or preparationId. Existing bound
+mobilePrincipal leader/member starts select the original people. Legacy sponsored
+openings still reject absent/dead patrons. Such an elected independent opening
+may declare ordinary finite hostedAccess without command; its source holder is
+logistical access, not a political sponsor. Its openingAccess schema-1 marker
+additionally requires authority, the original ordered host/superior chain of
+{realmId,characterId,generation}. Declared realm ids and original people/generations
+remain provenance; current holder, living party and chain-generation checks govern
+permission. Missing, forged or unsolicited chain facts reject matching restore.
+No restore initializes people, grants stocks or renews access.
+
+An expedition program seasonal_round step uses exactly {groundId,countyId}, with
+a matching profile ground, automate:true, a single actual command host and move
+permission. It shares existing camp-mode order tickets and completes only after
+actual halted arrival. It cannot combine with columns, corridor_access or
+holy_objective. All existing program windows, authority, consent, resource,
+pause/cancel and restore rules remain binding.
+
 Native legal catalogue ownership
 
 Trusted composition catalogs and source stage catalogs accept legalTraditions as
@@ -6752,7 +6818,7 @@ muster is a nonempty list of at most 64 {memberId, unitId, count} entries with u
 
 FB.mobile.openingPlan(state, realmDefinition) is a pure fresh-opening eligibility projection. Initialization rechecks the plan, including current generation, custody, location, unit gates, other following memberships and conflicting hosts or migrations, before creating any opted-in following. Authored declarations initialize after direct opening actors and before world stories in both playable and observer campaigns; declarations without mobile.opening keep their earlier initialization order and generated defaults. The independent mobile-opening-harbor.json and mobile-opening-dune.json files under tests/e2e/fixtures/authoring exercise the ordinary JSON path. Matching saves validate retained schema-2 mobile rows and their bounded openingBindings without reinitialization. Missing or malformed binding records fail validation; legacy schema-1 rows remain unchanged for declarations without this opt-in.
 
-FBDATA.mobileProfiles and the top-level mod mobileProfiles table select reusable policies for explicitly declared mobile_confederation realms. A realm mobile object requires profileId, patronRealmId, origin, target, food, fighters and treasury. Its realm supplies culture, religion, capital, rank and nonTerritorial:true. Origin and target must be inhabited; patron must be a distinct authored realm. Initial fighters are withdrawn from the first member following, not added to local population or fabricated from county levies. See data/mobile_confederations.js and docs/designs/mobile-confederation.md for complete profile fields and bounds.
+FBDATA.mobileProfiles and the top-level mod mobileProfiles table select reusable policies for explicitly declared mobile_confederation realms. A realm mobile object requires profileId, patronRealmId, origin, target, food, fighters and treasury. Its realm supplies culture, religion, capital, rank and nonTerritorial:true. Origin and target must be inhabited; sponsored declarations require a distinct authored patron. Only the explicit independent opening contract waives it. Initial fighters are withdrawn from the first member following, not added to local population or fabricated from county levies. See data/mobile_confederations.js and docs/designs/mobile-confederation.md for complete profile fields and bounds.
 
 Optional `cohesionPolicy` has exactly `schema:1` and these required fields:
 
@@ -7480,7 +7546,7 @@ Independent mobile sponsorship and external commissions
 
 Choose sponsorship separately from command.superior. An independent opening can omit a former hosting court entirely, provided its inhabited origin/target and other actual references still resolve. A vanished or dead required patron does not convert a sponsored declaration or saved migration to independence. An independent command still loses authority when its actual direct superior dies. The migration's patron and sponsorship provenance participate in the shared resource-review signature; changing either after review invalidates confirmation without payment. Restore also requires the exact imported policy, including a change from independent sponsorship to a real patron under the same mod name.
 
-Command-declared mobile openings may explicitly add sponsorship:{schema:1,kind:'independent'} and patronRealmId:null. This requires the existing mobile.opening and mobile.command contracts. All other declarations retain their required real patron; a missing sponsorship field never waives it. Origin and target remain inhabited physical counties, without implied ownership, local access, funding or protection. No new mod root is introduced. The general migration constructor accepts the waiver only for the effective declaration's exact following, origin, target, canonical following_<realmId> host and profile settlement form, only while its fresh command is effective and has no migration yet.
+Command-declared mobile openings may explicitly add sponsorship:{schema:1,kind:'independent'} and patronRealmId:null. Command followings require the existing mobile.opening and mobile.command contracts; elected single-host coalitions use the explicit countyless opening contract above without command. All other declarations retain their required real patron; a missing sponsorship field never waives it. Origin and target remain inhabited physical counties, without implied ownership, local access, funding or protection. No new mod root is introduced. The general migration constructor accepts the waiver only for the effective declaration's exact following, origin, target, canonical following_<realmId> host and profile settlement form, only while its fresh command is effective and has no migration yet.
 
 The migration stores the optional same-shaped schema-1 sponsorship marker with null patron. Both mobile and authority save validation reconcile it against the effective declaration and reject missing markers, forged policies, extra fields, a simultaneous patron, a patron migration contract, a nonnull migration choice/war, or an invented settlement seat. Independent records cannot use patron-based federateRequest or the generic federate settlement route. Owned-land settlement uses the conserved mobile review/apply transaction. The ordinary reviewed access, separately funded real-party service, war, and actual ownership settlement gates remain available within command scope. A consented access payment does not install a sponsor. Settlement sessions use the real following's sole seat after actual ownership is established; no null authority is added. Legacy migration fields and missing markers keep their previous semantics.
 

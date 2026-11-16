@@ -1,3 +1,18 @@
+Seasonal mobile ground reviews
+
+The Mobile coalition sheet discloses whether this calendar season still needs a
+ground review. Named ground actions show effective travel days, immediate camp
+food surcharge and current daily pasture yield on the action face. Confirmation
+retains those costs, current shared grazing capacity, seasonal suitability and
+actual neighboring counties/courts. It explains ordinary ongoing rations,
+physical host arrival and the absence of an animal inventory. Missing permission
+exposes separate member proposal and outside access-offer actions with exact
+capacity, recruitment, price and term; refusal grants no passage or payment.
+Stay and Cancel remain costless. Ground actions reuse the existing fact/action
+cards, keyboard and phone targets, Details and modal history; inputs, focus,
+disclosures and scroll survive Back, Escape and outcome Continue in both explicit
+distribution paths. A stale review spends no food, money or time.
+
 Deferred campaign preparation
 
 Local load measurements

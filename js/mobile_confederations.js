@@ -71,11 +71,17 @@
   function openingDefinition(s,rid) {
     return (FB.campaignBookmark(s).realms || []).filter(function (d) {return d.id===rid;})[0];
   }
+  function electedOpening(d,formId) {
+    var t=d && d.mobile, rule=formId && G.resolve(formId).use.succession;
+    return !!t && !!t.opening && !t.command && !t.columns && !t.civilianCamps &&
+      !t.preparationId && !!rule && !!rule.mobileLeadership && !rule.commandLeadership;
+  }
   M.independentMigrationAllowed = function (s,spec) {
     var d=spec && openingDefinition(s,spec.realmId), t=d && d.mobile;
     var p=t && FBDATA.mobileProfiles[t.profileId], r=d && M.row(s,d.id);
-    return !!p && !!r && r.migrationId===null && M.independent(t) && !!t.command && !!t.opening &&
-      (M.commandValid(s,d.id) || M.guardBirthAllowed && M.guardBirthAllowed(s,d)) &&
+    return !!p && !!r && r.migrationId===null && M.independent(t) && !!t.opening &&
+      (t.command ? M.commandValid(s,d.id) || M.guardBirthAllowed && M.guardBirthAllowed(s,d) :
+        electedOpening(d,G.forRealm(s,d.id).id) && !!M.leader(s,d.id) && !s.realms[d.id].liege && !FB.realmTerritory(s,d.id).length) &&
       M.independent(spec) && spec.origin===t.origin && spec.target===t.target &&
       spec.hostId==='following_'+d.id && spec.settlementForm===p.settlementForm;
   };
@@ -335,7 +341,7 @@
       accept:['agreementId'],decline:['agreementId'],join:['countyId','count'],replace_member:['memberId','candidateId'],leave:['memberId','countyId'],settle:['countyId','count','final'],
       work:[],trade:['countyId','count','direction','provisioning'],war:['causes'],peace:['warId'],service:['agreementId','warId'],march:['countyId'],
       extract:extractionFields,hire_answer:['contractId','signature','accept'],
-      land:['countyId'],contract:['contractId','signature'],distribute:['receiptId','mode','memberIds']};
+      land:['countyId'],contract:['contractId','signature'],distribute:['receiptId','mode','memberIds'],round:['groundId']};
     if (action==='offer') fields.offer.push('programStepId');
     if (!fields[action] || !keys(t,fields[action]) || JSON.stringify(t).length>4096) return false;
     if (t.provisioning!==undefined && t.provisioning!==true) return false;
@@ -524,6 +530,99 @@
     return weight > 0 && yes / weight >= M.profile(s, rid).threshold;
   }
   function capacity(s, pid) { var c = s.population && s.population.counties[pid]; return c ? Math.floor(c.count * 0.15) : 0; }
+  function groundAt(s,rid,pid) {
+    var p=M.profile(s,rid), round=p && p.seasonalRound;
+    return round && round.grounds.filter(function (g) {return g.countyId===pid;})[0] || null;
+  }
+  function roundSeasonAt(s,turn) {
+    var date=FB.campaignBookmark(s).date;
+    return date.year*4+Math.floor((date.season*90+Math.max(0,date.day-1)+turn)/90);
+  }
+  function groundById(s,rid,id) {
+    var p=M.profile(s,rid), round=p && p.seasonalRound;
+    return round && round.grounds.filter(function (g) {return g.id===id;})[0] || null;
+  }
+  M.roundAccessTerms = function (s,rid,id) {
+    var g=groundById(s,rid,id);
+    return g ? Object.assign({kind:'access',partnerId:s.holder[g.countyId],countyIds:[g.countyId]},copy(g.access)) : null;
+  };
+  /* The shared county ledger measures grazing capacity, not animals. Daily
+     use is bounded by the same concession and other reserved capacity. */
+  M.roundPasture = function (s,rid,pid) {
+    var g=groundAt(s,rid,pid), p=M.profile(s,rid), a=g && activeAccess(s,rid,pid);
+    if (!g) return null;
+    var zone=FB.climateZoneOf(pid,FB.campaignBookmark(s)), kind=FB.seasonKindAt(pid,s.date.season,FB.campaignBookmark(s));
+    var suited=zone===g.climateZone && g.seasonKinds.indexOf(kind)>=0;
+    var used=s.mobilePastures && s.mobilePastures.period===Math.floor(s.turn/90) ? s.mobilePastures.used[pid] || 0 : 0;
+    var allowed=s.owner[pid]===rid && s.holder[pid]===rid || !!a && a.capacity>=g.access.capacity &&
+      (!g.access.allowRecruit || a.allowRecruit);
+    var limit=allowed ? Math.max(0,Math.min(g.capacity,a ? a.capacity : g.capacity,
+      capacity(s,pid)-allocated(s,pid,a && a.id))) : 0;
+    var remaining=Math.max(0,limit-used), daily=Math.ceil(M.total(s,rid)/90);
+    var takeCapacity=Math.min(daily,remaining), factor=suited ? 1 : g.offSeasonYield;
+    return {groundId:g.id,countyId:pid,zone:zone,seasonKind:kind,suited:suited,access:allowed,
+      capacity:limit,used:used,remaining:remaining,dailyCapacity:daily,usedCapacity:takeCapacity,
+      food:takeCapacity*p.pasturePerPerson*factor,
+      potentialFood:Math.min(daily,Math.max(0,Math.min(g.capacity,capacity(s,pid))-used))*p.pasturePerPerson*factor,factor:factor};
+  };
+  function roundPlan(s,rid,id) {
+    var r=M.row(s,rid), p=M.profile(s,rid), moving=M.migration(s,rid), army=M.host(s,rid), g=groundById(s,rid,id);
+    var q={allowed:false,reason:'ground',groundId:id,countyId:g && g.countyId,path:[],days:0,delayDays:0,food:0,pasture:null};
+    if (!g || !moving) return q;
+    q.pasture=M.roundPasture(s,rid,g.countyId);
+    if (!q.pasture.access) {q.reason='access';return q;}
+    if (army && (army.moveLeft>0 || (army.path || []).length || army.broken!==undefined) ||
+        committed(s,rid) || FB.isRealmAtWar(s,rid)) {q.reason='commitment';return q;}
+    if (g.countyId!==moving.at) {
+      var from=groundAt(s,rid,moving.at), edge=from && from.neighbors.filter(function (e) {return e.groundId===id;})[0];
+      if (!edge || !army || army.at!==moving.at || army.warId) {q.reason='commitment';return q;}
+      var plan=FB.armyOrderPlan(s,army,g.countyId);
+      if (!plan || !plan.ok || plan.stop!==g.countyId || !plan.path || !plan.path.length ||
+          plan.path.some(function (pid) {return !safe(s,rid,pid);})) {q.reason='access';return q;}
+      q.path=plan.path.slice();q.days=Math.max(plan.totalDays,edge.distanceDays);
+      q.delayDays=q.days-plan.totalDays;
+      q.food=Math.ceil(M.total(s,rid)*p.foodPerPerson*q.days*p.seasonalRound.travelFoodRate);
+      if (r.food<q.food) {q.reason='food';return q;}
+    }
+    q.allowed=true;q.reason=null;return q;
+  }
+  M.roundSnapshot = function (s,rid) {
+    var r=M.row(s,rid),p=M.profile(s,rid),m=M.migration(s,rid);
+    if (!r || !p || !p.seasonalRound || !m) return null;
+    return {due:r.round.reviewedSeason!==s.date.year*4+s.date.season,at:m.at,
+      grounds:p.seasonalRound.grounds.map(function (g) {return roundPlan(s,rid,g.id);})};
+  };
+  function roundAI(s,rid) {
+    var snapshot=M.roundSnapshot(s,rid), current=M.roundPasture(s,rid,M.migration(s,rid).at);
+    if (!snapshot) return false;
+    if (!snapshot.due && current && current.access && current.remaining>0) return false;
+    // Current resources and ordinary consent decide between reachable grounds.
+    var candidates=snapshot.grounds.slice().sort(function (a,b) {
+      return b.pasture.potentialFood-a.pasture.potentialFood || a.food-b.food || (a.groundId<b.groundId ? -1 : a.groundId>b.groundId ? 1 : 0);
+    });
+    // A refused or still pending concession is not repeatedly purchased.
+    return candidates.some(function (q) {
+      if (q.allowed) return (snapshot.due || q.countyId!==snapshot.at && q.pasture.food>0) &&
+        enact(s,rid,'round',{groundId:q.groundId});
+      if (!q.pasture.potentialFood || q.reason!=='access' || M.agreements(s,rid).some(function (a) {
+        return a.kind==='access' && a.countyIds.indexOf(q.countyId)>=0 && a.endTurn>s.turn;
+      })) return false;
+      var t=M.roundAccessTerms(s,rid,q.groundId);
+      return approvalAI(s,rid,'agreement',t) && enact(s,rid,'offer',t);
+    });
+  }
+  function roundResponses(s,rid) {
+    if (!M.profile(s,rid).seasonalRound) return;
+    M.agreements(s,rid).filter(function (a) {return a.kind==='access' && a.status==='offered' &&
+      a.countyIds.length===1 && !!groundAt(s,rid,a.countyIds[0]);}).forEach(function (a) {
+      var c=FB.realmRulerCharacterSnapshot(s,a.partnerId), form=G.forRealm(s,a.partnerId);
+      if (!availablePerson(s,c) || c.id===s.player.charId) return;
+      if (form && form.use.ai.canNegotiate(s,a.partnerId,{}) &&
+          FB.aiDecisions.willing(s,a.partnerId,'government','agreementWillingness') &&
+          enact(s,rid,'accept',{agreementId:a.id},Q.realmReference(a.partnerId))) return;
+      enact(s,rid,'decline',{agreementId:a.id},Q.realmReference(a.partnerId));
+    });
+  }
   function allocated(s, pid, exclude) {
     var n = 0;
     Object.keys(s.authority.governments).forEach(function (rid) {
@@ -535,8 +634,22 @@
     return n;
   }
   function hostedAccessId(d) { return 'opening_access_' + d.id + '_' + d.mobile.hostedAccess.id; }
+  function openingAuthority(s,d) {
+    var bm=FB.campaignBookmark(s), next=d.mobile.hostedAccess.partnerRealmId, chain=[],seen={};
+    while (next) {
+      var source=(bm.realms || []).filter(function (r) {return r.id===next;})[0],rid=FB.startRealmId(s,next);
+      var person=rid==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid);
+      if (!source || seen[next] || chain.length>=16 || !s.realms[rid] || !s.realms[rid].alive || !availablePerson(s,person) ||
+          (s.realms[rid].liege || null)!==(source.liege ? FB.startRealmId(s,source.liege) : null)) return null;
+      seen[next]=true;chain.push({realmId:next,characterId:person.id,generation:FB.realmRulerGeneration(s,rid)});
+      next=source.liege;
+    }
+    return chain;
+  }
   function hostedAccessCurrent(s, rid, a) {
     var partner = a.partnerId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, a.partnerId);
+    var marker=M.row(s,rid).openingAccess, d=openingDefinition(s,rid);
+    if (marker && marker.authority && JSON.stringify(marker.authority)!==JSON.stringify(openingAuthority(s,d))) return false;
     return !!(M.leader(s, rid) || M.guardHostedLeader && M.guardHostedLeader(s,rid)) && availablePerson(s, partner) &&
       FB.realmRulerGeneration(s, rid) === a.generations[0] &&
       FB.realmRulerGeneration(s, a.partnerId) === a.generations[1] &&
@@ -547,7 +660,7 @@
   /* Opening consent is a declaration of an existing relationship, not a new
      offer or a replay of its former purchase. Preflight the whole batch. */
   M.hostedAccessPlan = function (s, defs) {
-    var result = { allowed:true, grants:Object.create(null) }, reserved = Object.create(null);
+    var result = { allowed:true, grants:Object.create(null), authorities:Object.create(null) }, reserved = Object.create(null);
     defs.forEach(function (d) {
       var t = d.mobile, a = t && t.hostedAccess;
       if (a === undefined || M.row(s, d.id)) return;
@@ -558,6 +671,11 @@
       }
       var partnerId = FB.startRealmId(s,a.partnerRealmId), person = FB.bookmarkActor(s,a.partnerActorId);
       var current = partnerId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,partnerId);
+      if (M.independent(t) && electedOpening(d,G.forRealm(s,d.id).id)) {
+        var chain=openingAuthority(s,d);
+        if (!chain) {result.allowed=false;return;}
+        result.authorities[d.id]=chain;
+      }
       if (!s.realms[partnerId] || !s.realms[partnerId].alive || !availablePerson(s,person) || !current || person.id !== current.id ||
           FB.armiesHostile(s, {realm:d.id}, {realm:partnerId}) ||
           a.countyIds.some(function (pid) {
@@ -583,7 +701,8 @@
       s.authority.contracts, s.authority.governments, s.player && [s.player.charId, s.player.provinceId, s.player.gold, s.player.travel || null],
       s.market && s.market.counties && s.market.counties[t.countyId],
       r.command ? M.commandSnapshot(s,rid) : null, t.provisioning ? M.profile(s,rid).supplyPolicy : null,
-      M.profile(s,rid).extractionPolicy || null,M.profile(s,rid).cohesionPolicy || null,t.countyId && [s.realms[s.holder[t.countyId]],
+      M.profile(s,rid).extractionPolicy || null,M.profile(s,rid).cohesionPolicy || null,M.profile(s,rid).seasonalRound || null,
+      s.mobilePastures || null,t.countyId && [s.realms[s.holder[t.countyId]],
         FB.treasuryAvailable(s,s.holder[t.countyId])]]);
   }
   /* All requests, including AI requests, carry an actual acting principal.
@@ -603,7 +722,7 @@
         (s.armies || []).some(function (a) {return a.realm===rid && a.mobileCourt && (a.moveLeft>0 || (a.path || []).length); }))) {
       q.reason='commitment';return q;
     }
-    if (r.command && !M.commandPermits(s,rid,action==='decline' ? 'accept' : action==='distribute' ? 'trade' : action)) {q.reason='command';return q;}
+    if (r.command && !M.commandPermits(s,rid,action==='decline' ? 'accept' : action==='distribute' ? 'trade' : action==='round' ? 'move' : action)) {q.reason='command';return q;}
     if (t.provisioning) {
       var supply=M.supplySnapshot(s,rid), expected=supply && (action==='trade' ? supply.purchase : supply.replacement);
       if (!expected || !expected.count || Object.keys(expected).some(function (k) {return t[k]!==expected[k];})) {
@@ -617,7 +736,12 @@
     q.signature = stamp(s, rid, t, request.actor);
     function no(reason) { q.reason = reason; return q; }
     var m = member(s, rid, t.memberId), moving = M.migration(s, rid), army = M.host(s, rid);
-    if (action === 'distribute') {
+    if (action === 'round') {
+      if (!leader || !p.seasonalRound || r.camps || r.columns) return no('principal');
+      q.round=roundPlan(s,rid,t.groundId);
+      if (!q.round.allowed) return no(q.round.reason);
+      q.path=q.round.path.slice();q.stop=q.round.countyId;q.days=q.round.days;
+    } else if (action === 'distribute') {
       if (!leader || !p.cohesionPolicy || !r.cohesion) return no('principal');
       q.distribution=distributionPlan(s,rid,t);
       if (!q.distribution) return no('policy');
@@ -740,7 +864,7 @@
       if (a.accessOrigin && (!FB.expeditionPrograms.accessCurrent(s,rid,a) ||
           !FB.expeditionPrograms.corridorResponseAllowed(s,rid,a))) return no('partner');
       if (action==='decline') {
-        if (!a.accessOrigin && !a.extraction) return no('operation');
+        if (!a.accessOrigin && !a.extraction && a.kind!=='access') return no('operation');
         q.allowed=true;q.reason=null;return q;
       }
       var partnerTerms = Object.assign({},a,{externalRealmId:rid,
@@ -911,7 +1035,16 @@
     var q = M.quote(s, request);
     if (!q.allowed || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
     var rid = q.realmId, r = M.row(s, rid), t = q.terms, m = member(s, rid, t.memberId), moving = M.migration(s, rid), army = M.host(s, rid);
-    if (q.action === 'distribute') {
+    if (q.action === 'round') {
+      if (q.round.path.length) {
+        if (!order(s,army,q.round.countyId)) return false;
+        army.mobileCourt=true;
+        army.moveLeft+=q.round.delayDays;
+        r.food-=q.round.food;
+      }
+      r.round.lastChoice={groundId:t.groundId,turn:s.turn};
+      r.round.reviewedSeason=s.date.year*4+s.date.season;
+    } else if (q.action === 'distribute') {
       var distribution=q.distribution;
       if (distribution.gold && !FB.treasurySpend(s,rid,distribution.gold)) return false;
       r.food-=distribution.food;
@@ -1113,10 +1246,11 @@
     if (M.definitionFaults(d,G.forRealm(s,d.id).id,bm.provinces,realms,null,bm).length ||
         !M.independent(t) && (!s.realms[t.patronRealmId] || !s.realms[t.patronRealmId].alive) ||
         !s.owner[t.origin] || !s.owner[t.target] || FB.realmTerritory(s,d.id).length ||
+        M.independent(t) && !t.command && !!s.realms[d.id].liege ||
         (s.armies || []).some(function (a) {return a.id==='following_'+d.id;}) ||
         (s.authority.migrations || []).some(function (m) {return m.realmId===d.id && m.status!=='settled' && m.status!=='failed';})) return plan;
     var declared=realms[d.id], original=declared && declared.mobile && declared.mobile.opening;
-    if ((o.reserves!==undefined || original && original.reserves!==undefined) &&
+    if ((M.independent(t) || o.reserves!==undefined || original && original.reserves!==undefined) &&
         (s.turn!==0 || !declared || JSON.stringify(d.mobile)!==JSON.stringify(declared.mobile))) return plan;
     var occupied={};
     Object.keys(s.authority.governments).forEach(function (rid) {
@@ -1163,6 +1297,7 @@
       leaderId:null,selection:null,decision:null,food:food,lastDay:s.turn,worked:{},agreements:[],
       accounting:{initial:0,arrivals:0,dead:0,settled:0,dispersed:0},members:[]};
     if (p.cohesionPolicy) r.cohesion={schema:1,scarcityDays:0,lastPeriod:Math.floor(s.turn/90),receipts:[]};
+    if (p.seasonalRound) r.round={schema:1,reviewedSeason:-1,lastChoice:null};
     if (plan) r.openingBindings=copy(plan.bindings);
     if (M.initializeGuard) M.initializeGuard(s,d,plan);
     p.members.forEach(function (a) {
@@ -1222,6 +1357,9 @@
   M.initialize = function (s, defs) {
     defs.forEach(function (d) {
       var t=d.mobile;
+      if (t && !M.row(s,d.id) && !M.independent(t) &&
+          (!s.realms[t.patronRealmId] || !s.realms[t.patronRealmId].alive))
+        throw new Error(FB.T('A mobile opening requires its living patron.'));
       if (t && t.opening && t.opening.reserves!==undefined &&
           (t.preparationId!==undefined || t.civilianCamps!==undefined))
         throw new Error(FB.T('Invalid opening reserve partition.'));
@@ -1250,6 +1388,7 @@
         grant.generations[0] = FB.realmRulerGeneration(s,d.id);
         r.agreements.push(grant);
         r.openingAccess = {schema:1, id:grant.id, startTurn:0, generations:grant.generations.slice()};
+        if (hosted.authorities[d.id]) r.openingAccess.authority=copy(hosted.authorities[d.id]);
       }
     });
   };
@@ -1398,8 +1537,9 @@
     var at = moving.at;
     expireAccess(s,rid);
     r.agreements = r.agreements.filter(function (a) { return a.kind==='corridor' || a.accessOrigin || a.endTurn > s.turn; });
+    if (p.seasonalRound && roundAI(s,rid)) return true;
     if (M.extractionAI(s,rid)) return true;
-    if (!safe(s, rid, at) && accessControl(s, s.holder[at], at) &&
+    if (!p.seasonalRound && !safe(s, rid, at) && accessControl(s, s.holder[at], at) &&
         !M.agreements(s,rid).some(function (a) { return a.kind === 'access' && a.countyIds.indexOf(at) >= 0; })) {
       var terms = {kind:'access',partnerId:s.holder[at],countyIds:[at],capacity:Math.min(M.total(s,rid),capacity(s,at)),
         allowRecruit:true,price:p.accessPrice,duration:p.accessDays};
@@ -1421,7 +1561,7 @@
     if (own.indexOf(at) >= 0 && !committed(s, rid)) {
       var settlement = {countyId:at,count:M.total(s,rid),final:true};
       if (approvalAI(s,rid,'settle',settlement)) enact(s,rid,'settle',settlement);
-    } else if (M.host(s, rid) && shortage) {
+    } else if (!p.seasonalRound && M.host(s, rid) && shortage) {
       var destination = M.agreements(s,rid).filter(function (a) { return a.kind === 'access' && a.status === 'active' && a.endTurn > s.turn; })
         .reduce(function (all,a) { return all.concat(a.countyIds); }, []).filter(function (pid) { return pid !== at; }).sort()[0];
       if (destination) enact(s,rid,'move',{countyId:destination});
@@ -1481,6 +1621,7 @@
       if (!r || !p || r.status !== 'active' || !M.active(s,rid) || r.lastDay === s.turn) return;
       r.lastDay = s.turn; r.worked = {};
       M.extractionResponses(s,rid);
+      roundResponses(s,rid);
       M.distributionAI(s,rid);
       expireAccess(s,rid);
       r.agreements=r.agreements.filter(function (a) {return a.kind==='corridor' || a.accessOrigin || a.endTurn>s.turn;});
@@ -1490,7 +1631,17 @@
         M.campDay(s,rid);cohesionDay(s,rid,scarce);return;
       }
       var m = M.migration(s,rid), period = Math.floor(s.turn / 90), a = m && activeAccess(s,rid,m.at);
-      if (a && a.harvestPeriod !== period) {
+      var roundLeader=M.leader(s,rid);
+      if (p.seasonalRound && roundLeader && roundLeader.id!==s.player.charId && !r.expeditionProgram)
+        roundAI(s,rid);
+      if (p.seasonalRound) {
+        var pasture=M.roundPasture(s,rid,m.at);
+        if (pasture && pasture.usedCapacity>0) {
+          if (!s.mobilePastures || s.mobilePastures.period!==period) s.mobilePastures={schema:1,period:period,used:{}};
+          s.mobilePastures.used[m.at]=(s.mobilePastures.used[m.at] || 0)+pasture.usedCapacity;
+          r.food+=pasture.food;
+        }
+      } else if (a && a.harvestPeriod !== period) {
         if (!s.mobilePastures || s.mobilePastures.period!==period) s.mobilePastures={schema:1,period:period,used:{}};
         a.harvestPeriod = period;
         var used=s.mobilePastures.used[m.at] || 0;
@@ -1825,12 +1976,37 @@
       items:{type:'string',ref:{table:'federateContractTerms'},test:function (id,c) {
         var d=c.data.federateContractTerms[id];return d.service==='host' && d.land!=='conquest' && d.recognition!=='required' && !!(d.payPerSeason || d.initialPay);
       }}}}}},test:function (p) {return !!(p.demand || p.raid || p.hire) && (!p.raid || !!(p.raid.maxGold || p.raid.maxFood));}};
-  M.validateProfiles = function (profiles,units,contracts) {
+  var groundIdSpec={type:'string',pattern:'^[a-z][a-z0-9_]{0,47}$'};
+  var roundSpec={type:'object',fields:{schema:{value:1},automate:{type:'boolean'},
+    travelFoodRate:{type:'number',exclusiveMin:0,max:3},
+    grounds:{type:'array',minItems:2,maxItems:16,uniqueBy:['id','countyId'],items:{type:'object',fields:{
+      id:groundIdSpec,name:{type:'string',nonblank:true,maxLength:160},countyId:{type:'string',minLength:1,maxLength:80},
+      climateZone:{type:'string',ref:{table:'climateZones'}},
+      seasonKinds:{type:'array',minItems:1,maxItems:4,unique:true,items:{type:'string',ref:{table:'seasonKinds'}}},
+      capacity:{type:'integer',min:1,max:100000000},offSeasonYield:{type:'number',min:0,max:1},
+      access:{type:'object',fields:{capacity:{type:'integer',min:1,max:100000000},allowRecruit:{type:'boolean'},
+        price:{type:'integer',min:0,max:1000000},duration:{type:'integer',min:1,max:1440}}},
+      neighbors:{type:'array',minItems:1,maxItems:15,uniqueBy:['groundId'],items:{type:'object',fields:{
+        groundId:groundIdSpec,distanceDays:{type:'integer',min:1,max:90}}}}
+    },test:function (g,c) {var zone=c.data.climateZones[g.climateZone];return Array.isArray(zone.seasons) &&
+      g.seasonKinds.every(function (kind) {return zone.seasons.indexOf(kind)>=0;});}}}
+  },test:function (p) {
+    var ids=p.grounds.map(function (g) {return g.id;}),seen=[ids[0]],bad=false;
+    p.grounds.forEach(function (g) {g.neighbors.forEach(function (edge) {
+      var to=p.grounds.filter(function (other) {return other.id===edge.groundId;})[0];
+      if (!to || to===g || !to.neighbors.some(function (back) {return back.groundId===g.id && back.distanceDays===edge.distanceDays;})) bad=true;
+    });});
+    for (var i=0;i<seen.length;i++) p.grounds[ids.indexOf(seen[i])].neighbors.forEach(function (edge) {
+      if (ids.indexOf(edge.groundId)>=0 && seen.indexOf(edge.groundId)<0) seen.push(edge.groundId);
+    });
+    return !bad && seen.length===ids.length;
+  }};
+  M.validateProfiles = function (profiles,units,contracts,climateData) {
     var errors = []; profiles = profiles || FBDATA.mobileProfiles || {};units=units || FBDATA.unitClasses;
     Object.keys(profiles).forEach(function (id) {
       var p = profiles[id], seen = [];
       if (!keys(p,['minAge','threshold','maxMembers','maxAgreements','recruitShare','recruitCost','foodPerPerson','pasturePerPerson',
-          'accessDays','accessPrice','starvationShare','defeatShare','settlementForm','regions','members','supplyPolicy','extractionPolicy','cohesionPolicy']) ||
+          'accessDays','accessPrice','starvationShare','defeatShare','settlementForm','regions','members','supplyPolicy','extractionPolicy','cohesionPolicy','seasonalRound']) ||
           !whole(p.minAge) || p.minAge < 16 || p.minAge > 80 || !Number.isFinite(p.threshold) || p.threshold <= 0.5 || p.threshold > 1 ||
           !whole(p.maxMembers) || !p.maxMembers || p.maxMembers > 24 || !whole(p.maxAgreements) || !p.maxAgreements || p.maxAgreements > 12 ||
           !boundedNumber(p.recruitShare,0.5) || !boundedNumber(p.recruitCost,100) || !boundedNumber(p.foodPerPerson,1) || !p.foodPerPerson ||
@@ -1845,6 +2021,8 @@
           }) || p.supplyPolicy!==undefined && !supplyPolicyValid(p.supplyPolicy,units)) errors.push(FB.T('Invalid mobile profile {id}.',{id:id}));
       if (p && p.cohesionPolicy!==undefined) errors=errors.concat(FB.schema.faults(p.cohesionPolicy,cohesionPolicySpec,
         'mobileProfiles.'+id+'.cohesionPolicy'));
+      if (p && p.seasonalRound!==undefined) errors=errors.concat(FB.schema.faults(p.seasonalRound,roundSpec,
+        'mobileProfiles.'+id+'.seasonalRound',{data:climateData || FBDATA}));
       if (p && p.extractionPolicy!==undefined) errors=errors.concat(FB.schema.faults(p.extractionPolicy,extractionPolicySpec,
         'mobileProfiles.'+id+'.extractionPolicy',{data:{federateContractTerms:contracts || FBDATA.federateContractTerms}}));
     });
@@ -1868,13 +2046,18 @@
     var t = d.mobile, p = t && profiles[t.profileId], byId = {};
     provinces.forEach(function (pr) {byId[pr.id]=pr;});
     if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns','openingCampaigns','funding','expeditionProgram','preparationId','guardedParty','civilianCamps']) || !p ||
-        (t.sponsorship!==undefined ? !M.independent(t) || !t.command || !t.opening :
+        (t.sponsorship!==undefined ? !M.independent(t) || !t.opening || !t.command && !electedOpening(d,formId) :
           !Object.prototype.hasOwnProperty.call(realms,t.patronRealmId) || t.patronRealmId === d.id) || !d.nonTerritorial ||
         !byId[t.origin] || byId[t.origin].wasteland || !byId[t.target] || byId[t.target].wasteland ||
         !FBDATA.cultures[d.culture] || !FBDATA.religions[d.religion] || !boundedNumber(t.food,1000000000) ||
         !boundedNumber(t.treasury,1000000) || !whole(t.fighters) || !t.fighters ||
         t.opening===undefined && (t.fighters > p.members[0].population ||
         t.fighters > Math.floor(p.members[0].population*p.members[0].pledge))) return [FB.T('Invalid mobile following declaration.')];
+    if (p.seasonalRound && (t.columns || t.civilianCamps || !p.seasonalRound.grounds.some(function (g) {return g.countyId===t.origin;}) ||
+        p.seasonalRound.grounds.some(function (g) {return !byId[g.countyId] || byId[g.countyId].wasteland;})))
+      return [FB.T('Invalid seasonal grounds for this following.')];
+    if (M.independent(t) && !t.command && (d.liege || provinces.some(function (pr) {return pr.realm===d.id;})))
+      return [FB.T('An independent coalition opening must be countyless and have no political superior.')];
     if (t.opening!==undefined) {
       var o=t.opening, members=Object.create(null), people=Object.create(null), actors=Object.create(null),
         recruited=Object.create(null), total=0, pairs=Object.create(null), invalid=false;
@@ -1946,7 +2129,7 @@
       var a = t.hostedAccess;
       var actorDef = a && bookmark && bookmark.opening && bookmark.opening.actors &&
         Object.prototype.hasOwnProperty.call(bookmark.opening.actors,a.partnerActorId) && bookmark.opening.actors[a.partnerActorId];
-      if (!t.opening || !t.command || !keys(a,['id','partnerRealmId','partnerActorId','countyIds','capacity','allowRecruit','duration']) ||
+      if (!t.opening || !t.command && !(M.independent(t) && electedOpening(d,formId)) || !keys(a,['id','partnerRealmId','partnerActorId','countyIds','capacity','allowRecruit','duration']) ||
           typeof a.id !== 'string' || !/^[a-z][a-z0-9_]{0,47}$/.test(a.id) || hostedAccessId(d).length > 160 ||
           !Object.prototype.hasOwnProperty.call(realms,a.partnerRealmId) || a.partnerRealmId === d.id || realms[a.partnerRealmId].mobile ||
           !actorDef || !actorDef.ref || actorDef.ref.kind !== 'realm_ruler' || actorDef.ref.realmId !== a.partnerRealmId ||
@@ -1981,8 +2164,16 @@
       if (!r) {if(strategy && strategy.mobileFollowing && !(FB.expeditionPreparation && FB.expeditionPreparation.unformed(s,rid))) fault(rid,'missing');return;}
       var p = M.profile(s,rid), moving = M.migration(s,rid), ids = {}, principals = {};
       if (moving && !M.migrationSponsorshipValid(s,moving)) fault(rid,'sponsorship');
+      if (p && p.seasonalRound) {
+        var marker=r.round, choice=marker && marker.lastChoice;
+        if (!keys(marker,['schema','reviewedSeason','lastChoice']) || Object.keys(marker).length!==3 || marker.schema!==1 ||
+            !Number.isSafeInteger(marker.reviewedSeason) || marker.reviewedSeason < -1 || marker.reviewedSeason>s.date.year*4+s.date.season ||
+            (choice===null ? marker.reviewedSeason!==-1 :
+              !keys(choice,['groundId','turn']) || Object.keys(choice).length!==2 || !whole(choice.turn) || choice.turn>s.turn ||
+              roundSeasonAt(s,choice.turn)!==marker.reviewedSeason || !groundById(s,rid,choice.groundId))) fault(rid,'round');
+      } else if (r.round!==undefined) fault(rid,'round');
       if (!keys(r,['schema','profileId','migrationId','status','serial','revision','leaderId','selection','decision','food','lastDay','lastAI',
-          'worked','agreements','accounting','members','defeatKey','openingBindings','openingReserves','command','openingAccess','columns','openingCampaigns','expeditionProgram','guardedParty','camps','lastRaid','lastRaidTurn','cohesion']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
+          'worked','agreements','accounting','members','defeatKey','openingBindings','openingReserves','command','openingAccess','columns','openingCampaigns','expeditionProgram','guardedParty','camps','lastRaid','lastRaidTurn','cohesion','round']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
           !['active','settled','dispersed'].includes(r.status) || !whole(r.serial) || !whole(r.revision) || !whole(r.lastDay) || r.lastDay > s.turn ||
           r.lastAI !== undefined && (!whole(r.lastAI) || r.lastAI>Math.floor(s.turn/90)) || !boundedNumber(r.food,1000000000000) ||
           !keys(r.accounting,['initial','arrivals','dead','settled','dispersed']) || Object.keys(r.accounting).length !== 5 ||
@@ -2069,11 +2260,27 @@
       var hosted = declaration && declaration.mobile && declaration.mobile.hostedAccess, marker = r.openingAccess;
       if (!hosted) { if (marker !== undefined) fault(rid,'openingAccess'); }
       else {
-        if (!keys(marker,['schema','id','startTurn','generations']) || Object.keys(marker).length !== 4 || marker.schema !== 1 ||
+        var independentHost=M.independent(declaration.mobile) && !declaration.mobile.command;
+        if (!keys(marker,['schema','id','startTurn','generations'].concat(independentHost ? ['authority'] : [])) ||
+            Object.keys(marker).length !== (independentHost ? 5 : 4) || marker.schema !== 1 ||
             marker.id !== hostedAccessId(declaration) || marker.startTurn !== 0 || !Array.isArray(marker.generations) ||
             marker.generations.length !== 2 || marker.generations.some(function (n,i) {
               return !whole(n) || !n || n > FB.realmRulerGeneration(s,i ? FB.startRealmId(s,hosted.partnerRealmId) : rid);
             })) fault(rid,'openingAccess');
+        if (independentHost) {
+          var next=hosted.partnerRealmId, sourceRealms=FB.campaignBookmark(s).realms || [], seenCourts={};
+          if (!Array.isArray(marker.authority) || !marker.authority.length || marker.authority.length>16) fault(rid,'openingAccess');
+          marker.authority.forEach(function (entry,index) {
+            var source=sourceRealms.filter(function (d) {return d.id===next;})[0],c=entry && s.chars[entry.characterId];
+            var actor=index===0 && FB.bookmarkActor(s,hosted.partnerActorId), ruler=source && source.ruler;
+            if (!keys(entry,['realmId','characterId','generation']) || Object.keys(entry).length!==3 || !source || seenCourts[next] ||
+                entry.realmId!==next || !c || index===0 && (!actor || actor.id!==entry.characterId && s.bookmarkSetup.actors[hosted.partnerActorId]!==entry.characterId) ||
+                entry.generation!==(ruler && ruler.generation!==undefined ? ruler.generation : 1) ||
+                ruler && (c.name!==ruler.name || c.born!==ruler.born || (c.sex || 'm')!==(ruler.sex || 'm'))) fault(rid,'openingAccess');
+            seenCourts[next]=true;next=source.liege;
+          });
+          if (next) fault(rid,'openingAccess');
+        }
         var grant = M.agreements(s,rid).filter(function (a) {return a.id === marker.id;})[0];
         if (!grant && s.turn < hosted.duration && r.status === 'active' || grant &&
             (grant.kind !== 'access' || grant.partnerId !== FB.startRealmId(s,hosted.partnerRealmId) || grant.price !== 0 || grant.levy !== undefined ||

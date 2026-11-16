@@ -2718,7 +2718,9 @@ window.FBMODS = window.FBMODS || [];
       try {
         FBDATA.governmentForms=combinedTable(forms,mod.governmentForms,'governmentForms');
         problems=FB.mobile.validateProfiles(profiles,combinedTable(FBDATA.unitClasses,mod.unitClasses,'unitClasses'),
-          combinedTable(FBDATA.federateContractTerms,mod.federateContractTerms,'federateContractTerms'));
+          combinedTable(FBDATA.federateContractTerms,mod.federateContractTerms,'federateContractTerms'),
+          {seasonKinds:combinedTable(FBDATA.seasonKinds,mod.seasonKinds,'seasonKinds'),
+            climateZones:combinedTable(FBDATA.climateZones,mod.climateZones,'climateZones')});
       } finally {FBDATA.governmentForms=forms;}
       if (problems.length) fail('mobileProfiles', problems[0]);
     }

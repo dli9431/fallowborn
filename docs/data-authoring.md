@@ -1,3 +1,25 @@
+Seasonal mobile round authoring
+
+Use optional mobileProfiles.seasonalRound schema 1 for an aggregate grazing
+round. Grounds declare stable ids and names, physical counties, climate zones,
+suited local season kinds, finite capacity, off-season yield, exact existing
+access terms and reciprocal neighbor distances. Pure FB.schema checks and the
+ordinary Mods path resolve climate definitions from the same detached import.
+The complete mobile-seasonal-round-glassroad.json and
+mobile-seasonal-round-reedbank.json examples vary climate, capacity, distances,
+travel surcharge, members and resources; both declare elected independent
+countyless openings with separate finite hosting. Bundled Pontic grounds use
+the same consumers. Keep these development fixtures outside shipped assets.
+
+Independent elected openings compose existing sponsorship, opening principals,
+mobilePrincipal starts and hostedAccess. They require no command or patron and
+confer no land or private funds. All other sponsor and command paths retain
+their existing requirements. Grounds use existing aggregate food/people and the
+shared pasture capacity ledger, with no animal inventory. No executable mod
+handler, calendar collapse or historical identity selector is supported.
+Exact schema and persistence: MODDING.md; production, AI and travel arithmetic:
+designs/mobile-confederation.md.
+
 Mobile member support authoring
 
 Optional mobileProfiles.cohesionPolicy declares battle results, actual receipt
