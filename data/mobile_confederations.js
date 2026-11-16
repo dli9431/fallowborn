@@ -21,6 +21,8 @@ FB.bookmarkSources.stage({"source":"data/mobile_confederations.js","bookmarks":[
       recruitShare:0.2, recruitCost:0.02, foodPerPerson:0.01,
       pasturePerPerson:1.8, accessDays:360, accessPrice:4,
       starvationShare:0.001, defeatShare:0.02, settlementForm:'regnum',
+      extractionPolicy:{schema:1,demand:{kinds:['tribute','protection'],maxPayment:8,maxDays:90},
+        raid:{maxGold:12,maxFood:120,stockShare:0.1,cooldownDays:90},hire:{templateIds:['paid_service']}},
       regions:['cherson','tomis','constantinople'], members:[
         { id:'elder_following', weight:3, pledge:0.2, population:1600 },
         { id:'younger_following', weight:2, pledge:0.15, population:1200 },
@@ -30,6 +32,7 @@ FB.bookmarkSources.stage({"source":"data/mobile_confederations.js","bookmarks":[
       recruitShare:0.15, recruitCost:0.03, foodPerPerson:0.01,
       pasturePerPerson:1.5, accessDays:270, accessPrice:6,
       starvationShare:0.001, defeatShare:0.03, settlementForm:'regnum',
+      extractionPolicy:{schema:1,hire:{templateIds:['paid_service']}},
       regions:[], members:[
         { id:'first_following', weight:2, pledge:0.15, population:900 },
         { id:'second_following', weight:2, pledge:0.1, population:700 }
@@ -49,6 +52,10 @@ FB.bookmarkSources.stage({"source":"data/mobile_confederations.js","bookmarks":[
     rationale:'Binding an existing living opening person creates no new office or military technology. Custody, age, location and incumbent generation remain authoritative.'};
   FBDATA.techImpactReviews.features.mobile_principal_start = {mode:'none',
     rationale:'Selecting an existing coalition member as a private protagonist requires no discovery. Current member selection, conserved people, public accounts, passage and ordinary unit gates retain their owners.'};
+  ['mobile_tribute_demand','mobile_bounded_raid','mobile_hired_service'].forEach(function (id) {
+    FBDATA.techImpactReviews.features[id]={mode:'none',
+      rationale:'Member assent, actual military strength, outside consent and conserved stocks govern this baseline operation. Existing equipment, crossing and service requirements remain binding.'};
+  });
   FBDATA.techImpactReviews.features.mobile_civilian_camps = {mode:'none',
     rationale:'Partitioning existing civilians, resting fighters and finite food by actual locality needs no discovery. Hosting consent, exact population conservation and separate military locations remain binding.'};
   FBDATA.techImpactReviews.features.mobile_camp_transactions = {mode:'none',

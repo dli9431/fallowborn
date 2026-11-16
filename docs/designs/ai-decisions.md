@@ -2,6 +2,18 @@ AI decision authoring
 
 Scope
 
+Government policies optionally declare demandResponse for mobile tribute and
+protection offers: reserve, maxPaymentShare, tributeThreatRatio and
+protectionThreatRatio. The pure mobileDemandResponse projection compares current
+available money and defending forces with actual deployed coalition fighters.
+It returns facts and an accept preference without RNG, materializing a ruler,
+charging money or granting authority. Current ruler consent and the canonical
+agreement transaction still decide acceptance. The same response path serves
+player-led and AI-led coalitions; the raider's culture, faith and identity supply
+no special rule. Omission retains the documented baseline parameters. Native
+defaults and the independent Glassroad ordinary import exercise different
+thresholds. See mobile-confederation.md and MODDING.md for the exact contract.
+
 Live religious choices read holy-war strength/rank/trait weights, forecast participation probabilities, failure memory and target weights, prospective vow/desire chances, papal election/investiture/sanction/legation preferences and conversion scoring. Existing vows are normalized without reseeding; deterministic compatibility vow repair retains its historical hash mapping. Existing faith/head/date/authority/ground rules, saved promises, campaign caps, election round rules and canonical conversion/appointment transactions remain fixed or under their existing typed profile owners. Ruler conversion chance/share/threshold reuse realm-scoped balance. Optional religious target ordering applies only to currently eligible later-call targets and conversion options; inaugural target ordering remains authored campaign content.
 
 Government variants read bounded agreement, service, settlement, office, negotiation and recruit willingness. Deterministic zero/one willingness consumes no extra RNG; intermediate authored probabilities draw only at that prospective AI choice. Mobile legacy trade/recruit sizes and food horizons, candidate diplomacy/martial weights, aristocratic concession size and civic reserve/aid/peace preferences are declared. Existing mobile supply policies retain their own finite logistics owner. Optional government mode ordering affects mobile leaders, public-selection candidates, eligible administrative/local religious appointments and provincial recognition. Facts without a meaning in a particular candidate class are zero. Constitutional eligibility, consent, mandatory incumbent/vacancy synchronization, unpaid-obligation maintenance and direct player choices remain canonical; disabled ordinary-war strategies stay disabled. Civic elections, institutional succession sources, parliamentary postures, historical foundation eligibility and profile-owned budgets retain their existing declared strategies/data rather than a second generic algorithm.

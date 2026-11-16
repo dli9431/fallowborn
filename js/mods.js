@@ -2717,7 +2717,8 @@ window.FBMODS = window.FBMODS || [];
       let problems;
       try {
         FBDATA.governmentForms=combinedTable(forms,mod.governmentForms,'governmentForms');
-        problems=FB.mobile.validateProfiles(profiles,combinedTable(FBDATA.unitClasses,mod.unitClasses,'unitClasses'));
+        problems=FB.mobile.validateProfiles(profiles,combinedTable(FBDATA.unitClasses,mod.unitClasses,'unitClasses'),
+          combinedTable(FBDATA.federateContractTerms,mod.federateContractTerms,'federateContractTerms'));
       } finally {FBDATA.governmentForms=forms;}
       if (problems.length) fail('mobileProfiles', problems[0]);
     }

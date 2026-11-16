@@ -762,6 +762,16 @@ contract automatically; regression coverage compares field styles across screens
 
 ## Required navigation and decision presentation
 
+Opted-in coalition extraction uses the existing Mobile coalition sheet. Declared
+demand, local raid and paid-service actions retain proposal, personal assent and
+confirmation as separate decisions. Confirmation shows the actual outside payer,
+raid threat and no-war refusal rule, or exact raid coin/food and fighter losses,
+or initial/seasonal pay and service duration. The last raid remains visible in
+the following's facts. Paying rulers may accept or refuse offered service and
+demands. Cancel, Back, Escape and outcome Continue preserve the selected county,
+numeric inputs, Details, scroll and originating focus. Unsupported profiles omit
+these actions; current resource, locality and approval blockers remain visible.
+
 Coalition member beginnings use the ordinary date and scenario picker and fixed
 identity summary. The summary discloses that private money and the public treasury
 remain separate and that member selection, rather than household inheritance,

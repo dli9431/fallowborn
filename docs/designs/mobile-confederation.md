@@ -19,6 +19,64 @@ Acceptance of a mobile agreement is a reviewed transaction. A civic counterparty
 
 Mobile confederation
 
+Extraction policy
+
+An optional mobileProfiles.extractionPolicy schema 1 selects demand, raid and
+hire operations independently. The Mobile coalition deed exposes only declared
+kinds. Each uses the existing exact extraction proposal, weighted assent and
+coalition review/commit boundary. NPC principals answer pending extraction
+proposals through the same assent transaction; the protagonist supplies only
+their own assent. Membership, terms, leadership, stocks and public accounts are
+rechecked before commitment. Cancel and stale confirmation spend nothing.
+
+Demand creates an ordinary tribute or protection offer carrying a named county
+and an explicit raid threat. Unlike an ordinary outward tribute offer, this
+receipt charges the outside public treasury once upon acceptance. A living
+direct holder must control the county, and a real halted host must be at that
+county or one reachable adjacent land county away. Allies, truces, shared
+sovereignty, occupation and existing hostile wars prevent this operation.
+Outside consent remains independent. The outside government AI policy's optional
+demandResponse weighs available treasury, a reserve, maximum payment share,
+defending strength and the coalition's actual deployed fighters. The ordinary
+daily response runs even when the coalition leader is the protagonist. Refusal
+ends the offer with no payment or automatic war. Protection retains its exact
+fighter commitment and the existing ordinary service consumer.
+An outside constitutional refusal also ends the offer, even when the financial
+and force forecast favors acceptance; forecasts never replace civic assent.
+
+Raid is a single local sortie by a halted field host reunited with camp. The
+existing actions.js raid calculation supplies skirmish resistance, forts and
+fighter casualties using that actual host. It creates no occupation, claim,
+ownership change or settlement. Coin is bounded by the direct holder's available
+treasury, policy ceiling and stock share. Whole food units come from that named
+county's existing provision stock, bounded by the surviving host's ordinary
+carrying limit, and enter the colocated camp; no goods value,
+captives or abstract reward is minted. Ordinary host-loss, roster, rout and
+market-shock owners apply. A successful raid at a local household publishes the
+existing home_raid lifecycle moment. The optional lastRaid receipt and turn
+retain exact gains, losses and cooldown through matching saves without replay.
+
+Hire expands an allowed existing paid host-service template with an explicit
+outside court, the actual host and empty land scopes. It records the coalition's
+reviewed consent in the canonical service contract. The patron separately accepts
+or refuses through the same mobile review and authority contract transaction.
+Initial and seasonal payments, expiration, succession and host obligations stay
+with the existing contract owner; no migration origin or sponsor is rewritten.
+
+This policy currently serves elected, single-host coalitions. Commissioned,
+column and dispersed-camp followings retain their own permission owners and do
+not acquire extraction authority from a shared profile. Profiles without this
+policy retain prior behavior. The native Pontic policy permits all three kinds;
+the river policy permits paid service only. The ordinary JSON example
+mobile-extraction-glassroad.json varies limits, cooldown, response preferences
+and a same-import paid-service template in a fictional world. Its numbers and
+the native limits are simulation choices, not reconstructed historical levies.
+
+Technology impact is none separately for mobile_tribute_demand,
+mobile_bounded_raid and mobile_hired_service. Political consent and finite stocks
+have no credible discovery prerequisite. Ordinary unit, fort, route, crossing
+and contract gates remain authoritative.
+
 Playable member principals
 
 An ordinary scenario may declare mobilePrincipal:{realmId,memberId}. The pure

@@ -77,6 +77,17 @@ helper; save-state validation remains with each system. Specs are trusted engine
 objects, never executable JSON mod fields. Validate against the detached effective
 candidate, including additions in the same import, before publication.
 
+Mobile profiles may declare extractionPolicy schema 1 to select tribute/protection
+demands, bounded local raids and hired host service. Native and imported profiles
+use the same pure typed checks, member assent, quotes and commits. Optional
+government AI demandResponse configures treasury reserve, payment share and
+defender-to-coalition strength thresholds, independently of the identity of the
+raider. The ordinary mobile-extraction-glassroad.json example supplies a fictional
+world, contrasting limits and a same-import service template. Coin and provision
+stock must exist; no declaration can mint spoils, bypass outside consent, start
+a war on refusal or grant land. Full fields are in MODDING.md and the lifecycle
+is in designs/mobile-confederation.md.
+
 `FB.schema.faults(value, spec, path, context)` returns an array of diagnostics
 containing the failing path; `valid(value, spec, context)` returns a boolean.
 Neither API writes data, specs, state, RNG or UID. Predicates must also be pure.
