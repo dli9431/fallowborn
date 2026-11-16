@@ -111,6 +111,8 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      event_canonical_reviews:{ mode:'none', rationale:'Event choices review existing canonical transactions. Consent, payment, current authority and each underlying technology gate still belong to the original owner; opening or cancelling a review grants nothing.' },
+      state_aware_events:{ mode:'none', rationale:'Events observe existing government, office, recognition, agreement, membership, law, case and story facts. Observation grants no authority or resources; every existing effect retains its own eligibility and technology gates.' },
       enforceable_guild_grants:{ mode:'hard', tech:['guild_charters'], fallback:'Ordinary enterprise ownership, careers and council operating-law proposals remain available without Guild Charters.', rationale:'Paid ruler-issued guild privileges reuse the established Guild Charters gate for new charters. Existing grants, exemptions, revocation, petitions and ordinary court enforcement survive research or ruler changes without a new gate.' },
       episcopal_rent_compositions:{ mode:'none', rationale:'Civil compositions of an existing institutional rent require actual property, living parties, competent temporal jurisdiction and conserved funds. Neither spiritual office nor a discovery supplies title or an unpaid debt.' },
       named_ecclesiastical_discipline:{ mode:'none', rationale:'Named discipline requires recorded conduct, a competent local Christian court, lawful custody and exact private assets. Technology supplies neither guilt nor jurisdiction; existing economic and military gates remain.' },

@@ -2386,7 +2386,8 @@ window.FB = window.FB || {};
                 FB.techUiRelevant(s)) UI.showTechDetail(status.missingTech[0]);
             return;
           }
-          if (opt.confirm === 'war_end') confirmWarOption(ev, opt, ctx);
+          if (opt.review) confirmEventReview(ev,opt,ctx);
+          else if (opt.confirm === 'war_end') confirmWarOption(ev, opt, ctx);
           else chooseOption(ev, opt, ctx);
         });
       })(o, optionStatus);
@@ -2426,6 +2427,52 @@ window.FB = window.FB || {};
       card.tabIndex = -1;
       card.focus();
     }, 0);
+  }
+
+  function confirmEventReview(ev,opt,ctx) {
+    const state = FB.state, box = $('ev-options'), body = $('ev-text');
+    const reviewed = FB.eventReviews.quote(state,opt,ctx), source = document.activeElement;
+    const oldBody = document.createDocumentFragment(), oldOptions = document.createDocumentFragment();
+    const scroll = $('eventmodal').querySelector('.modalcard').scrollTop;
+    while (body.firstChild) oldBody.appendChild(body.firstChild);
+    while (box.firstChild) oldOptions.appendChild(box.firstChild);
+    let finished = false;
+    function restore() {
+      if (finished) return;
+      finished = true; cancelWarConfirmation = null;
+      body.innerHTML = ''; box.innerHTML = '';
+      body.appendChild(oldBody); box.appendChild(oldOptions);
+      $('event-nav-back').disabled = true;
+      if (source && document.contains(source)) source.focus({preventScroll:true});
+      $('eventmodal').querySelector('.modalcard').scrollTop = scroll;
+      armEventGuard();
+    }
+    cancelWarConfirmation = restore;
+    const lines = reviewed ? FB.eventReviews.details(state,reviewed) :
+      [FB.T('The current people, property or authority no longer allows this review.')];
+    body.innerHTML = reviewFactsCard(FB.T('Decision terms'),lines.map(function (line) {
+      return '<p>' + esc(line) + '</p>';
+    }).join(''));
+    box.innerHTML = reviewActionCardHtml({id:'event-review-confirm',label:FB.T('Confirm decision'),
+      disabled:!reviewed || !reviewed.quote.allowed,
+      note:FB.T('Confirmation uses the same current terms as the ordinary review.'),
+      detailsId:'event-review-details',details:'<p>' + esc(FB.T('Changed consent, payment, people or authority requires a fresh review. Cancel changes nothing.')) + '</p>'}) +
+      '<button type="button" class="evopt" id="event-review-cancel">' + esc(FB.T('Cancel')) + '</button>';
+    $('event-nav-back').disabled = false;
+    const confirm = $('event-review-confirm');
+    if (confirm) confirm.onclick = function () {
+      if (finished || eventInputGuarded()) return;
+      if (FB.state !== state || !FB.eventContextStillValid(state,ev,ctx) ||
+          !FB.eventOptionStatus(state,ev,opt,ctx).ready) {restore();return;}
+      if (chooseOption(ev,opt,ctx,reviewed) === false) {
+        restore();
+        const note = document.createElement('p');note.className = 'hint';
+        note.textContent = FB.T('This decision changed while it was open. Review the current terms again. Nothing was spent.');
+        body.appendChild(note);
+      } else {finished = true;cancelWarConfirmation = null;}
+    };
+    $('event-review-cancel').onclick = function () {if (!eventInputGuarded()) restore();};
+    armEventGuard();$('eventmodal').focus();
   }
 
   function confirmWarOption(ev, opt, ctx) {
@@ -2630,17 +2677,12 @@ window.FB = window.FB || {};
     if (FB.game.setPaused) FB.game.setPaused(true);
   }
 
-  function chooseOption(ev, opt, ctx) {
+  function chooseOption(ev, opt, ctx, reviewed) {
     const s = FB.state;
+    if (opt.review && !reviewed) {confirmEventReview(ev,opt,ctx);return false;}
     if (!FB.eventContextStillValid(s, ev, ctx)) return false;
     if (FB.eventOptionStatus &&
         !FB.eventOptionStatus(s, ev, opt, ctx).ready) return false;
-    if (!s.player.flags) s.player.flags = {};
-    // The portal introduction belongs to choosing a match. Teach a separate
-    // event choice before moving from courtship to marriage and an enterprise.
-    if (!FB.platform.isCrazyGames || ev.id !== 'meet_suitor') {
-      s.player.flags.tut_event = 1; // First-steps checklist: answered an event
-    }
     if (ev.nameChild && ctx.childId) {
       const nc = s.chars[ctx.childId];
       const inp = $('ev-name');
@@ -2649,8 +2691,14 @@ window.FB = window.FB || {};
         if (nm) nc.name = nm;
       }
     }
-    const receipt = FB.resolveEventOption(s, ev, opt, ctx, { automated:false });
+    const receipt = FB.resolveEventOption(s, ev, opt, ctx, { automated:false,reviewed:reviewed });
     if (!receipt) return false;
+    if (!s.player.flags) s.player.flags = {};
+    // The portal introduction belongs to choosing a match. Teach a separate
+    // event choice before moving from courtship to marriage and an enterprise.
+    if (!FB.platform.isCrazyGames || ev.id !== 'meet_suitor') {
+      s.player.flags.tut_event = 1; // First-steps checklist: answered an event
+    }
     // Investiture already owns a result event: show it in this interaction,
     // instead of leaving it in the daily queue after its offer closes.
     if (ev.id === 'rank_elevation_offer') {

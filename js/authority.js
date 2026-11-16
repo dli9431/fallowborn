@@ -122,6 +122,7 @@
     ensure(s).governments[rid] = Object.assign({},
       s.authority && s.authority.governments && s.authority.governments[rid],
       { formId:formId, sinceTurn:s.turn });
+    FB.publishEventMoment(s,'government_transformed',{realmId:rid,beforeFormId:current.formId,formId:formId});
     return true;
   };
   /* World creation seeds the bookmark's form for each realm (realm id ->
@@ -308,6 +309,44 @@
     }
     return out;
   };
+  var legitimacyTransaction = null;
+  function legitimacySnapshot(s) {
+    var subjects = [], out = [];
+    list(s,'recognitions').forEach(function (r) {
+      if (subjects.some(function (v) {return same(v,r.subject);})) return;
+      subjects.push(r.subject);out.push({subject:copy(r.subject),band:legitimacyBand(s,r.subject)});
+    });
+    return out;
+  }
+  /* Observe explicit owner writes, including succession and death. This is
+     transient nesting protection, not another event or saved-state queue. */
+  FB.withLegitimacyMoments = function (s,write) {
+    if (legitimacyTransaction === s || !s || !s.player) return write();
+    var previous = legitimacyTransaction, before = legitimacySnapshot(s), result;
+    legitimacyTransaction = s;
+    try {result = write();} finally {legitimacyTransaction = previous;}
+    list(s,'recognitions').forEach(function (r) {
+      if (!before.some(function (v) {return same(v.subject,r.subject);}))
+        before.push({subject:copy(r.subject),band:'none'});
+    });
+    before.forEach(function (v) {legitimacyMoment(s,v.subject,v.band);});
+    return result;
+  };
+  function legitimacyBand(s,subject) {
+    var sources = [];
+    Q.legitimacy(s,subject).forEach(function (r) {if (sources.indexOf(r.source) < 0) sources.push(r.source);});
+    return sources.length > 1 ? 'multiple_sources' : sources.length ? 'single_source' : 'none';
+  }
+  function legitimacyMoment(s,subject,before) {
+    if (legitimacyTransaction === s) return;
+    var after = legitimacyBand(s,subject);
+    if (before !== after) FB.publishEventMoment(s,'legitimacy_band_changed',{
+      subjectId:subject.id,subjectKind:subject.kind,before:before,after:after});
+  }
+  function officeMoment(s,row,id) {
+    FB.publishEventMoment(s,id,{officeId:row.officeId,institutionId:row.institutionId,
+      holderId:row.holder.id,holderKind:row.holder.kind,appointmentId:row.id});
+  }
   FB.authorityRecognize = function (s, terms) {
     terms = terms || {};
     var def = FBDATA.legitimacySources[terms.source];
@@ -320,6 +359,7 @@
         existing.source === terms.source && same(existing.issuer, terms.issuer) &&
         same(existing.subject, subject) &&
         ((!existing.scope && !at) || same(existing.scope, at))) return null;
+    var beforeBand = legitimacyBand(s,subject);
     var row = { id:next(s, 'recognition-'), source:terms.source,
       issuer:copy(terms.issuer), issuerGeneration:generation(s, terms.issuer),
       subject:subject, scope:at, startTurn:s.turn,
@@ -342,11 +382,13 @@
           beneficiary:subject, scope:at, power:power, basis:'recognition', basisRef:row.id });
       }
     }
+    legitimacyMoment(s,subject,beforeBand);
     return copy(row);
   };
   FB.authorityRecognitionTransition = function (s, id, action) {
     var row = recognition(s, id);
     if (!row) return false;
+    var beforeBand = legitimacyBand(s,row.subject);
     if (action === 'revoke' && row.status === 'active') row.status = 'revoked';
     else if (action === 'reaffirm' && row.status === 'active' &&
         validIssuer(s, row.issuer, row.source) && ref(s, row.subject) &&
@@ -354,9 +396,27 @@
       row.issuerGeneration = generation(s, row.issuer);
     else return false;
     row.changedTurn = s.turn;
+    legitimacyMoment(s,row.subject,beforeBand);
     return true;
   };
 
+  ['assignRealmRulerCharacter','advanceRealmSuccession','killChar','markRealmDead',
+    'assignReligiousHead','vacateReligiousHeads','bindPoliticalReligiousHeads'].forEach(function (name) {
+    var write = FB[name];
+    if (!write) return;
+    FB[name] = function (s) {
+      var args = arguments;
+      return FB.withLegitimacyMoments(s,function () {
+        var living = name === 'killChar' && args[1] && !args[1].dead;
+        var heads = name === 'bindPoliticalReligiousHeads' ? JSON.stringify(s.religiousHeads || {}) : null;
+        var result = write.apply(FB,args);
+        var changed = Array.isArray(result) ? result.length > 0 : !!result;
+        if (changed || living && args[1].dead || heads !== null && heads !== JSON.stringify(s.religiousHeads || {}))
+          settleAppointments(s);
+        return result;
+      });
+    };
+  });
   function activeAppointment(s, row) {
     if (!row || row.status !== 'active' || row.endTurn !== null &&
         row.endTurn <= s.turn || !ref(s, row.holder) ||
@@ -421,11 +481,13 @@
       status:terms.contested ? 'contested' : 'active' };
     if (FB.officeMandates) FB.officeMandates.initialize(s,row);
     s.authority.appointments.push(row);
+    if (row.status === 'active') officeMoment(s,row,'office_appointed');
     return copy(row);
   };
   FB.authorityAppointmentTransition = function (s, id, action) {
     var row = appointment(s, id);
     if (!row) return false;
+    var beforeStatus = row.status;
     if (action === 'confirm' && row.status === 'contested' &&
         ref(s, row.holder) &&
         ref(s, row.appointer) && within(s, row.institutionId, row.scope) &&
@@ -447,6 +509,8 @@
       row.status = 'expired';
     else return false;
     row.changedTurn = s.turn;
+    if (beforeStatus !== 'active' && row.status === 'active') officeMoment(s,row,'office_appointed');
+    else if (beforeStatus === 'active' && row.status !== 'active') officeMoment(s,row,'office_lost');
     return true;
   };
   Q.offices = function (s, actor) {
@@ -522,8 +586,14 @@
         host(s, row.hostId).realm !== row.federateRealmId)) return 'host_lost';
     return null;
   }
-  function contractNotice(s, row, reason) {
+  function contractMoment(s,row,id) {
+    FB.publishEventMoment(s,id,{contractId:row.id,patronRealmId:row.patronRealmId,
+      federateRealmId:row.federateRealmId,hostId:row.hostId || null});
+  }
+  function contractNotice(s, row, reason, priorStatus) {
     row.changedTurn = s.turn; row.transitionReason = reason;
+    if (row.status === 'breached') contractMoment(s,row,'federate_contract_breached');
+    else if (row.status === 'expired' && priorStatus !== 'expired') contractMoment(s,row,'federate_contract_expired');
     var params = { patron:FB.realmNameParam(s, row.patronRealmId),
       federate:FB.realmNameParam(s, row.federateRealmId), amount:row.payPerSeason };
     if (reason === 'ruler_succession') FB.news(s, FB.msg('news.federate.succession',
@@ -580,6 +650,22 @@
     if (FB.treasuryRekeyPublicOwner) FB.treasuryRekeyPublicOwner(s,from,to);
     if (FB.governments) FB.governments.invalidate();
   };
+  FB.eventStateReaders.register({id:'protagonist_office',system:'authority',
+    args:{type:'object',fields:{kind:{type:'string',minLength:1,maxLength:80}}},
+    read:function (s,a) {
+      return Q.offices(s,{kind:'character',id:s.player.charId}).some(function (row) {
+        return row.ref.officeId === a.kind && (row.status === 'active' || row.status === 'recorded');
+      });
+    }});
+  FB.eventStateReaders.register({id:'legitimacy_band',system:'authority',
+    args:{type:'object',fields:{band:{enum:['none','single_source','multiple_sources']}}},
+    read:function (s,a) {
+      var sources = [];
+      Q.legitimacy(s,{kind:'character',id:s.player.charId}).forEach(function (row) {
+        if (sources.indexOf(row.source) < 0) sources.push(row.source);
+      });
+      return a.band === (sources.length > 1 ? 'multiple_sources' : sources.length ? 'single_source' : 'none');
+    }});
   Q.contractQuote = function (s, terms) {
     terms = terms || {};
     var patron = Q.actor(s, { kind:'realm', id:terms.patronRealmId });
@@ -698,11 +784,13 @@
     if (row.approvals[row.patronRealmId] === row.succession.patron &&
         row.approvals[row.federateRealmId] === row.succession.federate) {
       row.status = 'active'; row.startTurn = s.turn;
+      contractMoment(s,row,'federate_contract_signed');
     }
     return true;
   };
   FB.authorityContractTransition = function (s, id, action, rid, endTurn) {
     var row = contract(s, id);
+    var priorStatus = row && row.status;
     if (!row || rid !== row.patronRealmId && rid !== row.federateRealmId ||
         !Q.actor(s, { kind:'realm', id:rid })) return false;
     if (action === 'breach' && (row.status === 'active' || row.status === 'offered'))
@@ -722,7 +810,7 @@
       row.succession.patron = FB.realmRulerGeneration(s, row.patronRealmId);
       row.succession.federate = FB.realmRulerGeneration(s, row.federateRealmId);
     } else return false;
-    contractNotice(s, row, action === 'renew' ? 'renewed' : action === 'release' ? 'service_released' : 'breached');
+    contractNotice(s, row, action === 'renew' ? 'renewed' : action === 'release' ? 'service_released' : 'breached',priorStatus);
     return true;
   };
 
@@ -1545,8 +1633,41 @@
       return true;
     }, function (t) { FB.save.v4.validateAuthority(t.authority, t); });
   };
+  function settleAppointments(s) {
+    for (var office of list(s, 'appointments')) {
+      var beforeStatus = office.status;
+      if (office.publicTerms && office.status === 'active' &&
+          office.publicTerms.confirmation === 'reaffirm' &&
+          office.appointerGeneration !== FB.realmRulerGeneration(s, office.institutionId)) {
+        office.status = 'contested'; office.changedTurn = s.turn;
+      }
+      if (office.status === 'active' && FBDATA.authorityOffices[office.officeId] &&
+          FBDATA.authorityOffices[office.officeId].succession === 'reaffirm' &&
+          office.appointerGeneration !== FB.realmRulerGeneration(s, office.institutionId)) {
+        office.status = 'contested'; office.changedTurn = s.turn;
+      } else if (office.status === 'active' && !activeAppointment(s, office) &&
+          !(FB.officeMandates && FB.officeMandates.suspension(s,office) &&
+            ref(s,office.holder) && within(s,office.institutionId,office.scope) && office.endTurn > s.turn) ||
+          office.status === 'contested' && (!ref(s, office.holder) ||
+            !Q.actor(s, office.appointer) || !within(s, office.institutionId, office.scope) ||
+            office.endTurn !== null && office.endTurn <= s.turn)) {
+        office.status = 'expired'; office.changedTurn = s.turn;
+      }
+      if (beforeStatus === 'active' && office.status !== 'active') officeMoment(s,office,'office_lost');
+    }
+  }
   FB.authoritySeason = function (s) {
     FB.authorityCompact(s);
+    var endedRecognitions = list(s,'recognitions').filter(function (r) {
+      return r.status === 'active' && r.endTurn !== null && r.endTurn <= s.turn;
+    }), subjects = [];
+    endedRecognitions.forEach(function (r) {
+      if (subjects.some(function (v) {return same(v.subject,r.subject);})) return;
+      var earliest = Math.min.apply(Math,endedRecognitions.filter(function (v) {return same(v.subject,r.subject);}).map(function (v) {return v.endTurn;}));
+      subjects.push({subject:r.subject,band:legitimacyBand(Object.assign({},s,{turn:earliest - 1}),r.subject)});
+    });
+    endedRecognitions.forEach(function (r) {r.status = 'revoked';r.changedTurn = s.turn;});
+    subjects.forEach(function (v) {legitimacyMoment(s,v.subject,v.band);});
     var period = Math.floor(s.turn / 90);
     for (var row of list(s, 'contracts')) {
       if (row.status === 'offered') {
@@ -1584,25 +1705,7 @@
         { patron:FB.realmNameParam(s, row.patronRealmId),
           federate:FB.realmNameParam(s, row.federateRealmId), amount:row.payPerSeason }));
     }
-    for (var office of list(s, 'appointments')) {
-      if (office.publicTerms && office.status === 'active' &&
-          office.publicTerms.confirmation === 'reaffirm' &&
-          office.appointerGeneration !== FB.realmRulerGeneration(s, office.institutionId)) {
-        office.status = 'contested'; office.changedTurn = s.turn;
-      }
-      if (office.status === 'active' && FBDATA.authorityOffices[office.officeId] &&
-          FBDATA.authorityOffices[office.officeId].succession === 'reaffirm' &&
-          office.appointerGeneration !== FB.realmRulerGeneration(s, office.institutionId)) {
-        office.status = 'contested'; office.changedTurn = s.turn;
-      } else if (office.status === 'active' && !activeAppointment(s, office) &&
-          !(FB.officeMandates && FB.officeMandates.suspension(s,office) &&
-            ref(s,office.holder) && within(s,office.institutionId,office.scope) && office.endTurn > s.turn) ||
-          office.status === 'contested' && (!ref(s, office.holder) ||
-            !Q.actor(s, office.appointer) || !within(s, office.institutionId, office.scope) ||
-            office.endTurn !== null && office.endTurn <= s.turn)) {
-        office.status = 'expired'; office.changedTurn = s.turn;
-      }
-    }
+    settleAppointments(s);
     if (FB.federateContractSeason) FB.federateContractSeason(s);
     if (FB.officeCourtSeason) FB.officeCourtSeason(s);
     if (FB.officeMandates) Object.keys(s.realms).sort().forEach(function (rid) {

@@ -2,6 +2,15 @@
    papal institutions additionally require an enabling faith. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.systems = {
+  event_governments:{ id:'event_governments', eventReaderOwner:'governments', desc:'Government state conditions in events.', defaultEnabled:true, modules:['governments'] },
+  event_authority:{ id:'event_authority', eventReaderOwner:'authority', desc:'Office and recognition state conditions in events.', defaultEnabled:true, modules:['authority'] },
+  event_federates:{ id:'event_federates', eventReaderOwner:'federates', desc:'Federate contract state conditions in events.', defaultEnabled:true, modules:['federates'] },
+  event_mobile_confederations:{ id:'event_mobile_confederations', eventReaderOwner:'mobile_confederations', desc:'Mobile coalition state conditions in events.', defaultEnabled:true, modules:['mobile_confederations'] },
+  event_religious_institutions:{ id:'event_religious_institutions', eventReaderOwner:'religious_institutions', desc:'Institution membership state conditions in events.', defaultEnabled:true, modules:['religious_institutions'] },
+  event_industry_laws:{ id:'event_industry_laws', eventReaderOwner:'industry_laws', desc:'Enterprise operating-law state conditions in events.', defaultEnabled:true, modules:['industry_laws'] },
+  event_episcopal_claims:{ id:'event_episcopal_claims', eventReaderOwner:'episcopal_claims', desc:'Civil rent claim state conditions in events.', defaultEnabled:true, modules:['episcopal_claims'] },
+  event_religious_cases:{ id:'event_religious_cases', eventReaderOwner:'religious_cases', desc:'Named religious case state conditions in events.', defaultEnabled:true, modules:['religious_cases'] },
+  event_story_tracks:{ id:'event_story_tracks', eventReaderOwner:'story_tracks', desc:'Active story stage conditions in events.', defaultEnabled:true, modules:['stories'] },
   public_offices:{ id:'public_offices', desc:'Appointed public jurisdiction, audited receipts, service and sovereign recognition.', defaultEnabled:false, modules:['authority','treasury'] },
   roman_offices:{ id:'roman_offices', desc:'Scoped Roman offices, personal honors and contested imperial recognition.', defaultEnabled:false, modules:['authority'] },
   church_councils:{ id:'church_councils', desc:'Provincial gatherings of living bishops and protected congregations.', defaultEnabled:false, modules:['religion'] },

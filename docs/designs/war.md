@@ -1635,6 +1635,15 @@ data in `FBDATA.raidingTraditions` together with the culture doctrine
 
 Raiding does not declare a formal conquest war, nor does it occupy land permanently:
 
+Mobile profile extraction policies have a separate bounded local consumer of
+this same skirmish/fort calculation. It passes the coalition's actual host and
+uses detached inspection because legacy muster readers may normalize lazy
+state. Its commit takes only real holder coin and named-county provision stock,
+applies ordinary host losses and market devastation, and publishes home_raid
+for the local household. The ordinary private raiding reward path is unchanged.
+No occupation, claim, captives, ownership change or settlement is created by this
+consumer; see mobile-confederation.md for consent and resource bounds.
+
 - **Expedition Range**: Overland baseline is 2 legs. `longships` unlocks deep overseas and
   upriver naval raiding (+4 legs and cross-water navigation). A campaign culture's equivalent
   long-range seafaring doctrine grants that route only from an origin where the branch has

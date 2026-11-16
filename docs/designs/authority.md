@@ -6,6 +6,14 @@ proposals and officer acclamation are documented in
 [Court office mandates](office-mandates.md). A title alone implies none of these
 delegated operations or public spending rights.
 
+State-aware events register `protagonist_office` and `legitimacy_band` under
+the `authority` observation tag, and `federate_contract` under `federates`.
+They read canonical personal office rows, distinct current personal
+recognition sources and canonical contract effectiveness without issuing or
+repairing anything. The source bands are none, one and several, not a universal
+legitimacy score. See events.md for selection lifetime and the none technology
+decision, and MODDING.md for exact arguments.
+
 Administrative profiles retain their separate public commission path. Enabling roman_offices in an era does not expose a profile-owned court through legacy officeCourts, officeScopes or appointment petitions. Rows with publicTerms also use their public owner's transition reviews rather than legacy officeTransitionQuote/officeTransition. Public commissions retain their dated catalogue, productive source, pay and confirmation rules. This does not change the Roman catalogues of regnum, roman_civic or federate_polity, or rewrite existing authority records.
 
 Occupation and claimant boundaries
@@ -536,3 +544,7 @@ An external command issuer can be represented as a generation-tagged finite warr
 Home office presence
 
 Opted-in homeAuthority forms use FB.homeAuthority.quote for new levies, appointments, discretionary grants, war and spending. Each homePowers entry is an exact supported operation on an existing effective civil appointment. Local presence, issuer generation, scope, term, recall and custody remain live facts; host command supplies no civil delegation. Appointment and grant reviews retain this evidence for stale rejection. Existing accepted service awards retain their exact contract-owned consent, recipient and site; they cannot authorize a new discretionary grant. The full design and independent none technology decisions are in docs/designs/home-authority.md.
+
+Committed event observations
+
+Successful scoped appointments and confirmations publish office_appointed; contest, removal and expiry publish office_lost once. Explicit spiritual assignments and vacancies share those ids. Recognition-source band changes are observed around canonical recognition, succession and death writes, with nested writes coalesced. Fixed-term recognitions close at the existing seasonal authority boundary. A contract signs only on the second current approval and publishes its terminal breach or expiry once; repeated reads, refusal, restore and release of an already expired record publish nothing. A successful government-form write publishes government_transformed. Payloads and availability are defined in events.md and MODDING.md; these observations grant no authority.

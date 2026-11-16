@@ -1,5 +1,11 @@
 Deferred instance compilation
 
+The staged-story owner registers `active_story_stage` under the `story_tracks` event
+observation tag. Arguments name an existing declaration and nonterminal stage;
+the saved record must already occupy that phase without a result. A read never
+attaches or advances a track. See events.md for shared candidate validation,
+selection lifetime and the none technology decision.
+
 Title boot seals the registered story types. Unmodded bookmark setup compiles only the selected date and its accepted start graphs through the canonical source review. It does not seal the full instance registry. FB.game.prepareContent restores the original declarations and English messages, publishes all native sources, loads bundled instances, applies stored mods and seals the effective registry before campaign creation or restoration. Message indexing and locale finalization follow accepted publication. Switching setup dates discards the previous partial registry; it never initializes a story or campaign.
 
 Trusted source order
@@ -532,6 +538,28 @@ Mainz household in 1096
 data/starts_mainz_1096.js and data/story_households_rhineland_1096.js add a fictional Jewish craft household with ordinary paid work, costless family and context decisions, optional goals and a separate named-party card. The shared temporary-refuge card owns actual requests, individual shelter consent, civil authorization, Ruthard's offer, exact local entry and ending. The personal graph neither asserts protection nor cancels it. Attributed May history and a conditional sovereign-at-war review produce no local threat, incident receipt, wage, casualty or forced departure. Expiry, declining and continuing ordinary life remain complete paths. Existing household decisions, work, party consent and temporary-refuge technology decisions of none apply; no new capability or schema is introduced.
 
 Original attachment requirements
+
+Coalition member beginnings
+
+`mobilePrincipal` scenarios attach their ordinary tracks only after the existing
+member person and following are initialized. Ruler agendas accept this original
+start provenance as well as ordinary ruler provenance, while retaining the exact
+living incumbent, generation and jurisdiction gate. A member start cannot gain
+leadership by attaching an agenda. Original records survive office loss and
+household succession; current reads archive or interrupt unfinished personal goals.
+
+`data/story_mobile_principal.js` supplies a costless 1204 Qipchaq leader agenda
+and an `opening_profile` with member, resource and outside-consent review goals.
+Priorities and retaining present arrangements both count; setting the agenda aside
+is costless. The Mobile coalition Deed owns actual political operations. These
+stories grant no agreement, county, force, private payment or successor. Literal
+`rulerAgendas_` and `openingProfiles_` tables use the existing extractor owners.
+`data/story_mobile_leadership.js` registers empty tables for further declarations.
+
+Opening profiles stamp an unrevisioned ordinary JSON bookmark as `baseline`,
+matching the world's effective revision convention. Initialization and strict
+restore use the same value; explicit named revisions remain exact. Loading does
+not repair missing profile records or rewrite a saved revision.
 
 The final fresh creation call seals the successfully initialized world and birthplace-specific track ids in state.start.storyAttachments. Repeated world-only initialization does not change this snapshot, and neither restore nor a successor reads today's catalogue to expand it. Every originally recorded id remains required, including terminal stories. Saves predating this optional provenance use only actual saved records and their existing dependency graph. The save contract, envelope pairing and legacy limits are described in state-and-saves.md. Technology impact retained_start_attachments is none because preserving original commitments has no research dependency.
 

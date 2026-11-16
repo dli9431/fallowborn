@@ -2,6 +2,16 @@
 (function () {
   'use strict';
   var C = FB.episcopalClaims = {}, MAX = 32;
+  FB.eventStateReaders.register({id:'open_episcopal_claim',system:'episcopal_claims',
+    args:{type:'object',fields:{profileId:{type:'string',ref:{table:'episcopalClaims'}}}},
+    read:function (s,a) {
+      return rows(s).some(function (r) {
+        if (r.profileId !== a.profileId || !openClaim(r)) return false;
+        var x = C.snapshot(s,r.profileId,r.settlement);
+        return !!(x && !x.reason && !x.stale &&
+          [x.bishopId,x.possessorId,x.courtId].indexOf(s.player.charId) >= 0);
+      });
+    }});
   FB.msg('news.episcopal.rent', 'The civil rent review at {place} records a decision. Institutional receipts and household property retain their separate owners.');
   FB.msg('news.episcopal.settled', 'The rent composition at {place} transfers {money:amount} to the institutional see and sets future seasonal rent at {share}% for {seasons} seasons, beginning next season.');
   var STATES = ['demanded','contested','proposed','enforcement','settled','abandoned','declined','rejected'];
@@ -16,6 +26,7 @@
   function profile(id) { return (FBDATA.episcopalClaims || {})[id]; }
   function claimId(id, slot) { return 'episcopal:' + id + ':' + slot; }
   function row(s,id,slot) { return rows(s).filter(function (r) { return r.id === claimId(id,slot); })[0] || null; }
+  function openClaim(r) { return !!(r && ['demanded','contested','proposed','enforcement'].indexOf(r.status) >= 0); }
   function property(s,p,slot) {
     var c = p && s.settlementLordships && s.settlementLordships.counties[p.provinceId];
     return c && c.lordships && c.lordships[slot] || null;
@@ -174,7 +185,7 @@
     if (!p || ['demand','contest','recurring','compensation','accept','decline','abandon','request_enforcement','adjudicate','reject_enforcement'].indexOf(action) < 0) return null;
     var bishop = actorId === x.principals.bishopId, possessor = actorId === x.principals.possessorId;
     var judge = actorId === x.principals.courtId, reason = x.reason, cost = 0;
-    var party = bishop || possessor, pending = r && ['demanded','contested','proposed','enforcement'].indexOf(r.status) >= 0;
+    var party = bishop || possessor, pending = openClaim(r);
     if (!reason && (!party && !judge || !s.chars[actorId] || !live(s,s.chars[actorId]))) reason = 'actor';
     if (!reason && action === 'demand') {
       if (!party || r && (!pending || !snap.stale) || !r && rows(s).length >= MAX ||
@@ -248,6 +259,8 @@
       r.terms = null;
     }
     r.revision++; r.changedTurn = s.turn;
+    if (a === 'accept' || a === 'adjudicate') FB.publishEventMoment(s,'claim_settled',{
+      claimId:r.id,profileId:r.profileId,realmId:r.realmId,locationId:r.provinceId,settlement:r.settlement});
     FB.invalidateSettlementLordships(s,x.profile.provinceId);
     FB.news(s,r.status === 'settled' ? FB.message('news.episcopal.settled', {
       place:FB.world.byId[x.profile.provinceId].name, amount:r.terms.cost,

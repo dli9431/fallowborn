@@ -3,6 +3,17 @@
 (function () {
   'use strict';
   var Q = FB.political;
+  FB.eventStateReaders.register({id:'federate_contract',system:'federates',
+    args:{type:'object',fields:{
+      realmId:{type:'string',minLength:1,maxLength:80},
+      status:{enum:['offered','active','ineffective','breached','expired','released']}
+    }},read:function (s,a) {
+      return Q.contracts(s,a.realmId).some(function (row) {
+        return a.status === 'ineffective' ? row.status === 'active' && !row.effective :
+          a.status === 'released' ? row.status === 'expired' && row.transitionReason === 'service_released' :
+          row.status === a.status && (a.status !== 'active' || row.effective);
+      });
+    }});
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
   function rows(s) { return s.authority && s.authority.migrations || []; }
@@ -208,7 +219,10 @@
         !(homeCommand && homeCommand.characterId === s.player.charId) &&
         s.player.provinceId === row.at && row.courtIds.indexOf(s.player.charId) >= 0)
       s.player.provinceId = army.at;
+    var formerAt = row.at;
     row.at = army.at;
+    if (formerAt !== row.at) FB.publishEventMoment(s,'camp_arrived',{realmId:row.realmId,
+      migrationId:row.id,hostId:army.id,fromProvinceId:formerAt,locationId:row.at});
   }
   FB.federateReferencesCharacter = function (s, cid) {
     return rows(s).some(function (row) { return ongoing(row) && row.courtIds.indexOf(cid) >= 0; });
@@ -396,6 +410,7 @@
     if (FB.mobileMigrationInterrupted && FB.mobileMigrationInterrupted(s, row, reason)) return;
     row.status = 'failed'; row.failureReason = reason; row.changedTurn = s.turn;
     var army = host(s, row.hostId);
+    if (!army || army.men <= 0) FB.publishEventMoment(s,'field_host_lost',{realmId:row.realmId,hostId:row.hostId});
     if (army) delete army.migrationId;
     if (row.contractId) FB.authorityContractTransition(s, row.contractId, 'breach', row.realmId);
     if (!FB.realmTerritory(s, row.realmId).length && live(s, row.realmId))

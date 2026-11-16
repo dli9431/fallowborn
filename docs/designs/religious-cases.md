@@ -1,5 +1,12 @@
 # Named ecclesiastical discipline
 
+The owner registers `open_religious_case` under the `religious_cases` event
+observation tag. It reads existing charged, offered, referred and accepted
+records through the canonical snapshot, requiring current source/principals and
+the protagonist's involvement. It creates no accusation, custody or judgment.
+See events.md for shared validation, selection lifetime and the none technology
+decision.
+
 Hold ecclesiastical court opens a free review for a supported canonical bishop,
 an actual defendant or the competent temporal ruler. The Bishopric also links
 the review. Civil rent claims remain a separate sheet. With no eligible evidence,
@@ -129,3 +136,7 @@ configurations use identical definition validation and transactions.
 Technology impact `named_ecclesiastical_discipline` is **none**: actual conduct,
 local office, law, custody and resources supply the gates. Ordinary economic and
 military technology rules remain independent.
+
+Committed judgment observation
+
+An imposed canonical penance, imprisonment, enforcement or exact-fief confiscation publishes case_judged with the existing case, profile, offense, defendant, county and settled status. Repeated judgment notifications on a closed case are inert. Accusation, dismissal, voluntary settlement and restore publish no judgment. This is the ordinary event subscription surface described in events.md, with no new prosecution or queue.

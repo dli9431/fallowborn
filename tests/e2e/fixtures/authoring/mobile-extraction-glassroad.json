@@ -1,0 +1,884 @@
+{
+  "name": "Glassroad extraction policies",
+  "cultures": {
+    "dune_folk": {
+      "name": "Glassroad clans",
+      "tradition": "other",
+      "dyn": "plain",
+      "male": [
+        "Kavi",
+        "Daro",
+        "Aran"
+      ],
+      "female": [
+        "Tamar",
+        "Sela",
+        "Nari"
+      ],
+      "family": [
+        "Selen",
+        "Vara",
+        "Ash"
+      ]
+    }
+  },
+  "cultureDoctrineDefaults": {
+    "dune_folk": {
+      "learning": "steppe"
+    }
+  },
+  "religions": {
+    "dune_belief": {
+      "name": "The Open Sky",
+      "parent": "tengri",
+      "availability": {},
+      "properties": {
+        "head": null,
+        "legalTradition": "customary"
+      }
+    }
+  },
+  "geographies": {
+    "dune_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "dune_well",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "steppe"
+        },
+        {
+          "id": "dune_flats",
+          "x": 3.1,
+          "y": 2.1,
+          "terrain": "steppe"
+        },
+        {
+          "id": "dune_pass",
+          "x": 4.7,
+          "y": 2.7,
+          "terrain": "steppe"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {
+        "dune_meeting_hall": {
+          "x": 1.5,
+          "y": 1.5
+        }
+      },
+      "defaultLayout": null
+    }
+  },
+  "governmentForms": {
+    "dune_assembly": {
+      "holders": "coalition_holders",
+      "succession": "coalition_leadership",
+      "territory": "coalition_court",
+      "consent": "coalition_consent",
+      "levy": "following_levy",
+      "revenue": "coalition_receipts",
+      "council": "member_council",
+      "diplomacy": "coalition_diplomacy",
+      "ai": "coalition_decisions",
+      "ladder": "local_service",
+      "officeCatalogue": [],
+      "systems": {
+        "disable": [
+          "feudal_service",
+          "roman_offices",
+          "public_offices",
+          "royal_council",
+          "estates",
+          "manorial_tenure"
+        ]
+      }
+    },
+    "dune_council": {
+      "holders": "civic_holders",
+      "succession": "civic_magistracies",
+      "territory": "civic_territory",
+      "consent": "civic_consent",
+      "levy": "civic_service",
+      "revenue": "civic_receipts",
+      "council": "civic_council",
+      "diplomacy": "civic_diplomacy",
+      "ai": "civic_decisions",
+      "ladder": "civic_careers",
+      "civicProfileId": "dune_rotation",
+      "officeCatalogue": [],
+      "systems": {
+        "disable": [
+          "roman_offices",
+          "public_offices",
+          "feudal_service",
+          "scutage",
+          "estates",
+          "royal_council",
+          "crown_bloc",
+          "manorial_tenure",
+          "colonate"
+        ]
+      }
+    }
+  },
+  "mobileProfiles": {
+    "dune_compact": {
+      "minAge": 20,
+      "threshold": 0.75,
+      "maxMembers": 8,
+      "maxAgreements": 8,
+      "recruitShare": 0.15,
+      "recruitCost": 0.03,
+      "foodPerPerson": 0.01,
+      "pasturePerPerson": 1.5,
+      "accessDays": 270,
+      "accessPrice": 6,
+      "starvationShare": 0.001,
+      "defeatShare": 0.03,
+      "settlementForm": "regnum",
+      "regions": [
+        "dune_well",
+        "dune_flats",
+        "dune_pass"
+      ],
+      "members": [
+        {
+          "id": "well_following",
+          "weight": 2,
+          "pledge": 0.15,
+          "population": 900
+        },
+        {
+          "id": "ridge_following",
+          "weight": 2,
+          "pledge": 0.1,
+          "population": 700
+        }
+      ],
+      "extractionPolicy": {
+        "schema": 1,
+        "demand": {
+          "kinds": [
+            "protection",
+            "tribute"
+          ],
+          "maxPayment": 4,
+          "maxDays": 45
+        },
+        "raid": {
+          "maxGold": 4,
+          "maxFood": 23,
+          "stockShare": 0.25,
+          "cooldownDays": 30
+        },
+        "hire": {
+          "templateIds": [
+            "glassroad_service"
+          ]
+        }
+      }
+    }
+  },
+  "storyInstances": {
+    "dune_offices": {
+      "id": "dune_offices",
+      "type": "government_contest",
+      "name": "The well council",
+      "desc": "Public water rights continue through each change of office.",
+      "realmId": "dune_oasis"
+    },
+    "dune_candidacy": {
+      "id": "dune_candidacy",
+      "type": "civic_candidacy",
+      "requires": [
+        "dune_offices"
+      ],
+      "requirements": {
+        "realms": [
+          "dune_oasis"
+        ],
+        "provinces": [
+          "dune_well"
+        ]
+      },
+      "realmId": "dune_oasis",
+      "officeId": "well_keeper",
+      "name": "Keep the common wells",
+      "desc": "Choose public service or keep your household outside the office.",
+      "choices": {
+        "stand": {
+          "id": "dune_stand",
+          "label": "Stand for office",
+          "detail": "Pay the declared nomination fee and seek the public mandate."
+        },
+        "decline": {
+          "id": "dune_decline",
+          "label": "Remain a private household",
+          "detail": "End this invitation without paying a nomination fee or receiving public rights."
+        }
+      }
+    },
+    "dune_principal_household": {
+      "id": "dune_principal_household",
+      "type": "household_track",
+      "title": "A principal\u2019s private household",
+      "intro": "Consider the separate private purse and current member voice.",
+      "homeProvinceId": "dune_well",
+      "continuity": "protagonist",
+      "interruptedStage": "interrupted",
+      "initialStage": "review",
+      "requirements": {
+        "provinces": [
+          "dune_well"
+        ]
+      },
+      "stages": {
+        "review": {
+          "name": "Separate accounts",
+          "text": "The public following remains its own institution. You may record a priority or postpone it.",
+          "choices": [
+            {
+              "id": "review_private",
+              "label": "Keep the private purse available",
+              "detail": "Spend nothing and make no public decision.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            },
+            {
+              "id": "postpone_private",
+              "label": "Postpone this review",
+              "detail": "End with the current arrangements unchanged.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "done": {
+          "name": "The review is complete",
+          "text": "No public resources or powers have changed.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        },
+        "interrupted": {
+          "name": "The original review ended",
+          "text": "The next household head receives no inherited public mandate.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    },
+    "opening_dune_leader_start": {
+      "id": "opening_dune_leader_start",
+      "type": "opening_profile",
+      "title": "The principal\u2019s opening goals",
+      "intro": "Optional personal goals grant no public resources or authority.",
+      "scenarioIds": [
+        "dune_leader_start"
+      ],
+      "provinceIds": [
+        "dune_well"
+      ],
+      "requires": [
+        "dune_principal_household"
+      ],
+      "goals": [
+        {
+          "id": "review",
+          "name": "Consider the private household",
+          "text": "Record a costless priority or postpone it.",
+          "criterion": {
+            "kind": "household_phase",
+            "storyId": "dune_principal_household",
+            "phases": [
+              "done"
+            ]
+          }
+        }
+      ],
+      "contacts": []
+    },
+    "opening_dune_member_start": {
+      "id": "opening_dune_member_start",
+      "type": "opening_profile",
+      "title": "The principal\u2019s opening goals",
+      "intro": "Optional personal goals grant no public resources or authority.",
+      "scenarioIds": [
+        "dune_member_start"
+      ],
+      "provinceIds": [
+        "dune_well"
+      ],
+      "requires": [
+        "dune_principal_household"
+      ],
+      "goals": [
+        {
+          "id": "review",
+          "name": "Consider the private household",
+          "text": "Record a costless priority or postpone it.",
+          "criterion": {
+            "kind": "household_phase",
+            "storyId": "dune_principal_household",
+            "phases": [
+              "done"
+            ]
+          }
+        }
+      ],
+      "contacts": []
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "dune_household",
+      "name": "Wellside household",
+      "desc": "A free household beside the following.",
+      "intro": "Your household begins on the Glass Road.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 40,
+      "prestige": 5,
+      "piety": 0,
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "fixedProvinceId": "dune_well",
+      "tracks": [
+        "dune_candidacy"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Free household",
+          "diff": "age 24"
+        }
+      },
+      "trackLocations": {
+        "dune_candidacy": [
+          "dune_well"
+        ]
+      }
+    },
+    {
+      "id": "dune_leader_start",
+      "alwaysUnlocked": true,
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "name": "Glassroad leader",
+      "desc": "Begin as the existing principal with a separate private purse. Public leadership remains with member selection.",
+      "mobilePrincipal": {
+        "realmId": "dune_coalition",
+        "memberId": "well_following"
+      },
+      "fixedProvinceId": "dune_well",
+      "characterName": "Sela Vey",
+      "sex": "f",
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "startAge": 32,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 23,
+      "prestige": 5,
+      "piety": 0,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing principal",
+          "diff": "No generated family"
+        }
+      },
+      "tracks": [
+        "dune_principal_household",
+        "opening_dune_leader_start"
+      ],
+      "trackLocations": {
+        "dune_principal_household": [
+          "dune_well"
+        ],
+        "opening_dune_leader_start": [
+          "dune_well"
+        ]
+      },
+      "intro": "You are {name}, a principal in the existing following. Use Mobile coalition in Deeds for current reviews."
+    },
+    {
+      "id": "dune_member_start",
+      "alwaysUnlocked": true,
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "name": "Glassroad member",
+      "desc": "Begin as the existing principal with a separate private purse. Public leadership remains with member selection.",
+      "mobilePrincipal": {
+        "realmId": "dune_coalition",
+        "memberId": "ridge_following"
+      },
+      "fixedProvinceId": "dune_well",
+      "characterName": "Nari Ash",
+      "sex": "f",
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "startAge": 34,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 9,
+      "prestige": 5,
+      "piety": 0,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing principal",
+          "diff": "No generated family"
+        }
+      },
+      "tracks": [
+        "dune_principal_household",
+        "opening_dune_member_start"
+      ],
+      "trackLocations": {
+        "dune_principal_household": [
+          "dune_well"
+        ],
+        "opening_dune_member_start": [
+          "dune_well"
+        ]
+      },
+      "intro": "You are {name}, a principal in the existing following. Use Mobile coalition in Deeds for current reviews."
+    }
+  ],
+  "bookmarks": {
+    "dune_world": {
+      "id": "dune_world",
+      "name": "The Glass Road",
+      "desc": "A fictional three-county authoring world.",
+      "date": {
+        "year": 900,
+        "season": 3,
+        "day": 87
+      },
+      "era": "early_medieval",
+      "geography": "dune_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "stories": [
+        "dune_offices"
+      ],
+      "provinces": [
+        {
+          "id": "dune_well",
+          "name": "Amber Well",
+          "realm": "dune_oasis",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 6,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ],
+          "settlements": [
+            {
+              "site": "dune_meeting_hall",
+              "name": "Well Court",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "dune_flats",
+          "name": "Glass Flats",
+          "realm": "dune_oasis",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 3,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "dune_pass",
+          "name": "Red Gate",
+          "realm": "dune_gate",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 3,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "dune_oasis",
+          "name": "The Amber Wells",
+          "capital": "dune_well",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "dune_council",
+          "religion": "dune_belief",
+          "culture": "dune_folk",
+          "ruler": {
+            "name": "Tamar Selen",
+            "culture": "dune_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          },
+          "constituency": "dune_households"
+        },
+        {
+          "id": "dune_gate",
+          "name": "The Red Gate",
+          "capital": "dune_pass",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "religion": "dune_belief",
+          "culture": "dune_folk",
+          "ruler": {
+            "name": "Kavi Aran",
+            "culture": "dune_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          }
+        },
+        {
+          "id": "dune_coalition",
+          "name": "The Glassroad Following",
+          "capital": "dune_well",
+          "color": "#b99651",
+          "aggression": 0,
+          "rank": 2,
+          "government": "dune_assembly",
+          "religion": "dune_belief",
+          "culture": "dune_folk",
+          "ruler": {
+            "name": "Sela Vey",
+            "culture": "dune_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          },
+          "nonTerritorial": true,
+          "mobile": {
+            "profileId": "dune_compact",
+            "patronRealmId": "dune_oasis",
+            "origin": "dune_well",
+            "target": "dune_pass",
+            "food": 3200,
+            "fighters": 160,
+            "treasury": 70,
+            "opening": {
+              "principals": [
+                {
+                  "memberId": "well_following",
+                  "person": {
+                    "kind": "realm_ruler",
+                    "actorId": "dune_incumbent",
+                    "realmId": "dune_coalition",
+                    "generation": 1
+                  }
+                },
+                {
+                  "memberId": "ridge_following",
+                  "person": {
+                    "kind": "opening_actor",
+                    "actorId": "dune_deputy"
+                  }
+                }
+              ],
+              "leaderMemberId": "well_following",
+              "muster": [
+                {
+                  "memberId": "well_following",
+                  "unitId": "cav",
+                  "count": 70
+                },
+                {
+                  "memberId": "well_following",
+                  "unitId": "arch",
+                  "count": 40
+                },
+                {
+                  "memberId": "ridge_following",
+                  "unitId": "ret",
+                  "count": 50
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "duchies": {
+        "dune_district": {
+          "name": "The Glass Road",
+          "kingdom": "dune_country"
+        }
+      },
+      "kingdoms": {
+        "dune_country": {
+          "name": "Amber Country",
+          "empire": "dune_horizon"
+        }
+      },
+      "empires": {
+        "dune_horizon": {
+          "name": "The Wide Horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "localInstitutions": {
+        "dune_household_bench": {
+          "city": "Amber Well",
+          "kind": "council",
+          "provinceId": "dune_well",
+          "site": "dune_meeting_hall",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "historicalName": "Nari Ash"
+        }
+      },
+      "starts": [
+        "dune_household",
+        "dune_leader_start",
+        "dune_member_start"
+      ],
+      "hidden": false,
+      "opening": {
+        "actors": {
+          "dune_incumbent": {
+            "name": "Sela Vey",
+            "sex": "f",
+            "born": 868,
+            "culture": "dune_folk",
+            "religion": "dune_belief",
+            "station": 1,
+            "role": "commander",
+            "home": "dune_well",
+            "skills": {
+              "mar": 6
+            }
+          },
+          "dune_deputy": {
+            "name": "Nari Ash",
+            "role": "notable",
+            "sex": "f",
+            "born": 866,
+            "culture": "dune_folk",
+            "religion": "dune_belief",
+            "station": 1,
+            "home": "dune_well",
+            "skills": {
+              "dip": 6,
+              "mar": 4
+            }
+          }
+        },
+        "appointments": {},
+        "estates": [],
+        "claims": [],
+        "migrations": []
+      },
+      "balance": {
+        "aiGovernmentPolicy": "glassroad_response"
+      }
+    }
+  },
+  "civicProfiles": {
+    "dune_rotation": {
+      "name": "Council of the Wells",
+      "constituency": "dune_households",
+      "eligibility": {
+        "sex": "any",
+        "membership": false
+      },
+      "executive": "majority",
+      "interim": "council",
+      "offices": [
+        {
+          "id": "well_keeper",
+          "name": "Well keeper",
+          "termDays": 180,
+          "salary": 0.25
+        }
+      ],
+      "consent": {
+        "war": 1,
+        "treaty": 1,
+        "extraordinary_tax": 1,
+        "pledge": 1,
+        "grant": 1,
+        "conversion": 1
+      }
+    }
+  },
+  "constituencyProfiles": {
+    "dune_households": {
+      "eligibility": {
+        "minAge": 18,
+        "minServiceYears": 0,
+        "skills": {},
+        "free": true
+      },
+      "selection": {
+        "threshold": 0.75,
+        "tie": "id",
+        "termDays": 180,
+        "nominationCost": 3
+      },
+      "recall": {
+        "threshold": 0.6,
+        "reasons": [
+          "neglect",
+          "overreach",
+          "ineligible"
+        ]
+      },
+      "obligations": {
+        "revenueRate": 0.7,
+        "levyRate": 0.5,
+        "maxDues": 12,
+        "maxLevy": 8000,
+        "reserve": 6
+      },
+      "reserved": [
+        "war",
+        "treaty",
+        "grant",
+        "extraordinary_tax",
+        "pledge",
+        "conversion"
+      ],
+      "powers": [
+        "ban",
+        "peace",
+        "revenue"
+      ],
+      "members": [
+        {
+          "id": "well_homes",
+          "name": "Well households",
+          "weight": 2,
+          "basis": "custom",
+          "continuity": "institution",
+          "support": 80
+        },
+        {
+          "id": "road_homes",
+          "name": "Road households",
+          "weight": 1,
+          "basis": "service",
+          "continuity": "institution",
+          "support": 75
+        }
+      ]
+    }
+  },
+  "federateContractTerms": {
+    "glassroad_service": {
+      "payPerSeason": 3,
+      "initialPay": 2,
+      "durationDays": 120,
+      "renewWindowDays": 30,
+      "service": "host",
+      "land": "none",
+      "recognition": "none",
+      "autoRenew": false
+    }
+  },
+  "aiDecisionPolicies": {
+    "glassroad_response": {
+      "family": "government",
+      "mode": "first",
+      "parameters": {
+        "agreementWillingness": 1,
+        "serviceWillingness": 1,
+        "settlementWillingness": 1,
+        "officeWillingness": 1,
+        "negotiationWillingness": 1,
+        "recruitWillingness": 1,
+        "mobileTradeCount": 40,
+        "mobileRecruitCount": 20,
+        "mobileBuyDays": 30,
+        "mobileSellDays": 90,
+        "mobileShortageDays": 10,
+        "provincialConcession": 0.1,
+        "candidateDiplomacyWeight": 1,
+        "candidateMartialWeight": 0,
+        "civicReserveMultiplier": 2,
+        "civicAidAmount": 5,
+        "civicAidDays": 90,
+        "civicPeaceSeasons": 4
+      },
+      "demandResponse": {
+        "reserve": 2,
+        "maxPaymentShare": 0.5,
+        "tributeThreatRatio": 0.1,
+        "protectionThreatRatio": 0.1
+      },
+      "order": [],
+      "weights": {},
+      "bias": 0,
+      "tieBreak": "input",
+      "adjustments": []
+    }
+  }
+}

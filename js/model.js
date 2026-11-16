@@ -1904,6 +1904,12 @@ window.FB = window.FB || {};
     return strategy && strategy.succeed ? strategy.succeed(state, religionId, options || {}) : false;
   };
 
+  FB.religiousOfficeMoment = function (s,officeId,holderId,kind) {
+    const office = religiousOfficeDefinitions(s)[officeId];
+    if (holderId && office && FB.publishEventMoment) FB.publishEventMoment(s,kind,{
+      officeId:officeId,institutionId:office.institutionId || officeId,holderId:holderId,
+      holderKind:office.head.holderKind,appointmentId:null});
+  };
   FB.religiousHeadCharacterDied = function (state, charId) {
     const offices = religiousOfficeDefinitions(state);
     for (const id in offices) {
@@ -1912,6 +1918,7 @@ window.FB = window.FB || {};
       state.religiousHeads[id] = null;
       state.religiousHeadVacancies = state.religiousHeadVacancies || {};
       state.religiousHeadVacancies[id] = { turn:state.turn || 0, formerHolder:charId };
+      FB.religiousOfficeMoment(state,id,charId,'office_lost');
       if (!offices[id].head.local) FB.succeedReligiousHead(state, offices[id].religionId, {
         formerHolder:charId, reason:'death'
       });
@@ -2069,7 +2076,12 @@ window.FB = window.FB || {};
       }
       if (!c || !religiousHeadHolderEligible(state, office, c.id)) continue;
       state.religiousHeads = state.religiousHeads || {};
+      const priorHolder = state.religiousHeads[id];
       state.religiousHeads[id] = c.id;
+      if (!fresh && priorHolder !== c.id) {
+        FB.religiousOfficeMoment(state,id,priorHolder,'office_lost');
+        FB.religiousOfficeMoment(state,id,c.id,'office_appointed');
+      }
       if (state.religiousHeadVacancies) delete state.religiousHeadVacancies[id];
     }
   };
@@ -2170,8 +2182,13 @@ window.FB = window.FB || {};
         (office.head.holderKind !== 'character' && (!realm || !realm.alive)) ||
         !religiousHeadHolderEligible(state, office, realmId)) return false;
     FB.ensureReligiousHeads(state);
+    const formerHolder = state.religiousHeads[officeId];
     state.religiousHeads[officeId] = realmId;
     delete state.religiousHeadVacancies[officeId];
+    if (formerHolder !== realmId) {
+      FB.religiousOfficeMoment(state,officeId,formerHolder,'office_lost');
+      FB.religiousOfficeMoment(state,officeId,realmId,'office_appointed');
+    }
     return true;
   };
 
@@ -2194,6 +2211,7 @@ window.FB = window.FB || {};
         formerHolder:realmId
       };
       vacated.push(religionId);
+      FB.religiousOfficeMoment(state,officeId,realmId,'office_lost');
       if (!opts.silent && FB.news && state.log) {
         FB.news(state, FB.msg('news.religion.head_vacant',
           '⛪ The office of {title} stands vacant after {realm} falls.', {

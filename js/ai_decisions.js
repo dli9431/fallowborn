@@ -81,9 +81,16 @@
   }
   function recordFaults(d, data, path) {
     var errors = [];
-    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments','buildingRoleWeights','benefitWeights','domainWeights','schemeOrder','aimOrder','aimOrders'],path,errors)) return errors;
+    if (!fields(d,['family','mode','parameters','order','weights','bias','tieBreak','adjustments','buildingRoleWeights','benefitWeights','domainWeights','schemeOrder','aimOrder','aimOrders','demandResponse'],path,errors)) return errors;
     if (!own(families,d.family)) return errors.concat(path + '.family is unregistered.');
     var f = families[d.family], names = Object.keys(f.parameters);
+    if (own(d,'demandResponse')) {
+      if (d.family!=='government') errors.push(path + '.demandResponse requires government.');
+      errors=errors.concat(FB.schema.faults(d.demandResponse,{type:'object',fields:{
+        reserve:{type:'number',min:0,max:1000000000000},maxPaymentShare:{type:'number',min:0,max:1},
+        tributeThreatRatio:{type:'number',min:0,max:10},protectionThreatRatio:{type:'number',min:0,max:10}
+      }},path+'.demandResponse'));
+    }
     if (own(d,'aimOrders')) {
       if (d.family !== 'expansion' || d.mode !== 'ordered') errors.push(path + '.aimOrders requires ordered expansion.');
       if (fields(d.aimOrders,Object.keys(data.agencyRules && data.agencyRules.aims || {}),path + '.aimOrders',errors))
@@ -288,6 +295,18 @@
     var value = P.parameters(state,realmId,family)[key];
     if (!finite(value,0,1)) throw new Error('AI willingness requires a declared probability.');
     return value === 1 || value > 0 && FB.chance(value);
+  };
+  P.mobileDemandResponse = function (s,partnerId,rid,offer) {
+    var policy=P.resolve(s,partnerId,'government'), terms=policy.definition.demandResponse ||
+      {reserve:0,maxPaymentShare:0.25,tributeThreatRatio:1.25,protectionThreatRatio:0.5};
+    var host=FB.mobile.host(s,rid), strength=host && !host.moveLeft ? host.men : 0;
+    // Existing muster readers may normalize technology, support and alliances.
+    // A detached inspection preserves their complete calculation and pure review.
+    var defense=FB.realmDefensiveStrength(copy(s),partnerId), treasury=FB.treasuryAvailable(s,partnerId);
+    var ratio=offer.kind==='protection' ? terms.protectionThreatRatio : terms.tributeThreatRatio;
+    return {policyId:policy.id,parameters:copy(terms),treasury:treasury,defense:defense,strength:strength,
+      accept:strength>0 && strength>=Math.max(1,defense)*ratio &&
+        offer.price<=Math.max(0,treasury-terms.reserve) && offer.price<=treasury*terms.maxPaymentShare};
   };
   P.diplomaticFacts = function (state, realmId, targetId) {
     var ownStrength = FB.realmStrength(state,realmId), defense = FB.realmStrength(state,targetId);

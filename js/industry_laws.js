@@ -2,6 +2,13 @@
 (function () {
   'use strict';
   const L = FB.industryLaws = {};
+  FB.eventStateReaders.register({id:'owned_enterprise_law',system:'industry_laws',
+    args:{type:'object',fields:{definitionId:{type:'string',ref:{table:'industryLaws'}}}},
+    read:function (s,a) {
+      return (s.player.enterprises || []).some(function (e) {
+        return L.operation(s,e).laws.some(function (law) { return law.definitionId === a.definitionId; });
+      });
+    }});
   const own = function (o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); };
   const plain = function (o) { return !!o && typeof o === 'object' && !Array.isArray(o); };
   const copy = function (o) { return JSON.parse(JSON.stringify(o)); };
@@ -210,6 +217,8 @@
       ['incoming','outgoing'].forEach(function (slot) {
         if (slots[slot] && slots[slot].lawId === law.id) slots[slot] = null;
       });
+      FB.publishEventMoment(s,'law_repealed',{lawId:law.id,definitionId:law.definitionId,
+        realmId:law.issuer.realmId,locationId:law.terms.provinceId});
       return law;
     }
     const row = {id:'industry_law_' + FB.uid(), definitionId:q.definitionId,
@@ -220,6 +229,8 @@
         return e.provinceId === q.terms.provinceId && e.type === q.terms.enterpriseType;
       }).map(function (e) { return e.uid; })};
     rows.laws.push(row);
+    FB.publishEventMoment(s,'law_enacted',{lawId:row.id,definitionId:row.definitionId,
+      realmId:row.issuer.realmId,locationId:row.terms.provinceId});
     return row;
   }
   L.propose = function (s, motionId, q) {
@@ -1314,4 +1325,30 @@
     if (live.laws > LIMITS.laws || live.permits > LIMITS.permits || live.votes > LIMITS.votes ||
         live.petitions > LIMITS.petitions || live.violations > LIMITS.violations) bad();
   };
+  FB.eventReviews.register('industry_operation',{
+    owner:'industry_laws',
+    args:{type:'object',fields:{definitionId:{type:'string',ref:{table:'industryLaws'}},
+      action:{enum:['pay','pause','resume','close']}}},
+    quote:function (s,args,ctx) {
+      const d = FBDATA.industryLaws[args.definitionId];
+      const e = (s.player.enterprises || []).filter(function (e) {
+        return e.type === d.enterpriseType && e.provinceId === d.provinceId &&
+          (ctx.enterpriseUid === undefined || ctx.enterpriseUid === e.uid);
+      })[0];
+      const q = e && L.quoteOperation(s,e,args.action,0);
+      return q ? {allowed:q.ready,operation:q} : null;
+    },
+    apply:function (s,args,q) {return L.commitOperation(s,q.operation);},
+    report:function (s,args,q) {
+      const preview = FB.previewEventOption(s,null,{effects:{gold:-q.operation.amount}},{});
+      return (preview.sections[0] ? preview.sections[0].impacts : []).concat([{type:'system',system:'story'}]);
+    },
+    details:function (s,args,q) {
+      const op = q.operation, place = FB.world.byId[op.enterprise.provinceId];
+      return [FB.T('Business at {province}. Private payment: {money:amount}.',{
+        province:place.name,amount:op.amount}),
+        FB.T('The existing business review controls permission, operation and the original public payee. Ownership is retained.'),
+        op.reason || FB.T('The current operating terms permit this decision.')];
+    }
+  });
 })();

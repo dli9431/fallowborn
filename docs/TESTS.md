@@ -1,5 +1,18 @@
 Autumn 634 selection and core identity coverage
 
+State-aware event coverage lives in event-state-readers.spec.js. It imports
+fictional event declarations through the Mods file picker and stages positive
+and negative owner facts, malformed candidate rejection, stale queued contexts,
+disabled observation tags, option requirements, selection-local caching and
+matching restore. event-pack-validation.spec.js validates every registered pack
+and discovers declarative semantic fixture files under fixtures/event-packs/;
+extend only its fixture filename registrations for another pack. Each row stages
+literal patches on a detached state and checks eligibility and read purity.
+period-event-parity.spec.js compares fixed-seed selection against the catalogue
+without the new observation content in fresh 867 and 1066, including exact
+contexts, RNG, UID and zero reader work. This bounded selection check does not
+replace nightly season timing or owner visual/device/play acceptance.
+
 ruler-agendas.spec.js restores the exact original county owner after a stale
 outside-party offer review. season-performance.spec.js counts shared border
 projections during candidate selection separately from the fresh strength check
