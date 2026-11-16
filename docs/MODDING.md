@@ -2270,15 +2270,30 @@ lists every registered reader and its owning availability tag:
 | `protagonist_office` | `kind` (canonical office id) | `authority`: protagonist's canonical office view has an active or recorded office of this kind; includes scoped appointments and existing religious, council, command, household and guild offices; contested, expired and removed rows fail |
 | `legitimacy_band` | `band`: `none`, `single_source`, `multiple_sources` | `authority`: zero, one or several distinct live personal recognition sources; no universal legitimacy score or territorial authority is implied |
 | `federate_contract` | `realmId`, `status`: `offered`, `active`, `ineffective`, `breached`, `expired`, `released` | `federates`: an involving contract; active requires canonical effectiveness, ineffective means a recorded active contract whose continuity/term fails, released means expired with the canonical service-release reason |
-| `mobile_coalition_member` | `realmId` | `mobile_confederations`: protagonist is a living, available, allegiant principal in an active coalition |
-| `mobile_role` | `realmId`, `role`: `leader`, `member` | `mobile_confederations`: same membership, with the current qualified leader or a nonleader principal |
-| `mobile_scarcity` | `realmId` | `mobile_confederations`: active coalition food is below total living following × profile foodPerPerson × 30 days; independent of a configurable procurement target |
+| `mobile_coalition_member` | `realmId` or `following`: `current`, `moment` | `mobile_confederations`: protagonist is a living, available, allegiant principal in an active coalition |
+| `mobile_role` | `realmId` or `following`, plus `role`: `leader`, `member` | `mobile_confederations`: same membership, with the current qualified leader or a nonleader principal |
+| `mobile_scarcity` | `realmId` or `following` | `mobile_confederations`: active coalition food is below total living following × profile foodPerPerson × 30 days; independent of a configurable procurement target |
+| `mobile_camp_household` | `realmId` or `following` | `mobile_confederations`: available nonprincipal household resident and physically present at the active camp county, with no moving civilian court; no membership or authority implied |
 | `institution_membership` | `institutionId` | `religious_institutions`: active personal membership in an available profile institution |
 | `institution_role` | `institutionId`, `roleId` | `religious_institutions`: that active membership still satisfies the named role's qualifications |
 | `owned_enterprise_law` | `definitionId` (industryLaws id) | `industry_laws`: a law currently applies to at least one owned enterprise, including exempt or transition-covered operations |
 | `open_episcopal_claim` | `profileId` (episcopalClaims id) | `episcopal_claims`: a nonstale demanded, contested, proposed or enforcement claim involving the protagonist as possessor, bishop or competent ruler |
 | `open_religious_case` | `profileId` (religiousCases id) | `religious_cases`: a nonstale charged, offered, referred or accepted case involving the protagonist as defendant, victim, bishop or competent ruler |
 | `active_story_stage` | `storyId`, `stage` | `story_tracks`: a declared nonterminal stage of a staged story, with its existing record at that phase and no result |
+
+Mobile reader arguments require exactly one of `realmId` (unchanged explicit
+instance selection) or `following` (`current` or `moment`). `current` selects
+exactly one live following associated through allegiant principal membership or
+ordinary camp residence and actual presence. Multiple relevant followings fail
+closed. `moment` selects the existing event context's `realmId`; a missing or
+unavailable context fails. Role and membership still require a canonical living,
+available, allegiant principal of that selected following. Camp households are
+outside its principal registry and require actual single-camp migration locality; residents
+elsewhere and visiting travelers do not qualify. Host loss alone leaves the
+surviving camp eligible. Dispersed civilian camps are unavailable to this reader
+until an exact camp can be selected; the migration anchor never substitutes for
+their actual location. Every read is pure and creates no saved membership,
+resources or authority.
 
 Office kinds and all instance strings are nonempty and bounded to 80 characters; institution,
 role and stage ids use lowercase identifier spelling. Static definition references
