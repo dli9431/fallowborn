@@ -43,6 +43,19 @@ Preserve the documented order and guard semantics in docs/designs/time.md, inclu
 
 Historical story type loading
 
+For an opt-in mobilePrincipal start, bookmark_setup prepares direct actors and
+community partitions before protagonist lookup. main initializes declared
+infrastructure and population/market/public accounts, then the existing legacy
+and authored mobile constructors. starts selects that member's actual person,
+records personal provenance and court identity, and leaves world stories and
+player tracks at the ordinary final story boundary. No temporary protagonist or
+duplicate bound person is created. Other start paths retain their ordering.
+The mobile principal sources are dated manifest entries after
+data/start_ambitions.js. The empty mobile leader sources follow that eager script
+in index.html so they can also declare content for the eager dates. Their literal
+presentation tables use existing start, ruler-agenda and opening-profile
+extractor discovery.
+
 index.html loads data/story_instances.js after bookmark instance sources, including data/story_courts_476.js. js/story_campaign.js, js/story_history.js, js/story_agreements.js, js/royal_settlements.js, js/story_polity_foundation.js, js/story_settlements.js, js/story_courts.js and js/story_track.js load after js/stories.js and before js/main.js. story_track.js depends on story_courts.js. Reusable type files register factories only. At title boot, js/main.js seals factory registration (FB.stories.sealTypes). Unmodded bookmark setup first reviews only its selected date and graphs without sealing instances or capturing the mod baseline. At campaign start or another request for complete content, FB.game.prepareContent restores the pristine authoring baseline, compiles and publishes the bundled FBDATA.storyInstances (FB.stories.load), applies stored mods (FB.mods.applyStored; each mod, including runtime JSON storyInstances, is validated against a detached candidate registry before anything is published), then seals the effective instances (FB.stories.seal) before any world is generated. The compiler places declaration-owned instance batches at their registrationBefore and registrationAfter data anchors, preserving attachment and RNG dispatch order. New type files must declare their source and never select historical content through literal ids. Structural spellings that collide with content ids require explicit protocolFiles reviews and exact per-file counts in the content-id allowlist. Keep protocol literals in their owning files; do not hide them behind shared token tables.
 
 Expanded 476 load order

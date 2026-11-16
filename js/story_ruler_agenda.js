@@ -74,6 +74,10 @@
   }
   function factory(def, context) {
     var C = FB.governments.support;
+    function beginning(s) {
+      return !!s.start && (s.start.rulerRealmId === def.subjectRealmId ||
+        s.start.mobilePrincipal && s.start.mobilePrincipal.realmId === def.subjectRealmId);
+    }
     function realm(s) { return FB.startRealmId(s, def.subjectRealmId); }
     function subject(s) {
       var rid = realm(s), r = s.realms[rid], row = C.row(s, rid), delegated = C.isDelegated(s, rid);
@@ -86,7 +90,7 @@
     function current(s, t) {
       var f = subject(s), c = s.chars[t.subjectId];
       return t.status === 'agenda_open' && !!c && !c.dead && !s.player.dead && s.player.charId === t.subjectId &&
-        s.start && s.start.rulerRealmId === def.subjectRealmId && f.id === t.subjectId && f.generation === t.generation &&
+        beginning(s) && f.id === t.subjectId && f.generation === t.generation &&
         f.mandateId === t.mandateId && f.jurisdiction;
     }
     function stage(t) { return def.stages[t.step] || null; }
@@ -182,14 +186,14 @@
       need(t.status === 'agenda_open' ? t.step < def.stages.length && !finish && t.outcomeTurn === null :
         Number.isInteger(t.outcomeTurn) && t.outcomeTurn >= lastTurn && (t.status !== 'agenda_complete' || finish || t.step === def.stages.length));
       need(t.status === 'agenda_complete' || t.step < def.stages.length && !finish);
-      if (s) need(s.start && s.start.rulerRealmId === def.subjectRealmId && t.openedTurn <= s.turn && lastTurn <= s.turn &&
+      if (s) need(beginning(s) && t.openedTurn <= s.turn && lastTurn <= s.turn &&
         (t.outcomeTurn === null || t.outcomeTurn <= s.turn));
     }
     return { id:def.id, kind:'track', requires:def.requires,
       appliesToBookmark:function (bm) { return (bm.realms || []).some(function (r) { return r.id === def.subjectRealmId; }); },
       init:function (s) {
         var f = subject(s);
-        if (!s.start || s.start.rulerRealmId !== def.subjectRealmId || !f.id || f.id !== s.player.charId || !f.jurisdiction) return;
+        if (!beginning(s) || !f.id || f.id !== s.player.charId || !f.jurisdiction) return;
         return { schema:1, subjectId:f.id, generation:f.generation, mandateId:f.mandateId, step:0,
           status:'agenda_open', openedTurn:s.turn, outcomeTurn:null, decisions:[] };
       },

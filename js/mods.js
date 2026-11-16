@@ -1293,7 +1293,7 @@ window.FBMODS = window.FBMODS || [];
             !delegated && FB.station.realmRank({ tier:scenario.tier, formId:scenario.governmentForm, era:eraId }, {}) !== realm.rank)
           fail(path + '.rulerRealmId', 'must match the authored ruler and government in every offered bookmark.');
       }
-    } else if (!own(scenario, 'existingPerson') && !own(scenario, 'originalPrincipal') && (own(scenario, 'characterName') || own(scenario, 'governmentForm') || own(scenario, 'onboarding')))
+    } else if (!own(scenario, 'existingPerson') && !own(scenario, 'originalPrincipal') && !own(scenario, 'mobilePrincipal') && (own(scenario, 'characterName') || own(scenario, 'governmentForm') || own(scenario, 'onboarding')))
       fail(path + '.rulerRealmId', 'is required for an existing-ruler identity.');
     if (own(scenario, 'existingPerson')) {
       if (!Array.isArray(scenario.bookmarkIds) || !scenario.bookmarkIds.length) fail(path + '.existingPerson', 'needs an explicit bookmark.');
@@ -1311,6 +1311,16 @@ window.FBMODS = window.FBMODS || [];
         offeringBookmarks(id, scenario).forEach(function (bookmark) {
           if (!FB.originalPrincipalStartProfile(scenario, bookmark, stories))
             fail(path + '.originalPrincipal', 'must select the matching original guarded adult, home and storyline in every offered revision.');
+        });
+      });
+    }
+    if (own(scenario, 'mobilePrincipal')) {
+      if (!Array.isArray(scenario.bookmarkIds) || !scenario.bookmarkIds.length)
+        fail(path + '.mobilePrincipal', 'needs an explicit bookmark.');
+      (Array.isArray(scenario.bookmarkIds) ? scenario.bookmarkIds : []).forEach(function (id) {
+        offeringBookmarks(id, scenario).forEach(function (bookmark) {
+          if (!FB.mobilePrincipalStartProfile(scenario, bookmark, stories))
+            fail(path + '.mobilePrincipal', 'must select a matching coalition member, identity, home and storyline in every offered revision.');
         });
       });
     }
@@ -1347,7 +1357,7 @@ window.FBMODS = window.FBMODS || [];
           fail(path + '.fixedProvinceId', 'is not a settled county of bookmark ' +
             bookmark.id + '.');
         }
-        const paired = !!scenario.rulerRealmId || !!scenario.existingPerson || !!scenario.originalPrincipal || FB.provinceCommunities(county).some(function (community) {
+        const paired = !!scenario.rulerRealmId || !!scenario.existingPerson || !!scenario.originalPrincipal || !!scenario.mobilePrincipal || FB.provinceCommunities(county).some(function (community) {
           return community.culture === scenario.startCulture &&
             community.religion === scenario.startReligion;
         });
@@ -1478,7 +1488,7 @@ window.FBMODS = window.FBMODS || [];
         startEffects:true, bookmarkIds:true, eras:true, alwaysUnlocked:true,
         fixedProvinceId:true, startAge:true, startCulture:true,
         startReligion:true, revisionIdentities:true, familyPresets:true, tracks:true, trackLocations:true, hidden:true,
-        rulerRealmId:true, existingPerson:true, originalPrincipal:true, governmentForm:true, characterName:true, onboarding:true, requirements:true,
+        rulerRealmId:true, existingPerson:true, originalPrincipal:true, mobilePrincipal:true, governmentForm:true, characterName:true, onboarding:true, requirements:true,
         system:true, systems:true, birthplaces:true
       }, path);
       if (!/^[a-z][a-z0-9_]*$/.test(scenario.id || '')) {

@@ -247,6 +247,13 @@
     initialize(s);
     return actor(s, scenario.originalPrincipal.actorId);
   };
+  FB.prepareStartingMobileActors = function (s, scenario) {
+    if (!s || s.turn !== 0 || !s.player || s.player.charId !== null || s.stories !== undefined ||
+        !FB.mobilePrincipalStartProfile(scenario, FB.campaignBookmark(s))) return false;
+    if (!s.bookmarkSetup) FB.seedSettlementCommunities(s);
+    initialize(s);
+    return true;
+  };
   /* Explicit infrastructure adopts a home crown before resource setup.
      Seed its actor references now, leaving authored followings until the
      normal funded story boundary. */

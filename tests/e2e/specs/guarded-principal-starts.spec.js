@@ -8,6 +8,20 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {harbor:require('../fixtures/authoring/guarded-principal-harbor.json'),
   dune:require('../fixtures/authoring/guarded-principal-dune.json')};
 
+test('guarded selection stays separate from a mobile member beginning and rejects unsolicited provenance', async function ({page}, info) {
+  await imported(page,info,'harbor'); await begin(page,'harbor');
+  const result = await page.evaluate(function () {
+    const s=FB.state, original=JSON.stringify(s.start.originalPrincipal), saved=JSON.parse(FB.save.serialize());
+    const absent=s.start.mobilePrincipal===undefined;
+    saved.state.start.mobilePrincipal={version:1,realmId:s.start.originalPrincipal.realmId,memberId:'harbor_homes',charId:s.player.charId};
+    const rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
+    try {FB.save.restore(saved);} catch (e) {rejected=true;}
+    return {absent:absent,rejected:rejected,pure:FB.state===s && original===JSON.stringify(s.start.originalPrincipal) &&
+      rng===FB.getRngState() && uid===FB.getUidCounter()};
+  });
+  expect(result).toEqual({absent:true,rejected:true,pure:true});
+});
+
 dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html','data/mobile_confederations.js','data/technology.js',
   'data/eras.js','data/economy.js','data/units.js','js/starts.js','js/main.js','js/world.js',
   'js/mods.js','js/bookmark_setup.js','js/stories.js','js/story_household.js','js/story_ruler_agenda.js',
