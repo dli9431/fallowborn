@@ -211,6 +211,28 @@ ordered manifest entry. The static extractor's `events_*.js` registration covers
 all of them without executing a source or regenerating catalogs. Empty packs add
 no event, random-pool entry or distribution-specific behavior.
 
+## Dated household packs
+
+The 711 and 800 dated packs each contain twelve once-only local household events.
+Their explicit early-medieval windows are 711-731 and 800-820, respectively;
+each source loads only with its own bookmark. County selectors and the
+`county_holder_government` reader observe the current holder in Toledo, Tangier,
+Malaga, Aachen and Baghdad. Toledo and Malaga scenes require elective monarchy;
+Tangier and Aachen require territorial government, and Baghdad requires
+administrative monarchy. A changed holder's form or an unavailable holder makes
+the scene ineligible. No household track is required.
+
+Five events in each pack offer alternative opportunities to prepare a household
+account for one private coin. The option is unavailable once that period's
+preparation flag is set. Preparation adds fifteen percentage points before the
+normal cap to the pack's two skill-weighted named chances; it creates no wages,
+contract, office or tax exemption. Every event retains an unconditional leave
+option. Other scenes offer small household consequences or bound-friend
+conversations. No scene decides a campaign or changes a community. These are
+configurations of existing event conditions, effects and chances, with no new
+technology eligibility. Semantic fixtures cover every scene's government form,
+unavailable holder, county and inclusive year boundaries.
+
 ## Post-decision outcomes
 
 The shared resolver marks significant manual receipts for acknowledgement after
