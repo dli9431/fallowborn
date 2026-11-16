@@ -2766,6 +2766,10 @@ window.FBMODS = window.FBMODS || [];
     validateEventParticipants(mod);
     validateEducationEvents(mod);
     validateContentPeriods(mod);
+    for (const ev of FBDATA.events) {
+      const faults = FB.validateEventStateConditions(ev,{data:FBDATA});
+      if (faults.length) fail('events',faults.join(' '));
+    }
     validateQuickStarts(mod);
     if (own(mod, 'tournaments')) onlyFields(mod.tournaments, { scales:true,programmes:true,tracks:true,tactics:true }, 'tournaments');
     if (own(mod, 'marketGoods') || own(mod, 'marketEndowmentTypes') || own(mod, 'marketEndowments')) {

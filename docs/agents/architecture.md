@@ -3,6 +3,10 @@ Architecture
 `js/schema.js` loads immediately after `js/util.js` as an ordered deferred
 classic script. It installs only the pure `FB.schema` definition helper; owning
 validators invoke it after their required engine and candidate tables exist.
+The same early foundation installs `FB.eventStateReaders` so owning modules can
+register pure typed event predicates in classic-script order, including owners
+loaded before events.js. Its registry seals on first condition validation, after
+the complete engine, and adds no script-loading or saved-state dependency.
 
 index.html loads classic (non-module) scripts in a fixed order; everything hangs off two globals. Load order matters  -  do not reorder the <script> tags casually:
 

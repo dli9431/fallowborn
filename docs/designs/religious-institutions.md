@@ -1,5 +1,11 @@
 Read-only institution queries
 
+`institution_membership` and `institution_role` are registered event readers
+under `religious_institutions`. The former observes active membership in an
+available profile institution; the latter also requires the original role and
+current qualifications. They never admit, appoint or repair a member. Shared
+validation, selection lifetime and the none technology decision are in events.md.
+
 Native explicit-state office-input validation resolves the campaign world once for both local institution definitions and office dependency comparison. Independent entries still validate independently. Null-state and missing-start fallbacks retain their original FB.state and activeBookmark distinction. Replaced local definition or campaign bookmark readers retain their original call order and separate calls. Explicit empty local tables, retained revision errors, authoring edits and detached catalogues retain their existing meaning. The helper shares definitions only, never a holder or eligibility answer.
 
 The Religious Membership deed uses hasPlayerReligiousInstitution to stop at the first visible institution. It checks the protagonist first, then the remaining managed household; household-only opportunities remain visible and independent authorities remain excluded. The modal still receives the complete sorted playerReligiousInstitutions list. Both reads share the same membership, faith, residence and patron rules and retain no visibility cache. religiousInstitutionAvailable exposes the canonical availability predicate without building a detached snapshot.

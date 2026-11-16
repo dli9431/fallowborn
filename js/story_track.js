@@ -1,6 +1,15 @@
 /* Reusable political story mechanics. Historical selectors and presentation belong to declarations. */
 (function () {
   'use strict';
+  FB.eventStateReaders.register({id:'active_story_stage',system:'story_tracks',
+    args:{type:'object',fields:{storyId:{type:'string',minLength:1,maxLength:80},
+      stage:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/}},test:function (a,c) {
+      var table = (c.data || FBDATA).storyInstances || {}, d = table[a.storyId];
+      return !!(d && d.stages && d.stages[a.stage] && !d.stages[a.stage].terminal);
+    }},read:function (s,a) {
+      var row = FB.stories.record(s,a.storyId);
+      return !!(row && row.phase === a.stage && !row.result);
+    }});
   function service_negotiation(def, context) {
     function cast(s, role) { return FB.stories.resolve(s, def.cast[role]); }
     function operation(id) { return choiceOperation(def, id); }

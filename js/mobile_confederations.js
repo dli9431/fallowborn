@@ -299,6 +299,31 @@
       treasury:FB.treasuryAvailable(s, rid), marketFood:market ? market.stock : 0,
       access:access ? copy(access) : null };
   };
+  function eventMember(s,rid) {
+    var r = M.row(s,rid);
+    return r && r.status === 'active' && M.active(s,rid) &&
+      s.realms[rid] && s.realms[rid].alive && M.members(s,rid).some(function (m) {
+        return m.principal.id === s.player.charId && !!m.allegiance;
+      });
+  }
+  FB.eventStateReaders.register({id:'mobile_coalition_member',system:'mobile_confederations',
+    args:{type:'object',fields:{realmId:{type:'string',minLength:1,maxLength:80}}},
+    read:function (s,a) { return !!eventMember(s,a.realmId); }});
+  FB.eventStateReaders.register({id:'mobile_role',system:'mobile_confederations',
+    args:{type:'object',fields:{realmId:{type:'string',minLength:1,maxLength:80},role:{enum:['leader','member']}}},
+    read:function (s,a) {
+      return !!eventMember(s,a.realmId) && (a.role === 'leader'
+        ? !!M.leader(s,a.realmId) && M.leader(s,a.realmId).id === s.player.charId
+        : M.row(s,a.realmId).leaderId !== s.player.charId);
+    }});
+  FB.eventStateReaders.register({id:'mobile_scarcity',system:'mobile_confederations',
+    args:{type:'object',fields:{realmId:{type:'string',minLength:1,maxLength:80}}},
+    read:function (s,a) {
+      var r = M.row(s,a.realmId), p = M.profile(s,a.realmId);
+      return !!(r && p && r.status === 'active' && M.active(s,a.realmId) &&
+        s.realms[a.realmId] && s.realms[a.realmId].alive &&
+        r.food < M.total(s,a.realmId) * p.foodPerPerson * 30);
+    }});
   M.passage = function (s, rid, pid, court) {
     return s.owner[pid] === rid || !!activeAccess(s, rid, pid) ||
       !!(s.owner[pid] && FB.armiesHostile(s, { realm:rid }, { realm:s.owner[pid] })) ||

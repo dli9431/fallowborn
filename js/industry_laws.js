@@ -2,6 +2,13 @@
 (function () {
   'use strict';
   const L = FB.industryLaws = {};
+  FB.eventStateReaders.register({id:'owned_enterprise_law',system:'industry_laws',
+    args:{type:'object',fields:{definitionId:{type:'string',ref:{table:'industryLaws'}}}},
+    read:function (s,a) {
+      return (s.player.enterprises || []).some(function (e) {
+        return L.operation(s,e).laws.some(function (law) { return law.definitionId === a.definitionId; });
+      });
+    }});
   const own = function (o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); };
   const plain = function (o) { return !!o && typeof o === 'object' && !Array.isArray(o); };
   const copy = function (o) { return JSON.parse(JSON.stringify(o)); };

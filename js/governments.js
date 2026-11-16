@@ -356,4 +356,16 @@ window.FB = window.FB || {};
   G.countyRealm = function (state, context) {
     return state.holder && state.holder[context.provinceId] || state.owner && state.owner[context.provinceId];
   };
+  FB.eventStateReaders.register({id:'sovereign_government',system:'governments',
+    args:{type:'object',fields:{formId:{type:'string',ref:{table:'governmentForms'}}}},
+    read:function (s,a) {
+      var rid = FB.playerRealmId(s), form = rid && G.forRealm(s,rid);
+      return !!form && form.id === a.formId;
+    }});
+  FB.eventStateReaders.register({id:'county_holder_government',system:'governments',
+    args:{type:'object',fields:{formId:{type:'string',ref:{table:'governmentForms'}}}},
+    read:function (s,a,ctx) {
+      var rid = FB.settlementCountyHolder(s,ctx.locationId || s.player.provinceId), form = rid && G.forRealm(s,rid);
+      return !!form && form.id === a.formId;
+    }});
 })();

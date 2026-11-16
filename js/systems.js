@@ -206,6 +206,10 @@ window.FB = window.FB || {};
         continue;
       }
       var tenure = def.tenure;
+      if (def.eventReaderOwner !== undefined && (!FB.schema.valid(def.eventReaderOwner,
+          {type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/}) || S.ids().some(function (other) {
+            return other !== id && defs[other] && defs[other].eventReaderOwner === def.eventReaderOwner;
+          }))) errors.push(FB.T('Invalid system definition {id}.', {id:id}));
       if (def.providesOrdination !== undefined && typeof def.providesOrdination !== 'boolean' ||
           tenure !== undefined && (!plain(tenure) ||
             tenure.estatePossessor !== undefined && typeof tenure.estatePossessor !== 'boolean')) {

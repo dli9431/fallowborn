@@ -307,6 +307,50 @@ local-formation-harbor.json and local-formation-upland.json are standalone ordin
 
 The standalone harbor-mod.json and dune-mod.json files in tests/e2e/fixtures/authoring are normal JSON imports. They require no script tag, custom factory or test-only registration. They remain development authoring assets outside runtime and shipping allowlists. The ordinary editions support custom imports. CrazyGames keeps its existing restriction against custom mods and its silent English-only distribution behavior.
 
+## State-aware event authoring
+
+Use the single `state` condition key in an event `trigger`, an option `require`,
+or a lifecycle subscription `require`. It is an AND list of one to sixteen
+`{reader, args, not?}` calls. For example:
+
+```json
+{"state":[{"reader":"county_holder_government","args":{"formId":"territorial"}}]}
+```
+
+Choose a reader and its exact typed arguments from the **State condition readers**
+table in docs/MODDING.md. `not:true` negates an available reader's answer;
+an unavailable system always fails. Unknown readers, extra fields, wrong types
+and unknown static catalogue references reject the complete candidate import.
+Realm and institution instance ids are bounded strings resolved in the live world;
+missing instances return false. No JavaScript or saved reader results belong in JSON.
+
+Use explicit pack era membership and year windows. A condition observes existing
+facts; it grants no office, control, membership, permission, case or story stage.
+Use existing effects and canonical reviews for decisions. Bind exact participants
+when prose or consequences concern a person. Put presentation in ordinary literal
+event fields and use placeholders; imported prose keeps English fallback.
+
+Conditions run before chance and the weighted draw. Repeated identical reader
+calls share one pure answer for that selection pass only. Queued and open decisions
+recheck event state conditions; options recheck their own requirements at resolution.
+Lifecycle decisions also recheck the original hook's state requirement. Restore
+uses current projections without replay, grants or cached eligibility.
+
+Add semantic rows under tests/e2e/fixtures/event-packs/ and append a `{file,runtime}`
+registration in event-pack-validation.spec.js, naming the fixture and its focused
+shipped source inputs. Each file has `rows` with
+`eventId`, `bookmark`, `code`, `readers`, and `cases`; each case declares `expected`
+and optional `patches` (`path` segments and a literal `value`) on a detached state.
+Rows may also assert option requirements through `optionIndex`. Include both
+eligible and ineligible cases. Use `hook` to exercise a lifecycle requirement,
+or `contextCheck:true` with `context` for a system moment's normal context guard.
+A complete new pack fixture also declares `packId` and optional `eventCount`
+(`min`, `max`, default 20–24). It covers every event, explicit era/year bounds,
+state conditions or system moments, and at least one third non-scalar decisions.
+Example-only rows for an existing shared pack may omit `packId`.
+The shared spec discovers unregistered fixture files,
+validates every registered pack and checks all rows without pack-specific code.
+
 Lifecycle and tournament authoring
 
 eventSubscriptions and tournamentRules are public behaviour catalogues. The former binds existing or same-import events to typed simulation moments. The latter supplies tournament resolution, participation, capability, prize routing, team support and AI/default selection alongside the existing tournament content tables. The harbor-contracts.json and dune-contracts.json subsystem fixtures add different subscriptions, contest rules, tactics, programmes and scales. Definitions are validated against their effective counterpart tables before application. Detailed fields and limits are in docs/MODDING.md.
