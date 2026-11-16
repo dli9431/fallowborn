@@ -361,7 +361,10 @@
     }
     add(FB.T('Sell food'),'trade',{countyId:migration.at,count:count,direction:'sell'},FB.T('The county treasury pays for food delivered from the coalition’s actual stock.'));
     var terms = {kind:'access',partnerId:s.owner[destination],countyIds:[destination],capacity:count,allowRecruit:true,price:price,duration:days};
-    add(FB.T('Propose seasonal access to members'),'propose',{operation:'agreement',proposal:terms},FB.T('Members review capacity, payment, recruitment rights and duration. The outside owner must then accept the exact offer.'));
+    function addProposal(label,operation,terms,details) {
+      add(label,'propose',{operation:operation,proposal:terms},details);
+    }
+    addProposal(FB.T('Propose seasonal access to members'),'agreement',terms,FB.T('Members review capacity, payment, recruitment rights and duration. The outside owner must then accept the exact offer.'));
     add(FB.T('Offer approved seasonal access'),'offer',terms,FB.T('This creates a bounded offer. Access starts only after the outside court accepts and the treasury pays.'));
     var tribute={kind:'tribute',partnerId:s.owner[destination],levy:0,price:price,duration:days};
     var protection={kind:'protection',partnerId:s.owner[destination],levy:count,price:price,duration:days};
@@ -372,7 +375,7 @@
     var extraction=profile.extractionPolicy;
     if (extraction && !r.command && !columns && !camps) {
       function extractionAction(label,t,detail) {
-        add(FB.T('Propose {operation} to members',{operation:label}),'propose',{operation:'extraction',proposal:t},detail);
+        addProposal(FB.T('Propose {operation} to members',{operation:label}),'extraction',t,detail);
         add(label,'extract',t,detail);
       }
       if (extraction.demand) extraction.demand.kinds.forEach(function (kind) {
