@@ -2022,7 +2022,7 @@ Activation rejects a bookmark with duplicate ids; missing or cyclic lieges; miss
 capitals; invalid province realm/de-jure/culture/faith references; development outside
 1–10; broken straits; invalid crossing classifications; invalid scripted targets; an
 unknown `era` or a start year outside that era's window; a start year outside the
-technology catalogue's coverage (`FBDATA.techCoverage`, 476–1300) or outside the era's
+technology catalogue's coverage (`FBDATA.techCoverage`, 375–1300) or outside the era's
 technology window; a realm `techTraditions` entry or `techSeed` reference the catalogue
 does not know; or a realm `government` that is unknown or names an unregistered strategy.
 `era` names an entry of `FBDATA.eras` (`data/eras.js`): `late_antique` (375–649),
@@ -5122,6 +5122,16 @@ Culture selection restrictions govern ordinary research, independently of histor
 - `name`/`desc` accept text tokens and religion-variant objects.
 
 Supplemental source files may declare complete FBDATA.techCorrections_<suffix> maps and replace individual existing FBDATA.tech entries after data/technology.js. data/technology_foundations.js uses that convention for nine agricultural and machinery records; it loads before bookmark declarations. These source maps add no JSON root: imported technology replacements still use tech and the same ordinary detached validation and consumers. Supply explicit cost and the complete history.adoption map when correcting evidence dates, so an earlier attestation does not accidentally lower a base cost or regenerate regional adoption. Culture research-selection restrictions do not filter historical seeding. Saved completed ids and progress are not reseeded on restore.
+
+The shared catalogue coverage begins at 375. Era technology windows remain
+independent: broadening catalogue coverage does not broaden an era, create a
+bookmark or change a retained campaign. Earlier regional emergence for seven
+foundations preserves every widespread date and mixed-tradition pair ordering;
+fresh 476 and later knowledge and exposure remain unchanged. See
+docs/research/technology-before-476.md for the exact schedules. Ordinary imported
+tech records use these same fields, closure and exception rules; the independent
+technology-pre-476-civic.json and technology-pre-476-workshop.json authoring
+fixtures demonstrate distinct early schedules through real JSON imports.
 
 - Events grant national progress with the `research` effect and gate on effective
   completed ids with `techs`/`notTechs`. Buildings may carry a `research` per-season key

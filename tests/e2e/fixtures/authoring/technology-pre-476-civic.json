@@ -1,0 +1,15 @@
+{
+  "name": "Early civic record schedule",
+  "tech": {
+    "tax_assessment": {
+      "name": "Regular Tax Assessment", "icon": "T", "domain": "governance", "cost": 20,
+      "req": ["census_records"],
+      "history": {"attested": [-500, 600], "adoption": {
+        "default": [300, 500], "latin": [250, 425], "byzantine": [200, 475]
+      }},
+      "desc": "An independent civic schedule for recorded revenue obligations.",
+      "confidence": "modded", "sources": ["MOD"], "unlocks": ["practice:tax_assessment"],
+      "capabilities": [], "fx": {"tax": 0.01}
+    }
+  }
+}
