@@ -19,6 +19,106 @@ Acceptance of a mobile agreement is a reviewed transaction. A civic counterparty
 
 Mobile confederation
 
+Extraction policy
+
+An optional mobileProfiles.extractionPolicy schema 1 selects demand, raid and
+hire operations independently. The Mobile coalition deed exposes only declared
+kinds. Each uses the existing exact extraction proposal, weighted assent and
+coalition review/commit boundary. NPC principals answer pending extraction
+proposals through the same assent transaction; the protagonist supplies only
+their own assent. Membership, terms, leadership, stocks and public accounts are
+rechecked before commitment. Cancel and stale confirmation spend nothing.
+
+Demand creates an ordinary tribute or protection offer carrying a named county
+and an explicit raid threat. Unlike an ordinary outward tribute offer, this
+receipt charges the outside public treasury once upon acceptance. A living
+direct holder must control the county, and a real halted host must be at that
+county or one reachable adjacent land county away. Allies, truces, shared
+sovereignty, occupation and existing hostile wars prevent this operation.
+Outside consent remains independent. The outside government AI policy's optional
+demandResponse weighs available treasury, a reserve, maximum payment share,
+defending strength and the coalition's actual deployed fighters. The ordinary
+daily response runs even when the coalition leader is the protagonist. Refusal
+ends the offer with no payment or automatic war. Protection retains its exact
+fighter commitment and the existing ordinary service consumer.
+An outside constitutional refusal also ends the offer, even when the financial
+and force forecast favors acceptance; forecasts never replace civic assent.
+
+Raid is a single local sortie by a halted field host reunited with camp. The
+existing actions.js raid calculation supplies skirmish resistance, forts and
+fighter casualties using that actual host. It creates no occupation, claim,
+ownership change or settlement. Coin is bounded by the direct holder's available
+treasury, policy ceiling and stock share. Whole food units come from that named
+county's existing provision stock, bounded by the surviving host's ordinary
+carrying limit, and enter the colocated camp; no goods value,
+captives or abstract reward is minted. Ordinary host-loss, roster, rout and
+market-shock owners apply. A successful raid at a local household publishes the
+existing home_raid lifecycle moment. The optional lastRaid receipt and turn
+retain exact gains, losses and cooldown through matching saves without replay.
+
+Hire expands an allowed existing paid host-service template with an explicit
+outside court, the actual host and empty land scopes. It records the coalition's
+reviewed consent in the canonical service contract. The patron separately accepts
+or refuses through the same mobile review and authority contract transaction.
+Initial and seasonal payments, expiration, succession and host obligations stay
+with the existing contract owner; no migration origin or sponsor is rewritten.
+
+This policy currently serves elected, single-host coalitions. Commissioned,
+column and dispersed-camp followings retain their own permission owners and do
+not acquire extraction authority from a shared profile. Profiles without this
+policy retain prior behavior. The native Pontic policy permits all three kinds;
+the river policy permits paid service only. The ordinary JSON example
+mobile-extraction-glassroad.json varies limits, cooldown, response preferences
+and a same-import paid-service template in a fictional world. Its numbers and
+the native limits are simulation choices, not reconstructed historical levies.
+
+Technology impact is none separately for mobile_tribute_demand,
+mobile_bounded_raid and mobile_hired_service. Political consent and finite stocks
+have no credible discovery prerequisite. Ordinary unit, fort, route, crossing
+and contract gates remain authoritative.
+
+Playable member principals
+
+An ordinary scenario may declare mobilePrincipal:{realmId,memberId}. The pure
+mobilePrincipalStartProfile resolves one member in the effective coalition
+profile. An authored opening binding selects its exact existing direct actor,
+including a same-realm incumbent; an unbound member selects the person created
+by the unchanged member constructor. Selection does not create a duplicate,
+invent kin, change leadership, grant land or add a second principal registry.
+Command, guarded-party and later-preparation starts retain their separate owners.
+
+The fresh order is politics, direct opening actors and community partitions,
+explicit infrastructure if declared, population/market/public treasury setup,
+legacy and authored following initialization, exact member-person selection and
+court/provenance binding, private career/equipment setup, then world stories and
+the selected tracks. Other start paths keep their existing initialization order.
+The coalition retains its stable realm id, actual members, host, stores and public
+account. player.liege names that court; private scenario gold remains private.
+The existing Mobile coalition Deed supplies canonical leader and member reviews.
+Their normal consent, resource, unit and passage gates remain binding for both
+player and AI. Cancelling a review commits nothing.
+
+Leader death opens the existing weighted member selection. Household inheritance
+does not replace a member or install a leader. An eligible heir may separately
+receive an ordinary replacement appointment and member support; an unselected
+member retains only that voice, while an ordinary household heir returns to the
+local court. Even an elected heir cannot absorb an active mobile institution or
+its public treasury. Final territorial settlement retains ordinary absorption.
+Optional original selection provenance survives death, member replacement and
+restore without replaying the opening or reattaching a missing story.
+
+The 1204 eastern Qipchaq start selects the existing generated river principal.
+It retains schema 1, both existing members, 1,600 people, 80 fighters and the
+existing finite opening stocks. Its leader and private starting resources are
+simulation choices, not an identified historical person's biography. The new
+agenda and opening_profile observe personal reviews; they grant no county,
+tribute, passage or hereditary command. The independent ordinary JSON example
+mobile-principal-starts-glassroad.json selects a bound female incumbent or a
+different bound member with distinct private resources, retaining schema 2.
+
+Technology impact mobile_principal_start is none: selecting a political person
+requires no discovery. Existing equipment, resource and travel gates persist.
+
 The mobile layer of realmIdForRulerCharacter evaluates its native leader reader once per qualifying filter row. It still scans every government in the same order before consulting the inherited territorial resolver and retains landed-home and mobile fallback precedence. Replaced leader readers retain the original two-call behavior after a truthy first result. No leader or ruler answer survives a predicate evaluation; later reads recheck custody, guards, command authority and generations.
 
 The native scan retains the first matching realm directly instead of collecting a filtered array. It captures the ordered keys once and still evaluates every present key, including live callbacks and errors after the first match. Recursive queries use independent local variables. A replaced array filter keeps the original filter path and its returned order. This removes temporary result arrays and predicate closures, without reducing ruler queries, government visits or eligibility work.

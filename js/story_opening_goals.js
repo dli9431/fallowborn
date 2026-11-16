@@ -209,7 +209,7 @@
         d.goals.forEach(function (g) { goals[g.id] = { status:'pending', turn:null }; });
         Object.keys(rules).forEach(function (key) { earnings[key] = 0; });
         return { schema:1, actorId:s.player.charId, scenarioId:s.start.scenarioId, provinceId:s.player.provinceId,
-          bookmarkId:s.start.id, revision:FB.campaignBookmark(s).revision, openedTurn:s.turn,
+          bookmarkId:s.start.id, revision:s.start.revision, openedTurn:s.turn,
           ready:false, office:null, goals:goals, contacts:{}, earnings:earnings, lastEarnedTurn:null, pacts:pacts };
       },
       day:function (s, t) { update(s, d, t); }, season:function (s, t) { update(s, d, t); }, year:function (s, t) { update(s, d, t); },
@@ -271,7 +271,7 @@
         var pactIds = Object.keys(pactRules(d)); need(Object.keys(t.pacts).length === pactIds.length);
         pactIds.forEach(function (rid) { need(own(t.pacts, rid) && (t.pacts[rid] === null || integer(t.pacts[rid]))); });
         if (s) {
-          need(s.start && !!s.chars[t.actorId] && t.scenarioId === s.start.scenarioId && t.bookmarkId === s.start.id && t.revision === FB.campaignBookmark(s).revision && t.openedTurn <= s.turn);
+          need(s.start && !!s.chars[t.actorId] && t.scenarioId === s.start.scenarioId && t.bookmarkId === s.start.id && t.revision === s.start.revision && t.openedTurn <= s.turn);
           d.contacts.forEach(function (c) { need(t.contacts[c.id] === null || own(s.chars, t.contacts[c.id])); });
         }
       }

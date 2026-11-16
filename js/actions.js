@@ -11874,6 +11874,7 @@ window.FB = window.FB || {};
   };
 
   FB.calculateRaidSpoils = function (state, targetPid, strategy, charId, preview, previewOptions) {
+    const force = preview && previewOptions && previewOptions.force;
     const previewTarget = preview && previewOptions && previewOptions.target;
     const previewShared = preview && previewOptions && previewOptions.shared;
     const pr = FB.world.byId[targetPid];
@@ -11917,16 +11918,18 @@ window.FB = window.FB || {};
     const mult = isSack ? 1.35 : 0.65;
 
     const p = state.player;
-    const raidOrigins = FB.raidOriginPids
+    const raidOrigins = force ? [force.at] : FB.raidOriginPids
       ? FB.raidOriginPids(state, charId) : [];
     const homePid = previewTarget && previewTarget.originPid ||
       (pr && closestRaidOrigin(raidOriginContext(state, charId), pr).pid) ||
       raidOrigins[0] || p.provinceId || (p.provs && p.provs[0]);
-    const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
+    const playerRealm = force ? force.realm : FB.playerRealmId ? FB.playerRealmId(state) : 'player';
 
     // 1. Initial Raider Strength
     let initialMen;
-    if (previewShared && previewShared.initialMen !== undefined) {
+    if (force) {
+      initialMen = force.men;
+    } else if (previewShared && previewShared.initialMen !== undefined) {
       initialMen = previewShared.initialMen;
     } else {
       initialMen = FB.raidMuster
@@ -12011,7 +12014,7 @@ window.FB = window.FB || {};
       const stepFortLevel = stepData.fortLevel;
       let stepRealmMen = 0;
       let stepRealmDev = 0;
-      if (stepOwner && stepOwner !== 'player') {
+      if (stepOwner && (stepOwner !== 'player' || force)) {
         if (previewShared) {
           previewShared.realmMen = previewShared.realmMen || {};
           previewShared.realmDev = previewShared.realmDev || {};
@@ -12225,6 +12228,45 @@ window.FB = window.FB || {};
     };
   };
 
+  /* A local mobile sortie uses the existing skirmish/fort model, with its
+     actual host instead of a territorial muster. Only existing coin and food
+     can be taken; no occupation, conquest or abstract reward is applied. */
+  FB.boundedPillageQuote = function (s,army,pid,limits,commander) {
+    const pr=FB.world.byId[pid], stock=FB.marketProvisionSnapshot(s,pid), holder=s.holder[pid];
+    if (!army || !commander || !pr || !stock || !holder || !limits || !s.treasuryAccounting ||
+        s.treasuryAccounting.mode!=='active' || !FB.treasuryCounterparty(s,holder) || !FB.treasuryCounterparty(s,army.realm)) return null;
+    const detached=JSON.parse(JSON.stringify(s));
+    const result=FB.calculateRaidSpoils(detached,pid,'skirmish',commander.id,true,{force:army,
+      shared:{charId:commander.id,martial:FB.skillSnapshot(s,commander,'mar'),prowess:commander.prowess || 10},
+      target:{dev:s.dev[pid] || 1,pop:FB.countyPopulation(s,pid),fortLevel:(FB.fortAt(s,pid) || {}).level || 0,
+        buildingCount:0,endowments:[],originPid:army.at,route:[pid]}});
+    const gold=result.success ? Math.min(limits.maxGold,Math.floor(FB.treasuryAvailable(s,holder)*limits.stockShare)) : 0;
+    // Whole units preserve market rounding exactly, even for fractional stocks.
+    const carriage=FB.mobile.hostSupplySnapshot(detached,army);
+    const food=result.success ? Math.min(limits.maxFood,Math.floor(stock.stock*limits.stockShare),
+      Math.floor(carriage.capacity*Math.max(0,army.men-result.casualties)/Math.max(1,army.men))) : 0;
+    return {schema:1,turn:s.turn,countyId:pid,holderId:holder,hostId:army.id,men:army.men,
+      defenders:result.garrisonMen,success:result.success,casualties:Math.min(army.men,result.casualties),gold:gold,food:food};
+  };
+  FB.commitBoundedPillage = function (s,army,pid,limits,commander,reviewed) {
+    const q=FB.boundedPillageQuote(s,army,pid,limits,commander);
+    if (!q || JSON.stringify(q)!==JSON.stringify(reviewed)) return false;
+    const row=FB.mobile.row(s,army.realm), camp=FB.mobile.migration(s,army.realm);
+    if (!row || army.at!==camp.at || row.food+q.food>1000000000000) return false;
+    if (q.gold && !FB.treasuryTransfer(s,q.holderId,army.realm,q.gold)) return false;
+    if (q.food) {FB.marketWithdrawProvisions(s,pid,q.food);row.food+=q.food;}
+    FB.applyHostLosses(army,q.casualties,s);
+    row.lastRaid=JSON.parse(JSON.stringify(q));
+    if (q.success) {
+      FB.addMarketShock(s,{pid:pid,source:'raid_devastation',severe:true,production:-0.20,demand:0.15,flow:-0.25,seasons:4});
+      if (s.player.provinceId===pid && !FB.station.isLanded(s.player,s)) FB.queueLifecycleEvents(s,'home_raid',{});
+    }
+    FB.news(s,FB.msg('news.mobile.raid',
+      '{realm} raids {province}: {money:gold} and {food} food taken, {casualties} fighters lost.',
+      {realm:FB.realmNameParam(s,army.realm),province:FB.world.byId[pid].name,gold:q.gold,food:q.food,casualties:q.casualties}));
+    if (army.men<(FBDATA.balance.armyMinMen || 40)) FB.disbandArmy(s,army);
+    return true;
+  };
   FB.executeRaid = function (state, targetPid, strategy, charId, captiveChoice) {
     if (FB.raidMuster && FB.raidMuster(state, charId) <= 0) return false;
     const spoils = FB.calculateRaidSpoils(state, targetPid, strategy, charId);

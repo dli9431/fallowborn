@@ -28,6 +28,17 @@ An effective bookmark's homeAuthorityPolicies map composes exact schema-1 presen
 
 Existing people as household protagonists
 
+Coalition principals use `startScenarios.mobilePrincipal:{realmId,memberId}` to
+select the existing member owner after canonical following initialization. Both
+direct/incumbent opening bindings and unchanged generated principals are
+supported. Pure candidate validation, picker/code eligibility and direct creation
+share the same effective-world identity gate. The private household and public
+coalition remain separate, and leadership continues through ordinary member
+selection. The 1204 regional consumer and the independent complete
+mobile-principal-starts-glassroad.json import vary identity source, sex, private
+resources and leader/member selection. The latter is imported through the normal
+Mods file picker. Exact fields and saved provenance are in docs/MODDING.md.
+
 Optional startScenarios.existingPerson selects one named living authored court member through an exact realm/local-member binding and an explicit co-resident close-family list. The pure resolver checks the effective world revision, exact identity/birth/home, private station and a complete storyline before fresh initialization. Built-in declarations and ordinary detached JSON imports use the same gate, materializer, constructor, picker/code summary and strict optional saved provenance. A second person, generated substitute family, source-realm adoption or data callback changing the player id is unsupported. Existing-person-harbor.json and existing-person-dune.json are complete independent ordinary imports with different protagonists, sex, named families, homes, private stations, careers and resources. Their source courts and public accounts remain independent. The source succession, personal mortality, player inheritance and residence owners remain canonical. See docs/MODDING.md for exact fields and bounds.
 
 Current expedition objectives
@@ -65,6 +76,17 @@ validation. Industry laws and production goods, recipes and sites use this
 helper; save-state validation remains with each system. Specs are trusted engine
 objects, never executable JSON mod fields. Validate against the detached effective
 candidate, including additions in the same import, before publication.
+
+Mobile profiles may declare extractionPolicy schema 1 to select tribute/protection
+demands, bounded local raids and hired host service. Native and imported profiles
+use the same pure typed checks, member assent, quotes and commits. Optional
+government AI demandResponse configures treasury reserve, payment share and
+defender-to-coalition strength thresholds, independently of the identity of the
+raider. The ordinary mobile-extraction-glassroad.json example supplies a fictional
+world, contrasting limits and a same-import service template. Coin and provision
+stock must exist; no declaration can mint spoils, bypass outside consent, start
+a war on refusal or grant land. Full fields are in MODDING.md and the lifecycle
+is in designs/mobile-confederation.md.
 
 `FB.schema.faults(value, spec, path, context)` returns an array of diagnostics
 containing the failing path; `valid(value, spec, context)` returns a boolean.

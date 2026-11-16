@@ -90,6 +90,7 @@ FBDATA.aiDecisionPolicies = {
     mobileTradeCount:100,mobileRecruitCount:60,mobileBuyDays:90,mobileSellDays:180,mobileShortageDays:30,
     provincialConcession:0.1,candidateDiplomacyWeight:1,candidateMartialWeight:0,
     civicReserveMultiplier:2,civicAidAmount:5,civicAidDays:90,civicPeaceSeasons:4},
+    demandResponse:{reserve:0,maxPaymentShare:0.25,tributeThreatRatio:1.25,protectionThreatRatio:0.5},
     order:[], weights:{}, bias:0, tieBreak:'input', adjustments:[] }
 };
 Object.assign(FBDATA.balance, {
