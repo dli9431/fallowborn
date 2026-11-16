@@ -1,3 +1,91 @@
+Seasonal grounds and elected independent openings
+
+Optional mobileProfiles.seasonalRound schema 1 declares named physical grounds,
+their climate zones and suited local season kinds, finite grazing capacity,
+off-season yield, required access terms and reciprocal neighbor distances.
+The Mobile coalition sheet marks a new review at each actual calendar season,
+including campaigns beginning partway through a season. A leader can stay,
+review a neighboring ground, seek its declared access, or cancel. A refused or
+blocked ground supplies no permission; an accessible alternative can be chosen.
+County adjacency continues to determine nearby courts, raids and campaign targets.
+The native Pontic grounds are illustrative game-scale choices, not an attested
+itinerary. The independent Glassroad and Reedbank JSON worlds vary climate,
+capacity, distances, food cost, membership, leadership thresholds and public stocks.
+
+The existing mobile pasture production owner remains authoritative. Every day,
+requested grazing is ceil(total following / 90) capacity units. Available units
+are bounded by the ground capacity, the actual access concession, the county's
+existing population-derived capacity less other reserved concessions, and the
+shared mobilePastures.used county ledger. Grazing adds used units to that same
+ledger and credits units * pasturePerPerson * seasonal factor to existing camp
+food. The factor is one only when both the actual climate zone and local season
+kind match; otherwise it is offSeasonYield. Continuing on an exhausted ground
+produces nothing, and replacing an agreement or revisiting cannot refill it.
+The existing ledger's ninety-day periods, measured from campaign initialization,
+remain unchanged; a calendar-season review does not reset that ledger. Legacy
+non-round and dispersed-camp producers compete through the same capacity owner.
+These are aggregate people and food accounts. There is no animal ledger, herd,
+remount count or claim to reconstructed animal productivity.
+
+A ground review uses the canonical mobile quote/commit boundary. Travel requires
+a reunited halted host, peace, no conflicting service, a declared neighboring
+ground and lawful access throughout the actual ordinary route. Effective travel
+time is the larger of ordinary route time and the declared neighbor distance in
+days. Extra days extend only the host's existing first-leg clock. Departure
+consumes ceil(total following * foodPerPerson * effective days * travelFoodRate)
+from camp stock as a travel surcharge, in addition to ordinary daily rations.
+Carried host food, private purses and local markets are not debited by this
+surcharge. The camp remains at canonical migration.at and follows actual host
+arrivals; no target coordinate substitutes for presence. Stay costs no travel
+food. Losing the host leaves local grazing and a stay review possible, but no
+fictional escort or remote move is created.
+
+AI leaders rank the same current ground projections by potential daily food,
+then travel cost and stable ground id. They use the same review and exact food
+charge. They request a higher-ranked missing concession through ordinary member
+assent and outside consent, then can choose an accessible alternative after
+refusal. A pending/refused offer is not repeatedly purchased before its term
+ends. Ordinary extraction, provisioning, member decisions and elections retain
+their existing owners. A command program may use seasonal_round only when the
+profile's automate flag opts in; it retains ordinary command authority and
+actual-arrival checkpoints. Elected coalitions do not acquire a command program.
+
+The optional saved round schema 1 records reviewedSeason and lastChoice (groundId
+and turn), or -1/null before a review. Its season is derived from the actual
+calendar and original campaign date; strict restore rejects missing opted-in
+facts, future or inconsistent choices, unknown grounds and unsolicited markers.
+The shared pasture ledger, spent food, actual route clock and existing program
+tickets restore without grazing, movement, decisions or payments being replayed.
+No mobile outer schema or save-envelope version changes.
+
+An explicitly authored elected single-host coalition may use the existing
+sponsorship:{schema:1,kind:'independent'} and patronRealmId:null without a command.
+Its mobileLeadership constitution, bound opening leader/member identities,
+weighted election, public account and personal protagonist selection remain the
+ordinary owners. mobile.treasury is credited once in addition to the ordinary
+finite opening public-account reserve; it does not replace that existing reserve. The opening must be countyless, nonTerritorial and without a
+political superior. It cannot use dispersed camps, columns or deferred formation.
+Exact effective declarations and the complete live batch are preflighted before
+people, accounts, RNG or UID change. Legacy sponsored declarations still require
+a distinct living patron; a null, missing or dead patron never implies independence.
+
+Such an opening can declare finite hostedAccess from an actual lawful local
+holder, independently of sponsorship. Its ordinary agreement owns capacity and
+permission; openingAccess also retains the original declared host/superior chain,
+people and generations. A changed holder, occupation, original person's loss or
+changed generation invalidates access immediately. The daily owner ends it, and
+restored control cannot revive it. Expiry and lawful paid renewal use existing
+agreement transactions. Hosted access grants no ownership, political subordination,
+public income, replacement people, private money or recurring provisions. Later
+membership departure, elected succession and owned-land partial/final settlement
+use the existing conserving transactions. Original personal selection survives
+those changes and matching restore, without selecting another protagonist.
+
+Technology impact mobile_seasonal_round is none: climate, consent and actual
+stocks have no credible discovery prerequisite. The existing independent
+sponsorship and hosted-opening decisions remain none for elected coalitions as
+well. Every ordinary unit, route, transport and resource gate remains binding.
+
 Member cohesion and receipt distribution
 
 Optional mobileProfiles.cohesionPolicy schema 1 keeps one support value on each
