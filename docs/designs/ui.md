@@ -762,6 +762,14 @@ contract automatically; regression coverage compares field styles across screens
 
 ## Required navigation and decision presentation
 
+Coalition member beginnings use the ordinary date and scenario picker and fixed
+identity summary. The summary discloses that private money and the public treasury
+remain separate and that member selection, rather than household inheritance,
+controls leadership. An unbound principal is labeled as the existing member until
+the seeded person is selected at creation. The existing Mobile coalition Deed
+shows the real leader, member voices, camp/host, public stock and canonical reviews.
+Its existing cancellation, Back, Escape and retained view behavior applies.
+
 Operating-law reviews use the local council motion list and the enterprise
 manager's retained modal history. Proposal sheets disclose the affected county
 and business, fee and term, beneficiaries, existing-business transition, seeded

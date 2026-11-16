@@ -178,6 +178,8 @@ if (FB.bookmarkSources && FB.bookmarkSources.manifest) FB.bookmarkSources.manife
       ['data/story_household_effects_711_800_1204.js',['711','800','1204']]
     ]},
     {after:'data/start_ambitions.js', files:[
+      ['data/starts_mobile_principal.js',['1204']],
+      ['data/story_mobile_principal.js',['1204']],
       ['data/story_opening_goals_634.js',['634']],
       ['data/start_ambitions_634.js',['634']]
     ]},

@@ -523,6 +523,28 @@ data/starts_mainz_1096.js and data/story_households_rhineland_1096.js add a fict
 
 Original attachment requirements
 
+Coalition member beginnings
+
+`mobilePrincipal` scenarios attach their ordinary tracks only after the existing
+member person and following are initialized. Ruler agendas accept this original
+start provenance as well as ordinary ruler provenance, while retaining the exact
+living incumbent, generation and jurisdiction gate. A member start cannot gain
+leadership by attaching an agenda. Original records survive office loss and
+household succession; current reads archive or interrupt unfinished personal goals.
+
+`data/story_mobile_principal.js` supplies a costless 1204 Qipchaq leader agenda
+and an `opening_profile` with member, resource and outside-consent review goals.
+Priorities and retaining present arrangements both count; setting the agenda aside
+is costless. The Mobile coalition Deed owns actual political operations. These
+stories grant no agreement, county, force, private payment or successor. Literal
+`rulerAgendas_` and `openingProfiles_` tables use the existing extractor owners.
+`data/story_mobile_leadership.js` registers empty tables for further declarations.
+
+Opening profiles stamp an unrevisioned ordinary JSON bookmark as `baseline`,
+matching the world's effective revision convention. Initialization and strict
+restore use the same value; explicit named revisions remain exact. Loading does
+not repair missing profile records or rewrite a saved revision.
+
 The final fresh creation call seals the successfully initialized world and birthplace-specific track ids in state.start.storyAttachments. Repeated world-only initialization does not change this snapshot, and neither restore nor a successor reads today's catalogue to expand it. Every originally recorded id remains required, including terminal stories. Saves predating this optional provenance use only actual saved records and their existing dependency graph. The save contract, envelope pairing and legacy limits are described in state-and-saves.md. Technology impact retained_start_attachments is none because preserving original commitments has no research dependency.
 
 Alexander's optional recall, 1241

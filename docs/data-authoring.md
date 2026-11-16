@@ -28,6 +28,17 @@ An effective bookmark's homeAuthorityPolicies map composes exact schema-1 presen
 
 Existing people as household protagonists
 
+Coalition principals use `startScenarios.mobilePrincipal:{realmId,memberId}` to
+select the existing member owner after canonical following initialization. Both
+direct/incumbent opening bindings and unchanged generated principals are
+supported. Pure candidate validation, picker/code eligibility and direct creation
+share the same effective-world identity gate. The private household and public
+coalition remain separate, and leadership continues through ordinary member
+selection. The 1204 regional consumer and the independent complete
+mobile-principal-starts-glassroad.json import vary identity source, sex, private
+resources and leader/member selection. The latter is imported through the normal
+Mods file picker. Exact fields and saved provenance are in docs/MODDING.md.
+
 Optional startScenarios.existingPerson selects one named living authored court member through an exact realm/local-member binding and an explicit co-resident close-family list. The pure resolver checks the effective world revision, exact identity/birth/home, private station and a complete storyline before fresh initialization. Built-in declarations and ordinary detached JSON imports use the same gate, materializer, constructor, picker/code summary and strict optional saved provenance. A second person, generated substitute family, source-realm adoption or data callback changing the player id is unsupported. Existing-person-harbor.json and existing-person-dune.json are complete independent ordinary imports with different protagonists, sex, named families, homes, private stations, careers and resources. Their source courts and public accounts remain independent. The source succession, personal mortality, player inheritance and residence owners remain canonical. See docs/MODDING.md for exact fields and bounds.
 
 Current expedition objectives

@@ -801,6 +801,7 @@
       FB.orderArmy(s,army,s.realms[service.partnerId].capital);
     }
     r.revision++; G.invalidate();
+    if (q.action === 'leave') M.restorePlayerCourt(s);
     if (['select','settle','offer','accept','join','leave'].indexOf(q.action)>=0) FB.news(s,FB.msg('news.mobile.decision',
       '{realm} records a coalition decision at {province}. Its mobile following now numbers {count}.',
       {realm:FB.realmNameParam(s,rid),province:FB.world.byId[moving.at].name,count:M.total(s,rid)}));
@@ -1352,6 +1353,21 @@
   };
   M.localRealm = function (s) {
     return M.localRealms(s)[0] || null;
+  };
+  /* The public mobile institution is never the inheritable player realm.
+     Later territorial settlement still delegates to ordinary absorption. */
+  var absorbRealm = FB.absorbRealm;
+  FB.absorbRealm = function (s,rid,c) {
+    return M.active(s,rid) ? false : absorbRealm.apply(FB,arguments);
+  };
+  M.restorePlayerCourt = function (s) {
+    var b = s.start && s.start.mobilePrincipal, p = s.player;
+    if (!b || p.liege !== b.realmId) return;
+    var r = M.row(s,b.realmId);
+    if (r && r.status === 'settled') return;
+    if (!r || r.status !== 'active' || !M.active(s,b.realmId) || !r.members.some(function (m) {
+      return m.principal.id === p.charId;
+    })) FB.changePlayerLiege(s,(s.holder && s.holder[p.provinceId]) || s.owner[p.provinceId] || null,'mobile:household_continuity');
   };
   M.referencesCharacter = function (s,cid) {
     return Object.keys(s.authority && s.authority.governments || {}).some(function (rid) {

@@ -81,6 +81,13 @@ unaffected.
 
 ## Determinism across presets
 
+A `mobilePrincipal` beginning fixes its origin, sex, identity and standard family
+summary. A bound actor retains its exact authored name (up to 40 characters). An
+unbound member keeps the canonical generated name from the campaign seed; the
+code's name token does not rename the member. The saved code spells the actual
+name after following initialization. Reopening that code selects the same member,
+people, public stocks and private household without generating a duplicate.
+
 A non-`standard` family preset changes the protagonist's birth year (a pure
 parameter, no draw) and then draws its spouse and children on the shared stream in
 a fixed order *after* the parents and siblings every start shares. The `standard`

@@ -841,6 +841,49 @@ screen instead of silently falling back to another start.
 
 ## Starting scenarios and family presets
 
+Coalition member protagonists
+
+Optional `mobilePrincipal` has exactly `realmId` and `memberId`, lowercase ids
+beginning with a letter, at most 160 characters each. The effective bookmark must
+declare that mobile coalition and profile member under a `mobileLeadership`
+succession strategy. It is exclusive with `rulerRealmId`, `existingPerson`,
+`originalPrincipal`, `governmentForm` and `onboarding`. Commands, guarded parties
+and unformed preparations use their own start contracts.
+
+Declare explicit `bookmarkIds`, a free unlanded private `tier`, `fixedProvinceId`
+equal to the following's origin, exact `sex`, `startCulture`, `startReligion` and
+`startAge` (16–80 and at least the profile minimum), only the `standard` family
+preset, and a complete storyline in `tracks` at that county. An opening binding
+uses its exact direct actor, including the existing same-realm incumbent binding;
+`characterName` must match and fit the 40-character start-code bound. An unbound
+member keeps the constructor's generated male principal aged thirty, with the
+realm's culture and religion; omit `characterName`. No unknown relatives are
+generated for either selection. Ordinary declared private starting effects retain
+their meanings; selection itself grants no public resources, county or agreement.
+
+The picker fixes personal identity and discloses separate accounts and member
+succession. Ordinary start codes retain their format, exact authored identity and
+origin. For an unbound member, the campaign seed determines the actual generated
+name; the code's name token does not rename that person. The saved code records
+the actual name. The coalition keeps its institutional id and public account,
+while `player.liege` identifies the player's court. Selecting a member does not
+select a new leader. Current reviews still check the actual acting principal.
+
+Optional `state.start.mobilePrincipal` has exactly `version:1`, `realmId`,
+`memberId` and `charId`. The original person is also the household founder. A bound
+person must retain its original bookmark actor identity. Current leadership,
+membership, home, wealth, private career and protagonist may subsequently change.
+Matching restore validates this provenance without constructing people, selecting
+a successor, granting resources or replaying tracks. Unknown, missing, conflicting
+or unsolicited provenance rejects before live state or storage changes.
+
+`data/starts_mobile_principal.js` and `data/story_mobile_principal.js` declare the
+1204 regional start. `data/starts_mobile_leaders.js` and
+`data/story_mobile_leadership.js` are registered empty declaration tables. Start,
+`rulerAgendas_` and `openingProfiles_` table names use the existing static display
+extraction owners. The complete independent ordinary JSON example is
+`tests/e2e/fixtures/authoring/mobile-principal-starts-glassroad.json`.
+
 `FBDATA.startScenarios` and `FBDATA.familyPresets` live in `data/starts.js` and merge
 by stable `id`. A replacement is complete rather than a partial patch. New definitions
 are consumed only when creating a campaign; the resulting character, family, equipment,
