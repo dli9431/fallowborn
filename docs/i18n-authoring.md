@@ -1,3 +1,17 @@
+Mobile leadership story text
+
+The literal rulerAgendas_mobile_leadership, householdTracks_mobile_leadership,
+openingProfiles_mobile_leadership tables retain the existing rulerAgenda,
+householdStory and openingProfile display owners. The literal
+storyExpeditions_mobile_leadership campaign table uses the existing expeditionStory
+name/desc owner for opted-in mobile campaign presentation. Companion literal suffixed tables compose through the same static source
+discovery; no extractor registration changes. Scenario text stays in the ordinary
+startScenarios_mobile_leaders table. Native ground names reuse their existing
+county names and exact-English aliases. Imported declarations use English fallback.
+Generic review, blocker and outcome chrome uses literal FB.T with numeric money,
+food and days placeholders. Receipt ids, actor ids, stages, generations and turns
+remain untranslated; no rendered prose is saved and no catalogue is regenerated.
+
 Seasonal mobile ground names render through FB.dataText with the mobileGround
 owner, profileId.groundId identity and name field. Imported and bundled names
 retain English fallback; costs, seasons, access and blockers use literal FB.T

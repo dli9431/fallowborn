@@ -41,7 +41,12 @@
         fields.push('storyId');
         var story = context.get(c.storyId), source = story && story.declaration;
         need((d.requires || []).indexOf(c.storyId) >= 0 && !!source, 'source dependency');
-        if (c.kind === 'story_choice') {
+        if (c.kind === 'mobile_transaction') {
+          fields.push('stageId');
+          need(source.type==='ruler_agenda' && slug(c.stageId) && source.stages.some(function (stage) {
+            return stage.id===c.stageId && !!stage.completion;
+          }), 'canonical mobile stage');
+        } else if (c.kind === 'story_choice') {
           fields.push('choiceIds'); need(list(c.choiceIds, 32), 'source choices');
           var choices = [];
           if (Array.isArray(source.stages)) source.stages.forEach(function (stage) { choices = choices.concat(stage.choices || []); });
@@ -122,6 +127,9 @@
     if (c.kind === 'earnings') return (t.earnings[c.focusIds.join('|')] || 0) >= c.amount;
     if (c.kind === 'event') return !!event && event.kind === c.eventKind && event.realmId === FB.startRealmId(s, c.realmId);
     if (c.kind === 'story_choice') return !!event && event.storyId === c.storyId && c.choiceIds.indexOf(event.choiceId) >= 0;
+    if (c.kind === 'mobile_transaction') return !!r && r.subjectId===t.actorId && r.decisions.some(function (d) {
+      return d.stageId===c.stageId && !!d.evidence && d.turn>=t.openedTurn;
+    });
     if (c.kind === 'household_phase') return !!r && c.phases.indexOf(r.phase) >= 0 && !!r.decisions && Object.keys(r.decisions).length > 0;
     if (c.kind === 'job_complete') { var job = r && r.jobs && r.jobs[c.jobId]; return !!job && job.daysWorked > 0 && job.paid > 0 && ['disputed','settled'].indexOf(job.status) >= 0 && job.workerId === t.actorId; }
     if (c.kind === 'service_payment') return !!r && r.lastAllocatedPeriod > Math.floor(t.openedTurn / 90);
@@ -263,6 +271,12 @@
         d.goals.forEach(function (g) {
           var row = t.goals[g.id]; need(keys(row, ['status','turn']) && Object.keys(row).length === 2 &&
             ['pending','completed','dismissed','archived'].indexOf(row.status) >= 0 && (row.status === 'pending' ? row.turn === null : integer(row.turn) && row.turn >= t.openedTurn && (!s || row.turn <= s.turn)));
+          if (s && row.status==='completed' && g.criterion.kind==='mobile_transaction') {
+            var source=s.stories && s.stories[g.criterion.storyId];
+            need(!!source && source.subjectId===t.actorId && source.decisions.some(function (decision) {
+              return decision.stageId===g.criterion.stageId && !!decision.evidence && decision.turn>=t.openedTurn && decision.turn<=row.turn;
+            }));
+          }
         });
         d.contacts.forEach(function (c) { need(own(t.contacts, c.id) && (t.contacts[c.id] === null || typeof t.contacts[c.id] === 'string' && !!t.contacts[c.id])); });
         need(Object.keys(t.earnings).length === Object.keys(rules).length);

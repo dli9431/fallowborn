@@ -1,4 +1,35 @@
+Typed mobile story reviews
+
+The mobile leadership JSON example also declares a complete leader agenda,
+transaction goals and an ordinary campaign. A ruler_agenda stage may opt into
+completion:{kind:'demand'|'raid'|'distribution'|'arrival'|'settlement'}. Such a stage
+allows only agenda_mobile_prepare, agenda_mobile, agenda_mobile_result and
+agenda_defer choices. Include exactly one result choice and a costless defer.
+The result is observation of canonical completion, never acknowledgment.
+
+Mobile review choices add action and terms. demand/raid terms use the exact
+extraction schema, including kind; distribute uses mode and distinct memberIds
+and selects the oldest actual unresolved receipt; round/access uses groundId;
+settle uses countyId, positive count and final. Final reviews resolve count to all
+remaining people. Preparation supports demand, raid, access and settle and creates
+only their ordinary member proposal. Actual member assent and outside consent
+stay on their canonical source surfaces. Cancel, defer and stay never fabricate
+completion. A mobile_transaction goal criterion references required storyId and
+stageId of a typed transaction stage. campaign mobileReview:{schema:1} requires
+ordinary admission and an elected single-host coalition, and keeps its actual
+principal’s deliberate player review. No JSON callback or custom trigger is used.
+
 Seasonal mobile round authoring
+
+`tests/e2e/fixtures/authoring/mobile-leadership-glassroad.json` composes an ordinary
+`mobilePrincipal` leader or member start with a `household_track` paid service
+and an `opening_profile` using `household_phase`. Its work stage advances only
+after `mobile_work` commits; the paid terminal phase supplies the goal evidence.
+Viewing or cancelling the shared confirmation leaves both pending. The native
+Qipchaq member beginning uses the same transaction and criterion. Public funds,
+camp food, actual presence and the daily work marker retain their normal owners.
+The literal `householdTracks_` and `openingProfiles_` tables use the existing
+structured display owners and imported text retains English fallback.
 
 Use optional mobileProfiles.seasonalRound schema 1 for an aggregate grazing
 round. Grounds declare stable ids and names, physical counties, climate zones,
