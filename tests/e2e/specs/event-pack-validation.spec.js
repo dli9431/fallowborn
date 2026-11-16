@@ -13,6 +13,8 @@ const runtimeInputs=['js/events.js','js/schema.js','js/mods.js','js/systems.js',
 // Append fixture registrations here; the discovery assertion prevents silent omissions.
 const fixtureFiles = [
   {file:'state-readers-native.json',runtime:['data/events_common.js','data/industry_laws.js']}
+  ,{file:'711.json',runtime:['data/events_711.js','js/lordships.js']}
+  ,{file:'800.json',runtime:['data/events_800.js','js/lordships.js']}
 ];
 dependsOnRuntime(__filename,fixtureFiles.reduce(function (out,entry) {return out.concat(entry.runtime);},runtimeInputs));
 const directory = path.resolve(__dirname,'../fixtures/event-packs');
