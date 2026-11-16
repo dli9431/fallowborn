@@ -117,7 +117,7 @@
   function member(s, rid, id) { var r = M.row(s, rid); return r && r.members.filter(function (m) { return m.id === id; })[0]; }
   function actorRealm(s, actor) {
     if (!actor) return null;
-    if (actor.kind === 'realm') return s.realms[actor.id] && s.realms[actor.id].alive ? actor.id : null;
+    if (Q.isRealmReference(actor)) return s.realms[actor.id] && s.realms[actor.id].alive ? actor.id : null;
     var c = actor.kind === 'character' && s.chars[actor.id];
     if (!availablePerson(s,c)) return null;
     if (c.id===s.player.charId && FB.station.rulesRealm(s.player,s) && s.realms.player && s.realms.player.alive) return 'player';
@@ -224,7 +224,7 @@
         p.recruitCost>0 ? Math.floor(spendable/p.recruitCost) : Number.MAX_SAFE_INTEGER);
       if (count>0) replacement.unitIds.some(function (unitId) {
         var terms={count:count,unitId:unitId};
-        if (!M.quote(s,{realmId:rid,action:'recruit',terms:terms,actor:{kind:'realm',id:rid}}).allowed) return false;
+        if (!M.quote(s,{realmId:rid,action:'recruit',terms:terms,actor:Q.realmReference(rid)}).allowed) return false;
         terms.provisioning=true;result.replacement=terms;return true;
       });
     }
@@ -236,7 +236,7 @@
     var row=M.row(s,rid);
     if (row && row.columns && action==='recruit') return M.columnSupplyReview(s,rid,
       terms ? terms.columnId : row.columns.entries[0].id,action,actor);
-    return M.review(s,{realmId:rid,action:action,terms:terms || {provisioning:true},actor:actor || {kind:'realm',id:rid}});
+    return M.review(s,{realmId:rid,action:action,terms:terms || {provisioning:true},actor:actor || Q.realmReference(rid)});
   };
   function deployed(s, rid, mid) {
     return (s.armies || []).filter(function (a) { return a.realm === rid && a.mobileFollowing; })
@@ -1000,7 +1000,7 @@
       var joined = [];
       if (!FB.populationPoolApply(s, joined, q.transfer)) return false;
       r.accounting.arrivals += t.count;
-      r.members.push(cohesionMember(M.profile(s,rid),{ id:next(r, 'member_'), principal:copy(request.actor), scope:{kind:'realm', id:rid},
+      r.members.push(cohesionMember(M.profile(s,rid),{ id:next(r, 'member_'), principal:copy(request.actor), scope:Q.realmReference(rid),
         basis:'following', continuity:'member', weight:1, pledge:0, allegiance:true, civilians:joined, reserve:[] },s.turn));
       if (moving.courtIds.indexOf(request.actor.id) < 0) moving.courtIds.push(request.actor.id); r.decision = null;
     } else if (q.action === 'replace_member') {
@@ -1027,7 +1027,7 @@
       if (!moving.session || moving.session.assets[0].id !== t.countyId) {
         var session = FB.settlement.create({kind:'federate_migration', seats:moving.sponsorship ? [rid] : [moving.patronRealmId, rid],
           assets:[{id:t.countyId, kind:'county', land:true}], claims:[{asset:t.countyId, claimant:rid,
-            beneficiary:{kind:'realm', id:rid}, basis:{contribution:1,vow:1,occupation:1,right:1,support:1,office:1}}]});
+            beneficiary:Q.realmReference(rid), basis:{contribution:1,vow:1,occupation:1,right:1,support:1,office:1}}]});
         while (session.status === 'open') if (!FB.settlement.act(s, session, 'acquiesce')) return false;
         if (!session.awards.some(function (a) { return a.asset === t.countyId && a.claimant === rid; })) return false;
         moving.session = session;
@@ -1170,7 +1170,7 @@
       var c = bound ? s.chars[bound.characterId] : FB.makeCharacter(s, {sex:'m',culture:d.culture,religion:d.religion,born:s.date.year - 30,
         quality:1,station:1,traitsN:1});
       if (!bound) c.homeProvinceId = d.mobile.origin;
-      r.members.push({id:a.id,principal:{kind:'character',id:c.id},scope:{kind:'realm',id:d.id},basis:'following',
+      r.members.push({id:a.id,principal:{kind:'character',id:c.id},scope:Q.realmReference(d.id),basis:'following',
         continuity:'member',weight:a.weight,pledge:a.pledge,allegiance:true,
         civilians:pools ? copy(pools[a.id]) : [{culture:d.culture,religion:d.religion,count:a.population}],reserve:[]});
       cohesionMember(p,r.members[r.members.length-1],s.turn);
@@ -1259,9 +1259,8 @@
   FB.mobileInitializeAuthored = function (s,defs) {
     M.initialize(s,defs.filter(function (d) {return d.mobile && d.mobile.opening!==undefined;}));
   };
-  function realmActor(id) {return {kind:'realm',id:id};}
   function enact(s, rid, action, terms, actor) {
-    var review = M.review(s, {realmId:rid,action:action,terms:terms || {},actor:actor || realmActor(rid)});
+    var review = M.review(s, {realmId:rid,action:action,terms:terms || {},actor:actor || Q.realmReference(rid)});
     return review && review.review.allowed && M.commit(s, review);
   }
   function approvalAI(s, rid, operation, terms) {
@@ -1278,7 +1277,7 @@
     var a=M.agreement(s,rid,id), partner=a && (a.partnerId==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,a.partnerId));
     if (!a || !a.extraction || a.status!=='offered' || !availablePerson(s,partner) || partner.id===s.player.charId) return false;
     var response=FB.aiDecisions.mobileDemandResponse(s,a.partnerId,rid,a);
-    var actor=realmActor(a.partnerId), terms={agreementId:id};
+    var actor=Q.realmReference(a.partnerId), terms={agreementId:id};
     if (response.accept) {
       var accepted=M.review(s,{realmId:rid,action:'accept',terms:terms,actor:actor});
       if (accepted.review.allowed) return M.commit(s,accepted);
@@ -1310,7 +1309,7 @@
       if (!availablePerson(s,person) || person.id===s.player.charId) return;
       var terms=M.contractTerms(s,c.id);
       terms.accept=FB.aiDecisions.willing(s,c.patronRealmId,'government','serviceWillingness');
-      var actor=realmActor(c.patronRealmId), reviewed=M.review(s,{realmId:rid,action:'hire_answer',terms:terms,actor:actor});
+      var actor=Q.realmReference(c.patronRealmId), reviewed=M.review(s,{realmId:rid,action:'hire_answer',terms:terms,actor:actor});
       if (terms.accept && !reviewed.review.allowed) {
         terms.accept=false;reviewed=M.review(s,{realmId:rid,action:'hire_answer',terms:terms,actor:actor});
       }
@@ -1390,7 +1389,7 @@
       var partner = FB.realmRulerCharacterSnapshot(s, a.partnerId), form = G.forRealm(s, a.partnerId);
       if (partner && partner.id !== s.player.charId && form && form.use.ai.canNegotiate(s, a.partnerId, {}) &&
           FB.aiDecisions.willing(s,a.partnerId,'government','agreementWillingness'))
-        enact(s, rid, 'accept', {agreementId:a.id}, {kind:'realm',id:a.partnerId});
+        enact(s, rid, 'accept', {agreementId:a.id}, Q.realmReference(a.partnerId));
     });
     M.agreements(s,rid).filter(function (a) {return a.kind==='protection' && a.status==='active' && a.endTurn>s.turn;}).forEach(function (a) {
       var war = FB.realmWars(s,a.partnerId)[0];
@@ -1409,7 +1408,7 @@
       var ruler=offered && FB.realmRulerCharacterSnapshot(s,offered.partnerId), government=offered && G.forRealm(s,offered.partnerId);
       if(ruler && ruler.id!==s.player.charId && government && government.use.ai.canNegotiate(s,offered.partnerId,{}) &&
           FB.aiDecisions.willing(s,offered.partnerId,'government','agreementWillingness'))
-        enact(s,rid,'accept',{agreementId:offered.id},{kind:'realm',id:offered.partnerId});
+        enact(s,rid,'accept',{agreementId:offered.id},Q.realmReference(offered.partnerId));
     }
     if (!p.supplyPolicy && r.food < M.total(s,rid)*p.foodPerPerson*preference.mobileBuyDays)
       enact(s,rid,'trade',{countyId:at,count:preference.mobileTradeCount,direction:'buy'});
@@ -2030,7 +2029,7 @@
       r.members.forEach(function (m) {
         if (!keys(m,['id','principal','scope','basis','continuity','weight','pledge','allegiance','civilians','reserve','support','lastGainTurn']) ||
             typeof m.id !== 'string' || !m.id || m.id.length>160 || ids[m.id] || !keys(m.principal,['kind','id']) || m.principal.kind !== 'character' ||
-            !s.chars[m.principal.id] || principals[m.principal.id] || !keys(m.scope,['kind','id']) || m.scope.kind !== 'realm' || m.scope.id !== rid ||
+            !s.chars[m.principal.id] || principals[m.principal.id] || !keys(m.scope,['kind','id']) || !Q.isRealmReference(m.scope) || m.scope.id !== rid ||
             m.basis !== 'following' || m.continuity !== 'member' || !whole(m.weight) || !m.weight || m.weight > 100 ||
             !boundedNumber(m.pledge,p.recruitShare) || typeof m.allegiance !== 'boolean') fault(rid,'members');
         if (p.cohesionPolicy ? !boundedNumber(m.support,100) || !whole(m.lastGainTurn) || m.lastGainTurn>s.turn :
