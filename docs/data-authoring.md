@@ -71,6 +71,14 @@ Native contributors use bookmarkSources.stage with explicit source, affected boo
 
 Data authoring contract
 
+Court service uses optional typed `authorityOffices[id].mandate` rather than
+story-specific authority. Bundled `data/office_mandates.js` and the complete
+ordinary `office-mandates-lantern.json` import share the declarative validator,
+holder/court reviews and canonical transactions. The import varies finite terms,
+favor, powers, public commissions and payments. See MODDING.md and
+designs/office-mandates.md. Empty `householdTracks_imperial_service` declarations
+use the normal household-track compiler and automatic static extraction.
+
 New data tables use `FB.schema` in `js/schema.js` for declarative definition
 validation. Industry laws and production goods, recipes and sites use this
 helper; save-state validation remains with each system. Specs are trusted engine

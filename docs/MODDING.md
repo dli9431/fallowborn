@@ -247,6 +247,71 @@ FB.officeCourts(state), officeScopes(state, realmId, officeId), officeClaimants(
 
 No new authority record family or save version is introduced. New starts record rival imperial claims as contested imperial_office appointments. Existing appointments and recognitions preserve their ids, scopes, statuses and generation stamps. Optional state.officeCourtPeriod records the last seasonal court pass and survives normal v4 save/restore. Absent state and optional records remain absent in older campaigns. No event trigger/effect keys or new shipped script files are added.
 
+## Court office mandates
+
+An `authorityOffices` definition may include `mandate` with exactly:
+
+- `schema:1`, unique `powers` drawn from `command`, `negotiate`, `pay`, `propose`;
+  integer `tenureDays` (1–3600); `favor:{source:'court_standing',minimum}` with
+  finite threshold [-100,100]; `dismissal:'court'`; integer `responseDays`
+  (1–360); and `contractTemplates` (0–8 unique existing ids).
+- Optional `hostIds`: at most eight unique nonempty ids of at most 200 characters.
+  These supplement the exact appointment host. Live ownership or effective
+  federate service is always rechecked. Command requires ordinary Ban and host
+  scope; a mandated Ban office must declare command.
+- Optional `acclamation:{officeId,sourceId,minimumSources,requiredMandates,
+  dispute,afterDismissal}`. The claim office supports realm scope without
+  governing powers and accepts the named host-issued army legitimacy source.
+  Minimum sources is 1–8 distinct effective issuers. Required mandate kinds are
+  a unique nonempty subset of the existing legitimacy mandate kinds `command`,
+  `court`, `community`, `religious_head`. Both final
+  fields are booleans. Roman disputes and public succession retain their own
+  existing eligibility and political resolution gates.
+
+Payment requires negotiation and `pay`. Listed templates must have `land:'none'`
+and `recognition:'none'`. A mandated office has only basic `ban` when it declares
+command, otherwise no basic powers. It cannot carry `homePowers`; its optional
+`publicRole` is `commander`. Qualifications, public sources, salary and succession
+keep their ordinary meaning. Mandate tenure caps
+rather than extends a shorter commission. No executable mod strategy or new JSON
+root is introduced. The complete independent import is
+`tests/e2e/fixtures/authoring/office-mandates-lantern.json`.
+
+`FB.officeMandates.review(state, actor, appointmentId, operation, input)` returns
+a detached pure review; `commit(state, review)` recomputes every relevant fact.
+The holder performs delegated acts; the actual court accepts/refuses proposals
+and dismisses officers. Inputs are exact:
+
+| Operation | Input |
+| --- | --- |
+| `command` | `{hostId,destination}` |
+| `offer` | `{templateId,federateRealmId,hostId?}` |
+| `consent`, `refuse` | `{contractId}` |
+| `renew` | `{contractId,endTurn,payPerSeason}` |
+| `propose` | `{target:{officeId,holderId,scope,sourceProvinceId?}}`; public sources name a real productive directly administered county |
+| `accept_proposal`, `reject_proposal`, `dismiss`, `confirm`, `accept_loss` | `{}` |
+| `acclaim` | `{hostId}` |
+| `accede`, `dispute`, `withdraw`, `renounce` | `{}` |
+
+`snapshot(state, appointmentId)` exposes retained terms, favor, effective status,
+living forces, independent support and exact public account. `definitionFaults`
+accepts an optional detached candidate catalogue. Unknown fields and malformed
+reviews reject before mutation.
+
+Saved `appointment.mandate` has exactly `schema:1`, `definitionKey` (exact JSON
+declaration), `originalInstitutionId`, `originalGeneration`, `response`,
+`proposal`, `claim`. The last three start null. Response is
+`{choice:'accept',turn}`. Proposal is `{target,generation,turn,status}` with
+`pending`, `accepted` or `rejected`; only accepted proposals add the exact result
+`appointmentId`. Claim is `{appointmentId,recognitionId,generation,turn,status,
+warId,factionId,forces,currentCourtId}`. Claim status is `claimed`, `disputed`,
+`succeeded` or `failed`; war/faction start null. Forces is a bounded list of
+original `{hostId,realmId}` bindings. Public institution rekeying retains original
+mandate provenance. Optional contract `publicPayer:true` requires real public
+accounts for initial and subsequent payments. Restore does not appoint, confirm,
+consent, accede, create armies or pay. See
+[Court office mandates](designs/office-mandates.md) for lifecycle and AI coverage.
+
 # Modding Fallowborn
 
 Site institution API

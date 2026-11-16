@@ -1,5 +1,11 @@
 Administrative monarchy
 
+Optional office mandates retain all public commission source, capacity, finance
+and confirmation gates. Personal delegation, court proposal acceptance and
+officer candidature compose the existing owners; public interests still cast
+only their own support. See [Court office mandates](office-mandates.md) for the
+shared schema, lifecycle, account preservation and canonical review interface.
+
 Scope and consumers
 
 Additional dated consumers use umayyad_711, byzantine_711, byzantine_867, abbasid_867 and byzantine_1066 through fresh world revisions. The original 800 profiles below remain independent. See docs/research/government-rollout.md for evidence, policy differences and pending courts; these assignments use the existing contracts without changing old saved forms or public-service records.

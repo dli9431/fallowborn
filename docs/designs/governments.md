@@ -1,5 +1,11 @@
 Government dispatch
 
+Court office mandates authenticate the actual appointed person before invoking
+the Roman or public office, federate and recognition owners. They add no
+government strategy or sovereign ledger. Public officer accession retains its
+recognition procedure; Roman disputes resolve through ordinary armies. See
+[Court office mandates](office-mandates.md).
+
 The `sovereign_government` and `county_holder_government` event state readers
 use the current sovereign and direct-holder projections. They register under
 the `governments` observation tag and grant no government or jurisdiction.

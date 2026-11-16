@@ -333,6 +333,16 @@ Odoacer's civic-government review requires a current Ravenna council agreement f
 
 Technology impact: existing_ruler_starts and western_claim_restoration use none. Existing political institutions, living actors and actual military possession constrain these baseline openings and recovery paths. There is no discovery prerequisite for taking control of an authored court or maintaining a living claim.
 
+Court service stories
+
+Court-service household declarations may use the registered literal
+`householdTracks_imperial_service` table in `data/story_imperial_service.js`.
+It is initially empty and compiles through the normal story-instance catalogue
+after the existing western office anchor. The initial court-service household
+seeks its office through ordinary Offices & Legitimacy reviews. Service stories
+must use the shared mandate reviews described in office-mandates.md, preserving
+actual authority, public accounting, refusal and independent recognition.
+
 Spring 711 review campaigns
 
 data/story_campaigns_711.js declares four ordinary campaign instances for the selectable 711 bookmark: a southern Iberian crossing, Toledo, Narbonne and Aquitaine. They register through the existing data batch before story sealing but attach only when a bookmark lists them. Possession prerequisites resolve divergence when their window opens; busy courts can wait within that window. Dates grant no territory, hosts, ruler deaths or community conversions. Each campaign opportunity has a separate technology-impact decision of none. The same file declares the separate conditional Asturian foundation; see bookmark-711.md for registration and timing approximations.

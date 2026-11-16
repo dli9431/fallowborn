@@ -1,5 +1,15 @@
 # Wars
 
+Declared Roman office disputes register ordinary `office_acclamation` campaigns.
+Their landless banner uses only existing defecting hosts, without a levy,
+treasury or generated dynasty. Ordinary movement, combat, supply and capital
+occupation determine the result. The original candidate, generation,
+independent support and living forces remain required. Victory calls the ruler
+owner rather than awarding counties separately. Defeat, white peace and
+withdrawal return surviving hosts with their actual losses and restore no lawful
+mandate. History stays in the existing war registry. See
+[Court office mandates](office-mandates.md).
+
 Ordinary seasonal declarations use the shared war preference projection. The default policy declares ambitious/wrathful versus content/kind/patient consideration and aggression-appetite multipliers, while current ruler aims adjust the strength margin through a separate channel. Exact values, neutral defaults, legacy personality compatibility and import examples are in docs/designs/ai-decisions.md. A consideration roll is separate from legal target selection, aggression support/revolt review and real treasury-backed muster. Preferences grant no permission, troops or money, and do not alter historical openings or direct player declarations. This numeric preference change creates no new technology-gated capability.
 
 Realm adoption remaps the live attacker, defender, cause enemy and objective enemies together. An opening ruler adopted by the player must leave each retained war pointing at the same current opponent. Immutable mobile opening-campaign provenance retains its original declared realm id; it is checked through the campaign's realm mapping rather than rewritten or repaired on save.

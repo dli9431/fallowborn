@@ -4940,7 +4940,7 @@ window.FB = window.FB || {};
 
   FB.refreshRealmSuccession = function (state, rid) {
     const r = state.realms[rid];
-    if (!r || !r.alive) return null;
+    if (!r || !r.alive || r.rebelFaction) return null;
     const s = r.succession;
     if (rid === 'player' && s && s.settlementGenealogy && s.members) {
       if (FB.syncRoyalBranches) FB.syncRoyalBranches(state, rid);
@@ -5015,7 +5015,7 @@ window.FB = window.FB || {};
 
   FB.ensureRealmSuccession = function (state, rid) {
     const r = state.realms[rid];
-    if (!r || !r.alive) return null;
+    if (!r || !r.alive || r.rebelFaction) return null;
     if (FB.governments.successionForRealm(state, rid).delegatedLeadership ||
         FB.governments.successionForRealm(state, rid).mobileLeadership) return null;
     if (rid === 'player') {
@@ -9337,7 +9337,7 @@ window.FB = window.FB || {};
       // realm AI
       for (const id in state.realms) {
         const r = state.realms[id];
-        if (!r.alive) continue;
+        if (!r.alive || r.rebelFaction) continue;
         if (id === 'player') {
           const form = FB.governments.forRealm(state, id);
           if (form && form.use.succession.selectionManaged && r.succession && r.succession.members)
@@ -11751,6 +11751,13 @@ window.FB = window.FB || {};
     if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);
     const mine = state.realms.player;
     const publicProfile = FB.administrationProfile && FB.administrationProfile(state,rid);
+    const mandateAccession = FB.officeMandates && FB.officeMandates.preservesAccount(state,rid);
+    if (mandateAccession && !publicProfile) {
+      FB.authoritySetGovernment(state,'player',FB.political.governmentFormId(state,{kind:'realm',id:rid}));
+      mine.ruler.generation = FB.realmRulerGeneration(state,rid);
+      if (mine.succession) mine.succession.rulerGeneration = mine.ruler.generation;
+    }
+    if (mandateAccession) FB.authorityRekeyContracts(state,rid,'player');
     if (publicProfile) {
       FB.publicAdministrationRekey(state,rid,'player');
       mine.ruler.generation = FB.realmRulerGeneration(state,rid);
@@ -11778,7 +11785,8 @@ window.FB = window.FB || {};
     if (FB.remapWarRealm) FB.remapWarRealm(state, rid, 'player');
     if (FB.historicalAmbitionRealmInherited) FB.historicalAmbitionRealmInherited(state, rid, 'player');
     if (FB.treasuryRetireRealm) FB.treasuryRetireRealm(state, rid, 'player', {
-      publicAccession:!!(FB.treasuryPreserved(state,rid) || FB.electiveCrown && FB.electiveCrown(state, rid))
+      publicAccession:!!(FB.treasuryPreserved(state,rid) || FB.electiveCrown && FB.electiveCrown(state, rid) ||
+        FB.officeMandates && FB.officeMandates.preservesAccount(state,rid))
     });
     FB.markRealmDead(state, rid);
     /* The realm's temporal inheritance is separate from any religious office:
@@ -11825,7 +11833,8 @@ window.FB = window.FB || {};
     if (FB.notePlayerStatus) FB.notePlayerStatus(state);
     if (FB.councilEnsure && FB.station.mayHoldCouncil(p, state)) FB.councilEnsure(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
-    FB.news(state, FB.msg('news.world.realm_inherited',
+    FB.news(state, mandateAccession ? FB.msg('news.office.mandate_accession',
+      'The public rule of {realm} passes to you. Its accounts remain separate from household gold.',{realm:inheritedName}) : FB.msg('news.world.realm_inherited',
       '👑 {realm} joins your rule by rightful succession.',
       { realm:inheritedName }), { audience:3 });
     return true;

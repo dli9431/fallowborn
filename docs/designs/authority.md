@@ -1,5 +1,11 @@
 Roman offices and imperial claims
 
+Optional personal court mandates compose the existing appointment, recognition,
+contract and treasury owners. Declared powers, favor, tenure, dismissal,
+proposals and officer acclamation are documented in
+[Court office mandates](office-mandates.md). A title alone implies none of these
+delegated operations or public spending rights.
+
 State-aware events register `protagonist_office` and `legitimacy_band` under
 the `authority` observation tag, and `federate_contract` under `federates`.
 They read canonical personal office rows, distinct current personal

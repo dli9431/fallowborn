@@ -30,8 +30,12 @@
     return !!(p && p.retirement === null && p.realmId === rid);
   }
   FB.treasuryPreserved = preservedOwner;
+  FB.treasuryRekeyPublicOwner = function (state,from,to) {
+    if (preservedOwner(state,from)) preservation(state).realmId = to;
+  };
   FB.treasurySeparated = function (state,rid) {
-    return preservedOwner(state,rid) || !!(FB.electiveCrown && FB.electiveCrown(state,rid));
+    return preservedOwner(state,rid) || !!(FB.electiveCrown && FB.electiveCrown(state,rid)) ||
+      !!(FB.officeMandates && FB.officeMandates.preservesAccount(state,rid));
   };
   FB.treasuryValidatePreservation = function (state) {
     const p = preservation(state), start = state.start, bm = FB.campaignBookmark(state);
@@ -46,7 +50,8 @@
     }
     if (!exact(p,['schema','originalRealmId','realmId','retirement']) || p.schema !== 1 ||
         p.originalRealmId !== start.rulerRealmId ||
-        [p.originalRealmId,'player'].indexOf(p.realmId) < 0) invalid();
+        [p.originalRealmId,'player'].indexOf(p.realmId) < 0 &&
+          !(FB.officeMandates && FB.officeMandates.preservesAccount(state,p.realmId))) invalid();
     if (p.retirement !== null && (!exact(p.retirement,['turn','recipientId']) ||
         !Number.isSafeInteger(p.retirement.turn) || p.retirement.turn < 0 || p.retirement.turn > state.turn ||
         p.retirement.recipientId !== null && (typeof p.retirement.recipientId !== 'string' ||
@@ -887,7 +892,8 @@
     const from = account(state, rid);
     if (!from) return;
     if (recipient === 'player' && options && options.publicAccession &&
-        (preservedOwner(state,rid) ? !account(state,recipient) : FB.electiveCrown && FB.electiveCrown(state, rid))) {
+        (preservedOwner(state,rid) ? !account(state,recipient) : FB.electiveCrown && FB.electiveCrown(state, rid) ||
+          FB.officeMandates && FB.officeMandates.preservesAccount(state,rid))) {
       state.realms.player.treasury = from;
       delete state.realms[rid].treasury;
       if (preservedOwner(state,rid)) preservation(state).realmId = 'player';

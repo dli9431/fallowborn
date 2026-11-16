@@ -375,6 +375,10 @@
       var publicFault = FB.validatePublicAdministrationState(state);
       if (publicFault) invalid(publicFault);
     }
+    if (FB.officeMandates) {
+      var mandateFault = FB.officeMandates.validateState(state);
+      if (mandateFault) invalid(mandateFault);
+    }
     if (FB.aristocracy) {
       var aristocraticFault = FB.aristocracy.validateState(state);
       if (aristocraticFault) invalid(aristocraticFault);
@@ -408,6 +412,7 @@
           !Array.isArray(value.settlementAwards)) invalid(where);
       if (value.hostId !== null &&
           (typeof value.hostId !== 'string' || !value.hostId)) invalid(where + '.hostId');
+      if (value.publicPayer !== undefined && value.publicPayer !== true) invalid(where + '.publicPayer');
       if (value.patronRealmId === value.federateRealmId ||
           value.settlementCountyIds.some(function (id) {
             return typeof id !== 'string' || !id;
