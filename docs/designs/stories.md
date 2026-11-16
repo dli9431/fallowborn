@@ -1,3 +1,59 @@
+Mobile transaction stages
+
+An optional ruler_agenda stage completion selects demand, raid, distribution,
+arrival or settlement. These stages offer canonical mobile reviews and a
+costless defer instead of priority acknowledgment. agenda_mobile_prepare proposes
+exact terms; it never supplies another member’s assent. agenda_mobile commits the
+current canonical review. agenda_mobile_result records only an actual source
+receipt and can also advance on ordinary observation. Every transaction stage
+keeps exactly one such result choice. No proposal, successful quote, demand offer,
+departure, defer or stay choice advances it. The existing stop remains available.
+Repeated references to the same source receipt cannot advance another stage.
+
+Demand needs the outside court’s accepted payment. Its active finite tribute
+commitment still blocks another sortie until expiry; the goals disclose that
+wait. Raid needs the resolved local sortie; distribution needs an actual resolved receipt, including deliberate public
+retention. Arrival needs a real seasonal departure and the same living leader,
+generation and host to reach the ground together with the civilian camp. Replacement
+orders, host loss, lost access and succession interrupt pending arrival evidence.
+Settlement delegates partial or final population transfer to the ordinary owner.
+The final receipt can close its original agenda after ordinary territorial
+absorption; it grants no continuing authority over the retired institution.
+All other incumbent, generation, mandate and protagonist interruption rules stay
+binding. Existing priority-based declarations keep their original meaning.
+
+opening_profile mobile_transaction criteria reference one required agenda and a
+stage with a typed completion. They consume its canonical decision evidence,
+never a review-choice event. Strict saved decisions retain source kind, identity,
+turn, original actor and generation, and completed profile goals require that
+source decision. Restore validates records without dispatch, reward or replay.
+
+campaign mobileReview:{schema:1} opts an ordinary-declaration campaign into the
+single-host elected coalition’s current war review and commit. Player control
+belongs to its actual living leader, with consent tied to that institution’s
+current generation. Its institutional realm is never aliased by personal selection.
+An ordinary member cannot authorize or decline the campaign. An NPC leader keeps
+ordinary canonical member-consent gates. Pending opportunities require explicit
+player review; started opportunities observe actual war and authority outcomes.
+Legacy campaign declarations keep their existing decision and AI behavior.
+
+The native generated Qipchaq leadership beginning composes demand, raid,
+distribution, seasonal arrival and settlement stages, four optional transaction
+goals and existing paid household service. Its existing introductory principal
+agenda/profile remain intact. Lower river and Kath grounds, payment caps and
+travel distances are simulation choices, not an attested itinerary or historical
+conquest. Pontic, Saragur and Oghur generated leader/member beginnings add ordinary camp
+household service where the existing opening already supports personal selection.
+Explicit world start lists include only the following present in that world;
+earlier worlds retain their original entries and omit absent followings.
+The independent Glassroad ordinary JSON import varies people, policies, terms,
+climate and route length while preserving its earlier service tracks and goals.
+
+Technology decisions mobile_story_transactions and mobile_campaign_principal_review
+are none: these expose existing political reviews and factual observations without
+a credible discovery prerequisite. Every underlying technology, authority,
+resource, population, route and consent gate remains binding.
+
 Deferred instance compilation
 
 The staged-story owner registers `active_story_stage` under the `story_tracks` event
@@ -121,7 +177,7 @@ Opening-profile royal_member contacts can refer to the original adopted territor
 
 The 1241 Silesian opening adopts the single Henry II court and attaches silesia_agenda_1241 with eight ordered reviews. Seven Spring reviews cover jurisdiction, family, resources, Bohemian relations, affordable preparation, information and response; the final review opens in Summer. Every stage offers a costless priority, and the shared stop choice remains available. The companion opening_silesia_1241 observes household, preparation and final review choices, with one optional link to the existing Bohemian incumbent. Anna and the children remain in ordinary Kin. No public preparation, hostile report, ally arrival, historical battle, partition or scheduled death is generated. Technology impact uses the existing ruler_agendas, opening_goals and opening_contacts none decisions; actual political and military actions retain their own gates. Restore retains decisions and people without attaching missing tracks to older saves.
 
-A retained or commissioned mobile leader can use the same costless priority and finish reviews. The subject is the existing effective leader and original ruler generation, so custody, recall, death or replacement removes its old agenda authority. Reviewing an already hosted relationship does not renew it, spend public or private money, move the following or promise personal protection. An outside ruler may separately accept a real subsequent offer through agenda_mobile_offer and its existing canonical consent and payment checks. No mobile-specific agenda operation or saved story field is added.
+A retained or commissioned mobile leader can use the same costless priority and finish reviews. The subject is the existing effective leader and original ruler generation, so custody, recall, death or replacement removes its old agenda authority. Reviewing an already hosted relationship does not renew it, spend public or private money, move the following or promise personal protection. An outside ruler may separately accept a real subsequent offer through agenda_mobile_offer and its existing canonical consent and payment checks. These legacy priority declarations retain their original operations and saved fields.
 
 js/story_ruler_agenda.js registers ruler_agenda, a bounded ordered program on the shared story surface. Each review has an authored earliest year and season, choices and an unconditional retain-arrangements alternative. The whole program can be set aside even before its next review date. Agendas bind the original protagonist, source court, ruler generation and any delegated mandate. Death, succession, recall and lost delegated jurisdiction interrupt the unfinished program. A supported change of government does not interrupt a surviving ruler merely because the form changed.
 
@@ -554,7 +610,19 @@ Priorities and retaining present arrangements both count; setting the agenda asi
 is costless. The Mobile coalition Deed owns actual political operations. These
 stories grant no agreement, county, force, private payment or successor. Literal
 `rulerAgendas_` and `openingProfiles_` tables use the existing extractor owners.
-`data/story_mobile_leadership.js` registers empty tables for further declarations.
+`data/starts_mobile_leaders.js` adds the existing steppe principal as a 1204
+Qipchaq member beginning. The river principal remains leader. Its companion
+`householdTracks_mobile_leadership` graph offers one canonical paid camp service,
+and `openingProfiles_mobile_leadership` observes only the paid terminal phase.
+Opening cash, viewing or cancelling the review cannot complete that goal. Missing
+camp food, public funds or actual worker presence leaves the work unavailable;
+closing the sheet leaves it optional. The payment uses the ordinary public
+treasury, private purse, one-food-unit debit and once-per-day work marker.
+Protagonist succession interrupts unfinished work. Matching saves retain the
+payment and goal without replay. The Glassroad JSON example independently offers
+the same household goal to its bound leader and other member. These declarations
+reuse the existing household_mobile_service and opening_goals none technology
+decisions; they add no political authority, transaction or saved field.
 
 Opening profiles stamp an unrevisioned ordinary JSON bookmark as `baseline`,
 matching the world's effective revision convention. Initialization and strict

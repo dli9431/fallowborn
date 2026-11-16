@@ -10,28 +10,42 @@
   function keys(o, allowed) { return plain(o) && Object.keys(o).every(function (k) { return allowed.indexOf(k) >= 0; }); }
   function text(v) { return typeof v === 'string' && v.length > 0 && v.length <= 4000; }
   var operations = ['agenda_priority','agenda_finish','agenda_story_choice','agenda_story_fact',
-    'agenda_provincial_terms','agenda_dues','agenda_public_record','agenda_mobile_offer'];
+    'agenda_provincial_terms','agenda_dues','agenda_public_record','agenda_mobile_offer',
+    'agenda_mobile','agenda_mobile_prepare','agenda_mobile_result','agenda_defer'];
   var recordKinds = ['agenda_appointments','agenda_recognition','agenda_mobile_agreement','agenda_collective_decision'];
-  function check(def, context) {
+  function check(def, context, bm) {
     function need(ok, field) { if (!ok) throw new Error('Invalid ruler agenda: ' + field + '.'); }
     need(keys(def, ['id','type','subjectRealmId','title','intro','requires','stages','registrationBefore','registrationAfter']), 'fields');
     need(slug(def.subjectRealmId) && text(def.title) && text(def.intro), 'subject or display');
     need(Array.isArray(def.stages) && def.stages.length > 0 && def.stages.length <= 16, 'stages');
     var stages = Object.create(null), choices = Object.create(null);
     def.stages.forEach(function (stage) {
-      need(keys(stage, ['id','name','text','year','season','choices']) && slug(stage.id) && !stages[stage.id], 'stage');
+      need(keys(stage, ['id','name','text','year','season','choices','completion']) && slug(stage.id) && !stages[stage.id], 'stage');
       stages[stage.id] = true;
       need(text(stage.name) && text(stage.text) && Number.isInteger(stage.year) && stage.year > 0 && stage.year <= 9999 &&
         Number.isInteger(stage.season) && stage.season >= 0 && stage.season <= 3, 'stage date or display');
       need(Array.isArray(stage.choices) && stage.choices.length > 0 && stage.choices.length <= 12, 'choices');
-      need(stage.choices.some(function (c) { return c.operation === 'agenda_priority'; }), 'unconditional alternative');
+      if (stage.completion!==undefined) {
+        need(keys(stage.completion,['kind']) && Object.keys(stage.completion).length===1 &&
+          ['demand','raid','distribution','arrival','settlement'].indexOf(stage.completion.kind)>=0, 'mobile completion');
+        need(FB.mobile.storyCompletionValid(stage.completion.kind,def.subjectRealmId,bm), 'mobile source policy');
+        need(stage.choices.some(function (c) {return c.operation==='agenda_defer';}) &&
+          stage.choices.filter(function (c) {return c.operation==='agenda_mobile_result';}).length===1 &&
+          stage.choices.every(function (c) {return ['agenda_mobile','agenda_mobile_prepare','agenda_mobile_result','agenda_defer'].indexOf(c.operation)>=0;}), 'transaction stage alternatives');
+      } else need(stage.choices.some(function (c) { return c.operation === 'agenda_priority'; }), 'unconditional alternative');
       stage.choices.forEach(function (c) {
         need(keys(c, ['id','label','detail','operation','storyId','choiceId','stateField','values','interestId','revenue','levy','amount','duration',
-          'recordKind','otherRealmId','recordOperation']) && slug(c.id) && c.id !== 'agenda_stop_program' && !choices[c.id], 'choice fields or duplicate');
+          'recordKind','otherRealmId','recordOperation','action','terms']) && slug(c.id) && c.id !== 'agenda_stop_program' && !choices[c.id], 'choice fields or duplicate');
         choices[c.id] = true;
         need(text(c.label) && text(c.detail) && operations.indexOf(c.operation) >= 0, 'choice operation or display');
         var fields = ['id','label','detail','operation'];
-        if (c.operation === 'agenda_story_choice' || c.operation === 'agenda_story_fact') {
+        if (c.operation==='agenda_mobile' || c.operation==='agenda_mobile_prepare') {
+          fields=fields.concat(['action','terms']);
+          need(!!stage.completion && !FB.mobile.storyActionFaults(c.action,c.terms,def.subjectRealmId,bm), 'mobile transaction');
+          need(c.operation!=='agenda_mobile_prepare' || ['demand','raid','access','settle'].indexOf(c.action)>=0, 'mobile proposal');
+        } else if (c.operation==='agenda_defer' || c.operation==='agenda_mobile_result') {
+          need(!!stage.completion, 'transaction-only choice');
+        } else if (c.operation === 'agenda_story_choice' || c.operation === 'agenda_story_fact') {
           fields.push('storyId');
           need((def.requires || []).indexOf(c.storyId) >= 0 && context.get(c.storyId), 'source dependency');
           if (c.operation === 'agenda_story_choice') {
@@ -89,9 +103,12 @@
     }
     function current(s, t) {
       var f = subject(s), c = s.chars[t.subjectId];
+      var mobile=FB.mobile.row(s,realm(s)),settled=stage(t) && stage(t).completion && stage(t).completion.kind==='settlement' &&
+        mobile && mobile.status==='settled' && mobile.lastSettlement && mobile.lastSettlement.final &&
+        mobile.lastSettlement.principal.characterId===t.subjectId && mobile.lastSettlement.principal.generation===t.generation;
       return t.status === 'agenda_open' && !!c && !c.dead && !s.player.dead && s.player.charId === t.subjectId &&
-        beginning(s) && f.id === t.subjectId && f.generation === t.generation &&
-        f.mandateId === t.mandateId && f.jurisdiction;
+        beginning(s) && (settled || f.id === t.subjectId && f.generation === t.generation &&
+        f.mandateId === t.mandateId && f.jurisdiction);
     }
     function stage(t) { return def.stages[t.step] || null; }
     function ready(s, st) { return !!st && (s.date.year > st.year || s.date.year === st.year && s.date.season >= st.season); }
@@ -119,6 +136,17 @@
     }
     function source(s, t, c) {
       if (!c) return null;
+      if (c.operation==='agenda_defer') return {allowed:true};
+      if (c.operation==='agenda_mobile' || c.operation==='agenda_mobile_prepare') {
+        var reviewed=FB.mobile.storyReview(s,realm(s),t.subjectId,c.action,c.terms,c.operation==='agenda_mobile_prepare');
+        return reviewed ? {allowed:reviewed.review.allowed,reviewed:reviewed} : null;
+      }
+      if (c.operation==='agenda_mobile_result') {
+        var since=t.step ? t.decisions[t.step-1].turn : t.openedTurn;
+        var evidence=FB.mobile.storyEvidence(s,realm(s),stage(t).completion.kind,t.subjectId,t.generation,since);
+        var used=evidence && t.decisions.some(function (d) {return d.evidence && same(d.evidence,evidence);});
+        return {allowed:!!evidence && !used,evidence:evidence};
+      }
       if (c.operation === 'agenda_story_choice') {
         var story = context.get(c.storyId), rec = FB.stories.record(s, c.storyId);
         return story && rec && story.choices && story.choices(s, rec).some(function (row) { return row.id === c.choiceId; }) &&
@@ -147,7 +175,9 @@
       var c = choice(t, id), cancel = id === 'agenda_stop_program', st = stage(t);
       var q = c && source(s, t, c), hasAction = c && ['agenda_priority','agenda_finish'].indexOf(c.operation) < 0;
       return { id:id, allowed:!!(current(s, t) && (cancel || ready(s, st) && c && (!hasAction || q && q.allowed))),
-        reason:c && c.operation === 'agenda_story_choice' && q && !q.allowed ? { storyId:c.storyId, reason:q.reason } : null,
+        reason:c && c.operation === 'agenda_story_choice' && q && !q.allowed ? { storyId:c.storyId, reason:q.reason } :
+          q && q.reviewed && !q.allowed ? {mobileReason:q.reviewed.review.reason,
+            action:q.reviewed.request.action,countyId:q.reviewed.request.terms.countyId || null} : null,
         facts:{ definition:copy(def), record:copy(t), subject:subject(s), turn:s.turn, date:copy(s.date), source:q,
           publicFunds:FB.treasuryAvailable(s, realm(s)), privateFunds:s.player.gold } };
     }
@@ -157,17 +187,28 @@
       if (!reviewed || !fresh.allowed || !same(fresh, reviewed)) return false;
       if (id === 'agenda_stop_program') { close(s, t, 'agenda_stopped'); return true; }
       var c = choice(t, id), q = fresh.facts.source;
+      if (c.operation==='agenda_defer') return true;
+      if (c.operation==='agenda_mobile' || c.operation==='agenda_mobile_prepare') return FB.mobile.commit(s,q.reviewed);
       if (c.operation === 'agenda_story_choice') {
         if (!FB.stories.apply(s, c.storyId, c.choiceId, q)) return false;
       } else if (c.operation === 'agenda_provincial_terms' && !FB.aristocracy.apply(s, q)) return false;
       else if (c.operation === 'agenda_dues' && !C.imposeDues(s, q)) return false;
       else if (c.operation === 'agenda_mobile_offer' && !FB.mobile.commit(s, q.reviewed)) return false;
-      t.decisions.push({ stageId:stage(t).id, choiceId:id, turn:s.turn });
+      var decision={stageId:stage(t).id,choiceId:id,turn:s.turn};
+      if (c.operation==='agenda_mobile_result') decision.evidence=copy(q.evidence);
+      t.decisions.push(decision);
       t.step++;
       if (t.step === def.stages.length || c.operation === 'agenda_finish') close(s, t, 'agenda_complete');
       return true;
     }
-    function day(s, t) { if (t.status === 'agenda_open' && !current(s, t)) close(s, t, 'agenda_interrupted'); }
+    function day(s, t) {
+      if (t.status !== 'agenda_open') return;
+      if (!current(s,t)) {close(s,t,'agenda_interrupted');return;}
+      if (stage(t).completion && ready(s,stage(t))) {
+        var c=stage(t).choices.filter(function (c) {return c.operation==='agenda_mobile_result';})[0],q=quote(s,t,c.id);
+        if (q.allowed) apply(s,t,c.id,q);
+      }
+    }
     function validate(t, s) {
       function need(ok) { if (!ok) throw new Error(FB.T('Invalid v4 save field at {path}.', { path:'state.stories.' + def.id })); }
       need(keys(t, ['schema','subjectId','generation','mandateId','step','status','openedTurn','outcomeTurn','decisions']) && Object.keys(t).length === 9);
@@ -179,8 +220,12 @@
       var lastTurn = t.openedTurn, finish = false;
       t.decisions.forEach(function (d, i) {
         var st = def.stages[i], c = plain(d) && st.choices.filter(function (row) { return row.id === d.choiceId; })[0];
-        need(keys(d, ['stageId','choiceId','turn']) && Object.keys(d).length === 3 && d.stageId === st.id && c && !finish &&
+        need(keys(d, ['stageId','choiceId','turn','evidence']) && Object.keys(d).length === (st.completion ? 4 : 3) && d.stageId === st.id && c && !finish &&
           Number.isInteger(d.turn) && d.turn >= lastTurn);
+        if (st.completion) need(c.operation==='agenda_mobile_result' &&
+          FB.mobile.storyEvidenceValid(d.evidence,st.completion.kind,t.subjectId,t.generation,lastTurn,d.turn) &&
+          (!s || FB.mobile.storyEvidenceMatches(s,realm(s),d.evidence)) &&
+          !t.decisions.slice(0,i).some(function (old) {return old.evidence && same(old.evidence,d.evidence);}));
         lastTurn = d.turn; finish = c.operation === 'agenda_finish';
       });
       need(t.status === 'agenda_open' ? t.step < def.stages.length && !finish && t.outcomeTurn === null :
@@ -236,14 +281,37 @@
         }) : [];
         rows.push({ id:'agenda_stop_program', label:FB.T('Set the program aside'), detail:FB.T('End this personal agenda without a payment, political commitment or restriction on ordinary play.') });
         return rows;
-      }, quote:quote, apply:apply, day:day, season:day, year:day,
+      }, quote:quote, apply:apply, day:day, season:day, year:day, observe:day,
       blocker:function (s, t, reason) {
+        if (reason && reason.action==='settle' && reason.countyId && FB.world.byId[reason.countyId] &&
+            FB.mobile.migration(s,realm(s)) && FB.mobile.migration(s,realm(s)).at!==reason.countyId)
+          return FB.T('This settlement choice concerns {province}. The civilian camp must actually arrive there, with lawful land rights and member assent.',{province:FB.world.byId[reason.countyId].name});
+        if (reason && reason.mobileReason==='commitment') return FB.T('A current tribute, protection or service commitment, war or moving host blocks this action. Wait for the finite agreement to end and reunite the halted host with the camp before reviewing again.');
+        if (reason && reason.mobileReason==='withheld') return FB.T('The members have not assented to these exact terms. Propose them here, give only your own assent in Mobile coalition, and let the other members answer before returning.');
+        if (reason && reason.mobileReason==='access') return FB.T('The actual holder must grant current access to the ground and every intervening county. Send the offer after member assent, wait for outside acceptance and review the real route again.');
         var story = reason && reason.storyId && context.get(reason.storyId);
         if (story && story.blocker) return story.blocker(s, FB.stories.record(s, reason.storyId), reason.reason);
         return FB.T('The original incumbent, review date and current source decision or recorded public action must still permit this choice. Use its ordinary review or retain the present arrangements.');
       },
       review:function (s, t, id, reviewed) {
         var q = reviewed.facts.source, lines = [FB.T('Recording this agenda adds no reward. Any political effect uses the existing decision and its current consent.')];
+        var mobile=choice(t,id);
+        if (mobile && ['agenda_mobile','agenda_mobile_prepare'].indexOf(mobile.operation)>=0 && q && q.reviewed) {
+          var review=q.reviewed.review;
+          lines.push(FB.T('Public cost: {money:cost}. Member assent and outside consent remain independent. Proposals and departures leave the stage pending.',{cost:review.cost || 0}));
+          var request=q.reviewed.request,terms=request.action==='propose' ? request.terms.proposal : request.terms;
+          if (request.action==='settle' || request.action==='propose' && request.terms.operation==='settle')
+            lines.push(FB.T('Settlement: {count} people at {province}. People remaining mobile: {remaining}.',
+              {count:terms.count,province:FB.world.byId[terms.countyId].name,remaining:Math.max(0,FB.mobile.total(s,realm(s))-terms.count)}));
+          if (review.round) lines.push(FB.T('Travel food surcharge: {food}. Journey: {days} days. Completion requires the actual camp and host to arrive.',{food:review.round.food,days:review.round.days}));
+          if (review.distribution) {
+            lines.push(FB.T('Immediate food consumption: {food}. This divides existing receipts and creates no reward.',{food:review.distribution.food}));
+            review.distribution.rows.forEach(function (part) {lines.push(FB.T('Member share: {money:gold}, {food} food; resulting support {support}.',
+              {gold:part.gold,food:part.food,support:part.support}));});
+          }
+          if (review.raid) lines.push(FB.T('Raid forecast: {money:gold}, {food} food; {losses} fighter casualties. No land or occupation is granted.',{gold:review.raid.gold,food:review.raid.food,losses:review.raid.casualties}));
+          return lines;
+        }
         if (q && Number.isFinite(q.cost)) lines.push(FB.T('Public treasury cost: {money:cost}.', { cost:q.cost }));
         if (q && q.terms && q.terms.amount !== undefined) lines.push(FB.T('Proposed extraordinary dues: {money:amount} for {days} days. Receipts belong to the public institution.', { amount:q.terms.amount, days:q.terms.duration }));
         if (q && q.reviewed) {

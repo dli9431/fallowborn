@@ -1,3 +1,31 @@
+Story projections and canonical completion
+
+The mobile owner exposes pure typed storyActionValid/storyActionFaults and
+storyReview projections for demand, raid, receipt distribution, named-ground
+access, seasonal travel and partial/final settlement. They use the existing
+coalition review/commit source; no story owns a public balance, member assent,
+outside consent or route. The oldest unresolved receipt is selected for sharing.
+Final-settlement proposals resolve all remaining people at review time, so changed
+population invalidates confirmation. Other terms remain exactly authored.
+
+Accepted extraction agreements retain their actual payment turn and the
+coalition leader/generation only after the outside payment succeeds. Refused or
+pending offers supply no completion evidence. Canonical raid and latest
+distribution receipts optionally retain the actual leader and generation. The existing mobile row may retain one lastSettlement
+receipt after population transfer. round may retain one journey reference with
+original ground, origin, host, leader, generation, departure, status and actual
+arrival turn. Daily reconciliation checks the same host, leadership and lawful
+route; the ordinary migration owner establishes camp presence before arrival is
+recorded. Manual or replacement movement interrupts the old reference. A stay
+review creates no journey or arrival. These are bounded provenance on existing
+transaction owners, not another resource or authority ledger. Original people
+remain retained for these source facts. Optional old receipts remain valid.
+
+Matching restore rejects malformed/future evidence and preserves spent resources,
+actual clocks, population transfers and personal story decisions without replay.
+No mobile outer schema or save-envelope change is introduced. The existing
+mobile_story_transactions technology decision is none; underlying gates stay live.
+
 Seasonal grounds and elected independent openings
 
 Optional mobileProfiles.seasonalRound schema 1 declares named physical grounds,

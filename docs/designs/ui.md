@@ -1,3 +1,19 @@
+Mobile leadership story decisions
+
+Transaction agendas and optional goals use the existing story cards, review,
+confirmation and retained Back/Escape/Close behavior. Each choice explains whether
+it proposes terms, commits the source action, defers, stays or observes an actual
+receipt. Reviews show the immediate public cost, food surcharge and route days,
+raid forecast or actual receipt shares as applicable. Settlement also names its
+physical county, exact current people and remaining mobile population. Proposals and departures
+remain visibly pending. Goals direct players to their own member assent and the
+separate outside response on Mobile coalition; they promise neither another
+member’s decision nor an outside payment. Stay mobile leaves settlement pending;
+Set the program aside closes the optional agenda without a settlement outcome.
+The campaign card belongs to the actual current coalition leader, with ordinary
+member-consent blockers and its institutional realm identity. No new modal,
+stylesheet, navigation stack or device/distribution inference is introduced.
+
 Seasonal mobile ground reviews
 
 The Mobile coalition sheet discloses whether this calendar season still needs a

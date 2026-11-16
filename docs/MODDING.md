@@ -1,3 +1,63 @@
+Mobile story transaction adapters
+
+ruler_agenda stages optionally accept completion with exactly kind, one of demand,
+raid, distribution, arrival or settlement. The opted-in choice set is restricted
+to agenda_mobile_prepare, agenda_mobile, agenda_mobile_result and agenda_defer.
+Exactly one result and at least one defer are required; ordinary priority/finish
+choices cannot conclude a transaction stage. Unchanged stages still require their
+original agenda_priority alternative and retain their original saved meaning.
+
+agenda_mobile_prepare and agenda_mobile add exactly action and terms. Supported
+terms are: demand (the existing exact demand extraction object); raid (the exact
+raid extraction object); distribute ({mode,memberIds}, with keep/weight requiring
+an empty list and favor a distinct nonempty member list); round or access
+({groundId}); and settle ({countyId,count,final}, positive integer count at most
+100000000 and boolean final). Final settlement uses the current total count.
+Only demand, raid, access and settle can prepare member proposals. Pure candidate
+checks resolve the following, its applicable policies, members, physical counties
+and named grounds; commanded, column and dispersed-camp forms are excluded.
+Runtime review and commit retain every ordinary source gate. Access prepares or
+sends a ground’s declared ordinary concession, never blanket route permission.
+
+agenda_mobile_result and agenda_defer accept no extra fields. The former is
+available only on a matching canonical receipt and is automatically observed;
+the latter leaves step, decisions, resources and authority unchanged. Stop closes
+the optional program without certifying its stage. Decisions on opted-in stages
+have their original stageId, choiceId and turn plus exact evidence:{kind,id,turn,
+actorId,generation}. The choice must be the declared result operation; evidence
+belongs to the original actor/generation, cannot be future or reused, and carries
+no rendered prose or resources. Legacy decisions retain their three fields.
+
+opening_profile criterion {kind:'mobile_transaction',storyId,stageId} requires
+an earlier required ruler_agenda whose named stage has a completion declaration.
+Only its canonical committed decision completes the goal. Completed saved goals
+require that source decision and its original protagonist, without replay.
+
+campaign optional mobileReview:{schema:1} requires ordinary-declaration admission
+and an elected, single-host mobile actor without command or dispersed camps.
+The actual current leader supplies its canonical war review, exact member assent
+and commit. Player choices and their generation belong to the controlled public
+principal, while its realm id remains institutional. Membership supplies no war
+or refusal authority. Unchanged declarations preserve legacy campaign behavior.
+
+An accepted agreement’s extraction object may add exactly paidTurn and
+principal:{characterId,generation}. They record actual outside payment, retain the
+agreement’s coalition generation, match its accepted startTurn exactly and cannot
+occur on an offered agreement.
+Canonical mobile receipts optionally add principal:{characterId,generation} to
+lastRaid and cohesion.lastDistribution. The mobile row may add lastSettlement
+with exactly schema:1, turn, countyId, count, final and principal. round may add
+journey with exactly groundId, countyId, origin, hostId, actorId, generation,
+departureTurn, status and arrivalTurn. status is moving, arrived or interrupted;
+only arrived has a nonnull actual arrivalTurn, strictly after departure. Ground,
+original host, neighboring origin, people, generations, accounting and dates are
+validated by their existing owner. Arrival cannot precede the declared minimum
+neighbor travel time. A vacancy retains the previous principal’s receipts without
+selecting another leader.
+The outer mobile schemas and save envelope are unchanged. Complete native and
+ordinary JSON examples are data/story_mobile_leadership.js and
+tests/e2e/fixtures/authoring/mobile-leadership-glassroad.json.
+
 Seasonal mobile grounds
 
 Optional mobileProfiles.seasonalRound has exactly schema:1, automate (boolean),
@@ -277,7 +337,7 @@ The active stage displays each distinct referenced world's current status once, 
 
 storyInstances accepts type ruler_agenda. Its only top-level fields are id, type, subjectRealmId, title, intro, optional requires and registrationBefore/registrationAfter, and stages. subjectRealmId must be an opening realm offered by the start's effective bookmark. The type is a player track: list its id in an existing-ruler scenario's tracks. It initializes only for the original ruler or current delegated incumbent of that start. No executable callbacks, arbitrary state paths or world initialization are supported.
 
-stages is an ordered array of 1-16 objects with unique slug id, name, text, earliest year (1-9999), season (0-3) and 1-12 choices. Each choice has a globally unique slug id, label, detail and operation. Every stage needs agenda_priority as an unconditional alternative. The engine also exposes Set the program aside before the next review date; its agenda_stop_program id is reserved. Ordinary successful choices advance one stage. agenda_finish completes early, agenda_priority records a priority without a political effect, and either operation accepts no additional fields.
+stages is an ordered array of 1-16 objects with unique slug id, name, text, earliest year (1-9999), season (0-3) and 1-12 choices. Each choice has a globally unique slug id, label, detail and operation. A stage without completion needs agenda_priority as an unconditional alternative; opted-in transaction stages use the costless defer and source-result contract above. The engine also exposes Set the program aside before the next review date; its agenda_stop_program id is reserved. Successful choices on legacy stages advance one stage. Transaction proposals, source actions and defers advance only after their declared canonical result. agenda_finish completes early, agenda_priority records a priority without a political effect, and either operation accepts no additional fields.
 
 agenda_story_choice adds storyId and choiceId. The source must be an earlier required world story, never another agenda. Its live choice, quote and apply own all consequences; confirmation requotes both the agenda and source. agenda_story_fact adds storyId, stateField and values instead: stateField is one of result, aiResolution, governanceResolved or playerDecision, and values is a unique list of 1-16 semantic slugs. It records only an already matching source fact. The key is stateField, not field, because the shared story compiler reads any object with storyId and field as a typed story-record reference. Delegated choices must occur in the source declaration's choices catalogue or its trusted module's static choiceIds metadata. The campaign factory exposes only face_campaign and leave_campaign; an unknown source choice fails detached validation, and a supported one still needs its live review. Source factories exposing neither contract cannot receive delegated choices.
 

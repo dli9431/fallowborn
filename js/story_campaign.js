@@ -120,6 +120,13 @@
       out.reason = 'public_authority'; return out;
     }
     out.preview = FB.warDeclarationPreview(s, rid, [out.cause]);
+    if (def.mobileReview) {
+      out.cause={type:def.admission.cause,target:def.target.provinceId,enemy:enemy};
+      var leader=FB.mobile.leader(s,rid);
+      out.mobile=leader && FB.mobile.review(s,{realmId:rid,action:'war',actor:{kind:'character',id:leader.id},terms:{causes:[out.cause]}});
+      if (!out.mobile || !out.mobile.review.allowed) {out.reason='mobile_consent';return out;}
+      out.preview=out.mobile.review.declaration;
+    }
     if (!out.preview.valid || out.preview.unlawful) { out.reason = 'ordinary_declaration'; return out; }
     if (FB.sameFaithHeadWarPolicy(s, FB.realmReligionId(s, rid), enemy, def.target.provinceId, true)) {
       out.reason = 'faith_policy'; return out;
@@ -141,6 +148,10 @@
   }
   function declare(s, def, check) {
     var rid = def.actor.realmId, cause = check.cause;
+    if (def.mobileReview) {
+      if (!FB.mobile.commit(s,check.mobile)) return null;
+      return FB.ordinaryWarBetween(s,rid,cause.enemy);
+    }
     if (rid === 'player') {
       if (!FB.startPlayerWar(s, cause, {confirmAggression:true})) return null;
       return FB.ordinaryWarBetween(s, rid, cause.enemy);
@@ -206,6 +217,10 @@
     if (rec.phase === 'resolved') return;
     var rid = def.actor.realmId, county = def.target.provinceId;
     if (rec.startedTurn !== null) {
+      if (def.mobileReview && (!FB.mobile.leader(s,rid) || FB.mobile.leader(s,rid).id!==rec.actorId ||
+          FB.realmRulerGeneration(s,rid)!==rec.actorGeneration)) {
+        finish(s,rec,def,'interrupted','authority_lost');return;
+      }
       /* Settlement precedes succession checks: a completed award is durable. */
       var moving = rec.migrationId && FB.political.movingPolity(s, rec.migrationId);
       if (moving && moving.status === 'settled') { finish(s, rec, def, 'won', 'settled'); return; }
@@ -217,6 +232,7 @@
         finish(s, rec, def, 'won', 'objective_held'); return;
       }
       if (!courtLive(s, rid, def) || rec.actorId && !alive(s, rec.actorId) ||
+          def.mobileReview && (!FB.mobile.leader(s,rid) || FB.mobile.leader(s,rid).id!==rec.actorId) ||
           rec.actorGeneration !== null && rec.actorGeneration !== FB.realmRulerGeneration(s, rid) ||
           def.commission && rec.patronGeneration !== null && (!live(s, def.commission.issuerRealmId) ||
             !alive(s, ruler(s, def.commission.issuerRealmId)) ||
@@ -266,7 +282,7 @@
     if (check.result) { finish(s, rec, def, check.result, check.reason); return; }
     if (!check.allowed || FB.isRealmAtWar(s, rid) || FB.isRealmAtWar(s, s.owner[county])) return;
     if (playerParty(s, def) && (rec.playerDecision !== 'campaign' ||
-        rec.playerDecisionGeneration !== FB.realmRulerGeneration(s, 'player'))) return;
+        rec.playerDecisionGeneration !== FB.realmRulerGeneration(s, playerRealm(s,def)))) return;
     var admitted = admission(s, def);
     if (!admitted.allowed) return;
     if (!commission(s, rec, def)) return;
@@ -282,14 +298,21 @@
     rec.warId = war.id; rec.phase = 'started'; notice(s, def, 'started');
   }
   function playerParty(s, def) {
+    return !!playerRealm(s,def);
+  }
+  function playerRealm(s,def) {
+    if (def.mobileReview) {
+      var leader=FB.mobile.leader(s,def.actor.realmId);
+      if (leader && leader.id===s.player.charId && !s.player.dead) return def.actor.realmId;
+    }
     return def.actor.realmId === 'player' || s.owner[def.target.provinceId] === 'player' ||
-      def.commission && def.commission.issuerRealmId === 'player';
+      def.commission && def.commission.issuerRealmId === 'player' ? 'player' : null;
   }
   function playerQuote(s, rec, authored, id) {
     var def = FB.stories.definition(s, authored), check = conditions(s, def);
     var admitted = admission(s, def);
     var facts = { phase:rec.phase, decision:rec.playerDecision || null, turn:s.turn,
-      date:s.date, generation:FB.realmRulerGeneration(s, 'player'),
+      date:s.date, generation:FB.realmRulerGeneration(s, playerRealm(s,def) || 'player'),
       actor:ruler(s, def.actor.realmId), target:s.owner[def.target.provinceId],
       actorGeneration:FB.realmRulerGeneration(s, def.actor.realmId),
       patronGeneration:def.commission && FB.realmRulerGeneration(s, def.commission.issuerRealmId),
@@ -398,6 +421,16 @@
           throw new Error('Unresolved campaign admission party or objective.');
       }
     }
+    if (def.mobileReview!==undefined) {
+      if (!def.admission || !plain(def.mobileReview) || Object.keys(def.mobileReview).length!==1 || def.mobileReview.schema!==1)
+        throw new Error('Invalid campaign mobile review.');
+      if (bm) {
+        var mobile=(bm.realms || []).filter(function (r) {return r.id===def.actor.realmId;})[0];
+        if (!mobile || !mobile.mobile || mobile.mobile.command || mobile.mobile.columns || mobile.mobile.civilianCamps ||
+            !FB.governments.resolve(mobile.government).use.succession.mobileLeadership)
+          throw new Error('Invalid campaign coalition principal.');
+      }
+    }
     for (var row of def.conditions || [])
       if (!plain(row) || ['owner','ruler','landless','host'].indexOf(row.kind) < 0 ||
           !id(row.realmId) || row.kind === 'owner' && !id(row.provinceId) ||
@@ -442,6 +475,7 @@
       },
       quote:function (s, rec, id) { return playerQuote(s, rec, def, id); },
       blocker:function (s, rec, reason) {
+        if (reason==='mobile_consent') return FB.T('The current coalition leader needs member assent to this exact war objective. In Mobile coalition, propose war with this target and obtain the members’ decisions before reviewing again. Membership alone grants no command.');
         if (reason === 'public_authority') return FB.T('The court needs a capable current public authority before making this commitment.');
         if (reason === 'ordinary_declaration') {
           var a = admission(s, FB.stories.definition(s, def));
@@ -452,6 +486,8 @@
       },
       review:function (s, rec, id, q) {
         if (!def.admission || id !== 'face_campaign') return [];
+        if (def.mobileReview) return [FB.T('Declare through the current coalition war review and its exact member assent. No money, fighters or land are granted. The actual host campaigns independently; success and later settlement are uncertain.'),
+          FB.T('The opportunity lasts at most {days} days. Your private purse and the coalition public account remain separate.',{days:def.durationDays})];
         var cost = q.facts.admission.costs, aggression = cost.aggression;
         var lines = [FB.T('No payment. The attempt lasts at most {days} days from declaration; an ordinary war may continue afterward. No conquest is guaranteed.', {days:def.durationDays}),
           FB.T('Popular support in every attacking county: {change}, recovering over {days} days.',
@@ -479,8 +515,8 @@
         var q = playerQuote(s, rec, def, id);
         if (!q.allowed || !reviewed || reviewed.id !== id || reviewed.stamp !== q.stamp) return false;
         rec.playerDecision = id === 'face_campaign' ? 'campaign' : 'declined';
-        rec.playerDecisionGeneration = FB.realmRulerGeneration(s, 'player');
         var effective = FB.stories.definition(s, def);
+        rec.playerDecisionGeneration = FB.realmRulerGeneration(s, playerRealm(s,effective));
         if (id === 'leave_campaign') finish(s, rec, effective, 'diverted', 'player_declined');
         else day(s, rec, effective);
         if (def.admission && id === 'face_campaign' && rec.phase === 'pending') {
@@ -490,8 +526,8 @@
         return true;
       },
       validate:function (rec, s) { validate(rec, def.id); validateAdmission(rec, def, s); },
-      title:function (s) { return FB.dataText(s, null, 'storyCampaign', def.id, def, 'name', {}); },
-      intro:function (s) { return FB.dataText(s, null, 'storyCampaign', def.id, def, 'desc', {}); },
+      title:function (s) { return FB.dataText(s, null, def.mobileReview ? 'expeditionStory' : 'storyCampaign', def.id, def, 'name', {}); },
+      intro:function (s) { return FB.dataText(s, null, def.mobileReview ? 'expeditionStory' : 'storyCampaign', def.id, def, 'desc', {}); },
       status:function (s, rec) {
         if (rec.phase === 'pending' && s.date.year < def.firstYear) return null;
         var names = { pending:playerParty(s, FB.stories.definition(s, def)) && !rec.playerDecision

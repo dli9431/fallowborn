@@ -1,3 +1,20 @@
+Mobile leadership transaction coverage
+
+mobile-leadership-stories.spec.js retains the original native/member and JSON
+leader/member service cases. Additional native and ordinary file-picker JSON
+journeys exercise demand proposal versus actual accepted payment, canonical raid,
+receipt sharing and actual seasonal arrival through the authored goals. They cover
+costless defer/stay/stop, denied and stale reviews, duplicate rejection, phone
+review cancellation, replacement-order interruption, elected succession,
+partial/final settlement against a territorial court, an in-flight vacancy save,
+actual leader versus member campaign review, independent
+NPC behavior and exact current-content restore. Detached malformed declarations
+and saves reject atomically, including missing/wrong completion evidence.
+All six generated 476 following roles must resolve through the ordinary principal
+projection and appear in the current world start list. Long
+travel alone advances the bounded daily source loop, at most one season; lawful
+settlement ownership and succession boundaries are staged directly.
+
 Autumn 634 selection and core identity coverage
 
 State-aware event coverage lives in event-state-readers.spec.js. It imports
@@ -1801,6 +1818,14 @@ Each court case owns a fresh guarded context and prepares its ordinary import in
 a separate bounded hook before adoption, restoration or rejection assertions.
 
 Column, household and retained-world regression fixtures
+
+mobile-leadership-stories.spec.js covers the native Qipchaq member beginning and
+real Glassroad JSON leader/member imports. Opening goals remain pending after
+browsing, cancellation, missing food and stale confirmation. A canonical camp
+service debits one food unit and the public payment, credits the private purse,
+retains people and leadership, and completes the goal once. Repeated confirmation
+and matching save/load/load do not replay payment. The declarations contain no
+acknowledgment completion choices; an unknown work operation rejects purely.
 
 Mobile column operations resolve the imported following by its declared realm,
 reuse the prepared Mods title and retain exact people, units, food, public/private

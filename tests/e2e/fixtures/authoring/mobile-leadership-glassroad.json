@@ -1,0 +1,1367 @@
+{
+  "name": "Mobile leadership and household goals: Glassroad",
+  "cultures": {
+    "dune_folk": {
+      "name": "Glassroad clans",
+      "tradition": "other",
+      "dyn": "plain",
+      "male": [
+        "Kavi",
+        "Daro",
+        "Aran"
+      ],
+      "female": [
+        "Tamar",
+        "Sela",
+        "Nari"
+      ],
+      "family": [
+        "Selen",
+        "Vara",
+        "Ash"
+      ]
+    }
+  },
+  "cultureDoctrineDefaults": {
+    "dune_folk": {
+      "learning": "steppe"
+    }
+  },
+  "religions": {
+    "dune_belief": {
+      "name": "The Open Sky",
+      "parent": "tengri",
+      "availability": {},
+      "properties": {
+        "head": null,
+        "legalTradition": "customary"
+      }
+    }
+  },
+  "geographies": {
+    "dune_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "dune_well",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "steppe"
+        },
+        {
+          "id": "dune_flats",
+          "x": 3.1,
+          "y": 2.1,
+          "terrain": "steppe"
+        },
+        {
+          "id": "dune_pass",
+          "x": 2.4,
+          "y": 3.8,
+          "terrain": "steppe"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {
+        "dune_meeting_hall": {
+          "x": 1.5,
+          "y": 1.5
+        }
+      },
+      "defaultLayout": null
+    }
+  },
+  "governmentForms": {
+    "dune_assembly": {
+      "holders": "coalition_holders",
+      "succession": "coalition_leadership",
+      "territory": "coalition_court",
+      "consent": "coalition_consent",
+      "levy": "following_levy",
+      "revenue": "coalition_receipts",
+      "council": "member_council",
+      "diplomacy": "coalition_diplomacy",
+      "ai": "coalition_decisions",
+      "ladder": "local_service",
+      "officeCatalogue": [],
+      "systems": {
+        "disable": [
+          "feudal_service",
+          "roman_offices",
+          "public_offices",
+          "royal_council",
+          "estates",
+          "manorial_tenure"
+        ]
+      }
+    },
+    "dune_council": {
+      "holders": "civic_holders",
+      "succession": "civic_magistracies",
+      "territory": "civic_territory",
+      "consent": "civic_consent",
+      "levy": "civic_service",
+      "revenue": "civic_receipts",
+      "council": "civic_council",
+      "diplomacy": "civic_diplomacy",
+      "ai": "civic_decisions",
+      "ladder": "civic_careers",
+      "civicProfileId": "dune_rotation",
+      "officeCatalogue": [],
+      "systems": {
+        "disable": [
+          "roman_offices",
+          "public_offices",
+          "feudal_service",
+          "scutage",
+          "estates",
+          "royal_council",
+          "crown_bloc",
+          "manorial_tenure",
+          "colonate"
+        ]
+      }
+    }
+  },
+  "mobileProfiles": {
+    "dune_compact": {
+      "minAge": 20,
+      "threshold": 0.75,
+      "maxMembers": 8,
+      "maxAgreements": 8,
+      "recruitShare": 0.15,
+      "recruitCost": 0.03,
+      "foodPerPerson": 0.01,
+      "pasturePerPerson": 1.5,
+      "accessDays": 270,
+      "accessPrice": 6,
+      "starvationShare": 0.001,
+      "defeatShare": 0.03,
+      "settlementForm": "regnum",
+      "regions": [
+        "dune_well",
+        "dune_flats",
+        "dune_pass"
+      ],
+      "members": [
+        {
+          "id": "well_following",
+          "weight": 2,
+          "pledge": 0.15,
+          "population": 900
+        },
+        {
+          "id": "ridge_following",
+          "weight": 2,
+          "pledge": 0.1,
+          "population": 700
+        }
+      ],
+      "seasonalRound": {
+        "schema": 1,
+        "automate": true,
+        "travelFoodRate": 0.5,
+        "grounds": [
+          {
+            "id": "well_ground",
+            "name": "Well grounds",
+            "countyId": "dune_well",
+            "climateZone": "arid",
+            "seasonKinds": [
+              "cool_season"
+            ],
+            "capacity": 1600,
+            "offSeasonYield": 0.1,
+            "access": {
+              "capacity": 1600,
+              "allowRecruit": false,
+              "price": 3,
+              "duration": 90
+            },
+            "neighbors": [
+              {
+                "groundId": "flats_ground",
+                "distanceDays": 12
+              },
+              {
+                "groundId": "pass_ground",
+                "distanceDays": 12
+              }
+            ]
+          },
+          {
+            "id": "flats_ground",
+            "name": "Open flats",
+            "countyId": "dune_flats",
+            "climateZone": "arid",
+            "seasonKinds": [
+              "spring",
+              "autumn"
+            ],
+            "capacity": 1000,
+            "offSeasonYield": 0.1,
+            "access": {
+              "capacity": 1600,
+              "allowRecruit": false,
+              "price": 4,
+              "duration": 90
+            },
+            "neighbors": [
+              {
+                "groundId": "well_ground",
+                "distanceDays": 12
+              },
+              {
+                "groundId": "pass_ground",
+                "distanceDays": 12
+              }
+            ]
+          },
+          {
+            "id": "pass_ground",
+            "name": "Pass shelter",
+            "countyId": "dune_pass",
+            "climateZone": "arid",
+            "seasonKinds": [
+              "hot_dry"
+            ],
+            "capacity": 700,
+            "offSeasonYield": 0.1,
+            "access": {
+              "capacity": 1600,
+              "allowRecruit": false,
+              "price": 5,
+              "duration": 90
+            },
+            "neighbors": [
+              {
+                "groundId": "well_ground",
+                "distanceDays": 12
+              },
+              {
+                "groundId": "flats_ground",
+                "distanceDays": 12
+              }
+            ]
+          }
+        ]
+      },
+      "cohesionPolicy": {
+        "schema": 1,
+        "initialSupport": 70,
+        "victory": 4,
+        "defeat": -8,
+        "receiptShare": 22,
+        "scarcity": {
+          "days": 10,
+          "support": -0.5
+        },
+        "idle": {
+          "seasons": 3,
+          "support": -6
+        },
+        "standing": {
+          "target": 0,
+          "factor": 0.03
+        },
+        "thresholds": {
+          "depart": 10,
+          "withhold": 30,
+          "rival": 45
+        },
+        "distribution": {
+          "mode": "weight",
+          "favorites": 1
+        }
+      },
+      "extractionPolicy": {
+        "schema": 1,
+        "demand": {
+          "kinds": [
+            "tribute",
+            "protection"
+          ],
+          "maxPayment": 5,
+          "maxDays": 60
+        },
+        "raid": {
+          "maxGold": 10,
+          "maxFood": 100,
+          "stockShare": 0.12,
+          "cooldownDays": 30
+        }
+      }
+    }
+  },
+  "storyInstances": {
+    "dune_offices": {
+      "id": "dune_offices",
+      "type": "government_contest",
+      "name": "The well council",
+      "desc": "Public water rights continue through each change of office.",
+      "realmId": "dune_oasis"
+    },
+    "dune_candidacy": {
+      "id": "dune_candidacy",
+      "type": "civic_candidacy",
+      "requires": [
+        "dune_offices"
+      ],
+      "requirements": {
+        "realms": [
+          "dune_oasis"
+        ],
+        "provinces": [
+          "dune_well"
+        ]
+      },
+      "realmId": "dune_oasis",
+      "officeId": "well_keeper",
+      "name": "Keep the common wells",
+      "desc": "Choose public service or keep your household outside the office.",
+      "choices": {
+        "stand": {
+          "id": "dune_stand",
+          "label": "Stand for office",
+          "detail": "Pay the declared nomination fee and seek the public mandate."
+        },
+        "decline": {
+          "id": "dune_decline",
+          "label": "Remain a private household",
+          "detail": "End this invitation without paying a nomination fee or receiving public rights."
+        }
+      }
+    },
+    "dune_principal_household": {
+      "id": "dune_principal_household",
+      "type": "household_track",
+      "title": "Work in the living camp",
+      "intro": "Your household belongs to this following. Review one paid service at its actual civilian camp. You may close the sheet without accepting; no future wage or public power is promised.",
+      "homeProvinceId": "dune_well",
+      "continuity": "protagonist",
+      "interruptedStage": "interrupted",
+      "initialStage": "work",
+      "requirements": {
+        "provinces": [
+          "dune_well"
+        ],
+        "realms": [
+          "dune_coalition"
+        ]
+      },
+      "stages": {
+        "work": {
+          "name": "One actual service",
+          "text": "The following must have public money and at least one food unit. Your payment enters the private purse; food leaves the camp. Service is available once per day and requires your actual presence. Closing this sheet leaves the goal pending.",
+          "choices": [
+            {
+              "id": "paid_service",
+              "label": "Review one paid camp service",
+              "detail": "Receive the ordinary service payment from the public treasury and consume one camp food unit. Confirm only after reviewing current eligibility and cost. This grants no troops, office or future payment.",
+              "operation": {
+                "kind": "mobile_work",
+                "realmId": "dune_coalition"
+              },
+              "next": "paid"
+            }
+          ],
+          "transitions": []
+        },
+        "paid": {
+          "name": "The service was paid",
+          "text": "One canonical service payment reached your private purse. The following paid from its own account and consumed one food unit. No other household member moved and no future wage was reserved.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        },
+        "interrupted": {
+          "name": "The original worker is no longer available",
+          "text": "This personal work opportunity has ended. A successor inherits no promised payment or public mandate.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    },
+    "opening_dune_leader_start": {
+      "id": "opening_dune_leader_start",
+      "type": "opening_profile",
+      "title": "Earn one camp payment",
+      "intro": "This optional goal observes a paid service, never an acknowledgment or opening cash. It adds no reward.",
+      "scenarioIds": [
+        "dune_leader_start"
+      ],
+      "provinceIds": [
+        "dune_well"
+      ],
+      "requires": [
+        "dune_principal_household"
+      ],
+      "goals": [
+        {
+          "id": "service",
+          "name": "Complete one paid camp service",
+          "text": "In Deeds, open Work in the living camp and review one paid camp service. The current camp, public treasury, food and daily work limit determine availability. Cancel leaves this goal pending.",
+          "criterion": {
+            "kind": "household_phase",
+            "storyId": "dune_principal_household",
+            "phases": [
+              "paid"
+            ]
+          }
+        }
+      ],
+      "contacts": []
+    },
+    "opening_dune_member_start": {
+      "id": "opening_dune_member_start",
+      "type": "opening_profile",
+      "title": "Earn one camp payment",
+      "intro": "This optional goal observes a paid service, never an acknowledgment or opening cash. It adds no reward.",
+      "scenarioIds": [
+        "dune_member_start"
+      ],
+      "provinceIds": [
+        "dune_well"
+      ],
+      "requires": [
+        "dune_principal_household"
+      ],
+      "goals": [
+        {
+          "id": "service",
+          "name": "Complete one paid camp service",
+          "text": "In Deeds, open Work in the living camp and review one paid camp service. The current camp, public treasury, food and daily work limit determine availability. Cancel leaves this goal pending.",
+          "criterion": {
+            "kind": "household_phase",
+            "storyId": "dune_principal_household",
+            "phases": [
+              "paid"
+            ]
+          }
+        }
+      ],
+      "contacts": []
+    },
+    "dune_leadership": {
+      "id": "dune_leadership",
+      "type": "ruler_agenda",
+      "subjectRealmId": "dune_coalition",
+      "title": "Lead the living following",
+      "intro": "Follow actual member decisions, finite receipts and physical arrival. Every review may be cancelled. Deferral grants no completion or reward.",
+      "stages": [
+        {
+          "id": "demand",
+          "name": "Receive one accepted demand",
+          "text": "Propose these exact terms here. In Mobile coalition, assent as your own member and wait for the other members to answer. Return here to send the demand. The outside court may refuse; only its actual public payment completes this stage.",
+          "year": 900,
+          "season": 0,
+          "completion": {
+            "kind": "demand"
+          },
+          "choices": [
+            {
+              "id": "propose_demand",
+              "label": "Propose these terms to the members",
+              "detail": "No payment or outcome. Replaces the pending proposal. Supply only your own assent in Mobile coalition; other members decide separately.",
+              "operation": "agenda_mobile_prepare",
+              "action": "demand",
+              "terms": {
+                "kind": "demand",
+                "countyId": "dune_well",
+                "agreementKind": "tribute",
+                "threat": "raid",
+                "price": 1,
+                "duration": 30,
+                "levy": 0
+              }
+            },
+            {
+              "id": "commit_demand",
+              "label": "Send the demand",
+              "detail": "Ask for one money unit under an explicit raid threat for thirty days. No payment occurs unless the outside court accepts.",
+              "operation": "agenda_mobile",
+              "action": "demand",
+              "terms": {
+                "kind": "demand",
+                "countyId": "dune_well",
+                "agreementKind": "tribute",
+                "threat": "raid",
+                "price": 1,
+                "duration": 30,
+                "levy": 0
+              }
+            },
+            {
+              "id": "observed_demand",
+              "label": "Record the actual completed transaction",
+              "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+              "operation": "agenda_mobile_result"
+            },
+            {
+              "id": "defer_demand",
+              "label": "Defer this review",
+              "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+              "operation": "agenda_defer"
+            }
+          ]
+        },
+        {
+          "id": "raid",
+          "name": "Resolve one bounded raid",
+          "text": "An accepted demand reserves a finite tribute commitment. Wait for its thirty-day term to end before raiding. Propose the local sortie here, assent in Mobile coalition and wait for other members. Return to commit the reviewed sortie. It risks fighter losses and provides finite spoils, without occupation or land.",
+          "year": 900,
+          "season": 0,
+          "completion": {
+            "kind": "raid"
+          },
+          "choices": [
+            {
+              "id": "propose_raid",
+              "label": "Propose these terms to the members",
+              "detail": "No payment or outcome. Replaces the pending proposal. Supply only your own assent in Mobile coalition; other members decide separately.",
+              "operation": "agenda_mobile_prepare",
+              "action": "raid",
+              "terms": {
+                "kind": "raid",
+                "countyId": "dune_well"
+              }
+            },
+            {
+              "id": "commit_raid",
+              "label": "Review and commit the sortie",
+              "detail": "Resolve ordinary resistance, casualties and finite public coin and county food. No land is granted.",
+              "operation": "agenda_mobile",
+              "action": "raid",
+              "terms": {
+                "kind": "raid",
+                "countyId": "dune_well"
+              }
+            },
+            {
+              "id": "observed_raid",
+              "label": "Record the actual completed transaction",
+              "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+              "operation": "agenda_mobile_result"
+            },
+            {
+              "id": "defer_raid",
+              "label": "Defer this review",
+              "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+              "operation": "agenda_defer"
+            }
+          ]
+        },
+        {
+          "id": "distribution",
+          "name": "Decide one actual receipt",
+          "text": "Share the oldest actual receipt by living member weight or retain it publicly. Food shares are consumed now. This resolves existing resources, without another story reward.",
+          "year": 900,
+          "season": 0,
+          "completion": {
+            "kind": "distribution"
+          },
+          "choices": [
+            {
+              "id": "commit_distribution",
+              "label": "Share by member weight",
+              "detail": "Distribute the oldest actual receipt once. Coin enters private purses; food allotments are consumed.",
+              "operation": "agenda_mobile",
+              "action": "distribute",
+              "terms": {
+                "mode": "weight",
+                "memberIds": []
+              }
+            },
+            {
+              "id": "keep_receipt",
+              "label": "Retain the receipt publicly",
+              "detail": "Resolve the oldest receipt without private payment or food allotments, with ordinary support consequences.",
+              "operation": "agenda_mobile",
+              "action": "distribute",
+              "terms": {
+                "mode": "keep",
+                "memberIds": []
+              }
+            },
+            {
+              "id": "observed_distribution",
+              "label": "Record the actual completed transaction",
+              "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+              "operation": "agenda_mobile_result"
+            },
+            {
+              "id": "defer_distribution",
+              "label": "Defer this review",
+              "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+              "operation": "agenda_defer"
+            }
+          ]
+        },
+        {
+          "id": "move",
+          "name": "Arrive at a seasonal ground",
+          "text": "Propose access here, assent in Mobile coalition and wait for the other members. Send the offer here and wait for outside acceptance. Every intervening county needs ordinary access. If the host was lost, use Mobile coalition to recruit from actual member pledges and pay the current public cost. Review departure here and let days pass. Only actual camp and host arrival completes the stage.",
+          "year": 900,
+          "season": 0,
+          "completion": {
+            "kind": "arrival"
+          },
+          "choices": [
+            {
+              "id": "propose_access",
+              "label": "Propose access to the next ground",
+              "detail": "No permission is granted. Obtain member assent in Mobile coalition.",
+              "operation": "agenda_mobile_prepare",
+              "action": "access",
+              "terms": {
+                "groundId": "pass_ground"
+              }
+            },
+            {
+              "id": "send_access",
+              "label": "Send the reviewed access offer",
+              "detail": "The outside holder must accept separately. The public treasury pays its finite price. Intervening counties need ordinary access.",
+              "operation": "agenda_mobile",
+              "action": "access",
+              "terms": {
+                "groundId": "pass_ground"
+              }
+            },
+            {
+              "id": "stay_ground",
+              "label": "Review staying at the present ground",
+              "detail": "No travel charge or arrival evidence. The movement goal remains pending.",
+              "operation": "agenda_mobile",
+              "action": "round",
+              "terms": {
+                "groundId": "well_ground"
+              }
+            },
+            {
+              "id": "commit_move",
+              "label": "Review the seasonal departure",
+              "detail": "Spend the quoted camp food surcharge and use the actual route clock. Departure is not completion.",
+              "operation": "agenda_mobile",
+              "action": "round",
+              "terms": {
+                "groundId": "pass_ground"
+              }
+            },
+            {
+              "id": "observed_move",
+              "label": "Record the actual completed transaction",
+              "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+              "operation": "agenda_mobile_result"
+            },
+            {
+              "id": "defer_move",
+              "label": "Defer this review",
+              "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+              "operation": "agenda_defer"
+            }
+          ]
+        },
+        {
+          "id": "settlement",
+          "name": "Choose the following’s future",
+          "text": "Red Gate is this program’s settlement objective. Partial or final settlement needs actual presence, lawful owned land or a recognized land award, peace and exact member assent. An optional campaign can attempt to secure land but guarantees none. Stay mobile and defer leave this stage pending. Set the program aside closes the agenda without claiming settlement.",
+          "year": 900,
+          "season": 0,
+          "completion": {
+            "kind": "settlement"
+          },
+          "choices": [
+            {
+              "id": "propose_settlement",
+              "label": "Propose these terms to the members",
+              "detail": "No payment or outcome. Replaces the pending proposal. Supply only your own assent in Mobile coalition; other members decide separately.",
+              "operation": "agenda_mobile_prepare",
+              "action": "settle",
+              "terms": {
+                "countyId": "dune_pass",
+                "count": 50,
+                "final": false
+              }
+            },
+            {
+              "id": "commit_settlement",
+              "label": "Settle a partial group",
+              "detail": "Transfer fifty civilians at the actual camp county through existing land rights and assent. The remaining following stays mobile.",
+              "operation": "agenda_mobile",
+              "action": "settle",
+              "terms": {
+                "countyId": "dune_pass",
+                "count": 50,
+                "final": false
+              }
+            },
+            {
+              "id": "propose_final",
+              "label": "Propose final settlement",
+              "detail": "Quotes every remaining person, including field fighters. Obtain exact member assent in Mobile coalition.",
+              "operation": "agenda_mobile_prepare",
+              "action": "settle",
+              "terms": {
+                "countyId": "dune_pass",
+                "count": 1,
+                "final": true
+              }
+            },
+            {
+              "id": "commit_final",
+              "label": "Review final settlement",
+              "detail": "Settle every remaining person under the following’s current rights and member decision. No outcome is recorded before it succeeds.",
+              "operation": "agenda_mobile",
+              "action": "settle",
+              "terms": {
+                "countyId": "dune_pass",
+                "count": 1,
+                "final": true
+              }
+            },
+            {
+              "id": "stay_mobile",
+              "label": "Stay mobile",
+              "detail": "Spend nothing and leave settlement pending. Ordinary camp decisions remain available.",
+              "operation": "agenda_defer"
+            },
+            {
+              "id": "observed_settlement",
+              "label": "Record the actual completed transaction",
+              "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+              "operation": "agenda_mobile_result"
+            },
+            {
+              "id": "defer_settlement",
+              "label": "Defer this review",
+              "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+              "operation": "agenda_defer"
+            }
+          ]
+        }
+      ]
+    },
+    "opening_dune_leadership": {
+      "id": "opening_dune_leadership",
+      "type": "opening_profile",
+      "title": "Learn the following’s real decisions",
+      "intro": "Optional goals observe completed actions and pay no rewards. Set any goal aside without changing the following.",
+      "scenarioIds": [
+        "dune_leader_start"
+      ],
+      "provinceIds": [
+        "dune_well"
+      ],
+      "officeRealmId": "dune_coalition",
+      "requires": [
+        "dune_leadership"
+      ],
+      "goals": [
+        {
+          "id": "demand",
+          "name": "Receive one accepted demand",
+          "text": "In Deeds, open Lead the living following. Propose these exact terms here. In Mobile coalition, assent as your own member and wait for the other members to answer. Return here to send the demand. The outside court may refuse; only its actual public payment completes this stage.",
+          "office": true,
+          "criterion": {
+            "kind": "mobile_transaction",
+            "storyId": "dune_leadership",
+            "stageId": "demand"
+          }
+        },
+        {
+          "id": "raid",
+          "name": "Resolve one bounded raid",
+          "text": "In Deeds, open Lead the living following. An accepted demand reserves a finite tribute commitment. Wait for its thirty-day term to end before raiding. Propose the local sortie here, assent in Mobile coalition and wait for other members. Return to commit the reviewed sortie. It risks fighter losses and provides finite spoils, without occupation or land.",
+          "office": true,
+          "criterion": {
+            "kind": "mobile_transaction",
+            "storyId": "dune_leadership",
+            "stageId": "raid"
+          }
+        },
+        {
+          "id": "distribution",
+          "name": "Decide one actual receipt",
+          "text": "In Deeds, open Lead the living following. Share the oldest actual receipt by living member weight or retain it publicly. Food shares are consumed now. This resolves existing resources, without another story reward.",
+          "office": true,
+          "criterion": {
+            "kind": "mobile_transaction",
+            "storyId": "dune_leadership",
+            "stageId": "distribution"
+          }
+        },
+        {
+          "id": "move",
+          "name": "Arrive at a seasonal ground",
+          "text": "In Deeds, open Lead the living following. Propose access here, assent in Mobile coalition and wait for the other members. Send the offer here and wait for outside acceptance. Every intervening county needs ordinary access. If the host was lost, use Mobile coalition to recruit from actual member pledges and pay the current public cost. Review departure here and let days pass. Only actual camp and host arrival completes the stage.",
+          "office": true,
+          "criterion": {
+            "kind": "mobile_transaction",
+            "storyId": "dune_leadership",
+            "stageId": "move"
+          }
+        }
+      ],
+      "contacts": []
+    },
+    "dune_land_campaign": {
+      "id": "dune_land_campaign",
+      "type": "campaign",
+      "name": "A permanent foothold",
+      "desc": "The following may seek a permanent foothold through an uncertain ordinary campaign. The actual leader decides with member assent. No historical conquest, land entitlement or settlement is promised; ordinary diplomacy remains available.",
+      "actor": {
+        "realmId": "dune_coalition"
+      },
+      "target": {
+        "provinceId": "dune_pass",
+        "ownerIds": [
+          "dune_gate"
+        ]
+      },
+      "firstYear": 900,
+      "lastYear": 905,
+      "durationDays": 90,
+      "conditions": [
+        {
+          "kind": "landless",
+          "realmId": "dune_coalition"
+        }
+      ],
+      "admission": {
+        "schema": 1,
+        "mode": "ordinary_declaration",
+        "cause": "aggression"
+      },
+      "mobileReview": {
+        "schema": 1
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "dune_household",
+      "name": "Wellside household",
+      "desc": "A free household beside the following.",
+      "intro": "Your household begins on the Glass Road.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 40,
+      "prestige": 5,
+      "piety": 0,
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "fixedProvinceId": "dune_well",
+      "tracks": [
+        "dune_candidacy"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Free household",
+          "diff": "age 24"
+        }
+      },
+      "trackLocations": {
+        "dune_candidacy": [
+          "dune_well"
+        ]
+      }
+    },
+    {
+      "id": "dune_leader_start",
+      "alwaysUnlocked": true,
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "name": "Glassroad leader",
+      "desc": "Begin as the existing principal with a separate private purse. Public leadership remains with member selection.",
+      "mobilePrincipal": {
+        "realmId": "dune_coalition",
+        "memberId": "well_following"
+      },
+      "fixedProvinceId": "dune_well",
+      "characterName": "Sela Vey",
+      "sex": "f",
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "startAge": 32,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 23,
+      "prestige": 5,
+      "piety": 0,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing principal",
+          "diff": "No generated family"
+        }
+      },
+      "tracks": [
+        "dune_principal_household",
+        "opening_dune_leader_start",
+        "dune_leadership",
+        "opening_dune_leadership"
+      ],
+      "trackLocations": {
+        "dune_principal_household": [
+          "dune_well"
+        ],
+        "opening_dune_leader_start": [
+          "dune_well"
+        ],
+        "dune_leadership": [
+          "dune_well"
+        ],
+        "opening_dune_leadership": [
+          "dune_well"
+        ]
+      },
+      "intro": "You are {name}, a principal in the existing following. Use Mobile coalition in Deeds for current reviews."
+    },
+    {
+      "id": "dune_member_start",
+      "alwaysUnlocked": true,
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "name": "Glassroad member",
+      "desc": "Begin as the existing principal with a separate private purse. Public leadership remains with member selection.",
+      "mobilePrincipal": {
+        "realmId": "dune_coalition",
+        "memberId": "ridge_following"
+      },
+      "fixedProvinceId": "dune_well",
+      "characterName": "Nari Ash",
+      "sex": "f",
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "startAge": 34,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 9,
+      "prestige": 5,
+      "piety": 0,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing principal",
+          "diff": "No generated family"
+        }
+      },
+      "tracks": [
+        "dune_principal_household",
+        "opening_dune_member_start"
+      ],
+      "trackLocations": {
+        "dune_principal_household": [
+          "dune_well"
+        ],
+        "opening_dune_member_start": [
+          "dune_well"
+        ]
+      },
+      "intro": "You are {name}, a principal in the existing following. Use Mobile coalition in Deeds for current reviews."
+    }
+  ],
+  "bookmarks": {
+    "dune_world": {
+      "id": "dune_world",
+      "name": "The Glass Road",
+      "desc": "A fictional three-county authoring world.",
+      "date": {
+        "year": 900,
+        "season": 3,
+        "day": 87
+      },
+      "era": "early_medieval",
+      "geography": "dune_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "stories": [
+        "dune_offices",
+        "dune_land_campaign"
+      ],
+      "provinces": [
+        {
+          "id": "dune_well",
+          "name": "Amber Well",
+          "realm": "dune_oasis",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 6,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ],
+          "settlements": [
+            {
+              "site": "dune_meeting_hall",
+              "name": "Well Court",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "dune_flats",
+          "name": "Glass Flats",
+          "realm": "dune_oasis",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 3,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "dune_pass",
+          "name": "Red Gate",
+          "realm": "dune_gate",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 3,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "dune_oasis",
+          "name": "The Amber Wells",
+          "capital": "dune_well",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "dune_council",
+          "religion": "dune_belief",
+          "culture": "dune_folk",
+          "ruler": {
+            "name": "Tamar Selen",
+            "culture": "dune_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          },
+          "constituency": "dune_households"
+        },
+        {
+          "id": "dune_gate",
+          "name": "The Red Gate",
+          "capital": "dune_pass",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "religion": "dune_belief",
+          "culture": "dune_folk",
+          "ruler": {
+            "name": "Kavi Aran",
+            "culture": "dune_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          }
+        },
+        {
+          "id": "dune_coalition",
+          "name": "The Glassroad Following",
+          "capital": "dune_well",
+          "color": "#b99651",
+          "aggression": 0,
+          "rank": 2,
+          "government": "dune_assembly",
+          "religion": "dune_belief",
+          "culture": "dune_folk",
+          "ruler": {
+            "name": "Sela Vey",
+            "culture": "dune_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          },
+          "nonTerritorial": true,
+          "mobile": {
+            "profileId": "dune_compact",
+            "patronRealmId": null,
+            "origin": "dune_well",
+            "target": "dune_well",
+            "food": 3200,
+            "fighters": 160,
+            "treasury": 70,
+            "opening": {
+              "principals": [
+                {
+                  "memberId": "well_following",
+                  "person": {
+                    "kind": "realm_ruler",
+                    "actorId": "dune_incumbent",
+                    "realmId": "dune_coalition",
+                    "generation": 1
+                  }
+                },
+                {
+                  "memberId": "ridge_following",
+                  "person": {
+                    "kind": "opening_actor",
+                    "actorId": "dune_deputy"
+                  }
+                }
+              ],
+              "leaderMemberId": "well_following",
+              "muster": [
+                {
+                  "memberId": "well_following",
+                  "unitId": "cav",
+                  "count": 70
+                },
+                {
+                  "memberId": "well_following",
+                  "unitId": "arch",
+                  "count": 40
+                },
+                {
+                  "memberId": "ridge_following",
+                  "unitId": "ret",
+                  "count": 50
+                }
+              ]
+            },
+            "sponsorship": {
+              "schema": 1,
+              "kind": "independent"
+            },
+            "hostedAccess": {
+              "id": "opening_grazing",
+              "partnerRealmId": "dune_oasis",
+              "partnerActorId": "dune_host",
+              "countyIds": [
+                "dune_well"
+              ],
+              "capacity": 1600,
+              "allowRecruit": false,
+              "duration": 90
+            }
+          }
+        }
+      ],
+      "duchies": {
+        "dune_district": {
+          "name": "The Glass Road",
+          "kingdom": "dune_country"
+        }
+      },
+      "kingdoms": {
+        "dune_country": {
+          "name": "Amber Country",
+          "empire": "dune_horizon"
+        }
+      },
+      "empires": {
+        "dune_horizon": {
+          "name": "The Wide Horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "localInstitutions": {
+        "dune_household_bench": {
+          "city": "Amber Well",
+          "kind": "council",
+          "provinceId": "dune_well",
+          "site": "dune_meeting_hall",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "historicalName": "Nari Ash"
+        }
+      },
+      "starts": [
+        "dune_household",
+        "dune_leader_start",
+        "dune_member_start"
+      ],
+      "hidden": false,
+      "opening": {
+        "actors": {
+          "dune_incumbent": {
+            "name": "Sela Vey",
+            "sex": "f",
+            "born": 868,
+            "culture": "dune_folk",
+            "religion": "dune_belief",
+            "station": 1,
+            "role": "commander",
+            "home": "dune_well",
+            "skills": {
+              "mar": 6
+            }
+          },
+          "dune_deputy": {
+            "name": "Nari Ash",
+            "role": "notable",
+            "sex": "f",
+            "born": 866,
+            "culture": "dune_folk",
+            "religion": "dune_belief",
+            "station": 1,
+            "home": "dune_well",
+            "skills": {
+              "dip": 6,
+              "mar": 4
+            }
+          },
+          "dune_host": {
+            "ref": {
+              "kind": "realm_ruler",
+              "realmId": "dune_oasis"
+            }
+          }
+        },
+        "appointments": {},
+        "estates": [],
+        "claims": [],
+        "migrations": []
+      },
+      "climate": {
+        "zone": "arid",
+        "provinces": {}
+      }
+    }
+  },
+  "civicProfiles": {
+    "dune_rotation": {
+      "name": "Council of the Wells",
+      "constituency": "dune_households",
+      "eligibility": {
+        "sex": "any",
+        "membership": false
+      },
+      "executive": "majority",
+      "interim": "council",
+      "offices": [
+        {
+          "id": "well_keeper",
+          "name": "Well keeper",
+          "termDays": 180,
+          "salary": 0.25
+        }
+      ],
+      "consent": {
+        "war": 1,
+        "treaty": 1,
+        "extraordinary_tax": 1,
+        "pledge": 1,
+        "grant": 1,
+        "conversion": 1
+      }
+    }
+  },
+  "constituencyProfiles": {
+    "dune_households": {
+      "eligibility": {
+        "minAge": 18,
+        "minServiceYears": 0,
+        "skills": {},
+        "free": true
+      },
+      "selection": {
+        "threshold": 0.75,
+        "tie": "id",
+        "termDays": 180,
+        "nominationCost": 3
+      },
+      "recall": {
+        "threshold": 0.6,
+        "reasons": [
+          "neglect",
+          "overreach",
+          "ineligible"
+        ]
+      },
+      "obligations": {
+        "revenueRate": 0.7,
+        "levyRate": 0.5,
+        "maxDues": 12,
+        "maxLevy": 8000,
+        "reserve": 6
+      },
+      "reserved": [
+        "war",
+        "treaty",
+        "grant",
+        "extraordinary_tax",
+        "pledge",
+        "conversion"
+      ],
+      "powers": [
+        "ban",
+        "peace",
+        "revenue"
+      ],
+      "members": [
+        {
+          "id": "well_homes",
+          "name": "Well households",
+          "weight": 2,
+          "basis": "custom",
+          "continuity": "institution",
+          "support": 80
+        },
+        {
+          "id": "road_homes",
+          "name": "Road households",
+          "weight": 1,
+          "basis": "service",
+          "continuity": "institution",
+          "support": 75
+        }
+      ]
+    }
+  }
+}
