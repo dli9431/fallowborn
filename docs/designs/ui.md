@@ -112,6 +112,15 @@ The colonus opening exposes Review estate & freedom in both Deeds layouts. Stati
 
 Offices and legitimacy reviews
 
+Court mandate sheets open from retained office and public-administration rows.
+They disclose exact delegated powers, favor threshold, finite term, public funds,
+private-property separation, bilateral service pay and dismissal/acclamation
+risks. Native labeled selectors use the shared field style; named actual people
+have portrait rows. Concrete second reviews use shared fact and action cards.
+Browsing and cancellation spend nothing; Back, Escape, confirmation and outcome
+returns retain selector values, disclosures, scroll and focus. See
+office-mandates.md for the underlying operations and lifecycle.
+
 Both Deeds layouts expose the system-gated Offices & Legitimacy section. Its root sheet uses Governance fact cards for held appointments and every living imperial claimant, named people in shared portrait rows, and the existing field skin for court, office, scope and recognition-mandate selectors. Office powers, actual petition fee, retained prestige qualification, skill and succession or annual term stay visible. Each claimant lists the five independent legitimacy sources and current issuers, without a universal score.
 
 Full-width shared action cards open a separate review before appointment, reaffirmation, recognition or contestation. Costs and consequences remain on the face; Details disclose political scope and the survival of independent sources. Disabled actions retain a focusable cost-disclosure wrapper and show the first blocker. Root Back is disabled and Close remains available. Review Back, Escape and outcome Continue retain court, office, scope, mandate, scroll, expanded Details and the originating control through the shared modal history. Stable semantic action keys survive list refreshes. Stale confirmation spends nothing and requires a new review. Selector controls use the existing 44px full-width style on narrow screens.

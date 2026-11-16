@@ -1,5 +1,14 @@
 Retained fixed-start identity
 
+Court mandates retain an optional schema-1 record on the original appointment,
+including exact declaration key, institution/generation and bounded response,
+proposal and claimant provenance. Public-account contract flags survive the
+holder's departure. Save validation rejects malformed or changed terms before
+adoption; restore never appoints, confirms, consents, pays or resolves accession.
+Current-content round trips retain original identities, resources and counters.
+The existing v4 envelope and authority schema are unchanged. See
+office-mandates.md and MODDING.md for exact fields.
+
 The optional authority.episcopalClaims ledger preserves exact grant sources,
 principals, effective-definition fingerprints, offers and finite rent terms.
 Compensation cross-references the existing unique authority receipt and actual

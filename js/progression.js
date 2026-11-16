@@ -25,6 +25,7 @@
     }
     return best === null ? 0 : best;
   }
+  FB.patronStanding = patronStanding;
   function facts(s, c) {
     var isPlayer = c.id === s.player.charId, subject = FB.station.subject(c, s);
     var rid = isPlayer && s.realms.player && s.realms.player.alive ? 'player' :

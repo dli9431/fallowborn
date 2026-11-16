@@ -1,5 +1,11 @@
 Government dispatch
 
+Court office mandates authenticate the actual appointed person before invoking
+the Roman or public office, federate and recognition owners. They add no
+government strategy or sovereign ledger. Public officer accession retains its
+recognition procedure; Roman disputes resolve through ordinary armies. See
+[Court office mandates](office-mandates.md).
+
 Unpublished autumn 634 court declarations
 
 data/bookmark_634_courts.js stages three complete court replacements and their

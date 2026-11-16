@@ -1189,9 +1189,9 @@
     return registerWar(s,rid,war);
   };
   var consentContract=FB.authorityConsentContract, requestMigration=FB.federateRequest, resolveMigration=FB.federateResolveSettlement;
-  FB.authorityConsentContract = function (s,id,rid) {
+  FB.authorityConsentContract = function (s,id,rid,publicPayer) {
     if (M.active(s,rid) && (M.row(s,rid).columns || !decision(s,rid,'contract',M.contractTerms(s,id)))) return false;
-    return consentContract(s,id,rid);
+    return consentContract(s,id,rid,publicPayer);
   };
   FB.federateRequest = function (s,id,choice,templateId,recognitionId) {
     var moving=Q.movingPolity(s,id);

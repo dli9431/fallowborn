@@ -32,6 +32,15 @@ expedition_undertaking name and desc use the existing storyCampaign dataText own
 
 Office and legitimacy presentation
 
+Court-service office declarations in `data/office_mandates.js` use the ordinary
+`authorityOffice.<id>.name/desc.default` owners; the extractor includes the literal
+`officeMandateOffices` table. Mandate review chrome uses `FB.T`. The empty
+`householdTracks_imperial_service` source follows the existing automatic
+household-track discovery and its display owners. Start presentation in
+`starts_imperial_officer.js` follows the existing start-source discovery. Original
+appointment, proposal and claimant records save ids and facts, never rendered
+prose. Generated catalogs remain integration artifacts.
+
 data/technology_learning.js declares literal techCorrections_learning complete replacements and data/buildings_learning_care.js declares buildingCorrections_learning_care replacements plus buildings_learning_care additions. Static extraction keeps ordinary tech.<id> and building.<id> owners and final-English aliases. Removed library faith variants and obsolete paper-workshop labels have no stale owner; the guesthouse is building.hospice. Runtime names and descriptions use the existing structured route. No generated catalogue is changed by this content work.
 
 Date-owned revision files may keep literal labels in a local REVISION_CONTENT object with bookmarkId and revisionId strings. The static extractor reads its provinces and realms arrays, duchies/kingdoms/empires tables, settlementLayout county arrays and constituencyProfiles member names. Each label receives a revision-scoped owner (constituency members retain their profile-scoped owners) and an exact-source alias for the ordinary runtime renderers. Compose those literal fields into the existing bookmark schema without executing a composer during extraction. This source organization adds no runtime mod root.

@@ -1516,6 +1516,11 @@ def extract_structured(inv: Inventory) -> None:
             supplemental_root = node_object(find_assignment(aristocratic_path, "FBDATA", supplemental)) or {}
             entries.extend((item_id, item_node, "data/aristocratic_courts.js")
                            for item_id, item_node in supplemental_root.items())
+        if data_name == "authorityOffices":
+            mandate_root = node_object(find_assignment(DATA / "office_mandates.js", "FBDATA",
+                                                       "officeMandateOffices")) or {}
+            entries.extend((item_id, item_node, "data/office_mandates.js")
+                           for item_id, item_node in mandate_root.items())
         if data_name == "administrationProfiles":
             rollout_root = node_object(find_assignment(DATA / "government_rollout.js", "FBDATA",
                                                       "governmentAdministrationProfiles")) or {}

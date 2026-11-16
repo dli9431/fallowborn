@@ -213,4 +213,138 @@
     }
     return result;
   };
+  // Mandate admission and political resolution use the canonical ruler owner.
+  R.officerAccessionQuote = function (s,actor,appointment) {
+    var rid = appointment.institutionId, c = s.chars[appointment.holder.id], realm = s.realms[rid],
+      incumbent = rid === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid),
+      tree = realm && realm.succession, member = tree && tree.members && tree.members[tree.rulerMemberId],
+      patron = actor && (actor.kind === 'realm' && actor.id === rid || actor.kind === 'character' && incumbent && incumbent.id === actor.id),
+      vacancy = !!(member && member.alive === false || incumbent && incumbent.dead);
+    var q = {appointmentId:appointment.id,actor:copy(actor),realmId:rid,characterId:c && c.id,
+      cause:vacancy ? 'death' : 'abdication',allowed:false,reason:null,owner:null};
+    var retained = (s.authority && s.authority.appointments || []).some(function (r) { return r === appointment; });
+    var claim = appointment.mandate && appointment.mandate.claim;
+    if (!retained || !claim || claim.status !== 'claimed' || !FB.officeMandates.supported(s,appointment) ||
+        claim.generation !== FB.realmRulerGeneration(s,rid))
+      q.reason = FB.T('The original officer claim and independent recognition must remain current.');
+    else if (!realm || !realm.alive || rid === 'player' && !(s.player.provs || []).length || !c || c.dead || c.unfree || FB.justiceCustodyOf(s,c.id) ||
+        FB.isReigningRealmRuler(s,c) || c.id === s.player.charId && FB.station.rulesRealm(s.player,s) || !FB.treasuryPublicAccountSnapshot(s,rid))
+      q.reason = FB.T('The candidate and an independent public court must remain available.');
+    else if (!vacancy && !patron) q.reason = FB.T('A living incumbent must consent to abdication; recognition alone does not remove a ruler.');
+    else if (!FB.governments.publicAuthorityReadiness(s,rid).allowed)
+      q.reason = FB.T('The court cannot make this public decision without a capable lawful authority.');
+    else if (FB.administrationProfile(s,rid)) {
+      q.owner = R.accessionQuote(s,rid,q.cause);
+      var selected = R.candidateMember(s,rid,q.owner.memberId);
+      if (!q.owner.allowed || !selected || selected.charId !== c.id) q.reason = q.owner.reason ||
+        FB.T('The independent public interests have not selected this officer.');
+    }
+    q.allowed = !q.reason;
+    q.stamp = JSON.stringify([appointment,realm && realm.ruler,member,incumbent && [incumbent.id,incumbent.dead],
+      c && [c.id,c.dead,c.unfree,c.royalLine],FB.treasuryPublicAccountSnapshot(s,rid)]);
+    return q;
+  };
+  function installOfficer(s,r) {
+    var rid = r.institutionId, c = s.chars[r.holder.id], claim = r.mandate.claim;
+    if (!c || c.dead || c.unfree || FB.justiceCustodyOf(s,c.id) || FB.isReigningRealmRuler(s,c)) return false;
+    claim.status = 'succeeded';
+    if (rid === 'player') {
+      var successorCourt = FB.abdicatePlayerRealmToHeir(s,c,{cause:'lawful_removal'});
+      if (!successorCourt) { claim.status = 'disputed'; return false; }
+      FB.authorityRekeyInstitution(s,'player',successorCourt.id);
+      claim.currentCourtId = successorCourt.id;
+      s.player.provs = [];
+      FB.setPlayerTier(s,2,{attachLiege:false});
+      FB.changePlayerLiege(s,successorCourt.id,'office:accession');
+    } else if (!FB.assignRealmRulerCharacter(s,rid,c.id,{replaceAuthored:true})) return false;
+    FB.authorityAppointmentTransition(s,r.id,'remove');
+    var claimant = (s.authority.appointments || []).filter(function (p) { return p.id === claim.appointmentId; })[0];
+    if (claimant) FB.authorityAppointmentTransition(s,claimant.id,'remove');
+    if (c.id === s.player.charId) {
+      if (!FB.absorbRealm(s,rid,c)) return false;
+      claim.currentCourtId = 'player';
+    }
+    var current = claim.currentCourtId, at = {kind:'realm',id:current}, issuer = {kind:'realm',id:current},
+      def = FBDATA.authorityOffices[claimant.officeId], source = FB.legitimacySourceFor(s,'court',issuer,def.recognitionSources);
+    if (source) {
+      var proof = FB.political.legitimacy(s,r.holder,at,source).filter(function (p) { return same(p.issuer,issuer); })[0] ||
+        FB.authorityRecognize(s,{issuer:issuer,subject:r.holder,scope:at,source:source});
+      if (proof) FB.authorityAppoint(s,{officeId:claimant.officeId,institutionId:current,appointer:issuer,
+        holder:r.holder,scope:at,recognitionId:proof.id});
+    }
+    return true;
+  }
+  R.officerAccede = function (s,reviewed,r) {
+    var current = R.officerAccessionQuote(s,reviewed.actor,r);
+    if (!current.allowed || JSON.stringify(current) !== JSON.stringify(reviewed)) return false;
+    if (FB.administrationProfile(s,r.institutionId)) {
+      var fromPlayer = r.institutionId === 'player';
+      r.mandate.claim.status = 'succeeded';
+      var result = FB.publicAccede(s,FB.publicAccessionQuote(s,{kind:'realm',id:r.institutionId},r.institutionId,current.cause));
+      if (result) {
+        r.mandate.claim.currentCourtId = r.holder.id === s.player.charId ? 'player' : r.institutionId;
+        if (fromPlayer) FB.authorityRekeyInstitution(s,'player',result.id);
+        FB.authorityAppointmentTransition(s,r.id,'remove');
+        return result;
+      }
+      r.mandate.claim.status = 'claimed'; return false;
+    }
+    return installOfficer(s,r);
+  };
+  R.openOfficeDispute = function (s,r) {
+    var M = FB.officeMandates, claim = r.mandate.claim, rid = r.institutionId,
+      c = s.chars[r.holder.id], realm = s.realms[rid], faction = 'office_dispute_' + r.id,
+      forces = M.forces(s,r).map(function (id) { return {hostId:id,realmId:(s.armies || []).filter(function (a) { return a.id === id; })[0].realm}; });
+    if (!forces.length || s.realms[faction]) return false;
+    // A banner identity, with no county, levy, purse, dynasty or generated ruler.
+    s.realms[faction] = {id:faction,name:c.name,capital:realm.capital,color:realm.color,
+      rank:1,liege:null,alive:true,rebelFaction:true,nonTerritorial:true,
+      religion:c.religion,ruler:{name:c.name,sex:c.sex,culture:c.culture,born:c.born,
+        age:FB.ageOf(c,s.date.year),mar:FB.skillSnapshot(s,c,'mar'),generation:1},war:null};
+    var war = FB.registerOrdinaryWar(s,faction,{enemy:rid,target:realm.capital,legacy:false,
+      casus:{type:'office_acclamation',target:realm.capital},objectives:[{type:'office_acclamation',target:realm.capital}]});
+    if (!war) { delete s.realms[faction]; return false; }
+    claim.status = 'disputed'; claim.factionId = faction; claim.warId = war.id; claim.forces = forces;
+    FB.authorityAppointmentTransition(s,r.id,'remove');
+    forces.forEach(function (f) {
+      var a = (s.armies || []).filter(function (a) { return a.id === f.hostId; })[0];
+      a.realm = faction; a.warId = war.id; a.path = []; a.goal = null; a.moveLeft = 0;
+      (s.authority.contracts || []).filter(function (p) { return p.hostId === a.id && ['active','offered'].indexOf(p.status) >= 0; }).forEach(function (p) {
+        FB.authorityContractTransition(s,p.id,'breach',p.patronRealmId);
+      });
+    });
+    FB.authorityRecognitionTransition(s,claim.recognitionId,'reaffirm');
+    FB.news(s,FB.msg('news.office.mandate_dispute',
+      '{person} disputes the court’s rule with the existing declared forces. An ordinary campaign will decide the outcome.',{person:c.name}));
+    FB.invalidateRealmCache(); FB.assignCampaignHosts(s);
+    return war;
+  };
+  R.officeDisputeValid = function (s,war) {
+    var r = FB.officeMandates.warAppointment(s,war.id), c = r && s.chars[r.holder.id], claim = r && r.mandate.claim;
+    return !!(claim && claim.status === 'disputed' && c && !c.dead && !c.unfree && !FB.justiceCustodyOf(s,c.id) &&
+      !FB.isReigningRealmRuler(s,c) && !(c.id === s.player.charId && FB.station.rulesRealm(s.player,s)) &&
+      claim.generation === FB.realmRulerGeneration(s,r.institutionId) && FB.officeMandates.supported(s,r) && (s.armies || []).some(function (a) {
+        return a.realm === claim.factionId && a.men > 0 && claim.forces.some(function (f) { return f.hostId === a.id; }); }));
+  };
+  R.finishOfficeDispute = function (s,war,result) {
+    var r = FB.officeMandates.warAppointment(s,war.id);
+    if (!r || r.mandate.claim.status !== 'disputed') return false;
+    var claim = r.mandate.claim, originalCourt = r.institutionId, won = result === 'victory' && R.officeDisputeValid(s,war);
+    if (won) won = !!installOfficer(s,r);
+    if (!won) { claim.status = 'failed'; FB.authorityRecognitionTransition(s,claim.recognitionId,'revoke'); }
+    // Return surviving soldiers, food and equipment on the same actual hosts.
+    claim.forces.forEach(function (f) {
+      var a = (s.armies || []).filter(function (a) { return a.id === f.hostId; })[0];
+      if (!a || a.realm !== claim.factionId) return;
+      a.realm = won && f.realmId === originalCourt ? claim.currentCourtId : f.realmId;
+      a.warId = null; a.path = []; a.goal = null; a.moveLeft = 0;
+    });
+    s.realms[claim.factionId].alive = false; FB.invalidateRealmCache();
+    var c = s.chars[r.holder.id];
+    FB.news(s,won ? FB.msg('news.office.mandate_victory',
+      'The campaign brings {person} to rule. Public accounts and private property remain separate.',{person:c.name}) :
+      FB.msg('news.office.mandate_failure',
+        'The acclamation of {person} fails. Surviving forces return to their former institutions; the revoked mandate is not restored.',{person:c.name}));
+    return won;
+  };
 })();

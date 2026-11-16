@@ -717,6 +717,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Continuing to buy ordinary family plots after declaring a manor or taking landed rank extends baseline private property accumulation; no innovation credibly gates buying land already offered in the home county. All free ranks retain the same prices, settlement caps, yields and inheritance.'
       },
+      court_office_mandates:{
+        mode:'none',
+        rationale:'Personal delegation, favor, court accounts, dismissal and recognition govern court service. Ordinary military, financial, qualification and public succession requirements remain authoritative.'
+      },
       building_university:{
         mode:'hard', tech:['universities'], fallback:'library',
         rationale:'Corporate university centers require organized universities knowledge; ordinary libraries remain available.'

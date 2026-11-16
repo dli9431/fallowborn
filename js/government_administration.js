@@ -86,6 +86,7 @@
     FB.changePlayerLiege(s,realm.id,'public:household_succession');
   };
   FB.publicAppointmentEffective = function (s, row) {
+    if (FB.officeMandates && FB.officeMandates.suspension(s,row)) return false;
     var terms = row && row.publicTerms, profile = row && FB.administrationProfile(s, row.institutionId);
     var hereditary = FB.aristocracy && FB.aristocracy.assignment(s, row);
     if (row && !hereditary && !G.publicAuthorityReadiness(s,row.institutionId).allowed) return false;
@@ -102,7 +103,8 @@
     if (row.status !== 'active') return row.status;
     if (row.publicTerms.confirmation === 'reaffirm' &&
         row.appointerGeneration !== FB.realmRulerGeneration(s, row.institutionId)) return 'contested';
-    return FB.publicAppointmentEffective(s, row) ? 'active' : 'expired';
+    return FB.publicAppointmentEffective(s, row) ? 'active' :
+      FB.officeMandates && FB.officeMandates.suspension(s,row) ? 'suspended' : 'expired';
   }
   FB.publicOfficeRows = function (s, rid) {
     return rows(s).filter(function (row) { return row.publicTerms && row.institutionId === rid; }).map(function (row) {
@@ -157,7 +159,7 @@
     var def = FBDATA.authorityOffices[input.officeId], c = s.chars[input.holderId];
     var at = input.scope, pid = input.provinceId, funds = rid && FB.treasuryAvailable(s, rid);
     var existing = rows(s).filter(function (row) {
-      return row.institutionId === rid && row.publicTerms && ['active','contested'].indexOf(stateName(s, row)) >= 0;
+      return row.institutionId === rid && row.publicTerms && ['active','contested','suspended'].indexOf(stateName(s, row)) >= 0;
     });
     var occupied = existing.some(function (row) { return same(row.scope, at) && row.officeId === input.officeId; });
     var shares = existing.filter(function (row) { return row.publicTerms.source.provinceId === pid; })
@@ -190,8 +192,15 @@
       FB.publicCountyIncome(s, rid, pid) <= 0 ? FB.T('This source has no collectible public receipts.') :
       !FB.treasuryCounterparty(s,rid) || funds < q.cost ? FB.T('The court needs {money:cost} in an active treasury for appointment.', { cost:q.cost }) : null;
     q.allowed = !q.reason;
+    var mandateFavor = def && def.mandate && FB.officeMandates.favor(s,{holder:{kind:'character',id:input.holderId},institutionId:rid});
+    if (def && def.mandate) {
+      q.endTurn = Math.min(q.endTurn,s.turn + def.mandate.tenureDays);
+      if (q.allowed && mandateFavor < def.mandate.favor.minimum) {
+        q.allowed = false; q.reason = FB.T('This mandate requires court favor of at least {minimum}.',{minimum:def.mandate.favor.minimum});
+      }
+    }
     q.stamp = JSON.stringify([q.generation, profile, c && [c.id,c.dead,c.born,c.unfree,qualification,FB.characterResidence(s,c)],
-      existing, funds, scopeValid, county, readiness, c && FB.justiceCustodyOf(s,c.id), s.player.prestige,
+      existing, funds, scopeValid, county, readiness, def && def.mandate, mandateFavor, c && FB.justiceCustodyOf(s,c.id), s.player.prestige,
       s.player.travel, s.player.provinceId, FB.publicCountyIncome(s, rid, pid),
       s.player.charId, ruler(s, rid) && ruler(s, rid).id]);
     return q;
@@ -212,7 +221,7 @@
     // Keep one ended commission per office/scope. Referenced legal evidence
     // is retained; a replaced unreferenced payroll is not a growing log.
     s.authority.appointments = rows(s).filter(function (prior) {
-      return prior.id === row.id || !prior.publicTerms || prior.institutionId !== row.institutionId ||
+      return prior.id === row.id || prior.mandate || !prior.publicTerms || prior.institutionId !== row.institutionId ||
         prior.officeId !== row.officeId || !same(prior.scope,row.scope) ||
         ['active','contested'].indexOf(stateName(s,prior)) >= 0 ||
         prior.publicTerms.arrears > 0 ||
