@@ -6689,6 +6689,43 @@ FB.mobile.openingPlan(state, realmDefinition) is a pure fresh-opening eligibilit
 
 FBDATA.mobileProfiles and the top-level mod mobileProfiles table select reusable policies for explicitly declared mobile_confederation realms. A realm mobile object requires profileId, patronRealmId, origin, target, food, fighters and treasury. Its realm supplies culture, religion, capital, rank and nonTerritorial:true. Origin and target must be inhabited; patron must be a distinct authored realm. Initial fighters are withdrawn from the first member following, not added to local population or fabricated from county levies. See data/mobile_confederations.js and docs/designs/mobile-confederation.md for complete profile fields and bounds.
 
+Optional `extractionPolicy` has exactly `schema:1` and at least one of:
+
+- `demand:{kinds,maxPayment,maxDays}`: kinds is 1-2 unique values from tribute
+  and protection; maxPayment is an integer 1-10000; maxDays is an integer 1-1440.
+- `raid:{maxGold,maxFood,stockShare,cooldownDays}`: maxGold is an integer 0-10000,
+  maxFood an integer 0-100000, at least one positive; stockShare is finite in
+  (0,1]; cooldownDays is an integer 1-1440.
+- `hire:{templateIds}`: 1-8 unique effective federateContractTerms ids, including
+  same-import definitions. Each must offer paid host service without required
+  recognition or conquest land. Optional land in a template creates no land scope
+  in this operation.
+
+Unknown and reserved keys reject. The pure shared schema validates native and
+ordinary JSON candidates. `mobile.extractionOperations(state,realmId)` projects
+declared kinds. `mobile.review` action extract uses exactly one terms shape:
+`{kind:'demand',countyId,agreementKind,threat:'raid',price,duration,levy}` (tribute
+requires levy 0; protection requires a positive real host commitment),
+`{kind:'raid',countyId}`, or `{kind:'hire',partnerId,templateId}`. Submit the exact
+terms through propose with operation extraction and current-principal assent
+before extract. Single-host elected coalitions only; local permission, finite
+stocks and all normal military gates remain intrinsic. Demand receipts add an
+optional extraction:{schema:1,countyId,threat:'raid'} to the existing agreement;
+their actual payer is the outside court. Ordinary accept/decline answers these
+offers. hire_answer takes contractId, exact contract signature and accept boolean
+from the current paying ruler. Neither refusal starts a war or moves land.
+
+Government AI policies may optionally add `demandResponse` with exactly reserve
+(finite 0-1000000000000), maxPaymentShare (0-1), tributeThreatRatio and
+protectionThreatRatio (each 0-10). Acceptance requires price no greater than
+available treasury minus reserve and treasury times maxPaymentShare, plus actual
+coalition fighters at least the chosen ratio times max(1, defending strength).
+Missing terms retain defaults 0, 0.25, 1.25 and 0.5 respectively. The response is
+pure, uses no identity-based exception or RNG, and never substitutes for current
+outside consent. These parameters are government-only and do not change the
+existing willingness parameters. See mobile-extraction-glassroad.json for a
+complete ordinary import with independent response and service terms.
+
 FB.mobile.review(state, {realmId, action, actor, terms}) and FB.mobile.commit(state, review) use the shared government selection owner adapter. The actor is a typed realm or character principal. Actions include pledge, support, select, propose, assent, recruit, demuster, move, march, offer, accept, join, replace_member, leave, settle, work, trade, war, peace, service, land and contract. land reviews a patron-owned camp county before requesting ordinary shared service terms. contract uses FB.mobile.contractTerms(state, contractId) to review those exact terms before recording the coalition's consent. Review is pure and detached; commit revalidates against current actors, people, stock, ownership and money. Only fresh initialization consumes a realm declaration. JSON mods choose registered strategies and cannot supply executable source.
 
 
