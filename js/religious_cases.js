@@ -3,6 +3,16 @@
   'use strict';
   var R = FB.religiousCases = {}, C = FB.episcopalClaims, MAX = 64;
   var ACTIVE = ['charged','offered','referred','accepted'];
+  FB.eventStateReaders.register({id:'open_religious_case',system:'religious_cases',
+    args:{type:'object',fields:{profileId:{type:'string',ref:{table:'religiousCases'}}}},
+    read:function (s,a) {
+      return rows(s).some(function (r) {
+        if (r.profileId !== a.profileId || ACTIVE.indexOf(r.status) < 0) return false;
+        var x = R.snapshot(s,r.profileId,r.offenseId);
+        return !!(x && !x.reason && !x.stale &&
+          [x.defendantId,x.victimId,x.principals.bishopId,x.principals.courtId].indexOf(s.player.charId) >= 0);
+      });
+    }});
   var CLOSED = ['dismissed','vindicated','settled','penance','imprisoned','confiscated','enforced','interrupted'];
   var ACTIONS = ['charge','dismiss','challenge','defend','settlement','accept','decline','refuse','arrest','submit',
     'penance','imprison','refer','accept_referral','reject_referral','confiscate','enforce','close_stale'];

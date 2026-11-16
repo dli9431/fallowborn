@@ -1,5 +1,11 @@
 Deferred instance compilation
 
+The staged-story owner registers `active_story_stage` under the `story_tracks` event
+observation tag. Arguments name an existing declaration and nonterminal stage;
+the saved record must already occupy that phase without a result. A read never
+attaches or advances a track. See events.md for shared candidate validation,
+selection lifetime and the none technology decision.
+
 Title boot seals the registered story types. Unmodded bookmark setup compiles only the selected date and its accepted start graphs through the canonical source review. It does not seal the full instance registry. FB.game.prepareContent restores the original declarations and English messages, publishes all native sources, loads bundled instances, applies stored mods and seals the effective registry before campaign creation or restoration. Message indexing and locale finalization follow accepted publication. Switching setup dates discards the previous partial registry; it never initializes a story or campaign.
 
 Trusted source order

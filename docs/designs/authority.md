@@ -1,5 +1,13 @@
 Roman offices and imperial claims
 
+State-aware events register `protagonist_office` and `legitimacy_band` under
+the `authority` observation tag, and `federate_contract` under `federates`.
+They read canonical personal office rows, distinct current personal
+recognition sources and canonical contract effectiveness without issuing or
+repairing anything. The source bands are none, one and several, not a universal
+legitimacy score. See events.md for selection lifetime and the none technology
+decision, and MODDING.md for exact arguments.
+
 Administrative profiles retain their separate public commission path. Enabling roman_offices in an era does not expose a profile-owned court through legacy officeCourts, officeScopes or appointment petitions. Rows with publicTerms also use their public owner's transition reviews rather than legacy officeTransitionQuote/officeTransition. Public commissions retain their dated catalogue, productive source, pay and confirmation rules. This does not change the Roman catalogues of regnum, roman_civic or federate_polity, or rewrite existing authority records.
 
 Occupation and claimant boundaries

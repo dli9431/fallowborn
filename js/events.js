@@ -32,6 +32,16 @@ window.FB = window.FB || {};
   FB.validateEventPeriod = function (ev, packs) {
     return FB.contentPeriodFault(eventPeriod(ev, packs));
   };
+  FB.validateEventStateConditions = function (ev, context) {
+    const errors = [];
+    function check(tg,path) {
+      if (tg && Object.prototype.hasOwnProperty.call(tg,'state'))
+        errors.push.apply(errors,FB.eventStateReaders.faults(tg.state,path + '.state',context));
+    }
+    check(ev.trigger,'events.' + ev.id + '.trigger');
+    (ev.options || []).forEach(function (option,i) { check(option.require,'events.' + ev.id + '.options[' + i + '].require'); });
+    return errors;
+  };
   FB.compileEventContent = function (era) {
     var periods = Object.create(null), events = [];
     var packs = FBDATA.eventPacks || {};
@@ -43,6 +53,8 @@ window.FB = window.FB || {};
     for (var ev of FBDATA.events) {
       var period = eventPeriod(ev), problem = FB.contentPeriodFault(period);
       if (problem) throw new Error('Invalid event period: ' + ev.id + ': ' + problem);
+      var stateFaults = FB.validateEventStateConditions(ev);
+      if (stateFaults.length) throw new Error(stateFaults.join(' '));
       periods[ev.id] = period;
       if (!period.eras || period.eras.indexOf(era) >= 0) events.push(ev);
     }
@@ -5174,6 +5186,7 @@ window.FB = window.FB || {};
     const provinceId = ctx && ctx.locationId || p.provinceId;
     const pr = FB.world.byId[provinceId];
     if (tg.countyIds && (!Array.isArray(tg.countyIds) || tg.countyIds.indexOf(provinceId) < 0)) return false;
+    if (tg.state !== undefined && !FB.eventStateReaders.test(state,tg.state,ctx,snapshot)) return false;
 
     if (!FB.station.reaches(p, tg.tierMin, state)) return false;
     if (FB.station.exceeds(p, tg.tierMax, state)) return false;
@@ -5620,7 +5633,9 @@ window.FB = window.FB || {};
         if (!object(row.require)) { errors.push(path + '.require must be an object.'); continue; }
         for (const key of Object.keys(row.require)) {
           const value = row.require[key];
-          if (['goldMin','goldMax','prestigeMin','pietyMin','minAge','maxAge','yearMin','yearMax'].indexOf(key) >= 0) {
+          if (key === 'state') {
+            errors.push.apply(errors,FB.eventStateReaders.faults(value,path + '.require.state'));
+          } else if (['goldMin','goldMax','prestigeMin','pietyMin','minAge','maxAge','yearMin','yearMax'].indexOf(key) >= 0) {
             if (typeof value !== 'number' || !isFinite(value) || Math.abs(value) > 1000000)
               errors.push(path + '.require.' + key + ' must be a bounded number.');
           } else if (['flags','notFlags','cultures','professions','holdings','notHoldings'].indexOf(key) >= 0) {
@@ -5648,15 +5663,18 @@ window.FB = window.FB || {};
         (lifecycleIndex[row.hook] || (lifecycleIndex[row.hook] = [])).push({ event:ev, require:row.require });
       }
     }
-    const queued = [];
+    const queued = [], snapshot = {};
     for (const row of lifecycleIndex[hook] || []) {
       const ev = row.event;
       if (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev) ||
           ev.once && state.player.fired[ev.id] ||
           ev.cooldown && state.player.cooldowns[ev.id] !== undefined &&
             state.turn - state.player.cooldowns[ev.id] < ev.cooldown * 90 ||
-          !FB.checkTrigger(state, row.require, ctx)) continue;
-      const item = FB.queueEvent(state, ev.id, ctx, extra);
+          ev.trigger && ev.trigger.state && !FB.eventStateReaders.test(state,ev.trigger.state,ctx,snapshot) ||
+          !FB.checkTrigger(state, row.require, ctx, snapshot)) continue;
+      const eventCtx = row.require && row.require.state
+        ? Object.assign({},ctx || {},{eventLifecycleHook:hook}) : ctx;
+      const item = FB.queueEvent(state, ev.id, eventCtx, extra);
       if (item) queued.push(item);
     }
     return queued;
@@ -5687,6 +5705,12 @@ window.FB = window.FB || {};
 
   FB.eventContextStillValid = function (state, ev, ctx) {
     if (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev)) return false;
+    if (ev.trigger && ev.trigger.state && !FB.eventStateReaders.test(state,ev.trigger.state,ctx)) return false;
+    if (ctx && ctx.eventLifecycleHook) {
+      const rows = (FBDATA.eventSubscriptions || {})[ev.id] || [];
+      const row = rows.filter(function (r) { return r.hook === ctx.eventLifecycleHook; })[0];
+      if (!row || row.require && row.require.state && !FB.eventStateReaders.test(state,row.require.state,ctx)) return false;
+    }
     if (!FB.eventParticipantsStillValid(state, ev, ctx || {})) return false;
     if (!tenureAwareContextStillValid(state, ev, ctx || {})) return false;
     if (ev.educationStory) {
@@ -5972,6 +5996,7 @@ window.FB = window.FB || {};
     const eligible = [];
     const triggerSnapshot = { age:protagonistAge };
     const contextOptions = Object.create(null);
+    let stateContextOptions = null;
     function selectorOptions(selector) {
       if (!Object.prototype.hasOwnProperty.call(contextOptions, selector)) {
         contextOptions[selector] = FB.eventContextOptions
@@ -5984,8 +6009,17 @@ window.FB = window.FB || {};
       if (ev.once && state.player.fired[ev.id]) continue;
       if (ev.cooldown && state.player.cooldowns[ev.id] !== undefined &&
         state.turn - state.player.cooldowns[ev.id] < ev.cooldown * 90) continue;
-      if (!FB.checkTrigger(state, ev.trigger, undefined, triggerSnapshot)) continue;
-      if (ev.contextSelector && !selectorOptions(ev.contextSelector).length) continue;
+      if (ev.trigger.state && ev.contextSelector) {
+        const contexts = selectorOptions(ev.contextSelector).filter(function (ctx) {
+          return FB.checkTrigger(state,ev.trigger,ctx,triggerSnapshot);
+        });
+        if (!contexts.length) continue;
+        if (!stateContextOptions) stateContextOptions = Object.create(null);
+        stateContextOptions[ev.id] = contexts;
+      } else {
+        if (!FB.checkTrigger(state, ev.trigger, undefined, triggerSnapshot)) continue;
+        if (ev.contextSelector && !selectorOptions(ev.contextSelector).length) continue;
+      }
       if (ev.trigger.chance !== undefined && !FB.chance(ev.trigger.chance)) continue;
       eligible.push(ev);
     }
@@ -6000,7 +6034,7 @@ window.FB = window.FB || {};
       }
       let selectedContext = {};
       if (chosen.contextSelector) {
-        const contexts = selectorOptions(chosen.contextSelector);
+        const contexts = stateContextOptions && stateContextOptions[chosen.id] || selectorOptions(chosen.contextSelector);
         if (!contexts.length) return out;
         selectedContext = FB.pick(contexts);
       }
@@ -6046,6 +6080,8 @@ window.FB = window.FB || {};
         FB.validateEventParticipants(ev);
         FB.validateEducationEvent(ev);
         FB.validateCommunityEvent(ev, communityRefs);
+        const faults = FB.validateEventStateConditions(ev);
+        if (faults.length) throw new Error(faults.join(' '));
         eventIndex[ev.id] = ev;
       }
     }
@@ -12220,7 +12256,8 @@ window.FB = window.FB || {};
     ctx = ctx || {};
     if (!option || (ev && (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev))) ||
         !FB.systemContentEnabled(state, option) ||
-        (option.require && !FB.systemContentEnabled(state, option.require))) {
+        (option.require && (!FB.systemContentEnabled(state, option.require) ||
+          option.require.state !== undefined && !FB.eventStateReaders.test(state,option.require.state,ctx)))) {
       return { visible:false, ready:false, systemLocked:true, techLocked:false, missingTech:[] };
     }
     const fiscalReason = FB.fiscalEventRestriction && FB.fiscalEventRestriction(state, option, ctx);

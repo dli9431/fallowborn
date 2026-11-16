@@ -1,5 +1,12 @@
 Episcopal civil rent claims
 
+The owner registers `open_episcopal_claim` under the `episcopal_claims` event
+observation tag. It reads existing demanded, contested, proposed and enforcement
+records through the canonical snapshot, requiring current principals, property
+and jurisdiction and the protagonist's involvement. It creates no claim or rent.
+See events.md for shared validation, selection lifetime and the none technology
+decision.
+
 Named discipline is a separate consumer of the pure `courtContext` and explicit
 `privateAccount/paymentReady/payReceipts` interfaces. These keep private household,
 barony and personal accounts separate from institutional and secular treasuries,

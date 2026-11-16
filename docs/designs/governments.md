@@ -1,5 +1,11 @@
 Government dispatch
 
+The `sovereign_government` and `county_holder_government` event state readers
+use the current sovereign and direct-holder projections. They register under
+the `governments` observation tag and grant no government or jurisdiction.
+See events.md, State condition readers, for shared validation, selection caching
+and the none technology decision.
+
 Unpublished autumn 634 court declarations
 
 data/bookmark_634_courts.js stages three complete court replacements and their

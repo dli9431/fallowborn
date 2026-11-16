@@ -3,6 +3,17 @@
 (function () {
   'use strict';
   var Q = FB.political;
+  FB.eventStateReaders.register({id:'federate_contract',system:'federates',
+    args:{type:'object',fields:{
+      realmId:{type:'string',minLength:1,maxLength:80},
+      status:{enum:['offered','active','ineffective','breached','expired','released']}
+    }},read:function (s,a) {
+      return Q.contracts(s,a.realmId).some(function (row) {
+        return a.status === 'ineffective' ? row.status === 'active' && !row.effective :
+          a.status === 'released' ? row.status === 'expired' && row.transitionReason === 'service_released' :
+          row.status === a.status && (a.status !== 'active' || row.effective);
+      });
+    }});
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
   function rows(s) { return s.authority && s.authority.migrations || []; }

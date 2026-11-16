@@ -50,6 +50,19 @@
       s.realms[rid] && s.realms[rid].alive && s.owner[a.def.provinceId] === FB.topRealm(s, rid));
   }
   function member(a, cid) { var m = a.row.members && a.row.members[cid]; return m && m.status === 'active' ? m : null; }
+  FB.eventStateReaders.register({id:'institution_membership',system:'religious_institutions',
+    args:{type:'object',fields:{institutionId:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/}}},
+    read:function (s,a) {
+      var entry = at(s,a.institutionId);
+      return !!(entry && available(s,entry) && character(s,s.player.charId) && member(entry,s.player.charId));
+    }});
+  FB.eventStateReaders.register({id:'institution_role',system:'religious_institutions',
+    args:{type:'object',fields:{institutionId:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/},
+      roleId:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/}}},
+    read:function (s,a) {
+      var entry = at(s,a.institutionId), m = entry && member(entry,s.player.charId);
+      return !!(m && m.roleId === a.roleId && available(s,entry) && qualified(s,entry,s.player.charId,a.roleId));
+    }});
   function affiliation(s, cid, aid, institutionId) {
     return (s.chars[cid].religiousAffiliations || []).some(function (v) {
       return v.id === aid && (institutionId === undefined || v.institutionId === institutionId);

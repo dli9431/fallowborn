@@ -1,5 +1,12 @@
 # Named ecclesiastical discipline
 
+The owner registers `open_religious_case` under the `religious_cases` event
+observation tag. It reads existing charged, offered, referred and accepted
+records through the canonical snapshot, requiring current source/principals and
+the protagonist's involvement. It creates no accusation, custody or judgment.
+See events.md for shared validation, selection lifetime and the none technology
+decision.
+
 Hold ecclesiastical court opens a free review for a supported canonical bishop,
 an actual defendant or the competent temporal ruler. The Bishopric also links
 the review. Civil rent claims remain a separate sheet. With no eligible evidence,

@@ -543,6 +543,22 @@
       return row.patronRealmId === rid || row.federateRealmId === rid;
     }).map(function (row) { return Q.contract(s, row.id); });
   };
+  FB.eventStateReaders.register({id:'protagonist_office',system:'authority',
+    args:{type:'object',fields:{kind:{type:'string',minLength:1,maxLength:80}}},
+    read:function (s,a) {
+      return Q.offices(s,{kind:'character',id:s.player.charId}).some(function (row) {
+        return row.ref.officeId === a.kind && (row.status === 'active' || row.status === 'recorded');
+      });
+    }});
+  FB.eventStateReaders.register({id:'legitimacy_band',system:'authority',
+    args:{type:'object',fields:{band:{enum:['none','single_source','multiple_sources']}}},
+    read:function (s,a) {
+      var sources = [];
+      Q.legitimacy(s,{kind:'character',id:s.player.charId}).forEach(function (row) {
+        if (sources.indexOf(row.source) < 0) sources.push(row.source);
+      });
+      return a.band === (sources.length > 1 ? 'multiple_sources' : sources.length ? 'single_source' : 'none');
+    }});
   Q.contractQuote = function (s, terms) {
     terms = terms || {};
     var patron = Q.actor(s, { kind:'realm', id:terms.patronRealmId });

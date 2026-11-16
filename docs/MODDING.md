@@ -2022,6 +2022,68 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 
 ### Trigger conditions (all optional, all must pass)
 
+#### State condition readers
+
+`state` is a bounded AND list (1–16) of `{reader, args, not?}` objects, also
+accepted in option and lifecycle subscription `require`. `args` is mandatory;
+unknown fields and reserved keys reject. `not` is an optional boolean. The table
+lists every registered reader and its owning availability tag:
+
+| Reader id | Exact arguments | System tag and meaning |
+| --- | --- | --- |
+| `sovereign_government` | `formId` (governmentForms id) | `governments`: protagonist's current sovereign form |
+| `county_holder_government` | `formId` | `governments`: actual holder of the event county (`locationId`, otherwise home), independently of its sovereign |
+| `protagonist_office` | `kind` (canonical office id) | `authority`: protagonist's canonical office view has an active or recorded office of this kind; includes scoped appointments and existing religious, council, command, household and guild offices; contested, expired and removed rows fail |
+| `legitimacy_band` | `band`: `none`, `single_source`, `multiple_sources` | `authority`: zero, one or several distinct live personal recognition sources; no universal legitimacy score or territorial authority is implied |
+| `federate_contract` | `realmId`, `status`: `offered`, `active`, `ineffective`, `breached`, `expired`, `released` | `federates`: an involving contract; active requires canonical effectiveness, ineffective means a recorded active contract whose continuity/term fails, released means expired with the canonical service-release reason |
+| `mobile_coalition_member` | `realmId` | `mobile_confederations`: protagonist is a living, available, allegiant principal in an active coalition |
+| `mobile_role` | `realmId`, `role`: `leader`, `member` | `mobile_confederations`: same membership, with the current qualified leader or a nonleader principal |
+| `mobile_scarcity` | `realmId` | `mobile_confederations`: active coalition food is below total living following × profile foodPerPerson × 30 days; independent of a configurable procurement target |
+| `institution_membership` | `institutionId` | `religious_institutions`: active personal membership in an available profile institution |
+| `institution_role` | `institutionId`, `roleId` | `religious_institutions`: that active membership still satisfies the named role's qualifications |
+| `owned_enterprise_law` | `definitionId` (industryLaws id) | `industry_laws`: a law currently applies to at least one owned enterprise, including exempt or transition-covered operations |
+| `open_episcopal_claim` | `profileId` (episcopalClaims id) | `episcopal_claims`: a nonstale demanded, contested, proposed or enforcement claim involving the protagonist as possessor, bishop or competent ruler |
+| `open_religious_case` | `profileId` (religiousCases id) | `religious_cases`: a nonstale charged, offered, referred or accepted case involving the protagonist as defendant, victim, bishop or competent ruler |
+| `active_story_stage` | `storyId`, `stage` | `story_tracks`: a declared nonterminal stage of a staged story, with its existing record at that phase and no result |
+
+Office kinds and all instance strings are nonempty and bounded to 80 characters; institution,
+role and stage ids use lowercase identifier spelling. Static definition references
+and story stages resolve against the detached effective candidate, including
+same-import declarations. Missing live instances fail without creating them.
+
+Each owner tag maps to the optional system definition whose `eventReaderOwner`
+equals that tag. Bundled availability ids are `event_governments`,
+`event_authority`, `event_federates`, `event_mobile_confederations`,
+`event_religious_institutions`, `event_industry_laws`, `event_episcopal_claims`,
+`event_religious_cases` and `event_story_tracks`. The mapping is unique and typed;
+owning module tags and configurable availability identities remain separate.
+These default-enabled systems govern event observation. They do not replace each
+owner's existing availability, authority or technology checks, nor do they disable
+its ordinary simulation. Bookmark/era/government/faith system layers can exclude
+the observations. A disabled owner fails before invoking its reader, even for
+`not:true`. Candidate validation accepts dormant content for other worlds;
+`FB.eventStateReaders.faults(calls, path, {data, state})` additionally validates
+availability for a specific live context before a decision can change it.
+
+Trusted owners register once with
+`FB.eventStateReaders.register({id, system, args, read})`. `args` is an
+`FB.schema` object spec; `system` names the owning module tag declared by one
+system's `eventReaderOwner`; `read(state, args, context)` is a pure boolean predicate.
+Registration is sealed at the first condition validation after the complete
+engine loads. JSON cannot register readers. `list()` exposes immutable specs.
+Readers name no content identities; arguments carry them. Reuse existing bounded
+projections, never scan the world, consume RNG/UID, initialize records or store
+answers. A selection-local snapshot memoizes each distinct reader/arguments/context
+call, including false answers. No answer survives the pass or restore. Event
+conditions precede chance and the weighted draw. Lifecycle queues preserve only
+the originating hook in ordinary context, never a derived answer; stale hook
+conditions fail the normal context guard before display or resolution.
+
+Read the short **State-aware event authoring** section in docs/data-authoring.md
+before authoring content; no new effect vocabulary is introduced.
+
+#### Other trigger conditions
+
 | key | meaning |
 |---|---|
 | `tierMin` / `tierMax` | rank 0 serf … 7 emperor; read through `FB.station.reaches` and `FB.station.exceeds` (see [realms.md](designs/realms.md#station-and-rank-queries)), so an absent bound never blocks |

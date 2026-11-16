@@ -121,6 +121,39 @@ foundation and actual player costs and rewards. The four initial territorial
 foundations have technology impact **none**; see
 [historical-ambitions.md](historical-ambitions.md).
 
+## State condition readers
+
+The generic `state` condition list composes pure, typed predicates registered by
+their owning engine modules through `FB.eventStateReaders.register`. The schema
+foundation loads before those owners; the first condition validation seals the
+session registry after the complete engine. Native and ordinary JSON definitions
+share candidate validation and the existing trigger/option interpreter. Owner
+availability is checked before evaluation and cannot be inverted by negation.
+
+Government, personal office, recognition-source band, federate contract,
+mobile membership/role/thirty-day food scarcity, religious institution membership
+and qualified role, owned-enterprise law, open rent claim/religious case and active
+staged-story readers use existing projections. Bands classify live recognition
+sources; they do not invent a universal legitimacy score. Reader availability
+tags affect event observation only; each underlying system retains its own gates.
+The exact reader table is in MODDING.md and the short content workflow is in
+data-authoring.md, State-aware event authoring.
+
+Random and lifecycle selection share each distinct pure call once per synchronous
+pass, including false answers. State filtering precedes all chance and weighted
+selection RNG. Normal context checks re-evaluate event conditions and the original
+lifecycle hook's conditions; option requirements re-evaluate on confirmation.
+No derived eligibility or reader result is saved. Matching restore reads existing
+facts without attaching stories, issuing appointments, opening cases or replaying
+transactions. Existing events without `state` retain their selection order.
+
+The native operating-terms notice observes an already enacted London stall law
+from 1204 to 1215. Its acknowledgement charges nothing and changes no permission.
+It cannot enter fresh 867/1066 pools. The independent fictional JSON events under
+tests/e2e/fixtures/authoring demonstrate ordinary imported configurations.
+Technology impact `state_aware_events` is **none**: observation requires no
+discovery and grants no underlying capability.
+
 ## Post-decision outcomes
 
 The shared resolver marks significant manual receipts for acknowledgement after
