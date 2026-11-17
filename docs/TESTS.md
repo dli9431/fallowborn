@@ -1,3 +1,7 @@
+Event validation and CI shard budget
+
+Independent semantic rows in event-pack-validation.spec.js use scoped parallel groups with a fresh page and cloned state per case. The declaration/discovery assertion remains sequential. Every original row, polarity and purity assertion remains registered exactly once. Targeted CI gives this growing case group eight shards. Every shared-workflow browser shard has a 600-second Playwright execution limit, including hooks and teardown; ordinary passing assertions cannot waive it. Aim below 480 seconds per shard and retain complete coverage when partitioning new proof groups.
+
 Mobile leadership transaction coverage
 
 mobile-leadership-stories.spec.js retains the original native/member and JSON

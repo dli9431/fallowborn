@@ -93,6 +93,10 @@ test('every event pack and registered semantic fixture has a valid declaration',
   expect(result.events).toBeGreaterThan(0);
 });
 
+// Each semantic row owns a fresh page and cloned state. Only these independent
+// cases are parallel groups, so sharding can divide a growing fixture catalogue.
+test.describe('independent event eligibility',function () {
+test.describe.configure({mode:'parallel'});
 for (const entry of fixtureFiles) {
   const file=entry.file;
   const fixture = require(path.join(directory,file));
@@ -123,6 +127,7 @@ for (const entry of fixtureFiles) {
     for (const example of result) {expect(example.actual).toBe(example.expected);expect(example.pure).toBe(true);}
   });
 }
+});
 
 // Empty declarations share the normal period validator and add no random pool members.
 dependsOnRuntime(__filename,['index.html','data/bookmark_manifest.js',
