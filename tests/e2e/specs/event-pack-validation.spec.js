@@ -21,6 +21,7 @@ const fixtureFiles = [
   ,{file:'mobile_life.json',runtime:['data/events_mobile_life.js','data/starts_mobile_principal.js','data/mobile_confederations.js','data/bookmark_1204_terrain.js']}
   ,{file:'federate_life.json',runtime:['data/events_federate_life.js','data/political_institutions.js','data/mobile_confederations.js','js/story_agreements.js','js/story_household_refuge.js']}
   ,{file:'works_technology.json',runtime:['data/events_works_technology.js','js/production.js','js/production_economy.js','js/site_resources.js','js/building_operations.js','js/building_profiles.js','js/building_seasons.js','js/maritime_work.js']}
+  ,{file:'kingship_succession.json',runtime:['data/events_kingship_succession.js','js/lordships.js','js/government_selection.js','js/government_recognition.js','js/government_aristocracy.js','js/story_settlements.js','js/story_ruler_agenda.js','data/bookmark_800_history.js','data/story_ruler_agendas.js','data/story_ruler_agendas_800.js']}
 ];
 dependsOnRuntime(__filename,fixtureFiles.reduce(function (out,entry) {return out.concat(entry.runtime);},runtimeInputs));
 const directory = path.resolve(__dirname,'../fixtures/event-packs');
