@@ -31,7 +31,9 @@ async function catalogue(page) {
   return page.evaluate(function (input) {
     const projected = {};
     input.roots.forEach(function (key) { if (Object.prototype.hasOwnProperty.call(FBDATA,key)) projected[key] = FBDATA[key]; });
-    return {signature:FB.mods.fingerprint(projected),starts:FBDATA.startScenarios.map(function (row) { return row.id; }),
+    const roots = {};
+    Object.keys(projected).forEach(function (key) { roots[key] = FB.mods.fingerprint(projected[key]); });
+    return {signature:FB.mods.fingerprint(projected),roots:roots,starts:FBDATA.startScenarios.map(function (row) { return row.id; }),
       declarations:Object.keys(FBDATA.storyInstances),registry:FB.stories.list().map(function (row) { return row.id; }),
       stories:Object.keys(FBDATA.storyInstances).map(function (id) { return {id:id,fingerprint:FB.mods.fingerprint(FBDATA.storyInstances[id])}; }),
       worlds:input.ids.map(function (id) { return {id:id,raw:FB.mods.fingerprint(projected.bookmarks[id]),
