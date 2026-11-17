@@ -1,0 +1,906 @@
+{
+  "name": "Estuary service and household review examples",
+  "geographies": {
+    "inventory_estuary_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "inventory_estuary_layout",
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_marsh",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_ridge",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        },
+        {
+          "id": "inventory_scenery",
+          "x": 3.1,
+          "y": 4,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "inventory_quay_hall": {
+          "x": 1.4,
+          "y": 2
+        },
+        "inventory_quay_store": {
+          "x": 1.7,
+          "y": 2
+        },
+        "inventory_marsh_town": {
+          "x": 3.1,
+          "y": 2
+        },
+        "inventory_ridge_tower": {
+          "x": 4.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "inventory_estuary_layout": {
+      "inventory_quay": [
+        {
+          "site": "inventory_quay_hall",
+          "name": "Quay Hall",
+          "kind": "town"
+        },
+        {
+          "site": "inventory_quay_store",
+          "name": "Quay Stores",
+          "kind": "village"
+        }
+      ],
+      "inventory_marsh": [
+        {
+          "site": "inventory_marsh_town",
+          "name": "Marsh Town",
+          "kind": "village"
+        }
+      ],
+      "inventory_ridge": [
+        {
+          "site": "inventory_ridge_tower",
+          "name": "Ridge Tower",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "inventory_estuary_household",
+      "name": "Estuary household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives beside the estuary.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 200,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "inventory_estuary"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "established": {
+          "name": "Established household",
+          "diff": "Spouse and young children"
+        }
+      },
+      "tracks": [
+        "river_party"
+      ],
+      "trackLocations": {
+        "river_party": [
+          "inventory_quay"
+        ]
+      },
+      "birthplaces": {
+        "counties": [
+          "inventory_quay"
+        ]
+      }
+    },
+    {
+      "id": "inventory_estuary_ruler",
+      "name": "Estuary court ruler",
+      "desc": "Review service and civilian agreements through the existing court.",
+      "intro": "You hold the estuary court, with its existing people and public commitments.",
+      "bookmarkIds": [
+        "inventory_estuary"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "rulerRealmId": "inventory_estuary_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "inventory_quay",
+      "tier": 5,
+      "profession": "soldier",
+      "gold": 0,
+      "prestige": 0,
+      "piety": 0,
+      "alwaysUnlocked": true,
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "The existing court family",
+          "diff": "Retain the existing family"
+        }
+      },
+      "sex": "m",
+      "characterName": "Ivo Reed",
+      "startCulture": "frankish",
+      "startReligion": "catholic"
+    },
+    {
+      "id": "inventory_following_leader",
+      "name": "The following leader",
+      "desc": "Review service and a consented county claim through the existing following.",
+      "intro": "You lead the countyless following. A service bargain grants no county until its separate settlement review.",
+      "bookmarkIds": [
+        "inventory_estuary"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "rulerRealmId": "inventory_following",
+      "governmentForm": "federate_polity",
+      "fixedProvinceId": "inventory_quay",
+      "characterName": "Neri Ford",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "sex": "m",
+      "tier": 4,
+      "profession": "soldier",
+      "gold": 0,
+      "prestige": 0,
+      "piety": 0,
+      "alwaysUnlocked": true,
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "The existing following family",
+          "diff": "Retain the existing family"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "inventory_estuary": {
+      "id": "inventory_estuary",
+      "name": "The Estuary",
+      "desc": "A fictional inventory example.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "inventory_estuary_land",
+      "religiousHeads": {},
+      "localInstitutions": {
+        "river_refuge_seat": {
+          "city": "River shelter seat",
+          "kind": "see",
+          "provinceId": "inventory_quay",
+          "site": "inventory_quay_hall",
+          "religion": "catholic",
+          "culture": "frankish",
+          "officeId": "river_refuge_bishop",
+          "officeSystem": null,
+          "representative": {
+            "name": "Hale",
+            "born": 860,
+            "sex": "m",
+            "role": "priest"
+          }
+        }
+      },
+      "stories": [
+        "river_attempt",
+        "river_refuge",
+        "estuary_civilians"
+      ],
+      "starts": [
+        "inventory_estuary_household",
+        "inventory_estuary_ruler",
+        "inventory_following_leader"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "name": "Quay",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "inventory_marsh",
+          "name": "Marsh",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "inventory_ridge",
+          "name": "Ridge",
+          "realm": "inventory_ridge_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "inventory_scenery",
+          "name": "Uninhabited upland",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "inventory_estuary_court",
+          "name": "Estuary court",
+          "capital": "inventory_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "sex": "m",
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techSeed": {
+            "complete": [
+              "ringworks"
+            ]
+          }
+        },
+        {
+          "id": "inventory_ridge_court",
+          "name": "Ridge court",
+          "capital": "inventory_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "liege": "inventory_estuary_court",
+          "ruler": {
+            "sex": "m",
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 870,
+            "mar": 5,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "inventory_following",
+          "name": "The Estuary Following",
+          "capital": "inventory_quay",
+          "color": "#916b43",
+          "aggression": 0,
+          "rank": 1,
+          "government": "federate_polity",
+          "nonTerritorial": true,
+          "ruler": {
+            "sex": "m",
+            "name": "Neri Ford",
+            "culture": "frankish",
+            "born": 865,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": []
+      }
+    }
+  },
+  "storyInstances": {
+    "river_party": {
+      "id": "river_party",
+      "type": "household_party",
+      "title": "River household party",
+      "intro": "Each named relative decides separately.",
+      "maxMembers": 2,
+      "allowDependents": false,
+      "invitationDays": 30,
+      "adultPolicy": "volunteers"
+    },
+    "river_attempt": {
+      "id": "river_attempt",
+      "type": "local_threat",
+      "title": "A local threat",
+      "intro": "An actor may commit an attempt or leave quietly.",
+      "actor": {
+        "kind": "protagonist"
+      },
+      "locality": {
+        "provinceId": "inventory_quay",
+        "siteId": "inventory_quay_hall"
+      },
+      "firstDate": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "lastDate": {
+        "year": 900,
+        "season": 0,
+        "day": 89
+      },
+      "ai": {
+        "policy": "hold",
+        "minPressure": 30
+      },
+      "choices": [
+        {
+          "id": "warn",
+          "label": "Intimidate",
+          "detail": "Record only this decision.",
+          "operation": "intimidate"
+        },
+        {
+          "id": "press",
+          "label": "Attempt",
+          "detail": "Record only this decision.",
+          "operation": "attempt"
+        },
+        {
+          "id": "finish",
+          "label": "End the episode",
+          "detail": "Record only this decision.",
+          "operation": "resolve"
+        },
+        {
+          "id": "leave",
+          "label": "Withdraw",
+          "detail": "Record only this decision.",
+          "operation": "withdraw"
+        }
+      ]
+    },
+    "river_refuge": {
+      "id": "river_refuge",
+      "type": "household_refuge",
+      "title": "River temporary shelter",
+      "intro": "Review exact places, permission and finite terms.",
+      "locality": {
+        "provinceId": "inventory_quay",
+        "siteId": "inventory_quay_hall"
+      },
+      "provider": {
+        "institutionId": "river_refuge_seat",
+        "officeId": "river_refuge_bishop",
+        "realmId": "inventory_estuary_court"
+      },
+      "capacity": 2,
+      "acceptanceDays": 20,
+      "termDays": 7,
+      "funding": {
+        "perPersonDay": 0.25
+      },
+      "partyIds": [
+        "river_party"
+      ],
+      "threatIds": [
+        "river_attempt"
+      ],
+      "providerPolicy": "volunteers",
+      "adultPolicy": "volunteers"
+    },
+    "estuary_civilians": {
+      "id": "estuary_civilians",
+      "type": "civilian_migration",
+      "name": "Estuary civilian route",
+      "desc": "Relocate only an authorized share of the existing community.",
+      "firstYear": 900,
+      "lastYear": 905,
+      "actor": {
+        "realmId": "inventory_estuary_court"
+      },
+      "community": {
+        "culture": "frankish",
+        "religion": "catholic"
+      },
+      "share": 0.2,
+      "batchSize": 17,
+      "routes": [
+        {
+          "from": "inventory_quay",
+          "to": "inventory_marsh"
+        }
+      ]
+    }
+  },
+  "federateContractTerms": {
+    "estuary_service": {
+      "payPerSeason": 7,
+      "initialPay": 13,
+      "durationDays": 180,
+      "renewWindowDays": 20,
+      "service": "host",
+      "land": "optional",
+      "recognition": "optional",
+      "autoRenew": false
+    }
+  },
+  "eventPacks": {
+    "estuary_reviews": {
+      "eras": [
+        "early_medieval"
+      ],
+      "yearMin": 900,
+      "yearMax": 905,
+      "bookmarkIds": [
+        "inventory_estuary"
+      ]
+    }
+  },
+  "events": [
+    {
+      "id": "estuary_federate_contract_consent",
+      "pack": "estuary_reviews",
+      "title": "Review the existing agreement",
+      "text": "The parties ask to review their actual terms. Reading makes no commitment.",
+      "trigger": {},
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "patron",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "captain",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "patron",
+        "captain"
+      ],
+      "options": [
+        {
+          "label": "Review the terms",
+          "desc": "Confirm only after reviewing the exact terms and costs.",
+          "review": {
+            "type": "federate_contract",
+            "args": {
+              "action": "consent"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the agreement unchanged",
+          "desc": "No payment or commitment.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "estuary_federate_contract_renew",
+      "pack": "estuary_reviews",
+      "title": "Review the existing agreement",
+      "text": "The parties ask to review their actual terms. Reading makes no commitment.",
+      "trigger": {},
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "patron",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "captain",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "patron",
+        "captain"
+      ],
+      "options": [
+        {
+          "label": "Review the terms",
+          "desc": "Confirm only after reviewing the exact terms and costs.",
+          "review": {
+            "type": "federate_contract",
+            "args": {
+              "action": "renew",
+              "extensionDays": 120,
+              "payPerSeason": 9
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the agreement unchanged",
+          "desc": "No payment or commitment.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "estuary_federate_contract_release",
+      "pack": "estuary_reviews",
+      "title": "Review the existing agreement",
+      "text": "The parties ask to review their actual terms. Reading makes no commitment.",
+      "trigger": {},
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "patron",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "captain",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "patron",
+        "captain"
+      ],
+      "options": [
+        {
+          "label": "Review the terms",
+          "desc": "Confirm only after reviewing the exact terms and costs.",
+          "review": {
+            "type": "federate_contract",
+            "args": {
+              "action": "release"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the agreement unchanged",
+          "desc": "No payment or commitment.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "estuary_federate_settlement_settle",
+      "pack": "estuary_reviews",
+      "title": "Review the existing agreement",
+      "text": "The parties ask to review their actual terms. Reading makes no commitment.",
+      "trigger": {},
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "patron",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "captain",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "patron",
+        "captain"
+      ],
+      "options": [
+        {
+          "label": "Review the terms",
+          "desc": "Confirm only after reviewing the exact terms and costs.",
+          "review": {
+            "type": "federate_settlement",
+            "args": {},
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the agreement unchanged",
+          "desc": "No payment or commitment.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "estuary_civilian_migration_authorize",
+      "pack": "estuary_reviews",
+      "title": "Review the existing agreement",
+      "text": "The parties ask to review their actual terms. Reading makes no commitment.",
+      "trigger": {},
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "civil_ruler",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "civil_ruler"
+      ],
+      "options": [
+        {
+          "label": "Review the terms",
+          "desc": "Confirm only after reviewing the exact terms and costs.",
+          "review": {
+            "type": "civilian_migration",
+            "args": {
+              "action": "authorize",
+              "storyId": "estuary_civilians"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the agreement unchanged",
+          "desc": "No payment or commitment.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "estuary_civilian_migration_decline",
+      "pack": "estuary_reviews",
+      "title": "Review the existing agreement",
+      "text": "The parties ask to review their actual terms. Reading makes no commitment.",
+      "trigger": {},
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "civil_ruler",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "civil_ruler"
+      ],
+      "options": [
+        {
+          "label": "Review the terms",
+          "desc": "Confirm only after reviewing the exact terms and costs.",
+          "review": {
+            "type": "civilian_migration",
+            "args": {
+              "action": "decline",
+              "storyId": "estuary_civilians"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the agreement unchanged",
+          "desc": "No payment or commitment.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "estuary_household_refuge_request",
+      "pack": "estuary_reviews",
+      "title": "Review the existing agreement",
+      "text": "The parties ask to review their actual terms. Reading makes no commitment.",
+      "trigger": {},
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "refuge_host",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "refuge_ruler",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "refuge_guest",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "refuge_host",
+        "refuge_ruler",
+        "refuge_guest"
+      ],
+      "options": [
+        {
+          "label": "Review the terms",
+          "desc": "Confirm only after reviewing the exact terms and costs.",
+          "review": {
+            "type": "household_refuge",
+            "args": {
+              "action": "request",
+              "storyId": "river_refuge"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the agreement unchanged",
+          "desc": "No payment or commitment.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "estuary_household_refuge_enter",
+      "pack": "estuary_reviews",
+      "title": "Review the existing agreement",
+      "text": "The parties ask to review their actual terms. Reading makes no commitment.",
+      "trigger": {},
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "refuge_host",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "refuge_ruler",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "refuge_guest",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "refuge_host",
+        "refuge_ruler",
+        "refuge_guest"
+      ],
+      "options": [
+        {
+          "label": "Review the terms",
+          "desc": "Confirm only after reviewing the exact terms and costs.",
+          "review": {
+            "type": "household_refuge",
+            "args": {
+              "action": "enter",
+              "storyId": "river_refuge"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the agreement unchanged",
+          "desc": "No payment or commitment.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "estuary_household_refuge_decline",
+      "pack": "estuary_reviews",
+      "title": "Review the existing agreement",
+      "text": "The parties ask to review their actual terms. Reading makes no commitment.",
+      "trigger": {},
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "refuge_host",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "refuge_ruler",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "refuge_guest",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "refuge_host",
+        "refuge_ruler",
+        "refuge_guest"
+      ],
+      "options": [
+        {
+          "label": "Review the terms",
+          "desc": "Confirm only after reviewing the exact terms and costs.",
+          "review": {
+            "type": "household_refuge",
+            "args": {
+              "action": "decline",
+              "storyId": "river_refuge"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the agreement unchanged",
+          "desc": "No payment or commitment.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "estuary_service_household",
+      "pack": "estuary_reviews",
+      "title": "Beside the service host",
+      "text": "Local households and the contracted host share the same county.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "federate_host_household",
+            "args": {
+              "status": "active"
+            }
+          }
+        ]
+      },
+      "weight": 0,
+      "options": [
+        {
+          "label": "Continue ordinary life",
+          "effects": {}
+        }
+      ]
+    }
+  ]
+}

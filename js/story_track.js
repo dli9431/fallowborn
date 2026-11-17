@@ -1,6 +1,48 @@
 /* Reusable political story mechanics. Historical selectors and presentation belong to declarations. */
 (function () {
   'use strict';
+  // Review references are checked against their own candidate composition, not
+  // by compiling unrelated dated stories against the installed catalogue.
+  FB.stories.eventReviewCandidate = function (type, args, c) {
+    if (c.runtime || !args.storyId) return true;
+    var data = c.data || FBDATA, d = (data.storyInstances || {})[args.storyId];
+    if (!d || d.type !== type) return false;
+    var ev = c.event || {}, pack = (data.eventPacks || {})[ev.pack] || {};
+    var dates = ev.bookmarkIds || pack.bookmarkIds, scoped=!!dates;
+    if (!c.event) return true;
+    var eras=ev.eras || pack.eras, last=ev.yearMax === undefined ? pack.yearMax : ev.yearMax;
+    dates=dates || Object.keys(data.bookmarks || {});
+    function reachable(id) {
+      var raw=(data.bookmarks || {})[id];
+      return !!raw && FB.bookmarkRevisions(id,raw).some(function (bm) {
+        if (eras && eras.indexOf(bm.era) < 0 || last !== undefined && bm.date.year > last) return false;
+        return (bm.stories || []).indexOf(args.storyId) >= 0 || (data.startScenarios || []).some(function (start) {
+          return (!bm.starts || bm.starts.indexOf(start.id) >= 0) &&
+            (!start.bookmarkIds || start.bookmarkIds.indexOf(id) >= 0) &&
+            (!start.eras || start.eras.indexOf(bm.era) >= 0) &&
+            (start.tracks || []).indexOf(args.storyId) >= 0;
+        });
+      });
+    }
+    return scoped ? dates.every(reachable) : dates.some(reachable);
+  };
+  FB.stories.eventReviewSource = function (s, type, args, ctx, select) {
+    var bound = ctx && ctx.storyReviewSource, matches = [];
+    FB.stories.attached(s).forEach(function (id) {
+      var m = FB.stories.get(id), rec = FB.stories.record(s,id);
+      if (!m || !m.declaration || m.declaration.type !== type || args.storyId && args.storyId !== id ||
+          bound && bound.storyId !== id) return;
+      var choice = select(s,m,rec,args);
+      if (choice && (!bound || bound.choiceId === choice.id)) matches.push({storyId:id,choiceId:choice.id});
+    });
+    return matches.length === 1 ? matches[0] : null;
+  };
+  FB.eventStateReaders.register({id:'attached_story_type',system:'story_tracks',
+    args:{type:'object',fields:{type:{enum:['household_refuge','civilian_migration']}}},
+    read:function (s,a) { return FB.stories.attached(s).some(function (id) {
+      var m = FB.stories.get(id), r = FB.stories.record(s,id);
+      return m && m.declaration && m.declaration.type === a.type && r.phase !== 'resolved';
+    }); }});
   FB.eventStateReaders.register({id:'active_story_stage',system:'story_tracks',
     args:{type:'object',fields:{storyId:{type:'string',minLength:1,maxLength:80},
       stage:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/}},test:function (a,c) {
@@ -15,9 +57,10 @@
     args:{type:'object',fields:{storyId:{type:'string',minLength:1,maxLength:80},
       choiceId:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/}},test:function (args,c) {
       const data = c.data || FBDATA;
-      const registry = c.runtime ? FB.stories : FB.stories.compile(data.storyInstances || {});
-      const story = registry.get(args.storyId), d = story && story.declaration;
-      if (!story || !story.quote || !story.apply) return false;
+      const story = FB.stories.get(args.storyId);
+      const d = c.runtime ? story && story.declaration : (data.storyInstances || {})[args.storyId];
+      if (c.runtime && (!story || !story.quote || !story.apply)) return false;
+      if (!d && (!story || story.declaration)) return false;
       if (!d) return (story.choiceIds || []).indexOf(args.choiceId) >= 0;
       let found = false, unsafe = false;
       function choices(value) {
