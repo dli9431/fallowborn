@@ -218,6 +218,9 @@
     function operation(op) {
       need(plain(op), 'operation');
       if (op.kind === 'record_decision') need(keys(op, ['kind']), 'decision terms');
+      else if (op.kind === 'mandate_service') need(FB.schema.valid(op,{type:'object',fields:{
+        kind:{value:'mandate_service'},service:FB.officeMandates.storySpec}}) &&
+        !FB.officeMandates.storyFaults(op.service,bookmark).length, 'mandate service terms');
       else if (op.kind === 'set_focus') need(keys(op, ['kind','focusId']) && focus(op.focusId), 'focus terms');
       else if (op.kind === 'household_expense') need(keys(op, ['kind','amount']) && Number.isFinite(op.amount) && op.amount > 0 && op.amount <= 100, 'expense terms');
       else if (op.kind === 'convert_faith') need(keys(op, ['kind','faithId','scope']) &&
@@ -234,6 +237,13 @@
       else if (op.kind === 'settle_job') need(keys(op, ['kind','jobId','resolution']) && own(jobs, op.jobId) &&
         ['settlement','hearing','waive'].indexOf(op.resolution) >= 0, 'account terms');
       else if (op.kind === 'mobile_work') { mobileRealm(op.realmId); need(keys(op, ['kind','realmId']), 'mobile work terms'); }
+      else if (op.kind === 'travel_realm') {
+        var travelPurpose = FBDATA.travelPurposes && FBDATA.travelPurposes[op.purposeId];
+        need(FB.schema.valid(op,{type:'object',fields:{kind:{value:'travel_realm'},
+          realmId:{type:'string',minLength:1,maxLength:200},purposeId:{type:'string',ref:{table:'travelPurposes'}}}}) && slug(op.realmId) &&
+          travelPurpose && !travelPurpose.targeted && travelPurpose.mode === 'capitals', 'court journey terms');
+        if (bookmark) need((bookmark.realms || []).some(function (r) {return r.id === op.realmId;}), 'court journey realm');
+      }
       else if (op.kind === 'travel_mobile') {
         mobileRealm(op.realmId);
         var purpose = FBDATA.travelPurposes && FBDATA.travelPurposes[op.purposeId];
@@ -493,7 +503,24 @@
         if (test(s, stage.transitions[i].when, t)) { close(s, t, stage, 'expired'); move(s, t, stage.transitions[i].next); return; }
       }
     }
+    function serviceId(s,t,op) {
+      var result = null;
+      Object.keys(t.decisions).forEach(function (id) {
+        var e = t.decisions[id].office;
+        if (e && FB.officeMandates.storyRow(s,op.service,s.player.charId,e.appointmentId)) result = e.appointmentId;
+      });
+      return result;
+    }
     function operation(s, op, t) {
+      if (op.kind === 'travel_realm') {
+        var destination = FB.travelRealmSnapshot(s,op.purposeId,FB.startRealmId(s,op.realmId));
+        return {allowed:!!destination && s.player.gold >= destination.cost,
+          reason:FB.T('A living reachable court, an eligible traveller and the full journey price are required.'),terms:destination};
+      }
+      if (op.kind === 'mandate_service') {
+        var q = FB.officeMandates.storyReview(s,op.service,s.player.charId,serviceId(s,t,op));
+        return {allowed:q.allowed,reason:q.reason,terms:q};
+      }
       if (op.kind === 'mobile_work') {
         var request = { realmId:FB.startRealmId(s, op.realmId), action:'work', terms:{}, actor:{ kind:'character', id:s.player.charId } };
         var review = FB.mobile.review(s, request);
@@ -583,6 +610,11 @@
         FB.game.passDay({ skipFocus:true, householdAction:{ storyId:def.id, choiceId:id, reviewed:reviewed } });
         return t.revision !== revision;
       }
+      var officeResult = null;
+      if (op.kind === 'mandate_service') {
+        officeResult = FB.officeMandates.storyCommit(s,op.service,s.player.charId,serviceId(s,t,op),q.facts.terms);
+        if (!officeResult) return false;
+      }
       if (op.kind === 'start_job' || op.kind === 'work_job') {
         var j = def.jobs[op.jobId], row = t.jobs[op.jobId];
         if (op.kind === 'start_job') {
@@ -611,12 +643,14 @@
       }
       if (op.kind === 'convert_faith' && !FB.applyConversion(s, 'faith', op.faithId, op.scope)) return false;
       if (op.kind === 'travel_site' && !FB.travelStart(s, q.facts.terms.purpose, q.facts.terms.destinationId, q.facts.terms.destinationRealm)) return false;
+      if (op.kind === 'travel_realm' && !FB.travelStart(s,q.facts.terms.purpose,q.facts.terms.destinationId,q.facts.terms.destinationRealm)) return false;
       if (op.kind === 'settle_household' && !FB.travelSettle(s)) return false;
       if (op.kind === 'mobile_work' && !FB.mobile.commit(s, q.facts.terms)) return false;
       if (op.kind === 'travel_mobile' && !FB.travelStart(s, q.facts.terms.purpose, q.facts.terms.destinationId, q.facts.terms.destinationRealm)) return false;
       if (op.kind === 'return_home' && !(s.player.travel.phase === 'arrived' ? FB.travelReturn(s) : FB.travelTurnBack(s))) return false;
       close(s, t, stage, 'resolved');
       t.decisions[t.phase] = { choiceId:id, turn:s.turn, actorId:s.player.charId };
+      if (officeResult) t.decisions[t.phase].office = FB.officeMandates.storyEvidence(q.facts.terms,officeResult);
       if (stage.localEvent) t.decisions[t.phase].locality = { provinceId:stage.localEvent.provinceId, siteId:stage.localEvent.siteId };
       move(s, t, choice.next); return true;
     }
@@ -683,6 +717,7 @@
       quote:quote, apply:apply, blocker:function (s, t, reason) { return reason; },
       review:function (s, t, id, q) {
         var choice = def.stages[t.phase].choices.filter(function (c) { return c.id === id; })[0], op = choice.operation, terms = q.facts.terms;
+        if (op.kind === 'mandate_service') return FB.officeMandates.storyDetails(s,op.service,terms);
         var location = def.stages[t.phase].localEvent || def.stages[t.phase].incident;
         if (location && own(location, 'siteId') && op.kind === 'record_decision') return [
           FB.T('Required residence: {site}.', { site:localityName(location) || FB.T('Unavailable settlement') }),
@@ -718,7 +753,7 @@
         if (op.kind === 'mobile_work') return [FB.T('The coalition pays you {money:gold} from its treasury and consumes one food unit.', { gold:terms.review.cost }),
           FB.T('This is one paid service today. It grants no membership, pasture, land, conversion or authority over the following.')];
         if (op.kind === 'return_home') return [FB.T('Use the existing journey to return home. Ordinary minimum-stay rules still apply; completion requires actual arrival.')];
-        if (op.kind === 'travel_site' || op.kind === 'travel_mobile') return [FB.T('Journey price: {gold}. Route time: {days} days.', { gold:terms.cost, days:terms.days }),
+        if (op.kind === 'travel_site' || op.kind === 'travel_mobile' || op.kind === 'travel_realm') return [FB.T('Journey price: {gold}. Route time: {days} days.', { gold:terms.cost, days:terms.days }),
           FB.T('Traveller: {name}. Relatives remain at home until an ordinary household settlement.', { name:FB.fullName(s.chars[s.player.charId]) }),
           FB.T('Travel risks and interruptions apply. Arrival grants no land or protection.')];
         if (op.kind === 'settle_household') return [FB.T('Move the household through the ordinary settlement rules. This uses your one permanent move in this lifetime.')];
@@ -768,8 +803,10 @@
         need(Object.keys(t.decisions).length <= 64 && Object.keys(t.householdReceipts).length <= 64);
         Object.keys(t.decisions).forEach(function (id) {
           var d = t.decisions[id];
-          need(own(def.stages, id) && keys(d, ['choiceId','turn','actorId','locality']) && integer(d.turn) && typeof d.actorId === 'string' &&
+          need(own(def.stages, id) && keys(d, ['choiceId','turn','actorId','locality','office']) && integer(d.turn) && typeof d.actorId === 'string' &&
             def.stages[id].choices.some(function (c) { return c.id === d.choiceId; }));
+          var selected = def.stages[id].choices.filter(function (c) {return c.id === d.choiceId;})[0].operation;
+          need(selected.kind === 'mandate_service' ? FB.officeMandates.storyEvidenceValid(s,d.office,selected.service,d.actorId,d.turn) : !own(d,'office'));
           var local = def.stages[id].localEvent;
           need(local ? keys(d.locality, ['provinceId','siteId']) && d.locality.provinceId === local.provinceId &&
             d.locality.siteId === local.siteId && localityValid(d.locality, s && FB.campaignBookmark(s)) : !own(d, 'locality'));

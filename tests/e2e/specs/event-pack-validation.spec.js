@@ -14,6 +14,7 @@ dependsOnRuntime(__filename,['js/ui_modals.js','js/world.js']);
 // Append fixture registrations here; the discovery assertion prevents silent omissions.
 const fixtureFiles = [
   {file:'imperial_office.json',runtime:['data/events_imperial_office.js','data/political_institutions.js','js/government_administration.js','js/government_recognition.js']},
+  {file:'imperial_service.json',runtime:['data/events_imperial_service.js','data/story_imperial_service.js','data/starts_imperial_officer.js','data/office_mandates.js','js/office_mandates.js','js/story_household.js','js/story_ruler_agenda.js','js/story_opening_goals.js','data/bookmark_manifest.js']},
   {file:'state-readers-native.json',runtime:['data/events_common.js','data/industry_laws.js']}
   ,{file:'711.json',runtime:['data/events_711.js','js/lordships.js']}
   ,{file:'800.json',runtime:['data/events_800.js','js/lordships.js']}
