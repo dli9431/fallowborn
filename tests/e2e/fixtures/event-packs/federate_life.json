@@ -1,0 +1,4796 @@
+{
+  "packId": "federate_life",
+  "eventCount": {
+    "min": 20,
+    "max": 20
+  },
+  "rows": [
+    {
+      "eventId": "federate_pay_table",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "sovereign_government",
+        "federate_contract"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": []
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "roma"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "federate_changed_terms",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "sovereign_government",
+        "federate_contract"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "breached",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "breached",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": []
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "breached",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "breached",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "breached",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "breached",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "roma"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "federate_allotment_neighbors",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "sovereign_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476"
+                }
+              ]
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476"
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476"
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476"
+                }
+              ]
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "roma"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "federate_settlement_copy",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "sovereign_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476"
+                }
+              ]
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476"
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476"
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "offered",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476"
+                }
+              ]
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "roma"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "federate_empty_purse",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "sovereign_government",
+        "federate_contract"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "breached",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "breached",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "breached",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service_fixture",
+                  "status": "breached",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "federate_pay_rumor",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "federate_host_household"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "offered",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "offered",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "moveLeft"
+              ],
+              "value": 1
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "offered",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "men"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "offered",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "offered",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "offered",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "federate_boundary_stone",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "federate_host_household"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "moveLeft"
+              ],
+              "value": 1
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "men"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "federate_shared_well",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "federate_host_household"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "moveLeft"
+              ],
+              "value": 1
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "men"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "federate_season_call",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "sovereign_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "federate_term_calendar",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "sovereign_government",
+        "federate_contract"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "authority",
+                "contracts",
+                0,
+                "endTurn"
+              ],
+              "value": 90
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "federate_polity"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "authority",
+                "contracts",
+                0,
+                "endTurn"
+              ],
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "federate_lodging_door",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "federate_host_household"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "moveLeft"
+              ],
+              "value": 1
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "men"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "italy",
+                  "federateRealmId": "federates_476",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "federates_476",
+                  "at": "ravenna",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "federate_departure_bundle",
+      "bookmark": "476",
+      "code": "PACKLIFE-476-curialis_476-ravenna-m-Marcus",
+      "readers": [
+        "attached_story_type"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "stories",
+                "norican_evacuation_476"
+              ],
+              "value": {
+                "phase": "pending"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "stories"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "hosted_changed_price",
+      "bookmark": "1096",
+      "code": "OBSERVE-1096-farmer-cologne-m-Observer",
+      "readers": [
+        "sovereign_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "hosted_following"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "hosted_following"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "hosted_following"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "hosted_shared_oven",
+      "bookmark": "1096",
+      "code": "OBSERVE-1096-farmer-cologne-m-Observer",
+      "readers": [
+        "federate_host_household"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "moveLeft"
+              ],
+              "value": 1
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "men"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "hosted_guest_debt",
+      "bookmark": "1096",
+      "code": "OBSERVE-1096-farmer-cologne-m-Observer",
+      "readers": [
+        "federate_host_household"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "breached",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "breached",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "moveLeft"
+              ],
+              "value": 1
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "breached",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "men"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "breached",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "breached",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "breached",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "hosted_bad_season",
+      "bookmark": "1096",
+      "code": "OBSERVE-1096-farmer-cologne-m-Observer",
+      "readers": [
+        "federate_host_household"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "moveLeft"
+              ],
+              "value": 1
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "men"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "hosted_expiry_question",
+      "bookmark": "1096",
+      "code": "OBSERVE-1096-farmer-cologne-m-Observer",
+      "readers": [
+        "sovereign_government",
+        "federate_contract"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "hosted_following"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "hosted_following"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "hosted_following"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "hosted_following"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "authority",
+                "contracts",
+                0,
+                "endTurn"
+              ],
+              "value": 90
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null,
+                "ruler": {
+                  "generation": 1
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "hosted_following"
+              }
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "turn"
+              ],
+              "value": 0
+            },
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "expiring_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "player",
+                  "status": "active",
+                  "endTurn": 20,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "authority",
+                "contracts",
+                0,
+                "endTurn"
+              ],
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "hosted_refuge_question",
+      "bookmark": "1096",
+      "code": "PACKLIFE-1096-serf-mainz-m-Marcus",
+      "readers": [
+        "attached_story_type"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "stories",
+                "mainz_refuge_1096"
+              ],
+              "value": {
+                "phase": "pending"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "stories"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "hosted_civilian_route",
+      "bookmark": "1096",
+      "code": "OBSERVE-1096-farmer-cologne-m-Observer",
+      "readers": [
+        "federate_host_household"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "moveLeft"
+              ],
+              "value": 1
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies",
+                0,
+                "men"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "contracts"
+              ],
+              "value": [
+                {
+                  "id": "household_service",
+                  "patronRealmId": "england_1096",
+                  "federateRealmId": "mainz_custody_1096",
+                  "hostId": "household_service_host",
+                  "status": "active",
+                  "endTurn": 360,
+                  "succession": {
+                    "patron": 1,
+                    "federate": 1
+                  }
+                }
+              ]
+            },
+            {
+              "path": [
+                "armies"
+              ],
+              "value": [
+                {
+                  "id": "household_service_host",
+                  "realm": "mainz_custody_1096",
+                  "at": "cologne",
+                  "men": 40,
+                  "moveLeft": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "hosted_land_request",
+      "bookmark": "1096",
+      "code": "OBSERVE-1096-farmer-cologne-m-Observer",
+      "readers": [
+        "sovereign_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "hosted_following"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "hosted_following"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "realms",
+                "player"
+              ],
+              "value": {
+                "alive": true,
+                "liege": null
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "player"
+              ],
+              "value": {
+                "formId": "hosted_following"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1301
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

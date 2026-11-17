@@ -2,13 +2,16 @@
    select behavior; stories supply historical parties and opportunities. */
 (function () {
   'use strict';
-  var Q = FB.political;
+  var Q = FB.political, RELEASE = 'release';
   FB.eventStateReaders.register({id:'federate_contract',system:'federates',
     args:{type:'object',fields:{
       realmId:{type:'string',minLength:1,maxLength:80},
-      status:{enum:['offered','active','ineffective','breached','expired','released']}
+      status:{enum:['offered','active','ineffective','breached','expired','released']},
+      endsWithinDays:{type:'integer',min:1,max:360,optional:true}
     }},read:function (s,a) {
       return Q.contracts(s,a.realmId).some(function (row) {
+        if (a.endsWithinDays !== undefined && (!Number.isInteger(row.endTurn) ||
+            row.endTurn <= s.turn || row.endTurn-s.turn > a.endsWithinDays)) return false;
         return a.status === 'ineffective' ? row.status === 'active' && !row.effective :
           a.status === 'released' ? row.status === 'expired' && row.transitionReason === 'service_released' :
           row.status === a.status && (a.status !== 'active' || row.effective);
@@ -25,6 +28,23 @@
     for (var army of s.armies || []) if (army.id === id) return army;
     return null;
   }
+  FB.eventStateReaders.register({id:'federate_host_household',system:'federates',
+    args:{type:'object',fields:{status:{enum:['offered','active','breached']},
+      realmId:{type:'string',minLength:1,maxLength:80,optional:true}}},
+    read:function(s,a,ctx) {
+      var person=s.chars[s.player.charId],at=ctx.locationId || s.player.provinceId;
+      if (!person || person.dead || person.captive || person.imprisoned || person.prisonerOf ||
+          s.player.dead || s.player.flags && s.player.flags.in_prison ||
+          s.player.provinceId !== at || FB.characterLocation(s,person) !== at ||
+          s.player.travel && s.player.travel.phase !== 'arrived') return false;
+      return (s.authority && s.authority.contracts || []).some(function(row) {
+        var army=row.hostId && host(s,row.hostId),deal=Q.contract(s,row.id);
+        return !!(army && army.realm === row.federateRealmId && army.men > 0 && army.at === at &&
+          !(army.moveLeft > 0) && live(s,row.patronRealmId) && live(s,row.federateRealmId) &&
+          (!a.realmId || row.federateRealmId === a.realmId) && deal.status === a.status &&
+          (a.status !== 'active' || deal.effective));
+      });
+    }});
   function live(s, rid) { return !!(s.realms[rid] && s.realms[rid].alive); }
   function ongoing(row) {
     return ['encamped','service','marching','arrived'].indexOf(row.status) >= 0;
@@ -33,6 +53,114 @@
     var form = FB.governments.forRealm(s, rid);
     return !!(form && form.use.territory.profile(s, rid, {}).movingCourt);
   }
+  function reviewRuler(s,rid) {
+    var c=rid === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid);
+    return c && !c.dead && !c.captive && !c.imprisoned && !c.prisonerOf &&
+      !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) &&
+      !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s,c.id)) &&
+      !(c.id === s.player.charId && (s.player.dead || s.player.flags && s.player.flags.in_prison)) &&
+      (rid === 'player' ? s.realms.player && s.realms.player.alive && FB.station.rulesRealm(s.player,s) :
+        FB.realmIdForRulerCharacter(s,c) === rid) ? c : null;
+  }
+  function reviewRealm(s) {
+    var c=s.chars[s.player.charId],rid=reviewRuler(s,'player') ? 'player' : c && FB.realmIdForRulerCharacter(s,c);
+    return rid && reviewRuler(s,rid) ? rid : null;
+  }
+  function reviewParties(s,patron,following) {
+    var a=reviewRuler(s,patron),b=reviewRuler(s,following);
+    return a && b ? {patron:a.id,captain:b.id} : null;
+  }
+  function exactParties(ctx,people) {
+    return people && (!ctx || Object.keys(people).every(function(slot) {
+      return ctx.participants && ctx.participants[slot] === people[slot];
+    }));
+  }
+  var contractReviewArgs={type:'object',fields:{
+    contractId:{type:'string',minLength:1,maxLength:200,optional:true},
+    action:{enum:['consent','renew',RELEASE]},
+    extensionDays:{type:'integer',min:1,max:1440,optional:true},
+    payPerSeason:{type:'number',min:0,max:100000,optional:true},
+    publicPayer:{type:'boolean',optional:true}
+  },test:function(a) {return (a.action === 'renew' ? a.extensionDays !== undefined :
+    a.extensionDays === undefined && a.payPerSeason === undefined) &&
+    (a.publicPayer === undefined || a.action === 'consent');}};
+  function contractReview(s,a,ctx) {
+    var rid=reviewRealm(s),bound=ctx && ctx.contractReviewId;
+    var matches=rid ? Q.contracts(s,rid).filter(function(r) {
+      return (!a.contractId || r.id === a.contractId) && (!bound || r.id === bound) &&
+        (a.action === 'consent' ? r.status === 'offered' : a.action === 'renew' ?
+          ['active','expired','breached'].indexOf(r.status) >= 0 :
+          ['active','offered','expired'].indexOf(r.status) >= 0 && r.transitionReason !== 'service_released');
+    }) : [];
+    if (matches.length !== 1) return null;
+    var r=matches[0],people=reviewParties(s,r.patronRealmId,r.federateRealmId);
+    if (ctx && !bound || !exactParties(ctx,people)) return null;
+    var changes=a.action === 'renew' ? {endTurn:Math.max(s.turn,r.endTurn)+a.extensionDays,
+      payPerSeason:a.payPerSeason === undefined ? r.payPerSeason : a.payPerSeason} : null;
+    var raw=(s.authority.contracts || []).filter(function(v) {return v.id === r.id;})[0];
+    var canonical=changes ? Q.contractRenegotiationQuote(s,r.id,changes) : Q.contractQuote(s,raw);
+    var publicPay=r.publicPayer || a.publicPayer === true && rid === r.patronRealmId;
+    var account=publicPay ? FB.treasuryPublicAccountSnapshot(s,r.patronRealmId) : null;
+    var funds=publicPay ? account && account.available || 0 : FB.treasuryAvailable(s,r.patronRealmId);
+    var other=rid === r.patronRealmId ? r.federateRealmId : r.patronRealmId;
+    var due=a.action === 'consent' && r.approvals[other] === FB.realmRulerGeneration(s,other) &&
+      r.initialPaidTurn === undefined ? r.initialPay || 0 : 0;
+    var allowed=a.action === RELEASE || !!(canonical && canonical.allowed !== false);
+    if (a.action === 'consent') allowed=allowed && (!publicPay || !!account) &&
+      (!a.publicPayer || rid === r.patronRealmId) && !own(r.approvals,rid) &&
+      r.succession.patron === FB.realmRulerGeneration(s,r.patronRealmId) &&
+      r.succession.federate === FB.realmRulerGeneration(s,r.federateRealmId) && funds >= due &&
+      (!due || !FB.mobile || FB.mobile.receiptCapacity(s,r.federateRealmId));
+    return {allowed:!!allowed,contractId:r.id,realmId:rid,action:a.action,changes:changes,canonical:canonical,
+      people:people,record:r,turn:s.turn,funds:funds,publicAccount:account,
+      accounts:[FB.treasuryPublicAccountSnapshot(s,r.patronRealmId),FB.treasuryPublicAccountSnapshot(s,r.federateRealmId)],
+      recipientFunds:FB.treasuryAvailable(s,r.federateRealmId),
+      generations:[FB.realmRulerGeneration(s,r.patronRealmId),FB.realmRulerGeneration(s,r.federateRealmId)],
+      rulers:[copy(s.chars[people.patron]),copy(s.chars[people.captain])],cost:due,publicPayer:!!publicPay};
+  }
+  FB.eventStateReaders.register({id:'federate_contract_review',system:'federates',args:contractReviewArgs,
+    read:function(s,a) {var q=contractReview(s,a);return !!(q && q.allowed);}});
+  FB.eventReviews.register('federate_contract',{owner:'federates',args:contractReviewArgs,partySlots:{patron:true,captain:true},
+    bind:function(s,a) {var q=contractReview(s,a);return q ? {contractReviewId:q.contractId,participants:q.people} : null;},
+    quote:contractReview,
+    apply:function(s,a,q) {
+      if (a.action === 'consent') return FB.authorityConsentContract(s,q.contractId,q.realmId,a.publicPayer);
+      if (a.action === 'renew') return FB.authorityRenegotiateContract(s,q.contractId,q.realmId,q.changes,q.canonical);
+      return FB.authorityContractTransition(s,q.contractId,RELEASE,q.realmId);
+    },
+    details:function(s,a,q) {return [
+      FB.T('Payer: {payer}. Recipient: {recipient}.',{payer:s.realms[q.record.patronRealmId].name,recipient:s.realms[q.record.federateRealmId].name}),
+      FB.T('Seasonal pay: {money:pay}. Immediate transfer on this approval: {money:cost}.',{pay:q.changes ? q.changes.payPerSeason : q.record.payPerSeason,cost:q.cost}),
+      FB.T('Initial payment still outstanding: {money:amount}.',{amount:q.record.initialPaidTurn === undefined ? q.record.initialPay || 0 : 0}),
+      FB.T('Term remaining after this decision: {days} days.',{days:a.action === RELEASE ? 0 : Math.max(0,(q.changes ? q.changes.endTurn : q.record.endTurn)-s.turn)}),
+      FB.T('Patron funds available: {money:funds}. Both courts must consent to new terms.',{funds:q.funds}),
+      FB.T('Renewal reopens both approvals. Release ends service; it grants no land or household debt.'),
+      q.allowed ? FB.T('Only this court decides now. The other court keeps its own decision.') :
+        FB.T('Current rulers, unchanged terms, available payment and an outstanding decision are required.')];}
+  });
+  var settlementReviewArgs={type:'object',fields:{migrationId:{type:'string',minLength:1,maxLength:200,optional:true}}};
+  function settlementReview(s,a,ctx) {
+    var rid=reviewRealm(s),bound=ctx && ctx.settlementReviewId;
+    var matches=rows(s).filter(function(r) {return r.realmId === rid && ongoing(r) &&
+      (!a.migrationId || r.id === a.migrationId) && (!bound || r.id === bound);});
+    if (matches.length !== 1) return null;
+    var row=matches[0],people=reviewParties(s,row.patronRealmId,row.realmId);
+    if (ctx && !bound || !exactParties(ctx,people)) return null;
+    var canonical=Q.federateSettlementQuote(s,row.id);
+    return {allowed:!!canonical,migrationId:row.id,canonical:canonical,people:people,
+      record:copy(row),rulers:[copy(s.chars[people.patron]),copy(s.chars[people.captain])]};
+  }
+  FB.eventStateReaders.register({id:'federate_settlement_review',system:'federates',args:settlementReviewArgs,
+    read:function(s,a) {var q=settlementReview(s,a);return !!(q && q.allowed);}});
+  FB.eventReviews.register('federate_settlement',{owner:'federates',args:settlementReviewArgs,partySlots:{patron:true,captain:true},
+    bind:function(s,a) {var q=settlementReview(s,a);return q ? {settlementReviewId:q.migrationId,participants:q.people} : null;},
+    quote:settlementReview,
+    apply:function(s,a,q) {return FB.federateResolveSettlement(s,q.migrationId,q.canonical);},
+    details:function(s,a,q) {return [FB.T('Resolve the existing county claim at {province}.',{province:FB.world.byId[q.record.target].name}),
+      FB.T('No payment now. The existing consent or won county, living court and arrived host are required.'),
+      FB.T('Confirmation ends this moving court, adopts its declared territorial government and closes its settlement contract. Existing communities and household property remain.'),
+      q.allowed ? FB.T('The ordinary claims session will decide the declared award.') : FB.T('The current court, host, county or contract no longer permits settlement.')];}
+  });
   function noticeParams(s, row) {
     return { realm:FB.realmNameParam(s, row.realmId),
       patron:FB.realmNameParam(s, row.patronRealmId),
@@ -106,7 +234,7 @@
           return row.hostId === terms.hostId && prior.indexOf(row) < 0 &&
             (row.status === 'offered' && Q.contractQuote(s, row).allowed || Q.contract(s, row.id).effective);
         })) return null;
-    prior.forEach(function (row) { FB.authorityContractTransition(s, row.id, 'release', row.patronRealmId); });
+    prior.forEach(function (row) { FB.authorityContractTransition(s, row.id, RELEASE, row.patronRealmId); });
     return FB.authorityOfferContractTemplate(s, templateId, terms);
   };
   function ai(s, rid, row) {
@@ -200,7 +328,7 @@
   };
   function court(s, row, army) {
     if (army.mobileFollowing && !army.mobileCourt) return;
-    var ruler = FB.realmRulerCharacterSnapshot(s, row.realmId);
+    var ruler = row.realmId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, row.realmId);
     if (ruler && !(FB.mobile && FB.mobile.separatePartyMember && FB.mobile.separatePartyMember(s,row.realmId,ruler.id)) &&
         row.courtIds.indexOf(ruler.id) < 0) row.courtIds.push(ruler.id);
     for (var cid of row.courtIds) {
@@ -265,7 +393,7 @@
         }) || Object.keys(spec.units).reduce(function (n, id) { return n + spec.units[id]; }, 0) !== spec.men))
       return null;
     FB.ensureRealmCourt(s, spec.realmId);
-    var ruler = FB.realmRulerCharacterSnapshot(s, spec.realmId) ||
+    var ruler = (spec.realmId === 'player' ? reviewRuler(s,'player') : FB.realmRulerCharacterSnapshot(s, spec.realmId)) ||
       FB.mobile && FB.mobile.guardBirthLeader && FB.mobile.guardBirthLeader(s,spec.realmId);
     if (!ruler) return null;
     if (!army) {
