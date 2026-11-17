@@ -662,14 +662,155 @@
       });
     }});
   FB.eventStateReaders.register({id:'legitimacy_band',system:'authority',
-    args:{type:'object',fields:{band:{enum:['none','single_source','multiple_sources']}}},
-    read:function (s,a) {
+    args:{type:'object',fields:{band:{enum:['none','single_source','multiple_sources']},
+      subject:{enum:['protagonist','moment'],optional:'absent'}}},
+    read:function (s,a,ctx) {
       var sources = [];
+      if (a.subject === 'moment' && (!ctx || ctx.subjectKind !== 'character' || ctx.subjectId !== s.player.charId)) return false;
       Q.legitimacy(s,{kind:'character',id:s.player.charId}).forEach(function (row) {
         if (sources.indexOf(row.source) < 0) sources.push(row.source);
       });
       return a.band === (sources.length > 1 ? 'multiple_sources' : sources.length ? 'single_source' : 'none');
     }});
+  // Event selectors resolve existing canonical records only. A supplied context
+  // identity is exact: disappearance never substitutes a different commission.
+  var E = FB.officeEventReviews = {};
+  E.court = function (s) { return FB.settlementCountyHolder(s,s.player.provinceId); };
+  E.actor = function (s) { return {kind:'character',id:s.player.charId}; };
+  E.officeField = {type:'string',ref:{table:'authorityOffices'},optional:'absent'};
+  E.participantField = {value:'official',optional:'absent'};
+  E.validParticipant = function (a,c) {
+    return a.participant === undefined || c.runtime || !!(c.event && (c.event.participants || []).some(function (p) {
+      return p.slot === a.participant && p.source === 'context' && p.required === true && !p.allowDead;
+    }));
+  };
+  E.current = function (s,ctx) {
+    return ctx.officeCourtId === E.court(s) && ctx.officeProvinceId === s.player.provinceId;
+  };
+  E.facts = function (s,cid,id) {
+    var c = s.chars[cid];
+    if (!c || c.dead) return null;
+    var facts = {participants:{official:cid},officeCourtId:E.court(s),officeProvinceId:s.player.provinceId};
+    if (id) facts.appointmentId = id;
+    return facts;
+  };
+  E.holder = function (s,a,ctx) {
+    var c = a.participant ? FB.eventParticipant(s,ctx,a.participant) : s.chars[s.player.charId];
+    return c && !c.dead ? c.id : null;
+  };
+  E.rows = function (s,a,ctx,other) {
+    var rid = E.court(s), cid = E.holder(s,a,ctx || {});
+    return list(s,'appointments').filter(function (row) {
+      var d = FBDATA.authorityOffices[row.officeId];
+      return row.holder.kind === 'character' && (other ? row.holder.id !== s.player.charId : cid && row.holder.id === cid) && row.institutionId === rid &&
+        (!a.officeId || row.officeId === a.officeId) && (!ctx || ctx.appointmentId === undefined || row.id === ctx.appointmentId) &&
+        d && (d.powers.indexOf('peace') >= 0 || d.powers.indexOf('revenue') >= 0) && d.powers.indexOf('ban') < 0 &&
+        (row.scope.kind === 'realm' || row.scope.kind === 'county' && row.scope.id === s.player.provinceId);
+    });
+  };
+  E.status = function (s,row) {
+    if (row.publicTerms) {
+      var projected = FB.publicOfficeRows(s,row.institutionId).filter(function (r) {return r.id === row.id;})[0];
+      return projected && projected.status;
+    }
+    return Q.appointmentStatus(s,row);
+  };
+  E.transitionQuote = function (s,a,ctx) {
+    if (!E.current(s,ctx)) return null;
+    var row = E.rows(s,a,ctx).filter(function (r) {
+      return ['active','contested','suspended'].indexOf(E.status(s,r)) >= 0;
+    })[0];
+    if (row && ctx.participants.official !== row.holder.id) return null;
+    if (row && row.publicTerms && !FB.systemEnabled(s,'public_offices',{realm:row.institutionId})) return null;
+    return !row ? null : row.publicTerms ? FB.publicOfficeQuote(s,E.actor(s),row.id,a.action) :
+      FB.officeTransitionQuote(s,E.actor(s),row.id,a.action);
+  };
+  E.details = function (s,a,q) {
+    var input = q.input || q.terms, row = q.id && appointment(s,q.id);
+    var officeId = input && input.officeId || row && row.officeId;
+    var rid = input && input.institutionId || row && row.institutionId;
+    var at = input && input.scope || row && row.scope;
+    var holderId = input && (input.holderId || input.holder && input.holder.id) || row && row.holder.id;
+    var person = holderId && s.chars[holderId];
+    return [FB.T('Office: {office}. Court: {court}. Scope: {scope}.',{
+      office:FB.officeText(s,officeId,'name'),court:s.realms[rid] && s.realms[rid].name || '',
+      scope:at && at.kind === 'county' ? FB.world.byId[at.id].name : s.realms[rid] && s.realms[rid].name || ''}),
+      input ? FB.T('Applicant: {person}.',{person:person ? FB.fullName(person) : FB.T('Unavailable person')}) :
+        FB.T('Officeholder: {person}.',{person:person ? FB.fullName(person) : FB.T('Unavailable person')}),
+      FB.officeText(s,officeId,'desc'),
+      FB.T('Payment on confirmation: {money:cost}.',{cost:q.cost || 0}),
+      q.action === 'remove' ? FB.T('Removal ends this commission’s public powers and future pay. Private property and recoverable arrears remain.') :
+        q.action === 'confirm' ? FB.T('Reaffirm the same holder and scope under the current court. This does not erase arrears or extend the original term.') :
+          FB.T('Existing sources, service obligations and private property keep their own terms.'),
+      q.reason || FB.T('This decision changes only the reviewed commission. Private property and hereditary titles remain separate.')];
+  };
+  E.report = function (s,a,q) {
+    var cost = q.terms && q.actor.kind === 'character' && q.actor.id === s.player.charId ? q.cost : 0;
+    return (cost ? [{type:'gold',amount:-cost}] : []).concat([{type:'system',system:'story'}]);
+  };
+  FB.eventStateReaders.register({id:'civil_office',system:'authority',
+    args:{type:'object',fields:{status:{enum:['active','contested','ended','none']},officeId:E.officeField}},
+    read:function (s,a) {
+      var offices = E.rows(s,a,{});
+      if (a.status === 'none') return !offices.some(function (r) {
+        return ['active','contested','suspended'].indexOf(E.status(s,r)) >= 0;
+      });
+      return offices.some(function (r) {
+        var status = E.status(s,r);
+        return a.status === 'ended' ? ['removed','expired'].indexOf(status) >= 0 : status === a.status;
+      });
+    }});
+  FB.eventReviews.register('office_appointment',{
+    owner:'authority',args:{type:'object',fields:{action:{enum:['confirm','remove']},
+      officeId:E.officeField,participant:E.participantField},test:E.validParticipant},
+    partySlots:{official:true},
+    bind:function (s,a,ctx) {
+      var row = E.rows(s,a,ctx,!!a.participant).filter(function (r) {
+        return ['active','contested','suspended'].indexOf(E.status(s,r)) >= 0;
+      })[0];
+      return row ? E.facts(s,row.holder.id,row.id) : null;
+    },
+    quote:E.transitionQuote,
+    apply:function (s,a,q) {
+      var row = appointment(s,q.id);
+      return row && row.publicTerms ? FB.publicOfficeApply(s,q) : FB.officeTransition(s,q);
+    },details:E.details,report:E.report
+  });
+  FB.eventReviews.register('office_petition',{
+    owner:'authority',args:{type:'object',fields:{officeId:E.officeField},test:function (a,c) {
+      if (a.officeId === undefined) return true;
+      var d = (c.data || FBDATA).authorityOffices[a.officeId];
+      return !!(d && d.appointment && d.scopes.indexOf('county') >= 0 && d.powers.indexOf('peace') >= 0 && d.powers.indexOf('ban') < 0);
+    }},
+    partySlots:{official:true},
+    bind:function (s) {return E.facts(s,s.player.charId);},
+    quote:function (s,a,ctx) {
+      if (!E.current(s,ctx) || ctx.participants.official !== s.player.charId) return null;
+      var rid = E.court(s), profile = FB.administrationProfile(s,rid), pid = s.player.provinceId;
+      var officeId = a.officeId || (profile ? profile.governor : officeCatalogue(s,rid).filter(function (id) {
+        var d = FBDATA.authorityOffices[id];
+        return d.appointment && d.scopes.indexOf('county') >= 0 && d.powers.indexOf('peace') >= 0 && d.powers.indexOf('ban') < 0;
+      })[0]);
+      if (!officeId || profile && !FB.systemEnabled(s,'public_offices',{realm:rid})) return null;
+      var def = FBDATA.authorityOffices[officeId];
+      if (!def || !def.appointment || def.scopes.indexOf('county') < 0 ||
+          def.powers.indexOf('peace') < 0 || def.powers.indexOf('ban') >= 0) return null;
+      return profile ? FB.publicAppointmentQuote(s,E.actor(s),{institutionId:rid,officeId:officeId,
+        holderId:s.player.charId,provinceId:pid,scope:{kind:'county',id:pid}}) :
+        FB.officeAppointmentQuote(s,E.actor(s),{institutionId:rid,officeId:officeId,
+          holder:E.actor(s),scope:{kind:'county',id:pid}});
+    },
+    apply:function (s,a,q) {return q.input ? FB.publicAppoint(s,q) : FB.officeSeekAppointment(s,q);},
+    details:function (s,a,q) {
+      var lines = E.details(s,a,q), input = q.input || q.terms, d = FBDATA.authorityOffices[input.officeId];
+      if (d.appointment) lines.push(FB.T('Qualification: {skill} {minimum}; retained prestige {prestige}.',{
+        skill:FB.T(FB.SKILL_NAMES[d.appointment.skill]),minimum:d.appointment.minimum,prestige:d.appointment.prestige}));
+      lines.push(q.input ? FB.T('The public treasury pays the appointment fee; salary and service use the existing source receipts.') :
+        FB.T('The applicant pays the registration fee once. This is a scoped appointment, not a grant of land.'));
+      if (q.endTurn !== null) lines.push(FB.T('Appointment ends in {days} days.',{days:Math.max(0,q.endTurn-s.turn)}));
+      return lines;
+    },report:E.report
+  });
   Q.contractQuote = function (s, terms) {
     terms = terms || {};
     var patron = Q.actor(s, Q.realmReference(terms.patronRealmId));

@@ -8,6 +8,78 @@
   function votes(s, rid) { var row = record(s, rid); return row && row.recognition || {}; }
   function validActor(s, actor) { return !!actor && !!FB.political.actor(s, actor); }
   function same(a, b) { return !!a && !!b && a.kind === b.kind && a.id === b.id; }
+  FB.eventReviews.register('office_recognition',{
+    owner:'authority',args:{type:'object',fields:{action:{enum:['recognize','contest','nominate']},
+      participant:{value:'official'},selection:{enum:['candidate','officer'],optional:'absent'},
+      sourceId:{type:'string',ref:{table:'legitimacySources'},optional:'absent'}},test:function (a,c) {
+        return FB.officeEventReviews.validParticipant(a,c) && !(a.action === 'nominate' && a.sourceId !== undefined);
+      }},
+    partySlots:{official:true},
+    bind:function (s,a,ctx) {
+      var E = FB.officeEventReviews, rid = E.court(s), cid, facts;
+      if (FB.administrationProfile(s,rid)) {
+        var officer = E.rows(s,a,ctx,true).filter(function (r) {return E.status(s,r) === 'active' || E.status(s,r) === 'contested';})[0];
+        var candidate = R.candidates(s,rid).filter(function (c) {return c.charId && s.chars[c.charId] && !s.chars[c.charId].dead;})[0];
+        cid = a.action === 'nominate' || a.selection === 'officer' ? officer && officer.holder.id :
+          candidate ? candidate.charId : officer && officer.holder.id;
+        return cid ? E.facts(s,cid) : null;
+      }
+      var claim = FB.officeClaimants(s).filter(function (r) {
+        return r.holder.kind === 'character' && r.holder.id !== s.player.charId &&
+          s.chars[r.holder.id] && !s.chars[r.holder.id].dead;
+      })[0];
+      if (!claim) return null;
+      facts = E.facts(s,claim.holder.id);
+      facts.claimantOfficeId = claim.officeId; facts.claimantInstitutionId = claim.institutionId;
+      return facts;
+    },
+    quote:function (s,a,ctx) {
+      var E = FB.officeEventReviews, rid = E.court(s), cid = E.holder(s,a,ctx), actor = E.actor(s), q, owner;
+      if (!cid || !E.current(s,ctx)) return null;
+      if (FB.administrationProfile(s,rid)) {
+        if (a.sourceId || !FB.systemEnabled(s,'public_offices',{realm:rid})) return null;
+        if (a.action === 'nominate') {owner = 'nominate';q = R.nominationQuote(s,actor,rid,cid);}
+        else if (a.action === 'recognize') {
+          var ruler = rid === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid);
+          var member = R.members(s,rid).filter(function (m) {
+            return same(m.principal,actor) || m.principal.kind === 'realm' && m.principal.id === rid && ruler && ruler.id === actor.id;
+          })[0];
+          var candidate = R.candidates(s,rid).filter(function (c) {return c.charId === cid;})[0];
+          owner = 'support';q = R.supportQuote(s,actor,rid,member && member.id,candidate && candidate.id);
+        } else return null;
+      } else {
+        var claim = FB.officeClaimants(s).filter(function (r) {
+          return r.holder.kind === 'character' && r.holder.id === cid && r.officeId === ctx.claimantOfficeId &&
+            r.institutionId === ctx.claimantInstitutionId;
+        })[0];
+        var mandate = FB.officeRecognitionMandates(s,actor).filter(function (m) {return !a.sourceId || m.source === a.sourceId;})[0];
+        if (!claim || !mandate || a.action === 'nominate') return null;
+        owner = 'claim';q = FB.officeClaimQuote(s,actor,claim,mandate,a.action);
+      }
+      return q ? {allowed:q.allowed,owner:owner,targetId:cid,review:q} : null;
+    },
+    apply:function (s,a,q) {
+      return q.owner === 'nominate' ? R.nominate(s,q.review) : q.owner === 'support' ? R.applySupport(s,q.review) : FB.officeDeclareClaim(s,q.review);
+    },
+    details:function (s,a,q) {
+      var rid = q.review.realmId || q.review.claimant && q.review.claimant.institutionId;
+      var person = s.chars[q.targetId];
+      var lines = [FB.T('Recognition for {person}.',{person:person ? FB.fullName(person) : FB.T('Unavailable person')}),
+        FB.T('Court: {court}.',{court:s.realms[rid] && s.realms[rid].name || FB.T('Unavailable court')}),
+        FB.T('Payment: {money:cost}; prestige spent: {prestige}.',{cost:q.review.cost || 0,prestige:q.review.prestige || 0}),
+        q.review.reason || (q.owner === 'nominate' ? FB.T('Admit this living public officer to the recognition slate. No ancestry or crown is granted.') :
+          FB.T('Record this recognition without granting a crown, property, another interest’s consent or automatic accession.'))];
+      if (q.owner === 'claim') {
+        lines.push(FB.T('Your recognition source: {source}.',{source:FB.legitimacySourceName(s,q.review.mandate.source)}));
+        lines.push(a.action === 'contest' ? FB.T('Withdraw only this mandate’s support from the named claimant. Other sources remain independent.') :
+          FB.T('Recognizing this person withdraws the same mandate’s support from rival claimants in this scope. Their other sources remain independent.'));
+      } else if (q.owner === 'support') lines.push(FB.T('Only your own current interest casts this support. Other interests retain their votes; this is not an accession.'));
+      return lines;
+    },
+    report:function (s,a,q) {
+      return (q.review.prestige ? [{type:'prestige',amount:-q.review.prestige}] : []).concat([{type:'system',system:'story'}]);
+    }
+  });
   // Later forms extend this same transaction with declared ancestry and terms.
   R.policy = function (s, rid) {
     var form = FB.governments.forRealm(s, rid);
