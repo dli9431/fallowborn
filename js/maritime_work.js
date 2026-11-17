@@ -7,6 +7,10 @@
   function keys(v,list) { return obj(v) && Object.keys(v).every(function(k){return list.indexOf(k)>=0;}); }
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
   function eq(a,b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function restoreCounters(uid,rng) {
+    if (FB.getUidCounter()!==uid) FB.setUidCounter(uid);
+    if (FB.getRngState()!==rng) FB.setRngState(rng);
+  }
   function int(v,a,b) { return Number.isSafeInteger(v) && v>=a && v<=b; }
   function id(v) { return typeof v === 'string' && /^[a-z][a-z0-9_]{0,79}$/.test(v); }
   function num(v,a,b) { return typeof v === 'number' && Number.isFinite(v) && v>=a && v<=b; }
@@ -110,7 +114,7 @@
           profile.quantity*Math.min(profile.unitValue,recipe.workPrice/recipe.outputs[0].quantity)));
         return credit>0 && t.player.gold>=recipe.workPrice+selected.cost-credit;
       });
-    } finally {FB.setUidCounter(uid);FB.setRngState(rng);}
+    } finally {restoreCounters(uid,rng);}
   };
   M.reservations = function(s) {
     var held={};
@@ -153,7 +157,7 @@
       q.assetId=row.asset.id;
       var savedUid=FB.getUidCounter(),savedRng=FB.getRngState(),selected;
       try {selected=target(copy(s),a,profile,invoice?invoice.enterpriseUid:request.enterpriseUid);}
-      finally {FB.setUidCounter(savedUid);FB.setRngState(savedRng);}
+      finally {restoreCounters(savedUid,savedRng);}
       q.reason='enterprise';if(!selected || selected.blocked)return q;
       q.baseCost=selected.cost;q.level=selected.level;
       if(!num(q.baseCost,1,1000000))return q;
@@ -223,7 +227,7 @@
         x.launchPeriod=FB.siteResources.snapshot(t,a.countyId,a.siteId).find(function(y){return y.id===a.launchSourceId;}).period;
         x.inputs.forEach(function(i){r.lots.find(function(l){return l.id===i.lotId;}).remaining-=i.quantity;});
         ok=true;
-      } finally {active=null;if(!ok){FB.setUidCounter(uid);FB.setRngState(rng);}}
+      } finally {active=null;if(!ok)restoreCounters(uid,rng);}
     }
     r.revision++;
     // All potentially failing work ran on detached state, including canonical payment and staffing.
@@ -258,6 +262,69 @@
     if(q.reason==='enterprise')return FB.T('The ordinary enterprise site and exact next-stage technology requirements must be met.');
     return FB.T('A living original household owner, standing facility and current permission are required.');
   };
+  var eventFields={assignmentId:P.eventId(),profileId:P.eventId('maritimeWorkProfiles'),
+    target:{enum:['new','upgrade'],optional:'absent'}};
+  function eventRows(s,args,ctx) {
+    var pid=ctx.locationId || s.player.provinceId;
+    return plan(s).assignments.filter(function (a) {
+      var invoice=args.operation!=='prepare' && eventInvoice(s,a);
+      var who=invoice ? invoice.actor : P.eventActor(s,a.countyId,a.slot);
+      return a.countyId===pid && (!args.assignmentId || args.assignmentId===a.id) &&
+        (!args.profileId || args.profileId===a.profileId) && P.eventControls(s,who);
+    });
+  }
+  function eventInvoice(s,a) {
+    return root(s) && root(s).invoices.find(function (x) {return x.assignmentId===a.id && x.status==='pending';});
+  }
+  function eventSource(s,args,a) {
+    var profile=FBDATA.maritimeWorkProfiles[a.profileId],invoice=args.operation!=='prepare' && eventInvoice(s,a);
+    var enterprise=args.target==='upgrade' && (s.player.enterprises || []).find(function (e) {
+      return e.type===profile.enterpriseType && e.provinceId===a.countyId && e.settlement===a.slot;
+    });
+    var row=P.snapshot(s,a.countyId,a.siteId).find(function (r) {return r.site.id===a.productionSiteId;});
+    if (!row || !row.asset || args.operation!=='prepare' && !invoice || args.target==='upgrade' && !enterprise && !invoice) return null;
+    return P.eventSource(s,'maritime',a.id,invoice ? invoice.actor : P.eventActor(s,a.countyId,a.slot),{
+      id:row.asset.id,invoiceId:invoice ? invoice.id : null,enterpriseUid:invoice ? invoice.enterpriseUid : enterprise ? enterprise.uid : null
+    });
+  }
+  function eventQuote(s,args,a,source) {
+    var request={operation:args.operation,assignmentId:a.id,actor:source.actor};
+    if (args.operation==='prepare') request.enterpriseUid=source.asset.enterpriseUid;else request.invoiceId=source.asset.invoiceId;
+    return M.quote(s,request);
+  }
+  FB.eventStateReaders.register({id:'works_maritime',system:'works',args:{type:'object',fields:Object.assign({},eventFields,{
+    status:{enum:['prepare_ready','pending','complete_ready','launch_unavailable','funds_short']}
+  })},read:function (state,args,ctx) {
+    if (!state.production) return false;
+    var s=copy(state);
+    return eventRows(s,args,ctx).some(function (a) {
+      if (args.status==='pending') return !!eventInvoice(s,a);
+      var terms=Object.assign({},args,{operation:args.status==='complete_ready' ? 'complete' : 'prepare'}),source=eventSource(s,terms,a);
+      if (!source) return false;
+      var q=eventQuote(s,terms,a,source);
+      return args.status==='launch_unavailable' ? q.reason==='launch' : args.status==='funds_short' ? q.reason==='funds' : q.allowed;
+    });
+  }});
+  FB.eventReviews.register('maritime_operation',{owner:'works',partySlots:{operator:true},
+    args:{type:'object',fields:Object.assign({},eventFields,{operation:{enum:['prepare','complete','cancel']}})},
+    bind:function (state,args,ctx) {
+      if (!state.production) return null;
+      var s=copy(state),a=eventRows(s,args,ctx)[0];return a ? P.eventBind(eventSource(s,args,a)) : null;
+    },
+    quote:function (state,args,ctx) {
+      var s=copy(state),source=ctx.worksSource;
+      if (!source || source.kind!=='maritime') return null;
+      var a=eventRows(s,Object.assign({},args,{assignmentId:source.id}),ctx)[0];
+      return a && P.eventMatches(ctx,eventSource(s,args,a)) ? eventQuote(s,args,a,source) : null;
+    },
+    apply:function (s,args,q) {return M.commit(s,q);},
+    report:function (s,args,q) {return P.eventReport(s,q.request.actor,args.operation==='complete' ? -q.due : 0);},
+    details:function (s,args,q) {
+      return [M.reason(q),FB.T('Ordinary invoice: {money:price}. Material contribution: {money:credit}. Remaining private payment: {money:due}.',{
+        price:q.baseCost || q.invoice && q.invoice.baseCost || 0,credit:q.credit || q.invoice && q.invoice.credit || 0,due:q.due || 0}),
+        FB.T('Reservation pays nothing. Completion consumes the reserved paid work and one lawful launching place; cancellation only releases materials.')];
+    }
+  });
   M.validate = function(s) {
     var r=s.production, ledger=root(s), out={ids:[],used:{},revision:0};
     if(ledger===undefined)return out;

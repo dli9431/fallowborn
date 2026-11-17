@@ -160,6 +160,22 @@
         reservations:copy(row.reservations),connectedSourceId:a.connectedSourceId || null,allowed:!!auth && auth.allowed};
     });
   };
+  FB.eventStateReaders.register({id:'works_resource',system:'works',args:{type:'object',fields:{
+    sourceId:{type:'string',pattern:'^[a-z][a-z0-9_]{0,79}$',optional:'absent'},
+    profileId:{type:'string',ref:{table:'siteResourceProfiles'},optional:'absent'},
+    kind:{enum:['flow','storage','access'],optional:'absent'},unit:{enum:['water','grazing','launching']},
+    status:{enum:['available','exhausted','stored','reserved','used']},
+    minimum:{type:'integer',min:1,max:1000000,optional:'absent'}
+  }},read:function (state,args,ctx) {
+    var s=state,pid=ctx.locationId || s.player.provinceId;
+    return R.snapshot(s,pid).some(function (row) {
+      if (row.unit!==args.unit || args.sourceId && row.id!==args.sourceId ||
+          args.profileId && row.profileId!==args.profileId || args.kind && row.kind!==args.kind) return false;
+      var value=args.status==='stored' ? row.stock : args.status==='reserved' ? row.reserved :
+        args.status==='used' ? row.consumed : row.available;
+      return args.status==='exhausted' ? value===0 : value>=(args.minimum || 1);
+    });
+  }});
   /* Revisions cover all sources so a transfer and both of its accounts commit once. */
   R.quote = function (s,request) {
     var q = {allowed:false,reason:'request',request:object(request) ? copy(request) : null,signature:null};

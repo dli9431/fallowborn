@@ -466,6 +466,146 @@
     return FB.T('A living lawful asset holder, the original owner and an actual standing building are required.');
   };
 
+  // Event routing retains the actual owner and asset; it never enrolls a plant.
+  P.eventId = function (table) {
+    var spec = {type:'string',pattern:'^[a-z][a-z0-9_]{0,79}$',optional:'absent'};
+    if (table) spec.ref = {table:table};
+    return spec;
+  };
+  P.eventControls = function (s,who) {
+    var person = who && original(s,who);
+    return !!person && person.characterId === s.player.charId;
+  };
+  P.eventActor = function (s,pid,slot) {
+    var who = FB.settlementHolder(s,pid,slot);
+    return P.eventControls(s,who) ? who : null;
+  };
+  P.eventSource = function (s,kind,key,who,asset) {
+    var person = who && original(s,who);
+    return person ? {kind:kind,id:key,actor:copy(who),person:person,asset:copy(asset)} : null;
+  };
+  P.eventBind = function (source) {
+    return source ? {worksSource:source,participants:{operator:source.person.characterId}} : null;
+  };
+  P.eventMatches = function (ctx,source) {
+    return !!source && eq(ctx.worksSource,source) && !!ctx.participants && ctx.participants.operator === source.person.characterId;
+  };
+  P.eventMaterials = function (s,list) {
+    return (list || []).map(function (x) {return FB.T('{quantity} {good}',{quantity:x.quantity,
+      good:FB.dataText(s,s.player.charId,'productionGood',x.goodId,FBDATA.productionGoods[x.goodId],'name',{})});}).join(', ');
+  };
+  P.eventPayment = function (s,who,amount) {
+    var account = P.account(s,who), person = account.payer.kind === 'character';
+    return person ? FB.T('Private payment: {money:amount}. Available: {money:available}; protected reserves: {money:reserve}.',{
+      amount:amount,available:account.funds.available,reserve:account.funds.reserve}) :
+      FB.T('Public payment: {money:amount}. Available: {money:available}; protected reserves: {money:reserve}.',{
+        amount:amount,available:account.funds.available,reserve:account.funds.reserve});
+  };
+  P.eventReport = function (s,who,delta) {
+    var impacts = [], account = who && P.account(s,who);
+    if (delta && account && account.payer.kind === 'character' && account.payer.id === s.player.charId) {
+      var preview = FB.previewEventOption(s,null,{effects:{gold:delta}},{});
+      impacts = preview.sections[0] ? preview.sections[0].impacts : [];
+    }
+    return impacts.concat([{type:'system',system:'story'}]);
+  };
+  P.eventRows = function (s,args,ctx) {
+    var pid = args.countyId || ctx.locationId || s.player.provinceId;
+    return P.snapshot(s,pid).filter(function (row) {
+      return row.asset && (!args.siteId || row.site.id === args.siteId) &&
+        (!args.recipeId || row.site.recipeIds.indexOf(args.recipeId) >= 0) &&
+        P.eventControls(s,row.asset.owner);
+    });
+  };
+  var eventFields = {countyId:P.eventId(),siteId:P.eventId(),recipeId:P.eventId('productionRecipes'),
+    technologyOnly:{type:'boolean',optional:'absent'}};
+  function batchReview(s,args,row,batch) {
+    var request = {siteId:row.site.id,actor:row.asset.owner,operation:args.operation};
+    if (args.operation === 'reserve') {
+      request.recipeId = args.recipeId || row.site.recipeIds.find(function (key) {
+        return !args.technologyOnly || FBDATA.productionRecipes[key].requiresTech.length > 0;
+      });request.disposition = args.disposition || 'store';
+    } else request.batchId = batch && batch.id;
+    return P.quote(s,request);
+  }
+  function batchSource(s,row,batch) {
+    return P.eventSource(s,'batch',row.site.id,row.asset.owner,{id:row.asset.id,batchId:batch ? batch.id : null});
+  }
+  FB.eventStateReaders.register({id:'works_payer',system:'works',args:{type:'object',fields:{
+    minimum:{type:'number',min:0,max:1000000}
+  }},read:function (s,args) {
+    return alive(s,s.player.charId) && Number.isFinite(s.player.gold) && s.player.gold >= args.minimum;
+  }});
+  FB.eventStateReaders.register({id:'production_account',system:'works',args:{type:'object',fields:Object.assign({
+    countyId:eventFields.countyId,siteId:eventFields.siteId,recipeId:eventFields.recipeId
+  },{
+    status:{enum:['ready','inputs_short','labor_unavailable','funds_short','technology_ready','pending','finish_ready','cancellable','stock']},
+    goodId:P.eventId('productionGoods'),minimum:{type:'integer',min:1,max:10000,optional:'absent'}
+  })},read:function (state,args,ctx) {
+    if (!state.production) return false;
+    var s = copy(state);
+    return P.eventRows(s,args,ctx).some(function (row) {
+      var who = row.asset.owner;
+      if (args.status === 'stock') return row.lots.reduce(function (n,l) {
+        return n + ((!args.goodId || l.goodId === args.goodId) ? l.available : 0);
+      },0) >= (args.minimum || 1);
+      var pending = row.batches.filter(function (b) {return b.status === 'reserved' && b.assetId === row.asset.id &&
+        (!args.recipeId || b.recipeId === args.recipeId);});
+      if (args.status === 'pending') return pending.length > 0;
+      if (args.status === 'finish_ready' || args.status === 'cancellable') return pending.some(function (b) {
+        return batchReview(s,{operation:args.status === 'finish_ready' ? 'finish' : 'cancel'},row,b).allowed;
+      });
+      return row.site.recipeIds.filter(function (key) {return !args.recipeId || key === args.recipeId;}).some(function (key) {
+        var q = batchReview(s,{operation:'reserve',recipeId:key},row), recipe = FBDATA.productionRecipes[key];
+        if (args.status === 'ready') return q.allowed;
+        if (args.status === 'technology_ready') return recipe.requiresTech.length > 0 && q.allowed;
+        if (args.status === 'inputs_short') return q.short === true;
+        if (args.status === 'labor_unavailable') return !!authority(s,row.site,who) && !worker(s,row.site,s.player.charId);
+        return q.reason === 'funds' && q.funds && q.funds.available < recipe.workPrice + q.funds.reserve;
+      });
+    });
+  }});
+  FB.eventReviews.register('production_batch',{owner:'works',partySlots:{operator:true},
+    args:{type:'object',fields:Object.assign({},eventFields,{
+      operation:{enum:['reserve','finish','cancel']},disposition:{enum:['store','use'],optional:'absent'}
+    }),test:function (a) {return a.operation === 'reserve' || a.recipeId === undefined && a.disposition === undefined && a.technologyOnly === undefined;}},
+    bind:function (state,args,ctx) {
+      if (!state.production) return null;
+      var s = copy(state), rows = P.eventRows(s,args,ctx), fallback = null;
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i], batch = args.operation === 'reserve' ? null : row.batches.find(function (b) {
+          return b.status === 'reserved' && b.assetId === row.asset.id;
+        });
+        if (args.technologyOnly && !row.site.recipeIds.some(function (key) {return FBDATA.productionRecipes[key].requiresTech.length > 0;})) continue;
+        if (args.operation === 'reserve' || batch) {
+          var bound = P.eventBind(batchSource(s,row,batch));
+          if (batchReview(s,args,row,batch).allowed) return bound;
+          if (!fallback) fallback = bound;
+        }
+      }
+      return fallback;
+    },
+    quote:function (state,args,ctx) {
+      var s = copy(state), source = ctx.worksSource;
+      if (!source || source.kind !== 'batch' || !object(source.asset)) return null;
+      var row = P.eventRows(s,Object.assign({},args,{siteId:source.id}),ctx)[0];
+      var batch = row && row.batches.find(function (b) {return b.id === source.asset.batchId;});
+      if (!row || !P.eventMatches(ctx,batchSource(s,row,batch))) return null;
+      return batchReview(s,args,row,batch);
+    },
+    apply:function (s,args,q) {return P.commit(s,q);},
+    report:function (s,args,q) {return P.eventReport(s,q.request.actor,args.operation === 'reserve' ? -q.cost : 0);},
+    details:function (s,args,q) {
+      var recipeId = q.request.recipeId, batch = s.production.batches.find(function (b) {return b.id === q.request.batchId;});
+      var recipe = FBDATA.productionRecipes[recipeId || batch && batch.recipeId];
+      return [P.reason(q),FB.T('Inputs: {inputs}. Output: {outputs}.',{inputs:P.eventMaterials(s,recipe && recipe.inputs),outputs:P.eventMaterials(s,recipe && recipe.outputs)}),
+        P.eventPayment(s,q.request.actor,args.operation === 'reserve' && recipe ? recipe.workPrice : 0),
+        FB.T('Processing payment: {money:cost}. Required work: {days} action days; this review performs no workday.',{
+        cost:args.operation === 'reserve' && recipe ? recipe.workPrice : 0,days:recipe ? recipe.workDays : 0}),
+        FB.T('Cancellation releases unused inputs without refunding paid processing. Completion creates only the declared output, stored or consumed as originally chosen.')];
+    }
+  });
+
   /* Windowed retention. Every production-family owner contributes its records to
      one graph: lot stock, pending work, current terms and agreements are live,
      and each record needs the provenance its validator reads. Caps count the live

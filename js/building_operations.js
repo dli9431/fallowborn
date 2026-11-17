@@ -319,7 +319,7 @@
     if (root && !root.receipts[r.waterOperation.id] && Object.keys(root.receipts).length >= 2048) return q;
     if (root && Object.keys(root.receipts).some(function (key) {
       var v = root.receipts[key]; return key !== r.waterOperation.id && v.demandId === a.demandId && s.turn < v.untilTurn;
-    })) return q;
+    })) { q.reason = 'period'; return q; }
     q.reason = 'water';
     var staged = stage(s,a,request.actor);
     if (!staged) return q;
@@ -334,8 +334,9 @@
     var d = FB.buildingProfiles.assetDefinition(r), cost = p.workCost + (d.upkeep || 0) * (until - s.turn) / 90;
     var balance = funds(s,request.actor), floor = reserveFloor(s,request.actor);
     q.reason = 'funds';
+    q.cost = cost; q.workCost = p.workCost; q.untilTurn = until; q.mode = p.mode;
     if (!money(cost,2000000) || !Number.isFinite(balance) || !Number.isFinite(floor) || balance < cost + floor) return q;
-    q.allowed = true; q.reason = null; q.cost = cost; q.workCost = p.workCost; q.untilTurn = until; q.mode = p.mode;
+    q.allowed = true; q.reason = null;
     if (p.inputs) q.inputs = inputs;
     q.period = period; q.amount = p.amount; q.authority = who; q.sources = staged.sources;
     q.signature = JSON.stringify([s.turn,definition(s),r,s.buildingOperations || null,s.siteResources || null,staged.steps,balance,floor,p.inputs ? s.production : null,q]);
@@ -410,11 +411,80 @@
     if (q.reason === 'season') return FB.T('Review the local seasonal operating term before funding this service.');
     if (q.reason === 'inputs') return FB.T('Requires {materials} as owned, unreserved, unexpired production materials at this exact site.',{materials:materials});
     if (q.reason === 'water') return FB.T('The lawful connected route needs enough unreserved water and storage room.');
-    if (q.reason === 'funds') return FB.T('Work and upkeep must be funded while retaining existing reserves.');
+    if (q.reason === 'funds') return FB.T('Work and upkeep require {money:cost} while retaining existing reserves.',{cost:q.cost});
     if (q.reason === 'period') return FB.T('This service or its shared demand was already funded for the current period.');
     if (q.reason === 'work') return FB.T('Local residents are required for paid water service.');
     return FB.T('A standing bound facility and its living lawful payer are required.');
   };
+  function eventRows(s,args,ctx) {
+    var pid=args.countyId || ctx.locationId || s.player.provinceId;
+    return plan(s).assignments.filter(function (a) {
+      var b=record(s,a.countyId,a.slot,a.buildingId);
+      return a.countyId===pid && b && b.waterOperation && b.waterOperation.assignmentId===a.id &&
+        (!args.assignmentId || args.assignmentId===a.id) && (!args.profileId || args.profileId===a.profileId) &&
+        (!args.mode || args.mode===a.profile.mode) && !!FB.production.eventActor(s,a.countyId,a.slot);
+    });
+  }
+  function eventQuote(s,a) {
+    return O.quote(s,{countyId:a.countyId,settlement:a.slot,buildingId:a.buildingId,
+      actor:FB.production.eventActor(s,a.countyId,a.slot)});
+  }
+  function eventSource(s,a) {
+    var b=record(s,a.countyId,a.slot,a.buildingId);
+    return FB.production.eventSource(s,'water',a.id,FB.production.eventActor(s,a.countyId,a.slot),b.waterOperation);
+  }
+  var eventFields={
+    assignmentId:{type:'string',pattern:'^[a-z][a-z0-9_]{0,79}$',optional:'absent'},
+    countyId:{type:'string',pattern:'^[a-z][a-z0-9_]{0,79}$',optional:'absent'},
+    profileId:{type:'string',ref:{table:'buildingOperationProfiles'},optional:'absent'},
+    mode:{enum:['store','use'],optional:'absent'},when:{enum:['ready','active','dry','demand_busy','unfunded'],optional:'absent'}
+  };
+  function eventState(s,a,status) {
+    var q=eventQuote(s,a),b=record(s,a.countyId,a.slot,a.buildingId),old=receipt(s,b);
+    if (status==='ready') return q.allowed;
+    if (status==='active') {
+      var projected=O.effects(s,a.countyId,b);
+      return !!old && effectKeys(a.profile).some(function (key) {return projected[key]>0;});
+    }
+    if (status==='unfunded') return q.reason==='funds';
+    if (status==='dry') {
+      var last=a.stores.length ? a.stores[a.stores.length-1] : a.sourceId;
+      return R.snapshot(s).some(function (r) {return r.id===last && r.kind==='storage' && r.stock===0;});
+    }
+    return !!(s.buildingOperations && Object.keys(s.buildingOperations.receipts).some(function (key) {
+      var v=s.buildingOperations.receipts[key];return key!==b.waterOperation.id && v.demandId===a.demandId && s.turn<v.untilTurn;
+    }));
+  }
+  FB.eventStateReaders.register({id:'works_water',system:'works',args:{type:'object',fields:Object.assign({
+    assignmentId:eventFields.assignmentId,countyId:eventFields.countyId,profileId:eventFields.profileId,mode:eventFields.mode
+  },{
+    status:{enum:['ready','active','dry','demand_busy','unfunded']}
+  })},read:function (state,args,ctx) {
+    var pid=args.countyId || ctx.locationId || state.player.provinceId;
+    if (!(state.buildings[pid] || []).some(function (b) {return !!b.waterOperation;})) return false;
+    var s=copy(state);
+    return eventRows(s,args,ctx).some(function (a) {
+      return eventState(s,a,args.status);
+    });
+  }});
+  FB.eventReviews.register('building_operation',{owner:'works',partySlots:{operator:true},args:{type:'object',fields:eventFields},
+    bind:function (state,args,ctx) {
+      var pid=args.countyId || ctx.locationId || state.player.provinceId;
+      if (!(state.buildings[pid] || []).some(function (b) {return !!b.waterOperation;})) return null;
+      var s=copy(state),a=eventRows(s,args,ctx).find(function (a) {return !args.when || eventState(s,a,args.when);});
+      return a ? FB.production.eventBind(eventSource(s,a)) : null;
+    },
+    quote:function (state,args,ctx) {
+      var s=copy(state),source=ctx.worksSource;
+      if (!source || source.kind!=='water') return null;
+      var a=eventRows(s,Object.assign({},args,{assignmentId:source.id}),ctx)[0];
+      return a && FB.production.eventMatches(ctx,eventSource(s,a)) ? eventQuote(s,a) : null;
+    },
+    apply:function (s,args,q) {return O.commit(s,q);},
+    report:function (s,args,q) {return FB.production.eventReport(s,q.request.actor,-q.cost);},details:function (s,args,q) {
+      return [O.reason(q),FB.production.eventPayment(s,q.request.actor,q.cost || 0)];
+    }
+  });
   O.validate = function (s) {
     function fail() { throw new Error(FB.T('Invalid saved water operation.')); }
     var root = s.buildingOperations, assets = {}, p = plan(s);
