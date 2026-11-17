@@ -34,6 +34,7 @@ async function catalogue(page) {
 }
 
 for (const order of [['800','711'],['711','800']]) test('dated declarations retain eager order after loading ' + order.join(' then '),async function ({page,browser},info) {
+  test.skip(!info.project.name.endsWith('-served'),'Source interception requires a served origin.');
   const context = await browser.newContext(), eager = await context.newPage();
   try {
     await routeEagerDocument(eager);await openTitle(eager,info);await prepareGameContent(eager);
@@ -57,6 +58,7 @@ for (const order of [['800','711'],['711','800']]) test('dated declarations reta
 });
 
 test('native optional story reviews validate without installing their graphs into another selected date',async function ({page},info) {
+  test.skip(!info.project.name.endsWith('-served'),'Source interception requires a served origin.');
   const file = 'data/events_568.js', source = fs.readFileSync(path.join(gameRoot,file),'utf8');
   const declaration = {
     id:'source_household_review',pack:'dated_568',title:'Household supplies',text:'Review the household account.',weight:1,
