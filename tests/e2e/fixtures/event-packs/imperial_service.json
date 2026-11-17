@@ -1,0 +1,689 @@
+{
+  "packId": "imperial_service",
+  "eventCount": {
+    "min": 20,
+    "max": 20
+  },
+  "rows": [
+    {
+      "eventId": "service_court_petition",
+      "bookmark": "476",
+      "code": "SERVICE-476-farmer_476-split-m-Officer",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_scope",
+      "bookmark": "493",
+      "code": "SERVICE-493-farmer_493-constantinople-m-Officer",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_gates",
+      "bookmark": "476",
+      "code": "SERVICE-476-farmer_476-split-m-Officer",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_accounts",
+      "bookmark": "493",
+      "code": "SERVICE-493-farmer_493-constantinople-m-Officer",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_interests",
+      "bookmark": "476",
+      "code": "SERVICE-476-farmer_476-split-m-Officer",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_favor",
+      "bookmark": "493",
+      "code": "SERVICE-493-farmer_493-constantinople-m-Officer",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_loss",
+      "bookmark": "476",
+      "code": "SERVICE-476-farmer_476-split-m-Officer",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_purple",
+      "bookmark": "493",
+      "code": "SERVICE-493-farmer_493-constantinople-m-Officer",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_pay_list",
+      "bookmark": "476",
+      "code": "SERVICE-476-farmer_476-split-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_rival",
+      "bookmark": "493",
+      "code": "SERVICE-493-farmer_493-constantinople-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_senators",
+      "bookmark": "476",
+      "code": "SERVICE-476-farmer_476-split-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_bishop",
+      "bookmark": "493",
+      "code": "SERVICE-493-farmer_493-constantinople-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_watch",
+      "bookmark": "476",
+      "code": "SERVICE-476-farmer_476-split-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_seal",
+      "bookmark": "493",
+      "code": "SERVICE-493-farmer_493-constantinople-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_purser",
+      "bookmark": "476",
+      "code": "SERVICE-476-farmer_476-split-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_purple_rumor",
+      "bookmark": "493",
+      "code": "SERVICE-493-farmer_493-constantinople-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_muster",
+      "bookmark": "476",
+      "code": "SERVICE-476-farmer_476-split-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_audience",
+      "bookmark": "493",
+      "code": "SERVICE-493-farmer_493-constantinople-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_succession",
+      "bookmark": "476",
+      "code": "SERVICE-476-farmer_476-split-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "split": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "service_court_dismissed",
+      "bookmark": "493",
+      "code": "SERVICE-493-farmer_493-constantinople-m-Clerk",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "holder"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            },
+            {
+              "path": [
+                "owner"
+              ],
+              "value": {
+                "constantinople": "absent_court"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
