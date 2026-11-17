@@ -14,7 +14,8 @@
       });
     }});
   var CLOSED = ['dismissed','vindicated','settled','penance','imprisoned','confiscated','enforced','interrupted'];
-  var ACTIONS = ['charge','dismiss','challenge','defend','settlement','accept','decline','refuse','arrest','submit',
+  var DEFEND = 'defend';
+  var ACTIONS = ['charge','dismiss','challenge',DEFEND,'settlement','accept','decline','refuse','arrest','submit',
     'penance','imprison','refer','accept_referral','reject_referral','confiscate','enforce','close_stale'];
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
   function same(a,b) { return JSON.stringify(a) === JSON.stringify(b); }
@@ -473,4 +474,75 @@
         r.asset && r.asset.grant.founderId].indexOf(cid) >= 0;
     });
   };
+
+  FB.eventStateReaders.register({id:'religious_case_present',system:'religious_cases',
+    args:{type:'object',fields:{profileId:{type:'string',ref:{table:'religiousCases'}}}},read:function (s,a) {
+      return R.list(s,s.player.charId).some(function (x) {return x.profileId === a.profileId && !x.reason && !x.stale && (!x.record || ACTIVE.indexOf(x.record.status) >= 0);});
+    }});
+  R.eventQuote = function (s,a,ctx) {
+    // A bound party map cannot authorize selecting a replacement matter.
+    if (ctx && ctx.participants && (!ctx.offenseId || !ctx.religiousCaseSource)) return null;
+    var exact = ctx && ctx.offenseId;
+    var qs = R.list(s,s.player.charId).filter(function (x) {return x.profileId === a.profileId &&
+      (exact === undefined || x.offenseId === exact) &&
+      (!ctx || !ctx.religiousCaseSource || same(x.accusation,ctx.religiousCaseSource)) &&
+      (!ctx || !ctx.participants || (!ctx.participants.defendant || ctx.participants.defendant === x.defendantId) &&
+        (!ctx.participants.victim || ctx.participants.victim === x.victimId) &&
+        (!ctx.participants.bishop || ctx.participants.bishop === x.principals.bishopId) &&
+        (!ctx.participants.court || ctx.participants.court === x.principals.courtId));}).map(function (x) {
+        return R.quote(s,a.profileId,x.offenseId,s.player.charId,a.action);
+      });
+    return qs.filter(function (q) {return q && q.allowed;})[0] || qs[0] || null;
+  };
+  var caseReviewArgs = {type:'object',fields:{profileId:{type:'string',ref:{table:'religiousCases'}},
+    action:{enum:['charge','dismiss','challenge',DEFEND,'settlement','accept','decline','refuse','refer','accept_referral','reject_referral','close_stale']}}};
+  FB.eventStateReaders.register({id:'religious_case_review',system:'religious_cases',args:caseReviewArgs,
+    read:function (s,a,ctx) {var q = R.eventQuote(s,a,ctx); return !!(q && q.allowed);}});
+  function eventCaseBlocker(reason) {
+    var reasons = {
+      jurisdiction:FB.T('The current office lacks lawful temporal jurisdiction.'),
+      defendant:FB.T('The recorded defendant is unavailable.'),
+      principal:FB.T('The recorded defendant cannot be the bishop or temporal judge.'),
+      cause:FB.T('The existing evidence does not establish this supported cause.'),
+      location:FB.T('The recorded defendant is no longer local.'),
+      actor:FB.T('This procedural decision belongs to another party or court.'),
+      stale:FB.T('The original source, parties or procedural stage has changed.'),
+      spent:FB.T('This matter has already spent that procedural decision.'),
+      offer:FB.T('There is no current offer this party may accept or decline.'),
+      funds:FB.T('The actual private payer or identified recipient cannot complete the payment.')
+    };
+    return reasons[reason] || FB.T('The current declaration or procedural terms do not permit this decision.');
+  }
+  function eventPaymentReport(s,amount) {
+    var preview = FB.previewEventOption(s,null,{effects:{gold:amount}},{});
+    return (preview.sections[0] ? preview.sections[0].impacts : []).concat([{type:'system',system:'story'}]);
+  }
+  FB.eventReviews.register('religious_case',{
+    partySlots:{defendant:true,victim:true,bishop:true,court:true},
+    owner:'religious_cases',args:caseReviewArgs,quote:R.eventQuote,
+    bind:function (s,a,ctx) {var q = R.eventQuote(s,a,ctx); if (!q) return null;
+      var o = q.stamp.offense, x = q.stamp.context;
+      return {offenseId:q.offenseId,religiousCaseSource:facts(o),participants:{defendant:o.accusedId,victim:o.victimId,bishop:x.bishopId,court:x.courtId}};},
+    apply:function (s,a,q) {return R.apply(s,q);},
+    report:function (s,a,q) {return eventPaymentReport(s,q.action === 'accept' && q.stamp.offense.accusedId === s.player.charId ? -(q.terms.amount + q.terms.fee) : 0);},
+    details:function (s,a,q) {var d = profile(a.profileId), t = q.terms, x = q.stamp.context, o = q.stamp.offense;
+      function name(id) {return s.chars[id] ? FB.fullName(s.chars[id]) : FB.T('Unavailable participant');}
+      return [FB.dataText(s,s.player.charId,'religiousCase',a.profileId,d,'name',{}),
+        FB.T('Defendant: {defendant}. Recorded victim: {victim}. Office holder: {bishop}. Temporal court: {court}.',{
+          defendant:name(o.accusedId),victim:name(o.victimId),
+          bishop:name(x.bishopId),court:name(x.courtId)}),
+        FB.T('Settlement recipient: {recipient}. Institutional fee account: {realm}. Offer deadline: {days} days.',{
+          recipient:d.settlementRecipient === 'victim' ? name(o.victimId) : s.realms[x.courtRealmId].name,
+          realm:s.realms[x.realmId].name,days:d.offerDays}),
+        FB.T('An accusation is not a conviction. Only this recorded source and these living parties are reviewed.'),
+        t ? FB.T('Proposed private payment: {money:amount}. Institutional fee: {money:fee}. Only the other party can accept.',{amount:t.amount,fee:t.fee}) : FB.T('This step transfers no settlement money.'),
+        FB.T('Defense chance: {chance}%. A challenge or defense is spent once. Refusal of process can cost support and standing; dismissal reverses only this matter’s refusal losses.',{chance:Math.round(q.chance * 100)}),
+        q.action === 'refuse' ? FB.T('Explicit refusal loses up to 3 {term:county} support and up to 6 political standing where the current relationship applies. It creates no new finding of guilt.') :
+          q.action === 'accept' ? FB.T('Voluntary settlement loses up to 1 {term:county} support and up to 2 political standing where the current relationship applies.') :
+          q.action === 'reject_referral' ? FB.T('Refusing a referral loses up to 1 {term:county} support and 5 relations between distinct courts.') :
+          FB.T('This procedural step imposes no new support penalty.'),
+        FB.T('Custody and penalties retain their current legal requirements. Spiritual office supplies no secular jurisdiction, property claim or private income.'),
+        q.allowed ? FB.T('Current evidence, parties and authority permit this step.') : eventCaseBlocker(q.reason)];}
+  });
+
 })();

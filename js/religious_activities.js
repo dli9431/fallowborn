@@ -462,4 +462,75 @@
     if (s.religiousActivityAI !== undefined && (!plain(s.religiousActivityAI) || !Number.isInteger(s.religiousActivityAI.period) ||
         s.religiousActivityAI.period < 0 || s.religiousActivityAI.period > Math.floor(s.turn / 90))) fail('religiousActivityAI');
   };
+
+  var activityReviewArgs = {type:'object',fields:{activityId:{type:'string',ref:{table:'religiousActivities'}}}};
+  FB.eventStateReaders.register({id:'religious_activity_available',system:'religious_institutions',args:activityReviewArgs,
+    read:function (s,a) { var q = FB.religiousActivityQuote(s,a.activityId,s.player.charId); return !!(q && q.allowed); }});
+  FB.eventStateReaders.register({id:'religious_service_funding',system:'religious_institutions',
+    args:{type:'object',fields:{profileId:{type:'string',ref:{table:'religiousPatronage'}},
+      fund:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/},state:{enum:['exhausted','low','funded']}},test:function (a,c) {
+      var d = (c.data || FBDATA).religiousPatronage[a.profileId]; return !!(d && Object.prototype.hasOwnProperty.call(d.funds,a.fund));
+    }},read:function (s,a) {
+      var d = FBDATA.religiousPatronage[a.profileId], h = house(s,d.institutionId), c = s.chars[s.player.charId];
+      if (!h || h.activityInstitutionId !== d.institutionId || !participant(s,d,c.id) ||
+          !h.activityServices || !h.activityServices[a.fund] ||
+          h.activityServices[a.fund].unitCost !== d.funds[a.fund].unitCost) return false;
+      var amount = h.restrictedFunds[a.fund] || 0, unit = d.funds[a.fund].unitCost;
+      return a.state === 'exhausted' ? amount < unit : a.state === 'low' ? amount >= unit && amount < 2 * unit : amount >= unit;
+    }});
+  function eventActivityBlocker(reason) {
+    var reasons = {
+      eligibility:FB.T('Current presence, faith or admission does not meet the declaration.'),
+      commitment:FB.T('An existing commitment or earned milestone prevents another start.'),
+      capacity:FB.T('The active activity or service capacity is full.'),
+      travel:FB.T('The participant is already traveling.'),
+      route:FB.T('The declared journey is unavailable.'),
+      funds:FB.T('The actual payer cannot cover the payment and reserve.'),
+      service:FB.T('The existing restricted service has insufficient matching funding.'),
+      recipient:FB.T('The declared receiving house is unavailable.'),
+      fund:FB.T('The gift does not fit the existing fund capacity.'),
+      property:FB.T('The original property is unavailable.'),
+      project:FB.T('The existing sponsored project no longer qualifies.')
+    };
+    return reasons[reason] || FB.T('The current declaration or procedural terms do not permit this decision.');
+  }
+  function eventPaymentReport(s,amount) {
+    var preview = FB.previewEventOption(s,null,{effects:{gold:amount}},{});
+    return (preview.sections[0] ? preview.sections[0].impacts : []).concat([{type:'system',system:'story'}]);
+  }
+  FB.eventReviews.register('religious_activity',{
+    owner:'religious_institutions',args:activityReviewArgs,
+    quote:function (s,a) {return FB.religiousActivityQuote(s,a.activityId,s.player.charId);},
+    apply:function (s,a,q) {return FB.religiousActivityApply(s,q);},
+    report:function (s,a,q) {return eventPaymentReport(s,-q.cost);},
+    details:function (s,a,q) {
+      var d = FBDATA.religiousActivities[a.activityId];
+      return [FB.dataText(s,s.player.charId,'religiousActivity',a.activityId,d,'name',{}),
+        FB.T('Payment: {money:cost}. Reserve: {money:reserve}.',{cost:q.cost,reserve:d.reserve}),
+        q.travel ? FB.T('{days} days outward, plus the return journey and any delays.',{days:q.travel.days}) : FB.T('Duration in days: {days}.',{days:q.duration}),
+        q.travel ? FB.T('The existing journey owns its arrival reward, supplies, encounters and cancellation. Arrival does not certify a rite.') :
+          FB.T('Once completed: {piety} piety, {prestige} prestige. Interruption retains the initial payment; unused service funding remains with the institution.',{piety:d.reward.piety,prestige:d.reward.prestige}),
+        d.service ? FB.T('Completion consumes {money:cost} from the existing restricted service fund.',{cost:d.service.cost}) : FB.T('No restricted service fund is consumed.'),
+        FB.T('Skill benefits: {skills}.',{skills:Object.keys(d.reward.skills).map(function (k) {return FB.T('{skill}: +{amount}',{skill:FB.T(FB.SKILL_NAMES[k]),amount:d.reward.skills[k]});}).join(', ') || FB.T('None')}),
+        q.allowed ? FB.T('The participant and funding currently qualify.') : eventActivityBlocker(q.reason)];
+    }
+  });
+  FB.eventReviews.register('religious_patronage',{
+    owner:'religious_institutions',
+    args:{type:'object',fields:{profileId:{type:'string',ref:{table:'religiousPatronage'}},
+      fund:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/},units:{type:'integer',min:1,max:64}},test:function (a,c) {
+      var d = (c.data || FBDATA).religiousPatronage[a.profileId];
+      return !!(d && Object.prototype.hasOwnProperty.call(d.funds,a.fund) && a.units <= d.funds[a.fund].capacity);
+    }},
+    quote:function (s,a) {var d = FBDATA.religiousPatronage[a.profileId];
+      return FB.religiousPatronageQuote(s,a.profileId,s.player.charId,'donation',{fund:a.fund,amount:a.units * d.funds[a.fund].unitCost});},
+    apply:function (s,a,q) {return FB.religiousPatronageApply(s,q);},
+    report:function (s,a,q) {return eventPaymentReport(s,-q.cost);},
+    details:function (s,a,q) {var d = FBDATA.religiousPatronage[a.profileId];
+      return [FB.dataText(s,s.player.charId,'religiousPatronage',a.profileId,d,'name',{}),
+        FB.T('Gift: {money:cost}. Reserve: {money:reserve}. Prepaid services: {units}.',{cost:q.cost,reserve:d.reserve,units:a.units}),
+        FB.T('The gift enters the existing restricted institutional fund. Household property and the office holder’s private purse receive nothing. Unspent gifts remain institutional property.'),
+        q.allowed ? FB.T('The existing recipient and capacity permit this gift.') : eventActivityBlocker(q.reason)];}
+  });
+
 })();

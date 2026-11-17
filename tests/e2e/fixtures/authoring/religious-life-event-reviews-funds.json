@@ -1,0 +1,153 @@
+{
+  "name": "Fictional congregational supply reviews",
+  "eventPacks": {
+    "river_reviews": {
+      "eras": [
+        "late_antique"
+      ],
+      "yearMin": 493,
+      "yearMax": 493
+    }
+  },
+  "religiousPatronage": {
+    "jewish_sardis_giving_493": {
+      "name": "Fictional two-unit congregational care",
+      "period": {
+        "yearMin": 493,
+        "yearMax": 493
+      },
+      "openings": [],
+      "faithIds": [
+        "jewish"
+      ],
+      "affiliationIds": [],
+      "roleIds": [],
+      "institutionId": "jewish_sardis_congregation_493",
+      "payer": "household",
+      "reserve": 4,
+      "foundation": {
+        "startup": 1,
+        "capital": 2,
+        "treasury": 1,
+        "landRequired": true
+      },
+      "funds": {
+        "building_care": {
+          "name": "Care supplies",
+          "capacity": 4,
+          "unitCost": 2
+        }
+      },
+      "outreach": []
+    }
+  },
+  "religiousActivities": {
+    "river_care": {
+      "name": "Fictional funded care",
+      "period": {
+        "yearMin": 493,
+        "yearMax": 493
+      },
+      "openings": [],
+      "faithIds": [
+        "jewish"
+      ],
+      "affiliationIds": [],
+      "roleIds": [
+        "worshipper"
+      ],
+      "institutionId": "jewish_sardis_congregation_493",
+      "mode": "local",
+      "purpose": null,
+      "siteId": null,
+      "payer": "household",
+      "cost": 0,
+      "reserve": 0,
+      "duration": 1,
+      "calendar": "any_day",
+      "interruption": "retain_cost",
+      "recipient": "institution",
+      "milestone": "river_care_done",
+      "reward": {
+        "piety": 1,
+        "prestige": 0,
+        "skills": {}
+      },
+      "legacy": null,
+      "service": {
+        "fund": "building_care",
+        "cost": 2
+      }
+    }
+  },
+  "events": [
+    {
+      "id": "river_fund_review",
+      "pack": "river_reviews",
+      "title": "A voluntary review",
+      "text": "Review the actual people, commitments and accounts before deciding.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "religious_service_funding",
+            "args": {
+              "profileId": "jewish_sardis_giving_493",
+              "fund": "building_care",
+              "state": "exhausted"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review the current terms",
+          "review": {
+            "type": "religious_patronage",
+            "args": {
+              "profileId": "jewish_sardis_giving_493",
+              "fund": "building_care",
+              "units": 1
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave this for now",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_care_review",
+      "pack": "river_reviews",
+      "title": "A voluntary review",
+      "text": "Review the actual people, commitments and accounts before deciding.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "religious_activity_available",
+            "args": {
+              "activityId": "river_care"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review the current terms",
+          "review": {
+            "type": "religious_activity",
+            "args": {
+              "activityId": "river_care"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave this for now",
+          "effects": {}
+        }
+      ]
+    }
+  ]
+}
