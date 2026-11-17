@@ -57,10 +57,23 @@
     var data = {events:[],eventPacks:{},eventChances:{}};
     author(data);
     if (!Array.isArray(data.events) || data.events.length > 256 ||
-        eventRoots.some(function (root) { return !data[root] || typeof data[root] !== 'object'; }))
+        eventRoots.some(function (root) { return !data[root] || typeof data[root] !== 'object'; }) ||
+        Object.keys(data).some(function (root) { return eventRoots.indexOf(root) < 0; }))
       throw new Error('Invalid dated event declarations: ' + source);
     var previous = eventSources[source];
     if (previous && canonical(previous.data) !== canonical(data)) throw new Error('Dated event source changed: ' + source);
+    eventRoots.forEach(function (root) {
+      var listRoot = root === 'events', known = Object.create(null);
+      Object.keys(eventSources).forEach(function (key) {
+        var rows = eventSources[key].data[root];
+        (listRoot ? rows.map(function (row) { return row.id; }) : Object.keys(rows)).forEach(function (id) { known[id] = true; });
+      });
+      var ids = listRoot ? data[root].map(function (row) { return row.id; }) : Object.keys(data[root]);
+      ids.forEach(function (id) {
+        if (!own(known,id) && (listRoot ? list(FBDATA[root]).some(function (row) { return row.id === id; }) : own(FBDATA[root],id)))
+          throw new Error('Conflicting dated event declaration: ' + id);
+      });
+    });
     eventSources[source] = {primary:file.primary,secondary:file.secondary,seq:fileOrder.indexOf(source),after:file.after,data:data};
     try { publishEventPacks(); }
     catch (error) { if (previous) eventSources[source] = previous; else delete eventSources[source]; throw error; }
@@ -1247,7 +1260,8 @@
   function reauthor() {
     var state = {view:view,frozen:frozen,orders:orders,declared:declared,faults:faults,origins:origins,starts:starts,graphs:graphs,
       ownership:ownership,catalogUses:catalogUses,usedGraphs:usedGraphs,seen:seen,foundationSnapshot:foundationSnapshot,
-      stageProduced:Object.assign(Object.create(null),stageProduced),catalogs:{},sources:FBDATA.bookmarkCompositionSources};
+      stageProduced:Object.assign(Object.create(null),stageProduced),eventReviewReferences:eventReviewReferences,
+      catalogs:{},sources:FBDATA.bookmarkCompositionSources};
     catalogs.forEach(function (root) { state.catalogs[root] = FBDATA[root]; });
     var ids = declared.slice();
     if (!pristine) throw new Error('Bookmark sources have no recorded authoring root.');
@@ -1267,6 +1281,7 @@
       origins = state.origins; starts = state.starts; graphs = state.graphs; ownership = state.ownership;
       catalogUses = state.catalogUses; usedGraphs = state.usedGraphs; seen = state.seen; foundationSnapshot = state.foundationSnapshot;
       stageProduced = state.stageProduced;
+      eventReviewReferences = state.eventReviewReferences;
       catalogs.forEach(function (root) { FBDATA[root] = state.catalogs[root]; });
       FBDATA.bookmarkCompositionSources = state.sources;
       throw error;

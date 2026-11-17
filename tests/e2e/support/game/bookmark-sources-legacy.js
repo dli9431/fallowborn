@@ -79,7 +79,7 @@ async function installNativeLegacy(page) {
   await routeEagerDocument(page);
   await page.route('**/js/bookmark_sources.js',function (route) {
     return route.fulfill({contentType:'application/javascript',body:
-      'FB.bookmarkSources={current:function(){return null;},ready:function(){return false;},owns:function(){return false;},reports:function(){return [];},unreviewedReference:function(){return false;},hasRetainedCatalogueTransitions:function(){return false;},finish:function(){},stage:function(spec,fn){fn(FBDATA);}};'});
+      'FB.bookmarkSources={current:function(){return null;},ready:function(){return false;},owns:function(){return false;},reports:function(){return [];},unreviewedReference:function(){return false;},hasRetainedCatalogueTransitions:function(){return false;},finish:function(){},eventBoundary:function(){},eventPack:function(source,fn){fn(FBDATA);},stage:function(spec,fn){fn(FBDATA);}};'});
   });
   for (const file of nativeSourceFiles) {
     if (file.indexOf('_634') >= 0) continue;
