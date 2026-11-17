@@ -39,10 +39,14 @@ for (const order of [['800','711'],['711','800']]) test('dated declarations reta
     await routeEagerDocument(eager);await openTitle(eager,info);await prepareGameContent(eager);
     const expected = await catalogue(eager);
     await openTitle(page,info);
-    expect(await page.evaluate(function () {return FB.eventById('aachen_report_800');})).toBeNull();
+    expect(await page.evaluate(function () {
+      const selected = FB.bookmarkSources.prepareSetup('867');
+      if (!selected.published) throw new Error(selected.worldFaults.join(' '));
+      return FB.eventById('aachen_report_800');
+    })).toBeNull();
     for (const id of order) await load(page,[id]);
-    expect(await page.evaluate(function () {return !!FB.eventById('aachen_report_800');})).toBe(true);
     await prepareGameContent(page);
+    expect(await page.evaluate(function () {return !!FB.eventById('aachen_report_800');})).toBe(true);
     const actual = await catalogue(page);
     expect(actual).toEqual(expected);
     expect(new Set(actual.events).size).toBe(actual.events.length);
