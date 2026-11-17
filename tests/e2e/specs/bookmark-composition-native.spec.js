@@ -10,6 +10,9 @@ const {beginBookmarkFromTitle,restoreBookmark,facts} = require('../support/game/
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 // Each proof uses fresh fixture pages or explicitly created isolated contexts.
 test.describe.configure({mode:'parallel'});
+test.afterEach(async function ({page},info) {
+  if (info.status !== info.expectedStatus) console.log('Native source failure view: ' + await page.locator('body').innerText());
+});
 const remaining = ['476','493','711','800','867','1066','1096','1204','1241'];
 const allWorlds = ['476','493','568','634','711','800','867','1066','1096','1204','1241'];
 const examples = [require('../fixtures/authoring/existing-person-harbor.json'),require('../fixtures/authoring/existing-person-dune.json')];
@@ -32,11 +35,11 @@ async function catalogue(page) {
     const projected = {};
     input.roots.forEach(function (key) { if (Object.prototype.hasOwnProperty.call(FBDATA,key)) projected[key] = FBDATA[key]; });
     const roots = {};
-    Object.keys(projected).forEach(function (key) { roots[key] = FB.mods.fingerprint(projected[key]); });
+    Object.keys(projected).forEach(function (key) { roots[key] = FB.mods.fingerprint({value:projected[key]}); });
     return {signature:FB.mods.fingerprint(projected),roots:roots,starts:FBDATA.startScenarios.map(function (row) { return row.id; }),
       declarations:Object.keys(FBDATA.storyInstances),registry:FB.stories.list().map(function (row) { return row.id; }),
       stories:Object.keys(FBDATA.storyInstances).map(function (id) { return {id:id,fingerprint:FB.mods.fingerprint(FBDATA.storyInstances[id])}; }),
-      worlds:input.ids.map(function (id) { return {id:id,raw:FB.mods.fingerprint(projected.bookmarks[id]),
+      worlds:input.ids.map(function (id) { if (!projected.bookmarks[id]) return {id:id,missing:true}; return {id:id,raw:FB.mods.fingerprint(projected.bookmarks[id]),
         revisions:FB.bookmarkRevisions(id,projected.bookmarks[id]).map(function (world) { return world.revision; }),
         faults:FB.bookmarkRevisions(id,projected.bookmarks[id]).map(function (world) { return FB.validateBookmark(world); })}; })};
   },{ids:allWorlds,roots:publicRoots});

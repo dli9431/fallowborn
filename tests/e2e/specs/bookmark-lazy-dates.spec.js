@@ -14,6 +14,9 @@ const eagerPages = new WeakSet();
 // Independent source cases own their pages and contexts; overlapping requests
 // remain deliberately sequential inside their own single proof.
 test.describe.configure({mode:'parallel'});
+test.afterEach(async function ({page},info) {
+  if (info.status !== info.expectedStatus) console.log('Lazy source failure view: ' + await page.locator('body').innerText());
+});
 const datedPackDates = {dated_451:['451'],dated_493:['493'],dated_568:['568'],dated_634:['634'],
   dated_711:['711'],dated_800:['800'],dated_1096:['1096'],dated_1204:['1204'],dated_1241:['1241']};
 
