@@ -2,7 +2,7 @@
 FB.bookmarkSources.eventPack('data/events_711.js',function (FBDATA) {
   'use strict';
   FBDATA.eventPacks = FBDATA.eventPacks || {};
-  FBDATA.eventPacks.dated_711 = { eras:['early_medieval'], yearMin:711, yearMax:731 };
+  FBDATA.eventPacks.dated_711 = { eras:['early_medieval'], yearMin:711, yearMax:731, bookmarkIds:['711'] };
   FBDATA.eventChances = FBDATA.eventChances || {};
   FBDATA.eventChances.dated_711_household_ste = {"base":0.5,"min":0.1,"max":0.85,"steps":[{"kind":"skill","id":"ste","factor":0.02},{"kind":"flag","id":"household_prepared_711","add":0.15}]};
   FBDATA.eventChances.dated_711_household_dip = {"base":0.5,"min":0.1,"max":0.85,"steps":[{"kind":"skill","id":"dip","factor":0.02},{"kind":"flag","id":"household_prepared_711","add":0.15}]};

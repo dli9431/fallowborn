@@ -8,6 +8,8 @@ const {installNativeLegacy,nativeSourceFiles,assertLegacy634} = require('../supp
 const {manifestRuns,manifestFiles} = require('../fixtures/bookmark-manifest/eager-document');
 const {beginBookmarkFromTitle,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+// Each proof uses fresh fixture pages or explicitly created isolated contexts.
+test.describe.configure({mode:'parallel'});
 const remaining = ['476','493','711','800','867','1066','1096','1204','1241'];
 const allWorlds = ['476','493','568','634','711','800','867','1066','1096','1204','1241'];
 const examples = [require('../fixtures/authoring/existing-person-harbor.json'),require('../fixtures/authoring/existing-person-dune.json')];

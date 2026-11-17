@@ -10,6 +10,12 @@ const {injectBrowserHarness} = require('../support/game/browser-harness');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {scanSource} = require('../support/source-literals');
 const {gameRoot,manifestRuns,manifestFiles,routeEagerDocument} = require('../fixtures/bookmark-manifest/eager-document');
+const eagerPages = new WeakSet();
+// Independent source cases own their pages and contexts; overlapping requests
+// remain deliberately sequential inside their own single proof.
+test.describe.configure({mode:'parallel'});
+const datedPackDates = {dated_451:['451'],dated_493:['493'],dated_568:['568'],dated_634:['634'],
+  dated_711:['711'],dated_800:['800'],dated_1096:['1096'],dated_1204:['1204'],dated_1241:['1241']};
 
 const indexText = fs.readFileSync(path.join(gameRoot,'index.html'),'utf8');
 const manifestText = fs.readFileSync(path.join(gameRoot,'data/bookmark_manifest.js'),'utf8');
@@ -50,6 +56,7 @@ function closureFiles(id) {
 // document position, exactly the former boot.
 async function withEager(browser,info,fn) {
   const context = await browser.newContext(), page = await context.newPage(), guard = installPageGuards(page);
+  eagerPages.add(page);
   try {
     await routeEagerDocument(page);
     await openTitle(page,info);
@@ -113,8 +120,13 @@ async function setupProjection(page,id,absent) {
       starts:data.startScenarios.map(function (row) { return row.id; }),startRows:FB.mods.fingerprint(data.startScenarios),
       stories:Object.keys(data.storyInstances),storyRows:FB.mods.fingerprint(data.storyInstances),
       registry:FB.stories.list().map(function (row) { return row.id; }),
-      events:(data.events || []).map(function (row) { return row.id; }),catalogs:catalogs,referenced:referenced};
-  },{id:id,absent:absent,roots:catalogRoots});
+      events:(data.events || []).filter(function (row) {
+        // Only the oracle omits declarations whose reviewed owning dates have
+        // not loaded in the real session. The actual event list stays exact.
+        const owners = input.datedPacks[row.pack];
+        return !input.oracle || !owners || owners.some(function (id) { return input.absent.indexOf(id) < 0; });
+      }).map(function (row) { return row.id; }),catalogs:catalogs,referenced:referenced};
+  },{id:id,absent:absent,roots:catalogRoots,oracle:eagerPages.has(page),datedPacks:datedPackDates});
 }
 function compareSetups(lazy,eager) {
   ['published','worldFaults','rejected','world','revisions','revisionFaults','starts','startRows','stories','storyRows','registry','events']
