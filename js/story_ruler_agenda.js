@@ -11,12 +11,18 @@
   function text(v) { return typeof v === 'string' && v.length > 0 && v.length <= 4000; }
   var operations = ['agenda_priority','agenda_finish','agenda_story_choice','agenda_story_fact',
     'agenda_provincial_terms','agenda_dues','agenda_public_record','agenda_mobile_offer',
-    'agenda_mobile','agenda_mobile_prepare','agenda_mobile_result','agenda_defer'];
+    'agenda_mobile','agenda_mobile_prepare','agenda_mobile_result','agenda_defer','agenda_mandate'];
   var recordKinds = ['agenda_appointments','agenda_recognition','agenda_mobile_agreement','agenda_collective_decision'];
   function check(def, context, bm) {
     function need(ok, field) { if (!ok) throw new Error('Invalid ruler agenda: ' + field + '.'); }
-    need(keys(def, ['id','type','subjectRealmId','title','intro','requires','stages','registrationBefore','registrationAfter']), 'fields');
+    need(keys(def, ['id','type','subjectRealmId','binding','title','intro','requires','stages','registrationBefore','registrationAfter']), 'fields');
     need(slug(def.subjectRealmId) && text(def.title) && text(def.intro), 'subject or display');
+    if (def.binding !== undefined) need(FB.schema.valid(def.binding,{type:'object',fields:{
+      kind:{enum:['mandate_holder','mandate_court']},officeId:{type:'string',ref:{table:'authorityOffices'}},
+      waitForOffice:{value:true,optional:'absent'}}}) &&
+      (!def.binding.waitForOffice || def.binding.kind === 'mandate_court') &&
+      !!FBDATA.authorityOffices[def.binding.officeId].mandate, 'mandate binding');
+    if (bm && def.binding) need((bm.realms || []).some(function (r) {return r.id === def.subjectRealmId;}), 'mandate court');
     need(Array.isArray(def.stages) && def.stages.length > 0 && def.stages.length <= 16, 'stages');
     var stages = Object.create(null), choices = Object.create(null);
     def.stages.forEach(function (stage) {
@@ -34,12 +40,19 @@
           stage.choices.every(function (c) {return ['agenda_mobile','agenda_mobile_prepare','agenda_mobile_result','agenda_defer'].indexOf(c.operation)>=0;}), 'transaction stage alternatives');
       } else need(stage.choices.some(function (c) { return c.operation === 'agenda_priority'; }), 'unconditional alternative');
       stage.choices.forEach(function (c) {
-        need(keys(c, ['id','label','detail','operation','storyId','choiceId','stateField','values','interestId','revenue','levy','amount','duration',
-          'recordKind','otherRealmId','recordOperation','action','terms']) && slug(c.id) && c.id !== 'agenda_stop_program' && !choices[c.id], 'choice fields or duplicate');
+        need(plain(c) && (c.operation === 'agenda_mandate' ? FB.schema.valid(c,{type:'object',fields:{
+          id:{type:'string'},label:{type:'string'},detail:{type:'string'},operation:{value:'agenda_mandate'},service:FB.officeMandates.storySpec}}) :
+          keys(c, ['id','label','detail','operation','storyId','choiceId','stateField','values','interestId','revenue','levy','amount','duration',
+            'recordKind','otherRealmId','recordOperation','action','terms'])) && slug(c.id) && c.id !== 'agenda_stop_program' && !choices[c.id], 'choice fields or duplicate');
         choices[c.id] = true;
         need(text(c.label) && text(c.detail) && operations.indexOf(c.operation) >= 0, 'choice operation or display');
         var fields = ['id','label','detail','operation'];
-        if (c.operation==='agenda_mobile' || c.operation==='agenda_mobile_prepare') {
+        if (c.operation === 'agenda_mandate') {
+          need(!!def.binding && !FB.officeMandates.storyFaults(c.service,bm).length &&
+            c.service.realmId === def.subjectRealmId && c.service.officeId === def.binding.officeId &&
+            c.service.action !== 'petition' && (c.service.action === 'dismiss') === (def.binding.kind === 'mandate_court'), 'mandate transaction');
+          return;
+        } else if (c.operation==='agenda_mobile' || c.operation==='agenda_mobile_prepare') {
           fields=fields.concat(['action','terms']);
           need(!!stage.completion && !FB.mobile.storyActionFaults(c.action,c.terms,def.subjectRealmId,bm), 'mobile transaction');
           need(c.operation!=='agenda_mobile_prepare' || ['demand','raid','access','settle'].indexOf(c.action)>=0, 'mobile proposal');
@@ -89,12 +102,26 @@
   function factory(def, context) {
     var C = FB.governments.support;
     function beginning(s) {
+      if (def.binding && def.binding.waitForOffice) return !!s.start;
+      if (def.binding && def.binding.kind === 'mandate_holder') return !!s.start;
       return !!s.start && (s.start.rulerRealmId === def.subjectRealmId ||
         s.start.mobilePrincipal && s.start.mobilePrincipal.realmId === def.subjectRealmId);
     }
-    function realm(s) { return FB.startRealmId(s, def.subjectRealmId); }
-    function subject(s) {
+    function realm(s) {
+      var row = def.binding && FB.officeMandates.storyRow(s,{realmId:def.subjectRealmId,officeId:def.binding.officeId});
+      return row ? row.institutionId : FB.startRealmId(s, def.subjectRealmId);
+    }
+    function subject(s,t) {
       var rid = realm(s), r = s.realms[rid], row = C.row(s, rid), delegated = C.isDelegated(s, rid);
+      if (def.binding) {
+        var a = {realmId:def.subjectRealmId,officeId:def.binding.officeId};
+        var appointment = FB.officeMandates.storyRow(s,a,s.player.charId,t && t.mandateId,def.binding.kind === 'mandate_court');
+        var who = def.binding.kind === 'mandate_holder' ? appointment ? s.chars[appointment.holder.id] : s.chars[s.player.charId] :
+          rid === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid);
+        return {id:who && who.id || null,generation:FB.realmRulerGeneration(s,rid),mandateId:appointment && appointment.id || null,
+          jurisdiction:!!r && r.alive && (!!r.nonTerritorial || FB.realmTerritory(s,rid).length > 0) &&
+            (def.binding.kind !== 'mandate_holder' || !FB.isReigningRealmRuler(s,who) && !FB.station.rulesRealm(s.player,s))};
+      }
       var c = delegated ? C.delegate(s, rid) : r && r.alive && FB.stories.ruler(s, def.subjectRealmId);
       return { id:c && c.id || null, generation:FB.realmRulerGeneration(s, rid),
         mandateId:delegated && row && row.mandate ? row.mandate.id : null,
@@ -102,13 +129,14 @@
           !!r.nonTerritorial || FB.realmTerritory(s, rid).length > 0) };
     }
     function current(s, t) {
-      var f = subject(s), c = s.chars[t.subjectId];
+      if (def.binding && def.binding.kind === 'mandate_holder' && !t.mandateId) return false;
+      var f = subject(s,t), c = s.chars[t.subjectId];
       var mobile=FB.mobile.row(s,realm(s)),settled=stage(t) && stage(t).completion && stage(t).completion.kind==='settlement' &&
         mobile && mobile.status==='settled' && mobile.lastSettlement && mobile.lastSettlement.final &&
         mobile.lastSettlement.principal.characterId===t.subjectId && mobile.lastSettlement.principal.generation===t.generation;
       return t.status === 'agenda_open' && !!c && !c.dead && !s.player.dead && s.player.charId === t.subjectId &&
         beginning(s) && (settled || f.id === t.subjectId && f.generation === t.generation &&
-        f.mandateId === t.mandateId && f.jurisdiction);
+        (def.binding && def.binding.kind === 'mandate_court' || f.mandateId === t.mandateId) && f.jurisdiction);
     }
     function stage(t) { return def.stages[t.step] || null; }
     function ready(s, st) { return !!st && (s.date.year > st.year || s.date.year === st.year && s.date.season >= st.season); }
@@ -136,6 +164,7 @@
     }
     function source(s, t, c) {
       if (!c) return null;
+      if (c.operation === 'agenda_mandate') return FB.officeMandates.storyReview(s,c.service,t.subjectId,t.mandateId);
       if (c.operation==='agenda_defer') return {allowed:true};
       if (c.operation==='agenda_mobile' || c.operation==='agenda_mobile_prepare') {
         var reviewed=FB.mobile.storyReview(s,realm(s),t.subjectId,c.action,c.terms,c.operation==='agenda_mobile_prepare');
@@ -174,11 +203,14 @@
     function quote(s, t, id) {
       var c = choice(t, id), cancel = id === 'agenda_stop_program', st = stage(t);
       var q = c && source(s, t, c), hasAction = c && ['agenda_priority','agenda_finish'].indexOf(c.operation) < 0;
-      return { id:id, allowed:!!(current(s, t) && (cancel || ready(s, st) && c && (!hasAction || q && q.allowed))),
-        reason:c && c.operation === 'agenda_story_choice' && q && !q.allowed ? { storyId:c.storyId, reason:q.reason } :
+      var waiting = def.binding && (def.binding.waitForOffice && t.generation === 0 || def.binding.kind === 'mandate_holder' && !t.mandateId) && t.status === 'agenda_open' &&
+        t.subjectId === s.player.charId && !s.player.dead && s.chars[t.subjectId] && !s.chars[t.subjectId].dead;
+      return { id:id, allowed:!!(waiting && cancel || current(s, t) && (cancel || ready(s, st) && c && (!hasAction || q && q.allowed))),
+        reason:c && c.operation === 'agenda_mandate' && q && !q.allowed ? {mandateReason:q.reason} :
+          c && c.operation === 'agenda_story_choice' && q && !q.allowed ? { storyId:c.storyId, reason:q.reason } :
           q && q.reviewed && !q.allowed ? {mobileReason:q.reviewed.review.reason,
             action:q.reviewed.request.action,countyId:q.reviewed.request.terms.countyId || null} : null,
-        facts:{ definition:copy(def), record:copy(t), subject:subject(s), turn:s.turn, date:copy(s.date), source:q,
+        facts:{ definition:copy(def), record:copy(t), subject:subject(s,t), turn:s.turn, date:copy(s.date), source:q,
           publicFunds:FB.treasuryAvailable(s, realm(s)), privateFunds:s.player.gold } };
     }
     function close(s, t, status) { t.status = status; t.outcomeTurn = s.turn; }
@@ -187,6 +219,11 @@
       if (!reviewed || !fresh.allowed || !same(fresh, reviewed)) return false;
       if (id === 'agenda_stop_program') { close(s, t, 'agenda_stopped'); return true; }
       var c = choice(t, id), q = fresh.facts.source;
+      var officeResult = null;
+      if (c.operation === 'agenda_mandate') {
+        officeResult = FB.officeMandates.storyCommit(s,c.service,t.subjectId,t.mandateId,q);
+        if (!officeResult) return false;
+      }
       if (c.operation==='agenda_defer') return true;
       if (c.operation==='agenda_mobile' || c.operation==='agenda_mobile_prepare') return FB.mobile.commit(s,q.reviewed);
       if (c.operation === 'agenda_story_choice') {
@@ -195,6 +232,7 @@
       else if (c.operation === 'agenda_dues' && !C.imposeDues(s, q)) return false;
       else if (c.operation === 'agenda_mobile_offer' && !FB.mobile.commit(s, q.reviewed)) return false;
       var decision={stageId:stage(t).id,choiceId:id,turn:s.turn};
+      if (officeResult) decision.office = FB.officeMandates.storyEvidence(q,officeResult);
       if (c.operation==='agenda_mobile_result') decision.evidence=copy(q.evidence);
       t.decisions.push(decision);
       t.step++;
@@ -203,6 +241,20 @@
     }
     function day(s, t) {
       if (t.status !== 'agenda_open') return;
+      if (def.binding && def.binding.waitForOffice && t.generation === 0) {
+        var authority = subject(s,t);
+        if (s.player.charId !== t.subjectId || s.player.dead || !s.chars[t.subjectId] || s.chars[t.subjectId].dead) {close(s,t,'agenda_interrupted');return;}
+        if (authority.id !== t.subjectId || !authority.jurisdiction) return;
+        t.generation = authority.generation; t.mandateId = authority.mandateId;
+      }
+      if (def.binding && !t.mandateId) {
+        var f = subject(s,t);
+        if (f.id === t.subjectId && f.generation === t.generation && f.jurisdiction && !s.player.dead &&
+            s.chars[t.subjectId] && !s.chars[t.subjectId].dead) {
+          if (!f.mandateId && def.binding.kind === 'mandate_holder') return;
+          t.mandateId = f.mandateId;
+        }
+      }
       if (!current(s,t)) {close(s,t,'agenda_interrupted');return;}
       if (stage(t).completion && ready(s,stage(t))) {
         var c=stage(t).choices.filter(function (c) {return c.operation==='agenda_mobile_result';})[0],q=quote(s,t,c.id);
@@ -212,7 +264,8 @@
     function validate(t, s) {
       function need(ok) { if (!ok) throw new Error(FB.T('Invalid v4 save field at {path}.', { path:'state.stories.' + def.id })); }
       need(keys(t, ['schema','subjectId','generation','mandateId','step','status','openedTurn','outcomeTurn','decisions']) && Object.keys(t).length === 9);
-      need(t.schema === 1 && typeof t.subjectId === 'string' && !!t.subjectId && Number.isInteger(t.generation) && t.generation >= 1 &&
+      need(t.schema === 1 && typeof t.subjectId === 'string' && !!t.subjectId && Number.isInteger(t.generation) &&
+        (t.generation >= 1 || def.binding && def.binding.waitForOffice && t.generation === 0 && t.mandateId === null && t.step === 0) &&
         (t.mandateId === null || typeof t.mandateId === 'string' && !!t.mandateId));
       need(Number.isInteger(t.openedTurn) && t.openedTurn >= 0 && Number.isInteger(t.step) && t.step >= 0 && t.step <= def.stages.length &&
         ['agenda_open','agenda_complete','agenda_stopped','agenda_interrupted'].indexOf(t.status) >= 0);
@@ -220,8 +273,10 @@
       var lastTurn = t.openedTurn, finish = false;
       t.decisions.forEach(function (d, i) {
         var st = def.stages[i], c = plain(d) && st.choices.filter(function (row) { return row.id === d.choiceId; })[0];
-        need(keys(d, ['stageId','choiceId','turn','evidence']) && Object.keys(d).length === (st.completion ? 4 : 3) && d.stageId === st.id && c && !finish &&
+        need(keys(d, ['stageId','choiceId','turn','evidence','office']) && Object.keys(d).length === (st.completion || c && c.operation === 'agenda_mandate' ? 4 : 3) && d.stageId === st.id && c && !finish &&
           Number.isInteger(d.turn) && d.turn >= lastTurn);
+        need(c.operation === 'agenda_mandate' ? d.office && d.office.appointmentId === t.mandateId &&
+          FB.officeMandates.storyEvidenceValid(s,d.office,c.service,t.subjectId,d.turn) : !own(d,'office'));
         if (st.completion) need(c.operation==='agenda_mobile_result' &&
           FB.mobile.storyEvidenceValid(d.evidence,st.completion.kind,t.subjectId,t.generation,lastTurn,d.turn) &&
           (!s || FB.mobile.storyEvidenceMatches(s,realm(s),d.evidence)) &&
@@ -233,22 +288,32 @@
       need(t.status === 'agenda_complete' || t.step < def.stages.length && !finish);
       if (s) need(beginning(s) && t.openedTurn <= s.turn && lastTurn <= s.turn &&
         (t.outcomeTurn === null || t.outcomeTurn <= s.turn));
+      if (s && def.binding && t.mandateId) need(!!FB.officeMandates.storyRow(s,
+        {realmId:def.subjectRealmId,officeId:def.binding.officeId},t.subjectId,t.mandateId,def.binding.kind === 'mandate_court'));
+      if (def.binding && def.binding.kind === 'mandate_holder' && !t.mandateId) need(t.step === 0);
     }
     return { id:def.id, kind:'track', requires:def.requires,
       appliesToBookmark:function (bm) { return (bm.realms || []).some(function (r) { return r.id === def.subjectRealmId; }); },
       init:function (s) {
         var f = subject(s);
+        if (def.binding && def.binding.waitForOffice && beginning(s) && f.id !== s.player.charId) return {
+          schema:1,subjectId:s.player.charId,generation:0,mandateId:null,step:0,status:'agenda_open',openedTurn:s.turn,outcomeTurn:null,decisions:[]};
         if (!beginning(s) || !f.id || f.id !== s.player.charId || !f.jurisdiction) return;
         return { schema:1, subjectId:f.id, generation:f.generation, mandateId:f.mandateId, step:0,
           status:'agenda_open', openedTurn:s.turn, outcomeTurn:null, decisions:[] };
       },
       title:function () { return FB.T(def.title); }, intro:function () { return FB.T(def.intro); },
       people:function (s, t) {
-        return [{ characterId:t.subjectId, label:FB.T('Original incumbent'),
-          detail:FB.T('This personal program belongs to this ruler and the original mandate.'), reason:'' }];
+        var waiting = def.binding && (t.generation === 0 || def.binding.kind === 'mandate_holder' && !t.mandateId);
+        return [{ characterId:t.subjectId, label:waiting ? FB.T('Original person') : FB.T('Original incumbent'),
+          detail:waiting ? FB.T('This program grants no office. It waits for the original person to acquire the declared authority.') :
+            def.binding && def.binding.kind === 'mandate_holder' ? FB.T('This personal program belongs to the original service holder and appointment.') :
+              FB.T('This personal program belongs to this ruler and the original mandate.'), reason:'' }];
       },
       status:function (s, t) {
         var st = stage(t), lines = [];
+        if (t.generation === 0) lines.push(FB.T('This program waits until its original protagonist actually holds the declared court. Attachment grants no authority.'));
+        if (def.binding && def.binding.kind === 'mandate_holder' && !t.mandateId) lines.push(FB.T('This program waits for an actual personal service appointment from its declared court.'));
         if (t.status === 'agenda_interrupted') lines.push(FB.T('This personal program ended when its original incumbent lost the office, mandate or required jurisdiction.'));
         else if (t.status === 'agenda_stopped') lines.push(FB.T('You set this program aside. Ordinary decisions remain available.'));
         else if (t.status === 'agenda_complete') lines.push(FB.T('The program is complete. Its decisions create no additional reward.'));
@@ -273,7 +338,8 @@
         return { phase:t.status, name:st && t.status === 'agenda_open' ? FB.T(st.name) : FB.T(def.title), lines:lines };
       },
       choices:function (s, t) {
-        if (!current(s, t)) return [];
+        if (!current(s, t)) return quote(s,t,'agenda_stop_program').allowed ? [{id:'agenda_stop_program',
+          label:FB.T('Set the program aside'),detail:FB.T('End this personal agenda without a payment, political commitment or restriction on ordinary play.')}] : [];
         var rows = ready(s, stage(t)) ? stage(t).choices.map(function (c) {
           var story = c.operation === 'agenda_story_choice' && context.get(c.storyId), rec = story && FB.stories.record(s, c.storyId);
           var original = rec && story.choices && story.choices(s, rec).filter(function (row) { return row.id === c.choiceId; })[0];
@@ -283,6 +349,7 @@
         return rows;
       }, quote:quote, apply:apply, day:day, season:day, year:day, observe:day,
       blocker:function (s, t, reason) {
+        if (reason && reason.mandateReason) return reason.mandateReason;
         if (reason && reason.action==='settle' && reason.countyId && FB.world.byId[reason.countyId] &&
             FB.mobile.migration(s,realm(s)) && FB.mobile.migration(s,realm(s)).at!==reason.countyId)
           return FB.T('This settlement choice concerns {province}. The civilian camp must actually arrive there, with lawful land rights and member assent.',{province:FB.world.byId[reason.countyId].name});
@@ -295,6 +362,8 @@
       },
       review:function (s, t, id, reviewed) {
         var q = reviewed.facts.source, lines = [FB.T('Recording this agenda adds no reward. Any political effect uses the existing decision and its current consent.')];
+        var serviceChoice = choice(t,id);
+        if (serviceChoice && serviceChoice.operation === 'agenda_mandate') return FB.officeMandates.storyDetails(s,serviceChoice.service,q);
         var mobile=choice(t,id);
         if (mobile && ['agenda_mobile','agenda_mobile_prepare'].indexOf(mobile.operation)>=0 && q && q.reviewed) {
           var review=q.reviewed.review;

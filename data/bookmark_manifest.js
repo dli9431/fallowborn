@@ -54,7 +54,7 @@ if (FB.bookmarkSources && FB.bookmarkSources.manifest) FB.bookmarkSources.manife
       ['data/bookmark_1204.js',['1204']],
       ['data/bookmark_1204_campaigns.js',['1204']],
       ['data/story_courts_476.js',['476']],
-      ['data/story_imperial_service.js',['476']],
+      ['data/story_imperial_service.js',['476','493']],
       ['data/story_instances.js',['476','493','711','800','1204']]
     ]},
     {after:'data/bookmark_476_wider_identities.js', files:[

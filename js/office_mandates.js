@@ -167,6 +167,7 @@
     var self = r && equal(actor,r.holder) && available(s,r), patron = r && court(s,actor,r.institutionId);
     var validActor = FB.schema.valid(actor,{type:'object',fields:{kind:{type:'string',enum:['character','realm']},id:idSpec()}});
     if (!r || !t || !r.mandate || !validInput || !validActor || !Q.actor(s,actor)) q.reason = FB.T('A declared mandate, original appointment and valid decision are required.');
+    else if (!serviceEnabled(s,r.institutionId)) q.reason = FB.T('This court’s office system is disabled.');
     else if (['dismiss','accept_proposal','reject_proposal'].indexOf(operation) >= 0 ? !patron :
         operation === 'accede' ? !self && !patron : operation === 'confirm' ? !self && !patron : !self)
       q.reason = FB.T('Only the actual holder or the lawful appointing court may make this decision.');
@@ -341,6 +342,151 @@
       suspension:M.suspension(s,r),status:Q.appointmentStatus(s,r),forces:M.forces(s,r),
       support:claimSupport(s,r),publicAccount:FB.treasuryPublicAccountSnapshot(s,r.institutionId)} : null;
   };
+  /* Story and event projections select existing appointments; only their
+     canonical owners can grant, exercise or end an office. */
+  var storyInputs = {
+    petition:{hostId:{type:'string',optional:'absent',minLength:1,maxLength:200}},
+    command:{destination:{type:'string',optional:'absent',minLength:1,maxLength:200}},
+    consent:{templateId:idSpec('federateContractTerms')},
+    confirm:{}, accept_loss:{}, dismiss:{}, acclaim:{}, renounce:{}
+  };
+  M.storySpec = {type:'object',fields:{realmId:{type:'string',optional:'absent',minLength:1,maxLength:200},officeId:idSpec('authorityOffices'),
+    action:{enum:Object.keys(storyInputs)},input:{type:'object'}},test:function (a,c) {
+    var data = c.data || FBDATA, d = data.authorityOffices[a.officeId];
+    if (!d || !d.mandate || !FB.schema.valid(a.input,{type:'object',fields:storyInputs[a.action] || {}},{data:data})) return false;
+    if (a.action === 'petition') return !!d.appointment && d.scopes.indexOf('host') >= 0;
+    if (a.action === 'command') return d.mandate.powers.indexOf('command') >= 0;
+    if (a.action === 'consent') return d.mandate.contractTemplates.indexOf(a.input.templateId) >= 0;
+    if (a.action === 'acclaim' || a.action === 'renounce') return !!d.mandate.acclamation;
+    return true;
+  }};
+  M.storyFaults = function (a,bm) {
+    var faults = FB.schema.faults(a,M.storySpec,'officeMandates.service');
+    if (faults.length) return faults;
+    if (bm && (!a.realmId || !(bm.realms || []).some(function (r) {return r.id === a.realmId;}))) faults.push('service.realmId');
+    if (bm && a.action === 'command' && a.input.destination && !(bm.provinces || []).some(function (p) {
+      return p.id === a.input.destination && !p.wasteland;
+    })) faults.push('service.input.destination');
+    return faults;
+  };
+  M.storyRow = function (s,a,cid,id,other) {
+    return rows(s).filter(function (r) {
+      return r.mandate && r.officeId === a.officeId && M.institutionMatches(s,a.realmId || FB.officeEventReviews.court(s),r.institutionId) &&
+        r.holder.kind === 'character' && (!cid || (other ? r.holder.id !== cid : r.holder.id === cid)) && (!id || r.id === id) &&
+        (!other || id || ['removed','expired'].indexOf(Q.appointmentStatus(s,r)) < 0);
+    }).slice(-1)[0] || null;
+  };
+  function serviceEnabled(s,rid) {
+    return FB.courtOfficeSystemEnabled(s,rid);
+  }
+  M.storyReview = function (s,a,cid,id) {
+    var actor = {kind:'character',id:cid}, rid = a.realmId ? FB.startRealmId(s,a.realmId) : FB.officeEventReviews.court(s),
+      r = M.storyRow(s,a,cid,id,a.action === 'dismiss'), q = null;
+    if (r && a.action !== 'petition') rid = r.institutionId;
+    if (!M.storyFaults(a).length && serviceEnabled(s,rid)) {
+      if (a.action === 'petition') {
+        var scopes = FB.administrationProfile(s,rid) ? (s.armies || []).filter(function (h) {
+          return h.realm === rid && h.men > 0;
+        }).map(function (h) {return {kind:'host',id:h.id};}) : FB.officeScopes(s,rid,a.officeId);
+        scopes = scopes.filter(function (at) {return at.kind === 'host' && (!a.input.hostId || at.id === a.input.hostId);});
+        for (var i=0;i<scopes.length;i++) {
+          var at = scopes[i], next = FB.administrationProfile(s,rid) ? FB.publicAppointmentQuote(s,actor,{
+            institutionId:rid,officeId:a.officeId,holderId:cid,provinceId:s.player.provinceId,scope:at}) :
+            FB.officeAppointmentQuote(s,actor,{institutionId:rid,officeId:a.officeId,holder:actor,scope:at});
+          if (!q || next && next.allowed) q = next;
+          if (q && q.allowed) break;
+        }
+      } else if (r) {
+        var input = {}, h = host(s,r.scope.id);
+        if (a.action === 'command') input = {hostId:r.scope.id,destination:a.input.destination || h && h.at || ''};
+        if (a.action === 'acclaim') input = {hostId:r.scope.id};
+        if (a.action === 'consent') {
+          var offer = Q.contracts(s,rid).filter(function (c) {return c.patronRealmId === rid && c.templateId === a.input.templateId &&
+            c.status === 'offered' && c.approvals[c.federateRealmId] === FB.realmRulerGeneration(s,c.federateRealmId);})[0];
+          input = {contractId:offer && offer.id || ''};
+        }
+        q = M.review(s,actor,r.id,a.action,input);
+      }
+    }
+    var ended = a.action !== 'accept_loss' || r && ['removed','expired'].indexOf(Q.appointmentStatus(s,r)) >= 0;
+    return {allowed:!!(q && q.allowed && ended),reason:!ended ? FB.T('Acceptance requires an actual dismissal or expired term, not a suspended warrant.') :
+      q && q.reason || FB.T('A living court, available host and current personal mandate are required.'),
+      action:a.action,appointmentId:r && r.id || null,quote:q};
+  };
+  M.storyCommit = function (s,a,cid,id,reviewed) {
+    var q = M.storyReview(s,a,cid,id);
+    if (!reviewed || !q.allowed || !equal(q,reviewed)) return false;
+    return a.action === 'petition' ? q.quote.input ? FB.publicAppoint(s,q.quote) : FB.officeSeekAppointment(s,q.quote) : M.commit(s,q.quote);
+  };
+  M.storyEvidence = function (q,result) {
+    var e = {appointmentId:q.action === 'petition' ? result.id : q.appointmentId,action:q.action};
+    if (q.action === 'consent') e.contractId = q.quote.input.contractId;
+    return e;
+  };
+  M.storyEvidenceValid = function (s,e,a,cid,turn) {
+    var fields = {appointmentId:idSpec(),action:{value:a.action}};
+    if (a.action === 'consent') fields.contractId = idSpec();
+    if (!FB.schema.valid(e,{type:'object',fields:fields})) return false;
+    if (!s) return true;
+    var r = M.storyRow(s,a,cid,e.appointmentId,a.action === 'dismiss');
+    if (!r || !s.chars[cid] || r.startTurn > turn) return false;
+    if (a.action === 'petition') return r.startTurn === turn;
+    if (a.action === 'dismiss') return r.status === 'removed' && r.changedTurn === turn;
+    if (a.action === 'accept_loss') return !!r.mandate.response && r.mandate.response.choice === 'accept' && r.mandate.response.turn === turn &&
+      (r.status === 'removed' && r.changedTurn <= turn || r.endTurn <= turn);
+    if (a.action === 'acclaim') return !!r.mandate.claim && r.mandate.claim.turn === turn;
+    if (a.action === 'renounce') return !!r.mandate.claim && r.mandate.claim.status === 'failed';
+    if (a.action === 'consent') {
+      var c = Q.contract(s,e.contractId);
+      return !!c && M.institutionMatches(s,a.realmId,c.patronRealmId) && c.publicPayer === true &&
+        c.templateId === a.input.templateId && Number.isSafeInteger(c.initialPaidTurn) && c.initialPaidTurn <= turn;
+    }
+    return true;
+  };
+  M.storyDetails = function (s,a,q) {
+    var r = q.appointmentId && row(s,q.appointmentId), d = FBDATA.authorityOffices[a.officeId], m = d.mandate;
+    var rid = r ? r.institutionId : a.realmId ? FB.startRealmId(s,a.realmId) : FB.officeEventReviews.court(s), account = FB.treasuryPublicAccountSnapshot(s,rid);
+    var input = q.quote && (q.quote.terms || q.quote.input), at = r ? r.scope : input && input.scope,
+      force = at && at.kind === 'host' && host(s,at.id), destination = q.quote && q.quote.input && q.quote.input.destination;
+    var lines = [FB.officeText(s,a.officeId,'name'),FB.officeText(s,a.officeId,'desc'),
+      FB.T('Court: {court}.',{court:s.realms[rid] && s.realms[rid].name || ''}),
+      a.action === 'consent' ? FB.T('Public funds required for initial payment and one seasonal reserve: {money:cost}.',{cost:q.quote && q.quote.cost || 0}) :
+        FB.T('Payment on confirmation: {money:cost}.',{cost:q.quote && q.quote.cost || 0}),
+      a.action === 'petition' ? q.quote && q.quote.input ? FB.T('The public treasury pays the appointment fee; salary and service use the existing source receipts.') :
+        FB.T('The applicant pays the registration fee once. This is a scoped appointment, not a grant of land.') :
+        FB.T('The original appointment and its living holder retain their canonical authority checks.'),
+      FB.T('Public account: {money:gold}. Private household money remains separate.',{gold:account ? account.available : 0}),
+      FB.T('Required court Standing: {favor}. Maximum term: {days} days.',{favor:m.favor.minimum,days:m.tenureDays}),
+      FB.T('Dismissal and expiry end delegated powers. Accepted public obligations remain with the court. Acceptance of loss restores no authority.'),
+      q.allowed ? FB.T('Cancel leaves the decision, money and mandate unchanged.') : q.reason];
+    if (a.action === 'consent' && q.quote && q.quote.owner) {
+      lines.push(FB.T('Service counterparty: {court}.',{court:s.realms[q.quote.owner.federateRealmId] && s.realms[q.quote.owner.federateRealmId].name || ''}));
+      lines.push(FB.T('Court payment now: {money:initial}. Seasonal obligation: {money:season}. Term: {days} days. The other court has already consented.',{
+        initial:q.quote.owner.initialPaidTurn === undefined ? q.quote.owner.initialPay || 0 : 0,
+        season:q.quote.owner.payPerSeason,days:Math.max(0,q.quote.owner.endTurn-s.turn)}));
+    }
+    if (d.appointment) lines.push(FB.T('Qualification: {skill} {minimum}; retained prestige {prestige}.',{
+      skill:FB.T(FB.SKILL_NAMES[d.appointment.skill]),minimum:d.appointment.minimum,prestige:d.appointment.prestige}));
+    if (force) lines.push(FB.T('Commissioned force: {men} soldiers at {place}. Ownership and supplies remain with the existing host.',{
+      men:force.men,place:FB.world.byId[force.at] && FB.world.byId[force.at].name || ''}));
+    if (destination) lines.push(FB.T('Destination: {place}.',{place:FB.world.byId[destination] && FB.world.byId[destination].name || ''}));
+    return lines;
+  };
+  FB.eventReviews.register('mandate_service',{owner:'authority',args:M.storySpec,partySlots:{official:true},
+    bind:function (s,a) {
+      var r = M.storyRow(s,a,s.player.charId,null,a.action === 'dismiss');
+      if (a.action !== 'petition' && !r) return null;
+      return {participants:{official:r ? r.holder.id : s.player.charId},serviceAppointmentId:r ? r.id : null,
+        serviceCourtId:FB.officeEventReviews.court(s),serviceProvinceId:s.player.provinceId};
+    },quote:function (s,a,ctx) {
+      var r = ctx.serviceAppointmentId && row(s,ctx.serviceAppointmentId);
+      if (!own(ctx,'serviceAppointmentId') || ctx.serviceCourtId !== FB.officeEventReviews.court(s) ||
+          ctx.serviceProvinceId !== s.player.provinceId || !ctx.participants ||
+          ctx.participants.official !== (a.action === 'petition' ? s.player.charId : r && r.holder.id)) return null;
+      return M.storyReview(s,a,s.player.charId,ctx.serviceAppointmentId);
+    },apply:function (s,a,q) {return M.storyCommit(s,a,s.player.charId,q.appointmentId,q);},
+    details:M.storyDetails
+  });
   M.ai = function (s,rid) {
     var humanCourt = court(s,{kind:'character',id:s.player.charId},rid);
     rows(s).slice().forEach(function (r) {

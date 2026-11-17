@@ -1,0 +1,986 @@
+{
+  "name": "Lantern service stories",
+  "geographies": {
+    "harbor_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "harbor_quay",
+          "x": 1.5,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "harbor_gardens",
+          "x": 3.1,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "harbor_ridge",
+          "x": 4.7,
+          "y": 2.5,
+          "terrain": "farmland"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {
+        "harbor_meeting_hall": {
+          "x": 1.5,
+          "y": 2.5
+        }
+      },
+      "defaultLayout": null
+    }
+  },
+  "authorityOffices": {
+    "lantern_marshal": {
+      "name": "Lantern marshal",
+      "desc": "A finite personal service warrant without land.",
+      "powers": [
+        "ban"
+      ],
+      "scopes": [
+        "host"
+      ],
+      "succession": "continues",
+      "recognitionSources": [
+        "imperial_commission",
+        "army_acclamation"
+      ],
+      "appointment": {
+        "gold": 4,
+        "prestige": 0,
+        "skill": "mar",
+        "minimum": 3
+      },
+      "mandate": {
+        "schema": 1,
+        "powers": [
+          "command",
+          "negotiate",
+          "pay",
+          "propose"
+        ],
+        "tenureDays": 180,
+        "favor": {
+          "source": "court_standing",
+          "minimum": 0
+        },
+        "dismissal": "court",
+        "responseDays": 30,
+        "contractTemplates": [
+          "lantern_service"
+        ],
+        "acclamation": {
+          "officeId": "lantern_crown_claim",
+          "sourceId": "army_acclamation",
+          "minimumSources": 1,
+          "requiredMandates": [
+            "command"
+          ],
+          "dispute": true,
+          "afterDismissal": false
+        },
+        "hostIds": [
+          "lantern_auxiliary"
+        ]
+      },
+      "publicRole": "commander"
+    },
+    "lantern_scribe": {
+      "name": "Lantern proposing clerk",
+      "desc": "A finite personal service warrant without land.",
+      "powers": [],
+      "scopes": [
+        "realm"
+      ],
+      "succession": "continues",
+      "recognitionSources": [
+        "imperial_commission",
+        "army_acclamation"
+      ],
+      "appointment": {
+        "gold": 4,
+        "prestige": 0,
+        "skill": "dip",
+        "minimum": 3
+      },
+      "mandate": {
+        "schema": 1,
+        "powers": [
+          "propose"
+        ],
+        "tenureDays": 180,
+        "favor": {
+          "source": "court_standing",
+          "minimum": 0
+        },
+        "dismissal": "court",
+        "responseDays": 30,
+        "contractTemplates": []
+      }
+    },
+    "lantern_watch": {
+      "name": "Lantern watch captain",
+      "desc": "A finite personal service warrant without land.",
+      "powers": [
+        "ban"
+      ],
+      "scopes": [
+        "host"
+      ],
+      "succession": "continues",
+      "recognitionSources": [
+        "imperial_commission",
+        "army_acclamation"
+      ],
+      "appointment": {
+        "gold": 4,
+        "prestige": 0,
+        "skill": "mar",
+        "minimum": 3
+      },
+      "mandate": {
+        "schema": 1,
+        "powers": [
+          "command"
+        ],
+        "tenureDays": 180,
+        "favor": {
+          "source": "court_standing",
+          "minimum": 0
+        },
+        "dismissal": "court",
+        "responseDays": 30,
+        "contractTemplates": []
+      }
+    },
+    "lantern_crown_claim": {
+      "name": "Claim to the lantern crown",
+      "desc": "A declared claim to rule, without automatic possession.",
+      "powers": [],
+      "scopes": [
+        "realm"
+      ],
+      "succession": "reaffirm",
+      "recognitionSources": [
+        "army_acclamation",
+        "imperial_commission",
+        "civic_acceptance",
+        "church_support"
+      ]
+    }
+  },
+  "federateContractTerms": {
+    "lantern_service": {
+      "payPerSeason": 3,
+      "initialPay": 5,
+      "durationDays": 180,
+      "renewWindowDays": 30,
+      "service": "host",
+      "land": "none",
+      "recognition": "none",
+      "autoRenew": false
+    }
+  },
+  "governmentForms": {
+    "lantern_court": {
+      "holders": "direct",
+      "succession": "office",
+      "territory": "fixed",
+      "consent": "delegated",
+      "levy": "feudal_levy",
+      "revenue": "demesne_revenue",
+      "council": "royal_council",
+      "diplomacy": "territorial_diplomacy",
+      "ai": "roman_offices",
+      "ladder": "roman_civic",
+      "officeCatalogue": [
+        "lantern_marshal",
+        "lantern_scribe",
+        "lantern_watch"
+      ]
+    },
+    "lantern_public": {
+      "holders": "public_offices",
+      "succession": "public_accession",
+      "territory": "fixed",
+      "consent": "delegated",
+      "levy": "public_service",
+      "revenue": "public_receipts",
+      "council": "appointed_council",
+      "diplomacy": "territorial_diplomacy",
+      "ai": "public_administration",
+      "ladder": "public_careers",
+      "administrationProfileId": "lantern_public",
+      "systems": {
+        "enable": [
+          "public_offices"
+        ]
+      }
+    }
+  },
+  "administrationProfiles": {
+    "lantern_public": {
+      "name": "Lantern public service",
+      "offices": [
+        "public_governor",
+        "public_fiscal_officer",
+        "lantern_marshal"
+      ],
+      "governor": "public_governor",
+      "fiscal": "public_fiscal_officer",
+      "commander": "lantern_marshal",
+      "appointmentCost": 6,
+      "termDays": 180,
+      "confirmation": "reaffirm",
+      "finance": {
+        "kind": "salary",
+        "share": 0.2,
+        "salary": 2,
+        "serviceShare": 0,
+        "remittance": 1
+      },
+      "accession": {
+        "mode": "recognition",
+        "minimumAge": 18,
+        "allowMinor": false,
+        "officeCandidates": true,
+        "threshold": 0.5,
+        "interests": [
+          {
+            "id": "field_officers",
+            "role": "commander",
+            "weight": 2
+          }
+        ]
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "mandate_household",
+      "name": "Lantern service household",
+      "desc": "A fictional free household beside the court.",
+      "intro": "Review an actual court commission before accepting its obligations.",
+      "tier": 1,
+      "sex": "m",
+      "profession": "soldier",
+      "gold": 30,
+      "prestige": 20,
+      "piety": 0,
+      "startAge": 26,
+      "startCulture": "roman",
+      "startReligion": "nicene",
+      "bookmarkIds": [
+        "mandate_coast"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {}
+      },
+      "tracks": [
+        "lantern_service_story",
+        "lantern_commander_story",
+        "lantern_service_goals",
+        "lantern_public_court_story"
+      ],
+      "birthplaces": {
+        "realms": [
+          "lantern_court"
+        ]
+      },
+      "fixedProvinceId": "harbor_quay"
+    },
+    {
+      "id": "lantern_ruler_story",
+      "name": "Lantern ruler",
+      "desc": "The existing court incumbent.",
+      "intro": "Review actual delegated service.",
+      "bookmarkIds": [
+        "mandate_coast"
+      ],
+      "rulerRealmId": "lantern_court",
+      "governmentForm": "lantern_court",
+      "fixedProvinceId": "harbor_quay",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 50,
+      "prestige": 80,
+      "piety": 0,
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {}
+      },
+      "tracks": [
+        "lantern_court_story"
+      ],
+      "onboarding": "ruler",
+      "characterName": "Iria Vale",
+      "sex": "f",
+      "startCulture": "roman",
+      "startReligion": "nicene",
+      "startAge": 36
+    }
+  ],
+  "bookmarks": {
+    "mandate_coast": {
+      "id": "mandate_coast",
+      "name": "The Lantern Courts",
+      "desc": "Two fictional courts with distinct service terms.",
+      "date": {
+        "year": 477,
+        "season": 0,
+        "day": 1
+      },
+      "era": "late_antique",
+      "geography": "harbor_lands",
+      "religiousHeads": {},
+      "stories": [],
+      "provinces": [
+        {
+          "id": "harbor_quay",
+          "name": "Lark Quay",
+          "realm": "lantern_court",
+          "culture": "roman",
+          "religion": "nicene",
+          "dev": 6,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "roman",
+              "religion": "nicene",
+              "populationShare0": 10000
+            }
+          ],
+          "settlements": [
+            {
+              "site": "harbor_meeting_hall",
+              "name": "Quay Hall",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "harbor_gardens",
+          "name": "Reed Gardens",
+          "realm": "lantern_court",
+          "culture": "roman",
+          "religion": "nicene",
+          "dev": 3,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "roman",
+              "religion": "nicene",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "harbor_ridge",
+          "name": "High Lantern",
+          "realm": "ridge_court",
+          "culture": "roman",
+          "religion": "nicene",
+          "dev": 3,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "roman",
+              "religion": "nicene",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "lantern_court",
+          "name": "Lantern Court",
+          "capital": "harbor_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "lantern_court",
+          "religion": "nicene",
+          "ruler": {
+            "name": "Iria Vale",
+            "sex": "f",
+            "culture": "roman",
+            "born": 440,
+            "mar": 8,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "ridge_court",
+          "name": "Ridge Court",
+          "capital": "harbor_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "lantern_public",
+          "religion": "nicene",
+          "ruler": {
+            "name": "Neri Reed",
+            "sex": "m",
+            "culture": "roman",
+            "born": 440,
+            "mar": 8,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {
+        "harbor_district": {
+          "name": "Lantern Coast",
+          "kingdom": "harbor_country"
+        }
+      },
+      "kingdoms": {
+        "harbor_country": {
+          "name": "Reed Country",
+          "empire": "harbor_horizon"
+        }
+      },
+      "empires": {
+        "harbor_horizon": {
+          "name": "The Wide Horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "starts": [
+        "mandate_household",
+        "lantern_ruler_story"
+      ],
+      "hidden": false,
+      "systems": {
+        "enable": [
+          "roman_offices",
+          "public_offices"
+        ],
+        "disable": [
+          "papacy",
+          "great_holy_wars",
+          "feudal_service",
+          "manorial_tenure",
+          "colonate",
+          "tournaments"
+        ]
+      },
+      "opening": {
+        "actors": {
+          "lantern_notable": {
+            "name": "Sen Lark",
+            "sex": "m",
+            "born": 450,
+            "culture": "roman",
+            "religion": "nicene",
+            "station": 2,
+            "role": "notable",
+            "home": "harbor_quay",
+            "skills": {
+              "dip": 9,
+              "mar": 9,
+              "ste": 9
+            }
+          },
+          "ridge_notable": {
+            "name": "Mira Lark",
+            "sex": "f",
+            "born": 450,
+            "culture": "roman",
+            "religion": "nicene",
+            "station": 2,
+            "role": "notable",
+            "home": "harbor_ridge",
+            "skills": {
+              "dip": 9,
+              "mar": 9,
+              "ste": 9
+            }
+          }
+        },
+        "appointments": {},
+        "estates": [],
+        "claims": [],
+        "migrations": []
+      }
+    }
+  },
+  "storyInstances": {
+    "lantern_service_story": {
+      "id": "lantern_service_story",
+      "type": "household_track",
+      "title": "Lantern service",
+      "intro": "A finite command through actual transactions.",
+      "homeProvinceId": "harbor_quay",
+      "continuity": "protagonist",
+      "initialStage": "petition",
+      "interruptedStage": "interrupted",
+      "stages": {
+        "petition": {
+          "name": "Service petition",
+          "text": "Review the real commission and exact host. Private funds, the public account and court consent remain separate.",
+          "choices": [
+            {
+              "id": "lantern_petition",
+              "label": "Review petition",
+              "detail": "Confirm only the actual canonical decision. Cancellation preserves current terms.",
+              "operation": {
+                "kind": "mandate_service",
+                "service": {
+                  "realmId": "lantern_court",
+                  "officeId": "lantern_marshal",
+                  "action": "petition",
+                  "input": {}
+                }
+              },
+              "next": "command"
+            },
+            {
+              "id": "lantern_stop_petition",
+              "label": "Set this program aside",
+              "detail": "Conclude freely.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            },
+            {
+              "id": "lantern_court_journey",
+              "label": "Review a journey to the ridge court",
+              "detail": "Use the ordinary service journey. No appointment is promised.",
+              "operation": {
+                "kind": "travel_realm",
+                "realmId": "ridge_court",
+                "purposeId": "service"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "command": {
+          "name": "Service command",
+          "text": "Review the real commission and exact host. Private funds, the public account and court consent remain separate.",
+          "choices": [
+            {
+              "id": "lantern_command",
+              "label": "Review command",
+              "detail": "Confirm only the actual canonical decision. Cancellation preserves current terms.",
+              "operation": {
+                "kind": "mandate_service",
+                "service": {
+                  "realmId": "lantern_court",
+                  "officeId": "lantern_marshal",
+                  "action": "command",
+                  "input": {
+                    "destination": "harbor_gardens"
+                  }
+                }
+              },
+              "next": "loss"
+            },
+            {
+              "id": "lantern_stop_command",
+              "label": "Set this program aside",
+              "detail": "Conclude freely.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            },
+            {
+              "id": "lantern_consent",
+              "label": "Review public service payment",
+              "detail": "Complete only a real outside-consented bargain using finite court funds.",
+              "operation": {
+                "kind": "mandate_service",
+                "service": {
+                  "realmId": "lantern_court",
+                  "officeId": "lantern_marshal",
+                  "action": "consent",
+                  "input": {
+                    "templateId": "lantern_service"
+                  }
+                }
+              },
+              "next": "loss"
+            }
+          ],
+          "transitions": []
+        },
+        "loss": {
+          "name": "Service loss",
+          "text": "Review the real commission and exact host. Private funds, the public account and court consent remain separate.",
+          "choices": [
+            {
+              "id": "lantern_accept_loss",
+              "label": "Review accept_loss",
+              "detail": "Confirm only the actual canonical decision. Cancellation preserves current terms.",
+              "operation": {
+                "kind": "mandate_service",
+                "service": {
+                  "realmId": "lantern_court",
+                  "officeId": "lantern_marshal",
+                  "action": "accept_loss",
+                  "input": {}
+                }
+              },
+              "next": "done"
+            },
+            {
+              "id": "lantern_stop_loss",
+              "label": "Set this program aside",
+              "detail": "Conclude freely.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "done": {
+          "name": "Service concluded",
+          "text": "Existing facts and obligations remain.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        },
+        "interrupted": {
+          "name": "The original service ended",
+          "text": "The original person no longer directs this program.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    },
+    "lantern_commander_story": {
+      "id": "lantern_commander_story",
+      "type": "ruler_agenda",
+      "subjectRealmId": "lantern_court",
+      "binding": {
+        "kind": "mandate_holder",
+        "officeId": "lantern_marshal"
+      },
+      "title": "Lantern responsibilities",
+      "intro": "The exact personal appointment and court generation govern this program.",
+      "stages": [
+        {
+          "id": "lantern_responsibility",
+          "name": "Actual authority",
+          "text": "Review the actual mandate or retain arrangements.",
+          "year": 476,
+          "season": 0,
+          "choices": [
+            {
+              "id": "lantern_commander_story_act",
+              "label": "Review command",
+              "detail": "Use the existing owner without supplying another principal’s consent.",
+              "operation": "agenda_mandate",
+              "service": {
+                "realmId": "lantern_court",
+                "officeId": "lantern_marshal",
+                "action": "command",
+                "input": {
+                  "destination": "harbor_gardens"
+                }
+              }
+            },
+            {
+              "id": "lantern_commander_story_retain",
+              "label": "Retain arrangements",
+              "detail": "Record a priority without executing a transaction.",
+              "operation": "agenda_priority"
+            }
+          ]
+        }
+      ]
+    },
+    "lantern_court_story": {
+      "id": "lantern_court_story",
+      "type": "ruler_agenda",
+      "subjectRealmId": "lantern_court",
+      "binding": {
+        "kind": "mandate_court",
+        "officeId": "lantern_marshal"
+      },
+      "title": "Lantern responsibilities",
+      "intro": "The exact personal appointment and court generation govern this program.",
+      "stages": [
+        {
+          "id": "lantern_responsibility",
+          "name": "Actual authority",
+          "text": "Review the actual mandate or retain arrangements.",
+          "year": 476,
+          "season": 0,
+          "choices": [
+            {
+              "id": "lantern_court_story_act",
+              "label": "Review dismiss",
+              "detail": "Use the existing owner without supplying another principal’s consent.",
+              "operation": "agenda_mandate",
+              "service": {
+                "realmId": "lantern_court",
+                "officeId": "lantern_marshal",
+                "action": "dismiss",
+                "input": {}
+              }
+            },
+            {
+              "id": "lantern_court_story_retain",
+              "label": "Retain arrangements",
+              "detail": "Record a priority without executing a transaction.",
+              "operation": "agenda_priority"
+            }
+          ]
+        }
+      ]
+    },
+    "lantern_service_goals": {
+      "id": "lantern_service_goals",
+      "type": "opening_profile",
+      "title": "Lantern transaction goals",
+      "intro": "Only committed mandate transactions count.",
+      "scenarioIds": [
+        "mandate_household"
+      ],
+      "requires": [
+        "lantern_service_story"
+      ],
+      "goals": [
+        {
+          "id": "lantern_petition",
+          "name": "Acquire command",
+          "text": "Complete the actual canonical decision, not an acknowledgment.",
+          "criterion": {
+            "kind": "mandate_transaction",
+            "storyId": "lantern_service_story",
+            "choiceId": "lantern_petition"
+          }
+        },
+        {
+          "id": "lantern_command",
+          "name": "Use command",
+          "text": "Complete the actual canonical decision, not an acknowledgment.",
+          "criterion": {
+            "kind": "mandate_transaction",
+            "storyId": "lantern_service_story",
+            "choiceId": "lantern_command"
+          }
+        },
+        {
+          "id": "lantern_accept_loss",
+          "name": "Accept real loss",
+          "text": "Complete the actual canonical decision, not an acknowledgment.",
+          "criterion": {
+            "kind": "mandate_transaction",
+            "storyId": "lantern_service_story",
+            "choiceId": "lantern_accept_loss"
+          }
+        }
+      ],
+      "contacts": []
+    },
+    "lantern_public_court_story": {
+      "id": "lantern_public_court_story",
+      "type": "ruler_agenda",
+      "subjectRealmId": "ridge_court",
+      "binding": {
+        "kind": "mandate_court",
+        "officeId": "lantern_marshal",
+        "waitForOffice": true
+      },
+      "title": "Lantern responsibilities",
+      "intro": "The exact personal appointment and court generation govern this program.",
+      "stages": [
+        {
+          "id": "public_lantern_responsibility",
+          "name": "Actual authority",
+          "text": "Review the actual mandate or retain arrangements.",
+          "year": 476,
+          "season": 0,
+          "choices": [
+            {
+              "id": "public_lantern_court_story_act",
+              "label": "Review dismiss",
+              "detail": "Use the existing owner without supplying another principal’s consent.",
+              "operation": "agenda_mandate",
+              "service": {
+                "realmId": "ridge_court",
+                "officeId": "lantern_marshal",
+                "action": "dismiss",
+                "input": {}
+              }
+            },
+            {
+              "id": "public_lantern_court_story_retain",
+              "label": "Retain arrangements",
+              "detail": "Record a priority without executing a transaction.",
+              "operation": "agenda_priority"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "id": "lantern_service_petition_event",
+      "pack": "imperial_service",
+      "title": "Lantern commission",
+      "text": "Review an actual commission for {official}.",
+      "yearMin": 476,
+      "yearMax": 550,
+      "bookmarkIds": [
+        "mandate_coast"
+      ],
+      "trigger": {},
+      "participants": [
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the petition",
+          "desc": "The actual fee and host must remain available.",
+          "review": {
+            "type": "mandate_service",
+            "args": {
+              "realmId": "lantern_court",
+              "officeId": "lantern_marshal",
+              "action": "petition",
+              "input": {}
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave freely",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "lantern_public_petition_event",
+      "pack": "imperial_service",
+      "title": "Lantern commission",
+      "text": "Review an actual commission for {official}.",
+      "yearMin": 476,
+      "yearMax": 550,
+      "bookmarkIds": [
+        "mandate_coast"
+      ],
+      "trigger": {},
+      "participants": [
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the petition",
+          "desc": "The actual fee and host must remain available.",
+          "review": {
+            "type": "mandate_service",
+            "args": {
+              "realmId": "ridge_court",
+              "officeId": "lantern_marshal",
+              "action": "petition",
+              "input": {}
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave freely",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "lantern_service_payment_event",
+      "pack": "imperial_service",
+      "title": "Lantern commission",
+      "text": "Review an actual commission for {official}.",
+      "yearMin": 476,
+      "yearMax": 550,
+      "bookmarkIds": [
+        "mandate_coast"
+      ],
+      "trigger": {},
+      "participants": [
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the petition",
+          "desc": "The actual fee and host must remain available.",
+          "review": {
+            "type": "mandate_service",
+            "args": {
+              "realmId": "lantern_court",
+              "officeId": "lantern_marshal",
+              "action": "consent",
+              "input": {
+                "templateId": "lantern_service"
+              }
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave freely",
+          "effects": {}
+        }
+      ]
+    }
+  ]
+}
