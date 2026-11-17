@@ -293,6 +293,48 @@
     }
     return true;
   };
+  FB.eventStateReaders.register({id:'public_office_arrears',system:'authority',
+    args:{type:'object',fields:{shortfall:{type:'boolean',optional:'absent'},officeId:FB.officeEventReviews.officeField}},
+    read:function (s,a) {
+      var E = FB.officeEventReviews;
+      return FB.systemEnabled(s,'public_offices',{realm:E.court(s)}) && E.rows(s,a,{}).some(function (r) {
+        return r.publicTerms && r.publicTerms.arrears > 0 &&
+          (a.shortfall === undefined || (s.player.gold < r.publicTerms.arrears) === a.shortfall);
+      });
+    }});
+  FB.eventReviews.register('office_dues',{
+    owner:'authority',args:{type:'object',fields:{action:{enum:['repay','remit']},
+      officeId:FB.officeEventReviews.officeField,remittance:{type:'number',min:0.5,max:1,optional:'absent'}},
+      test:function (a) {return a.action === 'remit' ? a.remittance !== undefined : a.remittance === undefined;}},
+    partySlots:{official:true},
+    bind:function (s,a,ctx) {
+      var E = FB.officeEventReviews;
+      var row = E.rows(s,a,ctx).filter(function (r) {
+        return r.publicTerms && (a.action === 'repay' ? r.publicTerms.arrears > 0 : E.status(s,r) === 'active');
+      })[0];
+      return row ? E.facts(s,row.holder.id,row.id) : null;
+    },
+    quote:function (s,a,ctx) {
+      var E = FB.officeEventReviews;
+      if (!E.current(s,ctx) || ctx.participants.official !== s.player.charId ||
+          !FB.systemEnabled(s,'public_offices',{realm:E.court(s)})) return null;
+      var row = E.rows(s,a,ctx).filter(function (r) {
+        return r.publicTerms && (a.action === 'repay' ? r.publicTerms.arrears > 0 : E.status(s,r) === 'active');
+      })[0];
+      return row ? FB.publicOfficeQuote(s,E.actor(s),row.id,a.action,a.remittance) : null;
+    },
+    apply:function (s,a,q) {return FB.publicOfficeApply(s,q);},
+    details:function (s,a,q) {
+      var lines = FB.officeEventReviews.details(s,a,q);
+      lines.push(a.action === 'repay' ?
+        FB.T('Repayment transfers the exact arrears from your available purse to the original court once. It does not reaffirm a contested appointment.') :
+        FB.T('Remit {percent}% of the remaining public receipts. Later withholding creates recoverable personal arrears; this review recruits no men.',{percent:a.remittance*100}));
+      return lines;
+    },
+    report:function (s,a,q) {
+      return (a.action === 'repay' && q.cost ? [{type:'gold',amount:-q.cost}] : []).concat([{type:'system',system:'story'}]);
+    }
+  });
   function payOfficer(s, row, amount) {
     if (!amount) return true;
     var cid = row.holder.id, rid = row.institutionId;
