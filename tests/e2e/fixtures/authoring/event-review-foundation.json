@@ -1,0 +1,176 @@
+{
+  "name": "Harbor event review examples",
+  "eventPacks": {
+    "harbor_review_examples": {
+      "eras": [
+        "high_medieval"
+      ],
+      "yearMin": 1204,
+      "yearMax": 1220,
+      "bookmarkIds": [
+        "1204"
+      ]
+    }
+  },
+  "events": [
+    {
+      "id": "harbor_permission_review",
+      "pack": "harbor_review_examples",
+      "title": "A household decision",
+      "text": "Review the current terms before deciding.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Review the decision",
+          "review": {
+            "type": "industry_operation",
+            "args": {
+              "definitionId": "harbor_stall_permission",
+              "action": "pay"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "harbor_household_review",
+      "pack": "harbor_review_examples",
+      "title": "A household decision",
+      "text": "Review the current terms before deciding.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Review the decision",
+          "review": {
+            "type": "story_choice",
+            "args": {
+              "storyId": "harbor_routine",
+              "choiceId": "keep_routine"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "harbor_party_review",
+      "pack": "harbor_review_examples",
+      "title": "A household decision",
+      "text": "The household consults {witness}.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Review the decision",
+          "review": {
+            "type": "review_party_choice",
+            "args": {
+              "storyId": "harbor_routine",
+              "choiceId": "keep_routine",
+              "participant": "witness"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision",
+          "effects": {}
+        }
+      ],
+      "desc": "Reviewing and cancelling preserve the household decision and the original participant.",
+      "participants": [
+        {
+          "slot": "witness",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "witness"
+      ]
+    }
+  ],
+  "eventSubscriptions": {
+    "harbor_party_review": [{"hook":"household_birth","require":{"flags":["review_fixture_birth"]}}]
+  },
+  "localCouncilMotions": {
+    "harbor_stall_permission": {
+      "name": "Harbor stall permission",
+      "icon": "H",
+      "desc": "A fictional market permission with a finite term.",
+      "fx": {}
+    }
+  },
+  "industryLaws": {
+    "harbor_stall_permission": {
+      "schema": 1,
+      "motionId": "harbor_stall_permission",
+      "bookmarkId": "1204",
+      "provinceId": "london",
+      "enterpriseType": "market_stall_business",
+      "minYear": 1204,
+      "maxYear": 1220,
+      "mode": "license",
+      "fee": 2.5,
+      "permitDays": 60,
+      "durationDays": 180,
+      "transitionDays": 7,
+      "exemptions": []
+    }
+  },
+  "storyInstances": {
+    "harbor_routine": {
+      "id": "harbor_routine",
+      "type": "household_track",
+      "title": "Household routine",
+      "intro": "A fictional household reviews its routine.",
+      "homeProvinceId": "london",
+      "continuity": "household",
+      "initialStage": "decide",
+      "requirements": {
+        "provinces": [
+          "london"
+        ]
+      },
+      "stages": {
+        "decide": {
+          "name": "The household decides",
+          "text": "Keep the present household routine.",
+          "choices": [
+            {
+              "id": "keep_routine",
+              "label": "Keep the routine",
+              "detail": "Record the decision without a grant or payment.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "finished"
+            }
+          ],
+          "transitions": []
+        },
+        "finished": {
+          "name": "Decision recorded",
+          "text": "The routine continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    }
+  }
+}

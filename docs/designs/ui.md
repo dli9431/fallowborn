@@ -854,6 +854,14 @@ must not be represented by text alone. Reuse the shared portrait and character
 summary/disclosure pattern; do not generate a replacement person for a missing
 historical identity. Repeated references within one surface may share one portrait.
 
+Canonical event confirmation retains the original participant portrait cards
+beside the current decision terms. Cancel, Back, Escape and stale rejection
+restore the exact cards and event controls, including open disclosures, scroll
+and originating focus. Portrait detail returns retain the mounted confirmation.
+Successful outcomes reuse those participant cards with their original identities;
+opening a portrait and returning preserves the settled outcome's scroll and focus.
+See [Shared event reviews](event-review-foundation.md).
+
 Significant decisions retain the event sheet for a post-decision outcome with one
 **Continue** action. The settled result and participant portraits remain visible.
 All result chips, including actual costs, losses, gains, and status changes, use

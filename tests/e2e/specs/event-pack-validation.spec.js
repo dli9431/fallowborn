@@ -9,6 +9,7 @@ const runtimeInputs=['js/events.js','js/schema.js','js/mods.js','js/systems.js',
   'js/governments.js','js/authority.js','js/federates.js','js/mobile_confederations.js',
   'js/religious_institutions.js','js/industry_laws.js','js/episcopal_claims.js',
   'js/religious_cases.js','js/story_track.js','data/systems.js'];
+dependsOnRuntime(__filename,['js/ui_modals.js','js/world.js']);
 
 // Append fixture registrations here; the discovery assertion prevents silent omissions.
 const fixtureFiles = [
