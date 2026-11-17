@@ -10,7 +10,7 @@
   var usedGraphs = Object.create(null), catalogUses = Object.create(null);
   var publishing = false, setup = null, setupFaults = Object.create(null);
   var retainedTransitions = [];
-  var eventBoundaries = Object.create(null), eventSources = Object.create(null);
+  var eventBoundaries = Object.create(null), eventSources = Object.create(null), eventReviewReferences = null;
   var eventRoots = ['events','eventPacks','eventChances'];
   C.eventBoundary = function (source) {
     var boundary = {};
@@ -325,9 +325,9 @@
   // Only the native proof base carries this exact sealed reference identity.
   // Ordinary detached imports never gain access to unpublished optional graphs.
   C.eventReviewData = function (data) {
-    if (!frozen || data.bookmarkCompositionReferences !== frozen.startScenarios) return data;
-    return Object.assign({},data,{bookmarks:Object.assign({},frozen.bookmarks,data.bookmarks),
-      startScenarios:frozen.startScenarios,storyInstances:Object.assign({},frozen.storyInstances,data.storyInstances)});
+    if (!frozen || !eventReviewReferences || data.bookmarkCompositionReferences !== frozen.startScenarios) return data;
+    return Object.assign({},data,{bookmarks:Object.assign({},eventReviewReferences.bookmarks,data.bookmarks),
+      startScenarios:eventReviewReferences.startScenarios,storyInstances:Object.assign({},eventReviewReferences.storyInstances,data.storyInstances)});
   };
   C.inspect = function () {
     var source = frozen || view || FBDATA;
@@ -421,9 +421,17 @@
   function seal(ids) {
     declared = ids.slice();
     frozen = copy(view); orders = FB.bookmarkCompositions.sourceOrder(frozen);
+    eventReviewReferences = {bookmarks:Object.assign({},frozen.bookmarks),
+      startScenarios:frozen.startScenarios.slice(),storyInstances:Object.assign({},frozen.storyInstances)};
     Object.keys(frozen.bookmarkCompositionSources || {}).forEach(function (owner) {
       var row = frozen.bookmarkCompositionSources[owner], input = row.input;
       if (!input) return;
+      eventReviewReferences.bookmarks[input.bookmark.id] = input.bookmark;
+      Object.assign(eventReviewReferences.storyInstances,input.catalogs && input.catalogs.storyInstances);
+      (input.starts || []).forEach(function (unit) {
+        eventReviewReferences.startScenarios.push(unit.definition);
+        Object.assign(eventReviewReferences.storyInstances,unit.storyInstances);
+      });
       Object.keys(input.catalogs || {}).forEach(function (root) {
         if (catalogs.indexOf(root) < 0) return;
         frozen[root] = frozen[root] || {}; ownership[root] = ownership[root] || Object.create(null);

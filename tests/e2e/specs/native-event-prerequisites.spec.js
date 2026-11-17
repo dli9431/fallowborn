@@ -96,7 +96,7 @@ for (const imported of [false,true]) test((imported ? 'ordinary JSON public' : '
     await prepareGameContent(page);await beginBookmarkFromTitle(page,'mandate_coast','mandate_household');
   } else await startHistoricalGame(page,info,{bookmark:'476',code:'GATE-476-court_service_household_476-split-m-Officer'});
   const result = await page.evaluate(function (imported) {
-    const s = FB.state, rid = imported ? 'lantern_court' : 'croatia';
+    const s = FB.state, rid = imported ? 'ridge_court' : 'croatia';
     const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
     const enabled = FB.courtOfficeSystemEnabled(s,rid), missing = FB.courtOfficeSystemEnabled(s,'absent_court');
     const system = imported ? 'public_offices' : 'roman_offices', raw = FBDATA.bookmarks[s.start.id], old = raw.systems;
