@@ -14,7 +14,7 @@ window.FB = window.FB || {};
   }
 
   var compiledEventEra = null, compiledPeriods = null, eraEvents = null;
-  var periodYear = null, yearEvents = null;
+  var periodYear = null, periodCampaign = null, yearEvents = null;
   function eventPeriod(ev, packs) {
     packs = packs || FBDATA.eventPacks || {};
     if (ev.pack !== undefined && (typeof ev.pack !== 'string' ||
@@ -23,16 +23,45 @@ window.FB = window.FB || {};
     }
     var pack = ev.pack !== undefined && packs[ev.pack];
     var out = {};
-    for (var key of ['eras','yearMin','yearMax']) {
+    for (var key of ['eras','yearMin','yearMax','bookmarkIds']) {
       if (ev[key] !== undefined) out[key] = ev[key];
       else if (pack && pack[key] !== undefined) out[key] = pack[key];
     }
     return out;
   }
-  FB.validateEventPeriod = function (ev, packs) {
-    return FB.contentPeriodFault(eventPeriod(ev, packs));
+  function eventPeriodFault(period,context) {
+    const fault = FB.contentPeriodFault(period);
+    if (fault) return fault;
+    if (Object.prototype.hasOwnProperty.call(period,'bookmarkIds') && !FB.schema.valid(period.bookmarkIds,
+        {type:'array',minItems:1,maxItems:64,unique:true,items:{type:'string',minLength:1,maxLength:200,ref:{table:'bookmarks'}}},context))
+      return FB.T('Campaign bookmarks must be a nonempty list of unique known ids.');
+    return null;
+  }
+  FB.validateEventPacks = function (packs,context) {
+    if (!packs || typeof packs !== 'object' || Array.isArray(packs)) return [FB.T('Event packs must be an object.')];
+    const faults = [];
+    for (const id of Object.keys(packs || {})) {
+      const fault = eventPeriodFault(packs[id],context);
+      if (fault || !Array.isArray(packs[id].eras)) faults.push('Invalid event pack: ' + id + ': ' + (fault || 'eras are required'));
+    }
+    return faults;
+  };
+  FB.validateEventPeriod = function (ev, packs, context) {
+    packs = packs || FBDATA.eventPacks || {};
+    // The ordinary mod validator also visits events when a new pack is empty.
+    // Validate opt-in selectors even when no event references that pack yet.
+    for (const id of Object.keys(packs)) {
+      if (Object.prototype.hasOwnProperty.call(packs[id] || {},'bookmarkIds')) {
+        const fault = eventPeriodFault(packs[id],context);
+        if (fault) return fault;
+      }
+    }
+    // Validate both declarations, including metadata hidden by an event override.
+    const pack = packs[ev.pack];
+    return eventPeriodFault(ev,context) || pack && eventPeriodFault(pack,context) || eventPeriodFault(eventPeriod(ev, packs),context);
   };
   FB.validateEventStateConditions = function (ev, context) {
+    context = Object.assign({},context,{event:ev});
     const errors = [];
     function check(tg,path) {
       if (tg && Object.prototype.hasOwnProperty.call(tg,'state'))
@@ -46,13 +75,10 @@ window.FB = window.FB || {};
   FB.compileEventContent = function (era) {
     var periods = Object.create(null), events = [];
     var packs = FBDATA.eventPacks || {};
-    for (var id in packs) {
-      if (!Object.prototype.hasOwnProperty.call(packs, id)) continue;
-      var fault = FB.contentPeriodFault(packs[id]);
-      if (fault || !Array.isArray(packs[id].eras)) throw new Error('Invalid event pack: ' + id + ': ' + (fault || 'eras are required'));
-    }
+    const packFaults = FB.validateEventPacks(packs);
+    if (packFaults.length) throw new Error(packFaults.join(' '));
     for (var ev of FBDATA.events) {
-      var period = eventPeriod(ev), problem = FB.contentPeriodFault(period);
+      var period = eventPeriod(ev), problem = FB.validateEventPeriod(ev,packs);
       if (problem) throw new Error('Invalid event period: ' + ev.id + ': ' + problem);
       var stateFaults = FB.validateEventStateConditions(ev);
       if (stateFaults.length) throw new Error(stateFaults.join(' '));
@@ -63,6 +89,7 @@ window.FB = window.FB || {};
     compiledPeriods = periods;
     eraEvents = events;
     periodYear = null;
+    periodCampaign = null;
     yearEvents = null;
     randomEventPools = null;
   };
@@ -73,15 +100,28 @@ window.FB = window.FB || {};
   FB.eventPeriodEnabled = function (state, ev) {
     if (!ev) return false;
     ensureEventEra(state);
-    return FB.contentPeriodEnabled(state, compiledPeriods[ev.id] || eventPeriod(ev));
+    return eventPeriodEnabled(state, compiledPeriods[ev.id] || eventPeriod(ev));
   };
+  function eventPeriodEnabled(state,period) {
+    if (!FB.contentPeriodEnabled(state,period)) return false;
+    if (period.bookmarkIds === undefined) return true;
+    const id = state && state.start && state.start.id;
+    if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(FBDATA.bookmarks || {},id) ||
+        !Array.isArray(period.bookmarkIds) || period.bookmarkIds.indexOf(id) < 0) return false;
+    try {
+      const bookmark = FB.campaignBookmark(state);
+      return !!bookmark && bookmark.id === id;
+    } catch (error) { return false; }
+  }
   FB.eventYearPool = function (state) {
     ensureEventEra(state);
     var year = state.date.year;
-    if (!yearEvents || periodYear !== year) {
+    const campaign = JSON.stringify([state.start && state.start.id,state.start && state.start.revision]);
+    if (!yearEvents || periodYear !== year || periodCampaign !== campaign) {
       periodYear = year;
+      periodCampaign = campaign;
       yearEvents = eraEvents.filter(function (ev) {
-        return FB.contentPeriodEnabled(state, compiledPeriods[ev.id]);
+        return eventPeriodEnabled(state, compiledPeriods[ev.id]);
       });
       randomEventPools = null;
     }
@@ -5581,7 +5621,10 @@ window.FB = window.FB || {};
 
   FB.eventContextFor = function (state, ev, ctx, existingOnly) {
     if (!FB.eventPeriodEnabled(state, ev)) return false;
-    const out = FB.eventContext(state, ctx);
+    let out = FB.eventContext(state, ctx);
+    // Existing-only contexts never acquire missing canonical parties on restore.
+    if (!existingOnly) out = FB.eventReviews.bindContext(state,ev,out);
+    if (!out) return false;
     snapshotTenureAwareContext(state, ev, out);
     const bound = FB.bindEventParticipants(state, ev, out,existingOnly);
     if (!bound || !FB.eventParticipantsStillValid(state, ev, bound)) return false;
@@ -5658,7 +5701,7 @@ window.FB = window.FB || {};
     function object(value) { return value && typeof value === 'object' && !Array.isArray(value); }
     if (!object(table)) return ['eventSubscriptions must be an object keyed by event id.'];
     const known = Object.create(null);
-    for (const ev of events || []) known[ev.id] = true;
+    for (const ev of events || []) known[ev.id] = ev;
     for (const id of Object.keys(table)) {
       const path = 'eventSubscriptions.' + id, rows = table[id];
       if (!known[id]) errors.push(path + ' names an unknown event.');
@@ -5678,7 +5721,7 @@ window.FB = window.FB || {};
         for (const key of Object.keys(row.require)) {
           const value = row.require[key];
           if (key === 'state') {
-            errors.push.apply(errors,FB.eventStateReaders.faults(value,path + '.require.state'));
+            errors.push.apply(errors,FB.eventStateReaders.faults(value,path + '.require.state',{event:known[id]}));
           } else if (['goldMin','goldMax','prestigeMin','pietyMin','minAge','maxAge','yearMin','yearMax'].indexOf(key) >= 0) {
             if (typeof value !== 'number' || !isFinite(value) || Math.abs(value) > 1000000)
               errors.push(path + '.require.' + key + ' must be a bounded number.');
@@ -5720,7 +5763,10 @@ window.FB = window.FB || {};
           !FB.checkTrigger(state, row.require, ctx, snapshot)) continue;
       const eventCtx = momentDef || row.require && row.require.state
         ? Object.assign({},ctx || {},{eventLifecycleHook:hook}) : ctx;
-      const item = FB.queueEvent(state, ev.id, eventCtx, extra,true);
+      // This is fresh publication, before the queue's existing-only guard.
+      // Adapters project actual canonical people without materializing a fallback.
+      const reviewCtx = FB.eventReviews.bindContext(state,ev,FB.eventContext(state,eventCtx));
+      const item = reviewCtx && FB.queueEvent(state, ev.id, reviewCtx, extra,true);
       if (item) queued.push(item);
     }
     return queued;
@@ -6142,6 +6188,7 @@ window.FB = window.FB || {};
     eraEvents = null;
     yearEvents = null;
     periodYear = null;
+    periodCampaign = null;
     randomEventPools = null;
     _validatedTenureCatalogue = null;
   };
@@ -12480,6 +12527,7 @@ window.FB = window.FB || {};
         ev.id === 'wardeath_friend' || ev.nameChild ||
         /^rank_elevation_|^field_battle_|^ghw_field_battle_/.test(ev.id) ||
         ev.contextValidator === 'parliament_motion_context_valid') return false;
+    if (option && option.review) return true;
     if (receipt.milestones && receipt.milestones.length) return true;
     const impacts = receipt.impacts || [];
     if (impacts.some(function (r) {
@@ -12590,6 +12638,10 @@ window.FB = window.FB || {};
       }
       if (!FB.eventOptionStatus(state,ev,option,ctx).ready) return false;
       eventReviewed = meta.automated ? current : meta.reviewed;
+      // Reject before message or participant preparation can materialize facts.
+      // The canonical owner rechecks again immediately before its write.
+      if (!current || !current.quote.allowed || !eventReviewed ||
+          JSON.stringify(current) !== JSON.stringify(eventReviewed)) return false;
     }
 
     if (ctx && ctx._tenureResolved) return false;

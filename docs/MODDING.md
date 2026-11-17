@@ -7407,6 +7407,29 @@ creation. There is no additional queue or saved cursor.
 
 Canonical review options
 
+Trusted registration extensions and campaign-scoped event periods are documented
+in [Shared event reviews](designs/event-review-foundation.md). Reader and review
+argument validators receive the containing event as `context.event`; runtime
+checks receive `runtime:true` and the bound context as `context.context`.
+Optional trusted `systemId` metadata selects an exact existing system. Omission
+preserves unique `eventReaderOwner` lookup, including its unavailable-owner rule.
+Invalid optional metadata rejects registration; data cannot register hooks.
+
+A review adapter's optional `partySlots` map contains one to four `{slot:true}`
+entries. Each requires a `source:'context'`, `required:true` event participant and
+explicit `participantCards` entry. Optional pure `bind(state,args,context)` returns
+existing `participants` and source facts for a new context, or null. It cannot
+replace supplied identities or source facts. Restored contexts are never recast;
+missing exact people reject the review. Opted-in quote envelopes retain party ids.
+
+Events and event packs optionally accept `bookmarkIds`, a unique nonempty list of
+at most 64 known bookmark ids. Event values override pack values; both declarations
+must validate. This restricts eligibility to saved campaign `start.id` in addition
+to era/year gates. Missing identity fails closed. Omitting the field preserves
+legacy unscoped behavior. `FB.validateEventPeriod(event,packs,context)` and
+`FB.validateEventPacks(packs,context)` validate the event-layer metadata against the
+effective candidate catalogue; source loading remains a separate contract.
+
 ```json
 {"label":"Review the permission", "desc":"Confirm the current private payment or cancel.",
  "review":{"type":"industry_operation",

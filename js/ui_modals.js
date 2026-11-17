@@ -1922,7 +1922,7 @@ window.FB = window.FB || {};
       return FB.T(labels[slot] || 'Named participant');
     }
     function participantCard(c, participant) {
-      const detailsId = 'event-participant-details-' + cardCount;
+      const detailsId = (ev.outcome ? 'outcome' : 'event') + '-participant-details-' + cardCount;
       const standing = FB.standingOf(s, { kind:'character', id:c.id });
       const label = participantLabel(participant);
       return '<div class="event-participant-card settcard" ' +
@@ -2436,13 +2436,21 @@ window.FB = window.FB || {};
     const scroll = $('eventmodal').querySelector('.modalcard').scrollTop;
     while (body.firstChild) oldBody.appendChild(body.firstChild);
     while (box.firstChild) oldOptions.appendChild(box.firstChild);
+    const partyCards = [], cards = oldBody.querySelectorAll('.event-participant-card');
+    for (let i = 0; i < cards.length; i++) {
+      const marker = document.createComment('review participant');
+      cards[i].parentNode.insertBefore(marker,cards[i]);
+      partyCards.push({card:cards[i],marker:marker});
+    }
     let finished = false;
     function restore() {
       if (finished) return;
       finished = true; cancelWarConfirmation = null;
+      partyCards.forEach(function (party) {party.marker.parentNode.replaceChild(party.card,party.marker);});
       body.innerHTML = ''; box.innerHTML = '';
       body.appendChild(oldBody); box.appendChild(oldOptions);
       $('event-nav-back').disabled = true;
+      mobileNavClosed('event-review',true);
       if (source && document.contains(source)) source.focus({preventScroll:true});
       $('eventmodal').querySelector('.modalcard').scrollTop = scroll;
       armEventGuard();
@@ -2453,6 +2461,7 @@ window.FB = window.FB || {};
     body.innerHTML = reviewFactsCard(FB.T('Decision terms'),lines.map(function (line) {
       return '<p>' + esc(line) + '</p>';
     }).join(''));
+    for (let i = partyCards.length - 1; i >= 0; i--) body.insertBefore(partyCards[i].card,body.firstChild);
     box.innerHTML = reviewActionCardHtml({id:'event-review-confirm',label:FB.T('Confirm decision'),
       disabled:!reviewed || !reviewed.quote.allowed,
       note:FB.T('Confirmation uses the same current terms as the ordinary review.'),
@@ -2469,10 +2478,16 @@ window.FB = window.FB || {};
         const note = document.createElement('p');note.className = 'hint';
         note.textContent = FB.T('This decision changed while it was open. Review the current terms again. Nothing was spent.');
         body.appendChild(note);
-      } else {finished = true;cancelWarConfirmation = null;}
+      } else {
+        finished = true;cancelWarConfirmation = null;
+        mobileNavClosed('event-review',true);
+      }
     };
     $('event-review-cancel').onclick = function () {if (!eventInputGuarded()) restore();};
     armEventGuard();$('eventmodal').focus();
+    mobileNavPush('event-review',restore,null,
+      function () {return !finished && cancelWarConfirmation === restore;},
+      function () {return true;});
   }
 
   function confirmWarOption(ev, opt, ctx) {
@@ -2564,7 +2579,7 @@ window.FB = window.FB || {};
       '<div id="' + esc(id) + '" class="settcard-details hidden">' + details + '</div></div>';
   }
 
-  function showDecisionOutcome(receipt) {
+  function showDecisionOutcome(receipt, retainedCards) {
     const s = FB.state;
     eventOpen = true;
     const modal = $('eventmodal');
@@ -2649,7 +2664,17 @@ window.FB = window.FB || {};
     $('ev-text').innerHTML = h;
     FB.paintFaces($('ev-text'), s);
     bindCardInfoToggles($('ev-text'));
+    const retainedButtons = [];
+    (retainedCards || []).forEach(function (card) {
+      const original = card.querySelector('[data-event-character]');
+      const replacement = original && $('ev-text').querySelector(
+        '.decision-outcome-people [data-event-character="' + original.dataset.eventCharacter + '"]');
+      if (!replacement) return;
+      replacement.closest('.event-participant-card').parentNode.replaceChild(card,replacement.closest('.event-participant-card'));
+      retainedButtons.push(original);
+    });
     $('ev-text').querySelectorAll('[data-event-character]').forEach(function (button) {
+      if (retainedButtons.indexOf(button) >= 0) return;
       button.onclick = function () {
         const card = modal.querySelector('.modalcard');
         UI.showCharModal(button.dataset.eventCharacter, {
@@ -2691,6 +2716,7 @@ window.FB = window.FB || {};
         if (nm) nc.name = nm;
       }
     }
+    const retainedCards = opt.review ? Array.prototype.slice.call($('ev-text').querySelectorAll('.event-participant-card')) : [];
     const receipt = FB.resolveEventOption(s, ev, opt, ctx, { automated:false,reviewed:reviewed });
     if (!receipt) return false;
     if (!s.player.flags) s.player.flags = {};
@@ -2725,7 +2751,7 @@ window.FB = window.FB || {};
     }
     const me = s.chars[s.player.charId];
     if (receipt.showOutcome && !s.player.dead && me && me.health > 0) {
-      showDecisionOutcome(receipt);
+      showDecisionOutcome(receipt,retainedCards);
       return true;
     }
     nextEvent();
