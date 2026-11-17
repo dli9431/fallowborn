@@ -1,0 +1,717 @@
+{
+  "name": "Independent royal and inheritance reviews",
+  "storyInstances": {
+    "review_royal_agenda": {
+      "id": "review_royal_agenda",
+      "type": "ruler_agenda",
+      "subjectRealmId": "sasanian_476",
+      "title": "A provincial program",
+      "intro": "A short royal program with a funded provincial negotiation.",
+      "stages": [
+        {
+          "id": "proof_terms",
+          "name": "Provincial terms",
+          "text": "Review the actual provincial bargain.",
+          "year": 476,
+          "season": 0,
+          "choices": [
+            {
+              "id": "proof_negotiate",
+              "label": "Offer lighter burdens",
+              "detail": "Negotiate 60% public revenue and 50% service through the existing provincial review. Its public cost remains due.",
+              "operation": "agenda_provincial_terms",
+              "interestId": "mihran",
+              "revenue": 0.6,
+              "levy": 0.5
+            },
+            {
+              "id": "proof_keep_terms",
+              "label": "Retain the terms",
+              "detail": "Keep the present terms without a payment.",
+              "operation": "agenda_priority"
+            }
+          ]
+        },
+        {
+          "id": "proof_later_review",
+          "name": "Later review",
+          "text": "The next review has a later date.",
+          "year": 477,
+          "season": 0,
+          "choices": [
+            {
+              "id": "proof_keep_offices",
+              "label": "Retain officers",
+              "detail": "Keep existing officers.",
+              "operation": "agenda_priority"
+            },
+            {
+              "id": "proof_finish_royal",
+              "label": "Finish",
+              "detail": "Finish without an award.",
+              "operation": "agenda_finish"
+            }
+          ]
+        }
+      ]
+    },
+    "review_partition": {
+      "id": "review_partition",
+      "type": "succession_partition",
+      "name": "A different inheritance consultation",
+      "desc": "Review the living regional crown before authorizing a future settlement.",
+      "firstYear": 805,
+      "lastYear": 811,
+      "chance": 0.4,
+      "truceDays": 0,
+      "actor": {
+        "realmId": "review_crown",
+        "capital": "review_home",
+        "castField": "king"
+      },
+      "branchRealmIds": [
+        "review_upper",
+        "review_lower"
+      ],
+      "cast": {
+        "king": {
+          "kind": "realm_ruler",
+          "realmId": "review_crown"
+        },
+        "regional": {
+          "kind": "realm_ruler",
+          "realmId": "review_upper"
+        }
+      },
+      "shares": [
+        {
+          "realmId": "review_upper",
+          "castField": "regional"
+        }
+      ],
+      "news": {}
+    }
+  },
+  "events": [
+    {
+      "id": "court_review_negotiate",
+      "eras": [
+        "late_antique",
+        "early_medieval"
+      ],
+      "yearMin": 476,
+      "yearMax": 496,
+      "title": "A political review",
+      "trigger": {
+        "minAge": 16
+      },
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "candidate",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "candidate",
+        "principal"
+      ],
+      "text": "Review the current decision with {candidate}.",
+      "options": [
+        {
+          "label": "Review the decision",
+          "review": {
+            "type": "political_succession",
+            "args": {
+              "participant": "candidate",
+              "action": "negotiate",
+              "terms": {
+                "levy": 0.5,
+                "revenue": 0.6
+              }
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Retain the present arrangements",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "court_review_minor",
+      "eras": [
+        "late_antique",
+        "early_medieval"
+      ],
+      "yearMin": 476,
+      "yearMax": 496,
+      "title": "A political review",
+      "trigger": {
+        "minAge": 16
+      },
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "candidate",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "candidate",
+        "principal"
+      ],
+      "text": "Review the current decision with {candidate}.",
+      "options": [
+        {
+          "label": "Review the decision",
+          "review": {
+            "type": "political_succession",
+            "args": {
+              "participant": "candidate",
+              "action": "negotiate",
+              "selection": "minor",
+              "terms": {
+                "levy": 0.5,
+                "revenue": 0.6
+              }
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Retain the present arrangements",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "court_review_designate",
+      "eras": [
+        "late_antique",
+        "early_medieval"
+      ],
+      "yearMin": 476,
+      "yearMax": 496,
+      "title": "A political review",
+      "trigger": {
+        "minAge": 16
+      },
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "candidate",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "candidate",
+        "principal"
+      ],
+      "text": "Review the current decision with {candidate}.",
+      "options": [
+        {
+          "label": "Review the decision",
+          "review": {
+            "type": "political_succession",
+            "args": {
+              "participant": "candidate",
+              "action": "designate"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Retain the present arrangements",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "court_review_support",
+      "eras": [
+        "late_antique",
+        "early_medieval"
+      ],
+      "yearMin": 476,
+      "yearMax": 496,
+      "title": "A political review",
+      "trigger": {
+        "minAge": 16
+      },
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "candidate",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "candidate"
+      ],
+      "text": "Review the current decision with {candidate}.",
+      "options": [
+        {
+          "label": "Review the decision",
+          "review": {
+            "type": "constituent_decision",
+            "args": {
+              "participant": "candidate",
+              "action": "support"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Retain the present arrangements",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "court_review_withhold",
+      "eras": [
+        "late_antique",
+        "early_medieval"
+      ],
+      "yearMin": 476,
+      "yearMax": 496,
+      "title": "A political review",
+      "trigger": {
+        "minAge": 16
+      },
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "candidate",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "candidate"
+      ],
+      "text": "Review the current decision with {candidate}.",
+      "options": [
+        {
+          "label": "Review the decision",
+          "review": {
+            "type": "constituent_decision",
+            "args": {
+              "participant": "candidate",
+              "action": "withhold"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Retain the present arrangements",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "court_review_agenda",
+      "eras": [
+        "late_antique",
+        "early_medieval"
+      ],
+      "yearMin": 476,
+      "yearMax": 496,
+      "title": "A political review",
+      "trigger": {
+        "minAge": 16
+      },
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "candidate",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "candidate"
+      ],
+      "text": "Review the current decision with {candidate}.",
+      "options": [
+        {
+          "label": "Review the decision",
+          "review": {
+            "type": "political_story",
+            "args": {
+              "participant": "candidate",
+              "storyId": "review_royal_agenda",
+              "choiceId": "proof_keep_terms"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Retain the present arrangements",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "court_review_partition",
+      "eras": [
+        "late_antique",
+        "early_medieval"
+      ],
+      "yearMin": 805,
+      "yearMax": 825,
+      "title": "A political review",
+      "trigger": {
+        "minAge": 16
+      },
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "candidate",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "heir",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "candidate",
+        "heir"
+      ],
+      "text": "Review the current decision with {candidate}.",
+      "options": [
+        {
+          "label": "Review the decision",
+          "review": {
+            "type": "political_partition",
+            "args": {
+              "participant": "candidate",
+              "storyId": "review_partition",
+              "choiceId": "approve"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Retain the present arrangements",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "court_review_decline",
+      "eras": [
+        "late_antique",
+        "early_medieval"
+      ],
+      "yearMin": 805,
+      "yearMax": 825,
+      "title": "A political review",
+      "trigger": {
+        "minAge": 16
+      },
+      "weight": 0,
+      "participants": [
+        {
+          "slot": "candidate",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "heir",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "candidate",
+        "heir"
+      ],
+      "text": "Review the current decision with {candidate}.",
+      "options": [
+        {
+          "label": "Review the decision",
+          "review": {
+            "type": "political_partition",
+            "args": {
+              "participant": "candidate",
+              "storyId": "review_partition",
+              "choiceId": "decline"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Retain the present arrangements",
+          "effects": {}
+        }
+      ]
+    }
+  ],
+  "geographies": {
+    "review_partition_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 4
+      },
+      "land": [
+        [
+          0.2,
+          0.2,
+          5.8,
+          0.2,
+          5.8,
+          3.8,
+          0.2,
+          3.8
+        ]
+      ],
+      "seas": [],
+      "rivers": [],
+      "gridWidth": 160,
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "review_home",
+          "x": 1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "review_upper_home",
+          "x": 3,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "review_lower_home",
+          "x": 5,
+          "y": 2,
+          "terrain": "farmland"
+        }
+      ]
+    }
+  },
+  "settlementSites": {
+    "review_home_site": {
+      "x": 1,
+      "y": 2
+    },
+    "review_upper_home_site": {
+      "x": 3,
+      "y": 2
+    },
+    "review_lower_home_site": {
+      "x": 5,
+      "y": 2
+    }
+  },
+  "settlementLayouts": {
+    "review_partition_layout": {
+      "review_home": [
+        {
+          "site": "review_home_site",
+          "name": "Ash village",
+          "kind": "village"
+        }
+      ],
+      "review_upper_home": [
+        {
+          "site": "review_upper_home_site",
+          "name": "Upper village",
+          "kind": "village"
+        }
+      ],
+      "review_lower_home": [
+        {
+          "site": "review_lower_home_site",
+          "name": "Lower village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "review_partition_ruler",
+      "bookmarkIds": [
+        "review_partition_world"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "review_crown",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "review_home",
+      "characterName": "Rowan",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "name": "Ash court ruler",
+      "desc": "A fictional ruler reviews a living inheritance consultation.",
+      "tier": 7,
+      "profession": "noble",
+      "gold": 80,
+      "prestige": 100,
+      "piety": 10,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "existing family",
+          "desc": "Retain the living court and its regional relatives."
+        }
+      },
+      "onboarding": "ruler",
+      "intro": "Review the existing inheritance terms without a territorial grant."
+    }
+  ],
+  "bookmarks": {
+    "review_partition_world": {
+      "id": "review_partition_world",
+      "name": "Ash inheritance consultation",
+      "desc": "Three fictional living courts and a prospective settlement.",
+      "date": {
+        "year": 805,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "review_partition_land",
+      "settlementLayout": "review_partition_layout",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "greatHolyWars": false,
+      "starts": [
+        "review_partition_ruler"
+      ],
+      "stories": [
+        "review_partition"
+      ],
+      "provinces": [
+        {
+          "id": "review_home",
+          "name": "Ash village",
+          "realm": "review_crown",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "review_upper_home",
+          "name": "Upper village",
+          "realm": "review_upper",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "review_lower_home",
+          "name": "Lower village",
+          "realm": "review_lower",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        }
+      ],
+      "realms": [
+        {
+          "id": "review_crown",
+          "name": "Rowan court",
+          "capital": "review_home",
+          "rank": 4,
+          "color": "#446644",
+          "religion": "catholic",
+          "government": "regnum",
+          "ruler": {
+            "name": "Rowan",
+            "sex": "m",
+            "culture": "frankish",
+            "born": 750,
+            "mar": 8,
+            "trait": "patient"
+          },
+          "royalCourt": {
+            "dynasty": "Ash",
+            "spouseId": null,
+            "members": []
+          }
+        },
+        {
+          "id": "review_upper",
+          "name": "Alder court",
+          "capital": "review_upper_home",
+          "rank": 3,
+          "color": "#446688",
+          "religion": "catholic",
+          "government": "regnum",
+          "ruler": {
+            "name": "Alder",
+            "sex": "m",
+            "culture": "frankish",
+            "born": 777,
+            "mar": 8,
+            "trait": "patient"
+          },
+          "royalCourt": {
+            "dynasty": "Ash",
+            "spouseId": null,
+            "members": []
+          },
+          "liege": "review_crown"
+        },
+        {
+          "id": "review_lower",
+          "name": "Reed court",
+          "capital": "review_lower_home",
+          "rank": 3,
+          "color": "#886644",
+          "religion": "catholic",
+          "government": "regnum",
+          "ruler": {
+            "name": "Reed",
+            "sex": "m",
+            "culture": "frankish",
+            "born": 779,
+            "mar": 8,
+            "trait": "patient"
+          },
+          "royalCourt": {
+            "dynasty": "Ash",
+            "spouseId": null,
+            "members": []
+          },
+          "liege": "review_crown"
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "straits": [],
+      "scripted": []
+    }
+  }
+}

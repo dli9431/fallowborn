@@ -8,6 +8,187 @@
   function votes(s, rid) { var row = record(s, rid); return row && row.recognition || {}; }
   function validActor(s, actor) { return !!actor && !!FB.political.actor(s, actor); }
   function same(a, b) { return !!a && !!b && a.kind === b.kind && a.id === b.id; }
+  var E = FB.selectionEventReviews;
+  function royalSeat(s,rid) {
+    return R.members(s,rid).filter(function (m) {
+      return m.active !== false && same(m.principal,E.actor(s));
+    })[0];
+  }
+  function politicalBind(s,a,ctx) {
+    var rid = E.court(s);
+    if (FB.governmentSelection.profile(s,rid)) return E.bind(s,a,ctx,false);
+    if (!R.policy(s,rid)) return null;
+    var seat = royalSeat(s,rid), candidate = R.candidates(s,rid).filter(function (c) {
+      return c.charId && s.chars[c.charId] && !s.chars[c.charId].dead && (a.selection !== 'minor' || c.minor);
+    })[0];
+    return candidate ? E.facts(s,candidate.charId,candidate.id,seat && seat.id) : null;
+  }
+  function politicalQuote(s,a,ctx) {
+    var rid = E.court(s), c = E.person(s,ctx), selection = FB.governmentSelection;
+    if (selection.profile(s,rid)) return E.quote(s,a,ctx,false);
+    if (!E.current(s,ctx) || !c || !R.policy(s,rid) || !FB.systemEnabled(s,'public_offices',{realm:rid})) return null;
+    var seat = royalSeat(s,rid), id = ctx.politicalCandidateId;
+    var candidate = R.candidates(s,rid).filter(function (row) {return row.id === id && row.charId === c.id;})[0];
+    if (!candidate || a.selection === 'minor' && !candidate.minor || ctx.politicalSeatId !== (seat && seat.id || null)) return null;
+    var court = a.action === 'designate';
+    var q = R.supportQuote(s,court ? E.courtActor(s,rid) : E.actor(s),rid,court ? 'court' : seat && seat.id,
+      a.action === 'withhold' || a.action === 'withdraw' ? null : id,a.terms);
+    return {allowed:q.allowed,owner:'recognition',targetId:c.id,review:q};
+  }
+  function politicalApply(s,a,q) {
+    return q.owner === 'selection' ? FB.governmentSelection.apply(s,q.review) : R.applySupport(s,q.review);
+  }
+  var politicalFields = {participant:E.participantField,
+    selection:{enum:['first','minor'],optional:'absent'},terms:E.termsField};
+  FB.eventReviews.register('constituent_decision',{
+    owner:'governments',partySlots:{candidate:true},
+    args:{type:'object',fields:Object.assign({action:{enum:['support','withhold','withdraw']}},politicalFields)},
+    bind:politicalBind,quote:politicalQuote,apply:politicalApply,details:E.details,report:E.report
+  });
+  FB.eventReviews.register('political_succession',{
+    owner:'governments',partySlots:{candidate:true,principal:true},
+    args:{type:'object',fields:Object.assign({action:{enum:['designate','negotiate']}},politicalFields)},
+    bind:function (s,a,ctx) {
+      var facts = politicalBind(s,a,ctx), rid = E.court(s);
+      if (facts && R.policy(s,rid) && a.action === 'negotiate') {
+        var seat = R.members(s,rid).filter(function (m) {return m.id !== 'court' && m.active !== false;})[0];
+        facts.politicalSeatId = seat && seat.id || null;
+        if (!seat || !seat.principal || seat.principal.kind !== 'character' || !s.chars[seat.principal.id]) return null;
+        facts.participants.principal = seat.principal.id;
+      }
+      if (facts && !facts.participants.principal) facts.participants.principal = s.player.charId;
+      return facts;
+    },quote:function (s,a,ctx) {
+      // A negotiating court binds the target interest rather than its own seat.
+      if (R.policy(s,E.court(s)) && a.action === 'negotiate') {
+        var rid = E.court(s), c = E.person(s,ctx), candidate = R.candidates(s,rid).filter(function (row) {
+          return row.id === ctx.politicalCandidateId && c && row.charId === c.id && (a.selection !== 'minor' || row.minor);
+        })[0];
+        var seat = R.members(s,rid).filter(function (m) {return m.id === ctx.politicalSeatId && m.id !== 'court';})[0];
+        if (!E.current(s,ctx) || !candidate || !seat || !seat.principal ||
+            seat.principal.id !== ctx.participants.principal || !FB.systemEnabled(s,'public_offices',{realm:rid})) return null;
+        var q = R.supportQuote(s,E.courtActor(s,rid),rid,seat.id,candidate.id,a.terms || FB.aristocracy.profile(s,rid).defaultTerms);
+        return {allowed:q.allowed,owner:'recognition',targetId:c.id,principalId:seat.principal.id,review:q};
+      }
+      if (ctx.participants.principal !== s.player.charId) return null;
+      return politicalQuote(s,a,ctx);
+    },apply:politicalApply,details:E.details,report:E.report
+  });
+  FB.eventStateReaders.register({id:'royal_recognition',system:'governments',
+    args:{type:'object',fields:{status:{enum:['active','withheld','competing','minor_candidate','stewardship']}}},
+    read:function (s,a) {
+      var rid = E.court(s), A = FB.aristocracy, data = A && A.state(s,rid);
+      if (!data || !R.policy(s,rid) || !FB.systemEnabled(s,'public_offices',{realm:rid})) return false;
+      if (a.status === 'active') return true;
+      if (a.status === 'minor_candidate') return R.candidates(s,rid).some(function (c) {return c.minor;});
+      if (a.status === 'competing') return R.candidates(s,rid).length > 1;
+      if (a.status === 'stewardship') return A.readiness(s,rid).kind === 'stewardship';
+      return R.members(s,rid).some(function (m) {
+        var v = votes(s,rid)[m.id];
+        return m.active !== false && v && v.generation === FB.realmRulerGeneration(s,rid) &&
+          v.candidateId === null && same(v.principal,m.principal);
+      });
+    }});
+  function storyDefinition(a,c) {
+    if (a.storyId === undefined) return a.choiceId === undefined &&
+      (a.storyType === 'succession_partition' ? ['approve','decline'].indexOf(a.choiceKind) >= 0 :
+        a.storyType === 'ruler_agenda' && ['agenda_priority','agenda_finish','agenda_defer','agenda_stop_program','agenda_provincial_terms'].indexOf(a.choiceKind) >= 0);
+    if (a.storyType !== undefined || a.choiceKind !== undefined || a.choiceId === undefined) return false;
+    var d = (c.data || FBDATA).storyInstances[a.storyId];
+    if (!d) return false;
+    if (d.type === 'succession_partition') return ['approve','decline'].indexOf(a.choiceId) >= 0;
+    return d.type === 'ruler_agenda' && (a.choiceId === 'agenda_stop_program' || Array.isArray(d.stages) && d.stages.some(function (st) {
+      return st && Array.isArray(st.choices) && st.choices.some(function (choice) {
+        return choice && choice.id === a.choiceId && ['agenda_priority','agenda_finish','agenda_defer','agenda_provincial_terms'].indexOf(choice.operation) >= 0;
+      });
+    }));
+  }
+  var storyFields = {storyId:{type:'string',minLength:1,maxLength:80,ref:{table:'storyInstances'},optional:'absent'},
+    choiceId:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/,optional:'absent'},
+    storyType:{enum:['succession_partition','ruler_agenda'],optional:'absent'},
+    choiceKind:{enum:['approve','decline','agenda_priority','agenda_finish','agenda_defer','agenda_stop_program','agenda_provincial_terms'],optional:'absent'}};
+  function choiceKind(d,id) {
+    if (d.type === 'succession_partition' || id === 'agenda_stop_program') return id;
+    for (var st of d.stages || []) for (var c of st.choices || []) if (c.id === id) return c.operation;
+    return null;
+  }
+  function storySource(s,a,ctx) {
+    if (!storyDefinition(a,{data:FBDATA}) || !FB.eventStateReaders.ownerEnabled(s,'governments')) return null;
+    var exact = ctx && ctx.politicalStoryId || a.storyId;
+    if (ctx && (!ctx.politicalStoryId || !ctx.politicalChoiceId) || a.storyId && exact !== a.storyId) return null;
+    // The registry's order is canonical. Only already attached records and
+    // currently offered safe choices participate; no date is loaded by a read.
+    var ids = exact ? [exact] : FB.stories.list().map(function (story) {return story.id;});
+    for (var id of ids) {
+      var d = FBDATA.storyInstances[id], rec = FB.stories.record(s,id);
+      if (!d || !rec || a.storyType && d.type !== a.storyType) continue;
+      var declared = d.type === 'ruler_agenda' ? d.subjectRealmId : d.actor && d.actor.realmId;
+      var rid = declared && FB.startRealmId(s,declared), ruler = declared && FB.stories.ruler(s,declared);
+      if (!rid || !s.realms[rid] || !s.realms[rid].alive || !ruler || ruler.id !== s.player.charId ||
+          !s.chars[ruler.id] || s.chars[ruler.id].dead) continue;
+      var choices = FB.stories.choices(s,id), selected = ctx ? ctx.politicalChoiceId : a.choiceId;
+      if (!selected) selected = (choices.filter(function (c) {return choiceKind(d,c.id) === a.choiceKind;})[0] || {}).id;
+      if (!selected || a.choiceId && selected !== a.choiceId || a.choiceKind && choiceKind(d,selected) !== a.choiceKind ||
+          !choices.some(function (c) {return c.id === selected;})) continue;
+      var q = FB.stories.quote(s,id,selected);
+      if (q) return {rid:rid,person:ruler.id,storyId:id,choiceId:selected,review:q};
+    }
+    return null;
+  }
+  function storyHeir(s,source) {
+    var plan = source.review.facts && source.review.facts.check && source.review.facts.check.plan;
+    var family = plan && FB.royalSettlementFamily(s,source.rid), member = family && family.members[plan.primaryId];
+    var c = member && member.charId && s.chars[member.charId];
+    return c && !c.dead ? {memberId:plan.primaryId,characterId:c.id} : null;
+  }
+  function storyAdapter(partition) { return {
+    owner:'story_tracks',partySlots:partition ? {candidate:true,heir:true} : {candidate:true},
+    args:{type:'object',fields:Object.assign({participant:E.participantField},storyFields),test:function (a,c) {
+      var d = a.storyId && (c.data || FBDATA).storyInstances[a.storyId], type = d ? d.type : a.storyType;
+      return storyDefinition(a,c) && type === (partition ? 'succession_partition' : 'ruler_agenda') &&
+        (partition || (a.choiceKind || d && choiceKind(d,a.choiceId)) !== 'agenda_provincial_terms');
+    }},
+    bind:function (s,a) {
+      var source = storySource(s,a);
+      var facts = source && E.facts(s,source.person);
+      if (facts) {
+        facts.politicalCourtId = source.rid; facts.politicalGeneration = FB.realmRulerGeneration(s,source.rid);
+        facts.politicalStoryId = source.storyId; facts.politicalChoiceId = source.choiceId;
+        if (partition) {
+          var heir = storyHeir(s,source);
+          if (!heir) return null;
+          facts.participants.heir = heir.characterId; facts.politicalHeirMemberId = heir.memberId;
+        }
+      }
+      return facts;
+    },quote:function (s,a,ctx) {
+      var source = storySource(s,a,ctx), c = E.person(s,ctx);
+      if (!source || !c || c.id !== source.person || ctx.politicalCourtId !== source.rid ||
+          ctx.politicalProvinceId !== s.player.provinceId || ctx.politicalGeneration !== FB.realmRulerGeneration(s,source.rid) ||
+          ctx.politicalStoryId !== source.storyId) return null;
+      if (partition) {
+        var heir = storyHeir(s,source);
+        if (!heir || heir.memberId !== ctx.politicalHeirMemberId || heir.characterId !== ctx.participants.heir) return null;
+      }
+      return {allowed:source.review.allowed,storyId:source.storyId,choiceId:source.choiceId,review:source.review};
+    },apply:function (s,a,q) {return FB.stories.apply(s,q.storyId,q.choiceId,q.review);},
+    details:function (s,a,q) {
+      var story = FB.stories.get(q.storyId), rec = FB.stories.record(s,q.storyId);
+      var choice = FB.stories.choices(s,q.storyId).filter(function (c) {return c.id === q.choiceId;})[0];
+      return (choice ? [choice.label,choice.detail] : []).concat(story.review ? story.review(s,rec,q.choiceId,q.review) : []);
+    }
+  }; }
+  FB.eventReviews.register('political_story',storyAdapter(false));
+  FB.eventReviews.register('political_partition',storyAdapter(true));
+  FB.eventStateReaders.register({id:'political_story',system:'story_tracks',
+    args:{type:'object',fields:Object.assign({status:{enum:['pending_partition','blocked_agenda','active_agenda']}},storyFields),test:function (a,c) {
+      var d = a.storyId && (c.data || FBDATA).storyInstances[a.storyId], type = d ? d.type : a.storyType;
+      return storyDefinition(a,c) && (a.status === 'pending_partition' ? type === 'succession_partition' : type === 'ruler_agenda');
+    }},read:function (s,a) {
+      var source = storySource(s,a), rec = source && FB.stories.record(s,source.storyId);
+      return !!source && (a.status === 'pending_partition' ? rec.phase === 'pending' && source.review.allowed :
+        rec.status === 'agenda_open' && (a.status === 'active_agenda' || !source.review.allowed));
+    }});
   FB.eventReviews.register('office_recognition',{
     owner:'authority',args:{type:'object',fields:{action:{enum:['recognize','contest','nominate']},
       participant:{value:'official'},selection:{enum:['candidate','officer'],optional:'absent'},

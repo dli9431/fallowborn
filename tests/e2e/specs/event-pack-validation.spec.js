@@ -18,6 +18,7 @@ const fixtureFiles = [
   ,{file:'711.json',runtime:['data/events_711.js','js/lordships.js']}
   ,{file:'800.json',runtime:['data/events_800.js','js/lordships.js']}
   ,{file:'mobile_life.json',runtime:['data/events_mobile_life.js','data/starts_mobile_principal.js','data/mobile_confederations.js','data/bookmark_1204_terrain.js']}
+  ,{file:'kingship_succession.json',runtime:['data/events_kingship_succession.js','js/lordships.js','js/government_selection.js','js/government_recognition.js','js/government_aristocracy.js','js/story_settlements.js','js/story_ruler_agenda.js','data/bookmark_800_history.js','data/story_ruler_agendas.js','data/story_ruler_agendas_800.js']}
 ];
 dependsOnRuntime(__filename,fixtureFiles.reduce(function (out,entry) {return out.concat(entry.runtime);},runtimeInputs));
 const directory = path.resolve(__dirname,'../fixtures/event-packs');
