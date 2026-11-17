@@ -360,6 +360,70 @@
     if(q.reason==='period') return FB.T('This asset already committed its current operating period.');
     return FB.T('The local season, standing asset, original authority and required local care must all be available.');
   };
+  var eventFields={assignmentId:FB.production.eventId(),profileId:FB.production.eventId('buildingSeasonProfiles'),
+    resourceUnit:{enum:['water','grazing'],optional:'absent'}};
+  function eventRows(s,args,ctx) {
+    var pid=ctx.locationId || s.player.provinceId,resources=FB.siteResources.snapshot(s);
+    return plan(s).assignments.filter(function (a) {
+      return a.countyId===pid && (!args.assignmentId || args.assignmentId===a.id) &&
+        (!args.profileId || args.profileId===a.profileId) && !!FB.production.eventActor(s,a.countyId,a.slot) &&
+        (!args.resourceUnit || a.resources.some(function (r) {return resources.some(function (x) {
+          return x.id===r.sourceId && x.unit===args.resourceUnit;
+        });}));
+    });
+  }
+  function eventRequest(s,args,a,lotId) {
+    return {operation:args.operation,assignmentId:a.id,actor:FB.production.eventActor(s,a.countyId,a.slot),lotId:lotId};
+  }
+  function eventLot(s,a) {
+    var benefit=a.profile.benefit;
+    return benefit && (s.production && s.production.lots || []).find(function (l) {
+      return l.goodId===benefit.goodId && S.quote(s,eventRequest(s,{operation:'allocate'},a,l.id)).allowed;
+    });
+  }
+  function eventSource(s,args,a,lotId) {
+    var b=building(s,a),t=term(s,a);
+    if (!b) return null;
+    return FB.production.eventSource(s,'season',a.id,FB.production.eventActor(s,a.countyId,a.slot),{
+      stamp:a.operationId!==null ? b.waterOperation || null : b.productionAsset || null,
+      termId:t ? t.id : null,lotId:lotId
+    });
+  }
+  FB.eventStateReaders.register({id:'works_season',system:'works',args:{type:'object',fields:Object.assign({},eventFields,{
+    status:{enum:['open_ready','active','care_unavailable','out_of_season','allocate_ready','stock_expiring']}
+  })},read:function (state,args,ctx) {
+    var bm=FB.campaignBookmark(state);
+    if (!bm || !(bm.buildingSeasonAssignments || []).length) return false;
+    var s=copy(state);
+    return eventRows(s,args,ctx).some(function (a) {
+      var who=FB.production.eventActor(s,a.countyId,a.slot),t=term(s,a);
+      if (args.status==='open_ready') return S.quote(s,eventRequest(s,{operation:'open'},a,null)).allowed;
+      if (args.status==='active') return live(s,a,t);
+      if (args.status==='out_of_season') return !!building(s,a) && a.profile.seasonKinds.indexOf(FB.localSeason(s,a.countyId))<0;
+      if (args.status==='care_unavailable') return a.profile.care && !!building(s,a) && !identity(s,a,who);
+      if (args.status==='allocate_ready') return !!eventLot(s,a);
+      return FB.production.snapshot(s,a.countyId,a.siteId).some(function (row) {
+        return row.site.id===a.productionSiteId && row.lots.some(function (l) {
+          return l.available>0 && S.lotExpiry(s,l)>s.turn && S.lotExpiry(s,l)<=s.turn+2;
+        });
+      });
+    });
+  }});
+  FB.eventReviews.register('seasonal_operation',{owner:'works',partySlots:{operator:true},
+    args:{type:'object',fields:Object.assign({},eventFields,{operation:{enum:['open','allocate']}})},
+    bind:function (state,args,ctx) {
+      var s=copy(state),a=eventRows(s,args,ctx)[0],lot=a && args.operation==='allocate' && eventLot(s,a);
+      return a ? FB.production.eventBind(eventSource(s,args,a,lot ? lot.id : null)) : null;
+    },
+    quote:function (state,args,ctx) {
+      var s=copy(state),source=ctx.worksSource;
+      if (!source || source.kind!=='season' || !obj(source.asset)) return null;
+      var a=eventRows(s,Object.assign({},args,{assignmentId:source.id}),ctx)[0];
+      return a && FB.production.eventMatches(ctx,eventSource(s,args,a,source.asset.lotId)) ?
+        S.quote(s,eventRequest(s,args,a,source.asset.lotId)) : null;
+    },
+    apply:function (s,args,q) {return S.commit(s,q);},details:function (s,args,q) {return [S.reason(q)];}
+  });
   S.validate=function(s) {
     function fail(){throw new Error(FB.T('Invalid saved seasonal building commitment.'));}
     var r=s.buildingSeasons;
