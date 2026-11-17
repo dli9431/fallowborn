@@ -86,7 +86,7 @@ jobs:
   e2e:
     needs: plan
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -148,6 +148,7 @@ jobs:
         env:
           FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES: ${{ inputs.bounded && '1' || '0' }}
         run: >-
+          timeout --signal=INT --kill-after=30s 600s
           npx playwright test ${{ steps.select.outputs.args }}
           --shard=${{ matrix.shard }}/${{ inputs.shards }}
           --workers=${{ inputs.workers }}
