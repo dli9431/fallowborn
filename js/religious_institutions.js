@@ -2,7 +2,8 @@
 (function () {
   'use strict';
   var MAX_MEMBERS = 64, MAX_AFFILIATIONS = 8, MAX_DECISIONS = 16;
-  var ACTIONS = ['admit','affiliate','appoint','recognize','dispute','withdraw','mediate','vacate','assent'];
+  var WITHDRAW = 'withdraw';
+  var ACTIONS = ['admit','affiliate','appoint','recognize','dispute',WITHDRAW,'mediate','vacate','assent'];
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
   function plain(o) { return !!o && Object.prototype.toString.call(o) === '[object Object]'; }
   function copy(o) { return JSON.parse(JSON.stringify(o)); }
@@ -770,4 +771,56 @@
     });
     return true;
   };
+
+  FB.eventStateReaders.register({id:'religious_office_vacancy',system:'religious_institutions',
+    args:{type:'object',fields:{officeId:{type:'string',minLength:1,maxLength:80}}},
+    read:function (s,a) {
+      var office = FB.religiousOffices(s)[a.officeId];
+      return !!(office && !FB.religiousOfficeSnapshot(s,a.officeId) && s.religiousHeadVacancies && s.religiousHeadVacancies[a.officeId]);
+    }});
+  FB.eventStateReaders.register({id:'institution_role_opening',system:'religious_institutions',
+    args:{type:'object',fields:{institutionId:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/},
+      roleId:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/}}},read:function (s,a) {
+      var q = FB.religiousInstitutionQuote(s,a.institutionId,{kind:'character',id:s.player.charId},'admit',{roleId:a.roleId});
+      return !!(q && q.allowed);
+    }});
+  function eventMembershipBlocker(reason) {
+    var reasons = {
+      qualification:FB.T('The participant no longer meets the role qualifications.'),
+      membership:FB.T('This membership is already held or its capacity is full.'),
+      unavailable:FB.T('The declared institution is currently unavailable.'),
+      funds:FB.T('The authorized payer cannot cover the declared fee.'),
+      rights:FB.T('The current participant has no right to make this decision.')
+    };
+    return reasons[reason] || FB.T('The current declaration or procedural terms do not permit this decision.');
+  }
+  function eventPaymentReport(s,amount) {
+    var preview = FB.previewEventOption(s,null,{effects:{gold:amount}},{});
+    return (preview.sections[0] ? preview.sections[0].impacts : []).concat([{type:'system',system:'story'}]);
+  }
+  FB.eventReviews.register('religious_institution',{
+    owner:'religious_institutions',
+    args:{type:'object',fields:{institutionId:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/},
+      action:{enum:['admit',WITHDRAW]},
+      roleId:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/,optional:'absent'}},test:function (a) {
+      return a.action === 'admit' ? !!a.roleId : a.roleId === undefined;
+    }},
+    quote:function (s,a) {
+      return FB.religiousInstitutionQuote(s,a.institutionId,{kind:'character',id:s.player.charId},a.action,
+        a.action === 'admit' ? {roleId:a.roleId} : {});
+    },apply:function (s,a,q) {return FB.religiousInstitutionApply(s,q);},
+    report:function (s,a,q) {return eventPaymentReport(s,-q.cost);},
+    details:function (s,a,q) {
+      var ins = FB.religiousInstitutionSnapshot(s,a.institutionId), r = a.roleId && ins.profile.roles[a.roleId];
+      return [FB.dataText(s,s.player.charId,'religiousInstitutionProfile',ins.definition.profileId,ins.profile,'name',{}),
+        r ? FB.dataText(s,s.player.charId,'religiousInstitutionProfile',ins.definition.profileId,ins.profile,'roles.' + a.roleId + '.name',{}) : FB.T('Review the existing personal commitment.'),
+        FB.T('Payment: {money:cost}. Qualified assents: {count}/{required}.',{cost:q.cost,count:q.consent.characterIds.length,required:q.consent.required}),
+        r && r.unmarried ? FB.T('This role requires remaining unmarried until withdrawal.') : FB.T('This decision adds no unmarried commitment.'),
+        q.consequences.officeId || q.facts.head === s.player.charId && a.roleId && ins.profile.selection && a.roleId !== ins.profile.selection.roleId ?
+          FB.T('This decision also vacates the current spiritual office. Institutional property remains with its owner.') : FB.T('This decision grants no spiritual or temporal office.'),
+        FB.T('Membership, personal work, spiritual office and temporal jurisdiction remain separate.'),
+        q.allowed ? FB.T('Current qualifications and consent permit this decision.') : eventMembershipBlocker(q.reason)];
+    }
+  });
+
 })();

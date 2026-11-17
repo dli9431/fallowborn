@@ -17,6 +17,7 @@ const fixtureFiles = [
   {file:'state-readers-native.json',runtime:['data/events_common.js','data/industry_laws.js']}
   ,{file:'711.json',runtime:['data/events_711.js','js/lordships.js']}
   ,{file:'800.json',runtime:['data/events_800.js','js/lordships.js']}
+  ,{file:'religious_life.json',runtime:['data/events_religious_life.js','data/religious_activities.js','data/religious_institutions.js','data/episcopal_claims.js','data/religious_cases.js','data/holy_war_causes.js','js/religious_activities.js','js/holywar.js']}
   ,{file:'mobile_life.json',runtime:['data/events_mobile_life.js','data/starts_mobile_principal.js','data/mobile_confederations.js','data/bookmark_1204_terrain.js']}
 ];
 dependsOnRuntime(__filename,fixtureFiles.reduce(function (out,entry) {return out.concat(entry.runtime);},runtimeInputs));

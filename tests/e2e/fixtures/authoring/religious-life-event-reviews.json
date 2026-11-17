@@ -1,0 +1,351 @@
+{
+  "name": "River household reviews",
+  "eventPacks": {
+    "river_reviews": {
+      "eras": [
+        "high_medieval"
+      ],
+      "yearMin": 1204,
+      "yearMax": 1229
+    }
+  },
+  "episcopalClaims": {
+    "river_rent": {
+      "name": "The river holding\u2019s rent review",
+      "desc": "A fictional composition of an actual delegated Spoleto holding\u2019s existing charter. No estate, arrears or historic litigation is supplied.",
+      "bookmarkId": "1204",
+      "provinceId": "spoleto",
+      "realmId": "papacy_1204",
+      "yearMin": 1204,
+      "yearMax": 1220,
+      "recurringShare": 0.05,
+      "compensation": 7,
+      "termSeasons": 2,
+      "offerDays": 9,
+      "possessorPolicy": "accept",
+      "enforcementPolicy": "compose"
+    }
+  },
+  "religiousCases": {
+    "river_clerical_peace": {
+      "name": "River chapter peace",
+      "desc": "A fictional Spoleto discipline rule examining actual recorded violence against clergy, with restitution paid to the temporal treasury and no court fee.",
+      "cause": "clerical_violence",
+      "bookmarkId": "1204",
+      "provinceId": "spoleto",
+      "realmId": "papacy_1204",
+      "faiths": [
+        "catholic"
+      ],
+      "yearMin": 1204,
+      "yearMax": 1220,
+      "fee": 0,
+      "settlementShare": 0.25,
+      "settlementMax": 40,
+      "settlementRecipient": "secular",
+      "offerDays": 12,
+      "penanceSentence": "penance",
+      "prisonSentence": "imprisonment",
+      "secularSentence": "imprisonment",
+      "allowFief": false,
+      "defendantPolicy": "submit",
+      "bishopPolicy": "imprison",
+      "enforcementPolicy": "reject"
+    }
+  },
+  "religiousInstitutionProfiles": {
+    "latin_local_service_1204": {
+      "name": "Fictional river service group",
+      "faithIds": [
+        "catholic"
+      ],
+      "period": {
+        "yearMin": 1204,
+        "yearMax": 1229
+      },
+      "system": null,
+      "roles": {
+        "visitor": {
+          "name": "Visitor",
+          "minAge": 18,
+          "sexes": [],
+          "unmarried": false,
+          "professions": [],
+          "skills": {
+            "int": 2
+          },
+          "affiliationId": null
+        }
+      },
+      "selection": null,
+      "recognition": {
+        "roles": [],
+        "sources": [],
+        "quorum": 1,
+        "requiresLeader": false,
+        "protectedWorship": true
+      },
+      "actions": [
+        "admit",
+        "withdraw"
+      ],
+      "fees": {},
+      "affiliationIds": []
+    }
+  },
+  "religiousActivities": {
+    "river_household_learning": {
+      "name": "Fictional household study",
+      "period": {
+        "yearMin": 1204,
+        "yearMax": 1229
+      },
+      "openings": [],
+      "faithIds": [],
+      "affiliationIds": [],
+      "roleIds": [],
+      "institutionId": null,
+      "mode": "local",
+      "purpose": null,
+      "siteId": null,
+      "payer": "household",
+      "cost": 3,
+      "reserve": 7,
+      "duration": 2,
+      "calendar": "any_day",
+      "interruption": "retain_cost",
+      "recipient": "participant",
+      "milestone": "river_learning_done",
+      "reward": {
+        "piety": 0,
+        "prestige": 0,
+        "skills": {
+          "int": 1
+        }
+      },
+      "legacy": null,
+      "service": null
+    }
+  },
+  "events": [
+    {
+      "id": "river_activity_review",
+      "pack": "river_reviews",
+      "title": "A voluntary review",
+      "text": "Review the actual people, commitments and accounts before deciding.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "religious_activity_available",
+            "args": {
+              "activityId": "river_household_learning"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review the current terms",
+          "review": {
+            "type": "religious_activity",
+            "args": {
+              "activityId": "river_household_learning"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave this for now",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_membership_review",
+      "pack": "river_reviews",
+      "title": "A voluntary review",
+      "text": "Review the actual people, commitments and accounts before deciding.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "institution_role_opening",
+            "args": {
+              "institutionId": "constantinople_latin_service_1204",
+              "roleId": "visitor"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review the current terms",
+          "review": {
+            "type": "religious_institution",
+            "args": {
+              "institutionId": "constantinople_latin_service_1204",
+              "roleId": "visitor",
+              "action": "admit"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave this for now",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_rent_review",
+      "pack": "river_reviews",
+      "title": "A voluntary review",
+      "text": "Review the actual people, commitments and accounts before deciding.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "episcopal_claim_review",
+            "args": {
+              "profileId": "river_rent",
+              "action": "accept"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review the current terms",
+          "review": {
+            "type": "episcopal_claim",
+            "args": {
+              "profileId": "river_rent",
+              "action": "accept"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave this for now",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "possessor",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "bishop",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "court",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "possessor",
+        "bishop",
+        "court"
+      ]
+    },
+    {
+      "id": "river_case_review",
+      "pack": "river_reviews",
+      "title": "A voluntary review",
+      "text": "Review the actual people, commitments and accounts before deciding.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "religious_case_review",
+            "args": {
+              "profileId": "river_clerical_peace",
+              "action": "accept"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review the current terms",
+          "review": {
+            "type": "religious_case",
+            "args": {
+              "profileId": "river_clerical_peace",
+              "action": "accept"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave this for now",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "defendant",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "victim",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "bishop",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "court",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "defendant",
+        "victim",
+        "bishop",
+        "court"
+      ]
+    },
+    {
+      "id": "river_vow_review",
+      "pack": "river_reviews",
+      "title": "A voluntary review",
+      "text": "Review the actual people, commitments and accounts before deciding.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "answerable_holy_war_call",
+            "args": {
+              "seasons": 8,
+              "desire": "neutral"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review the current terms",
+          "review": {
+            "type": "holy_war_vow",
+            "args": {
+              "seasons": 8,
+              "desire": "neutral"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave this for now",
+          "effects": {}
+        }
+      ]
+    }
+  ]
+}
