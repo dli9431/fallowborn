@@ -50,6 +50,7 @@
       if (!listRoot) keys.forEach(function (id) { result[root][id] = values[id]; });
     });
     eventRoots.forEach(function (root) { FBDATA[root] = result[root]; });
+    if (FB.invalidateEventIndex) FB.invalidateEventIndex();
   }
   C.eventPack = function (source,author) {
     var file = files[source];
