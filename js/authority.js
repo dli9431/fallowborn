@@ -1262,6 +1262,11 @@
     return FB.dataText(s, s.player.charId, 'legitimacySource', id,
       FBDATA.legitimacySources[id], 'name', {});
   };
+  FB.courtOfficeSystemEnabled = function (s, rid) {
+    if (!s || !s.realms || !s.realms[rid]) return false;
+    return FB.administrationProfile && FB.administrationProfile(s,rid) ? FB.publicOfficeSystemEnabled(s,rid) :
+      FB.systemEnabled(s, 'roman_offices', { realm:rid });
+  };
   function officeCatalogue(s, rid) {
     if (s.realms[rid] && s.realms[rid].rebelFaction) return [];
     var government = Q.government(s, Q.realmReference(rid));
@@ -1269,7 +1274,7 @@
     // including their dated catalogue, source, remuneration and continuity.
     // The legacy petition path cannot grant a commission without those terms.
     if (FB.administrationProfile && FB.administrationProfile(s, rid)) return [];
-    return government && FB.systemEnabled(s, 'roman_offices', { realm:rid })
+    return government && FB.courtOfficeSystemEnabled(s,rid)
       ? government.rules.officeCatalogue || [] : [];
   }
   FB.officeCourts = function (s) {

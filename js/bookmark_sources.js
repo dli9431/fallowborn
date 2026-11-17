@@ -10,6 +10,61 @@
   var usedGraphs = Object.create(null), catalogUses = Object.create(null);
   var publishing = false, setup = null, setupFaults = Object.create(null);
   var retainedTransitions = [];
+  var eventBoundaries = Object.create(null), eventSources = Object.create(null);
+  var eventRoots = ['events','eventPacks','eventChances'];
+  C.eventBoundary = function (source) {
+    var boundary = {};
+    eventRoots.forEach(function (root) {
+      boundary[root] = root === 'events' ? list(FBDATA[root]).map(function (row) { return row.id; }) : Object.keys(FBDATA[root] || {});
+    });
+    eventBoundaries[source] = boundary;
+  };
+  function publishEventPacks() {
+    var groups = Object.keys(eventSources).map(function (source) { return eventSources[source]; }).sort(compareRows);
+    var result = {};
+    eventRoots.forEach(function (root) {
+      var listRoot = root === 'events', current = FBDATA[root] || (listRoot ? [] : {}), owned = Object.create(null);
+      groups.forEach(function (group) {
+        var values = group.data[root];
+        (listRoot ? values.map(function (row) { return row.id; }) : Object.keys(values)).forEach(function (id) {
+          if (own(owned,id)) throw new Error('Duplicate dated event declaration: ' + id);
+          owned[id] = true;
+        });
+      });
+      var keys = listRoot ? current.map(function (row) { return row.id; }) : Object.keys(current), counts = Object.create(null);
+      keys.forEach(function (id) { counts[id] = (counts[id] || 0) + 1; });
+      Object.keys(owned).forEach(function (id) { if (counts[id] > 1) throw new Error('Duplicate dated event declaration: ' + id); });
+      var values = Object.create(null);
+      keys.forEach(function (id,i) { values[id] = listRoot ? current[i] : current[id]; });
+      keys = keys.filter(function (id) { return !own(owned,id); });
+      var after = Object.create(null);
+      groups.forEach(function (group) {
+        var prefix = after[group.after] || eventBoundaries[group.after][root], at = 0;
+        prefix.forEach(function (id) { var index = keys.indexOf(id); if (index >= 0) at = Math.max(at,index + 1); });
+        var rows = group.data[root], ids = listRoot ? rows.map(function (row) { return row.id; }) : Object.keys(rows);
+        ids.forEach(function (id,i) { values[id] = listRoot ? rows[i] : rows[id]; });
+        keys.splice.apply(keys,[at,0].concat(ids));
+        after[group.after] = prefix.concat(ids);
+      });
+      result[root] = listRoot ? keys.map(function (id) { return values[id]; }) : {};
+      if (!listRoot) keys.forEach(function (id) { result[root][id] = values[id]; });
+    });
+    eventRoots.forEach(function (root) { FBDATA[root] = result[root]; });
+  }
+  C.eventPack = function (source,author) {
+    var file = files[source];
+    if (!file || !eventBoundaries[file.after] || typeof author !== 'function') throw new Error('Unknown dated event source: ' + source);
+    var data = {events:[],eventPacks:{},eventChances:{}};
+    author(data);
+    if (!Array.isArray(data.events) || data.events.length > 256 ||
+        eventRoots.some(function (root) { return !data[root] || typeof data[root] !== 'object'; }))
+      throw new Error('Invalid dated event declarations: ' + source);
+    var previous = eventSources[source];
+    if (previous && canonical(previous.data) !== canonical(data)) throw new Error('Dated event source changed: ' + source);
+    eventSources[source] = {primary:file.primary,secondary:file.secondary,seq:fileOrder.indexOf(source),after:file.after,data:data};
+    try { publishEventPacks(); }
+    catch (error) { if (previous) eventSources[source] = previous; else delete eventSources[source]; throw error; }
+  };
   /* Per-date source loading. Every contributor is recorded at its original
      document position. Boot runs the eager subset exactly as before; a later
      date load replays all recorded contributors from the pristine authoring
@@ -267,6 +322,13 @@
     return result;
   }
   C.current = function () { return active; };
+  // Only the native proof base carries this exact sealed reference identity.
+  // Ordinary detached imports never gain access to unpublished optional graphs.
+  C.eventReviewData = function (data) {
+    if (!frozen || data.bookmarkCompositionReferences !== frozen.startScenarios) return data;
+    return Object.assign({},data,{bookmarks:Object.assign({},frozen.bookmarks,data.bookmarks),
+      startScenarios:frozen.startScenarios,storyInstances:Object.assign({},frozen.storyInstances,data.storyInstances)});
+  };
   C.inspect = function () {
     var source = frozen || view || FBDATA;
     return {starts:list(source.startScenarios).map(function (row) { return row && row.id; }),bookmarks:Object.keys(source.bookmarks || {})};
@@ -1190,6 +1252,7 @@
       var next = replayRows(recorded);
       frozen = null; seal(ids);
       publishSandbox(previous,next);
+      if (Object.keys(eventSources).length) publishEventPacks();
       lastSandbox = next;
     } catch (error) {
       view = state.view; frozen = state.frozen; orders = state.orders; declared = state.declared; faults = state.faults;

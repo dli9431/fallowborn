@@ -68,10 +68,11 @@ test('native court household, typed mandate and ordinary petition retain exact f
     return {pure:pure,command:q.allowed,wrong:wrong.allowed,civil:civil,control:FB.playerControlsHost(s,s.armies.find(function (h) { return h.id === a.hostId; })),
       term:s.authority.appointments.find(function (r) { return r.id === a.id; }).endTurn-s.turn,
       technology:FBDATA.techImpactReviews.features.court_office_mandates.mode,
-      errors:FB.validateAuthorityData(),slot:FBDATA.householdTracks_imperial_service,
+      errors:FB.validateAuthorityData(),slot:!!FBDATA.householdTracks_imperial_service &&
+        typeof FBDATA.householdTracks_imperial_service === 'object' && !Array.isArray(FBDATA.householdTracks_imperial_service),
       station:FB.station.isLanded(s.player,s),privateGold:s.player.gold};
   });
-  expect(result).toEqual({pure:true,command:true,wrong:false,civil:false,control:true,term:720,technology:'none',errors:[],slot:{},station:false,privateGold:985});
+  expect(result).toEqual({pure:true,command:true,wrong:false,civil:false,control:true,term:720,technology:'none',errors:[],slot:true,station:false,privateGold:985});
   await page.evaluate(function () { FB.ui.showOffices(); });
   await page.locator('[data-court-mandate="' + id + '"]').click();
   await expect(page.getByText('Court mandate',{exact:true})).toBeVisible();

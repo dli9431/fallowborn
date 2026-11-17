@@ -1,11 +1,15 @@
 /* Reusable political story mechanics. Historical selectors and presentation belong to declarations. */
 (function () {
   'use strict';
+  function eventReviewData(c) {
+    var data = c.data || FBDATA;
+    return !c.runtime && FB.bookmarkSources && FB.bookmarkSources.eventReviewData ? FB.bookmarkSources.eventReviewData(data) : data;
+  }
   // Review references are checked against their own candidate composition, not
   // by compiling unrelated dated stories against the installed catalogue.
   FB.stories.eventReviewCandidate = function (type, args, c) {
     if (c.runtime || !args.storyId) return true;
-    var data = c.data || FBDATA, d = (data.storyInstances || {})[args.storyId];
+    var data = eventReviewData(c), d = (data.storyInstances || {})[args.storyId];
     if (!d || d.type !== type) return false;
     var ev = c.event || {}, pack = (data.eventPacks || {})[ev.pack] || {};
     var dates = ev.bookmarkIds || pack.bookmarkIds, scoped=!!dates;
@@ -46,7 +50,7 @@
   FB.eventStateReaders.register({id:'active_story_stage',system:'story_tracks',
     args:{type:'object',fields:{storyId:{type:'string',minLength:1,maxLength:80},
       stage:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/}},test:function (a,c) {
-      var table = (c.data || FBDATA).storyInstances || {}, d = table[a.storyId];
+      var table = eventReviewData(c).storyInstances || {}, d = table[a.storyId];
       return !!(d && d.stages && d.stages[a.stage] && !d.stages[a.stage].terminal);
     }},read:function (s,a) {
       var row = FB.stories.record(s,a.storyId);
@@ -56,7 +60,7 @@
     owner:'story_tracks',
     args:{type:'object',fields:{storyId:{type:'string',minLength:1,maxLength:80},
       choiceId:{type:'string',pattern:/^[a-z][a-z0-9_]{0,79}$/}},test:function (args,c) {
-      const data = c.data || FBDATA;
+      const data = eventReviewData(c);
       const story = FB.stories.get(args.storyId);
       const d = c.runtime ? story && story.declaration : (data.storyInstances || {})[args.storyId];
       if (c.runtime && (!story || !story.quote || !story.apply)) return false;

@@ -1686,3 +1686,4 @@ FBDATA.events.push(
     if (eventEras[FBDATA.events[i].id]) FBDATA.events[i].eras = eventEras[FBDATA.events[i].id];
   }
 })();
+FB.bookmarkSources.eventBoundary('data/events_common.js');

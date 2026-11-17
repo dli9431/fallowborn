@@ -293,11 +293,14 @@
     }
     return true;
   };
+  FB.publicOfficeSystemEnabled = function (s, rid) {
+    return FB.systemEnabled(s,'public_offices',{realm:rid});
+  };
   FB.eventStateReaders.register({id:'public_office_arrears',system:'authority',
     args:{type:'object',fields:{shortfall:{type:'boolean',optional:'absent'},officeId:FB.officeEventReviews.officeField}},
     read:function (s,a) {
       var E = FB.officeEventReviews;
-      return FB.systemEnabled(s,'public_offices',{realm:E.court(s)}) && E.rows(s,a,{}).some(function (r) {
+      return FB.publicOfficeSystemEnabled(s,E.court(s)) && E.rows(s,a,{}).some(function (r) {
         return r.publicTerms && r.publicTerms.arrears > 0 &&
           (a.shortfall === undefined || (s.player.gold < r.publicTerms.arrears) === a.shortfall);
       });

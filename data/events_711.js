@@ -1,5 +1,5 @@
 /* Local household decisions observe the current county holder. */
-(function () {
+FB.bookmarkSources.eventPack('data/events_711.js',function (FBDATA) {
   'use strict';
   FBDATA.eventPacks = FBDATA.eventPacks || {};
   FBDATA.eventPacks.dated_711 = { eras:['early_medieval'], yearMin:711, yearMax:731 };
@@ -155,4 +155,4 @@
           effects:{} }
       ] }
   ]);
-})();
+});
