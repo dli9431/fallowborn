@@ -14,6 +14,7 @@ const fixtureFiles = [
   'bookmark-451-a-western-provinces.json',
   'bookmark-451-b.json',
   'world-451-corrections-c.json',
+  'bookmark-451-d-eastern-frontiers.json',
   'bookmark-451-scaffold.json'
 ];
 const slots = ['bookmark_451','bookmark_451_composition','bookmark_451_scaffold_a','bookmark_451_scaffold_b',
