@@ -70,7 +70,7 @@ test('a landed principal retains one home crown, family, public command and priv
 
 test('the independent nonlanded import retains voluntary consent without a deputy or superior recall',async function ({page},info) {
   await importWorld(page,info,'upland');
-  await beginBookmark(page,info,'dune_world','dune_household');
+  await beginBookmarkFromTitle(page,'dune_world','dune_household');
   const result=await page.evaluate(function () {
     const s=FB.state,M=FB.mobile,rid='dune_coalition',r=M.row(s,rid),c=M.leader(s,rid);
     return {active:M.commandValid(s,rid),link:M.landedLink(s,rid),noSponsor:M.migration(s,rid).patronRealmId===null,
