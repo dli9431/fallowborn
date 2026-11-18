@@ -27,6 +27,9 @@ const fixtureFiles = [
   ,{file:'493.json',runtime:['data/events_493.js']}
   ,{file:'568.json',runtime:['data/events_568.js','data/story_households_568_ravenna.js','js/story_household.js']}
   ,{file:'634.json',runtime:['data/events_634.js','data/story_households_634_medina.js','js/story_household.js']}
+  ,{file:'1096.json',runtime:['data/events_1096.js','data/story_households_rhineland_1096.js','data/bookmark_1096_western_expeditions.js']}
+  ,{file:'1204.json',runtime:['data/events_1204.js','data/industry_laws.js','data/episcopal_claims.js','data/religious_cases.js','data/holy_war_causes.js']}
+  ,{file:'1241.json',runtime:['data/events_1241.js','data/story_koten_1241.js','data/bookmark_1241_operations.js']}
 ];
 dependsOnRuntime(__filename,fixtureFiles.reduce(function (out,entry) {return out.concat(entry.runtime);},runtimeInputs));
 const directory = path.resolve(__dirname,'../fixtures/event-packs');
