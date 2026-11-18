@@ -24,6 +24,8 @@ Trigger and read runs with the GitHub CLI, for example: gh workflow run tests.ym
 
 Only pushed branches can be tested. To test work, create a new branch and push that; agents push main or dev only when the owner asks. A passing run is evidence, not owner acceptance; visual, device, and play acceptance remain the owner's.
 
+For manual CI, keep the branch name, published commit and run links together. The publisher retires the remote branch after its runs and reviews finish and the work is integrated or the probe is superseded. Use git push --force-with-lease=refs/heads/BRANCH:SHA origin --delete BRANCH with the recorded branch and commit. Verify deletion with git ls-remote --heads origin refs/heads/BRANCH. If the tip moved or another check still needs it, record who will finish cleanup and when.
+
 Local load measurements
 
 For owner-controlled startup diagnostics, append ?loadTiming=1 to the local game URL and reload. This records the main menu, bookmark selection and game loading, including Quick Start, Observe and saved games. Each load prints a console report; JSON.stringify(FB.game.loadTiming.reports(), null, 2) returns the latest twenty reports for copying. FB.game.loadTiming.enable(true) enables subsequent loads in the current page, and enable(false) disables them when no load is active. This is local-only, opt-in and transient. Interpret operation selfMs without double counting totalMs, and keep unattributed time distinct from measured synchronous work. The measurement contract is in docs/designs/ui.md. Agents may author coverage in tests/e2e/specs/load-timing.spec.js and inspect owner-provided reports, but must not run measurements or the harness on the local machine.
