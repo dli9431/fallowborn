@@ -13,6 +13,7 @@ const fixtureDirectory = path.resolve(__dirname,'../fixtures/authoring');
 const fixtureFiles = [
   'bookmark-451-a-western-provinces.json',
   'bookmark-451-b.json',
+  'world-451-corrections-c.json',
   'bookmark-451-scaffold.json'
 ];
 const slots = ['bookmark_451','bookmark_451_composition','bookmark_451_scaffold_a','bookmark_451_scaffold_b',
@@ -28,6 +29,7 @@ dependsOnRuntime(__filename,['index.html','data/bookmark_manifest.js','data/book
 
 test('all regional fixtures and dated source slots are registered exactly once',async function ({page},info) {
   expect(fixtureFiles.slice().sort()).toEqual(fs.readdirSync(fixtureDirectory).filter(function (file) {
+    if (file === 'world-451-corrections-c.json') return true;
     return /^bookmark-451.*\.json$/.test(file);
   }).sort());
   expect(new Set(fixtureFiles).size).toBe(fixtureFiles.length);
