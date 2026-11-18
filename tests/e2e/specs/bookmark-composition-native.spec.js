@@ -48,18 +48,6 @@ async function withLegacy(browser,fn) {
   const context = await browser.newContext(), page = await context.newPage(), guard = installPageGuards(page);
   try {
     await installNativeLegacy(page);
-    // The immutable registry predates the later imperial-service declarations.
-    // Retain their explicit registration at the same position on both sides.
-    const former = fs.readFileSync(path.resolve(__dirname,'../fixtures/bookmark-composition/native-before-shared/story_instances.js'),'utf8');
-    const current = fs.readFileSync(path.resolve(__dirname,'../../../data/story_instances.js'),'utf8');
-    const anchor = '  Object.keys(FBDATA.storyCourts476 || {}).forEach(function (id) {';
-    const registration = "  add(FBDATA.householdTracks_imperial_service, 'registrationAfter', 'western_office_476');";
-    expect(former.split(anchor)).toHaveLength(2);
-    expect(former.split(registration)).toHaveLength(1);
-    expect(current.split(registration)).toHaveLength(2);
-    await page.route('**/data/story_instances.js',function (route) {
-      return route.fulfill({contentType:'application/javascript',body:former.replace(anchor,registration + '\n' + anchor)});
-    });
     return await fn(page);
   }
   finally { try { expect(guard.faults).toEqual([]); } finally { await context.close(); } }

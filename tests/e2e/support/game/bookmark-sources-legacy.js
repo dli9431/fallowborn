@@ -161,6 +161,18 @@ async function installNativeLegacy(page) {
     }
     await page.route('**/' + file,function (route) { return route.fulfill({contentType:'application/javascript',body:body}); });
   }
+  // The immutable registry predates the later imperial-service declarations.
+  // Retain their explicit registration at the same position on both sides.
+  const former = fs.readFileSync(path.join(fixtureRoot,'story_instances.js'),'utf8');
+  const current = fs.readFileSync(path.join(gameRoot,'data/story_instances.js'),'utf8');
+  const anchor = '  Object.keys(FBDATA.storyCourts476 || {}).forEach(function (id) {';
+  const registration = "  add(FBDATA.householdTracks_imperial_service, 'registrationAfter', 'western_office_476');";
+  expect(former.split(anchor)).toHaveLength(2);
+  expect(former.split(registration)).toHaveLength(1);
+  expect(current.split(registration)).toHaveLength(2);
+  await page.route('**/data/story_instances.js',function (route) {
+    return route.fulfill({contentType:'application/javascript',body:former.replace(anchor,registration + '\n' + anchor)});
+  });
   await installLegacy634(page);
   await page.route('**/data/bookmark_sources.js',function (route) {
     function reconcile(changes) {
