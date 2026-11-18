@@ -1,6 +1,7 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { installRestoreFacts } = require('../support/game/restore-facts');

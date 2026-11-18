@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {useReleasedStartRules} = require('../support/game/released-starts');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');

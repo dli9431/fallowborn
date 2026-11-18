@@ -16,6 +16,7 @@ dependsOnRuntime(__filename, [
   'js/modifiers.js', 'js/events.js', 'js/bookmark_setup.js', 'js/religion.js', 'js/ui_misc.js'
 ]);
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
