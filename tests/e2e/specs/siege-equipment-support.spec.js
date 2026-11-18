@@ -2,8 +2,9 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={light:require('../fixtures/authoring/siege-support-light.json'),heavy:require('../fixtures/authoring/siege-support-heavy.json')};
@@ -20,7 +21,7 @@ async function boot(page,info,kind,npc) {
   await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
   const bm='siege_support_'+kind;
-  if(npc)await beginBookmark(page,info,bm,bm+'_household');
+  if(npc)await beginBookmarkFromTitle(page,bm,bm+'_household');
   else {
     const full=page.locator('#btn-choose-beginning');
     if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
