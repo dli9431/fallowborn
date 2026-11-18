@@ -32,6 +32,10 @@ async function installLegacy634(page,assembler) {
 }
 
 async function assertLegacy634(page) {
+  const publication = await page.evaluate(function () {
+    return {available:!!FBDATA.bookmarks['634'], diagnostics:FB.bookmarkRuntimeDiagnostics()};
+  });
+  expect(publication.available, JSON.stringify(publication.diagnostics)).toBe(true);
   const proof = await page.evaluate(function () { return window.__legacy634; });
   expect(proof.faults).toEqual([]);
   const former = proof.world, current = proof.current.bookmark;
