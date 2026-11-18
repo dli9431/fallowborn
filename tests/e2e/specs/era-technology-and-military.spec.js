@@ -35,7 +35,7 @@ test('every era declares a valid technology window and starting-knowledge policy
       Object.keys(FBDATA.eras).forEach(function (id) {
         out.slots[id] = FBDATA.eras[id].technology;
       });
-      out.bookmarks = ['476', '493', '568', '634', '711', '800', '867', '1066',
+      out.bookmarks = ['451', '476', '493', '568', '634', '711', '800', '867', '1066',
         '1096', '1204', '1241'].map(function (id) {
         return { id:id, errors:FB.validateBookmark(FB.bookmark(id)) };
       });
@@ -45,12 +45,12 @@ test('every era declares a valid technology window and starting-knowledge policy
     expect(result.errors).toEqual([]);
     expect(result.coverage).toEqual({ from:375, to:1300 });
     expect(result.slots).toEqual({
-      late_antique:{ from:476, to:649, startingKnowledge:'historical' },
+      late_antique:{ from:375, to:649, startingKnowledge:'historical' },
       early_medieval:{ from:650, to:999, startingKnowledge:'historical' },
       high_medieval:{ from:1000, to:1300, startingKnowledge:'historical' }
     });
     expect(result.bookmarks).toEqual([
-      { id:'476', errors:[] }, { id:'493', errors:[] }, { id:'568', errors:[] },
+      { id:'451', errors:[] }, { id:'476', errors:[] }, { id:'493', errors:[] }, { id:'568', errors:[] },
       { id:'634', errors:[] }, { id:'711', errors:[] }, { id:'800', errors:[] },
       { id:'867', errors:[] }, { id:'1066', errors:[] }, { id:'1096', errors:[] },
       { id:'1204', errors:[] }, { id:'1241', errors:[] }
@@ -83,7 +83,6 @@ test('a bookmark outside the catalogue coverage or its era window is rejected by
       const traditionErrors = errors({ realms:badTradition });
       return {
         early:errors({ era:'late_antique', date:{ year:374, season:0, day:1 } }),
-        earlyEra:errors({ era:'late_antique', date:{ year:400, season:0, day:1 } }),
         earlyEraTechnology:FB.bookmarkTechnologyFaults(Object.assign({}, base,
           { era:'late_antique', date:{ year:400, season:0, day:1 } }), 'late_antique'),
         late:FB.validateBookmark(Object.assign({}, undeclared,
@@ -97,13 +96,7 @@ test('a bookmark outside the catalogue coverage or its era window is rejected by
     expect(result.early).toContain(
       'Bookmark 867: start year 374 is outside the technology catalogue coverage (375–1300).');
     expect(result.early.join('\n')).not.toContain('technology window');
-    // The full 867 world also rejects faiths and institutions dated after 400.
-    // Keep its named rejection and check the technology owner's complete list.
-    expect(result.earlyEra).toContain(
-      'Bookmark 867: start year 400 is outside era late_antique technology window (476–649).');
-    expect(result.earlyEraTechnology).toEqual([
-      'Bookmark 867: start year 400 is outside era late_antique technology window (476–649).'
-    ]);
+    expect(result.earlyEraTechnology).toEqual([]);
     expect(result.late).toEqual([
       'Bookmark 867: start year 1350 is outside era high_medieval (1000–1300).',
       'Bookmark 867: start year 1350 is outside the technology catalogue coverage (375–1300).'

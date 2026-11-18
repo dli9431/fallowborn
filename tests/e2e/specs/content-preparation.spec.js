@@ -163,6 +163,9 @@ for (const pair of [1,2,3]) for (const modded of [false,true]) {
         expect(base[0].accepted).toBe(true);
         expect(base[0].jsonCodeUnits).toBeGreaterThan(0);
         const facts = await snapshot(page);
+        await info.attach(baseline ? 'reference-catalogue' : 'current-catalogue',{contentType:'application/json',
+          body:Buffer.from(JSON.stringify({facts:facts,copies:report.copies,bookmarkIds:report.bookmarkIds,
+            startIds:report.startIds,storyIds:report.storyIds}))});
         expect(facts).toEqual(copyReference.facts[modded ? 'household-overlay' : 'unmodded']);
         expect(report.copies).toEqual(copyReference.copies);
         const result = {baseline:baseline,mode:modded ? 'household-overlay' : 'unmodded',browser:browser.version(),

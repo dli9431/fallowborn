@@ -39,7 +39,14 @@ for (const bookmark of ['867', '1066']) {
         authority:papacy.obediences[papacy.romanObedience].authority
       };
     });
-    expect(result.excluded).toEqual([]);
+    const laterPacks = bookmark === '867' ? ['711','800','kingship_succession'] :
+      ['1096','1204','1241','civic_assembly','federate_life','mobile_life','religious_life','works_technology'];
+    const expected = ['operating_terms_notice'];
+    for (const pack of laterPacks) {
+      const fixture = require('../fixtures/event-packs/' + pack + '.json');
+      expected.push(...fixture.rows.map(function (row) { return row.eventId; }));
+    }
+    expect(result.excluded.sort()).toEqual(expected.sort());
     expect(result.established).toEqual(bookmark === '867' ? [] : ['england', 'normandy', 'norway']);
     expect(result.counts).toEqual(bookmark === '867' ? {
       John:8, Benedict:3, Gregory:4, Leo:4, Stephen:5, Nicholas:1,
