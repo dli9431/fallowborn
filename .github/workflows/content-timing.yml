@@ -5,7 +5,7 @@ on:
       timing_ref:
         description: Revision to diagnose (use paired speed comparison for speed claims)
         required: true
-        default: automation/v2
+        default: auto/v2
         type: string
 permissions:
   contents: read

@@ -1567,7 +1567,7 @@ stored. The default subject list selects content and all five starts. The
 tooling SHA is resolved once from the published integration branch:
 
 ```powershell
-$toolingSha = gh api repos/dli9431/fallowborn/git/ref/heads/automation/v2 --jq '.object.sha'
+$toolingSha = gh api repos/dli9431/fallowborn/git/ref/heads/auto/v2 --jq '.object.sha'
 gh workflow run nightly.yml --repo dli9431/fallowborn --ref $toolingSha -f suite=false -f timing=false -f timing_ref=978f2f8a1d44acb66f60908423bb92762bfa229d -f comparison_baseline=9aa049dccfa2488b14a5efccfc5bab7ac2264bfb -f comparison_repeats=3 -f seasons=4
 gh run list --repo dli9431/fallowborn --workflow nightly.yml --commit $toolingSha --event workflow_dispatch --limit 5
 ```
