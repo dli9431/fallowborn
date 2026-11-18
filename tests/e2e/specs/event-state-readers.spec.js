@@ -244,6 +244,7 @@ test('county-selector state conditions filter candidate contexts before chance a
     const ev=Object.assign({},FB.eventById('fictional_holder'),{contextSelector:'fixture_counties'});
     const original=FB.eventContextOptions;
     FB.eventContextOptions=function () {return [{locationId:home},{locationId:away}];};
+    FBDATA.eventSubscriptions={};
     FBDATA.events=[ev];FB.invalidateEventIndex();s.eventQueue=[];s.slotDays=[s.date.day];
     const selected=FB.pickDailyEvents(s);
     FB.authoritySetGovernment(s,awayRealm,'regnum');s.slotDays=[s.date.day];
@@ -260,6 +261,7 @@ test('one selection pass evaluates each distinct call once, caching false answer
     const s=FB.state,base=FB.eventById('fictional_contract'),native=FB.political.contracts;
     let reads=0;FB.political.contracts=function () {reads++;return native.apply(this,arguments);};
     const condition=base.trigger.state[0];
+    FBDATA.eventSubscriptions={};
     FBDATA.events=[0,1,2].map(function (i) {return Object.assign({},base,{id:'duplicate_'+i,trigger:{chance:1,state:[condition]}});});
     FB.invalidateEventIndex();s.eventQueue=[];s.slotDays=[s.date.day];
     const rng=FB.getRngState(),blocked=FB.pickDailyEvents(s),first=reads,pure=rng===FB.getRngState();

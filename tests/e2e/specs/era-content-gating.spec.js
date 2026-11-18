@@ -46,7 +46,8 @@ for (const bookmark of ['867', '1066']) {
       const fixture = require('../fixtures/event-packs/' + pack + '.json');
       expected.push(...fixture.rows.map(function (row) { return row.eventId; }));
     }
-    expect(result.excluded.sort()).toEqual(expected.sort());
+    // A pack fixture can exercise several choices on one event.
+    expect(result.excluded.sort()).toEqual(Array.from(new Set(expected)).sort());
     expect(result.established).toEqual(bookmark === '867' ? [] : ['england', 'normandy', 'norway']);
     expect(result.counts).toEqual(bookmark === '867' ? {
       John:8, Benedict:3, Gregory:4, Leo:4, Stephen:5, Nicholas:1,
