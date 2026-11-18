@@ -20,6 +20,7 @@ dependsOnRuntime(__filename, [
   'js/save_v4.js', 'js/messages.js', 'js/i18n.js', 'js/ui_panels.js', 'js/ui_misc.js', 'js/religion.js'
 ]);
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { openStoryAffairs } = require('../support/game/story-placement');
 const RAILS = ['zeno_return_476','clovis_syagrius_476','theoderic_italy_476',

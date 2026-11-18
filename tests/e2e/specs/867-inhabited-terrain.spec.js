@@ -346,7 +346,7 @@ test('unknown or mismatched expanded revisions fail before adopting saved facts'
   })).toEqual([true,true]);
 });
 
-test('a normal JSON bookmark mod pins the expanded revision and rejects a changed catalogue',async function ({page},info) {
+async function createModded867Save(page,info) {
   await openGame(page,info);
   const text = await page.evaluate(function (current) {
     const b = JSON.parse(JSON.stringify(FB.bookmark('867',current)));
@@ -367,11 +367,20 @@ test('a normal JSON bookmark mod pins the expanded revision and rejects a change
   await startDeterministicGame(page);
   const source = await page.evaluate(function () { return FB.save.serialize(); });
   expect(JSON.parse(source).mods).toMatch(/^effective-1-/);
+  return {source,text};
+}
+
+test('a normal JSON bookmark mod pins the expanded revision on restore',async function ({page},info) {
+  const {source} = await createModded867Save(page,info);
   await openGame(page,info);
   await restoreBookmark(page,source);
   expect(await page.evaluate(function () {
     return [FB.state.start.revision,FB.campaignProvince(FB.state,'kath_district').dev];
   })).toEqual([CURRENT,4]);
+});
+
+test('a normal JSON bookmark save rejects a changed catalogue',async function ({page},info) {
+  const {source,text} = await createModded867Save(page,info);
   await page.evaluate(function (text) {
     const mod = JSON.parse(text), b = mod.bookmarks['867'];
     b.provinces.find(function (p) { return p.id === 'kath_district'; }).dev = 5;
