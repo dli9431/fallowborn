@@ -1421,8 +1421,12 @@
         (s.armies || []).some(function (a) {return a.id==='following_'+d.id;}) ||
         (s.authority.migrations || []).some(function (m) {return m.realmId===d.id && m.status!=='settled' && m.status!=='failed';})) return plan;
     var declared=realms[d.id], original=declared && declared.mobile && declared.mobile.opening;
-    if ((M.independent(t) || o.reserves!==undefined || original && original.reserves!==undefined) &&
-        (s.turn!==0 || !declared || JSON.stringify(d.mobile)!==JSON.stringify(declared.mobile))) return plan;
+    var reserved=o.reserves!==undefined || original && original.reserves!==undefined;
+    if (M.independent(t) || reserved) {
+      if (!declared || JSON.stringify(d.mobile)!==JSON.stringify(declared.mobile)) return plan;
+      // Immediate openings bind at creation. Deferred preparations authorize and pay on a later turn.
+      if (s.turn!==0 && (reserved || t.preparationId===undefined)) return plan;
+    }
     var occupied={};
     Object.keys(s.authority.governments).forEach(function (rid) {
       var row=M.row(s,rid);
