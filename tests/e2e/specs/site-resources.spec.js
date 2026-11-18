@@ -2,8 +2,9 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmark,beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/site-resources-river.json'),upland:require('../fixtures/authoring/site-resources-upland.json')};
 dependsOnRuntime(__filename,['index.html','data/site_resources.js','data/technology.js','data/political_institutions.js',
@@ -18,7 +19,7 @@ async function importExample(page,info,name,ruler) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (name) { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks['resource_' + name]; },name);
-  if (!ruler) return beginBookmark(page,info,'resource_' + name,'resource_' + name + '_household');
+  if (!ruler) return beginBookmarkFromTitle(page,'resource_' + name,'resource_' + name + '_household');
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
