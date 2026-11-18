@@ -44,46 +44,6 @@ async function catalogue(page) {
         faults:FB.bookmarkRevisions(id,projected.bookmarks[id]).map(function (world) { return FB.validateBookmark(world); })}; })};
   },{ids:allWorlds,roots:publicRoots});
 }
-async function installLegacyEventReferences(page) {
-  // The former eager publisher reviews these two pending sources in sequence.
-  // Current dated events can reference either source before its publication.
-  // Supply their frozen declarations to detached review, never to live data or
-  // ordinary JSON validation. Canonical validators still decide acceptance.
-  function references() {
-    const declared = {bookmarks:{},storyInstances:{}}, starts = FBDATA.startScenarios.slice();
-    [['spring_568','568'],['autumn_634','634']].forEach(function (pair) {
-      const source = FBDATA.bookmarkCompositionSources[pair[0]], input = source && source.input;
-      if (!input || input.bookmark.id !== pair[1]) throw new Error('Missing retained source reference: ' + pair[0]);
-      declared.bookmarks[pair[1]] = input.bookmark;
-      Object.keys(input.catalogs || {}).forEach(function (root) {
-        declared[root] = Object.assign({},declared[root],input.catalogs[root]);
-      });
-      input.starts.forEach(function (unit) {
-        starts.push(unit.definition);
-        Object.assign(declared.storyInstances,unit.storyInstances);
-      });
-    });
-    if (FB.bookmarkSources.eventReviewData) throw new Error('Retained event references already have an owner.');
-    FB.bookmarkSources.eventReviewData = function (data) {
-      if (data.bookmarkCompositionReferences !== starts) return data;
-      return Object.assign({},data,{bookmarks:Object.assign({},declared.bookmarks,data.bookmarks),
-        startScenarios:starts,storyInstances:Object.assign({},declared.storyInstances,data.storyInstances)});
-    };
-    const prepare = FB.mods.prepareComposition;
-    FB.mods.prepareComposition = function (mod,worldId,base,complete) {
-      if (!base || ['568','634'].indexOf(worldId) < 0) return prepare.apply(this,arguments);
-      const proof = Object.assign({},base,{bookmarkCompositionReferences:starts});
-      Object.keys(declared).forEach(function (root) {
-        if (root !== 'storyInstances') proof[root] = Object.assign({},declared[root],base[root]);
-      });
-      return prepare.call(this,mod,worldId,proof,complete);
-    };
-  }
-  await page.route('**/js/main.js',async function (route) {
-    const response = await route.fetch();
-    await route.fulfill({response:response,body:'(' + references.toString() + ')();\n' + await response.text()});
-  });
-}
 async function withLegacy(browser,fn) {
   const context = await browser.newContext(), page = await context.newPage(), guard = installPageGuards(page);
   try {
@@ -100,7 +60,6 @@ async function withLegacy(browser,fn) {
     await page.route('**/data/story_instances.js',function (route) {
       return route.fulfill({contentType:'application/javascript',body:former.replace(anchor,registration + '\n' + anchor)});
     });
-    await installLegacyEventReferences(page);
     return await fn(page);
   }
   finally { try { expect(guard.faults).toEqual([]); } finally { await context.close(); } }

@@ -76,12 +76,56 @@ async function assertLegacy634(page) {
   });
 }
 
+async function installLegacyEventReferences(page) {
+  // The former eager publisher reviews these two pending sources in sequence.
+  // Current dated events can reference either source before its publication.
+  // Supply their frozen declarations to detached review, never to live data or
+  // ordinary JSON validation. Canonical validators still decide acceptance.
+  function references() {
+    const declared = {bookmarks:{},storyInstances:{}}, starts = FBDATA.startScenarios.slice();
+    [['spring_568','568'],['autumn_634','634']].forEach(function (pair) {
+      const source = FBDATA.bookmarkCompositionSources[pair[0]], input = source && source.input;
+      // The original 568 assembler already published its world and starts.
+      if (!input && FBDATA.bookmarks[pair[1]]) return;
+      if (!input || input.bookmark.id !== pair[1]) throw new Error('Missing retained source reference: ' + pair[0]);
+      declared.bookmarks[pair[1]] = input.bookmark;
+      Object.keys(input.catalogs || {}).forEach(function (root) {
+        declared[root] = Object.assign({},declared[root],input.catalogs[root]);
+      });
+      input.starts.forEach(function (unit) {
+        starts.push(unit.definition);
+        Object.assign(declared.storyInstances,unit.storyInstances);
+      });
+    });
+    if (FB.bookmarkSources.eventReviewData) throw new Error('Retained event references already have an owner.');
+    FB.bookmarkSources.eventReviewData = function (data) {
+      if (data.bookmarkCompositionReferences !== starts) return data;
+      return Object.assign({},data,{bookmarks:Object.assign({},declared.bookmarks,data.bookmarks),
+        startScenarios:starts,storyInstances:Object.assign({},declared.storyInstances,data.storyInstances)});
+    };
+    const prepare = FB.mods.prepareComposition;
+    FB.mods.prepareComposition = function (mod,worldId,base,complete) {
+      if (!base || ['568','634'].indexOf(worldId) < 0) return prepare.apply(this,arguments);
+      const proof = Object.assign({},base,{bookmarkCompositionReferences:starts});
+      Object.keys(declared).forEach(function (root) {
+        if (root !== 'storyInstances') proof[root] = Object.assign({},declared[root],base[root]);
+      });
+      return prepare.call(this,mod,worldId,proof,complete);
+    };
+  }
+  await page.route('**/js/main.js',async function (route) {
+    const response = await route.fetch();
+    await route.fulfill({response:response,body:'(' + references.toString() + ')();\n' + await response.text()});
+  });
+}
+
 // 7b557cd0 source text, executed at the original URLs only by the owner's
 // browser harness. The compatibility adapter supplies no runtime validation.
 async function installNativeLegacy(page) {
   // The pinned stage-only adapter predates lazy dates. Restore the former
   // document positions before executing any immutable source replacements.
   await routeEagerDocument(page);
+  await installLegacyEventReferences(page);
   await page.route('**/js/bookmark_sources.js',function (route) {
     return route.fulfill({contentType:'application/javascript',body:
       'FB.bookmarkSources={current:function(){return null;},ready:function(){return false;},owns:function(){return false;},reports:function(){return [];},unreviewedReference:function(){return false;},hasRetainedCatalogueTransitions:function(){return false;},finish:function(){},eventBoundary:function(){},eventPack:function(source,fn){fn(FBDATA);},stage:function(spec,fn){fn(FBDATA);}};'});
