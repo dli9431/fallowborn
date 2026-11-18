@@ -128,7 +128,10 @@ test('a withheld campaign retains pure native references and healthy scoped pool
   })).toEqual({withheld:true,healthy:true});
   expect(await page.evaluate(function () {
     const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
-    const pack = {retained:FBDATA.eventPacks.dated_711}, event = {id:'retained_selector',pack:'retained'};
+    // The withheld world's exclusive event pack is absent from the published catalogue.
+    // Exercise validation of its known bookmark identity independently of publication.
+    const pack = {retained:{bookmarkIds:['711'],eras:['early_medieval'],yearMin:711,yearMax:731}};
+    const event = {id:'retained_selector',pack:'retained'};
     const scenario = FBDATA.startScenarios.find(function (row) {return row.id === 'toledo_household_711';});
     const bookmark = FB.bookmark('493'), candidate = {data:FBDATA};
     const detached = JSON.parse(JSON.stringify(FBDATA));
@@ -136,7 +139,7 @@ test('a withheld campaign retains pure native references and healthy scoped pool
     const results = [];
     for (let pass = 0; pass < 3; pass++) {
       const nativeStart = FB.startSelectorReport(scenario,bookmark);
-      results.push(!FB.validateEventPacks(pack).length && !FB.validateEventPeriod(event,pack) &&
+      results.push(!FBDATA.eventPacks.dated_711 && !FB.validateEventPacks(pack).length && !FB.validateEventPeriod(event,pack) &&
         FB.validateEventPacks(pack,candidate).length > 0 && !!FB.validateEventPeriod(event,pack,candidate) &&
         FB.validateEventPacks(pack,{data:detached}).length > 0 &&
         nativeStart.valid && !nativeStart.matches && !FB.startSelectorReport(scenario,bookmark,undefined,detached).valid &&
