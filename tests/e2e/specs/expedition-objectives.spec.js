@@ -4,7 +4,7 @@ const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-objective-harbor.json'),
   upland:require('../fixtures/authoring/expedition-objective-upland.json')};
@@ -24,7 +24,7 @@ async function begin(page,info,label) {
   const prefix=label==='harbor' ? 'harbor' : 'dune';
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await page.evaluate(function (label) {
     const prefix=label==='harbor' ? 'harbor' : 'dune';
     window.objectiveCase={rid:label==='harbor' ? 'harbor_following' : 'dune_coalition',

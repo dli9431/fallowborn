@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmark,beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const {installRestoreFacts}=require('../support/game/restore-facts');
 
@@ -92,7 +92,7 @@ async function imported(page,info,label) {
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];
   },prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await installRestoreFacts(page);
   await page.evaluate(function (label) {
     const s=FB.state,prefix=label==='harbor' ? 'harbor' : 'dune';

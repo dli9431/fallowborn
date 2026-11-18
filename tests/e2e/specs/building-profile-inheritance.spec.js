@@ -4,7 +4,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/building-profile-inheritance-river.json'),
   hill:require('../fixtures/authoring/building-profile-inheritance-hill.json')};
@@ -30,7 +30,7 @@ async function start(page,info,label,empty) {
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   const world = label === 'river' ? 'inventory_estuary' : 'resource_upland';
-  await beginBookmark(page,info,world,world + '_household');
+  await beginBookmarkFromTitle(page,world,world + '_household');
   await installRestoreFacts(page);
 }
 async function hold(page) {

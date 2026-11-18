@@ -4,7 +4,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = {
   see:require('../fixtures/authoring/building-institutions-see.json'),
@@ -35,7 +35,7 @@ async function start(page, info, label, npc, required) {
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.binding_work; });
   const world = label === 'see' ? 'inventory_estuary' : 'inventory_uplands';
-  await beginBookmark(page, info, world, world + '_household');
+  await beginBookmarkFromTitle(page, world, world + '_household');
   await installRestoreFacts(page);
   await page.evaluate(function (npc) {
     const s = FB.state, pid = s.player.provinceId;

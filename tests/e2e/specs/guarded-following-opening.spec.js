@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmark,beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/guarded-following-harbor.json'),
   dune:require('../fixtures/authoring/guarded-following-dune.json')};
@@ -24,7 +24,7 @@ async function imported(page,info,prefix,ordinary) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
 }
 
 for (const prefix of ['harbor','dune']) {

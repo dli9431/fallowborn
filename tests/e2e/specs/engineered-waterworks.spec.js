@@ -4,7 +4,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples={supplied:require('../fixtures/authoring/engineered-waterworks-supplied.json'),
   rain:require('../fixtures/authoring/engineered-waterworks-rain.json')};
@@ -27,7 +27,7 @@ async function start(page,info,name,custom){
   const key=name==='supplied'?'river':'upland';
   await prepareGameContent(page);
   await page.waitForFunction(function(key){return window.FB&&FB.game&&FB.game.bootReady&&FBDATA.bookmarks['resource_'+key];},key);
-  await beginBookmark(page,info,'resource_'+key,'resource_'+key+'_household');
+  await beginBookmarkFromTitle(page,'resource_'+key,'resource_'+key+'_household');
   await installRestoreFacts(page);
 }
 async function build(page){

@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,['index.html','data/production.js','data/building_seasons.js','js/production.js','js/production_economy.js',
   'js/building_seasons.js','js/building_operations.js','js/actions.js','js/world.js','js/mods.js','js/save.js','js/save_v4.js','js/treasury.js']);
@@ -23,7 +23,7 @@ async function boot(page,info,inherited) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
-  await beginBookmark(page,info,'season_dry','season_dry_household');
+  await beginBookmarkFromTitle(page,'season_dry','season_dry_household');
 }
 test('canonical funded construction enrolls empty seasonal production and matching restore never replays opening lots',async function({page},info){
   await boot(page,info);

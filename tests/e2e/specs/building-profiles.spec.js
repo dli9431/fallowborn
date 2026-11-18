@@ -4,7 +4,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/building-profiles-river.json'),
   hill:require('../fixtures/authoring/building-profiles-hill.json')};
@@ -27,7 +27,7 @@ async function start(page,info,label,npc) {
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildingProfiles && FBDATA.buildingProfiles[Object.keys(FBDATA.buildingProfiles)[0]]; });
   const world = label === 'river' ? 'inventory_estuary' : 'resource_upland';
-  await beginBookmark(page,info,world,world + '_household');
+  await beginBookmarkFromTitle(page,world,world + '_household');
   await installRestoreFacts(page);
   await page.evaluate(function (npc) {
     const s = FB.state, pid = s.player.provinceId;

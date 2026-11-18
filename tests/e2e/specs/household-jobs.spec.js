@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = require('../fixtures/authoring/household-jobs.json');
 dependsOnRuntime(__filename, ['index.html','data/bookmarks.js','data/starts.js','data/technology.js',
@@ -18,7 +18,7 @@ async function importedStart(page, info, start) {
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('quay_work_example'); });
-  await beginBookmark(page, info, '867', start || 'quay_work_example_start');
+  await beginBookmarkFromTitle(page, '867', start || 'quay_work_example_start');
   await page.evaluate(function () { FB.state.date.day = 30; });
 }
 

@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {installRestoreFacts} = require('../support/game/restore-facts');
 const examples = {timber:require('../fixtures/authoring/fort-profiles-timber.json'),
@@ -21,7 +21,7 @@ async function start(page,info,kind) {
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   const world = kind === 'timber' ? 'inventory_estuary' : 'inventory_uplands';
-  await beginBookmark(page,info,world,world + '_household');
+  await beginBookmarkFromTitle(page,world,world + '_household');
 }
 async function hold(page,kind,county) {
   await page.evaluate(function (a) {

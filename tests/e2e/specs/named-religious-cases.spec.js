@@ -3,7 +3,7 @@ const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { openGame, prepareGameContent } = require('../support/game/navigation');
-const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const river = require('../fixtures/authoring/religious-river-court.json');
 
@@ -283,7 +283,7 @@ test('ordinary fictional JSON import varies recipients and refusal policy, with 
   await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/religious-river-court.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);await beginBookmark(page,info,'1204','baron');await bind(page);
+  await prepareGameContent(page);await beginBookmarkFromTitle(page,'1204','baron');await bind(page);
   const result=await page.evaluate(function(){
     const s=FB.state,R=FB.religiousCases;
     // Stage an actual superior court, preserving the bishop's local holdings.

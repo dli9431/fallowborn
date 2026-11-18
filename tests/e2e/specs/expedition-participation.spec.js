@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/personal-expedition-harbor.json'),
   upland:require('../fixtures/authoring/personal-expedition-upland.json')};
@@ -23,7 +23,7 @@ async function start(page,info,label,modified) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
 }
 
 for (const label of ['harbor','upland']) {
