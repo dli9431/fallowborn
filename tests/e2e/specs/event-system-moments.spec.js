@@ -2,6 +2,8 @@
 const path = require('path');
 const fs = require('fs');
 const {test,expect} = require('../support/fixture');
+// Each case owns its page and any synthetic records it installs there.
+test.describe.configure({mode:'parallel'});
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
