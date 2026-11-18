@@ -2,6 +2,14 @@
 const {test,expect} = require('../support/fixture');
 const {startParityGame} = require('../support/game/parity');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+const fs = require('node:fs');
+const path = require('node:path');
+const fixtureDir = path.join(__dirname, '../fixtures/event-packs');
+const readerEventIds = new Set();
+for (const name of fs.readdirSync(fixtureDir).filter(name => name.endsWith('.json'))) {
+  const fixture = JSON.parse(fs.readFileSync(path.join(fixtureDir, name), 'utf8'));
+  for (const row of fixture.rows) readerEventIds.add(row.eventId);
+}
 dependsOnRuntime(__filename,['js/events.js','js/schema.js','js/governments.js','js/authority.js',
   'js/federates.js','js/mobile_confederations.js','js/religious_institutions.js','js/industry_laws.js',
   'js/episcopal_claims.js','js/religious_cases.js','js/story_track.js','js/systems.js',
@@ -31,7 +39,7 @@ for (const bookmark of ['867','1066']) test(bookmark + ' fixed-seed event select
     FB.eventStateReaders.test=native;FBDATA.events=all;FB.invalidateEventIndex();
     return {control:control,current:current,excluded:excluded,additions:additions.map(function (e) {return e.id;}),reads:reads};
   });
-  expect(result.additions).toEqual(['operating_terms_notice']);
+  expect(result.additions.sort()).toEqual([...readerEventIds].sort());
   expect(result.excluded).toBe(true);
   expect(result.reads).toBe(0);
   expect(result.current).toEqual(result.control);
