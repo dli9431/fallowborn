@@ -2533,8 +2533,9 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'events') && !Array.isArray(mod.events)) fail('events', 'must be an array.');
     const packs = combinedTable(FBDATA.eventPacks, mod.eventPacks, 'eventPacks');
     for (const id in packs) {
-      const fault = FB.contentPeriodFault(packs[id]);
-      if (fault || !Array.isArray(packs[id].eras)) fail('eventPacks.' + id, fault || 'eras are required.');
+      const selected = {}; selected[id] = packs[id];
+      const faults = FB.validateEventPacks(selected, {data:FBDATA});
+      if (faults.length) fail('eventPacks.' + id, faults.join(' '));
     }
     /* A pack edit can invalidate the effective window of an existing event. */
     const events = (FBDATA.events || []).filter(function (ev) {
