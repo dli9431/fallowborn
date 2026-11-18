@@ -641,11 +641,8 @@ test('retained ruler channels restore without replay and real succession drops t
   expect(next.investmentAdjustments).not.toContain('aim:expand_realm');
 });
 
-for (const group of [
-  {name:'intrigue, diplomacy and religion',indexes:[0,1,2]},
-  {name:'investment, expansion and government',indexes:[3,4,5]}
-]) {
-  importedTest(group.name+' changes participate in exact save fingerprints',async function ({page},testInfo) {
+for (const [index,name] of ['intrigue','diplomacy','religion','investment','expansion','government'].entries()) {
+  importedTest(name+' changes participate in exact save fingerprints',async function ({page},testInfo) {
     await importExample(page,'ai-decisions-conservative.json');
     await startDeterministicGame(page);
     const checkpoint = await page.evaluate(function () { return {saved:JSON.parse(FB.save.serialize()),signature:FB.mods.sig()}; });
@@ -663,15 +660,14 @@ for (const group of [
         function (m) { m.aiDecisionPolicies.careful_investment.adjustments[1].benefitWeights.piety = 15; },
         function (m) { m.aiDecisionPolicies.cautious_frontier.aimOrders.keep_peace[1].direction = 'desc'; },
         function (m) { m.governmentForms.cautious_court.strategyParameters = {ai:{warChance:0}}; }];
-      return args.indexes.map(function (index) {
-        const change = changes[index];
-        const m = JSON.parse(JSON.stringify(source)); change(m); FB.mods.apply(m);
-        const mismatch = signature !== FB.mods.sig() && FB.save.otherWorld(saved);
-        FB.mods.apply(source);
-        return {mismatch:mismatch,exact:signature === FB.mods.sig() && !FB.save.otherWorld(saved)};
-      });
-    },{source:source,checkpoint:checkpoint,indexes:group.indexes});
-    expect(out).toEqual(Array(3).fill({mismatch:true,exact:true}));
+      const changed = JSON.parse(JSON.stringify(source));
+      changes[args.index](changed);
+      FB.mods.apply(changed);
+      const mismatch = signature !== FB.mods.sig() && FB.save.otherWorld(saved);
+      FB.mods.apply(source);
+      return {mismatch:mismatch,exact:signature === FB.mods.sig() && !FB.save.otherWorld(saved)};
+    },{source:source,checkpoint:checkpoint,index:index});
+    expect(out).toEqual({mismatch:true,exact:true});
   });
 }
 
