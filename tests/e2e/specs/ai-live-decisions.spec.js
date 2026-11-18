@@ -14,6 +14,7 @@ dependsOnRuntime(__filename,[
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
 const { test,expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
