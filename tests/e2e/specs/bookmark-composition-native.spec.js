@@ -24,7 +24,7 @@ const modSource = fs.readFileSync(path.resolve(__dirname,'../../../js/mods.js'),
 const publicRoots = Array.from(modSource.match(/const PUBLIC_KEYS = \{([\s\S]*?)\n  \};/)[1]
   .matchAll(/(\w+):true/g),function (match) { return match[1]; }).concat(['faithDefaults','defaultGeography']);
 dependsOnRuntime(__filename,['index.html','data/bookmark_manifest.js','js/bookmark_sources.js','js/bookmark_composition.js','js/mods.js',
-  'js/main.js','js/world.js','js/starts.js','js/stories.js','js/model.js','js/bookmark_setup.js',
+  'js/main.js','js/world.js','js/starts.js','js/stories.js','js/story_track.js','js/model.js','js/bookmark_setup.js',
   'js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js','js/crazygames.js','js/events.js',
   'js/justice.js','js/federates.js','js/religious_institutions.js','js/story_household_refuge.js','js/story_household_party.js','js/ai_decisions.js','js/government_aristocracy.js',
   'data/bookmark_sources.js','data/bookmarks.js','data/starts.js','data/geographies.js',
@@ -44,6 +44,46 @@ async function catalogue(page) {
         faults:FB.bookmarkRevisions(id,projected.bookmarks[id]).map(function (world) { return FB.validateBookmark(world); })}; })};
   },{ids:allWorlds,roots:publicRoots});
 }
+async function installLegacyEventReferences(page) {
+  // The former eager publisher reviews these two pending sources in sequence.
+  // Current dated events can reference either source before its publication.
+  // Supply their frozen declarations to detached review, never to live data or
+  // ordinary JSON validation. Canonical validators still decide acceptance.
+  function references() {
+    const declared = {bookmarks:{},storyInstances:{}}, starts = FBDATA.startScenarios.slice();
+    [['spring_568','568'],['autumn_634','634']].forEach(function (pair) {
+      const source = FBDATA.bookmarkCompositionSources[pair[0]], input = source && source.input;
+      if (!input || input.bookmark.id !== pair[1]) throw new Error('Missing retained source reference: ' + pair[0]);
+      declared.bookmarks[pair[1]] = input.bookmark;
+      Object.keys(input.catalogs || {}).forEach(function (root) {
+        declared[root] = Object.assign({},declared[root],input.catalogs[root]);
+      });
+      input.starts.forEach(function (unit) {
+        starts.push(unit.definition);
+        Object.assign(declared.storyInstances,unit.storyInstances);
+      });
+    });
+    if (FB.bookmarkSources.eventReviewData) throw new Error('Retained event references already have an owner.');
+    FB.bookmarkSources.eventReviewData = function (data) {
+      if (data.bookmarkCompositionReferences !== starts) return data;
+      return Object.assign({},data,{bookmarks:Object.assign({},declared.bookmarks,data.bookmarks),
+        startScenarios:starts,storyInstances:Object.assign({},declared.storyInstances,data.storyInstances)});
+    };
+    const prepare = FB.mods.prepareComposition;
+    FB.mods.prepareComposition = function (mod,worldId,base,complete) {
+      if (!base || ['568','634'].indexOf(worldId) < 0) return prepare.apply(this,arguments);
+      const proof = Object.assign({},base,{bookmarkCompositionReferences:starts});
+      Object.keys(declared).forEach(function (root) {
+        if (root !== 'storyInstances') proof[root] = Object.assign({},declared[root],base[root]);
+      });
+      return prepare.call(this,mod,worldId,proof,complete);
+    };
+  }
+  await page.route('**/js/main.js',async function (route) {
+    const response = await route.fetch();
+    await route.fulfill({response:response,body:'(' + references.toString() + ')();\n' + await response.text()});
+  });
+}
 async function withLegacy(browser,fn) {
   const context = await browser.newContext(), page = await context.newPage(), guard = installPageGuards(page);
   try {
@@ -60,6 +100,7 @@ async function withLegacy(browser,fn) {
     await page.route('**/data/story_instances.js',function (route) {
       return route.fulfill({contentType:'application/javascript',body:former.replace(anchor,registration + '\n' + anchor)});
     });
+    await installLegacyEventReferences(page);
     return await fn(page);
   }
   finally { try { expect(guard.faults).toEqual([]); } finally { await context.close(); } }
@@ -120,7 +161,10 @@ test('every retained native world, start and story keeps its former complete pro
     await assertLegacy634(oldPage);
     expect(await page.evaluate(function () { return FBDATA.bookmarks['634'].hidden; })).toBeUndefined();
     const actual = await catalogue(page), former = await catalogue(oldPage);
-    expect(actual).toEqual(former);
+    const sources = await oldPage.evaluate(function () { return FB.bookmarkCompositions.sourceReports(); });
+    expect(actual,JSON.stringify({roots:Object.keys(actual.roots).filter(function (key) {
+      return actual.roots[key] !== former.roots[key];
+    }),sources:sources})).toEqual(former);
     expect(await page.evaluate(function () {
       const raw = FBDATA.bookmarks['634'], fresh = raw.revisions.scenery_protected_v1;
       return {current:raw.revision,revisions:Object.keys(raw.revisions),fields:Object.keys(fresh),
@@ -134,6 +178,29 @@ test('every retained native world, start and story keeps its former complete pro
     expect(await page.evaluate(function () {
       return FB.bookmarkCompositions.sourceReports().filter(function (row) { return row.bookmarkId; }).every(function (row) { return row.published; });
     })).toBe(true);
+  });
+});
+
+test('retained event reference review stays detached and ordinary JSON validation stays strict',async function ({browser},info) {
+  test.skip(!info.project.name.endsWith('-served'),'Pinned source interception requires a served origin.');
+  await withLegacy(browser,async function (page) {
+    await openGame(page,info);
+    const result = await page.evaluate(function () {
+      const source = FBDATA.events.find(function (event) { return event.pack === 'dated_568' && event.options.some(function (option) {
+        return option.review && option.review.type === 'story_choice';
+      }); });
+      if (!source) throw new Error('Missing dated household review declaration.');
+      const row = JSON.parse(JSON.stringify(source)); row.id = 'retained_reference_probe_568';
+      const mod = {name:'Retained reference validation',events:[row]};
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const accepted = FB.mods.validate(JSON.parse(JSON.stringify(mod)));
+      row.options.find(function (option) { return option.review; }).review.args.storyId = 'missing_retained_story';
+      const rejected = FB.mods.validate(JSON.parse(JSON.stringify(mod)));
+      return {accepted:accepted,rejected:rejected.length > 0,
+        detached:!Object.prototype.hasOwnProperty.call(FBDATA,'bookmarkCompositionReferences'),
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    });
+    expect(result).toEqual({accepted:[],rejected:true,detached:true,pure:true});
   });
 });
 
