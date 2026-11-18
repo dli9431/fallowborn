@@ -570,3 +570,18 @@ Static JavaScript lexical scanning treats regular-expression literals as opaque 
 Canonical event review presentation
 
 Review option label/desc retain ordinary event field ownership and authored indexes. Canonical terms reuse literal FB.T chrome and the story owner's existing choice detail/review text; industry reviews disclose actual private payment through named placeholders. Moment names, payload ids and typed review args are protocol data, never translated or saved prose. The static EVENT_FILES events_*.js registration already includes every empty shared and dated event pack. Source work does not regenerate catalogs.
+
+Spring 451 source presentation
+
+The hidden 451 sources use existing static owners: bookmarkCandidates['451'] for
+metadata, bookmarkRegions451 regional literals for county/court/title/layout
+labels, startScenarios451Scaffold for the generic household and startScenarios_451
+for dated starts. bookmarkCultures451, bookmarkReligions451 and bookmarkOffices451
+use ordinary culture, religion and office owners. Government presentation uses
+bookmarkRevisionContent_451_governments; personal graphs use householdTracks_451,
+rulerAgendas_451 and openingProfiles_451. storyCampaigns451 in campaigns_451.js
+uses the normal campaign owner. bookmarkLexicons451 and bookmarkAmbitions451 in
+the presentation source use normal lexicon and ambition owners. Events are
+discovered through events_451.js. Empty tables yield no text. Static discovery
+does not execute a source or activate the date; generated catalogues remain a
+separately authorized integration artifact.
