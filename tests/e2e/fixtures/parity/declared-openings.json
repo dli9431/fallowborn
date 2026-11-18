@@ -1,11 +1,19 @@
 [
   {
+    "scenario": "aetius_451",
+    "bookmark": "451"
+  },
+  {
     "scenario": "alexander_1241",
     "bookmark": "1241"
   },
   {
     "scenario": "alexios_1096",
     "bookmark": "1096"
+  },
+  {
+    "scenario": "attila_451",
+    "bookmark": "451"
   },
   {
     "scenario": "baghdad_copyist_800",
@@ -36,6 +44,10 @@
     "bookmark": "1204"
   },
   {
+    "scenario": "court_service_household_476",
+    "bookmark": "476"
+  },
+  {
     "scenario": "craftsman_568",
     "bookmark": "568"
   },
@@ -56,6 +68,10 @@
     "bookmark": "634"
   },
   {
+    "scenario": "farmer_451",
+    "bookmark": "451"
+  },
+  {
     "scenario": "farmer_568",
     "bookmark": "568"
   },
@@ -64,12 +80,24 @@
     "bookmark": "634"
   },
   {
+    "scenario": "federate_soldier_451",
+    "bookmark": "451"
+  },
+  {
     "scenario": "frederick_1241",
     "bookmark": "1241"
   },
   {
     "scenario": "frontier_household_634",
     "bookmark": "634"
+  },
+  {
+    "scenario": "gallic_colonus_451",
+    "bookmark": "451"
+  },
+  {
+    "scenario": "gallic_curialis_451",
+    "bookmark": "451"
   },
   {
     "scenario": "godfrey_1096",
@@ -148,8 +176,36 @@
     "bookmark": "1241"
   },
   {
+    "scenario": "oghur_leader_476",
+    "bookmark": "476"
+  },
+  {
+    "scenario": "oghur_member_476",
+    "bookmark": "476"
+  },
+  {
     "scenario": "pilgrim_household_1096",
     "bookmark": "1096"
+  },
+  {
+    "scenario": "pontic_leader_476",
+    "bookmark": "476"
+  },
+  {
+    "scenario": "pontic_member_476",
+    "bookmark": "476"
+  },
+  {
+    "scenario": "qipchaq_leader_1204",
+    "bookmark": "1204"
+  },
+  {
+    "scenario": "qipchaq_member_1204",
+    "bookmark": "1204"
+  },
+  {
+    "scenario": "qipchaq_principal_1204",
+    "bookmark": "1204"
   },
   {
     "scenario": "ravenna_household_568",
@@ -166,6 +222,14 @@
   {
     "scenario": "rodrigo_diaz_1096",
     "bookmark": "1096"
+  },
+  {
+    "scenario": "saragur_leader_476",
+    "bookmark": "476"
+  },
+  {
+    "scenario": "saragur_member_476",
+    "bookmark": "476"
   },
   {
     "scenario": "sigebert_568",
