@@ -87,8 +87,13 @@ async function routeListReader(page, reference) {
   await routeReaders(page, false);
   await page.unroute('**/js/authority.js');
   let source = listAuthority;
-  if (reference) source = source.slice(0, source.indexOf('  function activeRecognition(')) +
-    listOracle.source + source.slice(source.indexOf(listOracle.end));
+  if (reference) {
+    const start = source.indexOf('  function activeRecognition(');
+    const end = source.indexOf('  var legitimacyTransaction =', start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    source = source.slice(0,start) + listOracle.source + source.slice(end);
+  }
   const prior = listOracle.source.replace(/\bactiveRecognition\b/g, 'listPriorActiveRecognition')
     .replace('  function recognition(s, id)', '  function listPriorRecognition(s, id)')
     .replace('  Q.legitimacy = function', '  FB.listPriorLegitimacy = function');
