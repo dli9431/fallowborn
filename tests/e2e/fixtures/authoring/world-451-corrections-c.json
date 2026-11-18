@@ -3724,9 +3724,9 @@
         "kind": "patriarchate",
         "provinceId": "constantinople",
         "site": "constantinople",
-        "religion": "chalcedonian",
+        "religion": "nicene",
         "culture": "greek",
-        "officeId": "constantinople_patriarch",
+        "officeId": "constantinople_nicene_451",
         "historicalName": "Anatolius"
       }
     },

@@ -2486,7 +2486,7 @@
             if (!keys(entry,['realmId','characterId','generation']) || Object.keys(entry).length!==3 || !source || seenCourts[next] ||
                 entry.realmId!==next || !c || index===0 && (!actor || actor.id!==entry.characterId && s.bookmarkSetup.actors[hosted.partnerActorId]!==entry.characterId) ||
                 entry.generation!==(ruler && ruler.generation!==undefined ? ruler.generation : 1) ||
-                ruler && (c.name!==ruler.name || c.born!==ruler.born || (c.sex || 'm')!==(ruler.sex || 'm'))) fault(rid,'openingAccess');
+                entry.characterId!==FB.openingRulerCharacterId(source)) fault(rid,'openingAccess');
             seenCourts[next]=true;next=source.liege;
           });
           if (next) fault(rid,'openingAccess');
