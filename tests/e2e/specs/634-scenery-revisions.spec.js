@@ -2,6 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+// Each worker builds its own retained saves. Cases read those saves into fresh pages.
+test.describe.configure({mode:'parallel'});
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
