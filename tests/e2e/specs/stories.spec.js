@@ -173,6 +173,15 @@ test('stories register in order at load time only and resolve by id',
       'justin_568:justin_agenda_568',
       'khosrow_568:khosrow_agenda_568',
       'constantinople_merchant_household_1204:constantinople_merchant_track_1204',
+      'qipchaq_principal_1204:qipchaq_principal_agenda_1204',
+      'qipchaq_member_1204:qipchaq_camp_household_1204',
+      'qipchaq_leader_1204:qipchaq_camp_household_1204,qipchaq_leadership_1204',
+      'pontic_leader_476:pontic_camp_household_476',
+      'pontic_member_476:pontic_camp_household_476',
+      'saragur_leader_476:saragur_camp_household_476',
+      'saragur_member_476:saragur_camp_household_476',
+      'oghur_leader_476:oghur_camp_household_476',
+      'oghur_member_476:oghur_camp_household_476',
       'thegn_household_1066:thegn_track_1066',
       'york_household_867:york_household_track_867',
       'crossing_soldier_711:crossing_soldier_track_711',
@@ -183,7 +192,13 @@ test('stories register in order at load time only and resolve by id',
       'louis_800:louis_agenda_800',
       'novgorod_household_1241:novgorod_household_track_1241',
       'alexander_1241:alexander_household_1241',
-      'henry_pious_1241:silesia_agenda_1241']);
+      'henry_pious_1241:silesia_agenda_1241',
+      'court_service_household_476:',
+      'attila_451:attila_agenda_451',
+      'aetius_451:aetius_service_track_451',
+      'federate_soldier_451:federate_soldier_track_451,gallic_household_party_451',
+      'gallic_curialis_451:gallic_curialis_track_451,gallic_household_party_451',
+      'gallic_colonus_451:gallic_colonus_track_451,gallic_household_party_451']);
   });
 
 test('a branch save holding state.situation476 migrates once into both story records',
@@ -297,9 +312,8 @@ test('the start picker and family presets follow scenario data',
     await page.locator('#bookmarklist .scencard', { hasText:/\b476:/ }).click();
     await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Story starts', 'Open starts']);
     const cards = page.locator('#scenariolist .scencard');
-    // Seven 476 starts (federate, colonus, curialis, three free households and
-    // the Pontic household) plus the Observe card; hidden ruler starts stay out.
-    await expect(cards).toHaveCount(8);
+    // Fourteen public starts plus Observe, including the new camp and court households.
+    await expect(cards).toHaveCount(15);
     const federate = cards.filter({ hasText:'Federate Soldier' });
     await expect(federate).toHaveCount(1);
     await expect(federate).not.toHaveClass(/locked/);

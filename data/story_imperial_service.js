@@ -1734,7 +1734,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       if (id === '476') {
         policy.entries.court_service_household_476 = {tracks:['salona_service_household','imperial_service_commander','imperial_service_eastern_commander_476','opening_imperial_service'],
           trackLocations:{salona_service_household:['split'],imperial_service_commander:['split'],imperial_service_eastern_commander_476:['split'],opening_imperial_service:['split']}};
-        policy.entries.nepos_476 = {tracks:['nepos_track_476','imperial_service_emperor']};
+        policy.entries.nepos_476 = {tracks:['nepos_track_476','opening_nepos_476','imperial_service_emperor']};
       } else {
         policy.entries.farmer_493 = {tracks:['eastern_service_household_493','imperial_service_commander_493','imperial_service_emperor_493','opening_imperial_service_493'],
           trackLocations:{eastern_service_household_493:['constantinople'],imperial_service_commander_493:['constantinople'],imperial_service_emperor_493:['constantinople'],opening_imperial_service_493:['constantinople']}};
