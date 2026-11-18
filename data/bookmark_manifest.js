@@ -10,6 +10,9 @@
    adds them to the offline precache. Keep the order of index.html. */
 if (FB.bookmarkSources && FB.bookmarkSources.manifest) FB.bookmarkSources.manifest({
   dates:{
+    '451':{name:'The Fifth-Century World',
+      desc:'An uncorrected late antique regional scaffold, reserved for historical authoring.',
+      date:{year:451,season:0,day:1},era:'late_antique',hidden:true,requires:['476']},
     '476':{name:'The Last Western Court',
       desc:'Roman cities, rival imperial courts and new kingdoms share a changing world, from British communities and northern assemblies to Roman Syria and Sasanian Persia. At Ravenna, unpaid federate soldiers demand a settlement from the western court.',
       date:{year:476,season:0,day:1},era:'late_antique',requires:[]},
@@ -152,6 +155,7 @@ if (FB.bookmarkSources && FB.bookmarkSources.manifest) FB.bookmarkSources.manife
       ['data/story_eastern_rulers_1096.js',['1096']]
     ]},
     {after:'data/events_common.js', files:[
+      ['data/events_451.js',['451']],
       ['data/events_493.js',['493']],
       ['data/events_568.js',['568']],
       ['data/events_634.js',['634']],
@@ -218,7 +222,19 @@ if (FB.bookmarkSources && FB.bookmarkSources.manifest) FB.bookmarkSources.manife
       ['data/bookmark_1241_core_starts.js',['1241']]
     ]},
     {after:'data/bookmark_1066_north_atlantic.js', files:[
-      ['data/starts_imperial_officer.js',['476']]
+      ['data/starts_imperial_officer.js',['476']],
+      ['data/bookmark_451_scaffold_a.js',['451']],
+      ['data/bookmark_451_scaffold_b.js',['451']],
+      ['data/bookmark_451_scaffold_c.js',['451']],
+      ['data/bookmark_451_scaffold_d.js',['451']],
+      ['data/bookmark_451.js',['451']],
+      ['data/bookmark_451_identities.js',['451']],
+      ['data/bookmark_451_governments.js',['451']],
+      ['data/bookmark_451_presentation.js',['451']],
+      ['data/starts_451.js',['451']],
+      ['data/story_451.js',['451']],
+      ['data/campaigns_451.js',['451']],
+      ['data/bookmark_451_composition.js',['451']]
     ]}
   ]
 });

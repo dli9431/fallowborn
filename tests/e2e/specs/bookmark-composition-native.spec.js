@@ -14,7 +14,7 @@ test.afterEach(async function ({page},info) {
   if (info.status !== info.expectedStatus) console.log('Native source failure view: ' + await page.locator('body').innerText());
 });
 const remaining = ['476','493','711','800','867','1066','1096','1204','1241'];
-const allWorlds = ['476','493','568','634','711','800','867','1066','1096','1204','1241'];
+const allWorlds = ['451','476','493','568','634','711','800','867','1066','1096','1204','1241'];
 const examples = [require('../fixtures/authoring/existing-person-harbor.json'),require('../fixtures/authoring/existing-person-dune.json')];
 const lazyFiles = manifestFiles(manifestRuns(fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_manifest.js'),'utf8')));
 // Read the fingerprint owner's explicit public-root list as text. All those
@@ -28,7 +28,7 @@ dependsOnRuntime(__filename,['index.html','data/bookmark_manifest.js','js/bookma
   'js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js','js/crazygames.js','js/events.js',
   'js/justice.js','js/federates.js','js/religious_institutions.js','js/story_household_refuge.js','js/story_household_party.js','js/ai_decisions.js','js/government_aristocracy.js',
   'data/bookmark_sources.js','data/bookmarks.js','data/starts.js','data/geographies.js',
-  'data/settlements.js','data/settlements_real.js','data/cultures.js','data/eras.js','data/religious_institutions.js','data/ai_decisions.js'].concat(nativeSourceFiles,lazyFiles));
+  'data/settlements.js','data/settlements_real.js','data/cultures.js','data/eras.js','data/technology.js','data/religious_institutions.js','data/ai_decisions.js'].concat(nativeSourceFiles,lazyFiles));
 
 async function catalogue(page) {
   return page.evaluate(function (input) {
@@ -46,7 +46,22 @@ async function catalogue(page) {
 }
 async function withLegacy(browser,fn) {
   const context = await browser.newContext(), page = await context.newPage(), guard = installPageGuards(page);
-  try { await installNativeLegacy(page); return await fn(page); }
+  try {
+    await installNativeLegacy(page);
+    // The immutable registry predates the later imperial-service declarations.
+    // Retain their explicit registration at the same position on both sides.
+    const former = fs.readFileSync(path.resolve(__dirname,'../fixtures/bookmark-composition/native-before-shared/story_instances.js'),'utf8');
+    const current = fs.readFileSync(path.resolve(__dirname,'../../../data/story_instances.js'),'utf8');
+    const anchor = '  Object.keys(FBDATA.storyCourts476 || {}).forEach(function (id) {';
+    const registration = "  add(FBDATA.householdTracks_imperial_service, 'registrationAfter', 'western_office_476');";
+    expect(former.split(anchor)).toHaveLength(2);
+    expect(former.split(registration)).toHaveLength(1);
+    expect(current.split(registration)).toHaveLength(2);
+    await page.route('**/data/story_instances.js',function (route) {
+      return route.fulfill({contentType:'application/javascript',body:former.replace(anchor,registration + '\n' + anchor)});
+    });
+    return await fn(page);
+  }
   finally { try { expect(guard.faults).toEqual([]); } finally { await context.close(); } }
 }
 
