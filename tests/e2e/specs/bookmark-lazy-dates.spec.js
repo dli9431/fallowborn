@@ -33,7 +33,7 @@ const catalogRoots = ['geographies','cultures','cultureDoctrineDefaults','religi
 dependsOnRuntime(__filename,['index.html','Dockerfile','sw.js','data/bookmark_manifest.js','data/bookmark_sources.js',
   'data/bookmarks.js','data/starts.js','js/bookmark_sources.js','js/bookmark_composition.js','js/main.js','js/mods.js',
   'data/bookmark_711_identities.js','data/eras.js','data/technology.js','js/episcopal_claims.js','js/industry_laws.js',
-  'js/stories.js','js/world.js','js/starts.js','js/save.js','js/save_v4.js','js/ui_modals.js'].concat(lazyFiles));
+  'js/stories.js','js/story_track.js','js/events.js','js/world.js','js/starts.js','js/save.js','js/save_v4.js','js/ui_modals.js'].concat(lazyFiles));
 
 function eagerScripts() {
   return Array.from(indexText.matchAll(/<script src="([^"?#]+)" defer><\/script>/g),function (match) { return match[1]; });
