@@ -305,12 +305,10 @@ test('one regional daily season resolves both bounded rails and retains communit
     try {
       for (let half = 0; half < 2; half++) {
         if (half === 1) {
-          // The daily tick started the Amal war; settle it as an ordinary
-          // defeat unless the war simulation has already decided it.
+          // The first half must have exercised the ordinary campaign transaction.
           const midpoint = await page.evaluate(function () {
             const s = FB.state, rec = s.stories.amal_epirus_476;
             const started = rec.startedTurn !== null && !!rec.warId;
-            if (rec.phase === 'started' && FB.ordinaryWarById(s,rec.warId)) FB.settleOrdinaryWar(s,rec.warId,'defeat');
             return {thracian:[s.stories.thracian_pressure_476.result,s.stories.thracian_pressure_476.reason],started:started};
           });
           expect(midpoint).toEqual({thracian:['diverted','window_closed'],started:true});
@@ -321,6 +319,11 @@ test('one regional daily season resolves both bounded rails and retains communit
             const turn = FB.state.turn;
             FB.game.passDay({deferUi:true});
             if (FB.state.turn !== turn + 1) throw new Error('Regional observer stalled at turn ' + turn);
+            // Resolve the actual war before later army movement can remove its host.
+            const rec = FB.state.stories.amal_epirus_476;
+            if (rec.phase === 'started' && FB.ordinaryWarById(FB.state,rec.warId)) {
+              if (!FB.settleOrdinaryWar(FB.state,rec.warId,'defeat')) throw new Error('Amal war settlement failed');
+            }
           }
           const saved = JSON.parse(FB.save.serialize()), records = JSON.stringify([saved.state.stories,saved.state.bookmarkSetup,saved.state.localInstitutions]);
           FB.save.restore(saved);
