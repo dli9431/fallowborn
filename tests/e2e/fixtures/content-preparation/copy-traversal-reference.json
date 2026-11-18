@@ -1,6 +1,6 @@
 {
   "sourceCommit": "bcc5b4a5513d5e1eb5e50f4c7840de5356f6c6f0",
-  "catalogueCommit": "5745f07ec4a7aa3e9ac9a28e2f83b78ab65a8f0a",
+  "catalogueCommit": "dbf803c74ac4bf1599c81ccfca9fc62af8e3c27f",
   "files": [
     {
       "path": "js/bookmark_sources.js",
@@ -15,19 +15,19 @@
   ],
   "facts": {
     "unmodded": {
-      "data": "8fbec77c099fed1af85eaede1fe568e287e400766a4f0844c5ea10fe992b39b1",
-      "revisions": "9f3ecd203d2df4eddd2a42104346fe291d3450ead5b1455b37651734ef86c119",
+      "data": "2fdc50680fcbd48dd9735abe06c4002b68b16d26a597e7888384461a01ad27e0",
+      "revisions": "95d2cdf235184afc9b075571d3e3243a1d560be21d9ed7a67b2e28e6d3060119",
       "signature": "",
-      "fingerprint": "0fc4ae7fa04e4093f79d8d1dd6e62f69a30f13e98cb48bfe514e8efc48cb9fa1",
+      "fingerprint": "9b1a48eaedc23c7a02a8ce314d1fbe3a3958cc4e80ae5bbf91ce6afc3a1c859b",
       "save": null,
       "rng": 634,
       "uid": 0
     },
     "household-overlay": {
-      "data": "cb074df33a2ae084309b99f435c7cb9bfd08ca4654a06a1b5c7225c1e003e484",
-      "revisions": "9f3ecd203d2df4eddd2a42104346fe291d3450ead5b1455b37651734ef86c119",
-      "signature": "effective-1-d85ba1411513c7af10f1ea8a12822afd053667d619e595fa22356e8d69d8e80a",
-      "fingerprint": "0fc4ae7fa04e4093f79d8d1dd6e62f69a30f13e98cb48bfe514e8efc48cb9fa1",
+      "data": "fd2784d03c24100281b42e121808b721af85ad860e640f18f646bea64e5eb817",
+      "revisions": "95d2cdf235184afc9b075571d3e3243a1d560be21d9ed7a67b2e28e6d3060119",
+      "signature": "effective-1-04538fd5f036f1236c6c094fb52c1f0e4c8c59b8f4a67bd63c900f14da8230ff",
+      "fingerprint": "9b1a48eaedc23c7a02a8ce314d1fbe3a3958cc4e80ae5bbf91ce6afc3a1c859b",
       "save": null,
       "rng": 634,
       "uid": 0
@@ -35,12 +35,12 @@
   },
   "copies": {
     "Copy source values": {
-      "calls": 11802,
-      "objects": 973809
+      "calls": 12448,
+      "objects": 1034722
     },
     "Copy composition values": {
-      "calls": 5892,
-      "objects": 404023
+      "calls": 6663,
+      "objects": 417059
     }
   }
 }
