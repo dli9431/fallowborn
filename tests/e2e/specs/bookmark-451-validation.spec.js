@@ -12,6 +12,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {expectModAdmission} = require('../support/game/mod-admission');
 const governmentFixture = require('../fixtures/authoring/government-451-catalogues.json');
+governmentFixture.malformedGroups.push.apply(governmentFixture.malformedGroups,require('../fixtures/authoring/stories-451-validation.json').malformedGroups);
 const courtPersonImport = require('../fixtures/authoring/court-person-451-import.json');
 test.describe.configure({mode:'parallel'});
 // Append registrations. Regional corrections, declarations, starts and stories

@@ -1,0 +1,173 @@
+{
+  "malformedGroups": [
+    {
+      "name": "coalition transaction stories",
+      "rows": [
+        {
+          "path": [
+            "storyInstances",
+            "attila_agenda_451",
+            "stages",
+            0,
+            "completion",
+            "kind"
+          ],
+          "value": "acknowledgment"
+        },
+        {
+          "path": [
+            "storyInstances",
+            "attila_agenda_451",
+            "stages",
+            0,
+            "choices",
+            0,
+            "terms",
+            "price"
+          ],
+          "value": -1
+        },
+        {
+          "path": [
+            "storyInstances",
+            "attila_agenda_451",
+            "subjectRealmId"
+          ],
+          "value": "not a realm"
+        },
+        {
+          "path": [
+            "storyInstances",
+            "attila_agenda_451",
+            "stages",
+            0,
+            "choices",
+            2,
+            "operation"
+          ],
+          "value": "agenda_priority"
+        }
+      ]
+    },
+    {
+      "name": "western campaign declarations",
+      "rows": [
+        {
+          "path": [
+            "storyInstances",
+            "western_objective_451",
+            "mobileReview",
+            "schema"
+          ],
+          "value": 2
+        },
+        {
+          "path": [
+            "storyInstances",
+            "western_objective_451",
+            "admission",
+            "cause"
+          ],
+          "value": "anniversary"
+        },
+        {
+          "path": [
+            "storyInstances",
+            "western_objective_451",
+            "target",
+            "provinceId"
+          ],
+          "value": "missing_western_objective"
+        },
+        {
+          "path": [
+            "storyInstances",
+            "western_objective_451",
+            "admission",
+            "mode"
+          ],
+          "value": "scheduled_declaration"
+        },
+        {
+          "path": [
+            "storyInstances",
+            "gallic_relocation_451",
+            "share"
+          ],
+          "value": 1.1
+        },
+        {
+          "path": [
+            "storyInstances",
+            "gallic_relocation_451",
+            "requires"
+          ],
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "local household story graphs",
+      "rows": [
+        {
+          "path": [
+            "storyInstances",
+            "gallic_curialis_track_451",
+            "stages",
+            "working",
+            "afterWork",
+            "focusId"
+          ],
+          "value": "missing_household_focus"
+        },
+        {
+          "path": [
+            "storyInstances",
+            "gallic_colonus_track_451",
+            "stages",
+            "control",
+            "choices",
+            0,
+            "next"
+          ],
+          "value": "working"
+        },
+        {
+          "path": [
+            "storyInstances",
+            "federate_soldier_track_451",
+            "stages",
+            "paid",
+            "terminal"
+          ],
+          "value": false
+        },
+        {
+          "path": [
+            "storyInstances",
+            "opening_attila_451",
+            "goals",
+            0,
+            "criterion",
+            "stageId"
+          ],
+          "value": "missing_transaction"
+        },
+        {
+          "path": [
+            "storyInstances",
+            "aetius_service_track_451",
+            "stages",
+            "service",
+            "choices",
+            0,
+            "operation",
+            "service",
+            "officeId"
+          ],
+          "value": "patricius"
+        }
+      ]
+    }
+  ]
+}
