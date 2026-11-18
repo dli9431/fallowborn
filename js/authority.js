@@ -313,7 +313,7 @@
     }
     return out;
   };
-  var legitimacyTransaction = null;
+  var legitimacyTransaction = null, appointmentsPending = false;
   function legitimacySnapshot(s) {
     var subjects = [], out = [];
     list(s,'recognitions').forEach(function (r) {
@@ -326,9 +326,15 @@
      transient nesting protection, not another event or saved-state queue. */
   FB.withLegitimacyMoments = function (s,write) {
     if (legitimacyTransaction === s || !s || !s.player) return write();
-    var previous = legitimacyTransaction, before = legitimacySnapshot(s), result;
-    legitimacyTransaction = s;
-    try {result = write();} finally {legitimacyTransaction = previous;}
+    var previous = legitimacyTransaction, previousPending = appointmentsPending, before = legitimacySnapshot(s), result;
+    legitimacyTransaction = s; appointmentsPending = false;
+    try {
+      result = write();
+      // Absorption moves offices, people and territory in one outer succession transaction.
+      if (appointmentsPending) settleAppointments(s);
+    } finally {
+      legitimacyTransaction = previous; appointmentsPending = previousPending;
+    }
     list(s,'recognitions').forEach(function (r) {
       if (!before.some(function (v) {return same(v.subject,r.subject);}))
         before.push({subject:copy(r.subject),band:'none'});
@@ -415,8 +421,10 @@
         var heads = name === 'bindPoliticalReligiousHeads' ? JSON.stringify(s.religiousHeads || {}) : null;
         var result = write.apply(FB,args);
         var changed = Array.isArray(result) ? result.length > 0 : !!result;
-        if (changed || living && args[1].dead || heads !== null && heads !== JSON.stringify(s.religiousHeads || {}))
-          settleAppointments(s);
+        if (changed || living && args[1].dead || heads !== null && heads !== JSON.stringify(s.religiousHeads || {})) {
+          if (legitimacyTransaction === s) appointmentsPending = true;
+          else settleAppointments(s);
+        }
         return result;
       });
     };
