@@ -1,7 +1,7 @@
 'use strict';
 const {test,expect}=require('../support/fixture');
-const {openGame}=require('../support/game/navigation');
-const {startParityGame,FRESH_JOURNEYS}=require('../support/game/parity');
+const {openGame,prepareGameContent}=require('../support/game/navigation');
+const {startParityGame,startPreparedParityGame,FRESH_JOURNEYS}=require('../support/game/parity');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 test.describe.configure({mode:'parallel'});
 const guards={harbor:require('../fixtures/authoring/guarded-principal-harbor.json'),
@@ -47,7 +47,8 @@ for(const example of [
     await page.locator('#modfile').setInputFiles({name:'guarded-principal-'+example.prefix+'.json',mimeType:'application/json',
       buffer:Buffer.from(JSON.stringify(guards[example.prefix]))});
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-    expect(await startParityGame(page,info,{bookmark:example.prefix+'_world',
+    await prepareGameContent(page);
+    expect(await startPreparedParityGame(page,{bookmark:example.prefix+'_world',
       scenario:example.prefix+'_guarded_principal',declaredOpening:true})).toBe(example.code);
     expect(await page.evaluate(function(){const s=FB.state,c=s.chars[s.player.charId];
       return {name:c.name,sex:c.sex,county:s.player.provinceId,slot:s.player.homeSettlement,original:c.id===s.start.originalPrincipal.charId};
