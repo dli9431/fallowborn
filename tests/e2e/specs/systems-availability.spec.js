@@ -389,7 +389,10 @@ for (const bookmark of ['867', '1066']) {
           pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter() };
       }, bookmark);
       expect(result.enabled).toEqual([
-        'abbeys', 'crown_bloc', 'estates', 'excommunication', 'feudal_service',
+        'abbeys', 'crown_bloc', 'estates', 'event_authority', 'event_episcopal_claims',
+        'event_federates', 'event_governments', 'event_industry_laws', 'event_mobile_confederations',
+        'event_religious_cases', 'event_religious_institutions', 'event_story_tracks', 'event_works',
+        'excommunication', 'feudal_service',
         'great_holy_wars', 'guild_elections', 'manorial_tenure', 'papacy',
         'royal_council', 'scutage', 'tournaments'
       ]);

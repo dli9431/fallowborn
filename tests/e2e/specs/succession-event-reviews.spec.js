@@ -3,6 +3,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
+const {startPreparedParityGame} = require('../support/game/parity');
 const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {installRestoreFacts} = require('../support/game/restore-facts');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
@@ -257,7 +258,8 @@ test('an imported majority profile produces a real losing vote on the household 
 
 async function royal(page,info,json,partition) {
   if (json) await imported(page,info,'succession-event-reviews-courts.json');
-  await startHistoricalGame(page,info,{bookmark:partition?(json?'review_partition_world':'800'):'476',
+  else await openGame(page,info);
+  await startPreparedParityGame(page,{unhide:true,bookmark:partition?(json?'review_partition_world':'800'):'476',
     scenario:partition?(json?'review_partition_ruler':'charlemagne_800'):'peroz_sasanian_476',declaredOpening:true});
   await page.evaluate(function (input) {
     const s=FB.state;FB.game.setPaused(true);FB.ui.coachmarkReset();delete s.player.flags.tutorial;
@@ -379,7 +381,8 @@ for (const json of [false,true]) test((json?'JSON':'native')+' queued partition 
 
 for (const json of [false,true]) test((json?'JSON':'native')+' an existing magnate gives only its own recognition and can withhold it',async function ({page},info) {
   if (json) await imported(page,info,'succession-event-reviews-courts.json');
-  await startHistoricalGame(page,info,{bookmark:'476',code:'ASSENT-476-farmer_476-rayy-m-Principal-established'});
+  else await openGame(page,info);
+  await startPreparedParityGame(page,{unhide:true,bookmark:'476',code:'ASSENT-476-farmer_476-rayy-m-Principal-established'});
   const result=await page.evaluate(function (json) {
     const s=FB.state,A=FB.aristocracy,R=FB.governmentRecognition,rid=FB.settlementCountyHolder(s,s.player.provinceId);
     const voice=A.constituency(s,rid).find(function (m) {return m.active&&m.scope.id===s.player.provinceId;});
