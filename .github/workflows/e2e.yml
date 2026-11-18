@@ -117,7 +117,49 @@ jobs:
         working-directory: tests/e2e
       - name: Install browsers
         working-directory: tests/e2e
-        run: npx playwright install --with-deps chromium firefox webkit
+        # A stalled install used to run until the 20 minute job limit and cancel the shard.
+        timeout-minutes: 10
+        env:
+          PROJECTS: ${{ inputs.projects }}
+        run: |
+          # Install only the engines the selected projects use.
+          browsers=""
+          for project in $PROJECTS; do
+            case "$project" in
+              all) browsers="$browsers chromium firefox webkit" ;;
+              chromium-*) browsers="$browsers chromium" ;;
+              firefox-*) browsers="$browsers firefox" ;;
+              webkit-*) browsers="$browsers webkit" ;;
+              *) echo "Unknown project: $project" >&2; exit 2 ;;
+            esac
+          done
+          browsers="$(printf '%s\n' $browsers | sort -u | tr '\n' ' ')"
+          echo "$(date -u +%T) Installing: $browsers"
+          # Run one named phase under a bound and report how long it took, so a
+          # stalled install shows which command stalled.
+          phase() {
+            name="$1"; shift
+            start=$(date +%s)
+            echo "$(date -u +%T) [$name] start"
+            if timeout --signal=TERM --kill-after=10s 90s "$@"; then rc=0; else rc=$?; fi
+            echo "$(date -u +%T) [$name] exit $rc after $(( $(date +%s) - start ))s"
+            if [ "$rc" -ne 0 ]; then
+              echo "Processes still running after a failed or stalled [$name]:"
+              ps -eo pid,etime,args | grep -E 'apt|dpkg|playwright|node|curl' | grep -v grep || true
+            fi
+            return "$rc"
+          }
+          # The normal install takes about a minute. Bound each phase and retry.
+          for attempt in 1 2 3; do
+            echo "$(date -u +%T) Attempt $attempt"
+            if phase "system packages" npx playwright install-deps $browsers \
+              && DEBUG=pw:install phase "browser download" npx playwright install $browsers; then
+              exit 0
+            fi
+            echo "Browser install attempt $attempt failed or timed out" >&2
+            sleep 5
+          done
+          exit 1
       - id: select
         name: Select tests
         env:
