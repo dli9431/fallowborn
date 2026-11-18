@@ -11,6 +11,7 @@ const fileProjectTests = [
   '**/bookmark-picker.spec.js',
   '**/determinism.spec.js',
   '**/eager-courts.spec.js',
+  '**/event-system-moments.spec.js',
   '**/family-growth.spec.js',
   '**/holywar-adapter.spec.js',
   '**/holywar-lifecycle.spec.js',
