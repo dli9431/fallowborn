@@ -144,11 +144,20 @@ jobs:
             if timeout --signal=TERM --kill-after=10s 90s "$@"; then rc=0; else rc=$?; fi
             echo "$(date -u +%T) [$name] exit $rc after $(( $(date +%s) - start ))s"
             if [ "$rc" -ne 0 ]; then
+              # timeout cannot reach the root apt-get that npx starts, and a surviving
+              # apt-get keeps the dpkg lock held for every retry.
+              sudo pkill -KILL -x apt-get || true
+              sudo pkill -KILL -f '/usr/lib/apt/method[s]' || true
+              sudo dpkg --configure -a || true
               echo "Processes still running after a failed or stalled [$name]:"
               ps -eo pid,etime,args | grep -E 'apt|dpkg|playwright|node|curl' | grep -v grep || true
             fi
             return "$rc"
           }
+          # A stalled mirror download used to hang apt-get indefinitely. Make apt time
+          # out and retry its own network requests.
+          printf '%s\n' 'Acquire::http::Timeout "20";' 'Acquire::https::Timeout "20";' 'Acquire::Retries "3";' \
+            | sudo tee /etc/apt/apt.conf.d/99ci-timeouts > /dev/null
           # The normal install takes about a minute. Bound each phase and retry.
           for attempt in 1 2 3; do
             echo "$(date -u +%T) Attempt $attempt"
