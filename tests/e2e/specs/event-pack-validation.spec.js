@@ -13,6 +13,7 @@ dependsOnRuntime(__filename,['js/ui_modals.js','js/world.js']);
 
 // Append fixture registrations here; the discovery assertion prevents silent omissions.
 const fixtureFiles = [
+  {file:'451.json',runtime:['data/events_451.js','data/bookmark_451_governments.js','data/bookmark_manifest.js','js/wars.js','js/save.js','js/save_v4.js']},
   {file:'imperial_office.json',runtime:['data/events_imperial_office.js','data/political_institutions.js','js/government_administration.js','js/government_recognition.js']},
   {file:'imperial_service.json',runtime:['data/events_imperial_service.js','data/story_imperial_service.js','data/starts_imperial_officer.js','data/office_mandates.js','js/office_mandates.js','js/story_household.js','js/story_ruler_agenda.js','js/story_opening_goals.js','data/bookmark_manifest.js']},
   {file:'state-readers-native.json',runtime:['data/events_common.js','data/industry_laws.js']}
@@ -143,3 +144,78 @@ dependsOnRuntime(__filename,['index.html','data/bookmark_manifest.js',
   'data/events_religious_life.js','data/events_kingship_succession.js','data/events_works_technology.js',
   'data/events_493.js','data/events_568.js','data/events_634.js','data/events_711.js','data/events_800.js',
   'data/events_1096.js','data/events_1204.js','data/events_1241.js','data/events_mobile_life.js','data/events_imperial_service.js']);
+
+const {prepareGameContent} = require('../support/game/navigation');
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
+
+test.describe('retained household decisions in 451',function () {
+test.describe.configure({mode:'parallel'});
+for (const row of [
+  {event:'constantinople_church_copy_451',county:'constantinople',holding:'letters',cost:30},
+  {event:'orleans_door_list_451',county:'orleans',flag:'gate_list_451',chance:'gate_explanation_451',cost:1},
+  {event:'paris_road_notes_451',county:'paris',flag:'road_notes_451',chance:'road_inquiry_451',cost:1},
+  {event:'thessalonica_reserve_list_451',county:'thessaloniki',flag:'reserve_list_451',chance:'reserve_accounts_451',cost:1}
+]) test(row.event + ' retains its private cost and useful preparation after two restores',async function ({page},info) {
+  await startHistoricalGame(page,info,{bookmark:'451',code:'PACK-451-farmer_451-' + row.county + '-m-Reader'});
+  await prepareGameContent(page);
+  const before = await page.evaluate(function (row) {
+    const s = FB.state, ev = FB.eventById(row.event);
+    // Stage the finite calendar boundary; no daily simulation or public war is needed.
+    s.turn += 270;s.date.season = 3;s.date.day = 1;
+    s.player.gold = 100;s.player.holdings = [];
+    const local = s, originalWars = s.wars;
+    if (ev.trigger.realmAtWar) {
+      const owner = local.owner[row.county];
+      local.wars = {war_fixture:{id:'war_fixture',attacker:owner,defender:'east_451',status:'active',startedTurn:0}};
+    }
+    // War is an eligibility fact for the local scene, never an event reward.
+    const ctx = FB.eventContextFor(local,ev,{});
+    const refusal = JSON.parse(JSON.stringify(local)), poor = JSON.parse(JSON.stringify(local));
+    poor.player.gold = 0;
+    const denied = !FB.eventOptionStatus(poor,ev,ev.options[0],ctx).ready;
+    const refused = FB.resolveEventOption(refusal,ev,ev.options[1],ctx,{automated:true});
+    const chanceBefore = row.chance ? FB.namedChance(local,row.chance,{}) : null;
+    const accepted = FB.resolveEventOption(local,ev,ev.options[0],ctx,{automated:true});
+    const chanceAfter = row.chance ? FB.namedChance(local,row.chance,{}) : null;
+    if (!accepted) throw new Error('Household decision rejected');
+    // The synthetic eligibility fact is separate from the real private transaction.
+    s.wars = originalWars;
+    s.eventQueue = [];
+    return {denied:denied,refused:!!refused,refusalGold:refusal.player.gold,gold:s.player.gold,
+      holdings:s.player.holdings,flags:s.player.flags,chanceBefore:chanceBefore,chanceAfter:chanceAfter,
+      saved:FB.save.serialize(),rng:FB.getRngState() >>> 0,uid:FB.getUidCounter(),start:s.start};
+  },row);
+  expect(before.denied).toBe(true);
+  expect(before.refused).toBe(true);
+  expect(before.refusalGold).toBe(100);
+  expect(before.gold).toBe(100-row.cost);
+  if (row.holding) expect(before.holdings).toContain(row.holding);
+  if (row.flag) {
+    expect(before.flags[row.flag]).toBeTruthy();
+    expect(before.chanceAfter).toBeGreaterThan(before.chanceBefore);
+    expect(before.chanceAfter).toBeCloseTo(Math.min(0.85,before.chanceBefore+0.15),10);
+  }
+  for (let pass=0;pass<2;pass++) {
+    await restoreBookmark(page,before.saved);
+    const retained = await page.evaluate(function (row) {
+      const s = FB.state, ev = FB.eventById(row.event), ctx = FB.eventContextFor(s,ev,{});
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const pool = FB.eventYearPool(s).filter(function (e) {return e.pack === 'dated_451';});
+      const duplicate = !FB.checkTrigger(s,ev.options[0].require,ctx);
+      return {gold:s.player.gold,holdings:s.player.holdings,flags:s.player.flags,start:s.start,
+        count:pool.length,duplicate:duplicate,pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter(),
+        rng:rng >>> 0,uid:uid,saved:FB.save.serialize()};
+    },row);
+    expect(retained.gold).toBe(before.gold);
+    expect(retained.holdings).toEqual(before.holdings);
+    expect(retained.flags).toEqual(before.flags);
+    expect(retained.start).toEqual(before.start);
+    expect(retained.count).toBe(22);
+    expect(retained.duplicate).toBe(true);
+    expect(retained.pure).toBe(true);
+    expect(retained.rng).toBe(before.rng);
+    expect(retained.uid).toBe(before.uid);
+    before.saved = retained.saved;
+  }
+});
+});

@@ -478,3 +478,94 @@ test('the Medinan scene offers its existing private provisions review without pu
   });
   expect(result).toEqual({pure:true,committed:true,charge:2,phase:'holding'});
 });
+
+const spring451 = require('../fixtures/authoring/dated-event-isolation-451.json');
+dependsOnRuntime(__filename,['data/events_451.js','data/bookmark_451_governments.js','data/bookmark_manifest.js']);
+
+for (const row of spring451.rows) test(row.bookmark + ' restored native pool and delivery exclude every other campaign at the same live year',async function ({page},info) {
+  await startHistoricalGame(page,info,row);
+  await prepareGameContent(page);
+  const snapshot = await page.evaluate(function (row) {
+    const s = FB.state;
+    // Put every event inside its declared window, including the later local notices.
+    s.turn += (row.liveYear - s.date.year) * 360;s.date.year = row.liveYear;
+    if (!FB.queueEvent(s,row.eventId,{})) throw new Error('Native notice queue rejected');
+    return {saved:FB.save.serialize(),start:s.start,gold:s.player.gold,holdings:s.player.holdings,
+      date:s.date,turn:s.turn,queue:s.eventQueue,stories:s.stories,rng:FB.getRngState() >>> 0,uid:FB.getUidCounter()};
+  },row);
+  // Warm a foreign identity's pool before restoring the real campaign.
+  await page.evaluate(function (row) {
+    const s = JSON.parse(JSON.stringify(FB.state));s.start.id = '1066';
+    delete s.start.revision;
+    s.start.era = 'high_medieval';s.date.year = row.liveYear;
+    if (FB.eventYearPool(s).some(function (ev) {return ev.pack === row.packId;})) throw new Error('Foreign pool leak');
+  },row);
+  await restoreBookmark(page,snapshot.saved);
+  expect(await page.evaluate(function (expected) {
+    const s = FB.state;
+    return JSON.stringify(s.start) === JSON.stringify(expected.start) && s.player.gold === expected.gold &&
+      JSON.stringify(s.date) === JSON.stringify(expected.date) && s.turn === expected.turn &&
+      JSON.stringify(s.player.holdings) === JSON.stringify(expected.holdings) &&
+      JSON.stringify(s.eventQueue) === JSON.stringify(expected.queue) && JSON.stringify(s.stories) === JSON.stringify(expected.stories) &&
+      FB.getRngState() >>> 0 === expected.rng && FB.getUidCounter() === expected.uid && FB.game.contentReady;
+  },snapshot)).toBe(true);
+  const result = await page.evaluate(function (row) {
+    const original = JSON.stringify(FB.state), rng = FB.getRngState(), uid = FB.getUidCounter(), faults = [];
+    const own = JSON.parse(original), pack = FBDATA.eventPacks[row.packId];
+    const events = FBDATA.events.filter(function (ev) {return ev.pack === row.packId;});
+    const active = events.filter(function (ev) {
+      return (ev.yearMin === undefined || own.date.year >= ev.yearMin) &&
+        (ev.yearMax === undefined || own.date.year <= ev.yearMax);
+    });
+    row.patches.forEach(function (patch) {
+      let target = own;
+      patch.path.slice(0,-1).forEach(function (key) {target = target[key];});
+      target[patch.path[patch.path.length-1]] = JSON.parse(JSON.stringify(patch.value));
+    });
+    // The real restored queue was checked above. Isolate this delivery from
+    // opening decisions: the dispatcher intentionally emits only one per day.
+    own.eventQueue = [];
+    const first = FB.eventById(row.eventId), ctx = FB.eventContextFor(own,first,{});
+    if (!ctx || !FB.queueEvent(own,first.id,{}) || !FB.pickDailyEvents(own).some(function (item) {return item.id === first.id;}))
+      faults.push('own queued delivery');
+    if (!FB.contentPeriodEnabled(own,pack) || events.some(function (ev) {
+      const expected = active.indexOf(ev) >= 0;
+      return FB.eventPeriodEnabled(own,ev) !== expected || (FB.eventYearPool(own).indexOf(ev) >= 0) !== expected;
+    })) faults.push('restored own pool');
+    const others = Object.keys(FBDATA.bookmarks).filter(function (id) {return id !== row.bookmark;});
+    others.forEach(function (id) {
+      const foreign = JSON.parse(JSON.stringify(own));foreign.start.id = id;
+      delete foreign.start.revision;
+      // Preserve the positive local facts, era and year: only campaign identity changes.
+      foreign.eventQueue = [];
+      const before = JSON.stringify(foreign), beforeRng = FB.getRngState(), beforeUid = FB.getUidCounter();
+      for (let pass = 0; pass < 2; pass++) {
+        if (FB.contentPeriodEnabled(foreign,pack) || events.some(function (ev) {
+          return FB.eventPeriodEnabled(foreign,ev) || FB.eventYearPool(foreign).indexOf(ev) >= 0 ||
+            FB.eventContextFor(foreign,ev,{}) || FB.ensureEventParticipants(foreign,ev,{}) ||
+            FB.queueEvent(foreign,ev.id,{}) || FB.eventContextStillValid(foreign,ev,ctx) ||
+            FB.eventOptionStatus(foreign,ev,ev.options[0],ctx).ready ||
+            FB.resolveEventOption(foreign,ev,ev.options[0],ctx,{automated:true});
+        })) faults.push('foreign routes: ' + id);
+      }
+      if (before !== JSON.stringify(foreign) || beforeRng !== FB.getRngState() || beforeUid !== FB.getUidCounter())
+        faults.push('impure rejection: ' + id);
+      foreign.eventQueue = [{id:first.id,ctx:ctx}];foreign.slotDays = [];
+      if (FB.pickDailyEvents(foreign).some(function (item) {return item.id === first.id;})) faults.push('queued dispatch: ' + id);
+      foreign.eventQueue = [];foreign.slotDays = [foreign.date.day];
+      if (FB.pickDailyEvents(foreign).some(function (item) {return events.indexOf(FB.eventById(item.id)) >= 0;}))
+        faults.push('random dispatch: ' + id);
+      if (FB.eventYearPool(own).filter(function (ev) {return ev.pack === row.packId;}).length !== active.length)
+        faults.push('return cache: ' + id);
+    });
+    FB.setRngState(rng);FB.setUidCounter(uid);
+    return {faults:faults,count:events.length,active:active.length,others:others,
+      pure:original === JSON.stringify(FB.state) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  },row);
+  expect(result.faults).toEqual([]);
+  expect(result.count).toBe(22);
+  expect(result.active).toBe(22);
+  expect(result.others).toEqual(expect.arrayContaining(['867','1066']));
+  expect(result.others.length).toBeGreaterThanOrEqual(10);
+  expect(result.pure).toBe(true);
+});
