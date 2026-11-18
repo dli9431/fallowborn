@@ -20,7 +20,7 @@ on:
         type: string
         default: changed
       specs:
-        description: Space-separated spec paths relative to tests/e2e (specs mode)
+        description: Space-separated spec paths relative to tests/e2e, required for specs mode and optional for changed mode
         type: string
         default: ''
       base:
@@ -184,7 +184,7 @@ jobs:
           SPECS: ${{ inputs.specs }}
         run: |
           args=""
-          if [ "$MODE" = specs ]; then
+          if [ "$MODE" = specs ] || { [ "$MODE" = changed ] && [ -n "$SPECS" ]; }; then
             for spec in $SPECS; do
               case "$spec" in
                 specs/*.spec.js) args="$args $spec" ;;
@@ -192,13 +192,14 @@ jobs:
               esac
             done
             if [ -z "$args" ]; then echo "specs mode needs specs" >&2; exit 2; fi
-          elif [ "$MODE" = changed ]; then
+          fi
+          if [ "$MODE" = changed ]; then
             base="$BASE"
             if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
               base="$(git rev-parse HEAD~1)"
             fi
             echo "Changed-test base: $base"
-            args="--only-changed=$base --pass-with-no-tests"
+            args="--only-changed=$base --pass-with-no-tests $args"
           fi
           if [ "$PROJECTS" != all ]; then
             for project in $PROJECTS; do args="$args --project=$project"; done

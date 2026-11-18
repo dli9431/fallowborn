@@ -24,7 +24,7 @@ on:
         options: [changed, all, specs]
         default: changed
       specs:
-        description: Space-separated spec paths relative to tests/e2e, for specs mode
+        description: Space-separated spec paths relative to tests/e2e, required for specs mode and optional for changed mode
         type: string
         default: ''
       base:
