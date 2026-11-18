@@ -3,7 +3,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame,prepareGameContent} = require('../support/game/navigation');
-const {startHistoricalGame} = require('../support/game/historical-start');
+const {startPreparedParityGame} = require('../support/game/parity');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {engineSources} = require('../support/source-literals');
@@ -23,17 +23,16 @@ dependsOnRuntime(__filename,[
 ]);
 
 async function start(page,info,imported,funds) {
+  await openGame(page,info);
   if (imported) {
-    await openGame(page,info);
-    await prepareGameContent(page);
     const file = path.resolve(__dirname,'../fixtures/authoring',examples[funds ? 1 : 0]);
     await page.evaluate(function () {FB.ui.showMods();});
     await page.locator('#modfile').setInputFiles(file);
     await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
     await prepareGameContent(page);
   }
-  await startHistoricalGame(page,info,funds ? {bookmark:'493',revision:'jewish_samaritan_v3',code:'REVIEW-493-farmer_493-sardis-m-Reader-established-0-greek.jewish'} :
-    {bookmark:'1204',code:'REVIEW-1204-baron-roma-m-Reader'});
+  await startPreparedParityGame(page,funds ? {unhide:true,bookmark:'493',revision:'jewish_samaritan_v3',code:'REVIEW-493-farmer_493-sardis-m-Reader-established-0-greek.jewish'} :
+    {unhide:true,bookmark:'1204',code:'REVIEW-1204-baron-roma-m-Reader'});
   await page.evaluate(function () {
     window.reviewTools = {
       facts:function (s,includeQueue) {

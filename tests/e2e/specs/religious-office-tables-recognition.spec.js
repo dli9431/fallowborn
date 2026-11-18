@@ -1,5 +1,6 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { openGame, prepareGameContent } = require('../support/game/navigation');
 const { beginBookmarkFromTitle, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { installPageGuards } = require('../support/page-contract');

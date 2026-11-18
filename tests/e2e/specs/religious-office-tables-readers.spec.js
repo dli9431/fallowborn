@@ -1,5 +1,6 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { beginBookmark } = require('../support/game/bookmark-acceptance');
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { snapshot, routeReaders, installReadProbe } = require('../support/game/religious-office-tables');
