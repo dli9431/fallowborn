@@ -262,4 +262,167 @@
   };
   var characterRealm = FB.treasuryCharacterRealm;
   FB.treasuryCharacterRealm = function (s,cid) { var rid = FB.realmIdForRulerCharacter(s,cid); return cid !== s.player.charId && V.profile(s,rid) ? null : characterRealm(s,cid); };
+
+  // Event invitations project existing institutions; the transaction owners above
+  // still decide qualification, assent, reserves and the exact public accounts.
+  function local(s) { return FB.settlementCountyHolder(s,s.player.provinceId); }
+  function living(s,id) { return !!(s.chars[id] && !s.chars[id].dead); }
+  function principal(s,ctx) {
+    return ctx.participants && ctx.participants.principal === s.player.charId && living(s,s.player.charId) && !s.player.dead &&
+      ctx.civicRealmId === local(s) && ctx.civicGeneration === FB.realmRulerGeneration(s,local(s));
+  }
+  function facts(s,rid) {
+    return {participants:{principal:s.player.charId},civicRealmId:rid,civicGeneration:FB.realmRulerGeneration(s,rid)};
+  }
+  function office(s,a) {
+    var r = V.row(s,local(s));
+    return r && r.offices.filter(function (o) {
+      return a.officeId ? o.id === a.officeId : a.action === 'resign' ? o.incumbentId === s.player.charId :
+        a.action === 'nominate' ? o.vacancy && o.vacancy.status === 'open' : true;
+    })[0];
+  }
+  function officeQuote(s,a,ctx) {
+    var rid = local(s), o = V.row(s,rid) && V.row(s,rid).offices.filter(function (o) {return o.id === ctx.civicOfficeId;})[0];
+    if (!principal(s,ctx) || !V.active(s,rid) || !o || a.officeId && a.officeId !== o.id ||
+        ctx.civicVacancyId !== (o.vacancy && o.vacancy.id || null)) return null;
+    return V.officeQuote(s,rid,o.id,a.action,a.action === 'resign' ? {characterId:s.player.charId} : {candidateId:s.player.charId});
+  }
+  function details(s,a,q) {
+    var rid = q.realmId, p = V.profile(s,rid), def = p && p.offices.filter(function (o) {return o.id === q.officeId;})[0];
+    var lines = [FB.T('Institution: {realm}.',{realm:s.realms[rid].name}),
+      FB.T('Payment on confirmation: {money:cost}.',{cost:q.cost || q.charge || 0})];
+    if (def) lines.push(FB.T('Office: {office}.',{office:FB.dataText(s,s.player.charId,'civicOffice',p && V.row(s,rid).profileId + '.' + def.id,def,'name',{})}),
+      FB.T('Admission grants membership only. Nomination pays from your personal purse and grants no office. Resignation ends only your own mandate.'));
+    if (def) lines.push(def.termDays === null ? FB.T('This office has no fixed term.') :
+      FB.T('Declared office term: {days} days.',{days:def.termDays}));
+    var current = q.stamp && q.stamp.civic && q.stamp.civic.offices.filter(function (o) {return o.id === q.officeId;})[0];
+    if (current && current.endTurn !== null) lines.push(FB.T('Remaining term: {days} days.',{days:Math.max(0,current.endTurn - s.turn)}));
+    if (q.reason) {
+      var reasons = {
+        occupied:FB.T('The institution must control every represented county.'),
+        constituency_unresolved:FB.T('A represented interest is unavailable.'),
+        no_vacancy:FB.T('This office has no open selection.'),
+        already_nominated:FB.T('This person is already nominated, or the nomination list is full.'),
+        membership:FB.T('The current citizenship requirements are not satisfied.'),
+        funds:FB.T('The payer lacks the declared nomination fee.'),
+        reserve:FB.T('The public treasury must retain its protected reserve.'),
+        partner_withheld:FB.T('The outside counterparty lacks funds or withholds the required assent.'),
+        withheld:FB.T('The represented interests withhold the required assent.'),
+        no_mandate:FB.T('A current mandate is required for this decision.'),
+        outside_scope:FB.T('These terms exceed the institution’s declared limits.'),
+        existing_dues:FB.T('An extraordinary due is already active.'),
+        commitment_limit:FB.T('The institution has reached its live commitment limit.')
+      };
+      lines.push(reasons[q.reason] || FB.T('A current qualification or authority requirement is not satisfied.'));
+    }
+    return lines;
+  }
+  FB.eventReviews.register('civic_office',{
+    owner:'governments',partySlots:{principal:true},
+    args:{type:'object',fields:{action:{enum:['admit','nominate','resign']},officeId:{type:'string',minLength:1,maxLength:100,optional:'absent'}}},
+    bind:function (s,a) {
+      var rid = local(s), o = office(s,a);
+      if (!o || !V.active(s,rid)) return null;
+      return Object.assign(facts(s,rid),{civicOfficeId:o.id,civicVacancyId:o.vacancy && o.vacancy.id || null});
+    },quote:officeQuote,apply:function (s,a,q) {return V.officeApply(s,q);},details:details,
+    report:function (s,a,q) {return (q.cost ? [{type:'gold',amount:-q.cost}] : []).concat([{type:'system',system:'story'}]);}
+  });
+  var budgetFields = {operation:{enum:['extraordinary_tax','pledge','repay']},
+    amount:{type:'number',min:0.01,max:10000,optional:'absent'},duration:{type:'integer',min:1,max:1440,optional:'absent'},
+    interest:{type:'number',min:0,max:0.25,optional:'absent'},lenderRealmId:{type:'string',minLength:1,maxLength:200,optional:'absent'}};
+  function budgetArgs(a) {
+    return a.operation === 'repay' ? a.amount === undefined && a.duration === undefined && a.interest === undefined && a.lenderRealmId === undefined :
+      a.amount !== undefined && a.duration !== undefined && (a.operation === 'pledge' ? a.duration >= 90 && a.interest !== undefined :
+        a.duration <= 360 && a.interest === undefined && a.lenderRealmId === undefined);
+  }
+  function budgetTerms(s,a,ctx) {
+    return a.operation === 'repay' ? {debtId:ctx.civicDebtId} : a.operation === 'pledge' ?
+      {lenderRealmId:ctx.civicLenderId,amount:a.amount,interest:a.interest,duration:a.duration} : {amount:a.amount,duration:a.duration};
+  }
+  FB.eventReviews.register('civic_budget',{
+    owner:'governments',partySlots:{principal:true,counterparty:true},args:{type:'object',fields:budgetFields,test:budgetArgs},
+    bind:function (s,a) {
+      var rid = local(s), r = V.row(s,rid), chief = V.chief(s,rid), debt, lender = null;
+      if (!r || !chief || chief.id !== s.player.charId) return null;
+      if (a.operation === 'repay') {
+        debt = r.debts.filter(function (d) {return d.status === 'active';})[0];
+        if (!debt) return null;
+        lender = debt.lenderRealmId;
+      } else if (a.operation === 'pledge') {
+        lender = a.lenderRealmId || Object.keys(s.realms).sort().filter(function (id) {
+          var c = FB.realmRulerCharacterSnapshot(s,id), q = id !== rid && c && V.proposalQuote(s,rid,'pledge',{
+            lenderRealmId:id,amount:a.amount,interest:a.interest,duration:a.duration});
+          return q && q.allowed;
+        })[0];
+      }
+      var person = lender && FB.realmRulerCharacterSnapshot(s,lender);
+      if (a.operation !== 'extraordinary_tax' && (!person || person.dead)) return null;
+      var f = facts(s,rid);f.participants.counterparty = person ? person.id : s.player.charId;
+      f.civicLenderId = lender || null;f.civicDebtId = debt ? debt.id : null;
+      return f;
+    },quote:function (s,a,ctx) {
+      var rid = local(s), chief = V.chief(s,rid), lender = ctx.civicLenderId;
+      if (!principal(s,ctx) || !chief || chief.id !== s.player.charId || !V.controlled(s,rid)) return null;
+      var person = lender && FB.realmRulerCharacterSnapshot(s,lender);
+      if (ctx.participants.counterparty !== (person && !person.dead ? person.id : a.operation === 'extraordinary_tax' ? s.player.charId : null) ||
+          a.lenderRealmId && lender !== a.lenderRealmId) return null;
+      return V.proposalQuote(s,rid,a.operation,budgetTerms(s,a,ctx));
+    },apply:function (s,a,q) {return V.proposalApply(s,q);},
+    details:function (s,a,q) {
+      var lines = details(s,a,q), t = q.terms;
+      lines.push(FB.T('Public treasury: {money:funds}. Your private purse: {money:privateFunds}.',{
+        funds:FB.treasuryAvailable(s,q.realmId),privateFunds:s.player.gold}));
+      lines.push(FB.T('Protected public reserve: {money:reserve}.',{reserve:q.stamp.constituency.obligations.reserve}));
+      if (a.operation === 'pledge') lines.push(FB.T('The lender pays {money:amount} to the institution now. Repayment: {money:repayment} after {days} days.',{
+        amount:t.amount,repayment:t.amount * (1 + t.interest),days:t.duration}));
+      if (a.operation === 'repay') lines.push(FB.T('The public treasury pays the original lender. Your private purse pays nothing.'));
+      if (a.operation === 'extraordinary_tax') lines.push(FB.T('Extraordinary public dues: {money:amount} for {days} days. Current collective assent is required.',{amount:t.amount,days:t.duration}));
+      return lines;
+    }
+  });
+  FB.eventReviews.register('assembly_mandate',{
+    owner:'governments',partySlots:{principal:true},
+    args:{type:'object',fields:{action:{enum:['nominate','resign','assent']},
+      amount:{type:'number',min:0.01,max:10000,optional:'absent'},duration:{type:'integer',min:1,max:360,optional:'absent'}},
+      test:function (a) {return a.action === 'assent' ? a.amount !== undefined && a.duration !== undefined : a.amount === undefined && a.duration === undefined;}},
+    bind:function (s) {
+      var rid = local(s), r = C.row(s,rid);
+      return !r || !C.isDelegated(s,rid) ? null : Object.assign(facts(s,rid),{
+        civicSelectionId:r.selection && r.selection.id || null,civicMandateId:r.mandate && r.mandate.id || null});
+    },quote:function (s,a,ctx) {
+      var rid = local(s), r = C.row(s,rid), delegate = C.delegate(s,rid);
+      if (!principal(s,ctx) || !r || !C.isDelegated(s,rid) || ctx.civicSelectionId !== (r.selection && r.selection.id || null) ||
+          ctx.civicMandateId !== (r.mandate && r.mandate.id || null)) return null;
+      if (a.action === 'nominate') return C.quote(s,rid,'nominate',{candidateId:s.player.charId});
+      if (!delegate || delegate.id !== s.player.charId) return null;
+      if (a.action === 'resign') return C.quote(s,rid,'resign',{delegateId:s.player.charId});
+      var q = C.assentQuote(s,rid,'extraordinary_tax',{amount:a.amount,duration:a.duration});
+      // A completed approval is consumed by the ordinary public action, not by this invitation.
+      if (q && C.authorization(s,rid,q.operation,q.terms)) return null;
+      return q;
+    },apply:function (s,a,q) {return a.action === 'assent' ? C.assent(s,q) : C.apply(s,q);},
+    details:function (s,a,q) {
+      return details(s,a,q).concat([a.action === 'assent' ?
+        FB.T('Seek collective assent for {money:amount} of dues over {days} days. Confirmation records approval only; it collects no money.',{amount:a.amount,days:a.duration}) :
+        FB.T('Nomination uses your private purse. Resignation ends your own public mandate; household property stays with its existing owner.')]);
+    },report:function (s,a,q) {return (q.cost ? [{type:'gold',amount:-q.cost}] : []).concat([{type:'system',system:'story'}]);}
+  });
+  FB.eventStateReaders.register({id:'civic_constituency',system:'governments',
+    args:{type:'object',fields:{kind:{enum:['civic','assembly']},status:{enum:['present','admission','nomination','term_ending','incumbent','debt_due']}}},
+    read:function (s,a) {
+      var rid = local(s), r = C.row(s,rid), civic = a.kind === 'civic', row = civic ? V.row(s,rid) : r;
+      if (!r || !row || !s.realms[rid] || !s.realms[rid].alive || !(civic ? V.active(s,rid) : C.isDelegated(s,rid)) ||
+          !living(s,s.player.charId) || s.player.dead || C.members(s,rid).length !== r.members.length) return false;
+      if (a.status === 'present') return true;
+      if (a.status === 'admission') return civic && row.citizens.indexOf(s.player.charId) < 0 && C.eligible(s,rid,s.player.charId).allowed;
+      if (a.status === 'nomination') return civic ? row.offices.some(function (o) {
+        return o.vacancy && o.vacancy.status === 'open' && V.eligible(s,rid,s.player.charId,o.id).allowed && o.vacancy.nominations.indexOf(s.player.charId) < 0;
+      }) : !!(r.selection && r.selection.status === 'open' && C.eligible(s,rid,s.player.charId).allowed && r.selection.nominations.indexOf(s.player.charId) < 0);
+      var own = civic ? row.offices.filter(function (o) {return o.incumbentId === s.player.charId && V.incumbent(s,rid,o.id);}) :
+        C.delegate(s,rid) && r.mandate.delegateId === s.player.charId ? [r.mandate] : [];
+      if (a.status === 'incumbent') return own.length > 0;
+      if (a.status === 'term_ending') return own.some(function (o) {return o.endTurn !== null && o.endTurn > s.turn && o.endTurn <= s.turn + 30;});
+      return civic && own.length > 0 && row.debts.some(function (d) {return d.status === 'active' && d.dueTurn <= s.turn;});
+    }
+  });
 })();
