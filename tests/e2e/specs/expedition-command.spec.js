@@ -2,8 +2,9 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const harbor=require('../fixtures/authoring/landed-expedition-harbor.json');
 
@@ -41,7 +42,7 @@ async function beginHome(page) {
 }
 async function start(page,info,modified) {
   await importWorld(page,info,'harbor',modified);
-  await beginBookmark(page,info,'harbor_world','harbor_household');
+  await beginBookmarkFromTitle(page,'harbor_world','harbor_household');
 }
 
 test('a landed principal retains one home crown, family, public command and private station',async function ({page},info) {
