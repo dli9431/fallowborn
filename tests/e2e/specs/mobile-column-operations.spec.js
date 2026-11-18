@@ -2,6 +2,7 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {installRestoreFacts}=require('../support/game/restore-facts');
