@@ -32,8 +32,11 @@ window.FB = window.FB || {};
   function eventPeriodFault(period,context) {
     const fault = FB.contentPeriodFault(period);
     if (fault) return fault;
+    const nativeReferences = !context && FB.bookmarkSources && FB.bookmarkSources.nativeSelectorKnowsBookmark;
     if (Object.prototype.hasOwnProperty.call(period,'bookmarkIds') && !FB.schema.valid(period.bookmarkIds,
-        {type:'array',minItems:1,maxItems:64,unique:true,items:{type:'string',minLength:1,maxLength:200,ref:{table:'bookmarks'}}},context))
+        {type:'array',minItems:1,maxItems:64,unique:true,items:{type:'string',minLength:1,maxLength:200,
+          test:function (id,c) { return Object.prototype.hasOwnProperty.call((c.data || FBDATA).bookmarks || {},id) ||
+            !!(nativeReferences && nativeReferences(id)); }}},context))
       return FB.T('Campaign bookmarks must be a nonempty list of unique known ids.');
     return null;
   }
@@ -116,7 +119,8 @@ window.FB = window.FB || {};
   FB.eventYearPool = function (state) {
     ensureEventEra(state);
     var year = state.date.year;
-    const campaign = JSON.stringify([state.start && state.start.id,state.start && state.start.revision]);
+    const revision = state.start && state.start.revision;
+    const campaign = JSON.stringify([state.start && state.start.id,typeof revision,revision]);
     if (!yearEvents || periodYear !== year || periodCampaign !== campaign) {
       periodYear = year;
       periodCampaign = campaign;

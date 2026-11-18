@@ -904,6 +904,17 @@ window.FB = window.FB || {};
   FB.contentPeriodEnabled = function (state, def) {
     var year = state && state.date ? state.date.year : FB.activeBookmark && FB.activeBookmark.date.year;
     var era = state ? FB.campaignEra(state) : FB.activeEra;
+    // Opt-in periods follow the saved campaign, including its retained revision.
+    // A title selection or a matching live date cannot supply missing identity.
+    if (def && def.bookmarkIds !== undefined) {
+      var id = state && state.start && state.start.id;
+      if (typeof id !== 'string' || !ownKey(FBDATA.bookmarks || {}, id) ||
+          !Array.isArray(def.bookmarkIds) || def.bookmarkIds.indexOf(id) < 0) return false;
+      try {
+        var bookmark = FB.campaignBookmark(state);
+        if (!bookmark || bookmark.id !== id) return false;
+      } catch (error) { return false; }
+    }
     return !!def && (!def.eras || def.eras.indexOf(era) >= 0) &&
       (def.yearMin === undefined || year >= def.yearMin) &&
       (def.yearMax === undefined || year <= def.yearMax);

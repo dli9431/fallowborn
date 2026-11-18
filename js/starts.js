@@ -100,7 +100,7 @@
      This report is not complete start validation or runtime eligibility. */
   FB.startSelectorReport = function (scenario, bookmark, eraId, catalogs) {
     var faults = [], report = {matches:false, valid:false, faults:faults};
-    var setupReferences = !catalogs && FB.bookmarkSources && FB.bookmarkSources.setupKnowsBookmark;
+    var nativeReferences = !catalogs && FB.bookmarkSources && FB.bookmarkSources.nativeSelectorKnowsBookmark;
     catalogs = catalogs || FBDATA;
     if (!plain(scenario) || typeof scenario.id !== 'string' || !scenario.id) {
       faults.push('Start definition is missing or has no id.'); return report;
@@ -116,7 +116,7 @@
       });
     }
     if (scenario.bookmarkIds !== undefined) list(scenario.bookmarkIds, owner + '.bookmarkIds', function (id) {
-      if (!own(catalogs.bookmarks, id) && !(setupReferences && setupReferences(id))) faults.push(owner + ': unknown bookmark ' + id + '.');
+      if (!own(catalogs.bookmarks, id) && !(nativeReferences && nativeReferences(id))) faults.push(owner + ': unknown bookmark ' + id + '.');
     });
     if (scenario.eras !== undefined) list(scenario.eras, owner + '.eras', function (id) {
       if (!own(catalogs.eras, id)) faults.push(owner + ': unknown era ' + id + '.');
