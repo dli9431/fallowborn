@@ -55,6 +55,7 @@ const WORLD_STORIES = [
   'household_effects_athens_partition_1204',
   'household_effects_achaia_partition_1204',
   'household_effects_fifth_crusade_call_1204',
+  'qipchaq_land_campaign_1204',
 ];
 
 async function startBookmark(page, testInfo, scenario, county, identity) {
@@ -294,5 +295,5 @@ test('one season of ordinary household play retains a valid world and saves at t
       return { year:FB.state.date.year, turn:FB.state.turn, errors:FBTEST.checkInvariants(),
         ordinary:!FB.game.observe, start:FB.state.start.id, stories:Object.keys(s.stories).length };
     });
-    expect(end).toEqual({ year:1204, turn:90, errors:[], ordinary:true, start:'1204', stories:31 });
+    expect(end).toEqual({ year:1204, turn:90, errors:[], ordinary:true, start:'1204', stories:WORLD_STORIES.length });
   });

@@ -47,7 +47,7 @@ test('the Arabian early profile has independent defaults and retains the release
         roles:[profile.roles.priestM,profile.roles.priestF,profile.roles.monasticM,profile.roles.monasticF],
         paths:profile.religiousPaths || null,errors:FB.validateReligionData(null),
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-    })).toEqual({lineage:['arabian_traditional_476'],availability:{bookmarkIds:['476','493','568','634']},
+    })).toEqual({lineage:['arabian_traditional_476'],availability:{bookmarkIds:['476','493','568','634','451']},
       head:null,war:null,law:{value:'customary',sourceId:'arabian_traditional_476'},
       marriage:{m:1,f:1},clergyMarriage:true,
       roles:['Ritual keeper','Ritual keeper','Devotee','Devotee'],paths:null,errors:[],pure:true});
