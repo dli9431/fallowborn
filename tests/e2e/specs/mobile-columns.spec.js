@@ -4,6 +4,7 @@ const {installRestoreFacts}=require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {installPageGuards}=require('../support/page-contract');
