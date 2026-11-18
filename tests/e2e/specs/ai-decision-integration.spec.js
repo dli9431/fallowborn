@@ -641,35 +641,49 @@ test('retained ruler channels restore without replay and real succession drops t
   expect(next.investmentAdjustments).not.toContain('aim:expand_realm');
 });
 
-for (const [index,name] of ['intrigue','diplomacy','religion','investment','expansion','government'].entries()) {
-  importedTest(name+' changes participate in exact save fingerprints',async function ({page},testInfo) {
+test.describe('exact policy fingerprints',function () {
+  test.describe.configure({mode:'default'});
+  const source = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../docs/examples/ai-decisions-conservative.json'),'utf8'));
+  let context,page,guard,checkpoint;
+  test.beforeAll(async function ({browser},info) {
+    context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+    await openGame(page,info);
+  });
+  test.beforeAll(async function () {
     await importExample(page,'ai-decisions-conservative.json');
     await startDeterministicGame(page);
-    const checkpoint = await page.evaluate(function () { return {saved:JSON.parse(FB.save.serialize()),signature:FB.mods.sig()}; });
-    // Reapply at the ordinary complete-catalogue boundary. Activation changes
-    // legacy world tables, which are not the mod installer's baseline.
+    checkpoint = await page.evaluate(function () { return {saved:JSON.parse(FB.save.serialize()),signature:FB.mods.sig()}; });
+  });
+  test.beforeAll(async function () {
+    // Each edit and reversal uses the same complete pre-campaign catalogue.
     await page.reload({waitUntil:'domcontentloaded'});
     await prepareGameContent(page);
-    const source = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../docs/examples/ai-decisions-conservative.json'),'utf8'));
-    const out = await page.evaluate(function (args) {
-      const source = args.source,saved = args.checkpoint.saved,signature = args.checkpoint.signature;
-      if (signature !== FB.mods.sig() || FB.save.otherWorld(saved)) throw new Error('Original import did not reload exactly');
-      const changes = [function (m) { m.aiDecisionPolicies.restrained_intrigue.parameters.chanceRate = 0.11; },
-        function (m) { m.aiDecisionPolicies.conciliatory_diplomacy.aimOrder.reverse(); },
-        function (m) { m.aiDecisionPolicies.observant_religion.adjustments[0].multiply.targetHolyWeight = 1.4; },
-        function (m) { m.aiDecisionPolicies.careful_investment.adjustments[1].benefitWeights.piety = 15; },
-        function (m) { m.aiDecisionPolicies.cautious_frontier.aimOrders.keep_peace[1].direction = 'desc'; },
-        function (m) { m.governmentForms.cautious_court.strategyParameters = {ai:{warChance:0}}; }];
-      const changed = JSON.parse(JSON.stringify(source));
-      changes[args.index](changed);
-      FB.mods.apply(changed);
-      const mismatch = signature !== FB.mods.sig() && FB.save.otherWorld(saved);
-      FB.mods.apply(source);
-      return {mismatch:mismatch,exact:signature === FB.mods.sig() && !FB.save.otherWorld(saved)};
-    },{source:source,checkpoint:checkpoint,index:index});
-    expect(out).toEqual({mismatch:true,exact:true});
   });
-}
+  test.afterAll(async function () {
+    if (context) try { expect(guard.faults).toEqual([]); } finally { await context.close(); }
+  });
+  for (const [index,name] of ['intrigue','diplomacy','religion','investment','expansion','government'].entries()) {
+    test(name+' changes participate in exact save fingerprints',async function () {
+      const out = await page.evaluate(function (args) {
+        const source = args.source,saved = args.checkpoint.saved,signature = args.checkpoint.signature;
+        if (signature !== FB.mods.sig() || FB.save.otherWorld(saved)) throw new Error('Original import did not reload exactly');
+        const changes = [function (m) { m.aiDecisionPolicies.restrained_intrigue.parameters.chanceRate = 0.11; },
+          function (m) { m.aiDecisionPolicies.conciliatory_diplomacy.aimOrder.reverse(); },
+          function (m) { m.aiDecisionPolicies.observant_religion.adjustments[0].multiply.targetHolyWeight = 1.4; },
+          function (m) { m.aiDecisionPolicies.careful_investment.adjustments[1].benefitWeights.piety = 15; },
+          function (m) { m.aiDecisionPolicies.cautious_frontier.aimOrders.keep_peace[1].direction = 'desc'; },
+          function (m) { m.governmentForms.cautious_court.strategyParameters = {ai:{warChance:0}}; }];
+        const changed = JSON.parse(JSON.stringify(source));
+        changes[args.index](changed);
+        FB.mods.apply(changed);
+        const mismatch = signature !== FB.mods.sig() && FB.save.otherWorld(saved);
+        FB.mods.apply(source);
+        return {mismatch:mismatch,exact:signature === FB.mods.sig() && !FB.save.otherWorld(saved)};
+      },{source:source,checkpoint:checkpoint,index:index});
+      expect(out).toEqual({mismatch:true,exact:true});
+    });
+  }
+});
 
 test('combined malformed imports publish no preferences, messages, storage or identities',async function ({page},testInfo) {
   await openGame(page,testInfo);
