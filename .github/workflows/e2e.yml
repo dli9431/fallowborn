@@ -155,12 +155,18 @@ jobs:
             return "$rc"
           }
           # A stalled mirror download used to hang apt-get indefinitely. Make apt time
-          # out and retry its own network requests.
-          printf '%s\n' 'Acquire::http::Timeout "20";' 'Acquire::https::Timeout "20";' 'Acquire::Retries "3";' \
+          # out and retry its own network requests, over IPv4 only.
+          printf '%s\n' 'Acquire::http::Timeout "15";' 'Acquire::https::Timeout "15";' 'Acquire::Retries "1";' 'Acquire::ForceIPv4 "true";' \
             | sudo tee /etc/apt/apt.conf.d/99ci-timeouts > /dev/null
           # The normal install takes about a minute. Bound each phase and retry.
           for attempt in 1 2 3; do
             echo "$(date -u +%T) Attempt $attempt"
+            if [ "$attempt" -gt 1 ]; then
+              # A single stuck file on the runner's default mirror stalls every retry
+              # that uses it, so retries use the main Ubuntu archive instead.
+              echo "Using archive.ubuntu.com for attempt $attempt"
+              sudo sed -i 's#mirror+file:/etc/apt/apt-mirrors.txt#http://archive.ubuntu.com/ubuntu/#' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
+            fi
             if phase "system packages" npx playwright install-deps $browsers \
               && DEBUG=pw:install phase "browser download" npx playwright install $browsers; then
               exit 0
