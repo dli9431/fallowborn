@@ -14,7 +14,7 @@ const {quotedCounts} = require('../support/content-id-reviews');
 const imported = require('../fixtures/authoring/event-system-moments-fictional.json');
 const fixturePath = path.resolve(__dirname,'../fixtures/authoring/event-system-moments-fictional.json');
 const sharedPacks=['imperial_office','federate_life','civic_assembly','religious_life','kingship_succession','works_technology','mobile_life','imperial_service'];
-const datedPacks=['493','568','634','711','800','1096','1204','1241'];
+const datedPacks=['451','493','568','634','711','800','1096','1204','1241'];
 const packFiles=sharedPacks.concat(datedPacks).map(function (id) {return 'data/events_'+id+'.js';});
 dependsOnRuntime(__filename,packFiles.concat(['index.html','data/bookmark_manifest.js','tools/i18n_catalog.py',
   'data/events_common.js','data/technology.js','data/systems.js','data/industry_laws.js',
@@ -375,7 +375,7 @@ test('event review Cancel, Back and Escape preserve state, choice nodes, disclos
   expect(await page.evaluate(function () {return reviewUiChanged===JSON.stringify(FB.state);})).toBe(true);
 });
 
-for (const file of [false,true]) for (const crazy of [false,true]) test('empty pack slots boot '+(file?'from file':'served')+' with distribution flag '+crazy,async function ({page},info) {
+for (const file of [false,true]) for (const crazy of [false,true]) test('reviewed event packs boot '+(file?'from file':'served')+' with distribution flag '+crazy,async function ({page},info) {
   if (crazy) {
     await mockCrazyGames(page);
     await page.addInitScript(function () {window.FB_DISTRIBUTION='crazygames';window.FB_CRAZYGAMES_STORAGE='localstorage';});
@@ -386,10 +386,15 @@ for (const file of [false,true]) for (const crazy of [false,true]) test('empty p
   const result=await page.evaluate(function (input) {
     return {crazy:FB.platform.isCrazyGames,ready:FB.game.bootReady&&FB.game.contentReady,
       packs:input.shared.map(function (id) {return !!FBDATA.eventPacks[id];}).concat(input.dates.map(function (id) {return !!FBDATA.eventPacks['dated_'+id];})),
-      events:FBDATA.events.filter(function (e) {return input.shared.indexOf(e.pack)>=0||input.dates.some(function (id) {return e.pack==='dated_'+id;});}).length,
+      events:FBDATA.events.filter(function (e) {return input.shared.indexOf(e.pack)>=0||input.dates.some(function (id) {return e.pack==='dated_'+id;});}).map(e => e.id).sort(),
       registered:input.files.every(function (file) {return Array.from(document.scripts).some(function (s) {return s.src.indexOf(file)>=0;});})};
   },{shared:sharedPacks,dates:datedPacks,files:packFiles});
-  expect(result).toEqual({crazy:crazy,ready:true,packs:Array(16).fill(true),events:0,registered:true});
+  const expectedIds = new Set();
+  for (const pack of sharedPacks.concat(datedPacks)) {
+    const fixture = require('../fixtures/event-packs/' + pack + '.json');
+    for (const row of fixture.rows) expectedIds.add(row.eventId);
+  }
+  expect(result).toEqual({crazy:crazy,ready:true,packs:packFiles.map(() => true),events:[...expectedIds].sort(),registered:true});
   const extractor=fs.readFileSync(path.resolve(__dirname,'../../../tools/i18n_catalog.py'),'utf8');
   expect(extractor).toContain('EVENT_FILES = sorted(DATA.glob("events_*.js"))');
   for (const file of packFiles) expect(fs.existsSync(path.resolve(__dirname,'../../..',file))).toBe(true);
