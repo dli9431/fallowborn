@@ -26,6 +26,7 @@ dependsOnRuntime(__filename, ['data/relay_services.js','js/relay_services.js',
   'data/bookmark_1204.js', 'data/bookmark_1204_campaigns.js', 'js/treasury.js'
 ]);
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { startBaseline476 } = require('../support/game/476-wider');
 const { openGame } = require('../support/game/navigation');
 const { loadParitySave } = require('../support/game/parity');

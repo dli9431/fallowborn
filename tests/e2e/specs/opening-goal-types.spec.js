@@ -2,8 +2,9 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
-const { startParityGame } = require('../support/game/parity');
+const { startParityGame, startPreparedParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const proof = require('../fixtures/authoring/opening-goals.json');
 dependsOnRuntime(__filename, ['index.html','js/story_opening_goals.js','js/stories.js','js/story_household.js','js/main.js',
@@ -19,7 +20,7 @@ async function importedStart(page, info, publicProfile) {
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('proof_private_goals'); });
-  await startParityGame(page, info, { bookmark:publicProfile ? '1204' : '711',
+  await startPreparedParityGame(page, { bookmark:publicProfile ? '1204' : '711',
     scenario:publicProfile ? 'siwa_delegate_1204' : 'toledo_household_711', declaredOpening:true });
 }
 

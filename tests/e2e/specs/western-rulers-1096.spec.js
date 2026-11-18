@@ -1,5 +1,6 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { beginRuler1096, installRuler1096Dates, importRuler1096WithoutTracks } = require('../support/game/rulers-1096');
 const { installRestoreFacts } = require('../support/game/restore-facts');
