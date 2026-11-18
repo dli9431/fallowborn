@@ -38,6 +38,10 @@ on:
       shards:
         type: number
         default: 4
+      workers:
+        description: Playwright workers per shard
+        type: number
+        default: 2
       request_id:
         description: Caller's id, shown in the run name
         type: string
@@ -70,5 +74,6 @@ jobs:
       base: ${{ inputs.base || github.event.before || github.event.pull_request.base.sha || '' }}
       projects: ${{ inputs.projects || 'all' }}
       shards: ${{ fromJSON(format('{0}', inputs.shards || 4)) }}
+      workers: ${{ fromJSON(format('{0}', inputs.workers || 2)) }}
       bounded: ${{ (inputs.mode || 'changed') == 'changed' }}
       report_source_run: ${{ inputs.report_source_run || '' }}
