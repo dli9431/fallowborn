@@ -2,6 +2,16 @@
 (function () {
   'use strict';
   var C = FB.episcopalClaims = {}, MAX = 32;
+  FB.eventStateReaders.register({id:'open_episcopal_claim',system:'episcopal_claims',
+    args:{type:'object',fields:{profileId:{type:'string',ref:{table:'episcopalClaims'}}}},
+    read:function (s,a) {
+      return rows(s).some(function (r) {
+        if (r.profileId !== a.profileId || !openClaim(r)) return false;
+        var x = C.snapshot(s,r.profileId,r.settlement);
+        return !!(x && !x.reason && !x.stale &&
+          [x.bishopId,x.possessorId,x.courtId].indexOf(s.player.charId) >= 0);
+      });
+    }});
   FB.msg('news.episcopal.rent', 'The civil rent review at {place} records a decision. Institutional receipts and household property retain their separate owners.');
   FB.msg('news.episcopal.settled', 'The rent composition at {place} transfers {money:amount} to the institutional see and sets future seasonal rent at {share}% for {seasons} seasons, beginning next season.');
   var STATES = ['demanded','contested','proposed','enforcement','settled','abandoned','declined','rejected'];
@@ -16,6 +26,7 @@
   function profile(id) { return (FBDATA.episcopalClaims || {})[id]; }
   function claimId(id, slot) { return 'episcopal:' + id + ':' + slot; }
   function row(s,id,slot) { return rows(s).filter(function (r) { return r.id === claimId(id,slot); })[0] || null; }
+  function openClaim(r) { return !!(r && ['demanded','contested','proposed','enforcement'].indexOf(r.status) >= 0); }
   function property(s,p,slot) {
     var c = p && s.settlementLordships && s.settlementLordships.counties[p.provinceId];
     return c && c.lordships && c.lordships[slot] || null;
@@ -174,7 +185,7 @@
     if (!p || ['demand','contest','recurring','compensation','accept','decline','abandon','request_enforcement','adjudicate','reject_enforcement'].indexOf(action) < 0) return null;
     var bishop = actorId === x.principals.bishopId, possessor = actorId === x.principals.possessorId;
     var judge = actorId === x.principals.courtId, reason = x.reason, cost = 0;
-    var party = bishop || possessor, pending = r && ['demanded','contested','proposed','enforcement'].indexOf(r.status) >= 0;
+    var party = bishop || possessor, pending = openClaim(r);
     if (!reason && (!party && !judge || !s.chars[actorId] || !live(s,s.chars[actorId]))) reason = 'actor';
     if (!reason && action === 'demand') {
       if (!party || r && (!pending || !snap.stale) || !r && rows(s).length >= MAX ||
@@ -248,6 +259,8 @@
       r.terms = null;
     }
     r.revision++; r.changedTurn = s.turn;
+    if (a === 'accept' || a === 'adjudicate') FB.publishEventMoment(s,'claim_settled',{
+      claimId:r.id,profileId:r.profileId,realmId:r.realmId,locationId:r.provinceId,settlement:r.settlement});
     FB.invalidateSettlementLordships(s,x.profile.provinceId);
     FB.news(s,r.status === 'settled' ? FB.message('news.episcopal.settled', {
       place:FB.world.byId[x.profile.provinceId].name, amount:r.terms.cost,
@@ -327,4 +340,63 @@
     });
     return true;
   };
+
+  FB.eventStateReaders.register({id:'episcopal_claim_present',system:'episcopal_claims',
+    args:{type:'object',fields:{profileId:{type:'string',ref:{table:'episcopalClaims'}}}},read:function (s,a) {
+      return C.list(s,s.player.charId).some(function (x) {return x.profileId === a.profileId && !x.reason && !x.stale;});
+    }});
+  C.eventQuote = function (s,a,ctx) {
+    // Bound notices must retain their original source, even if a save omits it.
+    if (ctx && ctx.participants && (ctx.settlement === undefined || !ctx.episcopalClaimSource)) return null;
+    var exact = ctx && ctx.settlement;
+    var list = C.list(s,s.player.charId).filter(function (x) {return x.profileId === a.profileId &&
+      (a.settlement === undefined || x.settlement === a.settlement) && (exact === undefined || x.settlement === exact) &&
+      (!ctx || !ctx.episcopalClaimSource || same(x.source,ctx.episcopalClaimSource)) &&
+      (!ctx || !ctx.participants || (!ctx.participants.possessor || ctx.participants.possessor === x.possessorId) &&
+        (!ctx.participants.bishop || ctx.participants.bishop === x.bishopId) && (!ctx.participants.court || ctx.participants.court === x.courtId));});
+    var qs = list.map(function (x) {return C.quote(s,a.profileId,x.settlement,s.player.charId,a.action);});
+    return qs.filter(function (q) {return q && q.allowed;})[0] || qs[0] || null;
+  };
+  var claimReviewArgs = {type:'object',fields:{profileId:{type:'string',ref:{table:'episcopalClaims'}},
+    action:{enum:['demand','contest','recurring','compensation','accept','decline','abandon','request_enforcement','adjudicate','reject_enforcement']},
+    settlement:{type:'integer',min:1,max:7,optional:'absent'}}};
+  FB.eventStateReaders.register({id:'episcopal_claim_review',system:'episcopal_claims',args:claimReviewArgs,
+    read:function (s,a,ctx) {var q = C.eventQuote(s,a,ctx); return !!(q && q.allowed);}});
+  function eventClaimBlocker(reason) {
+    var reasons = {
+      property:FB.T('The original settlement grant or its rent charter is unavailable.'),
+      jurisdiction:FB.T('The see lacks current recognition, control or temporal authority.'),
+      principal:FB.T('The private possessor cannot be the current bishop.'),
+      actor:FB.T('This procedural decision belongs to another party or court.'),
+      closed:FB.T('The claim cannot be opened in its current state or date.'),
+      stale:FB.T('The source, parties, offer or procedural stage has changed.'),
+      funds:FB.T('The actual private possessor cannot fund the compensation.')
+    };
+    return reasons[reason] || FB.T('The current declaration or procedural terms do not permit this decision.');
+  }
+  function eventPaymentReport(s,amount) {
+    var preview = FB.previewEventOption(s,null,{effects:{gold:amount}},{});
+    return (preview.sections[0] ? preview.sections[0].impacts : []).concat([{type:'system',system:'story'}]);
+  }
+  FB.eventReviews.register('episcopal_claim',{
+    partySlots:{possessor:true,bishop:true,court:true},
+    owner:'episcopal_claims',args:claimReviewArgs,quote:C.eventQuote,
+    bind:function (s,a,ctx) {var q = C.eventQuote(s,a,ctx); if (!q) return null;
+      var p = q.stamp.principals; return {settlement:q.settlement,episcopalClaimSource:copy(q.stamp.source),
+        participants:{possessor:p.possessorId,bishop:p.bishopId,court:p.courtId}};},
+    apply:function (s,a,q) {return C.apply(s,q);},
+    report:function (s,a,q) {return eventPaymentReport(s,q.action === 'accept' && q.payerId === s.player.charId ? -q.cost : 0);},
+    details:function (s,a,q) {var d = profile(a.profileId), p = q.stamp.principals;
+      var site = FB.world.sitesByProv[d.provinceId].list[q.settlement];
+      function name(id) {return s.chars[id] ? FB.fullName(s.chars[id]) : FB.T('Unavailable participant');}
+      return [FB.dataText(s,s.player.charId,'episcopalClaim',a.profileId,d,'name',{}),
+        FB.T('{Term:fief}: {place}. Private possessor: {possessor}. Office holder: {bishop}. Temporal court: {court}.',{
+          place:site ? site.name : FB.world.byId[d.provinceId].name,possessor:name(p.possessorId),
+          bishop:name(p.bishopId),court:name(p.courtId)}),
+        FB.T('Institutional receiving account: {realm}. Offer deadline: {days} days.',{realm:s.realms[q.payeeRealmId].name,days:d.offerDays}),
+        FB.T('Private compensation if accepted: {money:cost}. Seasonal rent share: {share}%. Term in seasons: {seasons}, starting next season.',{cost:q.cost,share:q.share * 100,seasons:q.termSeasons}),
+        FB.T('A proposal needs the other party’s acceptance. Only the competent temporal court may enforce a composition. The institutional treasury receives compensation; the office holder’s private purse receives nothing.'),
+        q.allowed ? FB.T('The current charter, parties and authority permit this step.') : eventClaimBlocker(q.reason)];}
+  });
+
 })();

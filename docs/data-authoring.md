@@ -1,3 +1,72 @@
+Typed mobile story reviews
+
+The mobile leadership JSON example also declares a complete leader agenda,
+transaction goals and an ordinary campaign. A ruler_agenda stage may opt into
+completion:{kind:'demand'|'raid'|'distribution'|'arrival'|'settlement'}. Such a stage
+allows only agenda_mobile_prepare, agenda_mobile, agenda_mobile_result and
+agenda_defer choices. Include exactly one result choice and a costless defer.
+The result is observation of canonical completion, never acknowledgment.
+
+Mobile review choices add action and terms. demand/raid terms use the exact
+extraction schema, including kind; distribute uses mode and distinct memberIds
+and selects the oldest actual unresolved receipt; round/access uses groundId;
+settle uses countyId, positive count and final. Final reviews resolve count to all
+remaining people. Preparation supports demand, raid, access and settle and creates
+only their ordinary member proposal. Actual member assent and outside consent
+stay on their canonical source surfaces. Cancel, defer and stay never fabricate
+completion. A mobile_transaction goal criterion references required storyId and
+stageId of a typed transaction stage. campaign mobileReview:{schema:1} requires
+ordinary admission and an elected single-host coalition, and keeps its actual
+principal’s deliberate player review. No JSON callback or custom trigger is used.
+
+Seasonal mobile round authoring
+
+`tests/e2e/fixtures/authoring/mobile-leadership-glassroad.json` composes an ordinary
+`mobilePrincipal` leader or member start with a `household_track` paid service
+and an `opening_profile` using `household_phase`. Its work stage advances only
+after `mobile_work` commits; the paid terminal phase supplies the goal evidence.
+Viewing or cancelling the shared confirmation leaves both pending. The native
+Qipchaq member beginning uses the same transaction and criterion. Public funds,
+camp food, actual presence and the daily work marker retain their normal owners.
+The literal `householdTracks_` and `openingProfiles_` tables use the existing
+structured display owners and imported text retains English fallback.
+
+Use optional mobileProfiles.seasonalRound schema 1 for an aggregate grazing
+round. Grounds declare stable ids and names, physical counties, climate zones,
+suited local season kinds, finite capacity, off-season yield, exact existing
+access terms and reciprocal neighbor distances. Pure FB.schema checks and the
+ordinary Mods path resolve climate definitions from the same detached import.
+The complete mobile-seasonal-round-glassroad.json and
+mobile-seasonal-round-reedbank.json examples vary climate, capacity, distances,
+travel surcharge, members and resources; both declare elected independent
+countyless openings with separate finite hosting. Bundled Pontic grounds use
+the same consumers. Keep these development fixtures outside shipped assets.
+
+Independent elected openings compose existing sponsorship, opening principals,
+mobilePrincipal starts and hostedAccess. They require no command or patron and
+confer no land or private funds. All other sponsor and command paths retain
+their existing requirements. Grounds use existing aggregate food/people and the
+shared pasture capacity ledger, with no animal inventory. No executable mod
+handler, calendar collapse or historical identity selector is supported.
+Exact schema and persistence: MODDING.md; production, AI and travel arithmetic:
+designs/mobile-confederation.md.
+
+Mobile member support authoring
+
+Optional mobileProfiles.cohesionPolicy declares battle results, actual receipt
+shares, consecutive scarcity, idle seasons and current leader Standing as the
+only support drivers. Pure schema validation and ordinary Mods imports share
+native runtime consumers; identity-triggered rebellion and calendar collapse
+fields reject. Pontic and river policies contrast with the complete fictional
+mobile-cohesion-glassroad.json import, which uses equal member weights,
+shorter scarcity/idle windows and AI favorite allocation. Existing canonical
+pledge, departure, assent and election transactions remain authoritative.
+Receipt distribution reviews spend actual public coin or consume actual camp
+food once. No executable mod handler, parallel loyalty meter or new resource
+inventory is supported. Exact schema and persistence are in docs/MODDING.md;
+allocation semantics, bounded receipt collection and none technology decisions
+are in docs/designs/mobile-confederation.md.
+
 Retained shared identity authoring
 
 Use revisionIdentities for the fixed start's faith and, for an existing ruler start, its governmentForm in explicitly named bookmark revisions. Each record supplies one or both fields; omitted fields keep the start default. Keep every other start field stable. The two independent ordinary imports revision-ruler-government-estuary.json and revision-ruler-government-uplands.json retain their older constitutions and select different current forms, with a combined faith/form projection in the uplands. Pure validation, codes, picker, ordinary adoption and matching retained saves share the same projection. This preserves existing ruler identity under the existing existing_ruler_starts technology decision of none; it adds no political action, discovery or eligibility exception.
@@ -28,6 +97,17 @@ An effective bookmark's homeAuthorityPolicies map composes exact schema-1 presen
 
 Existing people as household protagonists
 
+Coalition principals use `startScenarios.mobilePrincipal:{realmId,memberId}` to
+select the existing member owner after canonical following initialization. Both
+direct/incumbent opening bindings and unchanged generated principals are
+supported. Pure candidate validation, picker/code eligibility and direct creation
+share the same effective-world identity gate. The private household and public
+coalition remain separate, and leadership continues through ordinary member
+selection. The 1204 regional consumer and the independent complete
+mobile-principal-starts-glassroad.json import vary identity source, sex, private
+resources and leader/member selection. The latter is imported through the normal
+Mods file picker. Exact fields and saved provenance are in docs/MODDING.md.
+
 Optional startScenarios.existingPerson selects one named living authored court member through an exact realm/local-member binding and an explicit co-resident close-family list. The pure resolver checks the effective world revision, exact identity/birth/home, private station and a complete storyline before fresh initialization. Built-in declarations and ordinary detached JSON imports use the same gate, materializer, constructor, picker/code summary and strict optional saved provenance. A second person, generated substitute family, source-realm adoption or data callback changing the player id is unsupported. Existing-person-harbor.json and existing-person-dune.json are complete independent ordinary imports with different protagonists, sex, named families, homes, private stations, careers and resources. Their source courts and public accounts remain independent. The source succession, personal mortality, player inheritance and residence owners remain canonical. See docs/MODDING.md for exact fields and bounds.
 
 Current expedition objectives
@@ -54,17 +134,36 @@ The complete 568 regional/start/revision/story chain stages one draft and finali
 
 The composer namespace initializes after data/starts.js so trusted data sources can call captureStarts and captureAvailability at their original declaration positions. These methods record detached logical prefixes across staged groups and live append-only contributors; they invoke no engine validators or campaign services. Canonical world/start/story validation and publication still run only after all engine owners exist. Per-unit global placement and additive faith-edge prefixes skip rejected predecessors without treating them as definitions or permissions. The complete contract and bounds are in docs/MODDING.md.
 
-js/bookmark_composition.js supplies a common detached world/start publication owner for trusted source adapters. It uses the ordinary JSON validators and story compiler, then synchronously installs only accepted ownership units. Failed worlds install no new dependent declarations; independent bad starts withhold their own records and graphs. Declaration compatibility is explicit, and an ordinary JSON preview still uses whole-import atomicity through Mods. All eleven dates now stage their complete source chains through js/bookmark_sources.js before story loading and the mod baseline/fingerprint snapshot. Authored title spellings and explicit start/availability insertion anchors preserve the former data representation and array order. Exact envelopes, limits, immutable reuse, rollback, source reports and retained-revision binding limits are documented in docs/MODDING.md. No new gameplay capability is added.
+js/bookmark_composition.js supplies a common detached world/start publication owner for trusted source adapters. It uses the ordinary JSON validators and story compiler, then synchronously installs only accepted ownership units. Failed worlds install no new dependent declarations; independent bad starts withhold their own records and graphs. Declaration compatibility is explicit, and an ordinary JSON preview still uses whole-import atomicity through Mods. All bundled dates stage their complete source chains through js/bookmark_sources.js before story loading and the mod baseline/fingerprint snapshot. Authored title spellings and explicit start/availability insertion anchors preserve the former data representation and array order. Exact envelopes, limits, immutable reuse, rollback, source reports and retained-revision binding limits are documented in docs/MODDING.md. No new gameplay capability is added.
 
 Native contributors use bookmarkSources.stage with explicit source, affected bookmarks, touched catalogues and intrinsic shared roots. Its private view lets later world, opening and rollout contributors keep their original data order without registering incomplete runtime worlds. Shared rollouts isolate each date through scope. The explicit data/bookmark_sources.js manifest seals the complete chains after the final North Atlantic source. Only bootstrap invokes canonical validation. Preserve every raw retained layer, typed dependency and mandatory world graph; personal starts own complete track graphs and exact bindings. The initial 867/1066 seed and legacy merge API remain compatible. After sealing, changed source callbacks require reload. Browser-only pinned source fixtures compare full fingerprints, ordering and former saves; they are never shipped or Node-executed.
 
 Data authoring contract
+
+Court service uses optional typed `authorityOffices[id].mandate` rather than
+story-specific authority. Bundled `data/office_mandates.js` and the complete
+ordinary `office-mandates-lantern.json` import share the declarative validator,
+holder/court reviews and canonical transactions. The import varies finite terms,
+favor, powers, public commissions and payments. See MODDING.md and
+designs/office-mandates.md. Empty `householdTracks_imperial_service` declarations
+use the normal household-track compiler and automatic static extraction.
 
 New data tables use `FB.schema` in `js/schema.js` for declarative definition
 validation. Industry laws and production goods, recipes and sites use this
 helper; save-state validation remains with each system. Specs are trusted engine
 objects, never executable JSON mod fields. Validate against the detached effective
 candidate, including additions in the same import, before publication.
+
+Mobile profiles may declare extractionPolicy schema 1 to select tribute/protection
+demands, bounded local raids and hired host service. Native and imported profiles
+use the same pure typed checks, member assent, quotes and commits. Optional
+government AI demandResponse configures treasury reserve, payment share and
+defender-to-coalition strength thresholds, independently of the identity of the
+raider. The ordinary mobile-extraction-glassroad.json example supplies a fictional
+world, contrasting limits and a same-import service template. Coin and provision
+stock must exist; no declaration can mint spoils, bypass outside consent, start
+a war on refusal or grant land. Full fields are in MODDING.md and the lifecycle
+is in designs/mobile-confederation.md.
 
 `FB.schema.faults(value, spec, path, context)` returns an array of diagnostics
 containing the failing path; `valid(value, spec, context)` returns a boolean.
@@ -306,6 +405,76 @@ Examples and distribution
 local-formation-harbor.json and local-formation-upland.json are standalone ordinary JSON imports of expedition_preparation with home_authority providers and local_household contribution policies. They vary lawful incumbent presence versus a real county deputy with levy only, external versus withdrawn resident cohorts, contribution caps, deadlines and acceptance. Existing home-authority and funding consumers own permission and exact transfers; preparation owns the original binding and once-only formation. No executable import registration, historical roster or new mod root is introduced. Detached invalid-policy, stale-authority, exact funding, finite market, strict optional restore and shared sheet coverage lives in local-formation-authority.spec.js. Development fixtures remain outside shipped packages; both normal distribution and CrazyGames use the same generic consumers, with CrazyGames retaining its existing custom-import restriction.
 
 The standalone harbor-mod.json and dune-mod.json files in tests/e2e/fixtures/authoring are normal JSON imports. They require no script tag, custom factory or test-only registration. They remain development authoring assets outside runtime and shipping allowlists. The ordinary editions support custom imports. CrazyGames keeps its existing restriction against custom mods and its silent English-only distribution behavior.
+
+## State-aware event authoring
+
+Use the single `state` condition key in an event `trigger`, an option `require`,
+or a lifecycle subscription `require`. It is an AND list of one to sixteen
+`{reader, args, not?}` calls. For example:
+
+```json
+{"state":[{"reader":"county_holder_government","args":{"formId":"territorial"}}]}
+```
+
+Choose a reader and its exact typed arguments from the **State condition readers**
+table in docs/MODDING.md. `not:true` negates an available reader's answer;
+an unavailable system always fails. Unknown readers, extra fields, wrong types
+and unknown static catalogue references reject the complete candidate import.
+Realm and institution instance ids are bounded strings resolved in the live world;
+missing instances return false. No JavaScript or saved reader results belong in JSON.
+
+For mobile audiences, use exactly one of an explicit `realmId` or
+`following:"current"` / `following:"moment"`. Current selection requires one
+unambiguous live following related by principal membership or resident camp
+locality. Moment selection reads the committed context's realm id, then checks
+the audience again. `mobile_camp_household` serves available nonprincipal
+households resident and physically present at the single camp's actual county;
+it grants no principal role. A moving civilian court or dispersed camp set does
+not establish that context. Keep membership/role readers for principal decisions.
+See the reader table for exact arguments and fail-closed boundaries.
+
+Use explicit pack era membership and year windows. A condition observes existing
+facts; it grants no office, control, membership, permission, case or story stage.
+Use existing effects and canonical reviews for decisions. Bind exact participants
+when prose or consequences concern a person. Put presentation in ordinary literal
+event fields and use placeholders; imported prose keeps English fallback.
+
+Conditions run before chance and the weighted draw. Repeated identical reader
+calls share one pure answer for that selection pass only. Queued and open decisions
+recheck event state conditions; options recheck their own requirements at resolution.
+Lifecycle decisions also recheck the original hook's state requirement. Restore
+uses current projections without replay, grants or cached eligibility.
+
+Add semantic rows under tests/e2e/fixtures/event-packs/ and append a `{file,runtime}`
+registration in event-pack-validation.spec.js, naming the fixture and its focused
+shipped source inputs. Each file has `rows` with
+`eventId`, `bookmark`, `code`, `readers`, and `cases`; each case declares `expected`
+and optional `patches` (`path` segments and a literal `value`) on a detached state.
+Rows may also assert option requirements through `optionIndex`. Include both
+eligible and ineligible cases. Use `hook` to exercise a lifecycle requirement,
+or `contextCheck:true` with `context` for a system moment's normal context guard.
+A complete new pack fixture also declares `packId` and optional `eventCount`
+(`min`, `max`, default 20–24). It covers every event, explicit era/year bounds,
+state conditions or system moments, and at least one third non-scalar decisions.
+Example-only rows for an existing shared pack may omit `packId`.
+The shared spec discovers unregistered fixture files,
+validates every registered pack and checks all rows without pack-specific code.
+
+Use the **Committed system moments** table in MODDING.md for commit-driven
+subscriptions. A hook's context carries its canonical ids, not a writable state
+path. Require the relevant state readers to narrow an audience and bind exact
+people through normal participants. Restore never republishes a transition.
+
+A choice may instead declare `review:{type,args,refusalOption}`. Supported types
+are `industry_operation` (declared law and pay/pause/resume/close) and
+`story_choice` (an existing registered story and offered choice). Use a distinct,
+unconditional ordinary refusal index; do not add effects or chance to the review
+option. Display its purpose in label/desc; the confirmation obtains real costs,
+consent and blockers from the canonical owner. Cancel retains the event unchanged.
+Automation uses the same quote/commit or that declared refusal. Household work
+and other day-advancing story operations retain their ordinary Deeds path.
+The event-system-moments-fictional.json example contrasts imported finite business
+permission with an independently registered household decision.
 
 Lifecycle and tournament authoring
 

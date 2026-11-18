@@ -1,3 +1,22 @@
+Mobile leadership story text
+
+The literal rulerAgendas_mobile_leadership, householdTracks_mobile_leadership,
+openingProfiles_mobile_leadership tables retain the existing rulerAgenda,
+householdStory and openingProfile display owners. The literal
+storyExpeditions_mobile_leadership campaign table uses the existing expeditionStory
+name/desc owner for opted-in mobile campaign presentation. Companion literal suffixed tables compose through the same static source
+discovery; no extractor registration changes. Scenario text stays in the ordinary
+startScenarios_mobile_leaders table. Native ground names reuse their existing
+county names and exact-English aliases. Imported declarations use English fallback.
+Generic review, blocker and outcome chrome uses literal FB.T with numeric money,
+food and days placeholders. Receipt ids, actor ids, stages, generations and turns
+remain untranslated; no rendered prose is saved and no catalogue is regenerated.
+
+Seasonal mobile ground names render through FB.dataText with the mobileGround
+owner, profileId.groundId identity and name field. Imported and bundled names
+retain English fallback; costs, seasons, access and blockers use literal FB.T
+chrome. Saved seasonal choices contain only ground ids and numeric turns.
+
 Native legal literal presentation
 
 Literal bookmarkRevisionContent_<suffix>.legalTraditions records use the existing
@@ -31,6 +50,15 @@ Preparation-aware review status and closure explanations use literal FB.T calls 
 expedition_undertaking name and desc use the existing storyCampaign dataText owner and normal imported-English fallback. Runtime chrome in js/story_expedition_agreements.js uses literal FB.T calls with named placeholders for original parties, finite turns and current county/controller/holder labels. Proper personal names and stable ids remain untranslated. No rendered prose is stored in the optional record. No bundled source instance or new extraction namespace is added; a later bundled source must use a supported literal storyCampaign display table. Generated catalogues remain an integration step requiring explicit authorization.
 
 Office and legitimacy presentation
+
+Court-service office declarations in `data/office_mandates.js` use the ordinary
+`authorityOffice.<id>.name/desc.default` owners; the extractor includes the literal
+`officeMandateOffices` table. Mandate review chrome uses `FB.T`. The empty
+`householdTracks_imperial_service` source follows the existing automatic
+household-track discovery and its display owners. Start presentation in
+`starts_imperial_officer.js` follows the existing start-source discovery. Original
+appointment, proposal and claimant records save ids and facts, never rendered
+prose. Generated catalogs remain integration artifacts.
 
 data/technology_learning.js declares literal techCorrections_learning complete replacements and data/buildings_learning_care.js declares buildingCorrections_learning_care replacements plus buildings_learning_care additions. Static extraction keeps ordinary tech.<id> and building.<id> owners and final-English aliases. Removed library faith variants and obsolete paper-workshop labels have no stale owner; the guesthouse is building.hospice. Runtime names and descriptions use the existing structured route. No generated catalogue is changed by this content work.
 
@@ -538,3 +566,22 @@ Corridor decisions reuse the existing literal FB.T county, payment, capacity, du
 
 
 Static JavaScript lexical scanning treats regular-expression literals as opaque source, including quotes, character classes, escaped slashes and text resembling localization calls. Arithmetic division remains an operator, and genuine unterminated strings still fail with their source line. Lexer regressions and structured/static HTML extraction checks run together in CI. This source-tooling repair does not regenerate catalogues.
+
+Canonical event review presentation
+
+Review option label/desc retain ordinary event field ownership and authored indexes. Canonical terms reuse literal FB.T chrome and the story owner's existing choice detail/review text; industry reviews disclose actual private payment through named placeholders. Moment names, payload ids and typed review args are protocol data, never translated or saved prose. The static EVENT_FILES events_*.js registration already includes every empty shared and dated event pack. Source work does not regenerate catalogs.
+
+Spring 451 source presentation
+
+The hidden 451 sources use existing static owners: bookmarkCandidates['451'] for
+metadata, bookmarkRegions451 regional literals for county/court/title/layout
+labels, startScenarios451Scaffold for the generic household and startScenarios_451
+for dated starts. bookmarkCultures451, bookmarkReligions451 and bookmarkOffices451
+use ordinary culture, religion and office owners. Government presentation uses
+bookmarkRevisionContent_451_governments; personal graphs use householdTracks_451,
+rulerAgendas_451 and openingProfiles_451. storyCampaigns451 in campaigns_451.js
+uses the normal campaign owner. bookmarkLexicons451 and bookmarkAmbitions451 in
+the presentation source use normal lexicon and ambition owners. Events are
+discovered through events_451.js. Empty tables yield no text. Static discovery
+does not execute a source or activate the date; generated catalogues remain a
+separately authorized integration artifact.

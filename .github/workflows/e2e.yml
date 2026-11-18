@@ -97,7 +97,7 @@ jobs:
     if: ${{ inputs.report_source_run == '' }}
     needs: plan
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -117,7 +117,64 @@ jobs:
         working-directory: tests/e2e
       - name: Install browsers
         working-directory: tests/e2e
-        run: npx playwright install --with-deps chromium firefox webkit
+        # A stalled install used to run until the 20 minute job limit and cancel the shard.
+        timeout-minutes: 10
+        env:
+          PROJECTS: ${{ inputs.projects }}
+        run: |
+          # Install only the engines the selected projects use.
+          browsers=""
+          for project in $PROJECTS; do
+            case "$project" in
+              all) browsers="$browsers chromium firefox webkit" ;;
+              chromium-*) browsers="$browsers chromium" ;;
+              firefox-*) browsers="$browsers firefox" ;;
+              webkit-*) browsers="$browsers webkit" ;;
+              *) echo "Unknown project: $project" >&2; exit 2 ;;
+            esac
+          done
+          browsers="$(printf '%s\n' $browsers | sort -u | tr '\n' ' ')"
+          echo "$(date -u +%T) Installing: $browsers"
+          # Run one named phase under a bound and report how long it took, so a
+          # stalled install shows which command stalled.
+          phase() {
+            name="$1"; shift
+            start=$(date +%s)
+            echo "$(date -u +%T) [$name] start"
+            if timeout --signal=TERM --kill-after=10s 90s "$@"; then rc=0; else rc=$?; fi
+            echo "$(date -u +%T) [$name] exit $rc after $(( $(date +%s) - start ))s"
+            if [ "$rc" -ne 0 ]; then
+              # timeout cannot reach the root apt-get that npx starts, and a surviving
+              # apt-get keeps the dpkg lock held for every retry.
+              sudo pkill -KILL -x apt-get || true
+              sudo pkill -KILL -f '/usr/lib/apt/method[s]' || true
+              sudo dpkg --configure -a || true
+              echo "Processes still running after a failed or stalled [$name]:"
+              ps -eo pid,etime,args | grep -E 'apt|dpkg|playwright|node|curl' | grep -v grep || true
+            fi
+            return "$rc"
+          }
+          # A stalled mirror download used to hang apt-get indefinitely. Make apt time
+          # out and retry its own network requests, over IPv4 only.
+          printf '%s\n' 'Acquire::http::Timeout "15";' 'Acquire::https::Timeout "15";' 'Acquire::Retries "1";' 'Acquire::ForceIPv4 "true";' \
+            | sudo tee /etc/apt/apt.conf.d/99ci-timeouts > /dev/null
+          # The normal install takes about a minute. Bound each phase and retry.
+          for attempt in 1 2 3; do
+            echo "$(date -u +%T) Attempt $attempt"
+            if [ "$attempt" -gt 1 ]; then
+              # A single stuck file on the runner's default mirror stalls every retry
+              # that uses it, so retries use the main Ubuntu archive instead.
+              echo "Using archive.ubuntu.com for attempt $attempt"
+              sudo sed -i 's#mirror+file:/etc/apt/apt-mirrors.txt#http://archive.ubuntu.com/ubuntu/#' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
+            fi
+            if phase "system packages" npx playwright install-deps $browsers \
+              && DEBUG=pw:install phase "browser download" npx playwright install $browsers; then
+              exit 0
+            fi
+            echo "Browser install attempt $attempt failed or timed out" >&2
+            sleep 5
+          done
+          exit 1
       - id: select
         name: Select tests
         env:
@@ -152,6 +209,7 @@ jobs:
         env:
           FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES: ${{ inputs.bounded && '1' || '0' }}
         run: >-
+          timeout --signal=INT --kill-after=30s 600s
           npx playwright test ${{ steps.select.outputs.args }}
           --shard=${{ matrix.shard }}/${{ inputs.shards }}
           --workers=${{ inputs.workers }}

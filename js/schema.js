@@ -79,3 +79,221 @@
   };
   S.valid = function (value,spec,context) { return S.faults(value,spec,'data',context).length === 0; };
 })();
+
+/* Trusted event predicates register before catalogue preparation. This lives
+   beside the schema helper so earlier owners can register in script order. */
+(function () {
+  'use strict';
+  var R = FB.eventStateReaders = {}, readers = Object.create(null), sealed = false;
+  function own(o,k) { return !!o && Object.prototype.hasOwnProperty.call(o,k); }
+  function canonical(v) {
+    if (!v || typeof v !== 'object') return JSON.stringify(v);
+    if (Array.isArray(v)) return '[' + v.map(canonical).join(',') + ']';
+    return '{' + Object.keys(v).sort().map(function (k) {
+      return JSON.stringify(k) + ':' + canonical(v[k]);
+    }).join(',') + '}';
+  }
+  function availability(data,owner,systemId) {
+    if (systemId !== undefined) return typeof systemId === 'string' && own(data.systems,systemId) ? systemId : null;
+    var ids = Object.keys(data.systems || {}).filter(function (id) { return data.systems[id].eventReaderOwner === owner; });
+    return ids.length === 1 ? ids[0] : null;
+  }
+  function freeze(v) {
+    if (v && typeof v === 'object') {
+      Object.keys(v).forEach(function (k) { freeze(v[k]); }); Object.freeze(v);
+    }
+    return v;
+  }
+  R.register = function (def) {
+    if (sealed || !def || !/^[a-z][a-z0-9_]*$/.test(def.id) || own(readers,def.id) ||
+        typeof def.system !== 'string' || !def.system.trim() || own(def,'systemId') &&
+        (typeof def.systemId !== 'string' || !/^[a-z][a-z0-9_]*$/.test(def.systemId)) || !def.args || def.args.type !== 'object' ||
+        !def.args.fields || typeof def.read !== 'function') throw new Error('Invalid event state reader registration.');
+    readers[def.id] = Object.freeze({id:def.id,system:def.system,systemId:def.systemId,args:freeze(def.args),read:def.read});
+  };
+  R.seal = function () { sealed = true; };
+  R.list = function () {
+    return Object.keys(readers).map(function (id) {
+      var d = readers[id], row = {id:id,system:d.system,args:d.args};
+      if (d.systemId !== undefined) row.systemId = d.systemId;
+      return row;
+    });
+  };
+  R.faults = function (calls,path,context) {
+    R.seal(); context = context || {};
+    var data = context.data || FBDATA;
+    var faults = FB.schema.faults(calls,{type:'array',minItems:1,maxItems:16,items:{type:'object',fields:{
+      reader:{type:'string'}, args:{type:'object'}, not:{type:'boolean',optional:'absent'}
+    }}},path,context);
+    if (faults.length) return faults;
+    calls.forEach(function (call,i) {
+      var at = path + '[' + i + ']', d = readers[call.reader], system = d && availability(data,d.system,d.systemId);
+      if (!d || !system) faults.push(FB.T('Invalid data at {path}.',{path:at + '.reader'}));
+      else {
+        faults = faults.concat(FB.schema.faults(call.args,d.args,at + '.args',context));
+        if (context.state && !FB.systemEnabled(context.state,system))
+          faults.push(FB.T('Invalid data at {path}.',{path:at + '.reader'}));
+      }
+    });
+    return faults;
+  };
+  R.ownerAvailable = function (data,owner,systemId) { return !!availability(data,owner,systemId); };
+  R.ownerEnabled = function (s,owner,systemId) {
+    var id = availability(FBDATA,owner,systemId);
+    return !!id && FB.systemEnabled(s,id);
+  };
+  R.test = function (s,calls,ctx,snapshot) {
+    R.seal();
+    if (!Array.isArray(calls) || !calls.length || calls.length > 16) return false;
+    for (var i = 0; i < calls.length; i++) {
+      var call = calls[i], d = call && readers[call.reader];
+      // An unavailable owner is false even for a negated predicate.
+      var system = d && availability(FBDATA,d.system,d.systemId);
+      if (!d || !system || !FB.systemEnabled(s,system) ||
+          typeof call.not !== 'undefined' && typeof call.not !== 'boolean') return false;
+      var cache = snapshot && (snapshot.stateReaders || (snapshot.stateReaders = Object.create(null)));
+      var key = cache && d.id + ':' + canonical(call.args) + ':' + canonical(ctx || {});
+      var value;
+      if (cache && own(cache,key)) value = cache[key];
+      else {
+        if (!FB.schema.valid(call.args,d.args,{runtime:true,context:ctx || {}})) return false;
+        value = d.read(s,call.args,ctx || {}) === true;
+        if (cache) cache[key] = value;
+      }
+      if (value === (call.not === true)) return false;
+    }
+    return true;
+  };
+})();
+
+/* Definition-time registration precedes the early law owner. Consumers run
+   only after all canonical engines and story types have loaded. */
+(function () {
+  'use strict';
+  /* Trusted review adapters reuse canonical quotes and commits. JSON only
+     selects a registered type and its bounded arguments. */
+  const reviewAdapters = Object.create(null);
+  let reviewsSealed = false;
+  function own(o,k) { return !!o && Object.prototype.hasOwnProperty.call(o,k); }
+  function freeze(v) {
+    if (v && typeof v === 'object') {
+      Object.keys(v).forEach(function (key) {freeze(v[key]);}); Object.freeze(v);
+    }
+    return v;
+  }
+  function copy(v) { return JSON.parse(JSON.stringify(v)); }
+  const parties = {type:'object',minProperties:1,maxProperties:4,
+    keys:{type:'string',pattern:'^[a-z][A-Za-z0-9_]{0,79}$'},values:{value:true}};
+  function partiesPresent(s,adapter,ctx) {
+    return Object.keys(adapter.partySlots || {}).every(function (slot) {
+      const id = ctx && ctx.participants && ctx.participants[slot];
+      return typeof id === 'string' && !!(s.chars && s.chars[id]);
+    });
+  }
+  FB.eventReviews = {
+    register:function (id,adapter) {
+      if (reviewsSealed || !/^[a-z][a-z0-9_]*$/.test(id) || reviewAdapters[id] ||
+          !adapter || typeof adapter.owner !== 'string' || !adapter.owner.trim() ||
+          !adapter.args || adapter.args.type !== 'object' || !adapter.args.fields ||
+          own(adapter,'systemId') && (typeof adapter.systemId !== 'string' || !/^[a-z][a-z0-9_]*$/.test(adapter.systemId)) ||
+          own(adapter,'partySlots') && !FB.schema.valid(adapter.partySlots,parties) ||
+          own(adapter,'bind') && typeof adapter.bind !== 'function' ||
+          own(adapter,'report') && typeof adapter.report !== 'function' ||
+          typeof adapter.quote !== 'function' || typeof adapter.apply !== 'function' || typeof adapter.details !== 'function')
+        throw new Error('Invalid event review adapter.');
+      reviewAdapters[id] = Object.freeze(Object.assign({},adapter,{args:freeze(adapter.args),
+        partySlots:adapter.partySlots === undefined ? undefined : freeze(copy(adapter.partySlots))}));
+    },
+    quote:function (s,option,ctx) {
+      const spec = option && option.review, adapter = spec && reviewAdapters[spec.type];
+      if (!adapter || !FB.eventStateReaders.ownerEnabled(s,adapter.owner,adapter.systemId) ||
+          ctx && ctx.protagonistId !== undefined && ctx.protagonistId !== s.player.charId ||
+          !partiesPresent(s,adapter,ctx) ||
+          !FB.schema.valid(spec.args,adapter.args,{runtime:true,context:ctx || {}})) return null;
+      const q = adapter.quote(s,spec.args,ctx || {});
+      if (!q) return null;
+      const result = {type:spec.type,args:copy(spec.args),protagonistId:s.player.charId,quote:copy(q)};
+      if (adapter.partySlots) {
+        result.participants = {};
+        Object.keys(adapter.partySlots).forEach(function (slot) {result.participants[slot] = ctx.participants[slot];});
+      }
+      return result;
+    },
+    bindContext:function (s,ev,ctx) {
+      // A supplied party map, including an empty or malformed one, is authoritative.
+      // Restored contexts must never acquire a replacement party or source receipt.
+      if (own(ctx,'participants')) return ctx;
+      if (!(ev.options || []).some(function (option) {
+        return option.review && reviewAdapters[option.review.type] && reviewAdapters[option.review.type].bind;
+      })) return ctx;
+      const out = copy(ctx);
+      for (const option of ev.options || []) {
+        const spec = option.review, adapter = spec && reviewAdapters[spec.type];
+        if (!adapter || !adapter.bind || !FB.eventStateReaders.ownerEnabled(s,adapter.owner,adapter.systemId) ||
+            !FB.schema.valid(spec.args,adapter.args,{runtime:true,context:out})) continue;
+        const facts = adapter.bind(s,spec.args,copy(out));
+        if (facts === null || facts === undefined) continue;
+        if (!facts || typeof facts !== 'object' || Array.isArray(facts)) return false;
+        for (const key of Object.keys(facts)) {
+          if (['__proto__','constructor','prototype'].indexOf(key) >= 0) return false;
+          if (key === 'participants') {
+            if (!facts[key] || typeof facts[key] !== 'object' || Array.isArray(facts[key])) return false;
+            out.participants = out.participants || {};
+            for (const slot of Object.keys(facts[key])) {
+              if (!own(adapter.partySlots,slot) || typeof facts[key][slot] !== 'string' || !s.chars[facts[key][slot]] ||
+                  own(out.participants,slot) && out.participants[slot] !== facts[key][slot]) return false;
+              out.participants[slot] = facts[key][slot];
+            }
+          } else {
+            if (own(out,key) && JSON.stringify(out[key]) !== JSON.stringify(facts[key])) return false;
+            out[key] = copy(facts[key]);
+          }
+        }
+      }
+      return out;
+    },
+    details:function (s,reviewed) {
+      const adapter = reviewed && reviewAdapters[reviewed.type];
+      return adapter ? adapter.details(s,reviewed.args,reviewed.quote) : [];
+    },
+    report:function (s,reviewed) {
+      const adapter = reviewAdapters[reviewed.type];
+      return adapter.report ? adapter.report(s,reviewed.args,reviewed.quote) : [{type:'system',system:'story'}];
+    },
+    commit:function (s,option,ctx,reviewed) {
+      const fresh = FB.eventReviews.quote(s,option,ctx);
+      if (!fresh || !fresh.quote.allowed || !reviewed ||
+          JSON.stringify(fresh) !== JSON.stringify(reviewed)) return false;
+      return !!reviewAdapters[fresh.type].apply(s,fresh.args,fresh.quote);
+    }
+  };
+  FB.validateEventReviews = function (ev,context) {
+    reviewsSealed = true;
+    context = Object.assign({},context,{event:ev});
+    const faults = [];
+    (ev.options || []).forEach(function (option,i) {
+      if (option.review === undefined) return;
+      const spec = option.review, path = 'events.' + ev.id + '.options[' + i + '].review';
+      faults.push.apply(faults,FB.schema.faults(spec,{type:'object',fields:{
+        type:{type:'string'},args:{type:'object'},refusalOption:{type:'integer',min:0,max:31}
+      }},path,context));
+      const adapter = spec && reviewAdapters[spec.type];
+      if (!adapter) {faults.push(path + ': unknown review type.');return;}
+      if (!FB.eventStateReaders.ownerAvailable(context.data || FBDATA,adapter.owner,adapter.systemId))
+        faults.push(FB.T('Invalid data at {path}.',{path:path + '.type'}));
+      faults.push.apply(faults,FB.schema.faults(spec.args,adapter.args,path + '.args',context));
+      if (Object.keys(adapter.partySlots || {}).some(function (slot) {
+        return !Array.isArray(ev.participants) || !ev.participants.some(function (p) {
+          return p && p.slot === slot && p.source === 'context' && p.required === true;
+        }) || !Array.isArray(ev.participantCards) || ev.participantCards.indexOf(slot) < 0;
+      })) faults.push(FB.T('Review at {path} requires its exact context participants and portrait cards.',{path:path}));
+      const refusal = ev.options[spec.refusalOption];
+      if (ev.nameChild || !refusal || spec.refusalOption === i || refusal.review || refusal.require || refusal.requiresTech ||
+          refusal.manualOnly || refusal.chance !== undefined || refusal.system || refusal.systems ||
+          Object.keys(option).some(function (key) {return ['label','desc','require','requiresTech','showWhenTechLocked','manualOnly','review'].indexOf(key) < 0;}))
+        faults.push(path + ': require a separate unconditional refusal and no parallel effects or chance.');
+    });
+    return faults;
+  };
+
+})();

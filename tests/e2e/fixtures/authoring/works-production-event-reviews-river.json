@@ -1,0 +1,1680 @@
+{
+  "name": "Finite works review examples: river",
+  "siteResourceProfiles": {
+    "work_launch": {
+      "name": "Licensed river landing",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 7
+    },
+    "review_flow": {
+      "name": "Actual intake",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 18,
+      "periodDays": 30
+    },
+    "review_tank": {
+      "name": "Actual store",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 8
+    },
+    "review_grazing": {
+      "name": "Actual grazing places",
+      "kind": "access",
+      "unit": "grazing",
+      "capacity": 3,
+      "periodDays": 30
+    }
+  },
+  "geographies": {
+    "works_reviews_river_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [
+        [
+          1.5,
+          4.3,
+          1.5,
+          2,
+          2.2,
+          0.5
+        ]
+      ],
+      "defaultLayout": "works_reviews_river_layout",
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_bank",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_rocks",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_intake": {
+          "x": 1.5,
+          "y": 2
+        },
+        "resource_cistern": {
+          "x": 3.1,
+          "y": 2
+        },
+        "resource_slip": {
+          "x": 1.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "works_reviews_river_layout": {
+      "resource_quay": [
+        {
+          "site": "resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "resource_bank": [
+        {
+          "site": "resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "works_reviews_river_ruler",
+      "name": "The boat-work holder",
+      "desc": "A fictional existing holder of a paid boat-work site.",
+      "intro": "Review finite owned materials and the ordinary enterprise invoice.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 2000,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "works_reviews_river"
+      ],
+      "eras": [
+        "high_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "works_reviews_river_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "norse",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "works_reviews_river": {
+      "id": "works_reviews_river",
+      "name": "Boathouse river",
+      "desc": "A fictional licensed river worksite with conserved material and paid work, not a historical inventory.",
+      "date": {
+        "year": 1204,
+        "season": 0,
+        "day": 1
+      },
+      "era": "high_medieval",
+      "geography": "works_reviews_river_land",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "works_reviews_river_ruler"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "name": "Quay",
+          "realm": "works_reviews_river_court",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "resource_bank",
+          "name": "Bank",
+          "realm": "works_reviews_river_buyer",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "works_reviews_river_court",
+          "name": "River court",
+          "capital": "resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "sex": "m",
+            "name": "Ivo Reed",
+            "culture": "norse",
+            "born": 1170,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "nordic"
+          ]
+        },
+        {
+          "id": "works_reviews_river_buyer",
+          "name": "Store account",
+          "capital": "resource_bank",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "sex": "m",
+            "name": "Lena Bank",
+            "culture": "frankish",
+            "born": 1170,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "nordic"
+          ]
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "siteResourceAssignments": [
+        {
+          "id": "work_slip",
+          "profileId": "work_launch",
+          "countyId": "resource_quay",
+          "siteId": "resource_intake",
+          "suitability": {
+            "launching": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "review_intake",
+          "profileId": "review_flow",
+          "countyId": "resource_quay",
+          "siteId": "resource_intake",
+          "suitability": {
+            "source": true,
+            "gradient": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "review_store",
+          "profileId": "review_tank",
+          "countyId": "resource_quay",
+          "siteId": "resource_slip",
+          "connectedSourceId": "review_intake",
+          "suitability": {
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "review_ground",
+          "profileId": "review_grazing",
+          "countyId": "resource_quay",
+          "siteId": "resource_slip",
+          "suitability": {
+            "grazing": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        }
+      ],
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "resource_quay",
+            "siteId": "resource_intake",
+            "buildingId": "boathouse",
+            "condition": "standing"
+          },
+          {
+            "countyId": "resource_quay",
+            "siteId": "resource_intake",
+            "buildingId": "review_plant",
+            "condition": "standing"
+          },
+          {
+            "countyId": "resource_quay",
+            "siteId": "resource_slip",
+            "buildingId": "review_owned",
+            "condition": "standing"
+          },
+          {
+            "countyId": "resource_bank",
+            "siteId": "resource_cistern",
+            "buildingId": "review_depot",
+            "condition": "standing"
+          },
+          {
+            "countyId": "resource_quay",
+            "siteId": "resource_slip",
+            "buildingId": "review_pasture",
+            "condition": "standing"
+          },
+          {
+            "countyId": "resource_quay",
+            "siteId": "resource_intake",
+            "buildingId": "fish_drying_station",
+            "condition": "standing"
+          },
+          {
+            "countyId": "resource_quay",
+            "siteId": "resource_slip",
+            "buildingId": "review_fill",
+            "condition": "standing",
+            "profileId": "review_fill_retained"
+          },
+          {
+            "countyId": "resource_quay",
+            "siteId": "resource_slip",
+            "buildingId": "review_service",
+            "condition": "standing",
+            "profileId": "review_service_retained"
+          },
+          {
+            "countyId": "resource_quay",
+            "siteId": "resource_slip",
+            "buildingId": "review_rival",
+            "condition": "standing",
+            "profileId": "review_rival_retained"
+          }
+        ]
+      },
+      "productionSites": [
+        {
+          "id": "boat_plant",
+          "countyId": "resource_quay",
+          "siteId": "resource_intake",
+          "buildingId": "boathouse",
+          "recipeIds": [
+            "prepare_boathouse_work"
+          ],
+          "openingLots": [
+            {
+              "goodId": "boathouse_timber",
+              "quantity": 8
+            },
+            {
+              "goodId": "boathouse_cordage",
+              "quantity": 6
+            }
+          ]
+        },
+        {
+          "id": "review_plant",
+          "countyId": "resource_quay",
+          "siteId": "resource_intake",
+          "buildingId": "review_plant",
+          "recipeIds": [
+            "review_batch",
+            "review_advanced"
+          ],
+          "openingLots": [
+            {
+              "goodId": "review_feed",
+              "quantity": 4
+            }
+          ]
+        },
+        {
+          "id": "review_owned",
+          "countyId": "resource_quay",
+          "siteId": "resource_slip",
+          "buildingId": "review_owned",
+          "recipeIds": [
+            "review_batch"
+          ],
+          "openingLots": [
+            {
+              "goodId": "review_feed",
+              "quantity": 4
+            }
+          ]
+        },
+        {
+          "id": "review_depot",
+          "countyId": "resource_bank",
+          "siteId": "resource_cistern",
+          "buildingId": "review_depot",
+          "recipeIds": [
+            "review_batch"
+          ],
+          "openingLots": [
+            {
+              "goodId": "review_feed",
+              "quantity": 8
+            }
+          ]
+        },
+        {
+          "id": "review_pasture",
+          "countyId": "resource_quay",
+          "siteId": "resource_slip",
+          "buildingId": "review_pasture",
+          "recipeIds": [
+            "prepare_pasture_allocation"
+          ],
+          "openingLots": [
+            {
+              "goodId": "parent_farm_allocation",
+              "quantity": 2
+            }
+          ]
+        },
+        {
+          "id": "review_fish",
+          "countyId": "resource_quay",
+          "siteId": "resource_intake",
+          "buildingId": "fish_drying_station",
+          "recipeIds": [
+            "dry_fish"
+          ],
+          "openingLots": [
+            {
+              "goodId": "fresh_fish",
+              "quantity": 6
+            }
+          ]
+        }
+      ],
+      "maritimeWorkAssignments": [
+        {
+          "id": "licensed_work",
+          "profileId": "river_boathouse_work",
+          "productionSiteId": "boat_plant",
+          "launchSourceId": "work_slip"
+        }
+      ],
+      "climate": {
+        "zone": "review_weather",
+        "provinces": {}
+      },
+      "buildingOperationAssignments": [
+        {
+          "id": "review_fill",
+          "profileId": "review_fill",
+          "buildingId": "review_fill",
+          "countyId": "resource_quay",
+          "siteId": "resource_slip",
+          "sourceId": "review_intake",
+          "stores": [
+            "review_store"
+          ],
+          "demandId": "review_storage"
+        },
+        {
+          "id": "review_service",
+          "profileId": "review_service",
+          "buildingId": "review_service",
+          "countyId": "resource_quay",
+          "siteId": "resource_slip",
+          "sourceId": "review_store",
+          "stores": [],
+          "demandId": "review_neighborhood"
+        },
+        {
+          "id": "review_rival",
+          "profileId": "review_rival",
+          "buildingId": "review_rival",
+          "countyId": "resource_quay",
+          "siteId": "resource_slip",
+          "sourceId": "review_store",
+          "stores": [],
+          "demandId": "review_neighborhood"
+        }
+      ],
+      "buildingSeasonAssignments": [
+        {
+          "id": "review_pasture",
+          "profileId": "review_pasture",
+          "operationId": null,
+          "productionSiteId": "review_pasture",
+          "resources": [
+            {
+              "sourceId": "review_ground",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "review_fish",
+          "profileId": "fish_drying_cool",
+          "operationId": null,
+          "productionSiteId": "review_fish",
+          "resources": []
+        }
+      ],
+      "productionExchangeAssignments": [
+        {
+          "id": "review_buy",
+          "profileId": "review_buy",
+          "fromSiteId": "review_depot",
+          "toSiteId": "review_plant"
+        },
+        {
+          "id": "review_sell",
+          "profileId": "review_sell",
+          "fromSiteId": "review_plant",
+          "toSiteId": "review_depot"
+        },
+        {
+          "id": "review_move",
+          "profileId": "review_move",
+          "fromSiteId": "review_owned",
+          "toSiteId": "review_plant"
+        }
+      ]
+    }
+  },
+  "enterprises": {
+    "river_fishing_business": {
+      "name": "River fishing business",
+      "icon": "B",
+      "cost": 60,
+      "profession": "farmer",
+      "yield": 2,
+      "laborPay": 1,
+      "requiresTech": "knarrs",
+      "upgrades": [
+        {
+          "name": "Decked river boat",
+          "cost": 180,
+          "staff": 2,
+          "requiresTech": "sternpost_rudder",
+          "desc": "Paid river enterprise with normal staffing.",
+          "fx": {
+            "populationCapacity": 0.01
+          }
+        }
+      ],
+      "desc": "A fictional river enterprise with ordinary paid staffing."
+    }
+  },
+  "enterpriseMechanics": {
+    "river_fishing_business": {
+      "output": {
+        "provisions": 1
+      },
+      "maritimeWork": true
+    }
+  },
+  "productionRecipes": {
+    "prepare_boathouse_work": {
+      "name": "Prepare river boat work",
+      "desc": "Two paid action days and finite timber and cordage for a river invoice.",
+      "inputs": [
+        {
+          "goodId": "boathouse_timber",
+          "quantity": 1
+        },
+        {
+          "goodId": "boathouse_cordage",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "boathouse_work",
+          "quantity": 1
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 4,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    },
+    "review_batch": {
+      "name": "Prepare material",
+      "inputs": [
+        {
+          "goodId": "review_feed",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "review_output",
+          "quantity": 1
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 5,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    },
+    "review_advanced": {
+      "name": "Optional learned preparation",
+      "inputs": [
+        {
+          "goodId": "review_feed",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "review_output",
+          "quantity": 1
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 4,
+      "requiresTech": [
+        "bloomery_iron"
+      ],
+      "impactReviewId": "review_learned",
+      "fallback": "Ordinary preparation and purchased materials remain available."
+    }
+  },
+  "maritimeWorkProfiles": {
+    "river_boathouse_work": {
+      "name": "Maintained river boathouse work",
+      "desc": "A finite contribution to a paid river enterprise invoice.",
+      "enterpriseType": "river_fishing_business",
+      "recipeId": "prepare_boathouse_work",
+      "goodId": "boathouse_work",
+      "quantity": 1,
+      "unitValue": 3,
+      "invoiceShare": 0.05,
+      "termDays": 14
+    }
+  },
+  "buildings": {
+    "boathouse": {
+      "role": "shipyard",
+      "aiBuildOrder": 32,
+      "name": "Boathouse",
+      "icon": "\ud83d\udef6",
+      "cost": 25,
+      "upkeep": 1,
+      "devMin": 0,
+      "maxCounty": 1,
+      "coastal": true,
+      "settlementDraw": false,
+      "productionRecipeIds": [
+        "prepare_boathouse_work"
+      ],
+      "maritimeWorkProfileId": "river_boathouse_work",
+      "applicability": {
+        "yearMin": 650,
+        "yearMax": 1300,
+        "traditions": [
+          "nordic"
+        ]
+      },
+      "desc": "A modest maintained boat shelter and workspace. At an assigned lawful launching site, actual paid timber and cordage work can meet at most 10% of a fishing enterprise invoice. Remaining payment, staffing and enterprise knowledge still apply."
+    },
+    "review_plant": {
+      "name": "Plant works",
+      "desc": "Explicit finite fictional property.",
+      "role": "industry",
+      "cost": 12,
+      "upkeep": 0,
+      "maxCounty": 1,
+      "settlementDraw": false
+    },
+    "review_depot": {
+      "name": "Depot works",
+      "desc": "Explicit finite fictional property.",
+      "role": "industry",
+      "cost": 12,
+      "upkeep": 0,
+      "maxCounty": 1,
+      "settlementDraw": false
+    },
+    "review_owned": {
+      "name": "Owned works",
+      "desc": "Explicit finite fictional property.",
+      "role": "industry",
+      "cost": 12,
+      "upkeep": 0,
+      "maxCounty": 1,
+      "settlementDraw": false
+    },
+    "review_pasture": {
+      "name": "Pasture works",
+      "desc": "Explicit finite fictional property.",
+      "role": "industry",
+      "cost": 12,
+      "upkeep": 0,
+      "maxCounty": 1,
+      "settlementDraw": false
+    },
+    "review_hall": {
+      "name": "Work hall",
+      "desc": "A paid physical construction with no material grant.",
+      "role": "civic",
+      "cost": 12,
+      "upkeep": 1,
+      "maxCounty": 1,
+      "settlementDraw": false
+    },
+    "review_fill": {
+      "name": "Fill work",
+      "desc": "Actual connected paid finite water work.",
+      "role": "civic",
+      "cost": 8,
+      "upkeep": 1,
+      "maxCounty": 1,
+      "settlementDraw": false,
+      "operationProfile": "review_fill"
+    },
+    "review_service": {
+      "name": "Service work",
+      "desc": "Actual connected paid finite water work.",
+      "role": "civic",
+      "cost": 8,
+      "upkeep": 1,
+      "maxCounty": 1,
+      "settlementDraw": false,
+      "operationProfile": "review_service",
+      "populationCapacity": 0.02
+    },
+    "review_rival": {
+      "name": "Rival work",
+      "desc": "Actual connected paid finite water work.",
+      "role": "civic",
+      "cost": 8,
+      "upkeep": 1,
+      "maxCounty": 1,
+      "settlementDraw": false,
+      "operationProfile": "review_rival",
+      "populationCapacity": 0.02
+    }
+  },
+  "productionExchangeProfiles": {
+    "review_buy": {
+      "goodId": "review_feed",
+      "marketGoodId": "materials",
+      "basePrice": 3,
+      "mode": "market",
+      "quantityLimit": 8,
+      "budget": 100
+    },
+    "review_sell": {
+      "goodId": "review_output",
+      "marketGoodId": "materials",
+      "basePrice": 5,
+      "mode": "market",
+      "quantityLimit": 2,
+      "budget": 40
+    },
+    "review_move": {
+      "goodId": "review_feed",
+      "marketGoodId": "materials",
+      "basePrice": 1,
+      "mode": "owned",
+      "quantityLimit": 4,
+      "budget": 100
+    }
+  },
+  "climateZones": {
+    "review_weather": {
+      "name": "Local working weather",
+      "seasons": [
+        "summer",
+        "autumn",
+        "winter",
+        "cool_season"
+      ]
+    }
+  },
+  "productionGoods": {
+    "review_feed": {
+      "name": "Prepared input",
+      "unit": "feed_units",
+      "mass": 1
+    },
+    "review_output": {
+      "name": "Finished material",
+      "unit": "output_units",
+      "mass": 1
+    }
+  },
+  "techImpactReviews": {
+    "features": {
+      "review_learned": {
+        "mode": "hard",
+        "tech": [
+          "bloomery_iron"
+        ],
+        "rationale": "An optional reviewed process retains the ordinary material route.",
+        "fallback": "Ordinary preparation and purchased materials remain available."
+      }
+    }
+  },
+  "buildingProfiles": {
+    "review_hall_option": {
+      "buildingId": "review_hall",
+      "name": "Selected work hall",
+      "desc": "An independently priced physical alternative.",
+      "replace": {
+        "cost": 21,
+        "upkeep": 2
+      },
+      "requiresTech": []
+    },
+    "review_fill_retained": {
+      "buildingId": "review_fill",
+      "name": "Retained fill works",
+      "desc": "An explicit standing water facility with its original binding, initially unfunded.",
+      "replace": {},
+      "requiresTech": [],
+      "inheritance": "retain"
+    },
+    "review_service_retained": {
+      "buildingId": "review_service",
+      "name": "Retained service works",
+      "desc": "An explicit standing water facility with its original binding, initially unfunded.",
+      "replace": {},
+      "requiresTech": [],
+      "inheritance": "retain"
+    },
+    "review_rival_retained": {
+      "buildingId": "review_rival",
+      "name": "Retained rival works",
+      "desc": "An explicit standing water facility with its original binding, initially unfunded.",
+      "replace": {},
+      "requiresTech": [],
+      "inheritance": "retain"
+    }
+  },
+  "buildingOperationProfiles": {
+    "review_fill": {
+      "mode": "store",
+      "amount": 3,
+      "periodDays": 30,
+      "workCost": 1,
+      "effect": null
+    },
+    "review_service": {
+      "mode": "use",
+      "amount": 3,
+      "periodDays": 30,
+      "workCost": 2,
+      "effect": "populationCapacity"
+    },
+    "review_rival": {
+      "mode": "use",
+      "amount": 3,
+      "periodDays": 30,
+      "workCost": 2,
+      "effect": "populationCapacity"
+    }
+  },
+  "buildingSeasonProfiles": {
+    "review_pasture": {
+      "seasonKinds": [
+        "summer"
+      ],
+      "periodDays": 30,
+      "maxDays": 15,
+      "care": true,
+      "stockLives": [
+        {
+          "goodId": "parent_farm_allocation",
+          "days": 10
+        }
+      ],
+      "benefit": null
+    },
+    "fish_drying_cool": {
+      "seasonKinds": [
+        "summer"
+      ],
+      "periodDays": 7,
+      "maxDays": 7,
+      "care": false,
+      "stockLives": [
+        {
+          "goodId": "fresh_fish",
+          "days": 4
+        },
+        {
+          "goodId": "dried_provisions",
+          "days": 30
+        }
+      ],
+      "benefit": {
+        "goodId": "dried_provisions",
+        "quantity": 1,
+        "effect": "populationFamineProtection",
+        "days": 7
+      }
+    }
+  },
+  "eventPacks": {
+    "works_reviews_river_examples": {
+      "eras": [
+        "high_medieval"
+      ],
+      "yearMin": 1204,
+      "yearMax": 1215,
+      "bookmarkIds": [
+        "works_reviews_river"
+      ]
+    }
+  },
+  "events": [
+    {
+      "id": "works_reviews_river_build",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "works_construction",
+            "args": {
+              "buildingId": "review_hall",
+              "profileId": "review_hall_option"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_buy",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "counterparty",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator",
+        "counterparty"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "production_exchange",
+            "args": {
+              "routeId": "review_buy",
+              "operation": "buy",
+              "quantity": 2
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_sell",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "counterparty",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator",
+        "counterparty"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "production_exchange",
+            "args": {
+              "routeId": "review_sell",
+              "operation": "sell",
+              "quantity": 1
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_move",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "counterparty",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator",
+        "counterparty"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "production_exchange",
+            "args": {
+              "routeId": "review_move",
+              "operation": "transfer",
+              "quantity": 1
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_reserve",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "production_batch",
+            "args": {
+              "siteId": "review_plant",
+              "recipeId": "review_batch",
+              "operation": "reserve",
+              "disposition": "store"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_finish",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "production_batch",
+            "args": {
+              "siteId": "review_plant",
+              "operation": "finish"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_cancel_batch",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "production_batch",
+            "args": {
+              "siteId": "review_plant",
+              "operation": "cancel"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_water",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "building_operation",
+            "args": {
+              "assignmentId": "review_fill"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_pasture",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "seasonal_operation",
+            "args": {
+              "assignmentId": "review_pasture",
+              "operation": "open"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_maritime",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "maritime_operation",
+            "args": {
+              "assignmentId": "licensed_work",
+              "operation": "prepare"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_water_use",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "building_operation",
+            "args": {
+              "assignmentId": "review_service"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_allocate",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "seasonal_operation",
+            "args": {
+              "assignmentId": "review_fish",
+              "operation": "allocate"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_complete_invoice",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "maritime_operation",
+            "args": {
+              "assignmentId": "licensed_work",
+              "operation": "complete"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_cancel_invoice",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "maritime_operation",
+            "args": {
+              "assignmentId": "licensed_work",
+              "operation": "cancel"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_upgrade_invoice",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "maritime_operation",
+            "args": {
+              "operation": "prepare",
+              "assignmentId": "licensed_work",
+              "target": "upgrade"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "works_reviews_river_foreign_batch",
+      "pack": "works_reviews_river_examples",
+      "title": "Review existing work",
+      "text": "Review the exact existing account before deciding.",
+      "weight": 0,
+      "trigger": {
+        "state": [
+          {
+            "reader": "works_payer",
+            "args": {
+              "minimum": 0
+            }
+          }
+        ],
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ],
+      "options": [
+        {
+          "label": "Review current terms",
+          "review": {
+            "type": "production_batch",
+            "args": {
+              "operation": "cancel",
+              "countyId": "resource_bank",
+              "siteId": "review_depot"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave it unchanged",
+          "effects": {}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "starts": [
+    {"id":"attila_451","province":"sirmium","culture":"hunnic_451","religion":"hunnic_court_practices_451","story":"attila_agenda_451","opening":"opening_attila_451","choice":"defer_demand","families":["standard"],"name":"Attila","actor":"attila_451"},
+    {"id":"aetius_451","province":"ravenna","culture":"roman","religion":"nicene","story":"aetius_service_track_451","opening":"opening_aetius_451","choice":"consent_service","families":["standard"],"name":"Aetius","actor":"aetius_451","mandate":"aetius_service_451","reviewOnly":true},
+    {"id":"federate_soldier_451","province":"toulouse","culture":"gothic","religion":"homoian","story":"federate_soldier_track_451","opening":"opening_federate_soldier_451","choice":"work","families":["established","standard"],"party":"gallic_household_party_451"}
+  ],
+  "held": ["ardaric_451","valentinian_451","theodoric_451","marcian_451","camp_household_451","gallic_curialis_451","gallic_colonus_451"],
+  "heldDefinitions": [{"id":"gallic_curialis_451","province":"orleans"},{"id":"gallic_colonus_451","province":"arles"}]
+}

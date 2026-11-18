@@ -27,7 +27,7 @@
     var d = bm && bm.opening, errors = [], year = bm && bm.date && bm.date.year;
     if (!bm || d === undefined) return errors;
     function fail(p) { errors.push('Invalid opening declaration: ' + p + '.'); }
-    var counties = {}, realms = {};
+    var counties = {}, realms = {}, courtPeople = {};
     (Array.isArray(bm.provinces) ? bm.provinces : []).forEach(function (p) { if (p && !p.wasteland) counties[p.id] = p; });
     (Array.isArray(bm.realms) ? bm.realms : []).forEach(function (r) { if (r) realms[r.id] = r; });
     if (!plain(d) || !plain(d.actors) || !plain(d.appointments) ||
@@ -44,10 +44,20 @@
         var ref = p.ref;
         var validRef = plain(ref) && (ref.kind === 'realm_ruler'
           ? slug(ref.realmId) && !!realms[ref.realmId] && Object.keys(ref).every(function (k) { return ['kind','realmId'].indexOf(k) >= 0; })
+          : ref.kind === 'royal_court_person'
+            ? slug(ref.realmId) && slug(ref.memberId) && !!realms[ref.realmId] &&
+              !!realms[ref.realmId].royalCourt && Array.isArray(realms[ref.realmId].royalCourt.members) &&
+              realms[ref.realmId].royalCourt.members.some(function (m) { return m && m.id === ref.memberId && m.alive !== false; }) &&
+              Object.keys(ref).every(function (k) { return ['kind','realmId','memberId'].indexOf(k) >= 0; })
           : ref.kind === 'story' && slug(ref.storyId) && typeof ref.field === 'string' && /^[a-z][a-zA-Z0-9_]*$/.test(ref.field) &&
             (bm.stories || []).indexOf(ref.storyId) >= 0 && Object.keys(ref).every(function (k) { return ['kind','storyId','field'].indexOf(k) >= 0; }));
         if (Object.keys(p).length !== 1 || !validRef)
           fail('actors.' + id + '.ref');
+        if (validRef && ref.kind === 'royal_court_person') {
+          var personKey = ref.realmId + '/' + ref.memberId;
+          if (courtPeople[personKey]) fail('actors.' + id + '.ref');
+          courtPeople[personKey] = true;
+        }
         return;
       }
       Object.keys(p).forEach(function (k) {
@@ -166,9 +176,11 @@
     Object.keys(d.actors).forEach(function (id) {
       var ref = d.actors[id].ref;
       if (!ref || own(s.bookmarkSetup.actors, id)) return;
-      var realmId = ref.kind === 'realm_ruler' && FB.startRealmId(s, ref.realmId);
+      var realmId = ref.kind !== 'story' && FB.startRealmId(s, ref.realmId);
       var rec = ref.kind === 'story' && s.stories && s.stories[ref.storyId];
-      var c = realmId ? realmId === 'player' ? s.chars[s.player.charId] : FB.materializeRealmRuler(s, realmId) :
+      var member = ref.kind === 'royal_court_person' && FB.authoredRoyalMemberSnapshot(s, realmId, ref.memberId);
+      var c = ref.kind === 'royal_court_person' ? member && FB.materializeRoyalMember(s, realmId, member.id) :
+        realmId ? realmId === 'player' ? s.chars[s.player.charId] : FB.materializeRealmRuler(s, realmId) :
         rec && own(rec, ref.field) && typeof rec[ref.field] === 'string' && s.chars[rec[ref.field]];
       if (c) {
         if (Object.keys(s.bookmarkSetup.actors).some(function (key) { return s.bookmarkSetup.actors[key] === c.id; }))
@@ -246,6 +258,13 @@
     if (!s.bookmarkSetup) FB.seedSettlementCommunities(s);
     initialize(s);
     return actor(s, scenario.originalPrincipal.actorId);
+  };
+  FB.prepareStartingMobileActors = function (s, scenario) {
+    if (!s || s.turn !== 0 || !s.player || s.player.charId !== null || s.stories !== undefined ||
+        !FB.mobilePrincipalStartProfile(scenario, FB.campaignBookmark(s))) return false;
+    if (!s.bookmarkSetup) FB.seedSettlementCommunities(s);
+    initialize(s);
+    return true;
   };
   /* Explicit infrastructure adopts a home crown before resource setup.
      Seed its actor references now, leaving authored followings until the
@@ -348,6 +367,10 @@
         var ref = d.actors[id].ref, rec = ref && ref.kind === 'story' && s.stories && s.stories[ref.storyId];
         if (ref && ref.kind === 'story' && (!rec || !own(rec, ref.field) || rec[ref.field] !== r.actors[id]))
           fault(path + '.actors.' + id);
+        if (ref && ref.kind === 'royal_court_person') {
+          var cid = FB.courtCharacterId('royal_' + ref.realmId + '_authored_' + ref.memberId);
+          if (r.actors[id] !== cid) fault(path + '.actors.' + id);
+        }
         actorIds[r.actors[id]] = true;
       });
       if (Object.keys(r.appointments).length !== Object.keys(d.appointments).length) fault(path + '.appointments');

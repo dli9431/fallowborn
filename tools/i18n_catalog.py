@@ -1327,7 +1327,12 @@ def extract_structured(inv: Inventory) -> None:
                             TOKEN_RE.findall(record["text"]))
 
     ambition_path = ROOT / "data" / "ambitions.js"
-    for item_node in node_array(find_assignment(ambition_path, "FBDATA", "historicalAmbitions")) or []:
+    ambition_sources = [(ambition_path, "historicalAmbitions"),
+                        (DATA / "bookmark_451_presentation.js", "bookmarkAmbitions451")]
+    ambition_entries = [(source, item) for source, table in ambition_sources
+                        for item in node_array(find_assignment(source, "FBDATA", table)) or []]
+    for ambition_path, item_node in ambition_entries:
+        ambition_rel = ambition_path.relative_to(ROOT).as_posix()
         item = node_object(item_node) or {}
         item_id = node_string(item.get("id"))
         if not item_id:
@@ -1335,12 +1340,12 @@ def extract_structured(inv: Inventory) -> None:
         for field in ("name", "desc"):
             for branch, record, line in branch_records(item.get(field)):
                 inv.add(f"ambition.{item_id}.{field}.{branch}", record,
-                        f"data/ambitions.js:{line}", f"Historical ambition {item_id}, {field}.",
+                        f"{ambition_rel}:{line}", f"Historical ambition {item_id}, {field}.",
                         TOKEN_RE.findall(record["text"]))
 
         for branch, record, line in branch_records(item.get("news")):
             inv.add(f"news.ambition.{item_id}", record,
-                    f"data/ambitions.js:{line}", f"Historical foundation announcement {item_id}.",
+                    f"{ambition_rel}:{line}", f"Historical foundation announcement {item_id}.",
                     TOKEN_RE.findall(record["text"]))
 
     for item_id, item_node in (node_object(find_assignment(DATA / "actions.js", "FBDATA", "deedRoutines")) or {}).items():
@@ -1516,6 +1521,11 @@ def extract_structured(inv: Inventory) -> None:
             supplemental_root = node_object(find_assignment(aristocratic_path, "FBDATA", supplemental)) or {}
             entries.extend((item_id, item_node, "data/aristocratic_courts.js")
                            for item_id, item_node in supplemental_root.items())
+        if data_name == "authorityOffices":
+            mandate_root = node_object(find_assignment(DATA / "office_mandates.js", "FBDATA",
+                                                       "officeMandateOffices")) or {}
+            entries.extend((item_id, item_node, "data/office_mandates.js")
+                           for item_id, item_node in mandate_root.items())
         if data_name == "administrationProfiles":
             rollout_root = node_object(find_assignment(DATA / "government_rollout.js", "FBDATA",
                                                       "governmentAdministrationProfiles")) or {}
@@ -1524,19 +1534,23 @@ def extract_structured(inv: Inventory) -> None:
         # Review-only declarations still need stable localization owners.
         # Read literal data without activating the candidate or running JS.
         candidate_catalogues = {
-            "authorityOffices": [(DATA / "bookmark_1066_inhabited.js", "bookmarkOffices1066Terrain")],
+            "authorityOffices": [(DATA / "bookmark_1066_inhabited.js", "bookmarkOffices1066Terrain"),
+                                 (DATA / "bookmark_451_governments.js", "bookmarkOffices451")],
             "cultures": [(DATA / "bookmark_1066_inhabited.js", "bookmarkCultures1066Terrain"),
+                         (DATA / "bookmark_451_identities.js", "bookmarkCultures451"),
                          (DATA / "bookmark_711_identities.js", "bookmarkCultures711"),
                          (DATA / "bookmark_476_wider_identities.js", "bookmarkCultures476Wider"),
                          (DATA / "bookmark_568_identities.js", "bookmarkCultures568"),
                          (DATA / "bookmark_1204_terrain.js", "bookmarkCultures1204Terrain")],
             "religions": [(DATA / "bookmark_1066_inhabited.js", "bookmarkReligions1066Terrain"),
+                          (DATA / "bookmark_451_identities.js", "bookmarkReligions451"),
                           (DATA / "bookmark_634_identities.js", "bookmarkReligions634"),
                           (DATA / "identities_1096.js", "bookmarkReligions1096"),
                           (DATA / "identities_1241.js", "bookmarkReligions1241"),
                           (DATA / "bookmark_711_identities.js", "bookmarkReligions711"),
                           (DATA / "bookmark_476_wider_identities.js", "bookmarkReligions476Wider")],
-            "storyCampaigns": [(DATA / "story_campaigns_711.js", "storyCampaigns711"),
+            "storyCampaigns": [(DATA / "campaigns_451.js", "storyCampaigns451"),
+                               (DATA / "story_campaigns_711.js", "storyCampaigns711"),
                                (DATA / "bookmark_800_history.js", "storySettlements800")],
         }
         for candidate_path, catalogue in candidate_catalogues.get(data_name, ()):
@@ -2268,7 +2282,8 @@ def extract_structured(inv: Inventory) -> None:
                 (),
             )
 
-    scenario_sources = [(STARTS_FILE, "startScenarios")]
+    scenario_sources = [(STARTS_FILE, "startScenarios"),
+                        (DATA / "bookmark_451.js", "startScenarios451Scaffold")]
     scenario_sources.extend(
         (source, "startScenarios_" + source.stem.removeprefix("starts_"))
         for source in sorted(DATA.glob("starts_*.js"))
@@ -2590,7 +2605,15 @@ def base_terms() -> dict[str, set[str]]:
 
 def extract_lexicons(inv: Inventory) -> None:
     rel = LEXICON_FILE.relative_to(ROOT).as_posix()
-    for source, entry in lexicon_entries():
+    entries = [(rel, source, entry) for source, entry in lexicon_entries()]
+    staged_path = DATA / "bookmark_451_presentation.js"
+    staged = node_object(find_assignment(staged_path, "FBDATA", "bookmarkLexicons451")) or {}
+    for layer in LEXICON_LAYERS:
+        for layer_id, entry_node in (node_object(staged.get(layer)) or {}).items():
+            entry = node_object(entry_node)
+            if entry is not None:
+                entries.append((staged_path.relative_to(ROOT).as_posix(), f"{layer}.{layer_id}", entry))
+    for rel, source, entry in entries:
         prefix = f"lexicon.{source}"
         for term_id, term_node in (node_object(entry.get("terms")) or {}).items():
             term = node_object(term_node) or {}

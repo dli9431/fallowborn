@@ -157,6 +157,7 @@
     if (FB.validateStartingRealm) FB.validateStartingRealm(state);
     if (FB.validateStartingPerson) FB.validateStartingPerson(state);
     if (FB.validateStartingPrincipal) FB.validateStartingPrincipal(state);
+    if (FB.validateStartingMobilePrincipal) FB.validateStartingMobilePrincipal(state);
     if (FB.validateColonateTenure) FB.validateColonateTenure(state);
     if (FB.validateLocalInstitutionState) FB.validateLocalInstitutionState(state);
     if (FB.validateReligiousInstitutionState) FB.validateReligiousInstitutionState(state);
@@ -374,6 +375,10 @@
       var publicFault = FB.validatePublicAdministrationState(state);
       if (publicFault) invalid(publicFault);
     }
+    if (FB.officeMandates) {
+      var mandateFault = FB.officeMandates.validateState(state);
+      if (mandateFault) invalid(mandateFault);
+    }
     if (FB.aristocracy) {
       var aristocraticFault = FB.aristocracy.validateState(state);
       if (aristocraticFault) invalid(aristocraticFault);
@@ -407,6 +412,7 @@
           !Array.isArray(value.settlementAwards)) invalid(where);
       if (value.hostId !== null &&
           (typeof value.hostId !== 'string' || !value.hostId)) invalid(where + '.hostId');
+      if (value.publicPayer !== undefined && value.publicPayer !== true) invalid(where + '.publicPayer');
       if (value.patronRealmId === value.federateRealmId ||
           value.settlementCountyIds.some(function (id) {
             return typeof id !== 'string' || !id;

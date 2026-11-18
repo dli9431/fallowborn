@@ -1,0 +1,556 @@
+{
+  "name": "River civil service reviews",
+  "eventPacks": {
+    "river_civil_reviews": {
+      "eras": [
+        "late_antique"
+      ],
+      "yearMin": 476,
+      "yearMax": 650
+    }
+  },
+  "authorityOffices": {
+    "river_civil_officer": {
+      "name": "River civil officer",
+      "desc": "A fictional county commission with courts and public receipts.",
+      "powers": [
+        "peace",
+        "revenue"
+      ],
+      "scopes": [
+        "county"
+      ],
+      "succession": "reaffirm",
+      "publicRole": "governor",
+      "recognitionSources": [
+        "imperial_commission"
+      ],
+      "appointment": {
+        "gold": 7,
+        "prestige": 25,
+        "skill": "ste",
+        "minimum": 9
+      }
+    }
+  },
+  "administrationProfiles": {
+    "river_civil_service": {
+      "name": "River civil service",
+      "offices": [
+        "river_civil_officer",
+        "public_fiscal_officer",
+        "public_commander"
+      ],
+      "governor": "river_civil_officer",
+      "fiscal": "public_fiscal_officer",
+      "commander": "public_commander",
+      "appointmentCost": 7,
+      "termDays": 180,
+      "confirmation": "reaffirm",
+      "finance": {
+        "kind": "salary",
+        "share": 0.12,
+        "salary": 3,
+        "serviceShare": 0,
+        "remittance": 1
+      },
+      "accession": {
+        "mode": "recognition",
+        "minimumAge": 18,
+        "allowMinor": false,
+        "officeCandidates": true,
+        "threshold": 0.6,
+        "interests": [
+          {
+            "id": "civil_interest",
+            "role": "governor",
+            "weight": 2
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "id": "river_civil_petition",
+      "pack": "river_civil_reviews",
+      "title": "The river court’s papers",
+      "text": "The household reviews the current request with {friend}.",
+      "trigger": {
+        "minAge": 16
+      },
+      "participants": [
+        {
+          "slot": "friend",
+          "source": "role",
+          "role": "friend",
+          "required": true
+        },
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "friend",
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the current terms.",
+          "desc": "Confirm through the ordinary court review or cancel without spending.",
+          "review": {
+            "type": "office_petition",
+            "args": {
+              "officeId": "river_civil_officer"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open.",
+          "desc": "Spend nothing.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_civil_confirm",
+      "pack": "river_civil_reviews",
+      "title": "The river court’s papers",
+      "text": "The household reviews the current request with {friend}.",
+      "trigger": {
+        "minAge": 16
+      },
+      "participants": [
+        {
+          "slot": "friend",
+          "source": "role",
+          "role": "friend",
+          "required": true
+        },
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "friend",
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the current terms.",
+          "desc": "Confirm through the ordinary court review or cancel without spending.",
+          "review": {
+            "type": "office_appointment",
+            "args": {
+              "action": "confirm",
+              "officeId": "river_civil_officer",
+              "participant": "official"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open.",
+          "desc": "Spend nothing.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_civil_remove",
+      "pack": "river_civil_reviews",
+      "title": "The river court’s papers",
+      "text": "The household reviews the current request with {friend}.",
+      "trigger": {
+        "minAge": 16
+      },
+      "participants": [
+        {
+          "slot": "friend",
+          "source": "role",
+          "role": "friend",
+          "required": true
+        },
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "friend",
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the current terms.",
+          "desc": "Confirm through the ordinary court review or cancel without spending.",
+          "review": {
+            "type": "office_appointment",
+            "args": {
+              "action": "remove",
+              "officeId": "river_civil_officer",
+              "participant": "official"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open.",
+          "desc": "Spend nothing.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_civil_remit",
+      "pack": "river_civil_reviews",
+      "title": "The river court’s papers",
+      "text": "The household reviews the current request with {friend}.",
+      "trigger": {
+        "minAge": 16
+      },
+      "participants": [
+        {
+          "slot": "friend",
+          "source": "role",
+          "role": "friend",
+          "required": true
+        },
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "friend",
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the current terms.",
+          "desc": "Confirm through the ordinary court review or cancel without spending.",
+          "review": {
+            "type": "office_dues",
+            "args": {
+              "action": "remit",
+              "officeId": "river_civil_officer",
+              "remittance": 0.75
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open.",
+          "desc": "Spend nothing.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_civil_repay",
+      "pack": "river_civil_reviews",
+      "title": "The river court’s papers",
+      "text": "The household reviews the current request with {friend}.",
+      "trigger": {
+        "minAge": 16
+      },
+      "participants": [
+        {
+          "slot": "friend",
+          "source": "role",
+          "role": "friend",
+          "required": true
+        },
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "friend",
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the current terms.",
+          "desc": "Confirm through the ordinary court review or cancel without spending.",
+          "review": {
+            "type": "office_dues",
+            "args": {
+              "action": "repay",
+              "officeId": "river_civil_officer"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open.",
+          "desc": "Spend nothing.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_civil_support",
+      "pack": "river_civil_reviews",
+      "title": "The river court’s papers",
+      "text": "The household reviews the current request with {friend}.",
+      "trigger": {
+        "minAge": 16
+      },
+      "participants": [
+        {
+          "slot": "friend",
+          "source": "role",
+          "role": "friend",
+          "required": true
+        },
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "friend",
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the current terms.",
+          "desc": "Confirm through the ordinary court review or cancel without spending.",
+          "review": {
+            "type": "office_recognition",
+            "args": {
+              "action": "recognize",
+              "participant": "official",
+              "selection": "officer"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open.",
+          "desc": "Spend nothing.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_civil_nominate",
+      "pack": "river_civil_reviews",
+      "title": "The river court’s papers",
+      "text": "The household reviews the current request with {friend}.",
+      "trigger": {
+        "minAge": 16
+      },
+      "participants": [
+        {
+          "slot": "friend",
+          "source": "role",
+          "role": "friend",
+          "required": true
+        },
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "friend",
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the current terms.",
+          "desc": "Confirm through the ordinary court review or cancel without spending.",
+          "review": {
+            "type": "office_recognition",
+            "args": {
+              "action": "nominate",
+              "participant": "official"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open.",
+          "desc": "Spend nothing.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_civil_roman_petition",
+      "pack": "river_civil_reviews",
+      "title": "The river court’s papers",
+      "text": "The household reviews the current request with {friend}.",
+      "trigger": {
+        "minAge": 16
+      },
+      "participants": [
+        {
+          "slot": "friend",
+          "source": "role",
+          "role": "friend",
+          "required": true
+        },
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "friend",
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the current terms.",
+          "desc": "Confirm through the ordinary court review or cancel without spending.",
+          "review": {
+            "type": "office_petition",
+            "args": {
+              "officeId": "praeses"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open.",
+          "desc": "Spend nothing.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_civil_claim",
+      "pack": "river_civil_reviews",
+      "title": "The river court’s papers",
+      "text": "The household reviews the current request with {friend}.",
+      "trigger": {
+        "minAge": 16
+      },
+      "participants": [
+        {
+          "slot": "friend",
+          "source": "role",
+          "role": "friend",
+          "required": true
+        },
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "friend",
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the current terms.",
+          "desc": "Confirm through the ordinary court review or cancel without spending.",
+          "review": {
+            "type": "office_recognition",
+            "args": {
+              "action": "recognize",
+              "participant": "official",
+              "sourceId": "civic_acceptance"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open.",
+          "desc": "Spend nothing.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_civil_contest",
+      "pack": "river_civil_reviews",
+      "title": "The river court’s papers",
+      "text": "The household reviews the current request with {friend}.",
+      "trigger": {
+        "minAge": 16
+      },
+      "participants": [
+        {
+          "slot": "friend",
+          "source": "role",
+          "role": "friend",
+          "required": true
+        },
+        {
+          "slot": "official",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "friend",
+        "official"
+      ],
+      "options": [
+        {
+          "label": "Review the current terms.",
+          "desc": "Confirm through the ordinary court review or cancel without spending.",
+          "review": {
+            "type": "office_recognition",
+            "args": {
+              "action": "contest",
+              "participant": "official",
+              "sourceId": "civic_acceptance"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open.",
+          "desc": "Spend nothing.",
+          "effects": {}
+        }
+      ]
+    }
+  ],
+  "governmentForms": {
+    "administrative_monarchy": {
+      "holders": "public_offices",
+      "succession": "public_accession",
+      "territory": "fixed",
+      "consent": "delegated",
+      "levy": "public_service",
+      "revenue": "public_receipts",
+      "council": "appointed_council",
+      "diplomacy": "territorial_diplomacy",
+      "ai": "public_administration",
+      "ladder": "public_careers",
+      "administrationProfileId": "river_civil_service",
+      "systems": {
+        "enable": [
+          "public_offices"
+        ],
+        "disable": [
+          "feudal_service",
+          "scutage",
+          "estates",
+          "crown_bloc",
+          "royal_council"
+        ]
+      }
+    }
+  }
+}

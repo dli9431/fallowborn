@@ -10,21 +10,30 @@ const {injectBrowserHarness} = require('../support/game/browser-harness');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {scanSource} = require('../support/source-literals');
 const {gameRoot,manifestRuns,manifestFiles,routeEagerDocument} = require('../fixtures/bookmark-manifest/eager-document');
+const eagerPages = new WeakSet();
+// Independent source cases own their pages and contexts; overlapping requests
+// remain deliberately sequential inside their own single proof.
+test.describe.configure({mode:'parallel'});
+test.afterEach(async function ({page},info) {
+  if (info.status !== info.expectedStatus) console.log('Lazy source failure view: ' + await page.locator('body').innerText());
+});
+const datedPackDates = {dated_451:['451'],dated_493:['493'],dated_568:['568'],dated_634:['634'],
+  dated_711:['711'],dated_800:['800'],dated_1096:['1096'],dated_1204:['1204'],dated_1241:['1241']};
 
 const indexText = fs.readFileSync(path.join(gameRoot,'index.html'),'utf8');
 const manifestText = fs.readFileSync(path.join(gameRoot,'data/bookmark_manifest.js'),'utf8');
 const runs = manifestRuns(manifestText);
 const lazyFiles = manifestFiles(runs);
-const lazyDates = ['476','493','568','634','711','800','1096','1204','1241'];
+const lazyDates = ['451','476','493','568','634','711','800','1096','1204','1241'];
 // The manifest's date requirements, repeated here as the reviewed contract.
-const requires = {'493':['476'],'568':['476','493'],'634':['568'],'711':['476'],'800':['476'],'1204':['476'],'1241':['1204']};
+const requires = {'451':['476'],'493':['476'],'568':['476','493'],'634':['568'],'711':['476'],'800':['476'],'1204':['476'],'1241':['1204']};
 const catalogRoots = ['geographies','cultures','cultureDoctrineDefaults','religions','governmentForms','legalTraditions',
   'settlementSites','settlementLayouts','administrationProfiles','aristocraticProfiles','civicProfiles','constituencyProfiles',
   'ecclesiasticalProfiles','mobileProfiles','religiousInstitutionProfiles','religiousActivities','religiousPatronage'];
 dependsOnRuntime(__filename,['index.html','Dockerfile','sw.js','data/bookmark_manifest.js','data/bookmark_sources.js',
   'data/bookmarks.js','data/starts.js','js/bookmark_sources.js','js/bookmark_composition.js','js/main.js','js/mods.js',
-  'data/bookmark_711_identities.js','js/episcopal_claims.js','js/industry_laws.js',
-  'js/stories.js','js/world.js','js/starts.js','js/save.js','js/save_v4.js','js/ui_modals.js'].concat(lazyFiles));
+  'data/bookmark_711_identities.js','data/eras.js','data/technology.js','js/episcopal_claims.js','js/industry_laws.js',
+  'js/stories.js','js/story_track.js','js/events.js','js/world.js','js/starts.js','js/save.js','js/save_v4.js','js/ui_modals.js'].concat(lazyFiles));
 
 function eagerScripts() {
   return Array.from(indexText.matchAll(/<script src="([^"?#]+)" defer><\/script>/g),function (match) { return match[1]; });
@@ -50,6 +59,7 @@ function closureFiles(id) {
 // document position, exactly the former boot.
 async function withEager(browser,info,fn) {
   const context = await browser.newContext(), page = await context.newPage(), guard = installPageGuards(page);
+  eagerPages.add(page);
   try {
     await routeEagerDocument(page);
     await openTitle(page,info);
@@ -81,6 +91,7 @@ async function setupProjection(page,id,absent) {
   return page.evaluate(function (input) {
     const report = FB.game.contentReady ? FB.bookmarkCompositions.sourceReports().find(function (r) { return r.bookmarkId === input.id; }) :
       FB.bookmarkSources.prepareSetup(input.id), data = FBDATA, world = data.bookmarks[input.id];
+    const storyInstances = data.storyInstances || {};
     // Faith availability and activity openings are cross-date selector
     // lists; entries naming a date absent from the lazy session are removed.
     function normalize(root,value) {
@@ -95,7 +106,7 @@ async function setupProjection(page,id,absent) {
     const offered = data.startScenarios.filter(function (row) {
       return FB.bookmarkSources.matches(row,input.id,world.era) || JSON.stringify(world).indexOf('"' + row.id + '"') >= 0;
     });
-    const text = JSON.stringify([world,offered,data.storyInstances]);
+    const text = JSON.stringify([world,offered,storyInstances]);
     const catalogs = {}, referenced = {};
     input.roots.forEach(function (root) {
       catalogs[root] = {}; referenced[root] = [];
@@ -109,12 +120,17 @@ async function setupProjection(page,id,absent) {
       world:FB.mods.fingerprint(world),revisions:FB.bookmarkRevisions(input.id).map(function (row) { return row.revision; }),
       revisionFaults:FB.bookmarkRevisions(input.id).map(function (row) { return FB.validateBookmark(row); }),
       dateStarts:FB.mods.fingerprint(offered),
-      dateStories:FB.mods.fingerprint(Object.keys(data.storyInstances).filter(function (key) { return /634$/.test(key); }).map(function (key) { return [key,data.storyInstances[key]]; })),
+      dateStories:FB.mods.fingerprint(Object.keys(storyInstances).filter(function (key) { return /634$/.test(key); }).map(function (key) { return [key,storyInstances[key]]; })),
       starts:data.startScenarios.map(function (row) { return row.id; }),startRows:FB.mods.fingerprint(data.startScenarios),
-      stories:Object.keys(data.storyInstances),storyRows:FB.mods.fingerprint(data.storyInstances),
+      stories:Object.keys(storyInstances),storyRows:FB.mods.fingerprint(storyInstances),
       registry:FB.stories.list().map(function (row) { return row.id; }),
-      events:(data.events || []).map(function (row) { return row.id; }),catalogs:catalogs,referenced:referenced};
-  },{id:id,absent:absent,roots:catalogRoots});
+      events:(data.events || []).filter(function (row) {
+        // Only the oracle omits declarations whose reviewed owning dates have
+        // not loaded in the real session. The actual event list stays exact.
+        const owners = input.datedPacks[row.pack];
+        return !input.oracle || !owners || owners.some(function (id) { return input.absent.indexOf(id) < 0; });
+      }).map(function (row) { return row.id; }),catalogs:catalogs,referenced:referenced};
+  },{id:id,absent:absent,roots:catalogRoots,oracle:eagerPages.has(page),datedPacks:datedPackDates});
 }
 function compareSetups(lazy,eager) {
   ['published','worldFaults','rejected','world','revisions','revisionFaults','starts','startRows','stories','storyRows','registry','events']
@@ -158,7 +174,7 @@ test('index.html loads only the eager shell while the manifest owns every per-da
     'data/bookmark_476_africa.js','data/bookmark_476_outer.js','data/bookmark_476_wider_identities.js','data/bookmark_711_identities.js'];
   sharedDeclarations.forEach(function (file) { expect(eager).toContain(file); });
   fs.readdirSync(path.join(gameRoot,'data')).filter(function (name) {
-    return /(?:^|_)(476|493|568|634|711|800|1096|1204|1241)(?:_|\.js$)/.test(name) &&
+    return /(?:^|_)(451|476|493|568|634|711|800|1096|1204|1241)(?:_|\.js$)/.test(name) &&
       sharedDeclarations.indexOf('data/' + name) < 0 && !/^(lang_|music_)/.test(name);
   }).forEach(function (name) { expect(lazyFiles,'data/' + name).toContain('data/' + name); });
   ['data/story_household_effects_476_493.js','data/story_household_effects_711_800_1204.js','data/story_instances.js',
@@ -215,6 +231,7 @@ test('the title boots without dated sources and lists every date from its canoni
   });
   expect(lazy.menu).toEqual(eager);
   expect(lazy.menu.map(function (row) { return row.id; })).not.toContain('493');
+  expect(lazy.menu.map(function (row) { return row.id; })).not.toContain('451');
   await page.getByRole('button',{name:'New Game',exact:true}).click();
   for (const id of ['476','568','634','711','800','867','1066','1096','1204','1241'])
     await expect(page.locator('#bookmarklist [data-bookmark="' + id + '"]')).toBeVisible();

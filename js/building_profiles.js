@@ -209,7 +209,7 @@
     return changed;
   };
   P.status = function (s,pid,slot,buildingId,profileId,payer) {
-    var p = own(FBDATA.buildingProfiles,profileId) && FBDATA.buildingProfiles[profileId];
+    var p = profileId === undefined ? {} : own(FBDATA.buildingProfiles,profileId) && FBDATA.buildingProfiles[profileId];
     var d = P.definition(buildingId,profileId), a = FB.settlementActor(s,payer);
     function blocked(reason) { return {ready:false,reason:reason}; }
     if (!p || !d) return blocked(FB.T('This construction profile is unavailable.'));
@@ -225,8 +225,9 @@
       if (!scoped.ready) return scoped;
     }
     var realm = a.kind === 'realm' ? a.id : FB.settlementCountyHolder(s,pid);
-    for (var i=0; i<d.requiresTech.length; i++) if (!FB.techRequirementMet(s,d.requiresTech[i],realm))
-      return blocked(FB.T('Requires {technology}.',{technology:FB.dataText(s,s.player.charId,'tech',d.requiresTech[i],FBDATA.tech[d.requiresTech[i]],'name',{})}));
+    var technologies = [].concat(d.requiresTech || []);
+    for (var i=0; i<technologies.length; i++) if (!FB.techRequirementMet(s,technologies[i],realm))
+      return blocked(FB.T('Requires {technology}.',{technology:FB.dataText(s,s.player.charId,'tech',technologies[i],FBDATA.tech[technologies[i]],'name',{})}));
     if (p.siteResourceProfile) {
       if (!P.siteReady(s,pid,slot,p)) return blocked(FB.T('The declared physical mechanism is incompatible with this site.'));
       var site = FB.settlementsOf(s,pid)[slot];
@@ -238,10 +239,12 @@
   };
   function requestValid(r) {
     return keys(r,['countyId','settlement','buildingId','profileId','actor','targetLevel']) && ident(r.countyId) &&
-      Number.isSafeInteger(r.settlement) && r.settlement >= 0 && ident(r.buildingId) && ident(r.profileId) &&
+      Number.isSafeInteger(r.settlement) && r.settlement >= 0 && ident(r.buildingId) && (!own(r,'profileId') || ident(r.profileId)) &&
       keys(r.actor,['kind','id']) && Object.keys(r.actor).length === 2 && ['realm','character'].indexOf(r.actor.kind) >= 0 && typeof r.actor.id === 'string';
   }
   P.quote = function (s,r) {
+    // Existing fiscal and construction readers can normalize legacy records.
+    s = copy(s);
     var q = {allowed:false,reason:FB.T('This construction profile is unavailable.'),request:object(r) ? copy(r) : null};
     if (!requestValid(r) || r.actor.kind === 'realm' && r.actor.id === 'player' || !FB.world.byId[r.countyId] || FB.world.byId[r.countyId].wasteland ||
         !FB.settlementsOf(s,r.countyId)[r.settlement]) return q;
@@ -265,7 +268,7 @@
     var can = d.fort ? fort.ok : player ? FB.canBuildAt(s,r.countyId,r.settlement,r.buildingId,null,r.profileId) :
       FB.aiCanBuildAt(s,r.actor,r.countyId,r.settlement,r.buildingId,r.profileId);
     q.cost = d.fort ? fort.cost : FB.buildCost(s,r.countyId,r.buildingId,realm,r.profileId);
-    q.funds = r.actor.kind === 'realm' ? FB.treasuryAvailable(s,r.actor.id) : player ? s.player.gold : FB.baronyConstructionFunds(s,r.actor.id);
+    q.funds = r.actor.kind === 'realm' ? FB.treasuryAvailable(s,r.actor.id) : player ? FB.treasuryPlayerWorksFunds(s) : FB.baronyConstructionFunds(s,r.actor.id);
     q.reserve = r.actor.kind === 'realm' ? (FB.treasuryConstructionReserves(s) || {})[r.actor.id] : 0;
     var floor = r.actor.kind === 'realm' ? q.reserve + (d.upkeep || 0) * (FBDATA.balance.realmReserveSeasons || 2) :
       player ? 0 : (d.upkeep || 0) * (FBDATA.balance.realmReserveSeasons || 2);
@@ -277,6 +280,7 @@
       actor:FB.political.actor(s,r.actor),institution:institutional.binding,
       sources:FB.siteResources.snapshot(s,r.countyId,site && site.site,r.actor),
       buildings:copy(s.buildings[r.countyId] || []),fort:fort || null};
+    if (player && FB.treasuryPreserved(s,'player')) q.context.publicAccount = FB.treasuryPublicAccountSnapshot(s,'player');
     return q;
   };
   P.commit = function (s,reviewed) {
@@ -298,6 +302,73 @@
       FB.buildRealm(s,r.actor.id,r.countyId,r.settlement,r.buildingId,undefined,r.profileId) :
       FB.buildBarony(s,r.actor.id,r.countyId,r.settlement,r.buildingId,r.profileId);
   };
+  var eventFields={buildingId:FB.production.eventId('buildings'),profileId:FB.production.eventId('buildingProfiles'),
+    countyId:FB.production.eventId(),technologyOnly:{type:'boolean',optional:'absent'}};
+  function eventArgs(a,c) {
+    var d=c.data || FBDATA;
+    return !a.profileId || !a.buildingId || d.buildingProfiles[a.profileId].buildingId===a.buildingId;
+  }
+  function eventRows(s,args,ctx) {
+    var pid=args.countyId || ctx.locationId || s.player.provinceId,rows=[];
+    if (!FB.world.byId[pid]) return rows;
+    (args.buildingId ? [args.buildingId] : Object.keys(FBDATA.buildings).sort()).forEach(function (key) {
+      var d=FBDATA.buildings[key];
+      if (d.fort || args.buildingId && args.buildingId!==key) return;
+      var profiles=args.profileId ? [args.profileId] : [null].concat(P.ids(key));
+      profiles.forEach(function (profileId) {
+        var definition=P.definition(key,profileId);
+        if (!definition || args.technologyOnly && ![].concat(definition.requiresTech || []).length) return;
+        FB.settlementsOf(s,pid).forEach(function (site,slot) {
+          var request={countyId:pid,settlement:slot,buildingId:key,actor:{kind:'character',id:s.player.charId}};
+          if (profileId) request.profileId=profileId;
+          if (FB.settlementConstructionAuthority(s,pid,slot,request.actor).direct) rows.push(request);
+        });
+      });
+    });
+    return rows;
+  }
+  function eventSource(s,r) {
+    return FB.production.eventSource(s,'construction',r.countyId+':'+r.settlement,r.actor,{
+      site:FB.settlementsOf(s,r.countyId)[r.settlement].site || null,buildingId:r.buildingId,profileId:r.profileId || null,
+      holder:FB.settlementHolder(s,r.countyId,r.settlement),stamp:P.stamp(r.buildingId,r.profileId)
+    });
+  }
+  FB.eventStateReaders.register({id:'works_construction',system:'works',args:{type:'object',fields:Object.assign({},eventFields,{
+    status:{enum:['ready','technology_missing']}
+  }),test:eventArgs},read:function (state,args,ctx) {
+    var s=copy(state);
+    return eventRows(s,args,ctx).some(function (r) {
+      var q=P.quote(s,r);
+      if (args.status==='ready') return q.allowed;
+      var d=P.definition(r.buildingId,r.profileId),realm=FB.settlementCountyHolder(s,r.countyId);
+      return [].concat(d.requiresTech || []).some(function (key) {return !FB.techRequirementMet(s,key,realm);});
+    });
+  }});
+  FB.eventReviews.register('works_construction',{owner:'works',partySlots:{operator:true},
+    args:{type:'object',fields:eventFields,test:eventArgs},
+    bind:function (state,args,ctx) {
+      var s=copy(state),rows=eventRows(s,args,ctx),r=rows.find(function (x) {return P.quote(s,x).allowed;}) || rows[0];
+      return r ? FB.production.eventBind(eventSource(s,r)) : null;
+    },
+    quote:function (state,args,ctx) {
+      var s=copy(state),source=ctx.worksSource;
+      if (!source || source.kind!=='construction') return null;
+      var r=eventRows(s,args,ctx).find(function (r) {return FB.production.eventMatches(ctx,eventSource(s,r));});
+      return r ? P.quote(s,r) : null;
+    },
+    apply:function (s,args,q) {return P.commit(s,q);},
+    report:function (s,args,q) {return FB.production.eventReport(s,q.context && q.context.publicAccount ? {kind:'realm',id:'player'} : q.request.actor,-q.cost);},
+    details:function (s,args,q) {
+      var r=q.request,d=P.definition(r.buildingId,r.profileId),place=FB.world.byId[r.countyId];
+      return [FB.dataText(s,s.player.charId,r.profileId ? 'buildingProfile' : 'building',r.profileId || r.buildingId,
+        r.profileId ? FBDATA.buildingProfiles[r.profileId] : FBDATA.buildings[r.buildingId],'name',{}),
+        FB.T('Construction at {place}. Immediate payment: {money:cost}. Maintenance: {money:upkeep} each season.',{
+        place:place.name,cost:q.cost || 0,upkeep:d.upkeep || 0}),q.reason || FB.T('The current construction requirements are met.'),
+        FB.production.eventPayment(s,r.actor.kind === 'character' && r.actor.id === s.player.charId && FB.treasuryPreserved(s,'player') ?
+          {kind:'realm',id:'player'} : r.actor,q.cost || 0),
+        FB.T('Construction retains ordinary property, technology and reserve requirements. It supplies no materials, labor or operating term.')];
+    }
+  });
   P.validate = function (s) {
     var inheritedPlan = null;
     Object.keys(s.buildings || {}).forEach(function (pid) {

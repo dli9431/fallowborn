@@ -1,0 +1,6934 @@
+{
+  "packId": "dated_1204",
+  "eventCount": {
+    "min": 10,
+    "max": 10
+  },
+  "rows": [
+    {
+      "eventId": "stall_payment_1204",
+      "bookmark": "1204",
+      "code": "PACK-1204-farmer-london-m-Reader",
+      "readers": [
+        "owned_enterprise_law"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "industryLaws",
+                "laws"
+              ],
+              "value": []
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": []
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1203
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "roma"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1225
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 451
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 476
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 493
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 568
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 634
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 711
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 800
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1096
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1241
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "stall_pause_1204",
+      "bookmark": "1204",
+      "code": "PACK-1204-farmer-london-m-Reader",
+      "readers": [
+        "owned_enterprise_law"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "industryLaws",
+                "laws"
+              ],
+              "value": []
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": []
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1203
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "roma"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1225
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "market_stall_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_stall_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "market_stall_business",
+                      "mode": "license",
+                      "fee": 2,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "workshop_payment_1204",
+      "bookmark": "1204",
+      "code": "PACK-1204-farmer-london-m-Reader",
+      "readers": [
+        "owned_enterprise_law"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "industryLaws",
+                "laws"
+              ],
+              "value": []
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": []
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1203
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "roma"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1225
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "workshop_pause_1204",
+      "bookmark": "1204",
+      "code": "PACK-1204-farmer-london-m-Reader",
+      "readers": [
+        "owned_enterprise_law"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "industryLaws",
+                "laws"
+              ],
+              "value": []
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": []
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1203
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "roma"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1225
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "enterprises"
+              ],
+              "value": [
+                {
+                  "uid": "fixture_business",
+                  "type": "workshop_business",
+                  "provinceId": "london",
+                  "settlement": 0
+                }
+              ]
+            },
+            {
+              "path": [
+                "industryLaws"
+              ],
+              "value": {
+                "schema": 1,
+                "laws": [
+                  {
+                    "id": "fixture_license",
+                    "definitionId": "london_guild_license",
+                    "issuer": {
+                      "realmId": "england_1204"
+                    },
+                    "terms": {
+                      "provinceId": "london",
+                      "enterpriseType": "workshop_business",
+                      "mode": "license",
+                      "fee": 3,
+                      "permitDays": 90,
+                      "exemptions": []
+                    },
+                    "payeeRealmId": "england_1204",
+                    "endTurn": 360,
+                    "transitionEndTurn": 30,
+                    "existingEnterpriseUids": [
+                      "fixture_business"
+                    ],
+                    "repealedTurn": null
+                  }
+                ],
+                "permits": [],
+                "choices": []
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "roman_charter_1204",
+      "bookmark": "1204",
+      "code": "PACK-1204-farmer-roma-m-Reader",
+      "readers": [
+        "open_episcopal_claim"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1203
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1225
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "roman_accounts_1204",
+      "bookmark": "1204",
+      "code": "PACK-1204-farmer-roma-m-Reader",
+      "readers": [
+        "open_episcopal_claim"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1203
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1225
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "roman_evidence_1204",
+      "bookmark": "1204",
+      "code": "PACK-1204-farmer-roma-m-Reader",
+      "readers": [
+        "open_religious_case"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1203
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1225
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "occitan_oversight_1204",
+      "bookmark": "1204",
+      "code": "PACK-1204-farmer-toulouse-m-Reader",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1208
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1225
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "occitan_trade_1204",
+      "bookmark": "1204",
+      "code": "PACK-1204-farmer-toulouse-m-Reader",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1208
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1225
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "occitan_petitions_1204",
+      "bookmark": "1204",
+      "code": "PACK-1204-farmer-toulouse-m-Reader",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1208
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1225
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1209
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "toulouse_1204"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

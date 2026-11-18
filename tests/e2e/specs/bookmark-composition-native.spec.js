@@ -8,8 +8,13 @@ const {installNativeLegacy,nativeSourceFiles,assertLegacy634} = require('../supp
 const {manifestRuns,manifestFiles} = require('../fixtures/bookmark-manifest/eager-document');
 const {beginBookmarkFromTitle,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+// Each proof uses fresh fixture pages or explicitly created isolated contexts.
+test.describe.configure({mode:'parallel'});
+test.afterEach(async function ({page},info) {
+  if (info.status !== info.expectedStatus) console.log('Native source failure view: ' + await page.locator('body').innerText());
+});
 const remaining = ['476','493','711','800','867','1066','1096','1204','1241'];
-const allWorlds = ['476','493','568','634','711','800','867','1066','1096','1204','1241'];
+const allWorlds = ['451','476','493','568','634','711','800','867','1066','1096','1204','1241'];
 const examples = [require('../fixtures/authoring/existing-person-harbor.json'),require('../fixtures/authoring/existing-person-dune.json')];
 const lazyFiles = manifestFiles(manifestRuns(fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_manifest.js'),'utf8')));
 // Read the fingerprint owner's explicit public-root list as text. All those
@@ -19,27 +24,85 @@ const modSource = fs.readFileSync(path.resolve(__dirname,'../../../js/mods.js'),
 const publicRoots = Array.from(modSource.match(/const PUBLIC_KEYS = \{([\s\S]*?)\n  \};/)[1]
   .matchAll(/(\w+):true/g),function (match) { return match[1]; }).concat(['faithDefaults','defaultGeography']);
 dependsOnRuntime(__filename,['index.html','data/bookmark_manifest.js','js/bookmark_sources.js','js/bookmark_composition.js','js/mods.js',
-  'js/main.js','js/world.js','js/starts.js','js/stories.js','js/model.js','js/bookmark_setup.js',
+  'js/main.js','js/world.js','js/starts.js','js/stories.js','js/story_track.js','js/model.js','js/bookmark_setup.js',
   'js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js','js/crazygames.js','js/events.js',
   'js/justice.js','js/federates.js','js/religious_institutions.js','js/story_household_refuge.js','js/story_household_party.js','js/ai_decisions.js','js/government_aristocracy.js',
   'data/bookmark_sources.js','data/bookmarks.js','data/starts.js','data/geographies.js',
-  'data/settlements.js','data/settlements_real.js','data/cultures.js','data/eras.js','data/religious_institutions.js','data/ai_decisions.js'].concat(nativeSourceFiles,lazyFiles));
+  'data/settlements.js','data/settlements_real.js','data/cultures.js','data/eras.js','data/technology.js','data/religious_institutions.js','data/ai_decisions.js'].concat(nativeSourceFiles,lazyFiles));
 
 async function catalogue(page) {
   return page.evaluate(function (input) {
     const projected = {};
     input.roots.forEach(function (key) { if (Object.prototype.hasOwnProperty.call(FBDATA,key)) projected[key] = FBDATA[key]; });
-    return {signature:FB.mods.fingerprint(projected),starts:FBDATA.startScenarios.map(function (row) { return row.id; }),
+    const roots = {};
+    Object.keys(projected).forEach(function (key) { roots[key] = FB.mods.fingerprint({value:projected[key]}); });
+    return {signature:FB.mods.fingerprint(projected),roots:roots,starts:FBDATA.startScenarios.map(function (row) { return row.id; }),
       declarations:Object.keys(FBDATA.storyInstances),registry:FB.stories.list().map(function (row) { return row.id; }),
       stories:Object.keys(FBDATA.storyInstances).map(function (id) { return {id:id,fingerprint:FB.mods.fingerprint(FBDATA.storyInstances[id])}; }),
-      worlds:input.ids.map(function (id) { return {id:id,raw:FB.mods.fingerprint(projected.bookmarks[id]),
+      worlds:input.ids.map(function (id) { if (!projected.bookmarks[id]) return {id:id,missing:true}; return {id:id,raw:FB.mods.fingerprint(projected.bookmarks[id]),
         revisions:FB.bookmarkRevisions(id,projected.bookmarks[id]).map(function (world) { return world.revision; }),
         faults:FB.bookmarkRevisions(id,projected.bookmarks[id]).map(function (world) { return FB.validateBookmark(world); })}; })};
   },{ids:allWorlds,roots:publicRoots});
 }
+async function installLegacyEventReferences(page) {
+  // The former eager publisher reviews these two pending sources in sequence.
+  // Current dated events can reference either source before its publication.
+  // Supply their frozen declarations to detached review, never to live data or
+  // ordinary JSON validation. Canonical validators still decide acceptance.
+  function references() {
+    const declared = {bookmarks:{},storyInstances:{}}, starts = FBDATA.startScenarios.slice();
+    [['spring_568','568'],['autumn_634','634']].forEach(function (pair) {
+      const source = FBDATA.bookmarkCompositionSources[pair[0]], input = source && source.input;
+      if (!input || input.bookmark.id !== pair[1]) throw new Error('Missing retained source reference: ' + pair[0]);
+      declared.bookmarks[pair[1]] = input.bookmark;
+      Object.keys(input.catalogs || {}).forEach(function (root) {
+        declared[root] = Object.assign({},declared[root],input.catalogs[root]);
+      });
+      input.starts.forEach(function (unit) {
+        starts.push(unit.definition);
+        Object.assign(declared.storyInstances,unit.storyInstances);
+      });
+    });
+    if (FB.bookmarkSources.eventReviewData) throw new Error('Retained event references already have an owner.');
+    FB.bookmarkSources.eventReviewData = function (data) {
+      if (data.bookmarkCompositionReferences !== starts) return data;
+      return Object.assign({},data,{bookmarks:Object.assign({},declared.bookmarks,data.bookmarks),
+        startScenarios:starts,storyInstances:Object.assign({},declared.storyInstances,data.storyInstances)});
+    };
+    const prepare = FB.mods.prepareComposition;
+    FB.mods.prepareComposition = function (mod,worldId,base,complete) {
+      if (!base || ['568','634'].indexOf(worldId) < 0) return prepare.apply(this,arguments);
+      const proof = Object.assign({},base,{bookmarkCompositionReferences:starts});
+      Object.keys(declared).forEach(function (root) {
+        if (root !== 'storyInstances') proof[root] = Object.assign({},declared[root],base[root]);
+      });
+      return prepare.call(this,mod,worldId,proof,complete);
+    };
+  }
+  await page.route('**/js/main.js',async function (route) {
+    const response = await route.fetch();
+    await route.fulfill({response:response,body:'(' + references.toString() + ')();\n' + await response.text()});
+  });
+}
 async function withLegacy(browser,fn) {
   const context = await browser.newContext(), page = await context.newPage(), guard = installPageGuards(page);
-  try { await installNativeLegacy(page); return await fn(page); }
+  try {
+    await installNativeLegacy(page);
+    // The immutable registry predates the later imperial-service declarations.
+    // Retain their explicit registration at the same position on both sides.
+    const former = fs.readFileSync(path.resolve(__dirname,'../fixtures/bookmark-composition/native-before-shared/story_instances.js'),'utf8');
+    const current = fs.readFileSync(path.resolve(__dirname,'../../../data/story_instances.js'),'utf8');
+    const anchor = '  Object.keys(FBDATA.storyCourts476 || {}).forEach(function (id) {';
+    const registration = "  add(FBDATA.householdTracks_imperial_service, 'registrationAfter', 'western_office_476');";
+    expect(former.split(anchor)).toHaveLength(2);
+    expect(former.split(registration)).toHaveLength(1);
+    expect(current.split(registration)).toHaveLength(2);
+    await page.route('**/data/story_instances.js',function (route) {
+      return route.fulfill({contentType:'application/javascript',body:former.replace(anchor,registration + '\n' + anchor)});
+    });
+    await installLegacyEventReferences(page);
+    return await fn(page);
+  }
   finally { try { expect(guard.faults).toEqual([]); } finally { await context.close(); } }
 }
 
@@ -98,7 +161,10 @@ test('every retained native world, start and story keeps its former complete pro
     await assertLegacy634(oldPage);
     expect(await page.evaluate(function () { return FBDATA.bookmarks['634'].hidden; })).toBeUndefined();
     const actual = await catalogue(page), former = await catalogue(oldPage);
-    expect(actual).toEqual(former);
+    const sources = await oldPage.evaluate(function () { return FB.bookmarkCompositions.sourceReports(); });
+    expect(actual,JSON.stringify({roots:Object.keys(actual.roots).filter(function (key) {
+      return actual.roots[key] !== former.roots[key];
+    }),sources:sources})).toEqual(former);
     expect(await page.evaluate(function () {
       const raw = FBDATA.bookmarks['634'], fresh = raw.revisions.scenery_protected_v1;
       return {current:raw.revision,revisions:Object.keys(raw.revisions),fields:Object.keys(fresh),
@@ -112,6 +178,29 @@ test('every retained native world, start and story keeps its former complete pro
     expect(await page.evaluate(function () {
       return FB.bookmarkCompositions.sourceReports().filter(function (row) { return row.bookmarkId; }).every(function (row) { return row.published; });
     })).toBe(true);
+  });
+});
+
+test('retained event reference review stays detached and ordinary JSON validation stays strict',async function ({browser},info) {
+  test.skip(!info.project.name.endsWith('-served'),'Pinned source interception requires a served origin.');
+  await withLegacy(browser,async function (page) {
+    await openGame(page,info);
+    const result = await page.evaluate(function () {
+      const source = FBDATA.events.find(function (event) { return event.pack === 'dated_568' && event.options.some(function (option) {
+        return option.review && option.review.type === 'story_choice';
+      }); });
+      if (!source) throw new Error('Missing dated household review declaration.');
+      const row = JSON.parse(JSON.stringify(source)); row.id = 'retained_reference_probe_568';
+      const mod = {name:'Retained reference validation',events:[row]};
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const accepted = FB.mods.validate(JSON.parse(JSON.stringify(mod)));
+      row.options.find(function (option) { return option.review; }).review.args.storyId = 'missing_retained_story';
+      const rejected = FB.mods.validate(JSON.parse(JSON.stringify(mod)));
+      return {accepted:accepted,rejected:rejected.length > 0,
+        detached:!Object.prototype.hasOwnProperty.call(FBDATA,'bookmarkCompositionReferences'),
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    });
+    expect(result).toEqual({accepted:[],rejected:true,detached:true,pure:true});
   });
 });
 

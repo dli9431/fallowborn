@@ -505,6 +505,18 @@ FBDATA.events.push(
 { id:'decision_outcome', title:'Outcome', trigger:{ never:true },
   text:'The decision is settled.', options:[] },
 
+{ id:'operating_terms_notice', title:'Terms of Trade',
+  eras:['high_medieval'], yearMin:1204, yearMax:1215,
+  text:'The local operating terms apply to your stall in {province}. Ownership and the price of permission remain matters for the ordinary business review.',
+  trigger:{ countyIds:['london'], state:[{reader:'owned_enterprise_law',args:{definitionId:'london_stall_license'}}] },
+  weight:2, cooldown:4,
+  options:[
+    { label:'Keep the terms in mind.', desc:'No payment or change of permission.', effects:{} },
+    { label:'Set the notice aside.', desc:'No payment or change of permission.', effects:{} },
+    { label:'Review business permission.', desc:'Review the first affected owned stall and its actual private payment before confirming. Cancel keeps the notice open.',
+      review:{type:'industry_operation',args:{definitionId:'london_stall_license',action:'pay'},refusalOption:1} }
+  ]},
+
 /* ---------- courtship & marriage ---------- */
 { id:'meet_suitor', title:'A Possible Match', charCard:'suitor',
   text:'Through kin and gossip you are introduced to {suitor}. There is a certain promise in the meeting — and marriage is how fortunes are made.',
@@ -1674,3 +1686,4 @@ FBDATA.events.push(
     if (eventEras[FBDATA.events[i].id]) FBDATA.events[i].eras = eventEras[FBDATA.events[i].id];
   }
 })();
+FB.bookmarkSources.eventBoundary('data/events_common.js');

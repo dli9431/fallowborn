@@ -1,3 +1,34 @@
+Mobile leadership story decisions
+
+Transaction agendas and optional goals use the existing story cards, review,
+confirmation and retained Back/Escape/Close behavior. Each choice explains whether
+it proposes terms, commits the source action, defers, stays or observes an actual
+receipt. Reviews show the immediate public cost, food surcharge and route days,
+raid forecast or actual receipt shares as applicable. Settlement also names its
+physical county, exact current people and remaining mobile population. Proposals and departures
+remain visibly pending. Goals direct players to their own member assent and the
+separate outside response on Mobile coalition; they promise neither another
+member’s decision nor an outside payment. Stay mobile leaves settlement pending;
+Set the program aside closes the optional agenda without a settlement outcome.
+The campaign card belongs to the actual current coalition leader, with ordinary
+member-consent blockers and its institutional realm identity. No new modal,
+stylesheet, navigation stack or device/distribution inference is introduced.
+
+Seasonal mobile ground reviews
+
+The Mobile coalition sheet discloses whether this calendar season still needs a
+ground review. Named ground actions show effective travel days, immediate camp
+food surcharge and current daily pasture yield on the action face. Confirmation
+retains those costs, current shared grazing capacity, seasonal suitability and
+actual neighboring counties/courts. It explains ordinary ongoing rations,
+physical host arrival and the absence of an animal inventory. Missing permission
+exposes separate member proposal and outside access-offer actions with exact
+capacity, recruitment, price and term; refusal grants no passage or payment.
+Stay and Cancel remain costless. Ground actions reuse the existing fact/action
+cards, keyboard and phone targets, Details and modal history; inputs, focus,
+disclosures and scroll survive Back, Escape and outcome Continue in both explicit
+distribution paths. A stale review spends no food, money or time.
+
 Deferred campaign preparation
 
 Local load measurements
@@ -111,6 +142,15 @@ CrazyGames land coachmarks distinguish opening the land market from purchasing a
 The colonus opening exposes Review estate & freedom in both Deeds layouts. Station & home names the living estate possessor separately from the county controller, lists saved rights and dues and explains that cultivation grants no owned land. Shared action cards open separate military consent, ordination consent and flight reviews. Requirements, family coverage, costs, risks and blockers remain visible, with expanded Details for consequences. Reviews use the ordinary portrait rows, modal history and full-width controls. Back and Escape restore the originating route control; stale confirmation changes no state and replaces the review with current blockers. Lawful outcome Continue returns to Station & home. Flight closes the review and queues an ordinary event. Medieval tenure sheets and their action remain unchanged. Beginner, land and CrazyGames tips point to the estate deed while that legal form is active.
 
 Offices and legitimacy reviews
+
+Court mandate sheets open from retained office and public-administration rows.
+They disclose exact delegated powers, favor threshold, finite term, public funds,
+private-property separation, bilateral service pay and dismissal/acclamation
+risks. Native labeled selectors use the shared field style; named actual people
+have portrait rows. Concrete second reviews use shared fact and action cards.
+Browsing and cancellation spend nothing; Back, Escape, confirmation and outcome
+returns retain selector values, disclosures, scroll and focus. See
+office-mandates.md for the underlying operations and lifecycle.
 
 Both Deeds layouts expose the system-gated Offices & Legitimacy section. Its root sheet uses Governance fact cards for held appointments and every living imperial claimant, named people in shared portrait rows, and the existing field skin for court, office, scope and recognition-mandate selectors. Office powers, actual petition fee, retained prestige qualification, skill and succession or annual term stay visible. Each claimant lists the five independent legitimacy sources and current issuers, without a universal score.
 
@@ -762,6 +802,24 @@ contract automatically; regression coverage compares field styles across screens
 
 ## Required navigation and decision presentation
 
+Opted-in coalition extraction uses the existing Mobile coalition sheet. Declared
+demand, local raid and paid-service actions retain proposal, personal assent and
+confirmation as separate decisions. Confirmation shows the actual outside payer,
+raid threat and no-war refusal rule, or exact raid coin/food and fighter losses,
+or initial/seasonal pay and service duration. The last raid remains visible in
+the following's facts. Paying rulers may accept or refuse offered service and
+demands. Cancel, Back, Escape and outcome Continue preserve the selected county,
+numeric inputs, Details, scroll and originating focus. Unsupported profiles omit
+these actions; current resource, locality and approval blockers remain visible.
+
+Coalition member beginnings use the ordinary date and scenario picker and fixed
+identity summary. The summary discloses that private money and the public treasury
+remain separate and that member selection, rather than household inheritance,
+controls leadership. An unbound principal is labeled as the existing member until
+the seeded person is selected at creation. The existing Mobile coalition Deed
+shows the real leader, member voices, camp/host, public stock and canonical reviews.
+Its existing cancellation, Back, Escape and retained view behavior applies.
+
 Operating-law reviews use the local council motion list and the enterprise
 manager's retained modal history. Proposal sheets disclose the affected county
 and business, fee and term, beneficiaries, existing-business transition, seeded
@@ -795,6 +853,14 @@ cards, lists, dialogs, and tooltips, including deceased characters. A named pers
 must not be represented by text alone. Reuse the shared portrait and character
 summary/disclosure pattern; do not generate a replacement person for a missing
 historical identity. Repeated references within one surface may share one portrait.
+
+Canonical event confirmation retains the original participant portrait cards
+beside the current decision terms. Cancel, Back, Escape and stale rejection
+restore the exact cards and event controls, including open disclosures, scroll
+and originating focus. Portrait detail returns retain the mounted confirmation.
+Successful outcomes reuse those participant cards with their original identities;
+opening a portrait and returning preserves the settled outcome's scroll and focus.
+See [Shared event reviews](event-review-foundation.md).
 
 Significant decisions retain the event sheet for a post-decision outcome with one
 **Continue** action. The settled result and participant portraits remain visible.
@@ -4057,6 +4123,17 @@ For an aristocratic court the same sheet additionally shows actual royal eligibi
 
 Mobile coalition review
 
+Opted-in member cohesion adds support beside each existing member principal,
+scarcity days, leader Standing and the service/departure/vote thresholds.
+Pending receipts offer keep, share by weight and favor selected named members.
+A native multiple selector retains favorites through review, Escape and result
+returns. Action faces disclose public coin and consumed food; the exact review
+shows each recipient's portrait, private coin, household food and resulting
+support. Food allotments explicitly mean immediate consumption. The latest
+settled distribution remains readable without replay. Costs, cancellation,
+stock/leadership blockers and existing modal view preservation apply equally
+in both explicit distribution flag paths.
+
 The Mobile coalition Deed uses shared governance fact cards, person cards, action cards and modal history. It labels the court/civilian camp, separate field host, civilian following, resting fighters, local inhabitants, ownership, treasury and both camp and carried food. Proposal, member assent, outside acceptance and execution are distinct actions. Immediate costs and the first concrete blocker remain visible. Review and result sheets preserve inputs, body/list scroll, expanded shared disclosures and the originating focus through Back, Escape and Continue. A stale confirmation spends nothing and transfers no people.
 
 
@@ -4240,3 +4317,7 @@ The existing mobile source sheet enumerates each county receipt and its original
 Mobile command focus after refreshed reviews
 
 When a refreshed mobile command action becomes disabled after confirmation, returning to its list focuses that action’s existing focusable review card. Enabled actions retain button focus. Inputs, disclosures and scroll positions remain retained; the disabled control is never enabled merely to restore focus.
+
+Event canonical review return
+
+A review-bearing event option opens a retained confirmation within the existing event sheet. Shared fact/action cards show the selected canonical decision, actual cost and blocker. Confirm delegates to the original owner with the exact reviewed quote. Cancel, Back and Escape restore the same mounted choice nodes, open disclosures, list position and originating focus; a stale confirmation returns a review-again message and spends nothing. The event remains unanswered until a successful confirmation or its explicit refusal. Existing event input guards, full-width controls and keyboard/mobile navigation apply.

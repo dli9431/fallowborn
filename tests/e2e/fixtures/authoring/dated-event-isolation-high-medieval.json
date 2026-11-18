@@ -1,0 +1,99 @@
+{
+  "rows": [
+    {
+      "bookmark": "1096",
+      "packId": "dated_1096",
+      "code": "PACK-1096-mainz_jewish_household_1096-mainz-f-Leah-established-0-ashkenazi.jewish",
+      "eventId": "mainz_accounts_1096",
+      "patches": [
+        {
+          "path": [
+            "authority",
+            "governments",
+            "mainz_custody_1096"
+          ],
+          "value": {
+            "formId": "territorial"
+          }
+        }
+      ],
+      "liveYear": 1096
+    },
+    {
+      "bookmark": "1204",
+      "packId": "dated_1204",
+      "code": "PACK-1204-farmer-london-m-Reader",
+      "eventId": "stall_payment_1204",
+      "patches": [
+        {
+          "path": [
+            "player",
+            "enterprises"
+          ],
+          "value": [
+            {
+              "uid": "fixture_business",
+              "type": "market_stall_business",
+              "provinceId": "london",
+              "settlement": 0
+            }
+          ]
+        },
+        {
+          "path": [
+            "industryLaws"
+          ],
+          "value": {
+            "schema": 1,
+            "laws": [
+              {
+                "id": "fixture_license",
+                "definitionId": "london_stall_license",
+                "issuer": {
+                  "realmId": "england_1204"
+                },
+                "terms": {
+                  "provinceId": "london",
+                  "enterpriseType": "market_stall_business",
+                  "mode": "license",
+                  "fee": 2,
+                  "permitDays": 90,
+                  "exemptions": []
+                },
+                "payeeRealmId": "england_1204",
+                "endTurn": 2160,
+                "transitionEndTurn": 1830,
+                "existingEnterpriseUids": [
+                  "fixture_business"
+                ],
+                "repealedTurn": null
+              }
+            ],
+            "permits": [],
+            "choices": []
+          }
+        }
+      ],
+      "liveYear": 1209
+    },
+    {
+      "bookmark": "1241",
+      "packId": "dated_1241",
+      "code": "PACK-1241-farmer-szekesfehervar-m-Reader",
+      "eventId": "guarded_position_1241",
+      "patches": [
+        {
+          "path": [
+            "authority",
+            "governments",
+            "hungary_1241"
+          ],
+          "value": {
+            "formId": "territorial"
+          }
+        }
+      ],
+      "liveYear": 1241
+    }
+  ]
+}

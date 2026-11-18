@@ -1,5 +1,17 @@
 Government dispatch
 
+Court office mandates authenticate the actual appointed person before invoking
+the Roman or public office, federate and recognition owners. They add no
+government strategy or sovereign ledger. Public officer accession retains its
+recognition procedure; Roman disputes resolve through ordinary armies. See
+[Court office mandates](office-mandates.md).
+
+The `sovereign_government` and `county_holder_government` event state readers
+use the current sovereign and direct-holder projections. They register under
+the `governments` observation tag and grant no government or jurisdiction.
+See events.md, State condition readers, for shared validation, selection caching
+and the none technology decision.
+
 Unpublished autumn 634 court declarations
 
 data/bookmark_634_courts.js stages three complete court replacements and their
@@ -191,3 +203,7 @@ coalition_court marks mobileFollowing independently of succession. The hosted_fo
 Live AI strategy preferences now consume the typed government and religious decision policies documented in docs/designs/ai-decisions.md. Registered strategies still define supported actions and ordinary-war prohibitions. Prospective agreement/negotiation/service/settlement/office/recruit willingness, mobile legacy provisioning choices, voluntary candidate ordering, civic aid/peace preferences and aristocratic concessions retain their canonical quote/apply owners. Mandatory incumbent, succession, obligation and custody synchronization remain independent. Default zero/one willingness adds no RNG draw; intermediate authored willingness is a new prospective choice. No new authority, institution, financial ledger or technology capability is introduced.
 
 Weighted AI candidate retry lists may be empty. Public selection retains its lawful vacancy and can still resolve already valid canonical votes, without inventing a minority or choosing a rejected candidate. Aristocratic court recognition retains its prescribed incumbent without a speculative weighted draw; other recognition classes may withhold a voluntary choice. See docs/research/ai-decision-acceptance.md for supported fields and exact owner coverage.
+
+Committed form-change observation
+
+A successful canonical form write, including a moving government's settlement transformation, publishes government_transformed with realmId, beforeFormId and formId. Seeding, reads, rejected changes, equal forms and restore publish nothing. The subscription queue and observation availability remain owned by the event engine; no form or polity-specific event id is embedded in government dispatch.

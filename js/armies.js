@@ -3910,6 +3910,10 @@ window.FB = window.FB || {};
       winnerLoss = Math.min(rawWinnerLoss, Math.max(1, Math.round(loserBefore * 0.45 * ratio)));
     }
 
+    if (FB.mobile) {
+      FB.mobile.cohesionBattle(state,winnerSide,true);
+      FB.mobile.cohesionBattle(state,loserSide,false);
+    }
     const winnerLosses = spreadLosses(state, winnerSide, winnerLoss);
     for (const h of winnerSide) if (h.men < 1) h.men = 1;
     const loserLosses = spreadLosses(state, loserSide, loserLoss);

@@ -41,7 +41,34 @@
         fields.push('storyId');
         var story = context.get(c.storyId), source = story && story.declaration;
         need((d.requires || []).indexOf(c.storyId) >= 0 && !!source, 'source dependency');
-        if (c.kind === 'story_choice') {
+        if (c.kind === 'mandate_transaction') {
+          fields.push('choiceId');
+          var serviceChoices = [];
+          if (source.type === 'household_track') Object.keys(source.stages).forEach(function (id) {serviceChoices = serviceChoices.concat(source.stages[id].choices);});
+          if (source.type === 'ruler_agenda') source.stages.forEach(function (st) {serviceChoices = serviceChoices.concat(st.choices);});
+          need(slug(c.choiceId) && serviceChoices.some(function (choice) {
+            return choice.id === c.choiceId && (choice.operation === 'agenda_mandate' || choice.operation && choice.operation.kind === 'mandate_service');
+          }), 'canonical mandate choice');
+          if (source.type === 'household_track') {
+            var origin = Object.keys(source.stages).filter(function (id) {return source.stages[id].choices.some(function (choice) {return choice.id === c.choiceId;});})[0];
+            function edges(id) {
+              var stage = source.stages[id], next = stage.choices.concat(stage.transitions).map(function (r) {return r.next;});
+              if (stage.afterWork) next.push(stage.afterWork.next);
+              if (stage.afterIncident) next.push(stage.afterIncident);
+              return next;
+            }
+            var pending = edges(origin), visited = Object.create(null);
+            while (pending.length) {
+              var id = pending.pop();need(id !== origin, 'repeatable mandate goal');
+              if (!visited[id]) {visited[id] = true;pending = pending.concat(edges(id));}
+            }
+          }
+        } else if (c.kind === 'mobile_transaction') {
+          fields.push('stageId');
+          need(source.type==='ruler_agenda' && slug(c.stageId) && source.stages.some(function (stage) {
+            return stage.id===c.stageId && !!stage.completion;
+          }), 'canonical mobile stage');
+        } else if (c.kind === 'story_choice') {
           fields.push('choiceIds'); need(list(c.choiceIds, 32), 'source choices');
           var choices = [];
           if (Array.isArray(source.stages)) source.stages.forEach(function (stage) { choices = choices.concat(stage.choices || []); });
@@ -122,12 +149,28 @@
     if (c.kind === 'earnings') return (t.earnings[c.focusIds.join('|')] || 0) >= c.amount;
     if (c.kind === 'event') return !!event && event.kind === c.eventKind && event.realmId === FB.startRealmId(s, c.realmId);
     if (c.kind === 'story_choice') return !!event && event.storyId === c.storyId && c.choiceIds.indexOf(event.choiceId) >= 0;
+    if (c.kind === 'mandate_transaction') return mandateDecision(s,t,c,s.turn);
+    if (c.kind === 'mobile_transaction') return !!r && r.subjectId===t.actorId && r.decisions.some(function (d) {
+      return d.stageId===c.stageId && !!d.evidence && d.turn>=t.openedTurn;
+    });
     if (c.kind === 'household_phase') return !!r && c.phases.indexOf(r.phase) >= 0 && !!r.decisions && Object.keys(r.decisions).length > 0;
     if (c.kind === 'job_complete') { var job = r && r.jobs && r.jobs[c.jobId]; return !!job && job.daysWorked > 0 && job.paid > 0 && ['disputed','settled'].indexOf(job.status) >= 0 && job.workerId === t.actorId; }
     if (c.kind === 'service_payment') return !!r && r.lastAllocatedPeriod > Math.floor(t.openedTurn / 90);
     if (c.kind === 'civic_mandate') return !!r && r.result === 'civic_mandate' && !!r.officeId;
     if (c.kind === 'pact') { var end = s.pacts && s.pacts[FB.startRealmId(s, c.realmId)]; return Number.isFinite(end) && end > s.turn && end !== t.pacts[c.realmId]; }
     return false;
+  }
+  function mandateDecision(s,t,c,lastTurn) {
+    var r = FB.stories.record(s,c.storyId);
+    if (!r || (r.actorId || r.subjectId) !== t.actorId) return false;
+    var decisions = Array.isArray(r.decisions) ? r.decisions : Object.keys(r.decisions || {}).map(function (id) {return r.decisions[id];});
+    return decisions.some(function (d) {return d.choiceId === c.choiceId && !!d.office && d.turn >= t.openedTurn && d.turn <= lastTurn;});
+  }
+  function mandateCriterion(c) {
+    return c.kind === 'mandate_transaction' || c.kind === 'any' && c.conditions.every(mandateCriterion);
+  }
+  function mandateComplete(s,t,c,lastTurn) {
+    return c.kind === 'any' ? c.conditions.some(function (v) {return mandateComplete(s,t,v,lastTurn);}) : mandateDecision(s,t,c,lastTurn);
   }
   function update(s, d, t, event) {
     if (!t.ready) return;
@@ -209,7 +252,7 @@
         d.goals.forEach(function (g) { goals[g.id] = { status:'pending', turn:null }; });
         Object.keys(rules).forEach(function (key) { earnings[key] = 0; });
         return { schema:1, actorId:s.player.charId, scenarioId:s.start.scenarioId, provinceId:s.player.provinceId,
-          bookmarkId:s.start.id, revision:FB.campaignBookmark(s).revision, openedTurn:s.turn,
+          bookmarkId:s.start.id, revision:s.start.revision, openedTurn:s.turn,
           ready:false, office:null, goals:goals, contacts:{}, earnings:earnings, lastEarnedTurn:null, pacts:pacts };
       },
       day:function (s, t) { update(s, d, t); }, season:function (s, t) { update(s, d, t); }, year:function (s, t) { update(s, d, t); },
@@ -263,6 +306,13 @@
         d.goals.forEach(function (g) {
           var row = t.goals[g.id]; need(keys(row, ['status','turn']) && Object.keys(row).length === 2 &&
             ['pending','completed','dismissed','archived'].indexOf(row.status) >= 0 && (row.status === 'pending' ? row.turn === null : integer(row.turn) && row.turn >= t.openedTurn && (!s || row.turn <= s.turn)));
+          if (s && row.status==='completed' && g.criterion.kind==='mobile_transaction') {
+            var source=s.stories && s.stories[g.criterion.storyId];
+            need(!!source && source.subjectId===t.actorId && source.decisions.some(function (decision) {
+              return decision.stageId===g.criterion.stageId && !!decision.evidence && decision.turn>=t.openedTurn && decision.turn<=row.turn;
+            }));
+          }
+          if (s && row.status === 'completed' && mandateCriterion(g.criterion)) need(mandateComplete(s,t,g.criterion,row.turn));
         });
         d.contacts.forEach(function (c) { need(own(t.contacts, c.id) && (t.contacts[c.id] === null || typeof t.contacts[c.id] === 'string' && !!t.contacts[c.id])); });
         need(Object.keys(t.earnings).length === Object.keys(rules).length);
@@ -271,7 +321,7 @@
         var pactIds = Object.keys(pactRules(d)); need(Object.keys(t.pacts).length === pactIds.length);
         pactIds.forEach(function (rid) { need(own(t.pacts, rid) && (t.pacts[rid] === null || integer(t.pacts[rid]))); });
         if (s) {
-          need(s.start && !!s.chars[t.actorId] && t.scenarioId === s.start.scenarioId && t.bookmarkId === s.start.id && t.revision === FB.campaignBookmark(s).revision && t.openedTurn <= s.turn);
+          need(s.start && !!s.chars[t.actorId] && t.scenarioId === s.start.scenarioId && t.bookmarkId === s.start.id && t.revision === s.start.revision && t.openedTurn <= s.turn);
           d.contacts.forEach(function (c) { need(t.contacts[c.id] === null || own(s.chars, t.contacts[c.id])); });
         }
       }

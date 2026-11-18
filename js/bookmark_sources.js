@@ -10,6 +10,75 @@
   var usedGraphs = Object.create(null), catalogUses = Object.create(null);
   var publishing = false, setup = null, setupFaults = Object.create(null);
   var retainedTransitions = [];
+  var eventBoundaries = Object.create(null), eventSources = Object.create(null), eventReviewReferences = null;
+  var eventRoots = ['events','eventPacks','eventChances'];
+  C.eventBoundary = function (source) {
+    var boundary = {};
+    eventRoots.forEach(function (root) {
+      boundary[root] = root === 'events' ? list(FBDATA[root]).map(function (row) { return row.id; }) : Object.keys(FBDATA[root] || {});
+    });
+    eventBoundaries[source] = boundary;
+  };
+  function publishEventPacks() {
+    var groups = Object.keys(eventSources).map(function (source) { return eventSources[source]; }).sort(compareRows);
+    var result = {};
+    eventRoots.forEach(function (root) {
+      var listRoot = root === 'events', current = FBDATA[root] || (listRoot ? [] : {}), owned = Object.create(null);
+      groups.forEach(function (group) {
+        var values = group.data[root];
+        (listRoot ? values.map(function (row) { return row.id; }) : Object.keys(values)).forEach(function (id) {
+          if (own(owned,id)) throw new Error('Duplicate dated event declaration: ' + id);
+          owned[id] = true;
+        });
+      });
+      var keys = listRoot ? current.map(function (row) { return row.id; }) : Object.keys(current), counts = Object.create(null);
+      keys.forEach(function (id) { counts[id] = (counts[id] || 0) + 1; });
+      Object.keys(owned).forEach(function (id) { if (counts[id] > 1) throw new Error('Duplicate dated event declaration: ' + id); });
+      var values = Object.create(null);
+      keys.forEach(function (id,i) { values[id] = listRoot ? current[i] : current[id]; });
+      keys = keys.filter(function (id) { return !own(owned,id); });
+      var after = Object.create(null);
+      groups.forEach(function (group) {
+        var prefix = after[group.after] || eventBoundaries[group.after][root], at = 0;
+        prefix.forEach(function (id) { var index = keys.indexOf(id); if (index >= 0) at = Math.max(at,index + 1); });
+        var rows = group.data[root], ids = listRoot ? rows.map(function (row) { return row.id; }) : Object.keys(rows);
+        ids.forEach(function (id,i) { values[id] = listRoot ? rows[i] : rows[id]; });
+        keys.splice.apply(keys,[at,0].concat(ids));
+        after[group.after] = prefix.concat(ids);
+      });
+      result[root] = listRoot ? keys.map(function (id) { return values[id]; }) : {};
+      if (!listRoot) keys.forEach(function (id) { result[root][id] = values[id]; });
+    });
+    eventRoots.forEach(function (root) { FBDATA[root] = result[root]; });
+    if (FB.invalidateEventIndex) FB.invalidateEventIndex();
+  }
+  C.eventPack = function (source,author) {
+    var file = files[source];
+    if (!file || !eventBoundaries[file.after] || typeof author !== 'function') throw new Error('Unknown dated event source: ' + source);
+    var data = {events:[],eventPacks:{},eventChances:{}};
+    author(data);
+    if (!Array.isArray(data.events) || data.events.length > 256 ||
+        eventRoots.some(function (root) { return !data[root] || typeof data[root] !== 'object'; }) ||
+        Object.keys(data).some(function (root) { return eventRoots.indexOf(root) < 0; }))
+      throw new Error('Invalid dated event declarations: ' + source);
+    var previous = eventSources[source];
+    if (previous && canonical(previous.data) !== canonical(data)) throw new Error('Dated event source changed: ' + source);
+    eventRoots.forEach(function (root) {
+      var listRoot = root === 'events', known = Object.create(null);
+      Object.keys(eventSources).forEach(function (key) {
+        var rows = eventSources[key].data[root];
+        (listRoot ? rows.map(function (row) { return row.id; }) : Object.keys(rows)).forEach(function (id) { known[id] = true; });
+      });
+      var ids = listRoot ? data[root].map(function (row) { return row.id; }) : Object.keys(data[root]);
+      ids.forEach(function (id) {
+        if (!own(known,id) && (listRoot ? list(FBDATA[root]).some(function (row) { return row.id === id; }) : own(FBDATA[root],id)))
+          throw new Error('Conflicting dated event declaration: ' + id);
+      });
+    });
+    eventSources[source] = {primary:file.primary,secondary:file.secondary,seq:fileOrder.indexOf(source),after:file.after,data:data};
+    try { publishEventPacks(); }
+    catch (error) { if (previous) eventSources[source] = previous; else delete eventSources[source]; throw error; }
+  };
   /* Per-date source loading. Every contributor is recorded at its original
      document position. Boot runs the eager subset exactly as before; a later
      date load replays all recorded contributors from the pristine authoring
@@ -267,6 +336,13 @@
     return result;
   }
   C.current = function () { return active; };
+  // Only the native proof base carries this exact sealed reference identity.
+  // Ordinary detached imports never gain access to unpublished optional graphs.
+  C.eventReviewData = function (data) {
+    if (!frozen || !eventReviewReferences || data.bookmarkCompositionReferences !== frozen.startScenarios) return data;
+    return Object.assign({},data,{bookmarks:Object.assign({},eventReviewReferences.bookmarks,data.bookmarks),
+      startScenarios:eventReviewReferences.startScenarios,storyInstances:Object.assign({},eventReviewReferences.storyInstances,data.storyInstances)});
+  };
   C.inspect = function () {
     var source = frozen || view || FBDATA;
     return {starts:list(source.startScenarios).map(function (row) { return row && row.id; }),bookmarks:Object.keys(source.bookmarks || {})};
@@ -359,9 +435,17 @@
   function seal(ids) {
     declared = ids.slice();
     frozen = copy(view); orders = FB.bookmarkCompositions.sourceOrder(frozen);
+    eventReviewReferences = {bookmarks:Object.assign({},frozen.bookmarks),
+      startScenarios:frozen.startScenarios.slice(),storyInstances:Object.assign({},frozen.storyInstances)};
     Object.keys(frozen.bookmarkCompositionSources || {}).forEach(function (owner) {
       var row = frozen.bookmarkCompositionSources[owner], input = row.input;
       if (!input) return;
+      eventReviewReferences.bookmarks[input.bookmark.id] = input.bookmark;
+      Object.assign(eventReviewReferences.storyInstances,input.catalogs && input.catalogs.storyInstances);
+      (input.starts || []).forEach(function (unit) {
+        eventReviewReferences.startScenarios.push(unit.definition);
+        Object.assign(eventReviewReferences.storyInstances,unit.storyInstances);
+      });
       Object.keys(input.catalogs || {}).forEach(function (root) {
         if (catalogs.indexOf(root) < 0) return;
         frozen[root] = frozen[root] || {}; ownership[root] = ownership[root] || Object.create(null);
@@ -1177,7 +1261,8 @@
   function reauthor() {
     var state = {view:view,frozen:frozen,orders:orders,declared:declared,faults:faults,origins:origins,starts:starts,graphs:graphs,
       ownership:ownership,catalogUses:catalogUses,usedGraphs:usedGraphs,seen:seen,foundationSnapshot:foundationSnapshot,
-      stageProduced:Object.assign(Object.create(null),stageProduced),catalogs:{},sources:FBDATA.bookmarkCompositionSources};
+      stageProduced:Object.assign(Object.create(null),stageProduced),eventReviewReferences:eventReviewReferences,
+      catalogs:{},sources:FBDATA.bookmarkCompositionSources};
     catalogs.forEach(function (root) { state.catalogs[root] = FBDATA[root]; });
     var ids = declared.slice();
     if (!pristine) throw new Error('Bookmark sources have no recorded authoring root.');
@@ -1190,12 +1275,14 @@
       var next = replayRows(recorded);
       frozen = null; seal(ids);
       publishSandbox(previous,next);
+      if (Object.keys(eventSources).length) publishEventPacks();
       lastSandbox = next;
     } catch (error) {
       view = state.view; frozen = state.frozen; orders = state.orders; declared = state.declared; faults = state.faults;
       origins = state.origins; starts = state.starts; graphs = state.graphs; ownership = state.ownership;
       catalogUses = state.catalogUses; usedGraphs = state.usedGraphs; seen = state.seen; foundationSnapshot = state.foundationSnapshot;
       stageProduced = state.stageProduced;
+      eventReviewReferences = state.eventReviewReferences;
       catalogs.forEach(function (root) { FBDATA[root] = state.catalogs[root]; });
       FBDATA.bookmarkCompositionSources = state.sources;
       throw error;

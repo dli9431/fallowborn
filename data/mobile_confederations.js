@@ -21,6 +21,21 @@ FB.bookmarkSources.stage({"source":"data/mobile_confederations.js","bookmarks":[
       recruitShare:0.2, recruitCost:0.02, foodPerPerson:0.01,
       pasturePerPerson:1.8, accessDays:360, accessPrice:4,
       starvationShare:0.001, defeatShare:0.02, settlementForm:'regnum',
+      seasonalRound:{schema:1,automate:true,travelFoodRate:0.25,grounds:[
+        {id:'northern_grounds',name:'Cherson grounds',countyId:'cherson',climateZone:'northern_temperate',
+          seasonKinds:['spring','summer'],capacity:2700,offSeasonYield:0.15,
+          access:{capacity:800,allowRecruit:false,price:4,duration:90},
+          neighbors:[{groundId:'sheltered_grounds',distanceDays:24}]},
+        {id:'sheltered_grounds',name:'Bosphorus grounds',countyId:'constantinople',climateZone:'mediterranean',
+          seasonKinds:['autumn','mild_winter'],capacity:1800,offSeasonYield:0.4,
+          access:{capacity:800,allowRecruit:false,price:6,duration:90},
+          neighbors:[{groundId:'northern_grounds',distanceDays:24}]}
+      ]},
+      cohesionPolicy:{schema:1,initialSupport:65,victory:6,defeat:-12,receiptShare:24,
+        scarcity:{days:7,support:-1},idle:{seasons:2,support:-8},standing:{target:0,factor:0.05},
+        thresholds:{depart:15,withhold:35,rival:50},distribution:{mode:'weight',favorites:1}},
+      extractionPolicy:{schema:1,demand:{kinds:['tribute','protection'],maxPayment:8,maxDays:90},
+        raid:{maxGold:12,maxFood:120,stockShare:0.1,cooldownDays:90},hire:{templateIds:['paid_service']}},
       regions:['cherson','tomis','constantinople'], members:[
         { id:'elder_following', weight:3, pledge:0.2, population:1600 },
         { id:'younger_following', weight:2, pledge:0.15, population:1200 },
@@ -30,6 +45,10 @@ FB.bookmarkSources.stage({"source":"data/mobile_confederations.js","bookmarks":[
       recruitShare:0.15, recruitCost:0.03, foodPerPerson:0.01,
       pasturePerPerson:1.5, accessDays:270, accessPrice:6,
       starvationShare:0.001, defeatShare:0.03, settlementForm:'regnum',
+      cohesionPolicy:{schema:1,initialSupport:70,victory:4,defeat:-8,receiptShare:16,
+        scarcity:{days:10,support:-0.5},idle:{seasons:3,support:-6},standing:{target:0,factor:0.03},
+        thresholds:{depart:10,withhold:30,rival:45},distribution:{mode:'keep',favorites:1}},
+      extractionPolicy:{schema:1,hire:{templateIds:['paid_service']}},
       regions:[], members:[
         { id:'first_following', weight:2, pledge:0.15, population:900 },
         { id:'second_following', weight:2, pledge:0.1, population:700 }
@@ -43,10 +62,22 @@ FB.bookmarkSources.stage({"source":"data/mobile_confederations.js","bookmarks":[
   });
   FBDATA.techImpactReviews.features.mobile_seasonal_access.rationale =
     'Seasonal access depends on living consent, finite local capacity and conserved payments. A lawful subordinate holder may grant local access while its superior retains sovereignty; foreign occupation grants no such authority. Existing travel technology still applies.';
+  FBDATA.techImpactReviews.features.mobile_seasonal_round={mode:'none',
+    rationale:'Selecting seasonal grounds depends on local climate, finite shared grazing capacity, actual access and conserved food. Ordinary route, transport and unit technology remain authoritative; manual movement and access negotiations remain available.'};
   FBDATA.techImpactReviews.features.mobile_provisioning.rationale =
     'Baseline provisioning includes optional stock-aware ration targets for the camp and each column, affordable local market purchases and colocated stock transfers. Actual inventories, finite pasture, current access and public cash reserves remain binding; normal equipment and transport technology still applies.';
   FBDATA.techImpactReviews.features.mobile_opening_identity = {mode:'none',
     rationale:'Binding an existing living opening person creates no new office or military technology. Custody, age, location and incumbent generation remain authoritative.'};
+  FBDATA.techImpactReviews.features.mobile_principal_start = {mode:'none',
+    rationale:'Selecting an existing coalition member as a private protagonist requires no discovery. Current member selection, conserved people, public accounts, passage and ordinary unit gates retain their owners.'};
+  FBDATA.techImpactReviews.features.mobile_member_cohesion={mode:'none',
+    rationale:'Member support responds to real receipts, food, service, military outcomes and current leadership Standing. Political association needs no discovery; ordinary deployment, departure, consent and military gates remain binding.'};
+  FBDATA.techImpactReviews.features.mobile_spoils_distribution={mode:'none',
+    rationale:'Sharing already received public money and food with living members needs no discovery. Exact current resources, leadership and once-only receipt reviews remain binding.'};
+  ['mobile_tribute_demand','mobile_bounded_raid','mobile_hired_service'].forEach(function (id) {
+    FBDATA.techImpactReviews.features[id]={mode:'none',
+      rationale:'Member assent, actual military strength, outside consent and conserved stocks govern this baseline operation. Existing equipment, crossing and service requirements remain binding.'};
+  });
   FBDATA.techImpactReviews.features.mobile_civilian_camps = {mode:'none',
     rationale:'Partitioning existing civilians, resting fighters and finite food by actual locality needs no discovery. Hosting consent, exact population conservation and separate military locations remain binding.'};
   FBDATA.techImpactReviews.features.mobile_camp_transactions = {mode:'none',
@@ -60,7 +91,7 @@ FB.bookmarkSources.stage({"source":"data/mobile_confederations.js","bookmarks":[
   FBDATA.techImpactReviews.features.mobile_command_scope = {mode:'none',
     rationale:'Explicit public operation permissions depend on a valid commission and canonical resources, local rights and outside consent. The commission provides no county revenue or technological exception.'};
   FBDATA.techImpactReviews.features.mobile_independent_sponsorship = {mode:'none',
-    rationale:'An explicit independent following has no patron entitlement. Actual access, resources and separately consenting counterparts remain necessary, with ordinary unit and travel technology retained.'};
+    rationale:'An explicit independent command or elected coalition has no patron entitlement. Actual access, resources and separately consenting counterparts remain necessary, with ordinary unit and travel technology retained.'};
   FBDATA.techImpactReviews.features.mobile_external_commission = {mode:'none',
     rationale:'A finite generation-bound external warrant records political authority without creating a local person, income, land or passage rights. Expiry and ordinary command eligibility govern its scope, not an invented discovery.'};
   FBDATA.techImpactReviews.features.mobile_protective_guard = {mode:'none',

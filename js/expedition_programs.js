@@ -14,7 +14,8 @@
   });}
   function mode(v) {return v==='field' || v==='camp';}
   function liveObjective(step) {return step.adapter==='holy_objective';}
-  function ordered(step) {return step.adapter==='route' || liveObjective(step);}
+  function seasonalStep(step) {return !!step && step.adapter==='seasonal_round';}
+  function ordered(step) {return step.adapter==='route' || liveObjective(step) || seasonalStep(step);}
   function religiousProgram(p) {return p.steps.some(liveObjective);}
   function localAccess(step) {return !!step && (step.adapter==='local_access' || step.adapter==='corridor_access');}
   function corridorProgram(p) {return p.steps.some(function (step) {return !!step && step.adapter==='corridor_access';});}
@@ -73,6 +74,17 @@
   }
   function register(name,validate,review) {adapters[name]={validate:validate,review:review};}
   register('wait',function (t) {return keys(t,[]);},function () {return {observation:'waiting',operation:null};});
+  register('seasonal_round',function (t,c) {
+    var p=c.profile.seasonalRound;
+    return keys(t,['groundId','countyId']) && !!p && p.automate && !c.mobile.columns &&
+      c.mobile.command.operations.indexOf('move')>=0 && p.grounds.some(function (g) {return g.id===t.groundId && g.countyId===t.countyId;});
+  },function (c) {
+    var t=c.step.terms;
+    if (c.host.at===t.countyId && c.moving.at===t.countyId && !c.host.moveLeft && !(c.host.path || []).length)
+      return {observation:'reached',operation:null};
+    var e=c.row.expeditionProgram.execution,ticket=e && e.orders.some(function (o) {return o.stepId===c.step.id;});
+    return {observation:'route',operation:ticket ? canonical(c,'move',{countyId:t.countyId}) : canonical(c,'round',{groundId:t.groundId})};
+  });
   register('route',function (t,c) {
     return keys(t,['mode','waypoints']) && mode(t.mode) && Array.isArray(t.waypoints) &&
       t.waypoints.length>0 && t.waypoints.length<=16 && t.waypoints.every(c.county);
@@ -388,7 +400,7 @@
     var r=a && M.row(s,a.realm);
     if (!r || !r.expeditionProgram || !a.mobileFollowing || a.broken!==undefined) return false;
     var p=specification(s,a.realm),moving=M.migration(s,a.realm);
-    return !!(p && (religiousProgram(p) || accessProgram(p)) && moving && moving.hostId===a.id);
+    return !!(p && (religiousProgram(p) || accessProgram(p) || p.steps.some(seasonalStep)) && moving && moving.hostId===a.id);
   };
   E.definitionFaults=function (d,provinces,realms,profiles) {
     var t=d.mobile, p=t && t.expeditionProgram;
@@ -399,6 +411,7 @@
     var context={rid:d.id,mobile:t,realms:realms,profile:profile,county:function (v) {return typeof v==='string' && own(counties,v);}};
     if (!t.command || !t.opening || !profile || !keys(p,['schema','id','commandId','steps']) || p.schema!==1 ||
         !id(p.id) || p.commandId!==t.command.id || !Array.isArray(p.steps) || !p.steps.length || p.steps.length>16) return bad();
+    if (p.steps.some(seasonalStep) && (corridorProgram(p) || religiousProgram(p))) return bad();
     if (accessProgram(p) && (religiousProgram(p) || p.steps.reduce(function (n,a) {
       return n+(localAccess(a) && a.terms && Array.isArray(a.terms.countyIds) ? a.terms.countyIds.length : 0);
     },0)>(corridorProgram(p) ? 64 : 16) ||
@@ -496,7 +509,8 @@
           ordered(a) && v.status==='pending' && (liveObjective(a) ? r.schema===3 && typeof o.countyId==='string' &&
             o.countyId.length>0 && o.countyId.length<=160 &&
             o.mode==='field' && o.warId==='holy' && campaignIdentity(o.campaignId) && o.campaignId===e.campaignId :
-            o.countyId===a.terms.waypoints[v.cursor] && o.mode===a.terms.mode) &&
+            seasonalStep(a) ? o.countyId===a.terms.countyId && o.mode==='camp' :
+              o.countyId===a.terms.waypoints[v.cursor] && o.mode===a.terms.mode) &&
           typeof o.hostId==='string' && o.hostId.length>0 && o.hostId.length<=160 &&
           typeof o.actorId==='string' && o.actorId.length>0 && o.actorId.length<=160 &&
           integer(o.commandRevision,1000000000) && integer(o.leaderGeneration,1000000000) && integer(o.issuedTurn,1439) &&
@@ -702,8 +716,9 @@
     if (liveObjective(step)) e.campaignId=q.objective.campaignId;
     e.orders=e.orders.filter(function (o) {return o.stepId!==step.id;});
     if (ordered(step) && q.operation) {
-      var ticket={stepId:step.id,hostId:a.id,countyId:liveObjective(step) ? q.objective.countyId : step.terms.waypoints[checkpoint.cursor],
-        mode:liveObjective(step) ? 'field' : step.terms.mode,
+      var ticket={stepId:step.id,hostId:a.id,countyId:liveObjective(step) ? q.objective.countyId :
+        seasonalStep(step) ? step.terms.countyId : step.terms.waypoints[checkpoint.cursor],
+        mode:liveObjective(step) ? 'field' : seasonalStep(step) ? 'camp' : step.terms.mode,
         actorId:q.actor.id,commandRevision:r.command.revision,leaderGeneration:r.command.leaderGeneration,
         warId:a.warId || null,issuedTurn:s.turn};
       if (liveObjective(step)) ticket.campaignId=q.objective.campaignId;
@@ -775,7 +790,7 @@
        rather than manual orders from the command. */
     if (q.source==='coalition_leadership' && ['pledge','leave','join','accept','decline','assent','support'].indexOf(request.action)>=0) return result;
     var t=request.terms || {},c=r.columns && r.columns.entries.filter(function (v) {return v.id===t.columnId;})[0];
-    var replacement=request.action==='march' || request.action==='move';
+    var replacement=request.action==='march' || request.action==='move' || request.action==='round';
     stopOrders(s,request.realmId,replacement ? c ? c.hostId : M.host(s,request.realmId) && M.host(s,request.realmId).id : null);
     execution(p).paused=true;changed(r);return result;
   };

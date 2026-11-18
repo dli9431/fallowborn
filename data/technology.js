@@ -1,5 +1,5 @@
 /* =========================================================================
-   Fallowborn — historical technology catalogue, 476–1300
+   Fallowborn — historical technology catalogue, 375–1300
 
    Technology is a prerequisite graph with soft historical timing. Definitions
    are expanded here from compact authored rows so every live entry exposes the
@@ -14,7 +14,7 @@ window.FBDATA = window.FBDATA || {};
      authored for. A bookmark dated outside them is rejected rather than
      seeded from windows nobody wrote; an earlier or later start needs its
      technologies authored first. Each era's technology window lies inside. */
-  FBDATA.techCoverage = { from:476, to:1300 };
+  FBDATA.techCoverage = { from:375, to:1300 };
 
   FBDATA.techDomains = {
     agriculture:{ name:'Agriculture and animal power', icon:'🌾', order:0 },
@@ -111,6 +111,8 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      event_canonical_reviews:{ mode:'none', rationale:'Event choices review existing canonical transactions. Consent, payment, current authority and each underlying technology gate still belong to the original owner; opening or cancelling a review grants nothing.' },
+      state_aware_events:{ mode:'none', rationale:'Events observe existing government, office, recognition, agreement, membership, law, case and story facts. Observation grants no authority or resources; every existing effect retains its own eligibility and technology gates.' },
       enforceable_guild_grants:{ mode:'hard', tech:['guild_charters'], fallback:'Ordinary enterprise ownership, careers and council operating-law proposals remain available without Guild Charters.', rationale:'Paid ruler-issued guild privileges reuse the established Guild Charters gate for new charters. Existing grants, exemptions, revocation, petitions and ordinary court enforcement survive research or ruler changes without a new gate.' },
       episcopal_rent_compositions:{ mode:'none', rationale:'Civil compositions of an existing institutional rent require actual property, living parties, competent temporal jurisdiction and conserved funds. Neither spiritual office nor a discovery supplies title or an unpaid debt.' },
       named_ecclesiastical_discipline:{ mode:'none', rationale:'Named discipline requires recorded conduct, a competent local Christian court, lawful custody and exact private assets. Technology supplies neither guilt nor jurisdiction; existing economic and military gates remain.' },
@@ -716,6 +718,10 @@ window.FBDATA = window.FBDATA || {};
       gentry_freehold_expansion:{
         mode:'none',
         rationale:'Continuing to buy ordinary family plots after declaring a manor or taking landed rank extends baseline private property accumulation; no innovation credibly gates buying land already offered in the home county. All free ranks retain the same prices, settlement caps, yields and inheritance.'
+      },
+      court_office_mandates:{
+        mode:'none',
+        rationale:'Personal delegation, favor, court accounts, dismissal and recognition govern court service. Ordinary military, financial, qualification and public succession requirements remain authoritative.'
       },
       building_university:{
         mode:'hard', tech:['universities'], fallback:'library',
@@ -1521,4 +1527,47 @@ window.FBDATA = window.FBDATA || {};
   add('dry_docks','Graving Docks','⚓','seafaring',[900,1250],[1070,1280],['harbor_works','stone_bridgebuilding'],
     'Drainable basins expose hulls for inspection and major repair.',
     { leaders:['byzantine','islamic','latin'], unlocks:['rule:dry_docks','building:arsenal'], fx:{ seaMovement:0.01 } });
+
+  /* Earlier contact with inherited foundations. These are emergence dates,
+     not universal adoption or permission to create an institution or asset.
+     Keep the relative order of whole regional pairs and every widespread date.
+     See docs/research/technology-before-476.md for evidence and retained limits. */
+  var foundationEmergence = {
+    quern_stones:{
+      latin:230, byzantine:210, islamic:210, persianate:220, slavic:245,
+      nordic:250, steppe:240, baltic_finnic:265, caucasian:235, northeast_african:245
+    },
+    surgical_instruments:{
+      latin:270, byzantine:250, islamic:250, persianate:260, caucasian:275
+    },
+    census_records:{
+      latin:250, byzantine:230, islamic:230, persianate:240, slavic:265,
+      nordic:270, steppe:260, caucasian:255, northeast_african:265
+    },
+    land_registers:{
+      latin:250, byzantine:230, islamic:230, persianate:240, slavic:265,
+      nordic:270, steppe:260, caucasian:255, northeast_african:265
+    },
+    tax_assessment:{
+      latin:270, byzantine:250, islamic:250, persianate:260, caucasian:275
+    },
+    bureaucratic_offices:{
+      latin:250, byzantine:230, islamic:230, persianate:240, slavic:265,
+      nordic:270, steppe:260, caucasian:255, northeast_african:265
+    },
+    torsion_artillery:{ latin:270, byzantine:250, islamic:250 }
+  };
+  var foundationSources = {
+    quern_stones:'VITRUVIUS_X_5', surgical_instruments:'CELSUS_VII_4_5',
+    census_records:'CODEX_THEODOSIANUS_XI', land_registers:'CODEX_THEODOSIANUS_XI',
+    tax_assessment:'CODEX_THEODOSIANUS_XI', bureaucratic_offices:'CODEX_THEODOSIANUS_XI',
+    torsion_artillery:'AMMIANUS_XXIII_4'
+  };
+  for (var foundationId in foundationEmergence) {
+    var foundation = FBDATA.tech[foundationId];
+    for (var traditionId in foundationEmergence[foundationId]) {
+      foundation.history.adoption[traditionId][0] = foundationEmergence[foundationId][traditionId];
+    }
+    foundation.sources.push(foundationSources[foundationId]);
+  }
 })();

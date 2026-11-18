@@ -47,6 +47,146 @@
     return rid && S.profile(s, rid) ? rid : null;
   };
   function tree(s, rid) { var r = realm(s, rid); return r && r.succession; }
+  // Event invitations retain exact existing people and the original court.
+  // Court decisions derive the real ruler; represented communities keep their votes.
+  var E = FB.selectionEventReviews = {};
+  E.court = function (s) { return FB.settlementCountyHolder(s,s.player.provinceId); };
+  E.actor = function (s) { return {kind:'character',id:s.player.charId}; };
+  E.courtActor = function (s,rid) {
+    var t = tree(s,rid), ruler = t && t.members && t.members[t.rulerMemberId];
+    return rid === 'player' && FB.station.rulesRealm(s.player,s) &&
+      ruler && ruler.charId === s.player.charId ? {kind:'realm',id:rid} : E.actor(s);
+  };
+  E.termsField = {type:'object',optional:'absent',fields:{
+    levy:{type:'number',min:0,max:1},revenue:{type:'number',min:0,max:1}}};
+  E.participantField = {value:'candidate'};
+  E.current = function (s,ctx) {
+    return ctx.politicalCourtId === E.court(s) && ctx.politicalProvinceId === s.player.provinceId &&
+      ctx.politicalGeneration === generation(s,ctx.politicalCourtId);
+  };
+  E.person = function (s,ctx) {
+    var c = FB.eventParticipant(s,ctx,'candidate');
+    return c && !c.dead ? c : null;
+  };
+  E.facts = function (s,cid,memberId,seatId) {
+    var rid = E.court(s), c = s.chars[cid];
+    return !rid || !c || c.dead ? null : {participants:{candidate:cid},politicalCourtId:rid,
+      politicalProvinceId:s.player.provinceId,politicalGeneration:generation(s,rid),
+      politicalCandidateId:memberId || null,politicalSeatId:seatId || null};
+  };
+  E.seat = function (s,rid) {
+    var t = tree(s,rid);
+    return S.constituency(s,rid).filter(function (m) {
+      return m.active && (m.currentPrincipal.kind === 'character' ? m.currentPrincipal.id === s.player.charId :
+        m.currentPrincipal.kind === 'royal_member' && t.members[m.currentPrincipal.id].charId === s.player.charId);
+    })[0];
+  };
+  E.bind = function (s,a,ctx,nomination) {
+    if (a.selection === 'minor') return null;
+    var rid = E.court(s), seat = E.seat(s,rid), t = tree(s,rid);
+    var ids = nomination ? S.nominees(s,rid) : S.candidates(s,rid).filter(function (id) {
+      var m = t.members[id]; return m.charId && s.chars[m.charId] && !s.chars[m.charId].dead;
+    });
+    var self = !nomination && a.action === 'negotiate' && E.courtActor(s,rid).kind === 'character' &&
+      ids.filter(function (id) {return t.members[id].charId === s.player.charId;})[0];
+    var id = self || ids[0];
+    var facts = id ? E.facts(s,nomination ? id : t.members[id].charId,nomination ? null : id,seat && seat.id) : null;
+    if (facts && (a.action === 'negotiate' || a.action === 'designate')) facts.participants.principal = s.player.charId;
+    return facts;
+  };
+  E.quote = function (s,a,ctx,nomination) {
+    if (a.selection === 'minor') return null;
+    var rid = E.court(s), c = E.person(s,ctx), t = tree(s,rid), seat = E.seat(s,rid);
+    if (!c || !E.current(s,ctx) || !S.profile(s,rid) || !t) return null;
+    var id = ctx.politicalCandidateId;
+    if ((a.action === 'negotiate' || a.action === 'designate') && ctx.participants.principal !== s.player.charId) return null;
+    if (!nomination && (!t.members[id] || t.members[id].charId !== c.id) ||
+        ctx.politicalSeatId !== (seat && seat.id || null)) return null;
+    var action = nomination ? 'nominate' : a.action === 'withhold' ? 'support' : a.action;
+    var request = {action:action,actor:action === 'negotiate' || action === 'designate' ? E.courtActor(s,rid) : E.actor(s)};
+    if (nomination) request.characterId = c.id; else request.candidateId = id;
+    if (nomination || action === 'support' || action === 'withdraw') request.memberId = seat && seat.id;
+    if (action === 'support' || action === 'negotiate') request.terms = copy(a.terms || S.profile(s,rid).terms);
+    if (a.action === 'withhold') request.withhold = true;
+    var q = S.quote(s,rid,request);
+    return {allowed:q.allowed,owner:'selection',targetId:c.id,review:q,
+      principalId:a.action === 'negotiate' || a.action === 'designate' ? s.player.charId : null};
+  };
+  E.details = function (s,a,q) {
+    var r = q.review, offer = r.request && r.request.terms || r.terms, person = s.chars[q.targetId];
+    var lines = [FB.T('Candidate: {person}.',{person:person ? FB.fullName(person) : FB.T('Unavailable person')}),
+      FB.T('Court: {court}.',{court:s.realms[r.realmId] && s.realms[r.realmId].name || FB.T('Unavailable court')}),
+      FB.T('Payment on confirmation: {money:cost}.',{cost:r.cost || 0}),
+      FB.T('Only the current principal can give or withhold its own assent. Admission and designation do not install a ruler or grant land.')];
+    if (offer) lines.push(FB.T('Military service: {levy}%; public revenue: {revenue}%.',{
+      levy:offer.levy * 100,revenue:offer.revenue * 100}));
+    if (q.principalId) lines.push(FB.T('Principal: {person}.',{
+      person:s.chars[q.principalId] ? FB.fullName(s.chars[q.principalId]) : FB.T('Unavailable person')}));
+    if (r.cost) {
+      var court = q.owner === 'recognition' || r.request.actor.kind === 'realm';
+      lines.push(court ? r.realmId === 'player' && !FB.treasurySeparated(s,r.realmId) ?
+        FB.T('Court funds and your personal purse share the existing account. This cost reduces that account.') :
+        FB.T('The existing public treasury pays this cost. Your personal purse remains separate.') :
+        FB.T('Your personal purse pays this cost. Other accounts remain separate.'));
+    }
+    if (r.reason) lines.push(r.reason);
+    (r.responses || []).forEach(function (row) {
+      var data = S.state(s,r.realmId), p = S.profile(s,r.realmId);
+      var seat = data && data.members.filter(function (m) {return m.id === row.memberId;})[0];
+      var def = seat && p && p.members.filter(function (m) {return m.id === seat.templateId;})[0];
+      var label = def ? FB.dataText(s,s.player.charId,'governmentSelection',record(s,r.realmId).formId + '.member.' + def.id,def,'name',{}) : FB.T('Unavailable interest');
+      lines.push(FB.T('{interest}: {response}',{interest:label,
+        response:row.reason ? S.reason(row.reason) : FB.T('This interest accepts the displayed obligations.')}));
+    });
+    return lines;
+  };
+  E.report = function (s,a,q) {
+    var r = q.review, payer = r.request && r.request.actor;
+    var personal = q.owner === 'selection' && payer && payer.kind === 'character' && payer.id === s.player.charId ||
+      r.realmId === 'player' && !FB.treasurySeparated(s,r.realmId);
+    return (r.cost && personal ?
+      [{type:'gold',amount:-r.cost}] : []).concat([{type:'system',system:'story'}]);
+  };
+  FB.eventReviews.register('political_nomination',{
+    owner:'governments',partySlots:{candidate:true},
+    args:{type:'object',fields:{participant:E.participantField}},
+    bind:function (s,a,ctx) {return E.bind(s,a,ctx,true);},
+    quote:function (s,a,ctx) {return E.quote(s,a,ctx,true);},
+    apply:function (s,a,q) {return S.apply(s,q.review);},details:E.details
+  });
+  FB.eventStateReaders.register({id:'political_selection',system:'governments',
+    args:{type:'object',fields:{status:{enum:['active','vacancy','contested','withheld','competing','minority','nomination','losing_lord']}}},
+    read:function (s,a) {
+      var rid = E.court(s), data = S.state(s,rid), p = S.profile(s,rid), t = tree(s,rid);
+      if (!data || !p || !t || !realm(s,rid) || !realm(s,rid).alive) return false;
+      var v = data.vacancy, pending = v && v.generation === generation(s,rid) && v.status !== 'resolved';
+      if (a.status === 'active') return true;
+      if (a.status === 'nomination') return !!E.seat(s,rid) && S.nominees(s,rid).length > 0 &&
+        (!!pending || livingNomination(s,rid));
+      if (a.status === 'vacancy') return !!pending;
+      if (a.status === 'minority') return !!pending && !S.candidates(s,rid).length && Object.keys(t.members).some(function (id) {
+        return eligible(s,rid,t.members[id],false,true);
+      });
+      if (a.status === 'contested') return !!pending && v.status === 'contested';
+      if (a.status === 'competing') return !!pending && S.candidates(s,rid).length > 1;
+      if (a.status === 'withheld') return !!pending && Object.keys(v.support).some(function (id) {
+        var vote = v.support[id];
+        return vote.candidateId === null && vote.reason === 'local_refusal' && S.constituency(s,rid).some(function (m) {
+          return m.id === id && m.active && JSON.stringify(m.currentPrincipal) === JSON.stringify(vote.principal);
+        });
+      });
+      // A lord must be a real current household superior, not a remembered role.
+      var home = s.player.homeSettlement, holder = Number.isInteger(home) && FB.settlementHolder(s,s.player.provinceId,home);
+      var lord = holder && holder.kind === 'character' && s.chars[holder.id];
+      if (!lord || lord.dead || lord.id === s.player.charId || s.roles.friend !== lord.id ||
+          !v || v.status !== 'resolved' || !v.accessionId) return false;
+      return Object.keys(v.support).some(function (id) {
+        var vote = v.support[id], principal = vote.principal;
+        if (!principal) return false;
+        var cid = principal.kind === 'character' ? principal.id : principal.kind === 'royal_member' && t.members[principal.id] && t.members[principal.id].charId;
+        return cid === lord.id && vote.candidateId && vote.candidateId !== v.accessionId && !!t.members[vote.candidateId];
+      });
+    }});
   function generation(s, rid) { return FB.realmRulerGeneration(s, rid); }
   function memberCharacter(s, m) { return m && m.charId && s.chars[m.charId]; }
   function alive(s, m) { var c = memberCharacter(s, m); return !!m && m.alive !== false && !(m.charId && !c) && !(c && c.dead); }

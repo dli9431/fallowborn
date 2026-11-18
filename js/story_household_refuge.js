@@ -468,6 +468,58 @@
       return m.personId === id && m.admittedTurn !== null && m.leftTurn === null && countyPresent(s,id,v.def.locality.provinceId);
     })) found=copy(v.def.locality); }); });return found;
   };
+  var eventArgs={type:'object',fields:{
+    storyId:{type:'string',minLength:1,maxLength:80,optional:true},
+    action:{enum:['request','consent','authorize','offer','enter','decline','leave']},
+    partyId:{type:'string',minLength:1,maxLength:80,optional:true},
+    requestId:{type:'string',minLength:1,maxLength:200,optional:true},
+    personId:{type:'string',minLength:1,maxLength:200,optional:true}
+  },test:function(a,c) {
+    var data=c.data || FBDATA,d=(data.storyInstances || {})[a.storyId],p=(data.storyInstances || {})[a.partyId];
+    return FB.stories.eventReviewCandidate(TYPE,a,c) &&
+    (c.runtime || !a.partyId || p && p.type === 'household_party' &&
+      (!d || Array.isArray(d.partyIds) && d.partyIds.indexOf(a.partyId) >= 0)) &&
+    (!a.partyId || a.action === 'request') && (!a.requestId || a.action !== 'request') &&
+    (!a.personId || a.action === 'consent');}};
+  function eventSource(s,a,ctx) {
+    return FB.stories.eventReviewSource(s,TYPE,a,ctx,function(state,m) {
+      var choices=FB.stories.choices(state,m.id).filter(function(v) {
+        return v.action === a.action && (!a.partyId || v.terms.partyId === a.partyId) &&
+          (!a.requestId || v.terms.requestId === a.requestId) && (!a.personId || v.terms.personId === a.personId) &&
+          // A generic review selects a whole request, never an arbitrary first care group.
+          (v.action !== 'request' && v.action !== 'enter' || v.id.split('/').length === 2);
+      });
+      return choices.length === 1 ? choices[0] : null;
+    });
+  }
+  function eventParties(s,source) {
+    var m=FB.stories.get(source.storyId),t=FB.stories.record(s,source.storyId);
+    var choice=FB.stories.choices(s,source.storyId).filter(function(v) {return v.id === source.choiceId;})[0];
+    if (!choice) return null;
+    var request=choice.terms.requestId && row(t,choice.terms.requestId),c=current(s,m.declaration);
+    return {refuge_host:request ? request.provider.incumbentId : c.binding.incumbentId,
+      refuge_ruler:request ? request.provider.rulerId : c.binding.rulerId,
+      refuge_guest:request ? request.actorId : s.player.charId};
+  }
+  function eventQuote(s,a,ctx) {
+    var source=eventSource(s,a,ctx),people=source && eventParties(s,source);
+    if (!people || !ctx.storyReviewSource || Object.keys(people).some(function(slot) {
+      var id=people[slot];return !ctx.participants || ctx.participants[slot] !== id || !s.chars[id] || s.chars[id].dead;
+    })) return null;
+    var q=FB.stories.quote(s,source.storyId,source.choiceId);
+    return {allowed:!!q.allowed,source:source,review:q};
+  }
+  FB.eventStateReaders.register({id:'household_refuge_review',system:'story_tracks',args:eventArgs,
+    read:function(s,a) {var source=eventSource(s,a,{});return !!(source && FB.stories.quote(s,source.storyId,source.choiceId).allowed);}});
+  FB.eventReviews.register('household_refuge',{owner:'story_tracks',args:eventArgs,
+    partySlots:{refuge_host:true,refuge_ruler:true,refuge_guest:true},
+    bind:function(s,a,ctx) {var source=eventSource(s,a,ctx);return source ?
+      {storyReviewSource:source,participants:eventParties(s,source)} : null;},
+    quote:eventQuote,
+    apply:function(s,a,q) {return FB.stories.apply(s,q.source.storyId,q.source.choiceId,q.review);},
+    details:function(s,a,q) {var m=FB.stories.get(q.source.storyId),t=FB.stories.record(s,q.source.storyId);
+      return m.review(s,t,q.source.choiceId,q.review).concat(q.allowed ? [] : [m.blocker()]);}
+  });
   FB.stories.registerType(TYPE,factory,'js/story_household_refuge.js',check);
   var validatePlatform=FB.save.v4.validatePlatform;
   FB.save.v4.validatePlatform=function(s) {

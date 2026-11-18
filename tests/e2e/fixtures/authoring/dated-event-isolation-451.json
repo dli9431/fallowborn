@@ -1,0 +1,37 @@
+{
+  "rows": [
+    {
+      "bookmark": "451",
+      "packId": "dated_451",
+      "code": "PACK-451-farmer_451-thessaloniki-m-Reader",
+      "eventId": "thessalonica_reserve_list_451",
+      "patches": [
+        {
+          "path": [
+            "player",
+            "provinceId"
+          ],
+          "value": "thessaloniki"
+        },
+        {
+          "path": [
+            "holder",
+            "thessaloniki"
+          ],
+          "value": "east_451"
+        },
+        {
+          "path": [
+            "authority",
+            "governments",
+            "east_451"
+          ],
+          "value": {
+            "formId": "roman_civic"
+          }
+        }
+      ],
+      "liveYear": 451
+    }
+  ]
+}

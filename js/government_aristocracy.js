@@ -42,13 +42,18 @@
     return descendant(members[m.fatherId || m.parentId],members,roots,seen) ||
       descendant(members[m.motherId],members,roots,seen);
   }
-  function royalCharacter(s,rid,c,seen) {
+  function royalCharacter(s,rid,c,seen,characterId) {
     var data = A.state(s,rid), source = sourceTree(s,rid);
-    if (!c || !data || !source || seen[c.id]) return false;
-    seen[c.id] = true;
+    var cid = c && (c.id === undefined ? characterId : c.id);
+    if (!c || !data || !source || typeof cid !== 'string' || seen[cid] ||
+        characterId !== undefined && c.id !== undefined && c.id !== characterId) return false;
+    seen[cid] = true;
     var id = c.royalLine && c.royalLine.realmId === data.royalRealmId && c.royalLine.memberId;
+    // The wire codec omits only this exact derivable member identity.
+    if (c.royalLine && c.royalLine.realmId === data.royalRealmId && !own(c.royalLine,'memberId') && cid.indexOf('ro_') === 0)
+      id = 'royal_' + cid.slice(3);
     if (id && descendant(source.members[id],source.members,data.royalRoots,{})) return true;
-    return royalCharacter(s,rid,s.chars[c.fatherId],seen) || royalCharacter(s,rid,s.chars[c.motherId],seen);
+    return royalCharacter(s,rid,s.chars[c.fatherId],seen,c.fatherId) || royalCharacter(s,rid,s.chars[c.motherId],seen,c.motherId);
   }
   A.royalEligibility = function (s,rid,cid) {
     var p = A.profile(s,rid), c = s.chars[cid];
@@ -379,7 +384,7 @@
       action === 'negotiate' ? (patron || principal) && validTerms(s,rid,terms) &&
         terms.revenue <= r.maximumRevenue && terms.levy <= r.maximumLevy &&
         FB.countyPopularSupport(s,m.scope.id) >= p.refusalSupport : false);
-    var cost = action === 'negotiate' && patron ? p.negotiationCost : 0;
+    var cost = action === 'negotiate' && patron && p ? p.negotiationCost : 0;
     if (allowed && action === 'negotiate') {
       var shares = appointments(s).filter(function (a) { return a.id !== row.id && a.publicTerms && a.institutionId === rid &&
         a.publicTerms.source.provinceId === m.scope.id && ['active','contested'].indexOf(a.status) >= 0 &&
@@ -888,7 +893,7 @@
         var limits = p.interests.filter(function (entry) { return entry.id === id; })[0];
         if (id !== 'court' && !data.interests.some(function (m) { return m.id === id; }) ||
             !vote || !same(vote.principal,principal) || !own(vote,'terms') || vote.generation > FB.realmRulerGeneration(s,rid) ||
-            vote.candidateId !== null && !(rid === 'player' ? royalCharacter(s,rid,s.chars[vote.candidateId],{}) :
+            vote.candidateId !== null && !(rid === 'player' ? royalCharacter(s,rid,s.chars[vote.candidateId],{},vote.candidateId) :
               descendant(source.members[vote.candidateId],source.members,data.royalRoots,{})) ||
             (vote.candidateId === null ? vote.terms !== null :
               !keys(vote.terms,['revenue','levy']) || Object.keys(vote.terms).length !== 2 || !rate(vote.terms.revenue) ||

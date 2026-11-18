@@ -1,4 +1,217 @@
+Story projections and canonical completion
+
+The mobile owner exposes pure typed storyActionValid/storyActionFaults and
+storyReview projections for demand, raid, receipt distribution, named-ground
+access, seasonal travel and partial/final settlement. They use the existing
+coalition review/commit source; no story owns a public balance, member assent,
+outside consent or route. The oldest unresolved receipt is selected for sharing.
+Final-settlement proposals resolve all remaining people at review time, so changed
+population invalidates confirmation. Other terms remain exactly authored.
+
+Accepted extraction agreements retain their actual payment turn and the
+coalition leader/generation only after the outside payment succeeds. Refused or
+pending offers supply no completion evidence. Canonical raid and latest
+distribution receipts optionally retain the actual leader and generation. The existing mobile row may retain one lastSettlement
+receipt after population transfer. round may retain one journey reference with
+original ground, origin, host, leader, generation, departure, status and actual
+arrival turn. Daily reconciliation checks the same host, leadership and lawful
+route; the ordinary migration owner establishes camp presence before arrival is
+recorded. Manual or replacement movement interrupts the old reference. A stay
+review creates no journey or arrival. These are bounded provenance on existing
+transaction owners, not another resource or authority ledger. Original people
+remain retained for these source facts. Optional old receipts remain valid.
+
+Matching restore rejects malformed/future evidence and preserves spent resources,
+actual clocks, population transfers and personal story decisions without replay.
+No mobile outer schema or save-envelope change is introduced. The existing
+mobile_story_transactions technology decision is none; underlying gates stay live.
+
+Seasonal grounds and elected independent openings
+
+Optional mobileProfiles.seasonalRound schema 1 declares named physical grounds,
+their climate zones and suited local season kinds, finite grazing capacity,
+off-season yield, required access terms and reciprocal neighbor distances.
+The Mobile coalition sheet marks a new review at each actual calendar season,
+including campaigns beginning partway through a season. A leader can stay,
+review a neighboring ground, seek its declared access, or cancel. A refused or
+blocked ground supplies no permission; an accessible alternative can be chosen.
+County adjacency continues to determine nearby courts, raids and campaign targets.
+The native Pontic grounds are illustrative game-scale choices, not an attested
+itinerary. The independent Glassroad and Reedbank JSON worlds vary climate,
+capacity, distances, food cost, membership, leadership thresholds and public stocks.
+
+The existing mobile pasture production owner remains authoritative. Every day,
+requested grazing is ceil(total following / 90) capacity units. Available units
+are bounded by the ground capacity, the actual access concession, the county's
+existing population-derived capacity less other reserved concessions, and the
+shared mobilePastures.used county ledger. Grazing adds used units to that same
+ledger and credits units * pasturePerPerson * seasonal factor to existing camp
+food. The factor is one only when both the actual climate zone and local season
+kind match; otherwise it is offSeasonYield. Continuing on an exhausted ground
+produces nothing, and replacing an agreement or revisiting cannot refill it.
+The existing ledger's ninety-day periods, measured from campaign initialization,
+remain unchanged; a calendar-season review does not reset that ledger. Legacy
+non-round and dispersed-camp producers compete through the same capacity owner.
+These are aggregate people and food accounts. There is no animal ledger, herd,
+remount count or claim to reconstructed animal productivity.
+
+A ground review uses the canonical mobile quote/commit boundary. Travel requires
+a reunited halted host, peace, no conflicting service, a declared neighboring
+ground and lawful access throughout the actual ordinary route. Effective travel
+time is the larger of ordinary route time and the declared neighbor distance in
+days. Extra days extend only the host's existing first-leg clock. Departure
+consumes ceil(total following * foodPerPerson * effective days * travelFoodRate)
+from camp stock as a travel surcharge, in addition to ordinary daily rations.
+Carried host food, private purses and local markets are not debited by this
+surcharge. The camp remains at canonical migration.at and follows actual host
+arrivals; no target coordinate substitutes for presence. Stay costs no travel
+food. Losing the host leaves local grazing and a stay review possible, but no
+fictional escort or remote move is created.
+
+AI leaders rank the same current ground projections by potential daily food,
+then travel cost and stable ground id. They use the same review and exact food
+charge. They request a higher-ranked missing concession through ordinary member
+assent and outside consent, then can choose an accessible alternative after
+refusal. A pending/refused offer is not repeatedly purchased before its term
+ends. Ordinary extraction, provisioning, member decisions and elections retain
+their existing owners. A command program may use seasonal_round only when the
+profile's automate flag opts in; it retains ordinary command authority and
+actual-arrival checkpoints. Elected coalitions do not acquire a command program.
+
+The optional saved round schema 1 records reviewedSeason and lastChoice (groundId
+and turn), or -1/null before a review. Its season is derived from the actual
+calendar and original campaign date; strict restore rejects missing opted-in
+facts, future or inconsistent choices, unknown grounds and unsolicited markers.
+The shared pasture ledger, spent food, actual route clock and existing program
+tickets restore without grazing, movement, decisions or payments being replayed.
+No mobile outer schema or save-envelope version changes.
+
+An explicitly authored elected single-host coalition may use the existing
+sponsorship:{schema:1,kind:'independent'} and patronRealmId:null without a command.
+Its mobileLeadership constitution, bound opening leader/member identities,
+weighted election, public account and personal protagonist selection remain the
+ordinary owners. mobile.treasury is credited once in addition to the ordinary
+finite opening public-account reserve; it does not replace that existing reserve. The opening must be countyless, nonTerritorial and without a
+political superior. It cannot use dispersed camps, columns or deferred formation.
+Exact effective declarations and the complete live batch are preflighted before
+people, accounts, RNG or UID change. Legacy sponsored declarations still require
+a distinct living patron; a null, missing or dead patron never implies independence.
+
+Such an opening can declare finite hostedAccess from an actual lawful local
+holder, independently of sponsorship. Its ordinary agreement owns capacity and
+permission; openingAccess also retains the original declared host/superior chain,
+people and generations. A changed holder, occupation, original person's loss or
+changed generation invalidates access immediately. The daily owner ends it, and
+restored control cannot revive it. Expiry and lawful paid renewal use existing
+agreement transactions. Hosted access grants no ownership, political subordination,
+public income, replacement people, private money or recurring provisions. Later
+membership departure, elected succession and owned-land partial/final settlement
+use the existing conserving transactions. Original personal selection survives
+those changes and matching restore, without selecting another protagonist.
+
+Technology impact mobile_seasonal_round is none: climate, consent and actual
+stocks have no credible discovery prerequisite. The existing independent
+sponsorship and hosted-opening decisions remain none for elected coalitions as
+well. Every ordinary unit, route, transport and resource gate remains binding.
+
+Member cohesion and receipt distribution
+
+Optional mobileProfiles.cohesionPolicy schema 1 keeps one support value on each
+existing member record, alongside its allegiance, pledge and ordinary election
+vote. There is no parallel loyalty registry. Native Pontic and river policies
+and the complete ordinary mobile-cohesion-glassroad.json import select different
+coefficients, thresholds, idle windows and AI distribution preferences. These
+are game-scale political abstractions, not reconstructed historical quotas.
+Profiles without the policy retain their original records and behavior.
+
+A resolved field battle shifts each participating coalition once, regardless of
+how many of its hosts fought. Victory and defeat have separate declared effects;
+a bounded raid uses its actual sortie outcome. Casualties and host loss keep
+their existing demographic owners. A scarce day means camp food before ordinary
+consumption is below one day's actual camp ration. Consecutive scarce days incur
+the declared daily support loss after the grace window. For dispersed camps,
+any underfed camp establishes scarcity; its food remains local. At a new
+ninety-day boundary, members whose last actual personal gain is old enough lose
+the idle amount, and current leader Standing relative to the policy target adds
+its coefficient. Standing uses the game's existing ruler Standing snapshot,
+including its existing household-relative and faith-adjusted meaning; this is
+not a new universal reputation. Missing leadership contributes no Standing
+change. A skipped seasonal boundary applies once, without simulating past days.
+
+Raids, accepted incoming agreement payments, initial service pay and seasonal
+service pay register receipts only after their canonical resource transfer.
+Opening stocks, purchases, pasture, private contributions and public funding
+are not spoils. Each receipt describes already available public coin and camp
+food; it is not an escrow account or a second stockpile. The current leader's
+ordinary Mobile coalition review can keep it, divide by living allegiant member
+weight, or favor an explicitly selected nonempty set of those members, weighted
+within that set. Equal weights therefore divide equally. Coin enters the actual
+member principals' private purses, including the existing player purse. Food
+allotments are immediate household consumption, deducted once from camp stock.
+They neither replace subsequent ordinary daily rations nor create another food
+inventory. The exact costs and per-member support projections precede approval.
+
+For each living allegiant member, let ratio be its actual fraction of the total
+receipt (coin plus food units) divided by its ordinary weight fraction. Support
+changes by receiptShare * (min(2, ratio) - 0.5), clamped to [0,100]. Keeping gives
+ratio zero; an exact proportional share gives ratio one. Coin and food units are
+an intentionally simple allocation index, not a market exchange price. Whole
+food units round down in stable member order, with the final selected member
+receiving the remainder. Any positive personal allotment resets that member's
+last-gain turn. Retention never resets it. Replacing a dead principal preserves
+the existing member's support and gain history; a newly joined member receives
+the declared initial support and current turn.
+
+Pending receipts remain spendable public resources. A sharing review rejects if
+those resources have since been consumed; retention remains possible. There are
+at most 32 unresolved receipts. A full queue blocks a new raid or incoming
+agreement payment before mutation, refuses initial service payment before either
+consent or money changes, and leaves seasonal service collection pending under
+its existing period marker. It creates no arrears balance or retroactive multi-
+season payout. Resolving a receipt frees one slot. AI leaders use the same review
+and commit immediately, selecting keep, weight or the declared number of
+highest-support favorites with stable member-id ties. If sharing is unaffordable,
+they review retention instead. Protagonist leaders retain personal choice.
+
+NPC members at or below the withhold threshold use the existing pledge review
+to set recruitment service to zero and answer pending proposals without assent.
+When support recovers above that threshold, an allegiant NPC with zero service
+renews its profile member's declared pledge through the same review. This
+creates no fighters and leaves deployment and existing obligations unchanged;
+newly joined members without a declared pledge retain their voluntary zero.
+At or below depart they first attempt the ordinary local departure review:
+deployed fighters, external commitments, lawful access and population gates
+remain binding. No one demusters, cancels a contract or teleports to depart.
+The protagonist chooses their own pledge, assent, departure and vote. During an
+elected vacancy, NPCs above the rival threshold rally to the ordinary live
+candidate preference; dissatisfied eligible members back themselves through the
+existing support review. Each candidate still needs the original weighted
+threshold. Leadership can therefore resolve smoothly or remain contested.
+Commanded followings retain their original appointment rules; cohesion never
+creates an election or a new command permission. Distribution there requires
+its existing trade permission. Civilian-camp and column departure blockers are
+unchanged.
+
+Current-content saves retain the optional cohesion checkpoint, bounded pending
+receipts, latest distribution, member support and last-gain turns under existing
+mobile schemas. Strict validation rejects missing opted-in facts, duplicates,
+future turns, bad support and inconsistent distribution totals. Restore never
+allocates, pays, consumes or elects. Exact content/mod fingerprints remain
+binding. No envelope or version change is introduced.
+
+Technology impacts mobile_member_cohesion and mobile_spoils_distribution are
+both none: association and sharing actual stocks have no credible discovery
+prerequisite. Ordinary unit, command, authority, access and commitment gates
+remain authoritative.
+
 Column supply policies
+
+The mobile owner registers event readers for active allegiant personal
+membership, qualified leader/nonleader role and thirty-day scarcity under
+`mobile_confederations`. Scarcity compares current food with the existing total
+following and profile food-per-person rate for thirty days, independently of a
+configurable procurement target. These reads neither provision nor recruit.
+See events.md for the shared selection cache and none technology decision.
 
 Optional supplyPolicy composes with a bounded command column set through the same canonical camp, host, treasury, market and pledged-pool owners. supplySnapshot includes every column and counts only halted colocated deficits in camp procurement. Remote columns may procure at an actually accessible local market; camp food never reaches them remotely. The shared column adapter reviews conserved camp transfers and one command-wide class-aware replacement target. Automatic daily dispatch remains bounded by lastDay. Ordinary single-host policies retain their original behavior. See docs/designs/mobile-columns.md for exact scope, none technology decisions and the independent ordinary import examples.
 
@@ -11,6 +224,110 @@ Technology impact personal_expedition_admission is none. Unpaid personal consent
 Acceptance of a mobile agreement is a reviewed transaction. A civic counterparty supplies its executive and constituency decision through FB.civicGovernment.decision, with the agreement's terms and its own payment burden. An access or tribute receipt is not a payment by the receiving city; protection charges the city its agreed price. The returned decision is part of the review, so changed incumbents, eligibility, ballots or diplomatic skill invalidate confirmation. Refusal leaves payments and the agreement untouched.
 
 Mobile confederation
+
+Extraction policy
+
+An optional mobileProfiles.extractionPolicy schema 1 selects demand, raid and
+hire operations independently. The Mobile coalition deed exposes only declared
+kinds. Each uses the existing exact extraction proposal, weighted assent and
+coalition review/commit boundary. NPC principals answer pending extraction
+proposals through the same assent transaction; the protagonist supplies only
+their own assent. Extraction request keys come from the typed operation
+schemas rather than a separate field list. The retained raid receipt has a closed
+schema; its existing numeric, identity and resource checks still apply. Canonical
+realm actors, service matching, contract release and proposal cards share their
+owning transaction paths. Membership, terms, leadership, stocks and public accounts are
+rechecked before commitment. Cancel and stale confirmation spend nothing.
+
+Demand creates an ordinary tribute or protection offer carrying a named county
+and an explicit raid threat. Unlike an ordinary outward tribute offer, this
+receipt charges the outside public treasury once upon acceptance. A living
+direct holder must control the county, and a real halted host must be at that
+county or one reachable adjacent land county away. Allies, truces, shared
+sovereignty, occupation and existing hostile wars prevent this operation.
+Outside consent remains independent. The outside government AI policy's optional
+demandResponse weighs available treasury, a reserve, maximum payment share,
+defending strength and the coalition's actual deployed fighters. The ordinary
+daily response runs even when the coalition leader is the protagonist. Refusal
+ends the offer with no payment or automatic war. Protection retains its exact
+fighter commitment and the existing ordinary service consumer.
+An outside constitutional refusal also ends the offer, even when the financial
+and force forecast favors acceptance; forecasts never replace civic assent.
+
+Raid is a single local sortie by a halted field host reunited with camp. The
+existing actions.js raid calculation supplies skirmish resistance, forts and
+fighter casualties using that actual host. It creates no occupation, claim,
+ownership change or settlement. Coin is bounded by the direct holder's available
+treasury, policy ceiling and stock share. Whole food units come from that named
+county's existing provision stock, bounded by the surviving host's ordinary
+carrying limit, and enter the colocated camp; no goods value,
+captives or abstract reward is minted. Ordinary host-loss, roster, rout and
+market-shock owners apply. A successful raid at a local household publishes the
+existing home_raid lifecycle moment. The optional lastRaid receipt and turn
+retain exact gains, losses and cooldown through matching saves without replay.
+
+Hire expands an allowed existing paid host-service template with an explicit
+outside court, the actual host and empty land scopes. It records the coalition's
+reviewed consent in the canonical service contract. The patron separately accepts
+or refuses through the same mobile review and authority contract transaction.
+Initial and seasonal payments, expiration, succession and host obligations stay
+with the existing contract owner; no migration origin or sponsor is rewritten.
+
+This policy currently serves elected, single-host coalitions. Commissioned,
+column and dispersed-camp followings retain their own permission owners and do
+not acquire extraction authority from a shared profile. Profiles without this
+policy retain prior behavior. The native Pontic policy permits all three kinds;
+the river policy permits paid service only. The ordinary JSON example
+mobile-extraction-glassroad.json varies limits, cooldown, response preferences
+and a same-import paid-service template in a fictional world. Its numbers and
+the native limits are simulation choices, not reconstructed historical levies.
+
+Technology impact is none separately for mobile_tribute_demand,
+mobile_bounded_raid and mobile_hired_service. Political consent and finite stocks
+have no credible discovery prerequisite. Ordinary unit, fort, route, crossing
+and contract gates remain authoritative.
+
+Playable member principals
+
+An ordinary scenario may declare mobilePrincipal:{realmId,memberId}. The pure
+mobilePrincipalStartProfile resolves one member in the effective coalition
+profile. An authored opening binding selects its exact existing direct actor,
+including a same-realm incumbent; an unbound member selects the person created
+by the unchanged member constructor. Selection does not create a duplicate,
+invent kin, change leadership, grant land or add a second principal registry.
+Command, guarded-party and later-preparation starts retain their separate owners.
+
+The fresh order is politics, direct opening actors and community partitions,
+explicit infrastructure if declared, population/market/public treasury setup,
+legacy and authored following initialization, exact member-person selection and
+court/provenance binding, private career/equipment setup, then world stories and
+the selected tracks. Other start paths keep their existing initialization order.
+The coalition retains its stable realm id, actual members, host, stores and public
+account. player.liege names that court; private scenario gold remains private.
+The existing Mobile coalition Deed supplies canonical leader and member reviews.
+Their normal consent, resource, unit and passage gates remain binding for both
+player and AI. Cancelling a review commits nothing.
+
+Leader death opens the existing weighted member selection. Household inheritance
+does not replace a member or install a leader. An eligible heir may separately
+receive an ordinary replacement appointment and member support; an unselected
+member retains only that voice, while an ordinary household heir returns to the
+local court. Even an elected heir cannot absorb an active mobile institution or
+its public treasury. Final territorial settlement retains ordinary absorption.
+Optional original selection provenance survives death, member replacement and
+restore without replaying the opening or reattaching a missing story.
+
+The 1204 eastern Qipchaq start selects the existing generated river principal.
+It retains schema 1, both existing members, 1,600 people, 80 fighters and the
+existing finite opening stocks. Its leader and private starting resources are
+simulation choices, not an identified historical person's biography. The new
+agenda and opening_profile observe personal reviews; they grant no county,
+tribute, passage or hereditary command. The independent ordinary JSON example
+mobile-principal-starts-glassroad.json selects a bound female incumbent or a
+different bound member with distinct private resources, retaining schema 2.
+
+Technology impact mobile_principal_start is none: selecting a political person
+requires no discovery. Existing equipment, resource and travel gates persist.
 
 The mobile layer of realmIdForRulerCharacter evaluates its native leader reader once per qualifying filter row. It still scans every government in the same order before consulting the inherited territorial resolver and retains landed-home and mobile fallback precedence. Replaced leader readers retain the original two-call behavior after a truthy first result. No leader or ruler answer survives a predicate evaluation; later reads recheck custody, guards, command authority and generations.
 
@@ -152,3 +469,40 @@ FB.mobile.localRealms is the pure complete projection of the existing localRealm
 Canonical grouped county receipts
 
 Corridor storage envelopes occupy the existing bounded agreement slots while holding up to sixteen separate original county receipts each. They have no political status or permission. Every agreement reader uses FB.mobile.agreements and exact decisions use FB.mobile.agreement, including capacity across followings, provisioning, pasture, commitments, holy-war eligibility, ruler agendas and UI. Canonical county offers, outside consent, payment, expiry and original-party invalidation retain their existing owners. The expedition_corridor_receipts technology decision is none because political consent and record retention require no discovery. See docs/designs/expedition-programs.md for the complete pure preflight, immutable slots, live alias/original-person distinction and strict schema-5 contract. Legacy agreements and unopted worlds retain their previous saved representations.
+
+Committed event observations
+
+Leader installation, successful membership addition/departure, actual civilian-court county arrival, casualty loss below the ordinary field minimum and active access ending publish the generic system moments in MODDING.md. Access records close before existing daily/seasonal pruning, so the owner transition is idempotent, including individual corridor receipts and original-authority loss. Field movement without the civilian court, voluntary demuster and reads publish no arrival or defeat. No daily moment-detection scan, second queue or saved dispatch marker is added.
+
+Personal camp decisions
+
+The mobile_life pack contains 24 personal decisions during 1204?1240 in the
+high-medieval era. Leader and nonleader audiences use current coalition roles;
+four scarcity conversations serve ordinary resident camp households instead of
+asserting principal membership. The same pack serves native and imported
+coalitions. Six queued observations answer leadership, membership, civilian
+arrival, host-loss and access-ending moments in the protagonist's own following.
+Household conversations bind an actual local witness through the ordinary
+participant owner. Neither culture, religion nor terrain selects these events.
+
+The coalition readers accept either their existing explicit realmId or the typed
+following selector current or moment. Current requires exactly one live relevant
+following, from allegiant principal membership or resident camp locality. Moment
+uses the existing context's realmId and still checks the requested audience.
+Missing, ambiguous, inactive and settled contexts fail without mutation. Ordinary
+camp households must be available, resident and physically present at the actual
+single-camp migration county, outside the principal registry; a moving civilian court does
+not establish resident presence. Host loss alone does not erase a surviving camp.
+Dispersed civilian camps fail closed because this reader selects no exact camp.
+Local conversation creates no membership, vote, military or command authority.
+The existing event-observation none technology decision covers these pure reader
+repairs; no new transaction or saved record is introduced.
+
+Choices distinguish private preparation from public action. Account notes help
+a later personal share argument; notes on terms, voices, access and settlement
+help a later service explanation through declared eventChances. A successful
+practice attempt improves personal Diplomacy. Rest improves personal health.
+Every decision has an unconditional refusal. No choice transfers public food,
+money, people, land, access, pledges or service obligations. Binding proposals,
+outside acceptance and settlement remain separate canonical Mobile coalition
+reviews in Deeds. This is content using existing flags, skill checks and moments.

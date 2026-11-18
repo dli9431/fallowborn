@@ -1,0 +1,756 @@
+{
+  "name": "Seasonal coalition: Reedbank",
+  "cultures": {
+    "reed_folk": {
+      "name": "Reedbank clans",
+      "tradition": "other",
+      "dyn": "plain",
+      "male": [
+        "Kavi",
+        "Daro",
+        "Aran"
+      ],
+      "female": [
+        "Tamar",
+        "Sela",
+        "Nari"
+      ],
+      "family": [
+        "Selen",
+        "Vara",
+        "Ash"
+      ]
+    }
+  },
+  "cultureDoctrineDefaults": {
+    "reed_folk": {
+      "learning": "steppe"
+    }
+  },
+  "religions": {
+    "reed_belief": {
+      "name": "The Open Sky",
+      "parent": "tengri",
+      "availability": {},
+      "properties": {
+        "head": null,
+        "legalTradition": "customary"
+      }
+    }
+  },
+  "geographies": {
+    "reed_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "reed_well",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "steppe"
+        },
+        {
+          "id": "reed_flats",
+          "x": 3.1,
+          "y": 2.1,
+          "terrain": "steppe"
+        },
+        {
+          "id": "reed_pass",
+          "x": 4.7,
+          "y": 2.7,
+          "terrain": "steppe"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {
+        "reed_meeting_hall": {
+          "x": 1.5,
+          "y": 1.5
+        }
+      },
+      "defaultLayout": null
+    }
+  },
+  "governmentForms": {
+    "reed_assembly": {
+      "holders": "coalition_holders",
+      "succession": "coalition_leadership",
+      "territory": "coalition_court",
+      "consent": "coalition_consent",
+      "levy": "following_levy",
+      "revenue": "coalition_receipts",
+      "council": "member_council",
+      "diplomacy": "coalition_diplomacy",
+      "ai": "coalition_decisions",
+      "ladder": "local_service",
+      "officeCatalogue": [],
+      "systems": {
+        "disable": [
+          "feudal_service",
+          "roman_offices",
+          "public_offices",
+          "royal_council",
+          "estates",
+          "manorial_tenure"
+        ]
+      }
+    }
+  },
+  "mobileProfiles": {
+    "reed_compact": {
+      "minAge": 20,
+      "threshold": 0.6,
+      "maxMembers": 8,
+      "maxAgreements": 8,
+      "recruitShare": 0.15,
+      "recruitCost": 0.03,
+      "foodPerPerson": 0.01,
+      "pasturePerPerson": 2,
+      "accessDays": 270,
+      "accessPrice": 6,
+      "starvationShare": 0.001,
+      "defeatShare": 0.03,
+      "settlementForm": "regnum",
+      "regions": [
+        "reed_well",
+        "reed_flats",
+        "reed_pass"
+      ],
+      "members": [
+        {
+          "id": "well_following",
+          "weight": 3,
+          "pledge": 0.15,
+          "population": 1200
+        },
+        {
+          "id": "ridge_following",
+          "weight": 2,
+          "pledge": 0.1,
+          "population": 800
+        }
+      ],
+      "seasonalRound": {
+        "schema": 1,
+        "automate": true,
+        "travelFoodRate": 0.25,
+        "grounds": [
+          {
+            "id": "well_ground",
+            "name": "Reed meadow",
+            "countyId": "reed_well",
+            "climateZone": "southern_temperate",
+            "seasonKinds": [
+              "summer"
+            ],
+            "capacity": 2400,
+            "offSeasonYield": 0.35,
+            "access": {
+              "capacity": 2000,
+              "allowRecruit": false,
+              "price": 5,
+              "duration": 90
+            },
+            "neighbors": [
+              {
+                "groundId": "flats_ground",
+                "distanceDays": 18
+              },
+              {
+                "groundId": "pass_ground",
+                "distanceDays": 18
+              }
+            ]
+          },
+          {
+            "id": "flats_ground",
+            "name": "River flats",
+            "countyId": "reed_flats",
+            "climateZone": "southern_temperate",
+            "seasonKinds": [
+              "spring",
+              "autumn"
+            ],
+            "capacity": 1800,
+            "offSeasonYield": 0.35,
+            "access": {
+              "capacity": 2000,
+              "allowRecruit": false,
+              "price": 6,
+              "duration": 90
+            },
+            "neighbors": [
+              {
+                "groundId": "well_ground",
+                "distanceDays": 18
+              },
+              {
+                "groundId": "pass_ground",
+                "distanceDays": 18
+              }
+            ]
+          },
+          {
+            "id": "pass_ground",
+            "name": "High shelter",
+            "countyId": "reed_pass",
+            "climateZone": "southern_temperate",
+            "seasonKinds": [
+              "winter"
+            ],
+            "capacity": 1200,
+            "offSeasonYield": 0.35,
+            "access": {
+              "capacity": 2000,
+              "allowRecruit": false,
+              "price": 7,
+              "duration": 90
+            },
+            "neighbors": [
+              {
+                "groundId": "well_ground",
+                "distanceDays": 18
+              },
+              {
+                "groundId": "flats_ground",
+                "distanceDays": 18
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "storyInstances": {
+    "reed_principal_household": {
+      "id": "reed_principal_household",
+      "type": "household_track",
+      "title": "A principal’s private household",
+      "intro": "Consider the separate private purse and current member voice.",
+      "homeProvinceId": "reed_well",
+      "continuity": "protagonist",
+      "interruptedStage": "interrupted",
+      "initialStage": "review",
+      "requirements": {
+        "provinces": [
+          "reed_well"
+        ]
+      },
+      "stages": {
+        "review": {
+          "name": "Separate accounts",
+          "text": "The public following remains its own institution. You may record a priority or postpone it.",
+          "choices": [
+            {
+              "id": "review_private",
+              "label": "Keep the private purse available",
+              "detail": "Spend nothing and make no public decision.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            },
+            {
+              "id": "postpone_private",
+              "label": "Postpone this review",
+              "detail": "End with the current arrangements unchanged.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "done": {
+          "name": "The review is complete",
+          "text": "No public resources or powers have changed.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        },
+        "interrupted": {
+          "name": "The original review ended",
+          "text": "The next household head receives no inherited public mandate.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    },
+    "opening_reed_leader_start": {
+      "id": "opening_reed_leader_start",
+      "type": "opening_profile",
+      "title": "The principal’s opening goals",
+      "intro": "Optional personal goals grant no public resources or authority.",
+      "scenarioIds": [
+        "reed_leader_start"
+      ],
+      "provinceIds": [
+        "reed_well"
+      ],
+      "requires": [
+        "reed_principal_household"
+      ],
+      "goals": [
+        {
+          "id": "review",
+          "name": "Consider the private household",
+          "text": "Record a costless priority or postpone it.",
+          "criterion": {
+            "kind": "household_phase",
+            "storyId": "reed_principal_household",
+            "phases": [
+              "done"
+            ]
+          }
+        }
+      ],
+      "contacts": []
+    },
+    "opening_reed_member_start": {
+      "id": "opening_reed_member_start",
+      "type": "opening_profile",
+      "title": "The principal’s opening goals",
+      "intro": "Optional personal goals grant no public resources or authority.",
+      "scenarioIds": [
+        "reed_member_start"
+      ],
+      "provinceIds": [
+        "reed_well"
+      ],
+      "requires": [
+        "reed_principal_household"
+      ],
+      "goals": [
+        {
+          "id": "review",
+          "name": "Consider the private household",
+          "text": "Record a costless priority or postpone it.",
+          "criterion": {
+            "kind": "household_phase",
+            "storyId": "reed_principal_household",
+            "phases": [
+              "done"
+            ]
+          }
+        }
+      ],
+      "contacts": []
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "reed_household",
+      "name": "Wellside household",
+      "desc": "A free household beside the following.",
+      "intro": "Your household begins on the Reed Bank.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 40,
+      "prestige": 5,
+      "piety": 0,
+      "startCulture": "reed_folk",
+      "startReligion": "reed_belief",
+      "bookmarkIds": [
+        "reed_world"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "fixedProvinceId": "reed_well",
+      "tracks": [
+        "reed_principal_household"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Free household",
+          "diff": "age 24"
+        }
+      },
+      "trackLocations": {
+        "reed_principal_household": [
+          "reed_well"
+        ]
+      }
+    },
+    {
+      "id": "reed_leader_start",
+      "alwaysUnlocked": true,
+      "bookmarkIds": [
+        "reed_world"
+      ],
+      "name": "Reedbank leader",
+      "desc": "Begin as the existing principal with a separate private purse. Public leadership remains with member selection.",
+      "mobilePrincipal": {
+        "realmId": "reed_coalition",
+        "memberId": "well_following"
+      },
+      "fixedProvinceId": "reed_well",
+      "characterName": "Iri Vale",
+      "sex": "f",
+      "startCulture": "reed_folk",
+      "startReligion": "reed_belief",
+      "startAge": 32,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 17,
+      "prestige": 5,
+      "piety": 0,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing principal",
+          "diff": "No generated family"
+        }
+      },
+      "tracks": [
+        "reed_principal_household",
+        "opening_reed_leader_start"
+      ],
+      "trackLocations": {
+        "reed_principal_household": [
+          "reed_well"
+        ],
+        "opening_reed_leader_start": [
+          "reed_well"
+        ]
+      },
+      "intro": "You are {name}, a principal in the existing following. Use Mobile coalition in Deeds for current reviews."
+    },
+    {
+      "id": "reed_member_start",
+      "alwaysUnlocked": true,
+      "bookmarkIds": [
+        "reed_world"
+      ],
+      "name": "Reedbank member",
+      "desc": "Begin as the existing principal with a separate private purse. Public leadership remains with member selection.",
+      "mobilePrincipal": {
+        "realmId": "reed_coalition",
+        "memberId": "ridge_following"
+      },
+      "fixedProvinceId": "reed_well",
+      "characterName": "Mira Fen",
+      "sex": "f",
+      "startCulture": "reed_folk",
+      "startReligion": "reed_belief",
+      "startAge": 34,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 7,
+      "prestige": 5,
+      "piety": 0,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing principal",
+          "diff": "No generated family"
+        }
+      },
+      "tracks": [
+        "reed_principal_household",
+        "opening_reed_member_start"
+      ],
+      "trackLocations": {
+        "reed_principal_household": [
+          "reed_well"
+        ],
+        "opening_reed_member_start": [
+          "reed_well"
+        ]
+      },
+      "intro": "You are {name}, a principal in the existing following. Use Mobile coalition in Deeds for current reviews."
+    }
+  ],
+  "bookmarks": {
+    "reed_world": {
+      "id": "reed_world",
+      "name": "The Reed Bank",
+      "desc": "A fictional three-county authoring world.",
+      "date": {
+        "year": 900,
+        "season": 3,
+        "day": 87
+      },
+      "era": "early_medieval",
+      "geography": "reed_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "stories": [],
+      "provinces": [
+        {
+          "id": "reed_well",
+          "name": "Amber Well",
+          "realm": "reed_oasis",
+          "culture": "reed_folk",
+          "religion": "reed_belief",
+          "dev": 6,
+          "duchy": "reed_district",
+          "population0": 20000,
+          "communities": [
+            {
+              "culture": "reed_folk",
+              "religion": "reed_belief",
+              "populationShare0": 10000
+            }
+          ],
+          "settlements": [
+            {
+              "site": "reed_meeting_hall",
+              "name": "Well Court",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "reed_flats",
+          "name": "Glass Flats",
+          "realm": "reed_oasis",
+          "culture": "reed_folk",
+          "religion": "reed_belief",
+          "dev": 3,
+          "duchy": "reed_district",
+          "population0": 20000,
+          "communities": [
+            {
+              "culture": "reed_folk",
+              "religion": "reed_belief",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "reed_pass",
+          "name": "Red Gate",
+          "realm": "reed_gate",
+          "culture": "reed_folk",
+          "religion": "reed_belief",
+          "dev": 3,
+          "duchy": "reed_district",
+          "population0": 20000,
+          "communities": [
+            {
+              "culture": "reed_folk",
+              "religion": "reed_belief",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "reed_oasis",
+          "name": "The Amber Wells",
+          "capital": "reed_well",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "lineage_kingship",
+          "religion": "reed_belief",
+          "culture": "reed_folk",
+          "ruler": {
+            "name": "Tamar Selen",
+            "culture": "reed_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          },
+          "liege": "reed_gate"
+        },
+        {
+          "id": "reed_gate",
+          "name": "The Red Gate",
+          "capital": "reed_pass",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 3,
+          "government": "regnum",
+          "religion": "reed_belief",
+          "culture": "reed_folk",
+          "ruler": {
+            "name": "Kavi Aran",
+            "culture": "reed_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "m"
+          }
+        },
+        {
+          "id": "reed_coalition",
+          "name": "The Reedbank Following",
+          "capital": "reed_well",
+          "color": "#b99651",
+          "aggression": 0,
+          "rank": 2,
+          "government": "reed_assembly",
+          "religion": "reed_belief",
+          "culture": "reed_folk",
+          "ruler": {
+            "name": "Iri Vale",
+            "culture": "reed_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          },
+          "nonTerritorial": true,
+          "mobile": {
+            "profileId": "reed_compact",
+            "patronRealmId": null,
+            "origin": "reed_well",
+            "target": "reed_well",
+            "food": 4200,
+            "fighters": 160,
+            "treasury": 110,
+            "opening": {
+              "principals": [
+                {
+                  "memberId": "well_following",
+                  "person": {
+                    "kind": "realm_ruler",
+                    "actorId": "reed_incumbent",
+                    "realmId": "reed_coalition",
+                    "generation": 1
+                  }
+                },
+                {
+                  "memberId": "ridge_following",
+                  "person": {
+                    "kind": "opening_actor",
+                    "actorId": "reed_deputy"
+                  }
+                }
+              ],
+              "leaderMemberId": "well_following",
+              "muster": [
+                {
+                  "memberId": "well_following",
+                  "unitId": "cav",
+                  "count": 70
+                },
+                {
+                  "memberId": "well_following",
+                  "unitId": "arch",
+                  "count": 40
+                },
+                {
+                  "memberId": "ridge_following",
+                  "unitId": "ret",
+                  "count": 50
+                }
+              ]
+            },
+            "sponsorship": {
+              "schema": 1,
+              "kind": "independent"
+            },
+            "hostedAccess": {
+              "id": "opening_grazing",
+              "partnerRealmId": "reed_oasis",
+              "partnerActorId": "reed_host",
+              "countyIds": [
+                "reed_well"
+              ],
+              "capacity": 2000,
+              "allowRecruit": false,
+              "duration": 90
+            }
+          }
+        }
+      ],
+      "duchies": {
+        "reed_district": {
+          "name": "The Reed Bank",
+          "kingdom": "reed_country"
+        }
+      },
+      "kingdoms": {
+        "reed_country": {
+          "name": "Amber Country",
+          "empire": "reed_horizon"
+        }
+      },
+      "empires": {
+        "reed_horizon": {
+          "name": "The Wide Horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "starts": [
+        "reed_household",
+        "reed_leader_start",
+        "reed_member_start"
+      ],
+      "hidden": false,
+      "opening": {
+        "actors": {
+          "reed_incumbent": {
+            "name": "Iri Vale",
+            "sex": "f",
+            "born": 868,
+            "culture": "reed_folk",
+            "religion": "reed_belief",
+            "station": 1,
+            "role": "commander",
+            "home": "reed_well",
+            "skills": {
+              "mar": 6
+            }
+          },
+          "reed_deputy": {
+            "name": "Mira Fen",
+            "role": "notable",
+            "sex": "f",
+            "born": 866,
+            "culture": "reed_folk",
+            "religion": "reed_belief",
+            "station": 1,
+            "home": "reed_well",
+            "skills": {
+              "dip": 6,
+              "mar": 4
+            }
+          },
+          "reed_host": {
+            "ref": {
+              "kind": "realm_ruler",
+              "realmId": "reed_oasis"
+            }
+          }
+        },
+        "appointments": {},
+        "estates": [],
+        "claims": [],
+        "migrations": []
+      },
+      "climate": {
+        "zone": "southern_temperate",
+        "provinces": {}
+      }
+    }
+  }
+}

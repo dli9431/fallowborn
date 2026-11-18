@@ -121,6 +121,118 @@ foundation and actual player costs and rewards. The four initial territorial
 foundations have technology impact **none**; see
 [historical-ambitions.md](historical-ambitions.md).
 
+## State condition readers
+
+The generic `state` condition list composes pure, typed predicates registered by
+their owning engine modules through `FB.eventStateReaders.register`. The schema
+foundation loads before those owners; the first condition validation seals the
+session registry after the complete engine. Native and ordinary JSON definitions
+share candidate validation and the existing trigger/option interpreter. Owner
+availability is checked before evaluation and cannot be inverted by negation.
+
+Government, personal office, recognition-source band, federate contract,
+mobile membership/role/thirty-day food scarcity, religious institution membership
+and qualified role, owned-enterprise law, open rent claim/religious case and active
+staged-story readers use existing projections. Bands classify live recognition
+sources; they do not invent a universal legitimacy score. Reader availability
+tags affect event observation only; each underlying system retains its own gates.
+The exact reader table is in MODDING.md and the short content workflow is in
+data-authoring.md, State-aware event authoring.
+
+Random and lifecycle selection share each distinct pure call once per synchronous
+pass, including false answers. State filtering precedes all chance and weighted
+selection RNG. Normal context checks re-evaluate event conditions and the original
+lifecycle hook's conditions; option requirements re-evaluate on confirmation.
+No derived eligibility or reader result is saved. Matching restore reads existing
+facts without attaching stories, issuing appointments, opening cases or replaying
+transactions. Existing events without `state` retain their selection order.
+
+The native operating-terms notice observes an already enacted London stall law
+from 1204 to 1215. Its acknowledgement charges nothing and changes no permission.
+It cannot enter fresh 867/1066 pools. The independent fictional JSON events under
+tests/e2e/fixtures/authoring demonstrate ordinary imported configurations.
+Technology impact `state_aware_events` is **none**: observation requires no
+discovery and grants no underlying capability.
+
+## Committed system moments and canonical reviews
+
+`eventSubscriptions` also accepts the system moments listed in MODDING.md.
+Their owners publish only at successful appointment, recognition, contract,
+coalition, casualty, arrival, access-ending, law, judgment, rent-settlement and
+form-change writes. Each publication makes one ordered subscription pass through
+the existing event queue. It executes no effects and consumes no RNG or UID. Subscription binding uses
+existing participants only; a missing required person skips delivery rather than
+creating a fallback person.
+Repeated refused writes and reads publish nothing. Current-content restoration
+retains queued contexts and never replays a moment. Observation uses the same
+owner availability tags as state readers, including on queued-context rechecks.
+
+Recognition bands count distinct effective sources, including changes at explicit
+ruler succession and death commits. Nested writes coalesce their before/after
+band observation without a saved cache. The seasonal authority owner closes
+fixed-term recognition records and expires or contests invalid appointments;
+these terminal writes are idempotent. There is no daily moment-detection scan.
+Field-host loss observes the casualty crossing below the ordinary minimum;
+voluntary demuster and column merge are not losses. Arrival requires an actual
+change of the moving civilian court's county, independently of field movement.
+
+An option can declare `review:{type,args,refusalOption}` instead of effects or
+chance. Trusted adapters currently expose `industry_operation` and `story_choice`.
+The former selects the first owned business matching its declared law definition,
+or the exact `enterpriseUid` when supplied by the event context, and uses the
+ordinary business quote and commit. Payment, pause, resume and close retain their
+existing permission, private payer and public recipient. The native operating-terms
+notice offers this review without changing either acknowledgement option.
+
+The story adapter resolves only an existing registered and attached story's
+currently offered choice, then calls the same `stories.quote/apply` as its Deeds
+review. It creates no attachment or new decision. Declaration validation rejects
+unknown story/choice references and household operations which advance a day;
+work, hearings and day expenditure remain on their ordinary Deeds path.
+
+The event confirmation displays canonical terms and blockers. Cancel, Back and
+Escape restore the mounted event controls, disclosures, scroll and focus without
+committing a transaction or resolving the event. Confirmation compares the exact
+current quote and protagonist before the original owner commits. A stale quote
+leaves the event open without payment. Manual callers must supply that reviewed
+quote; Automation quotes and commits synchronously or takes the explicitly indexed
+unconditional refusal. No parallel rewards, chance or chained review are permitted.
+Payment receipts include the actual private charge; story changes keep the owner's
+ordinary messages. Review options always retain full event reconciliation.
+
+Technology impact `event_canonical_reviews` is **none**: reaching an existing
+review is presentation and routing, while its transaction keeps all existing
+technology, consent, authority and payment gates. System observation remains
+**none** under `state_aware_events`.
+
+Empty shared and dated event sources declare only their explicit pack period.
+Shared sources load after events_common.js; each dated source occupies its own
+ordered manifest entry. The static extractor's `events_*.js` registration covers
+all of them without executing a source or regenerating catalogs. Empty packs add
+no event, random-pool entry or distribution-specific behavior.
+
+## Dated household packs
+
+The 711 and 800 dated packs each contain twelve once-only local household events.
+Their explicit early-medieval windows are 711-731 and 800-820, respectively;
+each source loads only with its own bookmark. County selectors and the
+`county_holder_government` reader observe the current holder in Toledo, Tangier,
+Malaga, Aachen and Baghdad. Toledo and Malaga scenes require elective monarchy;
+Tangier and Aachen require territorial government, and Baghdad requires
+administrative monarchy. A changed holder's form or an unavailable holder makes
+the scene ineligible. No household track is required.
+
+Five events in each pack offer alternative opportunities to prepare a household
+account for one private coin. The option is unavailable once that period's
+preparation flag is set. Preparation adds fifteen percentage points before the
+normal cap to the pack's two skill-weighted named chances; it creates no wages,
+contract, office or tax exemption. Every event retains an unconditional leave
+option. Other scenes offer small household consequences or bound-friend
+conversations. No scene decides a campaign or changes a community. These are
+configurations of existing event conditions, effects and chances, with no new
+technology eligibility. Semantic fixtures cover every scene's government form,
+unavailable holder, county and inclusive year boundaries.
+
 ## Post-decision outcomes
 
 The shared resolver marks significant manual receipts for acknowledgement after

@@ -1,0 +1,163 @@
+{
+  "name": "Lantern household event periods",
+  "eventPacks": {
+    "lantern_periods": {
+      "eras": [
+        "late_antique"
+      ],
+      "yearMin": 568,
+      "yearMax": 588,
+      "bookmarkIds": [
+        "493",
+        "568"
+      ]
+    }
+  },
+  "events": [
+    {
+      "id": "lantern_household_review",
+      "pack": "lantern_periods",
+      "title": "Supplies for the household",
+      "text": "Consider spending {money:5} from the private purse on household supplies.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "active_story_stage",
+            "args": {
+              "storyId": "lantern_household",
+              "stage": "supplies"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review supplies for {money:5}.",
+          "review": {
+            "type": "story_choice",
+            "args": {
+              "storyId": "lantern_household",
+              "choiceId": "buy_supplies"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Keep the money for now.",
+          "effects": {},
+          "text": "No supplies are purchased."
+        }
+      ]
+    },
+    {
+      "id": "lantern_period_override",
+      "pack": "lantern_periods",
+      "bookmarkIds": [
+        "634"
+      ],
+      "yearMin": 634,
+      "yearMax": 654,
+      "title": "A separate local account",
+      "text": "Keep an account for this household.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Continue.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "lantern_legacy_period",
+      "eras": [
+        "late_antique"
+      ],
+      "yearMin": 568,
+      "yearMax": 588,
+      "title": "An unscoped account",
+      "text": "This account follows the live period.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Continue.",
+          "effects": {}
+        }
+      ]
+    }
+  ],
+  "eventSubscriptions": {
+    "lantern_household_review": [
+      {
+        "hook": "household_birth",
+        "require": {
+          "flags": [
+            "lantern_notice"
+          ]
+        }
+      }
+    ]
+  },
+  "storyInstances": {
+    "lantern_household": {
+      "id": "lantern_household",
+      "type": "household_track",
+      "title": "Household supplies",
+      "intro": "Decide whether to buy supplies from the private purse.",
+      "homeProvinceId": "ravenna",
+      "continuity": "protagonist",
+      "initialStage": "supplies",
+      "interruptedStage": "interrupted",
+      "requirements": {
+        "provinces": [
+          "ravenna"
+        ]
+      },
+      "stages": {
+        "supplies": {
+          "name": "A private expense",
+          "text": "Supplies cost {money:5}. They grant no property or income bonus.",
+          "choices": [
+            {
+              "id": "buy_supplies",
+              "label": "Buy household supplies",
+              "detail": "Spend {money:5} once from the private purse. No day or public funds are used.",
+              "operation": {
+                "kind": "household_expense",
+                "amount": 5
+              },
+              "next": "finished"
+            },
+            {
+              "id": "keep_money",
+              "label": "Keep the money",
+              "detail": "Spend nothing.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "finished"
+            }
+          ],
+          "transitions": []
+        },
+        "finished": {
+          "name": "Decision recorded",
+          "text": "The household carries on.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        },
+        "interrupted": {
+          "name": "The opening ended",
+          "text": "The next generation makes its own decisions.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    }
+  }
+}

@@ -14,6 +14,8 @@ Do not write long multi-year simulation tests. A 20-year 476 campaign test took 
 
 Continuous integration
 
+Every browser shard must complete its Playwright invocation within 600 seconds, including test setup, hooks and teardown. Aim below 480 seconds to leave headroom. The shared workflow interrupts an over-budget invocation, retains available reports and fails the check. Split oversized independent proof groups or use scoped parallel groups only when every case has fresh isolated state. More shards cannot divide an ordinary sequential file. Passing assertions do not establish the shard budget, and increasing timeouts does not satisfy it.
+
 CI test and measurement jobs use Node.js 24. JavaScript actions use supported versions that declare the Node.js 24 runtime; changing setup-node's node-version alone does not update the action runtime.
 
 GitHub Actions runs all tests; nothing runs on the owner's machine unless the owner starts it. .github/workflows/tests.yml runs on every push to main, dev, and 476, on pull requests, and by hand: npm run check, npm run test:server, then the changed specs plus the boot and determinism canaries (the test:changed selection) across all four projects, sharded. A manual run can test any pushed branch or commit (target), choose mode=all or mode=specs with an exact specs list, a base commit, projects, shards, and a request_id that names the run. .github/workflows/nightly.yml runs from main every night and by hand: the full suite on 476 and dev, and season timing for every start on 476. .github/workflows/e2e.yml and season-timing.yml are the reusable jobs behind them. docs/TESTS.md, Continuous integration, describes the jobs and artifacts.
@@ -21,6 +23,8 @@ GitHub Actions runs all tests; nothing runs on the owner's machine unless the ow
 Trigger and read runs with the GitHub CLI, for example: gh workflow run tests.yml --ref 476 -f mode=all; gh workflow run tests.yml --ref main -f target=476 -f mode=specs -f specs="specs/boot.spec.js"; gh workflow run nightly.yml -f suite=false -f timing_ref=476; gh run list --workflow tests.yml --branch 476 --limit 5; gh run view <run-id> for job results and the summary; gh run view <run-id> --log-failed for failing step logs; gh run download <run-id> -n report-tests -D ci-report for the merged HTML/JSON report.
 
 Only pushed branches can be tested. To test work, create a new branch and push that; agents push main or dev only when the owner asks. A passing run is evidence, not owner acceptance; visual, device, and play acceptance remain the owner's.
+
+For manual CI, keep the branch name, published commit and run links together. The publisher retires the remote branch after its runs and reviews finish and the work is integrated or the probe is superseded. Use git push --force-with-lease=refs/heads/BRANCH:SHA origin --delete BRANCH with the recorded branch and commit. Verify deletion with git ls-remote --heads origin refs/heads/BRANCH. If the tip moved or another check still needs it, record who will finish cleanup and when.
 
 Local load measurements
 

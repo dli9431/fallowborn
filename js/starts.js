@@ -4,6 +4,9 @@
   'use strict';
   function own(o, key) { return !!o && Object.prototype.hasOwnProperty.call(o, key); }
   function plain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+  function standardFamily(scenario) {
+    return scenario.familyPresets && Object.keys(scenario.familyPresets).join(',') === 'standard';
+  }
   // A fixed beginning keeps its id while a retained world selects its authored
   // faith and constitution. This is ordinary data, not authority to accept an
   // older fingerprint.
@@ -22,12 +25,82 @@
     var scenario = start && FBDATA.startScenarios.find(function (row) { return row.id === start.scenarioId; });
     return FB.startIdentity(scenario, start && FB.campaignBookmark(state));
   };
+  /* Select the existing member owner, including legacy generated principals.
+     A declaration never substitutes a new person for an opening binding. */
+  var mobilePrincipalSpec = {type:'object',fields:{
+    realmId:{type:'string',pattern:'^[a-z][a-z0-9_]*$',maxLength:160},
+    memberId:{type:'string',pattern:'^[a-z][a-z0-9_]*$',maxLength:160}
+  }};
+  FB.mobilePrincipalStartProfile = function (scenario, bookmark, stories) {
+    scenario = FB.startIdentity(scenario, bookmark);
+    var b = scenario && scenario.mobilePrincipal;
+    if (!FB.schema.valid(b, mobilePrincipalSpec) || !bookmark ||
+        scenario.rulerRealmId !== undefined || scenario.existingPerson !== undefined || scenario.originalPrincipal !== undefined ||
+        scenario.governmentForm !== undefined || scenario.onboarding !== undefined ||
+        !Array.isArray(scenario.bookmarkIds) || scenario.bookmarkIds.indexOf(bookmark.id) < 0 ||
+        !standardFamily(scenario) ||
+        !Number.isInteger(scenario.tier) || !FB.station.isFreeUnlanded(scenario.tier, null) ||
+        !FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories, bookmark).length) return null;
+    var realm = (bookmark.realms || []).find(function (r) { return r.id === b.realmId; });
+    var mobile = realm && realm.mobile, profile = mobile && FBDATA.mobileProfiles[mobile.profileId];
+    if (!profile || !Array.isArray(profile.members) || !bookmark.date || FB.governments.problems(realm.government).length ||
+        !FB.governments.resolve(realm.government).use.succession.mobileLeadership ||
+        mobile.command !== undefined || mobile.preparationId !== undefined || mobile.guardedParty !== undefined ||
+        scenario.fixedProvinceId !== mobile.origin) return null;
+    var member = profile.members.find(function (m) { return m && m.id === b.memberId; });
+    if (mobile.opening !== undefined && (!plain(mobile.opening) || !Array.isArray(mobile.opening.principals))) return null;
+    var binding = mobile.opening && mobile.opening.principals.find(function (row) { return row && row.memberId === b.memberId; });
+    var person = binding && binding.person && bookmark.opening && bookmark.opening.actors && bookmark.opening.actors[binding.person.actorId];
+    if (!member || binding && (!person || person.ref)) return null;
+    if (!binding) person = {sex:'m',born:bookmark.date.year - 30,culture:realm.culture,religion:realm.religion,home:mobile.origin};
+    if (scenario.characterName !== person.name || person.name && person.name.length > 40 || scenario.sex !== person.sex ||
+        scenario.startCulture !== person.culture || scenario.startReligion !== person.religion ||
+        scenario.startAge !== bookmark.date.year - person.born || scenario.startAge < Math.max(16,profile.minAge) ||
+        scenario.startAge > 80 || person.home !== mobile.origin) return null;
+    return {realm:realm, member:member, binding:binding || null, person:person};
+  };
+  FB.startingMobilePrincipal = function (s, scenario) {
+    var profile = FB.mobilePrincipalStartProfile(scenario, FB.campaignBookmark(s));
+    var row = profile && FB.mobile.row(s, profile.realm.id);
+    var member = row && row.members.find(function (m) { return m.id === profile.member.id; });
+    var c = member && s.chars[member.principal.id];
+    return c && !c.dead && member.allegiance && FB.characterLocation(s,c) === profile.realm.mobile.origin &&
+      (!profile.binding || FB.bookmarkActor(s,profile.binding.person.actorId) === c) ? c : null;
+  };
+  FB.adoptStartingMobilePrincipal = function (s, scenario) {
+    if (!s || !s.start || s.turn !== 0 || s.start.mobilePrincipal !== undefined ||
+        s.start.rulerRealmId !== undefined || s.start.existingPerson !== undefined || s.start.originalPrincipal !== undefined ||
+        !s.player || s.realms.player) return false;
+    var c = FB.startingMobilePrincipal(s,scenario), b = scenario.mobilePrincipal;
+    if (!c || s.player.charId !== c.id) return false;
+    s.start.mobilePrincipal = {version:1,realmId:b.realmId,memberId:b.memberId,charId:c.id};
+    s.player.liege = b.realmId;
+    c.role = null;
+    if (c.spouseId) s.roles.spouse = c.spouseId;
+    return true;
+  };
+  FB.validateStartingMobilePrincipal = function (s) {
+    if (!s.start) return;
+    var sc = FB.campaignStart(s), b = s.start.mobilePrincipal;
+    if (!own(s.start,'mobilePrincipal') && !(sc && sc.mobilePrincipal !== undefined)) return;
+    function bad() { throw new Error(FB.T('Invalid v4 save field at {path}.',{path:'state.start.mobilePrincipal'})); }
+    var profile = FB.mobilePrincipalStartProfile(sc,FB.campaignBookmark(s));
+    if (!plain(b) || Object.keys(b).sort().join(',') !== 'charId,memberId,realmId,version' || b.version !== 1 || !profile ||
+        b.realmId !== sc.mobilePrincipal.realmId || b.memberId !== sc.mobilePrincipal.memberId ||
+        s.start.rulerRealmId !== undefined || s.start.existingPerson !== undefined || s.start.originalPrincipal !== undefined ||
+        b.charId !== s.player.houseFounderId) bad();
+    var c = s.chars[b.charId];
+    if (!c || own(c,'id') && c.id !== b.charId || c.born !== profile.person.born || c.sex !== profile.person.sex) bad();
+    if (profile.binding && (!s.bookmarkSetup || s.bookmarkSetup.actors[profile.binding.person.actorId] !== b.charId)) bad();
+    // This is original selection provenance. Death, replacement, departure,
+    // settlement and personal inheritance do not reselect the opening member.
+  };
   /* Selector validity and matching are separate: an otherwise matching
      multi-date start may still contain an unknown bookmark reference.
      This report is not complete start validation or runtime eligibility. */
   FB.startSelectorReport = function (scenario, bookmark, eraId, catalogs) {
     var faults = [], report = {matches:false, valid:false, faults:faults};
-    var setupReferences = !catalogs && FB.bookmarkSources && FB.bookmarkSources.setupKnowsBookmark;
+    var nativeReferences = !catalogs && FB.bookmarkSources && FB.bookmarkSources.nativeSelectorKnowsBookmark;
     catalogs = catalogs || FBDATA;
     if (!plain(scenario) || typeof scenario.id !== 'string' || !scenario.id) {
       faults.push('Start definition is missing or has no id.'); return report;
@@ -43,7 +116,7 @@
       });
     }
     if (scenario.bookmarkIds !== undefined) list(scenario.bookmarkIds, owner + '.bookmarkIds', function (id) {
-      if (!own(catalogs.bookmarks, id) && !(setupReferences && setupReferences(id))) faults.push(owner + ': unknown bookmark ' + id + '.');
+      if (!own(catalogs.bookmarks, id) && !(nativeReferences && nativeReferences(id))) faults.push(owner + ': unknown bookmark ' + id + '.');
     });
     if (scenario.eras !== undefined) list(scenario.eras, owner + '.eras', function (id) {
       if (!own(catalogs.eras, id)) faults.push(owner + ': unknown era ' + id + '.');
@@ -66,7 +139,7 @@
         scenario.rulerRealmId !== undefined || scenario.existingPerson !== undefined ||
         scenario.governmentForm !== undefined || scenario.onboarding !== undefined ||
         !bookmark || !Array.isArray(scenario.bookmarkIds) || scenario.bookmarkIds.indexOf(bookmark.id) < 0 ||
-        !scenario.familyPresets || Object.keys(scenario.familyPresets).join(',') !== 'standard' ||
+        !standardFamily(scenario) ||
         !Number.isInteger(scenario.tier) || !FB.station.isFreeUnlanded(scenario.tier, null) ||
         !FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories, bookmark).length) return null;
     var realm = (bookmark.realms || []).find(function (r) { return r && r.id === b.realmId; });
@@ -233,7 +306,8 @@
   FB.startSelectionReferencesCharacter = function (s, cid) {
     var b = s && s.start && s.start.existingPerson;
     var principal = s && s.start && s.start.originalPrincipal;
-    return !!(b && b.familyIds.indexOf(cid) >= 0 || principal && principal.partyIds.indexOf(cid) >= 0);
+    var mobile = s && s.start && s.start.mobilePrincipal;
+    return !!(b && b.familyIds.indexOf(cid) >= 0 || principal && principal.partyIds.indexOf(cid) >= 0 || mobile && mobile.charId === cid);
   };
   FB.adoptStartingPerson = function (s, scenario) {
     if (!s || !s.start || s.turn !== 0 || s.stories !== undefined || !s.player || s.player.charId ||
@@ -383,6 +457,7 @@
     var province = (bookmark.provinces || []).find(function (p) { return p.id === provinceId; });
     if (!province || province.wasteland) return false;
     if (scenario.originalPrincipal !== undefined && !FB.originalPrincipalStartProfile(scenario, bookmark, stories)) return false;
+    if (scenario.mobilePrincipal !== undefined && !FB.mobilePrincipalStartProfile(scenario, bookmark, stories)) return false;
     if (scenario.rulerRealmId && !FB.governments.problems(scenario.governmentForm).length &&
         FB.governments.resolve(scenario.governmentForm).use.succession.commandLeadership) {
       var commandRealm = (bookmark.realms || []).find(function (r) { return r.id === scenario.rulerRealmId; });

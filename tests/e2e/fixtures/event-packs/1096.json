@@ -1,0 +1,6256 @@
+{
+  "packId": "dated_1096",
+  "eventCount": {
+    "min": 10,
+    "max": 10
+  },
+  "rows": [
+    {
+      "eventId": "mainz_accounts_1096",
+      "bookmark": "1096",
+      "code": "PACK-1096-mainz_jewish_household_1096-mainz-f-Leah-established-0-ashkenazi.jewish",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1095
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1117
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 451
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 476
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 493
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 568
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 634
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 711
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 800
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1204
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1241
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mainz_shelter_request_1096",
+      "bookmark": "1096",
+      "code": "PACK-1096-mainz_jewish_household_1096-mainz-f-Leah-established-0-ashkenazi.jewish",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1095
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1117
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_accounts_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mainz_finite_places_1096",
+      "bookmark": "1096",
+      "code": "PACK-1096-mainz_jewish_household_1096-mainz-f-Leah-established-0-ashkenazi.jewish",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1095
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1117
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_request_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mainz_renewed_consent_1096",
+      "bookmark": "1096",
+      "code": "PACK-1096-mainz_jewish_household_1096-mainz-f-Leah-established-0-ashkenazi.jewish",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1095
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1117
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mainz_custody_1096"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mainz_places_considered_1096": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "godfrey_ration_account_1096",
+      "bookmark": "1096",
+      "code": "PACK-1096-farmer-verdun-m-Reader",
+      "readers": [
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096",
+                "mobile",
+                "status"
+              ],
+              "value": "inactive"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1095
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1117
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "godfrey_passage_terms_1096",
+      "bookmark": "1096",
+      "code": "PACK-1096-farmer-verdun-m-Reader",
+      "readers": [
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096",
+                "mobile",
+                "status"
+              ],
+              "value": "inactive"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1095
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1117
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "godfrey_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "godfrey_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "raymond_ration_account_1096",
+      "bookmark": "1096",
+      "code": "PACK-1096-farmer-toulouse-m-Reader",
+      "readers": [
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096",
+                "mobile",
+                "status"
+              ],
+              "value": "inactive"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1095
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1117
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "raymond_passage_terms_1096",
+      "bookmark": "1096",
+      "code": "PACK-1096-farmer-toulouse-m-Reader",
+      "readers": [
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096",
+                "mobile",
+                "status"
+              ],
+              "value": "inactive"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1095
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1117
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "raymond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "raymond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "bohemond_ration_account_1096",
+      "bookmark": "1096",
+      "code": "PACK-1096-farmer-taranto-m-Reader",
+      "readers": [
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096",
+                "mobile",
+                "status"
+              ],
+              "value": "inactive"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1095
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1117
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "bohemond_passage_terms_1096",
+      "bookmark": "1096",
+      "code": "PACK-1096-farmer-taranto-m-Reader",
+      "readers": [
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096",
+                "mobile",
+                "status"
+              ],
+              "value": "inactive"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1095
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1117
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "bohemond_host_1096"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "bohemond_following_1096",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1241",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

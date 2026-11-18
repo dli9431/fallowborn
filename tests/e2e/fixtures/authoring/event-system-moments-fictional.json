@@ -1,0 +1,553 @@
+{
+  "name": "Quay system moment examples",
+  "eventPacks": {
+    "quay_moments": {
+      "eras": [
+        "late_antique",
+        "early_medieval",
+        "high_medieval"
+      ],
+      "yearMin": 476,
+      "yearMax": 1300
+    }
+  },
+  "events": [
+    {
+      "id": "quay_office_appointed",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_office_lost",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_legitimacy_band_changed",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_federate_contract_signed",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_federate_contract_breached",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_federate_contract_expired",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_coalition_leader_selected",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_coalition_member_joined",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_coalition_member_departed",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_field_host_lost",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_camp_arrived",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_access_expired",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_law_enacted",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_law_repealed",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_case_judged",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_claim_settled",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_government_transformed",
+      "pack": "quay_moments",
+      "title": "A recorded change",
+      "text": "A fictional clerk reports a completed decision.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {
+            "gold": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "quay_permission_review",
+      "pack": "quay_moments",
+      "title": "Review the current terms",
+      "text": "Review a real decision or decline.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Review the decision",
+          "desc": "No change until confirmation.",
+          "review": {
+            "type": "industry_operation",
+            "args": {
+              "definitionId": "quay_stall_permission",
+              "action": "pay"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Decline",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "quay_story_review",
+      "pack": "quay_moments",
+      "title": "Review the current terms",
+      "text": "Review a real decision or decline.",
+      "trigger": {
+        "never": true
+      },
+      "options": [
+        {
+          "label": "Review the decision",
+          "desc": "No change until confirmation.",
+          "review": {
+            "type": "story_choice",
+            "args": {
+              "storyId": "quay_review_story",
+              "choiceId": "acknowledge"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Decline",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "quay_empty_cast",
+      "pack": "quay_moments",
+      "title": "A missing participant",
+      "text": "No person is created by a subscription.",
+      "trigger": {
+        "never": true
+      },
+      "participants": [
+        {
+          "slot": "companion",
+          "source": "role",
+          "role": "notable",
+          "required": true,
+          "create": true
+        }
+      ],
+      "options": [
+        {
+          "label": "Acknowledge",
+          "effects": {}
+        }
+      ]
+    }
+  ],
+  "eventSubscriptions": {
+    "quay_office_appointed": [
+      {
+        "hook": "office_appointed"
+      }
+    ],
+    "quay_office_lost": [
+      {
+        "hook": "office_lost"
+      }
+    ],
+    "quay_legitimacy_band_changed": [
+      {
+        "hook": "legitimacy_band_changed"
+      }
+    ],
+    "quay_federate_contract_signed": [
+      {
+        "hook": "federate_contract_signed"
+      }
+    ],
+    "quay_federate_contract_breached": [
+      {
+        "hook": "federate_contract_breached"
+      }
+    ],
+    "quay_federate_contract_expired": [
+      {
+        "hook": "federate_contract_expired"
+      }
+    ],
+    "quay_coalition_leader_selected": [
+      {
+        "hook": "coalition_leader_selected"
+      }
+    ],
+    "quay_coalition_member_joined": [
+      {
+        "hook": "coalition_member_joined"
+      }
+    ],
+    "quay_coalition_member_departed": [
+      {
+        "hook": "coalition_member_departed"
+      }
+    ],
+    "quay_field_host_lost": [
+      {
+        "hook": "field_host_lost"
+      }
+    ],
+    "quay_camp_arrived": [
+      {
+        "hook": "camp_arrived"
+      }
+    ],
+    "quay_access_expired": [
+      {
+        "hook": "access_expired"
+      }
+    ],
+    "quay_law_enacted": [
+      {
+        "hook": "law_enacted"
+      }
+    ],
+    "quay_law_repealed": [
+      {
+        "hook": "law_repealed"
+      }
+    ],
+    "quay_case_judged": [
+      {
+        "hook": "case_judged"
+      }
+    ],
+    "quay_claim_settled": [
+      {
+        "hook": "claim_settled"
+      }
+    ],
+    "quay_government_transformed": [
+      {
+        "hook": "government_transformed"
+      }
+    ],
+    "quay_empty_cast": [
+      {
+        "hook": "office_appointed",
+        "require": {
+          "flags": [
+            "allow_empty_cast"
+          ]
+        }
+      }
+    ]
+  },
+  "localCouncilMotions": {
+    "quay_stall_permission": {
+      "name": "Quay stall permission",
+      "icon": "Q",
+      "desc": "A fictional stall pays for a finite permission.",
+      "fx": {}
+    }
+  },
+  "industryLaws": {
+    "quay_stall_permission": {
+      "schema": 1,
+      "motionId": "quay_stall_permission",
+      "bookmarkId": "1204",
+      "provinceId": "london",
+      "enterpriseType": "market_stall_business",
+      "minYear": 1204,
+      "maxYear": 1220,
+      "mode": "license",
+      "fee": 1.25,
+      "permitDays": 45,
+      "durationDays": 180,
+      "transitionDays": 7,
+      "exemptions": [
+        {
+          "kind": "home_province",
+          "id": "york",
+          "fee": 0.5,
+          "permission": true
+        }
+      ]
+    }
+  },
+  "storyInstances": {
+    "quay_review_story": {
+      "id": "quay_review_story",
+      "type": "household_track",
+      "title": "A quay household review",
+      "intro": "A fictional household records its own decision.",
+      "homeProvinceId": "london",
+      "continuity": "household",
+      "initialStage": "decide",
+      "requirements": {
+        "provinces": [
+          "london"
+        ]
+      },
+      "stages": {
+        "decide": {
+          "name": "A private choice",
+          "text": "The household decides without a public grant.",
+          "choices": [
+            {
+              "id": "acknowledge",
+              "label": "Keep the household routine",
+              "detail": "Record the decision without payment or a grant.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "finished"
+            }
+          ],
+          "transitions": []
+        },
+        "finished": {
+          "name": "Decision recorded",
+          "text": "The household routine continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    }
+  }
+}

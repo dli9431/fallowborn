@@ -18,8 +18,9 @@ window.FB = window.FB || {};
     return value === undefined ? fallback : value;
   }
 
+  var CAMPAIGN_SYSTEM = 'great_holy_wars';
   function config(state, religionId) {
-    if (!FB.systemEnabled(state, 'great_holy_wars', { faith:religionId })) return null;
+    if (!FB.systemEnabled(state, CAMPAIGN_SYSTEM, { faith:religionId })) return null;
     var religion = FB.religionOf(religionId, state);
     return religion && religion.head && religion.head.holderKind !== 'character' &&
       religion.head.greatHolyWar || null;
@@ -4089,4 +4090,36 @@ window.FB = window.FB || {};
       }
     }
   };
+
+  var vowReviewArgs = {type:'object',fields:{seasons:{enum:[4,8,12]},desire:{enum:['honor','neutral']},
+    causeId:{type:'string',ref:{table:'holyWarCauses'},optional:'absent'}}};
+  FB.greatHolyWarVowQuote = function (s,args) {
+    if (!FB.schema.valid(args,vowReviewArgs)) return null;
+    // Legacy campaign eligibility may normalize political projections. Isolate it.
+    var detached = JSON.parse(JSON.stringify(s)), c = s.chars[s.player.charId];
+    var campaign = enabledCampaign(detached), camp = FB.playerGreatHolyWarJoinCamp(detached);
+    var reason = !campaign || !camp ? 'call' : !c || c.dead || c.captive || c.exiled ||
+      FB.justiceCustodyOf(detached,c.id) ? 'actor' : s.player.greatHolyWar &&
+      s.player.greatHolyWar.campaignId === campaign.id ? 'commitment' :
+      args.causeId && (!campaign.cause || campaign.cause.id !== args.causeId) ? 'cause' : null;
+    return {allowed:!reason,reason:reason,camp:camp,args:JSON.parse(JSON.stringify(args)),
+      stamp:JSON.stringify([s.turn,s.date,s.start,c,s.player,s.greatHolyWar,s.authority,s.papacy,s.religiousOfficeStates,s.religiousHeads,s.owner,s.holder,
+        campaign && s.realms[campaign.callerRealm],campaign && personalMobileBinding(detached)])};
+  };
+  FB.greatHolyWarVowApply = function (s,q) {
+    var fresh = q && FB.greatHolyWarVowQuote(s,q.args);
+    return !!(fresh && fresh.allowed && JSON.stringify(fresh) === JSON.stringify(q) &&
+      FB.joinGreatHolyWar(s,fresh.camp,'player',{seasons:q.args.seasons,desire:{kind:q.args.desire,id:null}}));
+  };
+  FB.eventStateReaders.register({id:'answerable_holy_war_call',system:'holywar',systemId:CAMPAIGN_SYSTEM,args:vowReviewArgs,
+    read:function (s,a) {var q = FB.greatHolyWarVowQuote(s,a); return !!(q && q.allowed);}});
+  FB.eventReviews.register('holy_war_vow',{
+    owner:'holywar',systemId:CAMPAIGN_SYSTEM,args:vowReviewArgs,quote:FB.greatHolyWarVowQuote,
+    apply:function (s,a,q) {return FB.greatHolyWarVowApply(s,q);},
+    details:function (s,a,q) {return [FB.T('Personal vow: {seasons} seasons. No immediate payment. Military service and later withdrawal keep their ordinary costs.',{seasons:a.seasons}),
+      a.desire === 'honor' ? FB.T('The declared interest is honor, without a claim to land or sacred custody.') : FB.T('No preferred settlement interest is declared.'),
+      FB.T('The existing call, doctrine, current household and military gates apply. This vow grants no troops, supplies, office or territorial result.'),
+      q.allowed ? FB.T('The household may currently answer this call.') : FB.T('The current call or household no longer permits a vow.')];}
+  });
+
 })();

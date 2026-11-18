@@ -476,14 +476,17 @@
     const w = FB.ordinaryWarById(state, id);
     if (!w || ['victory', 'white_peace', 'defeat', 'invalid'].indexOf(result) < 0) return false;
     w.result = result;
-    if (endpoint(w, 'player')) FB.endPlayerWar(state, result === 'invalid', id);
+    if (endpoint(w, 'player') && !(FB.officeMandates && FB.officeMandates.warAppointment(state,id))) FB.endPlayerWar(state, result === 'invalid', id);
     else {
-      FB.concludeOrdinaryWar(state, w.attacker, w, result === 'invalid');
+      if (!(FB.officeMandates && FB.officeMandates.warAppointment(state,id)))
+        FB.concludeOrdinaryWar(state, w.attacker, w, result === 'invalid');
       settleRebellionCases(state, w);
       w.status = 'ended'; w.endedTurn = state.turn;
       invalidateWars(state);
     }
     w.occupations = {};
+    if (FB.officeMandates && FB.officeMandates.warAppointment(state,id))
+      FB.governmentRecognition.finishOfficeDispute(state,w,result);
     (state.armies || []).forEach(function (a) {
       if (a.warId === id) { a.warId = null; a.path = []; a.goal = null; a.huntPrey = null; }
     });
@@ -980,13 +983,15 @@
     // AI arrest resistance follows the same occupation/peace path as annual
     // AI breakaways. Player independence keeps its dedicated outcome handler.
     return (!endpoint(w, 'player') && w.casus && w.casus.type === 'independence') ||
-      ['claims', 'dejure', 'fabricated', 'customary', 'aggression', 'border', 'consolidation', 'enforcement', 'county_replacement'].indexOf(w.casus && w.casus.type || 'border') >= 0;
+      ['claims', 'dejure', 'fabricated', 'customary', 'aggression', 'border', 'consolidation', 'enforcement', 'county_replacement', 'office_acclamation'].indexOf(w.casus && w.casus.type || 'border') >= 0;
   }
   function finishObjectives(state, w) {
     return withPeaceReceipt(state, w, function () { return finishObjectivesApply(state, w); });
   }
   function finishObjectivesApply(state, w) {
     if (!w.objectives.length || !w.objectives.every(function (o) { return w.occupations[o.target] && w.occupations[o.target].occupied; })) return false;
+    if (FB.officeMandates && FB.officeMandates.warAppointment(state,w.id))
+      return FB.settleOrdinaryWar(state,w.id,'victory');
     if (w.countyChallenge) {
       if (!FB.completeCountyChallenge(state, w)) return FB.settleOrdinaryWar(state, w.id, 'invalid');
       if (FB.noteLifeConquest) FB.noteLifeConquest(state, w.attacker, w.objectives[0].target);
@@ -1029,6 +1034,8 @@
   FB.advanceOrdinaryObjectives = function (state, id, transitOnly) {
     const w = FB.ordinaryWarById(state, id);
     if (!w || !territorial(w)) return false;
+    if (FB.officeMandates && FB.officeMandates.warAppointment(state,id) &&
+        !FB.governmentRecognition.officeDisputeValid(state,w)) return FB.settleOrdinaryWar(state,id,'defeat');
     if (w.objectivePulseTurn === state.turn) return false;
     w.objectivePulseTurn = state.turn;
     if (w.enforcementOf && !FB.ordinaryWarById(state, w.enforcementOf)) return FB.settleOrdinaryWar(state, id, 'invalid');

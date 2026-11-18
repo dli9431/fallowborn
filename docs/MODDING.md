@@ -1,3 +1,129 @@
+Mobile story transaction adapters
+
+ruler_agenda stages optionally accept completion with exactly kind, one of demand,
+raid, distribution, arrival or settlement. The opted-in choice set is restricted
+to agenda_mobile_prepare, agenda_mobile, agenda_mobile_result and agenda_defer.
+Exactly one result and at least one defer are required; ordinary priority/finish
+choices cannot conclude a transaction stage. Unchanged stages still require their
+original agenda_priority alternative and retain their original saved meaning.
+
+agenda_mobile_prepare and agenda_mobile add exactly action and terms. Supported
+terms are: demand (the existing exact demand extraction object); raid (the exact
+raid extraction object); distribute ({mode,memberIds}, with keep/weight requiring
+an empty list and favor a distinct nonempty member list); round or access
+({groundId}); and settle ({countyId,count,final}, positive integer count at most
+100000000 and boolean final). Final settlement uses the current total count.
+Only demand, raid, access and settle can prepare member proposals. Pure candidate
+checks resolve the following, its applicable policies, members, physical counties
+and named grounds; commanded, column and dispersed-camp forms are excluded.
+Runtime review and commit retain every ordinary source gate. Access prepares or
+sends a ground’s declared ordinary concession, never blanket route permission.
+
+agenda_mobile_result and agenda_defer accept no extra fields. The former is
+available only on a matching canonical receipt and is automatically observed;
+the latter leaves step, decisions, resources and authority unchanged. Stop closes
+the optional program without certifying its stage. Decisions on opted-in stages
+have their original stageId, choiceId and turn plus exact evidence:{kind,id,turn,
+actorId,generation}. The choice must be the declared result operation; evidence
+belongs to the original actor/generation, cannot be future or reused, and carries
+no rendered prose or resources. Legacy decisions retain their three fields.
+
+opening_profile criterion {kind:'mobile_transaction',storyId,stageId} requires
+an earlier required ruler_agenda whose named stage has a completion declaration.
+Only its canonical committed decision completes the goal. Completed saved goals
+require that source decision and its original protagonist, without replay.
+
+campaign optional mobileReview:{schema:1} requires ordinary-declaration admission
+and an elected, single-host mobile actor without command or dispersed camps.
+The actual current leader supplies its canonical war review, exact member assent
+and commit. Player choices and their generation belong to the controlled public
+principal, while its realm id remains institutional. Membership supplies no war
+or refusal authority. Unchanged declarations preserve legacy campaign behavior.
+
+An accepted agreement’s extraction object may add exactly paidTurn and
+principal:{characterId,generation}. They record actual outside payment, retain the
+agreement’s coalition generation, match its accepted startTurn exactly and cannot
+occur on an offered agreement.
+Canonical mobile receipts optionally add principal:{characterId,generation} to
+lastRaid and cohesion.lastDistribution. The mobile row may add lastSettlement
+with exactly schema:1, turn, countyId, count, final and principal. round may add
+journey with exactly groundId, countyId, origin, hostId, actorId, generation,
+departureTurn, status and arrivalTurn. status is moving, arrived or interrupted;
+only arrived has a nonnull actual arrivalTurn, strictly after departure. Ground,
+original host, neighboring origin, people, generations, accounting and dates are
+validated by their existing owner. Arrival cannot precede the declared minimum
+neighbor travel time. A vacancy retains the previous principal’s receipts without
+selecting another leader.
+The outer mobile schemas and save envelope are unchanged. Complete native and
+ordinary JSON examples are data/story_mobile_leadership.js and
+tests/e2e/fixtures/authoring/mobile-leadership-glassroad.json.
+
+Seasonal mobile grounds
+
+Optional mobileProfiles.seasonalRound has exactly schema:1, automate (boolean),
+travelFoodRate (finite >0 through 3) and grounds (2-16 records). Each ground has
+exactly id, name, countyId, climateZone, seasonKinds, capacity, offSeasonYield,
+access and neighbors. Ground ids match [a-z][a-z0-9_]{0,47}; names are nonblank
+strings up to 160 characters. Ids and counties are independently unique.
+countyId is an inhabited county in every consuming effective world and the
+opening origin must be one ground. climateZone names an effective climateZones
+entry; seasonKinds contains 1-4 unique effective kinds occurring in that zone's
+season mapping, including same-import definitions. Runtime reads the actual
+local climate, rather than inferring a season from an ethnonym or global index.
+capacity is an integer 1-100000000; offSeasonYield is finite [0,1].
+
+access has exactly capacity (integer 1-100000000), allowRecruit (boolean), price
+(integer 0-1000000) and duration (integer 1-1440). It projects an ordinary access
+offer to the current actual holder of this ground's county. A current concession
+must supply at least that capacity and any requested recruitment permission;
+owned and directly held ground needs no outside concession. Current shared
+capacity still bounds production. An offer itself grants no right. neighbors
+contains 1-15 unique {groundId,distanceDays} records, with integer days 1-90.
+Each edge names a different ground and has an equal reciprocal edge; the graph
+must be connected. Distances are minimum effective journey days, not a replacement
+for physical adjacency, transport or permission. Columns and civilianCamps cannot
+consume this single-camp round. Profiles without it retain prior behavior.
+
+FB.mobile.roundSnapshot(state,realmId) projects due, canonical at and current
+ground plans. roundPasture(state,realmId,countyId) projects current access,
+climate/season match, shared used/remaining capacity and exact daily food.
+roundAccessTerms(state,realmId,groundId) projects existing bilateral offer terms.
+The canonical mobile review action round requires exactly {groundId}; only the
+actual leader may commit, and a command additionally needs ordinary move scope.
+Review returns round with path, effective days, first-leg delay, camp food cost
+and pasture facts. Cancellation and stale confirmation spend nothing. Daily
+production and exact movement arithmetic are in designs/mobile-confederation.md.
+
+Optional saved mobile.round has exactly schema:1, reviewedSeason and lastChoice.
+reviewedSeason is -1 before a review, otherwise year*4+calendar season at the
+last choice. lastChoice is null before a review, otherwise exactly groundId and
+turn. Its known ground, bounded past turn and original-calendar season must
+agree. This marker is required only for opted-in profiles. Food and people
+retain aggregate owners; no animals, separate forage inventory, new mobile outer
+schema or save-envelope version are introduced. Exact imported content remains
+part of the normal fingerprint.
+
+An elected independent opening uses mobile.sponsorship:{schema:1,kind:'independent'},
+patronRealmId:null, the ordinary authored opening and a mobileLeadership succession
+strategy without commandLeadership. It is nonTerritorial and initially countyless,
+with no liege, command, columns, civilianCamps or preparationId. Existing bound
+mobilePrincipal leader/member starts select the original people. Legacy sponsored
+openings still reject absent/dead patrons. Such an elected independent opening
+may declare ordinary finite hostedAccess without command; its source holder is
+logistical access, not a political sponsor. Its openingAccess schema-1 marker
+additionally requires authority, the original ordered host/superior chain of
+{realmId,characterId,generation}. Declared realm ids and original people/generations
+remain provenance; current holder, living party and chain-generation checks govern
+permission. Missing, forged or unsolicited chain facts reject matching restore.
+No restore initializes people, grants stocks or renews access.
+
+An expedition program seasonal_round step uses exactly {groundId,countyId}, with
+a matching profile ground, automate:true, a single actual command host and move
+permission. It shares existing camp-mode order tickets and completes only after
+actual halted arrival. It cannot combine with columns, corridor_access or
+holy_objective. All existing program windows, authority, consent, resource,
+pause/cancel and restore rules remain binding.
+
 Native legal catalogue ownership
 
 Trusted composition catalogs and source stage catalogs accept legalTraditions as
@@ -211,7 +337,7 @@ The active stage displays each distinct referenced world's current status once, 
 
 storyInstances accepts type ruler_agenda. Its only top-level fields are id, type, subjectRealmId, title, intro, optional requires and registrationBefore/registrationAfter, and stages. subjectRealmId must be an opening realm offered by the start's effective bookmark. The type is a player track: list its id in an existing-ruler scenario's tracks. It initializes only for the original ruler or current delegated incumbent of that start. No executable callbacks, arbitrary state paths or world initialization are supported.
 
-stages is an ordered array of 1-16 objects with unique slug id, name, text, earliest year (1-9999), season (0-3) and 1-12 choices. Each choice has a globally unique slug id, label, detail and operation. Every stage needs agenda_priority as an unconditional alternative. The engine also exposes Set the program aside before the next review date; its agenda_stop_program id is reserved. Ordinary successful choices advance one stage. agenda_finish completes early, agenda_priority records a priority without a political effect, and either operation accepts no additional fields.
+stages is an ordered array of 1-16 objects with unique slug id, name, text, earliest year (1-9999), season (0-3) and 1-12 choices. Each choice has a globally unique slug id, label, detail and operation. A stage without completion needs agenda_priority as an unconditional alternative; opted-in transaction stages use the costless defer and source-result contract above. The engine also exposes Set the program aside before the next review date; its agenda_stop_program id is reserved. Successful choices on legacy stages advance one stage. Transaction proposals, source actions and defers advance only after their declared canonical result. agenda_finish completes early, agenda_priority records a priority without a political effect, and either operation accepts no additional fields.
 
 agenda_story_choice adds storyId and choiceId. The source must be an earlier required world story, never another agenda. Its live choice, quote and apply own all consequences; confirmation requotes both the agenda and source. agenda_story_fact adds storyId, stateField and values instead: stateField is one of result, aiResolution, governanceResolved or playerDecision, and values is a unique list of 1-16 semantic slugs. It records only an already matching source fact. The key is stateField, not field, because the shared story compiler reads any object with storyId and field as a typed story-record reference. Delegated choices must occur in the source declaration's choices catalogue or its trusted module's static choiceIds metadata. The campaign factory exposes only face_campaign and leave_campaign; an unknown source choice fails detached validation, and a supported one still needs its live review. Source factories exposing neither contract cannot receive delegated choices.
 
@@ -246,6 +372,71 @@ An authority office may have host, county or realm scope. Ban requires a host sc
 FB.officeCourts(state), officeScopes(state, realmId, officeId), officeClaimants(state) and officeRecognitionMandates(state, actorRef) return detached read models. officeAppointmentQuote(state, actorRef, terms) accepts institutionId, officeId, holder and scope. officeSeekAppointment(state, reviewedQuote) revalidates its signature before committing. officeTransitionQuote(state, actorRef, appointmentId, action) supports confirm, contest and remove; officeTransition applies it. officeClaimQuote(state, actorRef, claimant, mandate, action) accepts a claimant's institutionId and holder, a mandate's source and issuer, and recognize or contest. officeDeclareClaim revalidates before redirecting or withdrawing only that mandate's scoped support. Existing low-level authority APIs remain the story-authoring boundary and never imply a territorial transfer.
 
 No new authority record family or save version is introduced. New starts record rival imperial claims as contested imperial_office appointments. Existing appointments and recognitions preserve their ids, scopes, statuses and generation stamps. Optional state.officeCourtPeriod records the last seasonal court pass and survives normal v4 save/restore. Absent state and optional records remain absent in older campaigns. No event trigger/effect keys or new shipped script files are added.
+
+## Court office mandates
+
+An `authorityOffices` definition may include `mandate` with exactly:
+
+- `schema:1`, unique `powers` drawn from `command`, `negotiate`, `pay`, `propose`;
+  integer `tenureDays` (1–3600); `favor:{source:'court_standing',minimum}` with
+  finite threshold [-100,100]; `dismissal:'court'`; integer `responseDays`
+  (1–360); and `contractTemplates` (0–8 unique existing ids).
+- Optional `hostIds`: at most eight unique nonempty ids of at most 200 characters.
+  These supplement the exact appointment host. Live ownership or effective
+  federate service is always rechecked. Command requires ordinary Ban and host
+  scope; a mandated Ban office must declare command.
+- Optional `acclamation:{officeId,sourceId,minimumSources,requiredMandates,
+  dispute,afterDismissal}`. The claim office supports realm scope without
+  governing powers and accepts the named host-issued army legitimacy source.
+  Minimum sources is 1–8 distinct effective issuers. Required mandate kinds are
+  a unique nonempty subset of the existing legitimacy mandate kinds `command`,
+  `court`, `community`, `religious_head`. Both final
+  fields are booleans. Roman disputes and public succession retain their own
+  existing eligibility and political resolution gates.
+
+Payment requires negotiation and `pay`. Listed templates must have `land:'none'`
+and `recognition:'none'`. A mandated office has only basic `ban` when it declares
+command, otherwise no basic powers. It cannot carry `homePowers`; its optional
+`publicRole` is `commander`. Qualifications, public sources, salary and succession
+keep their ordinary meaning. Mandate tenure caps
+rather than extends a shorter commission. No executable mod strategy or new JSON
+root is introduced. The complete independent import is
+`tests/e2e/fixtures/authoring/office-mandates-lantern.json`.
+
+`FB.officeMandates.review(state, actor, appointmentId, operation, input)` returns
+a detached pure review; `commit(state, review)` recomputes every relevant fact.
+The holder performs delegated acts; the actual court accepts/refuses proposals
+and dismisses officers. Inputs are exact:
+
+| Operation | Input |
+| --- | --- |
+| `command` | `{hostId,destination}` |
+| `offer` | `{templateId,federateRealmId,hostId?}` |
+| `consent`, `refuse` | `{contractId}` |
+| `renew` | `{contractId,endTurn,payPerSeason}` |
+| `propose` | `{target:{officeId,holderId,scope,sourceProvinceId?}}`; public sources name a real productive directly administered county |
+| `accept_proposal`, `reject_proposal`, `dismiss`, `confirm`, `accept_loss` | `{}` |
+| `acclaim` | `{hostId}` |
+| `accede`, `dispute`, `withdraw`, `renounce` | `{}` |
+
+`snapshot(state, appointmentId)` exposes retained terms, favor, effective status,
+living forces, independent support and exact public account. `definitionFaults`
+accepts an optional detached candidate catalogue. Unknown fields and malformed
+reviews reject before mutation.
+
+Saved `appointment.mandate` has exactly `schema:1`, `definitionKey` (exact JSON
+declaration), `originalInstitutionId`, `originalGeneration`, `response`,
+`proposal`, `claim`. The last three start null. Response is
+`{choice:'accept',turn}`. Proposal is `{target,generation,turn,status}` with
+`pending`, `accepted` or `rejected`; only accepted proposals add the exact result
+`appointmentId`. Claim is `{appointmentId,recognitionId,generation,turn,status,
+warId,factionId,forces,currentCourtId}`. Claim status is `claimed`, `disputed`,
+`succeeded` or `failed`; war/faction start null. Forces is a bounded list of
+original `{hostId,realmId}` bindings. Public institution rekeying retains original
+mandate provenance. Optional contract `publicPayer:true` requires real public
+accounts for initial and subsequent payments. Restore does not appoint, confirm,
+consent, accede, create armies or pay. See
+[Court office mandates](designs/office-mandates.md) for lifecycle and AI coverage.
 
 # Modding Fallowborn
 
@@ -840,6 +1031,49 @@ screen instead of silently falling back to another start.
 > which world it needs (the load dialog marks such slots too).
 
 ## Starting scenarios and family presets
+
+Coalition member protagonists
+
+Optional `mobilePrincipal` has exactly `realmId` and `memberId`, lowercase ids
+beginning with a letter, at most 160 characters each. The effective bookmark must
+declare that mobile coalition and profile member under a `mobileLeadership`
+succession strategy. It is exclusive with `rulerRealmId`, `existingPerson`,
+`originalPrincipal`, `governmentForm` and `onboarding`. Commands, guarded parties
+and unformed preparations use their own start contracts.
+
+Declare explicit `bookmarkIds`, a free unlanded private `tier`, `fixedProvinceId`
+equal to the following's origin, exact `sex`, `startCulture`, `startReligion` and
+`startAge` (16–80 and at least the profile minimum), only the `standard` family
+preset, and a complete storyline in `tracks` at that county. An opening binding
+uses its exact direct actor, including the existing same-realm incumbent binding;
+`characterName` must match and fit the 40-character start-code bound. An unbound
+member keeps the constructor's generated male principal aged thirty, with the
+realm's culture and religion; omit `characterName`. No unknown relatives are
+generated for either selection. Ordinary declared private starting effects retain
+their meanings; selection itself grants no public resources, county or agreement.
+
+The picker fixes personal identity and discloses separate accounts and member
+succession. Ordinary start codes retain their format, exact authored identity and
+origin. For an unbound member, the campaign seed determines the actual generated
+name; the code's name token does not rename that person. The saved code records
+the actual name. The coalition keeps its institutional id and public account,
+while `player.liege` identifies the player's court. Selecting a member does not
+select a new leader. Current reviews still check the actual acting principal.
+
+Optional `state.start.mobilePrincipal` has exactly `version:1`, `realmId`,
+`memberId` and `charId`. The original person is also the household founder. A bound
+person must retain its original bookmark actor identity. Current leadership,
+membership, home, wealth, private career and protagonist may subsequently change.
+Matching restore validates this provenance without constructing people, selecting
+a successor, granting resources or replaying tracks. Unknown, missing, conflicting
+or unsolicited provenance rejects before live state or storage changes.
+
+`data/starts_mobile_principal.js` and `data/story_mobile_principal.js` declare the
+1204 regional start. `data/starts_mobile_leaders.js` and
+`data/story_mobile_leadership.js` are registered empty declaration tables. Start,
+`rulerAgendas_` and `openingProfiles_` table names use the existing static display
+extraction owners. The complete independent ordinary JSON example is
+`tests/e2e/fixtures/authoring/mobile-principal-starts-glassroad.json`.
 
 `FBDATA.startScenarios` and `FBDATA.familyPresets` live in `data/starts.js` and merge
 by stable `id`. A replacement is complete rather than a partial patch. New definitions
@@ -1788,7 +2022,7 @@ Activation rejects a bookmark with duplicate ids; missing or cyclic lieges; miss
 capitals; invalid province realm/de-jure/culture/faith references; development outside
 1–10; broken straits; invalid crossing classifications; invalid scripted targets; an
 unknown `era` or a start year outside that era's window; a start year outside the
-technology catalogue's coverage (`FBDATA.techCoverage`, 476–1300) or outside the era's
+technology catalogue's coverage (`FBDATA.techCoverage`, 375–1300) or outside the era's
 technology window; a realm `techTraditions` entry or `techSeed` reference the catalogue
 does not know; or a realm `government` that is unknown or names an unregistered strategy.
 `era` names an entry of `FBDATA.eras` (`data/eras.js`): `late_antique` (375–649),
@@ -2021,6 +2255,83 @@ sources may reuse a core translation. Core v1 does not define separately install
 translation packs. Keep every documented `{token}` intact inside translatable strings.
 
 ### Trigger conditions (all optional, all must pass)
+
+#### State condition readers
+
+`state` is a bounded AND list (1–16) of `{reader, args, not?}` objects, also
+accepted in option and lifecycle subscription `require`. `args` is mandatory;
+unknown fields and reserved keys reject. `not` is an optional boolean. The table
+lists every registered reader and its owning availability tag:
+
+| Reader id | Exact arguments | System tag and meaning |
+| --- | --- | --- |
+| `sovereign_government` | `formId` (governmentForms id) | `governments`: protagonist's current sovereign form |
+| `county_holder_government` | `formId` | `governments`: actual holder of the event county (`locationId`, otherwise home), independently of its sovereign |
+| `protagonist_office` | `kind` (canonical office id) | `authority`: protagonist's canonical office view has an active or recorded office of this kind; includes scoped appointments and existing religious, council, command, household and guild offices; contested, expired and removed rows fail |
+| `legitimacy_band` | `band`: `none`, `single_source`, `multiple_sources` | `authority`: zero, one or several distinct live personal recognition sources; no universal legitimacy score or territorial authority is implied |
+| `federate_contract` | `realmId`, `status`: `offered`, `active`, `ineffective`, `breached`, `expired`, `released` | `federates`: an involving contract; active requires canonical effectiveness, ineffective means a recorded active contract whose continuity/term fails, released means expired with the canonical service-release reason |
+| `mobile_coalition_member` | `realmId` or `following`: `current`, `moment` | `mobile_confederations`: protagonist is a living, available, allegiant principal in an active coalition |
+| `mobile_role` | `realmId` or `following`, plus `role`: `leader`, `member` | `mobile_confederations`: same membership, with the current qualified leader or a nonleader principal |
+| `mobile_scarcity` | `realmId` or `following` | `mobile_confederations`: active coalition food is below total living following × profile foodPerPerson × 30 days; independent of a configurable procurement target |
+| `mobile_camp_household` | `realmId` or `following` | `mobile_confederations`: available nonprincipal household resident and physically present at the active camp county, with no moving civilian court; no membership or authority implied |
+| `institution_membership` | `institutionId` | `religious_institutions`: active personal membership in an available profile institution |
+| `institution_role` | `institutionId`, `roleId` | `religious_institutions`: that active membership still satisfies the named role's qualifications |
+| `owned_enterprise_law` | `definitionId` (industryLaws id) | `industry_laws`: a law currently applies to at least one owned enterprise, including exempt or transition-covered operations |
+| `open_episcopal_claim` | `profileId` (episcopalClaims id) | `episcopal_claims`: a nonstale demanded, contested, proposed or enforcement claim involving the protagonist as possessor, bishop or competent ruler |
+| `open_religious_case` | `profileId` (religiousCases id) | `religious_cases`: a nonstale charged, offered, referred or accepted case involving the protagonist as defendant, victim, bishop or competent ruler |
+| `active_story_stage` | `storyId`, `stage` | `story_tracks`: a declared nonterminal stage of a staged story, with its existing record at that phase and no result |
+
+Mobile reader arguments require exactly one of `realmId` (unchanged explicit
+instance selection) or `following` (`current` or `moment`). `current` selects
+exactly one live following associated through allegiant principal membership or
+ordinary camp residence and actual presence. Multiple relevant followings fail
+closed. `moment` selects the existing event context's `realmId`; a missing or
+unavailable context fails. Role and membership still require a canonical living,
+available, allegiant principal of that selected following. Camp households are
+outside its principal registry and require actual single-camp migration locality; residents
+elsewhere and visiting travelers do not qualify. Host loss alone leaves the
+surviving camp eligible. Dispersed civilian camps are unavailable to this reader
+until an exact camp can be selected; the migration anchor never substitutes for
+their actual location. Every read is pure and creates no saved membership,
+resources or authority.
+
+Office kinds and all instance strings are nonempty and bounded to 80 characters; institution,
+role and stage ids use lowercase identifier spelling. Static definition references
+and story stages resolve against the detached effective candidate, including
+same-import declarations. Missing live instances fail without creating them.
+
+Each owner tag maps to the optional system definition whose `eventReaderOwner`
+equals that tag. Bundled availability ids are `event_governments`,
+`event_authority`, `event_federates`, `event_mobile_confederations`,
+`event_religious_institutions`, `event_industry_laws`, `event_episcopal_claims`,
+`event_religious_cases` and `event_story_tracks`. The mapping is unique and typed;
+owning module tags and configurable availability identities remain separate.
+These default-enabled systems govern event observation. They do not replace each
+owner's existing availability, authority or technology checks, nor do they disable
+its ordinary simulation. Bookmark/era/government/faith system layers can exclude
+the observations. A disabled owner fails before invoking its reader, even for
+`not:true`. Candidate validation accepts dormant content for other worlds;
+`FB.eventStateReaders.faults(calls, path, {data, state})` additionally validates
+availability for a specific live context before a decision can change it.
+
+Trusted owners register once with
+`FB.eventStateReaders.register({id, system, args, read})`. `args` is an
+`FB.schema` object spec; `system` names the owning module tag declared by one
+system's `eventReaderOwner`; `read(state, args, context)` is a pure boolean predicate.
+Registration is sealed at the first condition validation after the complete
+engine loads. JSON cannot register readers. `list()` exposes immutable specs.
+Readers name no content identities; arguments carry them. Reuse existing bounded
+projections, never scan the world, consume RNG/UID, initialize records or store
+answers. A selection-local snapshot memoizes each distinct reader/arguments/context
+call, including false answers. No answer survives the pass or restore. Event
+conditions precede chance and the weighted draw. Lifecycle queues preserve only
+the originating hook in ordinary context, never a derived answer; stale hook
+conditions fail the normal context guard before display or resolution.
+
+Read the short **State-aware event authoring** section in docs/data-authoring.md
+before authoring content; no new effect vocabulary is introduced.
+
+#### Other trigger conditions
 
 | key | meaning |
 |---|---|
@@ -4812,6 +5123,16 @@ Culture selection restrictions govern ordinary research, independently of histor
 
 Supplemental source files may declare complete FBDATA.techCorrections_<suffix> maps and replace individual existing FBDATA.tech entries after data/technology.js. data/technology_foundations.js uses that convention for nine agricultural and machinery records; it loads before bookmark declarations. These source maps add no JSON root: imported technology replacements still use tech and the same ordinary detached validation and consumers. Supply explicit cost and the complete history.adoption map when correcting evidence dates, so an earlier attestation does not accidentally lower a base cost or regenerate regional adoption. Culture research-selection restrictions do not filter historical seeding. Saved completed ids and progress are not reseeded on restore.
 
+The shared catalogue coverage begins at 375. Era technology windows remain
+independent: broadening catalogue coverage does not broaden an era, create a
+bookmark or change a retained campaign. Earlier regional emergence for seven
+foundations preserves every widespread date and mixed-tradition pair ordering;
+fresh 476 and later knowledge and exposure remain unchanged. See
+docs/research/technology-before-476.md for the exact schedules. Ordinary imported
+tech records use these same fields, closure and exception rules; the independent
+technology-pre-476-civic.json and technology-pre-476-workshop.json authoring
+fixtures demonstrate distinct early schedules through real JSON imports.
+
 - Events grant national progress with the `research` effect and gate on effective
   completed ids with `techs`/`notTechs`. Buildings may carry a `research` per-season key
   (see the library); contributions become reserve if no project is active.
@@ -6582,7 +6903,89 @@ muster is a nonempty list of at most 64 {memberId, unitId, count} entries with u
 
 FB.mobile.openingPlan(state, realmDefinition) is a pure fresh-opening eligibility projection. Initialization rechecks the plan, including current generation, custody, location, unit gates, other following memberships and conflicting hosts or migrations, before creating any opted-in following. Authored declarations initialize after direct opening actors and before world stories in both playable and observer campaigns; declarations without mobile.opening keep their earlier initialization order and generated defaults. The independent mobile-opening-harbor.json and mobile-opening-dune.json files under tests/e2e/fixtures/authoring exercise the ordinary JSON path. Matching saves validate retained schema-2 mobile rows and their bounded openingBindings without reinitialization. Missing or malformed binding records fail validation; legacy schema-1 rows remain unchanged for declarations without this opt-in.
 
-FBDATA.mobileProfiles and the top-level mod mobileProfiles table select reusable policies for explicitly declared mobile_confederation realms. A realm mobile object requires profileId, patronRealmId, origin, target, food, fighters and treasury. Its realm supplies culture, religion, capital, rank and nonTerritorial:true. Origin and target must be inhabited; patron must be a distinct authored realm. Initial fighters are withdrawn from the first member following, not added to local population or fabricated from county levies. See data/mobile_confederations.js and docs/designs/mobile-confederation.md for complete profile fields and bounds.
+FBDATA.mobileProfiles and the top-level mod mobileProfiles table select reusable policies for explicitly declared mobile_confederation realms. A realm mobile object requires profileId, patronRealmId, origin, target, food, fighters and treasury. Its realm supplies culture, religion, capital, rank and nonTerritorial:true. Origin and target must be inhabited; sponsored declarations require a distinct authored patron. Only the explicit independent opening contract waives it. Initial fighters are withdrawn from the first member following, not added to local population or fabricated from county levies. See data/mobile_confederations.js and docs/designs/mobile-confederation.md for complete profile fields and bounds.
+
+Optional `cohesionPolicy` has exactly `schema:1` and these required fields:
+
+- `initialSupport`: finite [0,100]; `victory`: [0,100]; `defeat`: [-100,0];
+  `receiptShare`: [0,100].
+- `scarcity:{days,support}`: integer days 1-90, support [-100,0] per consecutive
+  scarce day after the grace window.
+- `idle:{seasons,support}`: integer seasons 1-40, support [-100,0] per observed
+  seasonal boundary without a sufficiently recent personal allotment.
+- `standing:{target,factor}`: target [-100,100], factor [0,1], applied to the
+  current leader's existing ruler Standing difference once per seasonal boundary.
+- `thresholds:{depart,withhold,rival}`: finite [0,100], in that ascending order.
+  Comparisons include equality. Departure and service/vote changes retain the
+  existing canonical reviews and authority/resource gates.
+- `distribution:{mode,favorites}`: mode keep, weight or favor; favorites is an
+  integer 1-24. AI favor selects up to that many living allegiant members by
+  descending current support and stable member id; unaffordable shares fall back
+  to a separately reviewed keep. Players select their own favorite member ids.
+
+Unknown/reserved fields reject through the pure shared schema. No identity or
+calendar collapse fields are supported. Omission retains original behavior.
+`mobile.cohesionSnapshot(state,realmId)` is a detached read of policy, current
+support, scarcity, leader Standing, idle seasons and pending receipts.
+`mobile.review` action `distribute` requires exactly
+`{receiptId,mode,memberIds}`; memberIds is empty for keep/weight and a nonempty
+unique list of current living allegiant member ids for favor. Only the current
+leader may commit. A command additionally needs its existing trade scope.
+Reviews project exact public coin, immediate household food consumption and
+per-member support before committing once. Weight sharing uses member weights;
+favor sharing uses the weights within the selected set. See mobile-confederation.md
+for the allocation formula, resource semantics, receipt capacity, live member
+responses and succession behavior.
+
+The optional saved `mobile.cohesion` has schema 1, scarcityDays, lastPeriod,
+receipts (at most 32) and optional lastDistribution. Member records require
+support [0,100] and lastGainTurn when opted in, and reject them otherwise.
+A receipt has id, source (raid, agreement, service_initial or service_season),
+sourceId, turn, gold and food; gold is finite [0,1000000000000], food an integer
+in that range, at least one positive. Ids use the mobile serial; sources identify
+already committed transfers and never grant resources on restoration.
+lastDistribution contains receipt, mode, rows and turn; each row has memberId,
+characterId, gold, food and resulting support. Its totals must exactly match
+retention or the allocated receipt (coin allows only floating-point tolerance).
+Historical recipients remain character references. The existing mobile/save
+schemas and exact JSON fingerprints do not change.
+
+Optional `extractionPolicy` has exactly `schema:1` and at least one of:
+
+- `demand:{kinds,maxPayment,maxDays}`: kinds is 1-2 unique values from tribute
+  and protection; maxPayment is an integer 1-10000; maxDays is an integer 1-1440.
+- `raid:{maxGold,maxFood,stockShare,cooldownDays}`: maxGold is an integer 0-10000,
+  maxFood an integer 0-100000, at least one positive; stockShare is finite in
+  (0,1]; cooldownDays is an integer 1-1440.
+- `hire:{templateIds}`: 1-8 unique effective federateContractTerms ids, including
+  same-import definitions. Each must offer paid host service without required
+  recognition or conquest land. Optional land in a template creates no land scope
+  in this operation.
+
+Unknown and reserved keys reject. The pure shared schema validates native and
+ordinary JSON candidates. `mobile.extractionOperations(state,realmId)` projects
+declared kinds. `mobile.review` action extract uses exactly one terms shape:
+`{kind:'demand',countyId,agreementKind,threat:'raid',price,duration,levy}` (tribute
+requires levy 0; protection requires a positive real host commitment),
+`{kind:'raid',countyId}`, or `{kind:'hire',partnerId,templateId}`. Submit the exact
+terms through propose with operation extraction and current-principal assent
+before extract. Single-host elected coalitions only; local permission, finite
+stocks and all normal military gates remain intrinsic. Demand receipts add an
+optional extraction:{schema:1,countyId,threat:'raid'} to the existing agreement;
+their actual payer is the outside court. Ordinary accept/decline answers these
+offers. hire_answer takes contractId, exact contract signature and accept boolean
+from the current paying ruler. Neither refusal starts a war or moves land.
+
+Government AI policies may optionally add `demandResponse` with exactly reserve
+(finite 0-1000000000000), maxPaymentShare (0-1), tributeThreatRatio and
+protectionThreatRatio (each 0-10). Acceptance requires price no greater than
+available treasury minus reserve and treasury times maxPaymentShare, plus actual
+coalition fighters at least the chosen ratio times max(1, defending strength).
+Missing terms retain defaults 0, 0.25, 1.25 and 0.5 respectively. The response is
+pure, uses no identity-based exception or RNG, and never substitutes for current
+outside consent. These parameters are government-only and do not change the
+existing willingness parameters. See mobile-extraction-glassroad.json for a
+complete ordinary import with independent response and service terms.
 
 FB.mobile.review(state, {realmId, action, actor, terms}) and FB.mobile.commit(state, review) use the shared government selection owner adapter. The actor is a typed realm or character principal. Actions include pledge, support, select, propose, assent, recruit, demuster, move, march, offer, accept, join, replace_member, leave, settle, work, trade, war, peace, service, land and contract. land reviews a patron-owned camp county before requesting ordinary shared service terms. contract uses FB.mobile.contractTerms(state, contractId) to review those exact terms before recording the coalition's consent. Review is pure and detached; commit revalidates against current actors, people, stock, ownership and money. Only fresh initialization consumes a realm declaration. JSON mods choose registered strategies and cannot supply executable source.
 
@@ -6961,6 +7364,104 @@ eventSubscriptions maps an existing event id to a complete list of subscriptions
 
 require supports numeric goldMin, goldMax, prestigeMin, pietyMin, minAge, maxAge, yearMin and yearMax; boolean married, hasChildren and atWar; and lists flags, notFlags, cultures, professions, holdings and notHoldings. Numeric magnitudes are bounded to 1000000; lists contain 1-16 unique ids. References use the effective catalogues. There are at most 32 subscriptions per hook and one subscription per event per hook. Queuing retains event catalogue order, period and system availability, once/cooldown gates, participant binding and the ordinary saved event context. It does not roll a probability or run effects. Birth and education hooks retain their ordinary simulation eligibility. Travel arrival subscriptions are marked as travel events and clear with that journey.
 
+Committed system moments
+
+The following additional hooks carry these exact canonical payload fields in the
+ordinary event context. All ids are nonempty strings of at most 200 characters;
+nullable ids are explicitly null. They are facts about the completed write, not
+instructions to the interpreter. `eventLifecycleHook` retains the original hook.
+
+| Hook | Payload fields | Observation owner |
+| --- | --- | --- |
+| `office_appointed`, `office_lost` | `officeId`, `institutionId`, `holderId`, `holderKind` (`character` or `realm`), nullable `appointmentId` | authority |
+| `legitimacy_band_changed` | `subjectId`, `subjectKind` (`character` or `realm`), `before`, `after` (`none`, `single_source`, `multiple_sources`) | authority |
+| `federate_contract_signed`, `federate_contract_breached`, `federate_contract_expired` | `contractId`, `patronRealmId`, `federateRealmId`, nullable `hostId` | federates |
+| `coalition_leader_selected` | `realmId`, `characterId`, nullable `formerCharacterId` | mobile_confederations |
+| `coalition_member_joined`, `coalition_member_departed` | `realmId`, `memberId`, `characterId` | mobile_confederations |
+| `field_host_lost` | `realmId`, `hostId` | mobile_confederations |
+| `camp_arrived` | `realmId`, `migrationId`, `hostId`, `fromProvinceId`, `locationId` | mobile_confederations |
+| `access_expired` | `realmId`, `agreementId`, `partnerRealmId` | mobile_confederations |
+| `law_enacted`, `law_repealed` | `lawId`, `definitionId`, `realmId` (original issuer), `locationId` | industry_laws |
+| `case_judged` | `caseId`, `profileId`, `offenseId`, `characterId` (defendant), `locationId`, `status` | religious_cases |
+| `claim_settled` | `claimId`, `profileId`, `realmId`, `locationId`, integer `settlement` (0-7) | episcopal_claims |
+| `government_transformed` | `realmId`, `beforeFormId`, `formId` | governments |
+
+Office appointment means an active appointment or confirmed spiritual incumbent;
+loss includes contest, removal, expiry and explicit vacancy. Recognition bands
+observe distinct effective sources rather than an aggregate political score.
+A fully approved contract signs once; renewal needs both new approvals. Release
+of an already expired contract does not expire it again. Access expiry includes
+an active receipt ending when its original authority becomes unavailable. Each
+receipt in a corridor is observed individually. Imposed penance, imprisonment,
+enforcement and confiscation are judgments; accusation, dismissal and voluntary
+settlement are not. A settlement-form change uses the same generic government
+hook as another reviewed form change. These hooks have no date or polity filter.
+
+Owners publish from successful writes, never restore or a moment-detection daily
+scan. Disabled observation owners deliver nothing, even without a `state`
+condition. Queued contexts recheck that owner. Subscribers retain ordinary
+period, system, participant, once and cooldown gates; delivery does not roll
+chance or execute option effects. Binding uses existing participants only;
+missing required participants skip delivery even when an ordinary event permits
+creation. There is no additional queue or saved cursor.
+
+Canonical review options
+
+Trusted registration extensions and campaign-scoped event periods are documented
+in [Shared event reviews](designs/event-review-foundation.md). Reader and review
+argument validators receive the containing event as `context.event`; runtime
+checks receive `runtime:true` and the bound context as `context.context`.
+Optional trusted `systemId` metadata selects an exact existing system. Omission
+preserves unique `eventReaderOwner` lookup, including its unavailable-owner rule.
+Invalid optional metadata rejects registration; data cannot register hooks.
+
+A review adapter's optional `partySlots` map contains one to four `{slot:true}`
+entries. Each requires a `source:'context'`, `required:true` event participant and
+explicit `participantCards` entry. Optional pure `bind(state,args,context)` returns
+existing `participants` and source facts for a new context, or null. It cannot
+replace supplied identities or source facts. Restored contexts are never recast;
+missing exact people reject the review. Opted-in quote envelopes retain party ids.
+
+Events and event packs optionally accept `bookmarkIds`, a unique nonempty list of
+at most 64 known bookmark ids. Event values override pack values; both declarations
+must validate. This restricts eligibility to saved campaign `start.id` in addition
+to era/year gates. Missing identity fails closed. Omitting the field preserves
+legacy unscoped behavior. `FB.validateEventPeriod(event,packs,context)` and
+`FB.validateEventPacks(packs,context)` validate the event-layer metadata against the
+effective candidate catalogue; source loading remains a separate contract.
+
+```json
+{"label":"Review the permission", "desc":"Confirm the current private payment or cancel.",
+ "review":{"type":"industry_operation",
+   "args":{"definitionId":"market_permission","action":"pay"},"refusalOption":1}}
+```
+
+`review` has exactly `type`, `args` and zero-based `refusalOption` (0-31).
+The indexed alternative must exist, differ from this option, and have no review,
+requirement, technology gate, system restriction, chance or manual-only flag.
+Review options accept only label, desc, ordinary require/technology presentation,
+manualOnly and review; they cannot combine effects, success/failure, chance or
+child naming. Native and ordinary JSON imports use the same pure validator.
+
+| Type | Exact args | Canonical review |
+| --- | --- | --- |
+| `industry_operation` | `definitionId` (industryLaws id), `action`: `pay`, `pause`, `resume`, `close` | `industryLaws.quoteOperation/commitOperation`; first matching owned business, or exact context `enterpriseUid` |
+| `story_choice` | `storyId`, `choiceId` (bounded lowercase choice id) | existing registered story's currently offered `stories.quote/apply` choice |
+
+Story references resolve against the complete effective candidate, including
+same-import stories. Declarative choices must exist and cannot be household
+start_job, work_job, spend_day or a settle_job hearing. Other unregistered review
+types and executable callbacks reject atomically. The runtime does not create
+missing records, substitute another choice or grant another principal's consent.
+The story owner retains the real quote's eligibility, cost and commitment.
+
+Opening and cancellation change no gameplay state. Manual confirmation supplies
+the original `FB.eventReviews.quote` result to `resolveEventOption` as
+`meta.reviewed`; missing or changed quotes refuse. Automation makes the same quote
+and commit in one synchronous call, taking `refusalOption` on a blocked or missing
+review. It never invents consent or silently pays a different price. The ordinary
+receipt and queue remain authoritative; quotes are not saved.
+
 Tournament behaviour
 
 tournaments now accepts new ids in scales, programmes, tracks and tactics as well as its existing partial field updates. Each new id also supplies a same-id record in tournamentRules under the matching group. tournamentRules group records replace completely; its four default fields replace individually. Neither root registers code. Each group is limited to 64 definitions.
@@ -7153,7 +7654,7 @@ Independent mobile sponsorship and external commissions
 
 Choose sponsorship separately from command.superior. An independent opening can omit a former hosting court entirely, provided its inhabited origin/target and other actual references still resolve. A vanished or dead required patron does not convert a sponsored declaration or saved migration to independence. An independent command still loses authority when its actual direct superior dies. The migration's patron and sponsorship provenance participate in the shared resource-review signature; changing either after review invalidates confirmation without payment. Restore also requires the exact imported policy, including a change from independent sponsorship to a real patron under the same mod name.
 
-Command-declared mobile openings may explicitly add sponsorship:{schema:1,kind:'independent'} and patronRealmId:null. This requires the existing mobile.opening and mobile.command contracts. All other declarations retain their required real patron; a missing sponsorship field never waives it. Origin and target remain inhabited physical counties, without implied ownership, local access, funding or protection. No new mod root is introduced. The general migration constructor accepts the waiver only for the effective declaration's exact following, origin, target, canonical following_<realmId> host and profile settlement form, only while its fresh command is effective and has no migration yet.
+Command-declared mobile openings may explicitly add sponsorship:{schema:1,kind:'independent'} and patronRealmId:null. Command followings require the existing mobile.opening and mobile.command contracts; elected single-host coalitions use the explicit countyless opening contract above without command. All other declarations retain their required real patron; a missing sponsorship field never waives it. Origin and target remain inhabited physical counties, without implied ownership, local access, funding or protection. No new mod root is introduced. The general migration constructor accepts the waiver only for the effective declaration's exact following, origin, target, canonical following_<realmId> host and profile settlement form, only while its fresh command is effective and has no migration yet.
 
 The migration stores the optional same-shaped schema-1 sponsorship marker with null patron. Both mobile and authority save validation reconcile it against the effective declaration and reject missing markers, forged policies, extra fields, a simultaneous patron, a patron migration contract, a nonnull migration choice/war, or an invented settlement seat. Independent records cannot use patron-based federateRequest or the generic federate settlement route. Owned-land settlement uses the conserved mobile review/apply transaction. The ordinary reviewed access, separately funded real-party service, war, and actual ownership settlement gates remain available within command scope. A consented access payment does not install a sponsor. Settlement sessions use the real following's sole seat after actual ownership is established; no null authority is added. Legacy migration fields and missing markers keep their previous semantics.
 

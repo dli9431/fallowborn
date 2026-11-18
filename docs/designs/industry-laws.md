@@ -1,5 +1,13 @@
 # Targeted operating laws
 
+The `owned_enterprise_law` event reader uses the canonical operation projection
+for current household enterprises. Exemption and transition coverage retain an
+applying law; repeal, expiry and loss of jurisdiction remove it. The
+`industry_laws` observation tag gates this read before evaluation. The native
+1204–1215 stall notice is a costless acknowledgement that changes no permission.
+See events.md for shared validation, selection caching and the none technology
+decision; the underlying law and enterprise technology gates retain their owners.
+
 Ordinary household enterprises can be subject to optional, council-approved or ruler-granted
 local operating terms.
 No campaign starts with an enacted law. In the 1204 London setting, a qualified
@@ -465,3 +473,7 @@ Technology impacts `industry_law_enforcement`, `industry_law_relief` and
 temporary exemptions/repeal petitions, and operational closure are distinct
 baseline political and judicial capabilities. Enterprise purchase/upgrade gates and canonical justice authority,
 custody, property, treasury and distribution restrictions remain authoritative.
+
+Event observations and review entry
+
+The shared approved-law writer publishes law_enacted and law_repealed once, retaining the original law, definition, issuer and county ids. Registered industry_operation event reviews use the same ordinary business quote and commit for payment, pause, resume or close. The first matching owned enterprise, or exact context enterpriseUid, is quoted before confirmation. Original public payees, private charges, permission gates, stale rejection and retained ownership are unchanged. Browsing and cancellation grant no permit; Automation uses the same quote or its declared refusal. See events.md for routing and the none technology decision.

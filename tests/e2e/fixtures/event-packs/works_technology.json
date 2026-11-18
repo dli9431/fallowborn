@@ -1,0 +1,1205 @@
+{
+  "packId": "works_technology",
+  "rows": [
+    {
+      "eventId": "works_input_short",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_owned_delivery",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_reserve_batch",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_processing_purse",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_late_worker",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_finished_work",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_hold_inputs",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_new_recipe",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_seller_waiting",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_buyer_ready",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_boat_upgrade",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_dry_cistern",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_water_route",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_service_due",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_shared_demand",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_water_reserved",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_pasture_open",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_pasture_care",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_drying_window",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_drying_stock",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_boat_invoice",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_mill_now",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_boat_complete",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "works_boat_release",
+      "bookmark": "1204",
+      "code": "WORKS-1204-baron-london-m-Reader",
+      "optionIndex": 0,
+      "readers": [
+        "works_payer"
+      ],
+      "cases": [
+        {
+          "expected": true
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "dead"
+              ],
+              "value": true
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

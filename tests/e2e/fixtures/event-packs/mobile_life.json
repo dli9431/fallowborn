@@ -1,0 +1,1874 @@
+{
+  "packId": "mobile_life",
+  "eventCount": {
+    "min": 24,
+    "max": 30
+  },
+  "rows": [
+    {
+      "eventId": "mobile_life_larger_share",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_court_hire",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_court_gift",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_held_ground",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_subject_test",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_town_trade",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_town_gate",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_settlement_question",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_member_share",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "leaderId"
+              ],
+              "value": null
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_member_voice",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "leaderId"
+              ],
+              "value": null
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_member_envoy",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "leaderId"
+              ],
+              "value": null
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_member_settlement",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "leaderId"
+              ],
+              "value": null
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_ration_account",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_camp_household",
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "food"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_scarcity_witness",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_camp_household",
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "food"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_scarcity_rumor",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_camp_household",
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "food"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_scarcity_rest",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_camp_household",
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "food"
+              ],
+              "value": 0
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "charId"
+              ],
+              "value": "camp_household"
+            },
+            {
+              "path": [
+                "chars",
+                "camp_household"
+              ],
+              "value": {
+                "id": "camp_household",
+                "name": "Camp resident",
+                "born": 1180,
+                "sex": "f",
+                "culture": "turkic",
+                "religion": "tengri"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_share_argument",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "leaderId"
+              ],
+              "value": null
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_service_argument",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_new_leader",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_coalition_member"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ],
+      "hook": "coalition_leader_selected",
+      "context": {
+        "realmId": "qipchaq_following_1204"
+      }
+    },
+    {
+      "eventId": "mobile_life_new_member",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_coalition_member"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ],
+      "hook": "coalition_member_joined",
+      "context": {
+        "realmId": "qipchaq_following_1204"
+      }
+    },
+    {
+      "eventId": "mobile_life_departed_member",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_coalition_member"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ],
+      "hook": "coalition_member_departed",
+      "context": {
+        "realmId": "qipchaq_following_1204"
+      }
+    },
+    {
+      "eventId": "mobile_life_camp_checkpoint",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_coalition_member"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ],
+      "hook": "camp_arrived",
+      "context": {
+        "realmId": "qipchaq_following_1204"
+      }
+    },
+    {
+      "eventId": "mobile_life_lost_host",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_coalition_member"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ],
+      "hook": "field_host_lost",
+      "context": {
+        "realmId": "qipchaq_following_1204"
+      }
+    },
+    {
+      "eventId": "mobile_life_ended_access",
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_coalition_member"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": []
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "qipchaq_following_1204",
+                "mobile",
+                "status"
+              ],
+              "value": "settled"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        }
+      ],
+      "hook": "access_expired",
+      "context": {
+        "realmId": "qipchaq_following_1204"
+      }
+    },
+    {
+      "eventId": "mobile_life_larger_share",
+      "optionIndex": 0,
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mobile_life_accounts_ready": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_court_hire",
+      "optionIndex": 0,
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mobile_life_terms_ready": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_held_ground",
+      "optionIndex": 0,
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mobile_life_access_ready": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_subject_test",
+      "optionIndex": 0,
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mobile_life_voices_ready": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "mobile_life_settlement_question",
+      "optionIndex": 0,
+      "bookmark": "1204",
+      "code": "CAMP-1204-qipchaq_principal_1204-lower_syr_darya-m-Busir-standard-0-turkic.tengri",
+      "readers": [
+        "mobile_role"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "mobile_life_settlement_ready": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

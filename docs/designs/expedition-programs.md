@@ -1,3 +1,25 @@
+Seasonal ground intent
+
+A single-host command may declare seasonal_round steps only when its selected
+mobileProfiles.seasonalRound.automate is true and its ordinary move scope is
+present. Terms are exactly groundId and countyId, selecting the same declared
+ground and physical county. The adapter uses the canonical ground review,
+including current access, connected ground, ordinary physical route, exact
+travel-food surcharge and minimum distance time. It neither requests access nor
+supplies provisions; ordinary separate access/supply steps remain available.
+Columns, corridor programs and live religious-objective programs cannot combine
+with this adapter. Elected coalitions retain manual/seasonal AI ground reviews
+without acquiring a command declaration or a program.
+
+A committed departure records the existing camp-mode route ticket and leaves
+the step pending. In-flight reconciliation checks existing command, resources
+and passage without charging travel food again. Completion observes the actual
+halted host and camp at the declared ground; it grants no future pasture, renewed
+access or recurring journey. Existing pause/cancel controls, daily dispatch
+budget, exact source commits, manual-order ownership and strict matching restore
+apply. The existing mobile_seasonal_round and expedition program technology
+decisions are none, retaining every ordinary route and equipment gate.
+
 Expedition program declarations and reviews
 
 Original access chains require an occupied political office at every level. A managed succession vacancy at the current generation invalidates passage immediately, even while its living former ruler remains the compact genealogy root awaiting accession. Adoption continues to remap only live court aliases. An explicit player-character response resolves that actual player court, while an unrelated household character remains unauthorized. Receipt history, original identities and strict matching restore remain unchanged.

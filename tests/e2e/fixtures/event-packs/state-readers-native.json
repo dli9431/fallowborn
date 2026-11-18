@@ -1,0 +1,11 @@
+{
+  "rows":[
+    {"eventId":"operating_terms_notice","bookmark":"1204","code":"OBSERVE-1204-farmer-london-m-Observer","readers":["owned_enterprise_law"],"cases":[
+      {"expected":false},
+      {"expected":true,"patches":[
+        {"path":["player","enterprises"],"value":[{"uid":"fixture_stall","type":"market_stall_business","provinceId":"london","settlement":0}]},
+        {"path":["industryLaws"],"value":{"schema":1,"laws":[{"id":"fixture_license","definitionId":"london_stall_license","issuer":{"realmId":"england_1204"},"terms":{"provinceId":"london","enterpriseType":"market_stall_business","mode":"license","fee":2,"permitDays":90,"exemptions":[]},"payeeRealmId":"england_1204","endTurn":360,"transitionEndTurn":30,"existingEnterpriseUids":["fixture_stall"],"repealedTurn":null}],"permits":[],"choices":[]}}
+      ]}
+    ]}
+  ]
+}

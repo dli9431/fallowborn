@@ -904,6 +904,17 @@ window.FB = window.FB || {};
   FB.contentPeriodEnabled = function (state, def) {
     var year = state && state.date ? state.date.year : FB.activeBookmark && FB.activeBookmark.date.year;
     var era = state ? FB.campaignEra(state) : FB.activeEra;
+    // Opt-in periods follow the saved campaign, including its retained revision.
+    // A title selection or a matching live date cannot supply missing identity.
+    if (def && def.bookmarkIds !== undefined) {
+      var id = state && state.start && state.start.id;
+      if (typeof id !== 'string' || !ownKey(FBDATA.bookmarks || {}, id) ||
+          !Array.isArray(def.bookmarkIds) || def.bookmarkIds.indexOf(id) < 0) return false;
+      try {
+        var bookmark = FB.campaignBookmark(state);
+        if (!bookmark || bookmark.id !== id) return false;
+      } catch (error) { return false; }
+    }
     return !!def && (!def.eras || def.eras.indexOf(era) >= 0) &&
       (def.yearMin === undefined || year >= def.yearMin) &&
       (def.yearMax === undefined || year <= def.yearMax);
@@ -1669,13 +1680,15 @@ window.FB = window.FB || {};
     if (startingProvince && !(Array.isArray(locations) && !locations.length) &&
         !FB.startProvinceAllowed(start, definition, startingProvince.id, stories))
       fault(owner, 'fixed birthplace is unavailable under this bookmark\u2019s start rules.');
-    if (startingProvince && !start.rulerRealmId && !start.existingPerson && !start.originalPrincipal && !(Array.isArray(startingProvince.communities) ? startingProvince.communities : [startingProvince]).some(function (community) {
+    if (startingProvince && !start.rulerRealmId && !start.existingPerson && !start.originalPrincipal && !start.mobilePrincipal && !(Array.isArray(startingProvince.communities) ? startingProvince.communities : [startingProvince]).some(function (community) {
           return community && community.culture === start.startCulture && community.religion === start.startReligion;
         })) fault(owner, 'fixed culture and faith are absent from province ' + start.fixedProvinceId + '.');
     if (start.existingPerson !== undefined && !FB.existingPersonStartProfile(start, definition, stories))
       fault(owner, 'existing household person, home, identity and storyline must match this revision.');
     if (start.originalPrincipal !== undefined && !FB.originalPrincipalStartProfile(start, definition, stories))
       fault(owner, 'original guarded principal, home, identity and storyline must match this revision.');
+    if (start.mobilePrincipal !== undefined && !FB.mobilePrincipalStartProfile(start, definition, stories))
+      fault(owner, 'mobile member principal, home, identity and storyline must match this revision.');
     if (start.rulerRealmId) {
       var startingRealm = realms[start.rulerRealmId], ruler = FB.startRulerProfile(definition, startingRealm, start.governmentForm);
       if (!startingRealm) fault(owner, 'unknown ruler realm ' + start.rulerRealmId + '.');
@@ -4938,7 +4951,7 @@ window.FB = window.FB || {};
 
   FB.refreshRealmSuccession = function (state, rid) {
     const r = state.realms[rid];
-    if (!r || !r.alive) return null;
+    if (!r || !r.alive || r.rebelFaction) return null;
     const s = r.succession;
     if (rid === 'player' && s && s.settlementGenealogy && s.members) {
       if (FB.syncRoyalBranches) FB.syncRoyalBranches(state, rid);
@@ -5013,7 +5026,7 @@ window.FB = window.FB || {};
 
   FB.ensureRealmSuccession = function (state, rid) {
     const r = state.realms[rid];
-    if (!r || !r.alive) return null;
+    if (!r || !r.alive || r.rebelFaction) return null;
     if (FB.governments.successionForRealm(state, rid).delegatedLeadership ||
         FB.governments.successionForRealm(state, rid).mobileLeadership) return null;
     if (rid === 'player') {
@@ -9335,7 +9348,7 @@ window.FB = window.FB || {};
       // realm AI
       for (const id in state.realms) {
         const r = state.realms[id];
-        if (!r.alive) continue;
+        if (!r.alive || r.rebelFaction) continue;
         if (id === 'player') {
           const form = FB.governments.forRealm(state, id);
           if (form && form.use.succession.selectionManaged && r.succession && r.succession.members)
@@ -11749,6 +11762,13 @@ window.FB = window.FB || {};
     if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);
     const mine = state.realms.player;
     const publicProfile = FB.administrationProfile && FB.administrationProfile(state,rid);
+    const mandateAccession = FB.officeMandates && FB.officeMandates.preservesAccount(state,rid);
+    if (mandateAccession && !publicProfile) {
+      FB.authoritySetGovernment(state,'player',FB.political.governmentFormId(state,{kind:'realm',id:rid}));
+      mine.ruler.generation = FB.realmRulerGeneration(state,rid);
+      if (mine.succession) mine.succession.rulerGeneration = mine.ruler.generation;
+    }
+    if (mandateAccession) FB.authorityRekeyContracts(state,rid,'player');
     if (publicProfile) {
       FB.publicAdministrationRekey(state,rid,'player');
       mine.ruler.generation = FB.realmRulerGeneration(state,rid);
@@ -11776,7 +11796,8 @@ window.FB = window.FB || {};
     if (FB.remapWarRealm) FB.remapWarRealm(state, rid, 'player');
     if (FB.historicalAmbitionRealmInherited) FB.historicalAmbitionRealmInherited(state, rid, 'player');
     if (FB.treasuryRetireRealm) FB.treasuryRetireRealm(state, rid, 'player', {
-      publicAccession:!!(FB.treasuryPreserved(state,rid) || FB.electiveCrown && FB.electiveCrown(state, rid))
+      publicAccession:!!(FB.treasuryPreserved(state,rid) || FB.electiveCrown && FB.electiveCrown(state, rid) ||
+        FB.officeMandates && FB.officeMandates.preservesAccount(state,rid))
     });
     FB.markRealmDead(state, rid);
     /* The realm's temporal inheritance is separate from any religious office:
@@ -11823,7 +11844,8 @@ window.FB = window.FB || {};
     if (FB.notePlayerStatus) FB.notePlayerStatus(state);
     if (FB.councilEnsure && FB.station.mayHoldCouncil(p, state)) FB.councilEnsure(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
-    FB.news(state, FB.msg('news.world.realm_inherited',
+    FB.news(state, mandateAccession ? FB.msg('news.office.mandate_accession',
+      'The public rule of {realm} passes to you. Its accounts remain separate from household gold.',{realm:inheritedName}) : FB.msg('news.world.realm_inherited',
       '👑 {realm} joins your rule by rightful succession.',
       { realm:inheritedName }), { audience:3 });
     return true;

@@ -4,12 +4,13 @@ dependsOnRuntime(__filename, [
   'data/story_instances.js',
   'data/story_courts_476.js',
   'data/eras.js', 'data/bookmarks.js', 'data/bookmark_476.js',
+  'data/technology.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
   'data/political_institutions.js', 'data/cultures.js',
   'js/government_levy.js', 'js/government_revenue.js', 'js/government_council.js',
   'js/government_diplomacy.js', 'js/government_ai.js', 'js/government_continuity.js',
-  'js/governments.js', 'js/world.js', 'js/authority.js', 'js/federates.js', 'js/politics.js',
+  'js/governments.js', 'js/world.js', 'js/technology.js', 'js/authority.js', 'js/federates.js', 'js/politics.js',
   'js/armies.js', 'js/wars.js', 'js/stories.js', 'js/story_courts.js', 'js/main.js',
   'js/save.js', 'js/save_v4.js'
 ]);
@@ -137,7 +138,7 @@ test('unknown eras, dates outside a declared era and unknown forms are rejected'
     /* The nearest era resolves, but both authored date windows reject it. */
     expect(result.nearestErrors).toEqual([
       'Bookmark 867: start year 1400 is outside era high_medieval (1000–1300).',
-      'Bookmark 867: start year 1400 is outside the technology catalogue coverage (476–1300).'
+      'Bookmark 867: start year 1400 is outside the technology catalogue coverage (375–1300).'
     ]);
     expect(result.unknownRealmForm).toContain('Bookmark 867: realm ' +
       result.firstRealm + ' has unknown government e2e_missing_form.');

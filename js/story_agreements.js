@@ -255,6 +255,43 @@
             d.routes.some(function (other,j) { return j<i && other.from === r.from; });
         })) throw new Error('Invalid civilian migration declaration.');
   }
+  var eventArgs = {type:'object',fields:{
+    storyId:{type:'string',minLength:1,maxLength:80,optional:true},
+    action:{enum:['authorize','decline']}
+  },test:function (a,c) { return FB.stories.eventReviewCandidate('civilian_migration',a,c); }};
+  function eventSource(s,a,ctx) {
+    return FB.stories.eventReviewSource(s,'civilian_migration',a,ctx,function (state,m) {
+      return FB.stories.choices(state,m.id).filter(function (v) { return v.id === a.action; })[0];
+    });
+  }
+  function eventQuote(s,a,ctx) {
+    var source = eventSource(s,a,ctx), person = s.chars[s.player.charId];
+    if (!source || !ctx.storyReviewSource || !person || !ctx.participants || ctx.participants.civil_ruler !== person.id || person.dead ||
+        person.captive || person.imprisoned || person.prisonerOf ||
+        s.player.dead || s.player.flags && s.player.flags.in_prison ||
+        FB.justiceCustodyOf && FB.justiceCustodyOf(s,person.id) ||
+        FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s,person.id) ||
+        !s.realms.player || !s.realms.player.alive || !FB.station.rulesRealm(s.player,s)) return null;
+    var q = FB.stories.quote(s,source.storyId,source.choiceId);
+    return {allowed:!!q.allowed,source:source,review:q};
+  }
+  FB.eventStateReaders.register({id:'civilian_migration_review',system:'story_tracks',args:eventArgs,
+    read:function (s,a) { var source=eventSource(s,a,{});return !!(source && FB.stories.quote(s,source.storyId,source.choiceId).allowed); }});
+  FB.eventReviews.register('civilian_migration',{owner:'story_tracks',args:eventArgs,partySlots:{civil_ruler:true},
+    bind:function (s,a,ctx) { var source=eventSource(s,a,ctx);return source ?
+      {storyReviewSource:source,participants:{civil_ruler:s.player.charId}} : null; },
+    quote:eventQuote,
+    apply:function (s,a,q) { return FB.stories.apply(s,q.source.storyId,q.source.choiceId,q.review); },
+    details:function (s,a,q) {
+      var m=FB.stories.get(q.source.storyId),d=FB.stories.definition(s,m.declaration);
+      return [a.action === 'decline' ? FB.T('Decline this civilian route without moving residents.') :
+        FB.T('Authorize only the declared civilian routes. No field host moves.'),
+        FB.T('Maximum share of the eligible community: {share}%. Seasonal batch ceiling: {count}.',{share:d.share*100,count:d.batchSize}),
+        FB.T('No payment is due. Current control, peace and the original community are rechecked.'),
+        q.allowed ? FB.T('Population, culture and faith are conserved by the ordinary relocation transaction.') : m.blocker()].concat(d.routes.map(function(route) {
+          return FB.T('Civilian route: {from} to {to}.',{from:FB.world.byId[route.from].name,to:FB.world.byId[route.to].name});
+        }));
+    }});
   FB.stories.registerType('civilian_migration',function (d) {
     migrationDefinition(d);
     return { id:d.id,kind:'world',requires:d.requires || [],init:migrationFresh,

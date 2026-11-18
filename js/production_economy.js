@@ -223,6 +223,70 @@
     if(q.reason==='funds')return FB.T('The buyer needs current cash, ordinary reserves, remaining declared demand and budget, and inventory room.');
     return FB.T('Both original asset owners need current lawful access to standing works with an accessible local market link.');
   };
+  var eventFields = {routeId:P.eventId(),goodId:P.eventId('productionGoods'),countyId:P.eventId(),
+    quantity:{type:'integer',min:1,max:10000},operation:{enum:['buy','sell','transfer']}};
+  function eventRows(s,args,ctx) {
+    var pid=args.countyId || ctx.locationId || s.player.provinceId;
+    return plan(s).routes.filter(function (a) {
+      var profile=FBDATA.productionExchangeProfiles[a.profileId],row=site(s,args.operation==='sell' ? a.fromSiteId : a.toSiteId);
+      return row && row.asset && row.site.countyId===pid && (!args.routeId || args.routeId===a.id) &&
+        (!args.goodId || args.goodId===profile.goodId) && !!P.eventActor(s,row.site.countyId,row.site.slot) &&
+        (args.operation==='transfer' ? profile.mode==='owned' : profile.mode==='market');
+    });
+  }
+  function eventQuote(s,args,route) {
+    var row=site(s,args.operation==='sell' ? route.fromSiteId : route.toSiteId);
+    return E.quote(s,{routeId:route.id,actor:actor(s,row),quantity:args.quantity,operation:args.operation});
+  }
+  function eventSource(s,args,route) {
+    var from=site(s,route.fromSiteId),to=site(s,route.toSiteId),seller=actor(s,from),buyer=actor(s,to);
+    if (!from || !to || !from.asset || !to.asset || !seller || !buyer) return null;
+    var who=args.operation==='sell' ? seller : buyer,other=args.operation==='sell' ? buyer : seller;
+    var person=FB.political.actor(s,other);
+    var source=P.eventSource(s,'exchange',route.id,who,{from:from.asset,to:to.asset,other:other,
+      person:person && {characterId:person.characterId,generation:other.kind==='realm' ? person.rulerGeneration : null}});
+    return source && person ? source : null;
+  }
+  FB.eventStateReaders.register({id:'production_exchange',system:'works',args:{type:'object',fields:Object.assign({},eventFields,{
+    status:{enum:['available','funds_short','stock_short','demand_spent']}
+  })},read:function (state,args,ctx) {
+    if (!state.production || !state.production.economy) return false;
+    var s=copy(state);
+    return eventRows(s,args,ctx).some(function (a) {
+      var q=eventQuote(s,args,a);
+      if (args.status==='available') return q.allowed;
+      if (!q.signature) return false;
+      if (args.status==='stock_short') return q.reason==='stock';
+      if (args.status==='demand_spent') return q.remainingDemand<args.quantity || q.remainingBudget<q.cost;
+      var funds=q.buyer && P.account(s,q.buyer).funds;
+      return funds && funds.available<q.cost+funds.reserve;
+    });
+  }});
+  FB.eventReviews.register('production_exchange',{owner:'works',partySlots:{operator:true,counterparty:true},
+    args:{type:'object',fields:eventFields},
+    bind:function (state,args,ctx) {
+      if (!state.production || !state.production.economy) return null;
+      var s=copy(state),a=eventRows(s,args,ctx)[0],source=a && eventSource(s,args,a),out=P.eventBind(source);
+      if (out) out.participants.counterparty=source.asset.person.characterId;
+      return out;
+    },
+    quote:function (state,args,ctx) {
+      var s=copy(state),source=ctx.worksSource;
+      if (!source || source.kind!=='exchange') return null;
+      var a=eventRows(s,Object.assign({},args,{routeId:source.id}),ctx)[0],fresh=a && eventSource(s,args,a);
+      if (!P.eventMatches(ctx,fresh) || ctx.participants.counterparty!==fresh.asset.person.characterId) return null;
+      return eventQuote(s,args,a);
+    },
+    apply:function (s,args,q) {return E.commit(s,q);},
+    report:function (s,args,q) {return P.eventReport(s,q.request.actor,args.operation==='sell' ? q.cost : -q.cost);},
+    details:function (s,args,q) {
+      return [E.reason(q),P.eventMaterials(s,[{goodId:q.goodId,quantity:args.quantity}]),
+        q.buyer ? P.eventPayment(s,q.buyer,q.cost || 0) : FB.T('The original buyer account is unavailable.'),
+        FB.T('Quantity: {quantity}. Payment: {money:cost}. Remaining demand: {demand}; remaining budget: {money:budget}.',{
+        quantity:args.quantity,cost:q.cost || 0,demand:q.remainingDemand || 0,budget:q.remainingBudget || 0}),
+        FB.T('The existing supplier receives the actual buyer payment. Only the reviewed owned lots move; no stock or buyer funds are created.')];
+    }
+  });
   E.validate = function(s) {
     var r=s.production,economy=r && r.economy,out={ids:[],used:{},revision:0};
     function fail(){throw new Error(FB.T('Invalid saved production exchange or producer receipt.'));}

@@ -1,0 +1,1201 @@
+{
+  "name": "River constituency reviews",
+  "constituencyProfiles": {
+    "venetian_councils": {
+      "eligibility": {
+        "minAge": 18,
+        "minServiceYears": 0,
+        "skills": {},
+        "free": true
+      },
+      "selection": {
+        "threshold": 0.6,
+        "tie": "id",
+        "termDays": 90,
+        "nominationCost": 3
+      },
+      "recall": {
+        "threshold": 0.6,
+        "reasons": [
+          "neglect",
+          "overreach",
+          "ineligible"
+        ]
+      },
+      "obligations": {
+        "revenueRate": 0.7,
+        "levyRate": 0.5,
+        "maxDues": 12,
+        "maxLevy": 8000,
+        "reserve": 6
+      },
+      "reserved": [
+        "war",
+        "treaty",
+        "grant",
+        "extraordinary_tax",
+        "pledge",
+        "conversion"
+      ],
+      "powers": [
+        "ban",
+        "peace",
+        "revenue"
+      ],
+      "members": [
+        {
+          "id": "quayside_homes",
+          "name": "Quayside homes",
+          "weight": 3,
+          "basis": "custom",
+          "continuity": "institution",
+          "support": 85
+        },
+        {
+          "id": "caravan_homes",
+          "name": "Caravan homes",
+          "weight": 2,
+          "basis": "service",
+          "continuity": "institution",
+          "support": 65
+        }
+      ]
+    },
+    "siwa_oasis_1204": {
+      "eligibility": {
+        "minAge": 18,
+        "minServiceYears": 0,
+        "skills": {},
+        "free": true
+      },
+      "selection": {
+        "threshold": 0.6,
+        "tie": "id",
+        "termDays": 180,
+        "nominationCost": 1
+      },
+      "recall": {
+        "threshold": 0.6,
+        "reasons": [
+          "neglect",
+          "overreach",
+          "ineligible"
+        ]
+      },
+      "obligations": {
+        "revenueRate": 0.7,
+        "levyRate": 0.5,
+        "maxDues": 12,
+        "maxLevy": 8000,
+        "reserve": 6
+      },
+      "reserved": [
+        "war",
+        "treaty",
+        "grant",
+        "extraordinary_tax",
+        "pledge",
+        "conversion"
+      ],
+      "powers": [
+        "ban",
+        "peace",
+        "revenue"
+      ],
+      "members": [
+        {
+          "id": "quayside_homes",
+          "name": "Quayside homes",
+          "weight": 3,
+          "basis": "custom",
+          "continuity": "institution",
+          "support": 85
+        },
+        {
+          "id": "caravan_homes",
+          "name": "Caravan homes",
+          "weight": 2,
+          "basis": "service",
+          "continuity": "institution",
+          "support": 65
+        }
+      ]
+    }
+  },
+  "civicProfiles": {
+    "venice_1204": {
+      "name": "Quarterly harbor council",
+      "constituency": "venetian_councils",
+      "eligibility": {
+        "sex": "any",
+        "membership": true
+      },
+      "executive": "majority",
+      "interim": "council",
+      "offices": [
+        {
+          "id": "river_speaker",
+          "name": "River speaker",
+          "termDays": 180,
+          "salary": 0.5
+        }
+      ],
+      "consent": {
+        "war": 0.8,
+        "treaty": 0.6,
+        "extraordinary_tax": 0.8,
+        "pledge": 0.8,
+        "grant": 1,
+        "conversion": 1
+      }
+    }
+  },
+  "localCouncilMotions": {
+    "river_market_hearing": {
+      "name": "River market hearing",
+      "icon": "⚖",
+      "desc": "A fictional London alternative: all market stalls pay {money:4} for 30 days. Civic notables have three influence and traders one; the entire electorate must participate.",
+      "fx": {}
+    },
+    "river_market_reserve": {
+      "name": "River market reserve hearing",
+      "icon": "⚖",
+      "desc": "A fictional restriction with permission for York households. Exemption changes trading interests without creating a seat.",
+      "fx": {}
+    },
+    "river_stall_permission": {
+      "name": "River stall permission",
+      "desc": "A fictional paid permission with a short transition.",
+      "icon": "⚖",
+      "fx": {}
+    },
+    "river_guild_permission": {
+      "name": "River guild permission",
+      "desc": "A fictional paid grant with a guild exemption and a short permission term.",
+      "icon": "⚖",
+      "fx": {}
+    }
+  },
+  "industryLaws": {
+    "river_market_hearing": {
+      "schema": 1,
+      "motionId": "river_market_hearing",
+      "bookmarkId": "1204",
+      "provinceId": "london",
+      "enterpriseType": "market_stall_business",
+      "minYear": 1204,
+      "maxYear": 1220,
+      "mode": "license",
+      "fee": 4,
+      "permitDays": 30,
+      "durationDays": 90,
+      "transitionDays": 7,
+      "exemptions": [],
+      "voting": {
+        "town": {
+          "quorum": 1,
+          "threshold": 0.6,
+          "days": 15,
+          "members": [
+            {
+              "id": "river_traders",
+              "kind": "guild",
+              "weight": 1
+            },
+            {
+              "id": "river_notables",
+              "kind": "notable",
+              "weight": 3
+            }
+          ]
+        },
+        "estates": {
+          "quorum": 1,
+          "threshold": 0.6,
+          "days": 20
+        }
+      },
+      "relief": {
+        "days": 20,
+        "chance": 0
+      },
+      "offense": {
+        "id": "river_stall_violation",
+        "penalty": "fine",
+        "amount": 5,
+        "closure": false
+      }
+    },
+    "river_market_reserve": {
+      "schema": 1,
+      "motionId": "river_market_reserve",
+      "bookmarkId": "1204",
+      "provinceId": "london",
+      "enterpriseType": "market_stall_business",
+      "minYear": 1204,
+      "maxYear": 1220,
+      "mode": "prohibition",
+      "fee": 0,
+      "permitDays": 30,
+      "durationDays": 90,
+      "transitionDays": 7,
+      "exemptions": [
+        {
+          "kind": "home_province",
+          "id": "york",
+          "fee": 0,
+          "permission": true
+        }
+      ],
+      "voting": {
+        "town": {
+          "quorum": 0.75,
+          "threshold": 0.5,
+          "days": 15,
+          "members": [
+            {
+              "id": "river_traders",
+              "kind": "guild",
+              "weight": 1
+            },
+            {
+              "id": "river_notables",
+              "kind": "notable",
+              "weight": 3
+            }
+          ]
+        },
+        "estates": {
+          "quorum": 1,
+          "threshold": 0.6,
+          "days": 20
+        }
+      }
+    },
+    "river_stall_permission": {
+      "schema": 1,
+      "motionId": "river_stall_permission",
+      "bookmarkId": "1204",
+      "provinceId": "london",
+      "enterpriseType": "market_stall_business",
+      "minYear": 1204,
+      "maxYear": 1220,
+      "mode": "license",
+      "fee": 4,
+      "permitDays": 30,
+      "durationDays": 90,
+      "transitionDays": 7,
+      "exemptions": [],
+      "relief": {
+        "days": 20,
+        "chance": 0
+      },
+      "offense": {
+        "id": "river_stall_violation",
+        "penalty": "fine",
+        "amount": 5,
+        "closure": false
+      }
+    },
+    "river_guild_permission": {
+      "schema": 1,
+      "motionId": "river_guild_permission",
+      "bookmarkId": "1204",
+      "provinceId": "london",
+      "enterpriseType": "market_stall_business",
+      "minYear": 1204,
+      "maxYear": 1220,
+      "mode": "license",
+      "fee": 4,
+      "permitDays": 30,
+      "durationDays": 90,
+      "transitionDays": 7,
+      "exemptions": [
+        {
+          "kind": "guild",
+          "id": "merchant",
+          "fee": 0,
+          "permission": true
+        }
+      ],
+      "relief": {
+        "days": 20,
+        "chance": 0
+      },
+      "offense": {
+        "id": "river_stall_violation",
+        "penalty": "fine",
+        "amount": 5,
+        "closure": false
+      },
+      "grant": {
+        "profession": "merchant",
+        "payment": 6
+      }
+    }
+  },
+  "eventPacks": {
+    "river_civic_reviews": {
+      "eras": [
+        "high_medieval"
+      ],
+      "yearMin": 1204,
+      "yearMax": 1215
+    }
+  },
+  "events": [
+    {
+      "id": "river_civic_admit",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "civic_constituency",
+            "args": {
+              "kind": "civic",
+              "status": "admission"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "civic_office",
+            "args": {
+              "action": "admit",
+              "officeId": "river_speaker"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "principal"
+      ]
+    },
+    {
+      "id": "river_civic_nominate",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "civic_constituency",
+            "args": {
+              "kind": "civic",
+              "status": "nomination"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "civic_office",
+            "args": {
+              "action": "nominate",
+              "officeId": "river_speaker"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "principal"
+      ]
+    },
+    {
+      "id": "river_civic_resign",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "civic_constituency",
+            "args": {
+              "kind": "civic",
+              "status": "incumbent"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "civic_office",
+            "args": {
+              "action": "resign",
+              "officeId": "river_speaker"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "principal"
+      ]
+    },
+    {
+      "id": "river_civic_dues",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "civic_constituency",
+            "args": {
+              "kind": "civic",
+              "status": "incumbent"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "civic_budget",
+            "args": {
+              "operation": "extraordinary_tax",
+              "amount": 3,
+              "duration": 60
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "counterparty",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "principal",
+        "counterparty"
+      ]
+    },
+    {
+      "id": "river_civic_borrow",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "civic_constituency",
+            "args": {
+              "kind": "civic",
+              "status": "incumbent"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "civic_budget",
+            "args": {
+              "operation": "pledge",
+              "amount": 7,
+              "interest": 0.2,
+              "duration": 90,
+              "lenderRealmId": "england_1204"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "counterparty",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "principal",
+        "counterparty"
+      ]
+    },
+    {
+      "id": "river_civic_repay",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "civic_constituency",
+            "args": {
+              "kind": "civic",
+              "status": "debt_due"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "civic_budget",
+            "args": {
+              "operation": "repay"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "counterparty",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "principal",
+        "counterparty"
+      ]
+    },
+    {
+      "id": "river_assembly_nominate",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "civic_constituency",
+            "args": {
+              "kind": "assembly",
+              "status": "nomination"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "assembly_mandate",
+            "args": {
+              "action": "nominate"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "principal"
+      ]
+    },
+    {
+      "id": "river_assembly_resign",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "civic_constituency",
+            "args": {
+              "kind": "assembly",
+              "status": "incumbent"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "assembly_mandate",
+            "args": {
+              "action": "resign"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "principal"
+      ]
+    },
+    {
+      "id": "river_assembly_assent",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "civic_constituency",
+            "args": {
+              "kind": "assembly",
+              "status": "incumbent"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "assembly_mandate",
+            "args": {
+              "action": "assent",
+              "amount": 3,
+              "duration": 60
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "principal"
+      ]
+    },
+    {
+      "id": "river_town_begin",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "town",
+              "status": "available"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "town",
+              "action": "begin"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_town_ballot",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "town",
+              "status": "affected_proposal"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "town",
+              "action": "ballot",
+              "posture": "oppose"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_town_withdraw",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "town",
+              "status": "pending"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "town",
+              "action": "withdraw"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_estates_begin",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "estates",
+              "status": "available"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "estates",
+              "action": "begin"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_estates_ballot",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "estates",
+              "status": "affected_proposal"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "estates",
+              "action": "ballot",
+              "posture": "oppose"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_estates_withdraw",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "estates",
+              "status": "pending"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "industry_hearing",
+            "args": {
+              "definitionId": "river_market_hearing",
+              "consumer": "estates",
+              "action": "withdraw"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_permission",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "owned_enterprise_law",
+            "args": {
+              "definitionId": "river_stall_permission"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "industry_operation",
+            "args": {
+              "definitionId": "river_stall_permission",
+              "action": "pay",
+              "bindEnterprise": true
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "river_relief",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "industry_business",
+            "args": {
+              "definitionId": "river_stall_permission",
+              "status": "relief"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "industry_relief",
+            "args": {
+              "definitionId": "river_stall_permission"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator"
+      ]
+    },
+    {
+      "id": "river_enforcement_self",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "industry_enforcement",
+            "args": {
+              "definitionId": "river_stall_permission",
+              "audience": "self"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "industry_enforcement",
+            "args": {
+              "definitionId": "river_stall_permission",
+              "audience": "self"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator",
+        "principal"
+      ]
+    },
+    {
+      "id": "river_enforcement_other",
+      "pack": "river_civic_reviews",
+      "title": "A river constituency review",
+      "text": "Review the existing institution and exact current terms.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "industry_enforcement",
+            "args": {
+              "definitionId": "river_guild_permission",
+              "audience": "other"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Review this decision",
+          "desc": "Review costs and current authority before confirming. Cancel changes nothing.",
+          "review": {
+            "type": "industry_enforcement",
+            "args": {
+              "definitionId": "river_guild_permission",
+              "audience": "other"
+            },
+            "refusalOption": 1
+          }
+        },
+        {
+          "label": "Leave the decision open",
+          "effects": {}
+        }
+      ],
+      "participants": [
+        {
+          "slot": "operator",
+          "source": "context",
+          "required": true
+        },
+        {
+          "slot": "principal",
+          "source": "context",
+          "required": true
+        }
+      ],
+      "participantCards": [
+        "operator",
+        "principal"
+      ]
+    },
+    {
+      "id": "river_deadline",
+      "pack": "river_civic_reviews",
+      "title": "The short permission window",
+      "text": "An actual permission or transition ends soon.",
+      "trigger": {
+        "state": [
+          {
+            "reader": "industry_business",
+            "args": {
+              "definitionId": "river_stall_permission",
+              "status": "deadline"
+            }
+          }
+        ]
+      },
+      "options": [
+        {
+          "label": "Keep the present terms",
+          "effects": {}
+        }
+      ]
+    }
+  ]
+}
