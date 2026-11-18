@@ -23,6 +23,7 @@ const fixtureFiles = [
   ,{file:'federate_life.json',runtime:['data/events_federate_life.js','data/political_institutions.js','data/mobile_confederations.js','js/story_agreements.js','js/story_household_refuge.js']}
   ,{file:'works_technology.json',runtime:['data/events_works_technology.js','js/production.js','js/production_economy.js','js/site_resources.js','js/building_operations.js','js/building_profiles.js','js/building_seasons.js','js/maritime_work.js']}
   ,{file:'kingship_succession.json',runtime:['data/events_kingship_succession.js','js/lordships.js','js/government_selection.js','js/government_recognition.js','js/government_aristocracy.js','js/story_settlements.js','js/story_ruler_agenda.js','data/bookmark_800_history.js','data/story_ruler_agendas.js','data/story_ruler_agendas_800.js']}
+  ,{file:'civic_assembly.json',runtime:['data/events_civic_assembly.js','data/industry_laws.js','data/civic_profiles.js','data/assembly_polities.js','js/civic_transactions.js','js/government_civic.js','js/government_support.js','js/government_collective.js','js/actions.js','js/parliament.js','js/justice.js']}
 ];
 dependsOnRuntime(__filename,fixtureFiles.reduce(function (out,entry) {return out.concat(entry.runtime);},runtimeInputs));
 const directory = path.resolve(__dirname,'../fixtures/event-packs');

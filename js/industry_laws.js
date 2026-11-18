@@ -1328,14 +1328,25 @@
   FB.eventReviews.register('industry_operation',{
     owner:'industry_laws',
     args:{type:'object',fields:{definitionId:{type:'string',ref:{table:'industryLaws'}},
-      action:{enum:['pay','pause','resume','close']}}},
+      action:{enum:['pay','pause','resume','close']},bindEnterprise:{value:true,optional:'absent'}}},
+    bind:function (s,a) {
+      if (!a.bindEnterprise) return {};
+      const d = FBDATA.industryLaws[a.definitionId], e = (s.player.enterprises || []).filter(function (e) {
+        return e.type === d.enterpriseType && e.provinceId === d.provinceId && L.operation(s,e).laws.some(function (law) {return law.definitionId === a.definitionId;});
+      })[0];
+      const law = e && L.operation(s,e).laws.filter(function (law) {return law.definitionId === a.definitionId;})[0];
+      return law ? {enterpriseUid:e.uid,industryOperationLawId:law.lawId} : null;
+    },
     quote:function (s,args,ctx) {
+      if (args.bindEnterprise && (!ctx.enterpriseUid || !ctx.industryOperationLawId)) return null;
       const d = FBDATA.industryLaws[args.definitionId];
       const e = (s.player.enterprises || []).filter(function (e) {
         return e.type === d.enterpriseType && e.provinceId === d.provinceId &&
           (ctx.enterpriseUid === undefined || ctx.enterpriseUid === e.uid);
       })[0];
-      const q = e && L.quoteOperation(s,e,args.action,0);
+      const q = e && (!args.bindEnterprise || L.operation(s,e).laws.some(function (law) {
+        return law.definitionId === args.definitionId && law.lawId === ctx.industryOperationLawId;
+      })) && L.quoteOperation(s,e,args.action,0);
       return q ? {allowed:q.ready,operation:q} : null;
     },
     apply:function (s,args,q) {return L.commitOperation(s,q.operation);},
@@ -1349,6 +1360,142 @@
         province:place.name,amount:op.amount}),
         FB.T('The existing business review controls permission, operation and the original public payee. Ownership is retained.'),
         op.reason || FB.T('The current operating terms permit this decision.')];
+    }
+  });
+  function eventBusiness(s,id) {
+    return (s.player.enterprises || []).map(function (e) {
+      return {enterprise:e,law:L.operation(s,e).laws.filter(function (law) {return law.definitionId === id;})[0]};
+    }).filter(function (row) {return !!row.law;})[0] || null;
+  }
+  const definitionField = {type:'string',ref:{table:'industryLaws'}};
+  FB.eventStateReaders.register({id:'industry_business',system:'industry_laws',
+    args:{type:'object',fields:{definitionId:definitionField,status:{enum:['applicable','deadline','relief','uncovered']}}},
+    read:function (s,a) {
+      const b = eventBusiness(s,a.definitionId);
+      if (!b) return false;
+      if (a.status === 'applicable') return true;
+      if (a.status === 'deadline') return [b.law.permitEndTurn,b.law.grace ? b.law.transitionEndTurn : null].some(function (end) {
+        return end !== null && end > s.turn && end <= s.turn + 30;
+      });
+      if (a.status === 'uncovered') return !b.law.covered;
+      const q = L.quotePetition(s,b.enterprise.uid,b.law.lawId,'exemption');
+      return !!(q && q.ready);
+    }
+  });
+  function pendingHearing(s,a) {
+    return votes(s).filter(function (v) {return v.definitionId === a.definitionId && v.consumer === a.consumer && v.status === 'pending';})[0] || null;
+  }
+  function ownBench(s,a,v) {
+    return L.assemblyMembers(s,a.definitionId,a.consumer,v && v.repealId).filter(function (m) {return m.actorId === s.player.charId;})[0];
+  }
+  const eventHearingFields = {definitionId:definitionField,consumer:{enum:['town','estates']}};
+  function hearingDefinition(a,c) {
+    const d = (c.data || FBDATA).industryLaws[a.definitionId];
+    return !!(d && d.voting && d.voting[a.consumer]);
+  }
+  FB.eventStateReaders.register({id:'industry_hearing',system:'industry_laws',
+    args:{type:'object',fields:Object.assign({status:{enum:['available','pending','affected_proposal']}},eventHearingFields),test:hearingDefinition},
+    read:function (s,a) {
+      const v = pendingHearing(s,a), m = v && ownBench(s,a,v);
+      if (a.status === 'available') {const q = L.quoteAssembly(s,a.definitionId,a.consumer,'begin');return !!(q && q.ready);}
+      if (!v || !applicable(s,FBDATA.industryLaws[a.definitionId])) return false;
+      const q = L.quoteAssembly(s,a.definitionId,a.consumer,'ballot',v.id,m && m.id,'abstain');
+      if (!q || !q.valid || q.expired) return false;
+      return a.status === 'pending' ? true : (s.player.enterprises || []).some(function (e) {
+        const d = FBDATA.industryLaws[a.definitionId];return e.type === d.enterpriseType && e.provinceId === d.provinceId;
+      });
+    }
+  });
+  FB.eventReviews.register('industry_hearing',{
+    owner:'industry_laws',
+    args:{type:'object',fields:Object.assign({action:{enum:['begin','ballot','withdraw']},
+      posture:{enum:['support','oppose','abstain'],optional:'absent'}},eventHearingFields),
+      test:function (a,c) {return hearingDefinition(a,c) && (a.action === 'ballot' ? a.posture !== undefined : a.posture === undefined);}},
+    bind:function (s,a) {
+      const v = a.action !== 'begin' && pendingHearing(s,a), m = v && ownBench(s,a,v), d = FBDATA.industryLaws[a.definitionId];
+      return {industryVoteId:v ? v.id : null,industryBenchId:m ? m.id : null,
+        industryIssuerId:controller(s,d.provinceId),industryIssuerGeneration:FB.realmRulerGeneration(s,controller(s,d.provinceId))};
+    },quote:function (s,a,ctx) {
+      const d = FBDATA.industryLaws[a.definitionId], rid = controller(s,d.provinceId);
+      if (ctx.industryIssuerId !== rid || ctx.industryIssuerGeneration !== FB.realmRulerGeneration(s,rid)) return null;
+      if (a.action !== 'begin' && !ctx.industryVoteId) return null;
+      return (function (q) {return q && {allowed:q.ready,hearing:q};})(L.quoteAssembly(s,a.definitionId,a.consumer,a.action,
+        ctx.industryVoteId,ctx.industryBenchId,a.posture));
+    },apply:function (s,a,q) {return !!L.commitAssembly(s,q.hearing);},
+    details:function (s,a,q) {
+      const h = q.hearing, rules = h.terms.voting[a.consumer];
+      return [FB.T('Hearing window: {days} days. Payment: {money:amount}.',{days:rules.days,amount:0}),
+        FB.T('Proposed operating terms in {province}: {money:fee} per {days} days; law duration {duration} days; existing-business transition {transition} days.',{
+          province:FB.world.byId[h.terms.provinceId].name,fee:h.terms.fee,days:h.terms.permitDays,
+          duration:h.terms.durationDays,transition:h.terms.transitionDays}),
+        h.terms.mode === 'prohibition' ? FB.T('The proposal prohibits operation except where its declared exemptions supply permission.') :
+          FB.T('The proposal requires paid permission except where its declared exemptions supply coverage.'),
+        FB.T('Quorum: {quorum}%; support must exceed {threshold}% of cast influence.',{quorum:rules.quorum * 100,threshold:rules.threshold * 100}),
+        FB.T('Opening spends the existing annual session. A ballot speaks only for your current seat. Withdrawal retains the spent session. This review enacts and repeals nothing.'),h.reason];
+    }
+  });
+  FB.eventReviews.register('industry_relief',{
+    owner:'industry_laws',partySlots:{operator:true},args:{type:'object',fields:{definitionId:definitionField}},
+    bind:function (s,a) {
+      const b = eventBusiness(s,a.definitionId);
+      return b ? {participants:{operator:s.player.charId},enterpriseUid:b.enterprise.uid,industryLawId:b.law.lawId} : null;
+    },quote:function (s,a,ctx) {
+      const law = lawById(s,ctx.industryLawId);
+      if (!law || law.definitionId !== a.definitionId || L.lifecycle(s,law) !== 'active' ||
+          !ctx.participants || ctx.participants.operator !== s.player.charId) return null;
+      const q = L.quotePetition(s,ctx.enterpriseUid,law.id,'exemption');
+      return q && {allowed:q.ready,petition:q};
+    },apply:function (s,a,q) {return !!L.commitPetition(s,q.petition);},
+    details:function (s,a,q) {
+      const law = lawById(s,q.petition.lawId);
+      return [FB.T('Temporary exemption: up to {days} days; chance {chance}%. Payment: {money:amount}.',{
+        days:Math.max(0,Math.min(q.petition.days,law.endTurn - s.turn)),chance:q.petition.chance * 100,amount:0}),
+        FB.T('Refusal spends this business’s one request under the law. Cancel spends nothing. The original court decides; property and the law remain unchanged.'),q.petition.reason];
+    }
+  });
+  function eventViolation(s,a) {
+    return list(ledger(s).violations).filter(function (v) {
+      const law = lawById(s,v.lawId), c = s.chars[v.actorId];
+      return law && law.definitionId === a.definitionId && L.lifecycle(s,law) === 'active' && c && !c.dead &&
+        (a.audience === 'self' ? v.actorId === s.player.charId : v.actorId !== s.player.charId) &&
+        !v.resolved && v.output > 0 && !!v.caseId && list(s.justice && s.justice.offenses).some(function (o) {
+          return o.id === v.caseId && !o.closed && L.caseRecord(s,o) === v;
+        });
+    })[0] || null;
+  }
+  const enforcementFields = {definitionId:definitionField,audience:{enum:['self','other']}};
+  function enforcementQuote(s,a,ctx) {
+    const v = violationById(s,ctx.industryViolationId), law = v && lawById(s,v.lawId);
+    if (!v || !law || law.definitionId !== a.definitionId || L.lifecycle(s,law) !== 'active' || v.resolved || !(v.output > 0) || !v.caseId ||
+        ctx.participants.operator !== v.actorId || ctx.participants.principal !== s.player.charId ||
+        !living(s,v.actorId) || !living(s,s.player.charId) || s.player.dead ||
+        (a.audience === 'self' ? v.actorId !== s.player.charId : v.actorId === s.player.charId || court(s,law) !== s.player.charId)) return null;
+    const q = a.audience === 'self' ? L.quoteComplaint(s,v.id) : FB.justiceArrestProjection(s,s.player.charId,v.actorId,v.caseId);
+    return q && {allowed:q.ready,enforcement:q,violationId:v.id,turn:s.turn,
+      signature:FB.mods.fingerprint({law:law,v:v,justice:s.justice,controller:controller(s,law.terms.provinceId),
+        generation:FB.realmRulerGeneration(s,law.issuer.realmId),player:s.player})};
+  }
+  FB.eventStateReaders.register({id:'industry_enforcement',system:'industry_laws',
+    args:{type:'object',fields:enforcementFields},
+    read:function (s,a) {
+      const v = eventViolation(s,a), law = v && lawById(s,v.lawId);
+      return !!(v && (a.audience === 'self' || court(s,law) === s.player.charId));
+    }
+  });
+  FB.eventReviews.register('industry_enforcement',{
+    owner:'industry_laws',partySlots:{operator:true,principal:true},args:{type:'object',fields:enforcementFields},
+    bind:function (s,a) {const v = eventViolation(s,a);return v ? {
+      participants:{operator:v.actorId,principal:s.player.charId},industryViolationId:v.id} : null;},
+    quote:enforcementQuote,apply:function (s,a,q) {
+      return a.audience === 'self' ? L.answerComplaint(s,q.enforcement) :
+        FB.justiceAttemptArrest(s,q.enforcement.actorId,q.enforcement.targetId,q.enforcement.offenseId,q.enforcement.courtKind).ok;
+    },details:function (s,a,q) {
+      const v = violationById(s,q.violationId), law = lawById(s,v.lawId), penalty = law.terms.offense;
+      return [FB.T('Answer or pursue an existing material-evidence complaint. This requests the ordinary arrest demand and hearing; it imposes no judgment.'),
+        FB.T('Possible fine after a separate judgment: {money:amount}.',{amount:penalty.amount}),
+        penalty.closure || penalty.penalty !== 'fine' ? FB.T('A separate judgment may also close or suspend the operation. Ownership is retained.') :
+          FB.T('These declared terms do not close the operation on a fine judgment.'),
+        FB.T('Payment: {money:amount}. The operator may answer through the existing justice procedure.',{amount:0})];
     }
   });
 })();
