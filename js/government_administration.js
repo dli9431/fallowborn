@@ -212,7 +212,7 @@
     var input = q.input;
     // All authorityAppoint preconditions were quoted before any debit or write.
     var result = FB.authorityAppoint(s, { officeId:input.officeId, institutionId:input.institutionId,
-      appointer:{ kind:'realm', id:input.institutionId }, holder:{ kind:'character', id:input.holderId },
+      appointer:FB.political.realmReference(input.institutionId), holder:{ kind:'character', id:input.holderId },
       scope:input.scope, endTurn:q.endTurn });
     if (!result) return false;
     var row = rows(s).filter(function (office) { return office.id === result.id; })[0];
@@ -404,7 +404,7 @@
   levy.settlementBase = function (s,rid,c) { return baseLevy(s,rid,c) * serviceFactor(s,rid,c.provinceId); };
   levy.subjectRate = function () { return 0; };
   levy.subjectContribution = function () { return 0; };
-  levy.mayCall = function (s,rid) { return FB.treasuryAvailable(s,rid) > 0 && Q.consent(s,{kind:'realm',id:rid},'levy',{}).allowed; };
+  levy.mayCall = function (s,rid) { return FB.treasuryAvailable(s,rid) > 0 && Q.consent(s,FB.political.realmReference(rid),'levy',{}).allowed; };
   G.register('levy','public_service',levy);
   var revenue = Object.assign({},G.strategy('revenue','demesne_revenue'));
   revenue.subjectContribution = function () { return 0; };
@@ -467,7 +467,7 @@
     if (!FB.administrationProfile(s,rid)) return advance(s,rid,opts);
     opts = opts || {};
     if (rid === 'player') return FB.publicAccede(s,FB.publicAccessionQuote(s,
-      {kind:'realm',id:rid},rid,opts.cause || 'death'));
+      FB.political.realmReference(rid),rid,opts.cause || 'death'));
     if (!s.realms[rid].succession) return null;
     FB.refreshRealmSuccession(s,rid);
     if (rid !== 'player') FB.publicRecognitionAI(s,rid);
@@ -485,7 +485,7 @@
     if (!candidates.length && FB.administrationProfile(s,rid).accession.officeCandidates) {
       var offices = FB.publicOfficeRows(s,rid);
       for (var office of offices) {
-        var nomination = R.nominationQuote(s,{kind:'realm',id:rid},rid,office.holder.id);
+        var nomination = R.nominationQuote(s,FB.political.realmReference(rid),rid,office.holder.id);
         if (nomination.allowed && R.nominate(s,nomination)) { candidates = R.candidates(s,rid); break; }
       }
     }
@@ -507,7 +507,7 @@
     if (rid === 'player') return;
     var profile = FB.administrationProfile(s,rid);
     if (!profile) return;
-    var actor = {kind:'realm',id:rid};
+    var actor = FB.political.realmReference(rid);
     rows(s).filter(function (row) { return row.institutionId === rid && row.publicTerms; }).forEach(function (row) {
       if (row.publicTerms.arrears) {
         var audit = FB.publicOfficeQuote(s,actor,row.id,'audit');

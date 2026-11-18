@@ -249,7 +249,7 @@
   function members(s,rid) {
     var data = A.state(s,rid);
     if (!data) return [];
-    return [{ id:'court', principal:{kind:'realm',id:rid}, scope:{kind:'realm',id:rid}, basis:'designation',weight:1,active:true }]
+    return [{ id:'court', principal:FB.political.realmReference(rid), scope:FB.political.realmReference(rid), basis:'designation',weight:1,active:true }]
       .concat(A.constituency(s,rid).map(function (m) {
         return { id:m.id, principal:m.principal, scope:copy(m.scope), basis:'hereditary_interest',
           weight:m.weight, active:m.active };
@@ -489,7 +489,7 @@
     var data = A.state(s,rid), p = A.profile(s,rid), reigning = p && current(s,rid);
     if (!data || !p || !reigning || !data.regency && p.openingStewardActorId === undefined) return;
     if (s.date.year - reigning.born >= p.minimumAge) data.regency = null;
-    else A.steward(s,A.stewardQuote(s,{kind:'realm',id:rid},rid));
+    else A.steward(s,A.stewardQuote(s,FB.political.realmReference(rid),rid));
   }
   var settle = FB.publicOfficeSettle;
   FB.publicOfficeSettle = function (s,snapshot,period,playerOnly) {
@@ -497,7 +497,7 @@
       if ((rid === 'player') !== !!playerOnly) return;
       var data = A.state(s,rid);
       if (rid !== 'player' && data && !A.profile(s,rid) && s.realms[rid] && s.realms[rid].alive) data.interests.forEach(function (m) {
-        A.inherit(s,A.inheritanceQuote(s,{kind:'realm',id:rid},rid,m.id));
+        A.inherit(s,A.inheritanceQuote(s,FB.political.realmReference(rid),rid,m.id));
       });
       maintainRegency(s,rid);
     });
@@ -527,7 +527,7 @@
         if (!live(s,c) || c.dyn !== interest.dynasty) throw new Error('Missing declared hereditary household');
         var at = {kind:'county',id:interest.provinceId};
         var grant = FB.authorityAppoint(s,{officeId:interest.officeId,institutionId:rid,
-          appointer:{kind:'realm',id:rid},holder:{kind:'character',id:cid},scope:at});
+          appointer:FB.political.realmReference(rid),holder:{kind:'character',id:cid},scope:at});
         if (!grant) throw new Error('Invalid hereditary jurisdiction');
         var office = appointments(s).filter(function (a) { return a.id === grant.id; })[0];
         office.publicTerms = {schema:1,kind:'revenue_service',source:{kind:'county_tax',provinceId:at.id},
@@ -535,7 +535,7 @@
           arrears:0,unpaid:0,lastPeriod:Math.floor(s.turn / 90),last:null};
         office.provincialTerms = {schema:1,interestId:interest.id,levy:p.defaultTerms.levy,status:'assent',changedTurn:s.turn};
         var ids = ['peace','consent'].map(function (power) {
-          var right = FB.authorityEstablishRight(s,{issuer:{kind:'realm',id:rid},beneficiary:copy(office.holder),scope:at,
+          var right = FB.authorityEstablishRight(s,{issuer:FB.political.realmReference(rid),beneficiary:copy(office.holder),scope:at,
             power:power,basis:'tenure',basisRef:'hereditary:' + id + ':' + interest.id});
           if (!right) throw new Error('Invalid hereditary right');
           return right.id;
@@ -552,7 +552,7 @@
         var input = {institutionId:rid,officeId:FB.administrationProfile(s,rid).governor,
           holderId:s.bookmarkSetup.actors[p.openingGovernor.actorId],provinceId:p.openingGovernor.provinceId,
           scope:{kind:'county',id:p.openingGovernor.provinceId}};
-        var q = FB.publicAppointmentQuote(s,{kind:'realm',id:rid},input);
+        var q = FB.publicAppointmentQuote(s,FB.political.realmReference(rid),input);
         if (!q.allowed || !FB.publicAppoint(s,q)) throw new Error('Invalid declared provincial governor');
       }
     });
@@ -588,14 +588,14 @@
     if (data.lastPeriod === period) return;
     data.lastPeriod = period;
     data.interests.forEach(function (m) {
-      var heir = A.inheritanceQuote(s,{kind:'realm',id:rid},rid,m.id);
+      var heir = A.inheritanceQuote(s,FB.political.realmReference(rid),rid,m.id);
       if (heir.allowed) A.inherit(s,heir);
       var voice = A.constituency(s,rid).filter(function (v) { return v.id === m.id; })[0];
       if (voice && voice.active && FB.countyPopularSupport(s,m.scope.id) < p.refusalSupport && voice.terms.status === 'assent') {
         A.apply(s,A.provincialQuote(s,voice.principal,rid,m.id,'withhold'));
       } else if (voice && voice.active && voice.terms.status === 'withheld' && FB.aiDecisions.willing(s,rid,'government','negotiationWillingness')) {
         var preference = FB.aiDecisions.parameters(s,rid,'government');
-        var q = A.provincialQuote(s,{kind:'realm',id:rid},rid,m.id,'negotiate',
+        var q = A.provincialQuote(s,FB.political.realmReference(rid),rid,m.id,'negotiate',
           {revenue:Math.max(p.minimumRevenue,p.defaultTerms.revenue-preference.provincialConcession),
             levy:Math.max(p.minimumLevy,p.defaultTerms.levy-preference.provincialConcession)});
         if (q.allowed) A.apply(s,q);
@@ -889,7 +889,7 @@
       });
       Object.keys(row.recognition || {}).forEach(function (id) {
         var vote = row.recognition[id], m = data.interests.filter(function (entry) { return entry.id === id; })[0];
-        var principal = id === 'court' ? {kind:'realm',id:rid} : m && assignment(s,m) && assignment(s,m).holder;
+        var principal = id === 'court' ? FB.political.realmReference(rid) : m && assignment(s,m) && assignment(s,m).holder;
         var limits = p.interests.filter(function (entry) { return entry.id === id; })[0];
         if (id !== 'court' && !data.interests.some(function (m) { return m.id === id; }) ||
             !vote || !same(vote.principal,principal) || !own(vote,'terms') || vote.generation > FB.realmRulerGeneration(s,rid) ||

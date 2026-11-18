@@ -1,18 +1,18 @@
 {
-  "total": 5376,
+  "total": 5374,
   "categories": {
     "builtin_content_binding": 149,
     "builtin_event": 224,
-    "builtin_handler": 737,
+    "builtin_handler": 742,
     "builtin_strategy": 2,
     "effect_ledger": 95,
     "legacy_default": 52,
     "presentation_token": 69,
-    "protocol_enum": 1977,
+    "protocol_enum": 2018,
     "saved_identity": 54,
-    "schema_token_collision": 1513,
-    "system_capability": 271,
+    "schema_token_collision": 1453,
+    "system_capability": 280,
     "technology_capability": 20,
-    "trait_mechanic": 213
+    "trait_mechanic": 216
   }
 }

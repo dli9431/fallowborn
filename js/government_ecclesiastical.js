@@ -34,13 +34,13 @@
   E.chapter = function (s,rid) {
     var r = E.row(s,rid), p = E.profile(s,rid);
     var def = r && FB.localInstitutionDefinitions(s)[r.institutionId];
-    return !!p && (!p.chapter || !!(def && def.chapterId && FB.localInstitutionConsent(s,def.chapterId,{ kind:'realm',id:rid })));
+    return !!p && (!p.chapter || !!(def && def.chapterId && FB.localInstitutionConsent(s,def.chapterId,FB.political.realmReference(rid))));
   };
   E.recognized = function (s,rid) {
     var p = E.profile(s,rid), c = E.incumbent(s,rid), realm = s.realms[rid];
     if (!p || !c || c.captive || c.exiled || FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) return false;
     if (!p.layRecognition) return true;
-    return !!realm.liege && FB.legitimacyByMandate(s,{ kind:'character',id:c.id },{ kind:'realm',id:rid },'court').some(function (proof) {
+    return !!realm.liege && FB.legitimacyByMandate(s,{ kind:'character',id:c.id },FB.political.realmReference(rid),'court').some(function (proof) {
       return proof.id === E.row(s,rid).temporalRecognitionId && proof.issuer.kind === 'realm' && proof.issuer.id === realm.liege;
     });
   };
@@ -80,7 +80,7 @@
       var actor = { kind:'character', id:s.player.charId };
       if (operation !== 'resign' && (operation === 'remove' || profile.selection.policy === 'patron') &&
           FB.realmIdForRulerCharacter(s, s.player.charId) === rid)
-        actor = { kind:'realm', id:rid };
+        actor = FB.political.realmReference(rid);
       if (Object.keys(t).length && operation !== 'appoint') return null;
       return FB.religiousInstitutionQuote(s, r.institutionId, actor,
         operation === 'appoint' ? 'appoint' : 'vacate', operation === 'appoint' ? t : {});
@@ -103,7 +103,7 @@
       if (!p.layRecognition || E.recognized(s,rid)) reason = reason || 'already_recognized';
       var liege = s.realms[rid].liege;
       if (!liege || !s.realms[liege] || !s.realms[liege].alive ||
-          !Q.consent(s,{ kind:'realm',id:liege },'treaty',{ kind:'realm',id:rid }).allowed) reason = reason || 'lay_refusal';
+          !Q.consent(s,FB.political.realmReference(liege),'treaty',FB.political.realmReference(rid)).allowed) reason = reason || 'lay_refusal';
       cost = p.recognitionCost;
     } else reason = reason || 'unsupported';
     if (appointment && p.source === 'institution_profile') cost = appointment.cost;
@@ -121,12 +121,12 @@
       if (!FB.governmentSelection.commitSource(s,q.source)) return false;
       var row = E.row(s,rid), old = (s.authority.recognitions || []).filter(function (proof) { return proof.id === row.temporalRecognitionId; })[0];
       if (old) {
-        old.subject = { kind:'character',id:c.id }; old.issuer = { kind:'realm',id:s.realms[rid].liege };
+        old.subject = { kind:'character',id:c.id }; old.issuer = FB.political.realmReference(s.realms[rid].liege);
         old.issuerGeneration = FB.realmRulerGeneration(s,old.issuer.id); old.status = 'active'; old.startTurn = s.turn; old.endTurn = null;
         success = old;
       } else {
-        success = FB.authorityRecognize(s,{ source:FB.legitimacySourceFor(s,'court',{kind:'realm',id:s.realms[rid].liege}),issuer:{ kind:'realm',id:s.realms[rid].liege },
-          subject:{ kind:'character',id:c.id },scope:{ kind:'realm',id:rid } });
+        success = FB.authorityRecognize(s,{ source:FB.legitimacySourceFor(s,'court',FB.political.realmReference(s.realms[rid].liege)),issuer:FB.political.realmReference(s.realms[rid].liege),
+          subject:{ kind:'character',id:c.id },scope:FB.political.realmReference(rid) });
         if (success) row.temporalRecognitionId = success.id;
       }
     } else success = E.profile(s,rid).source === 'institution_profile' ?

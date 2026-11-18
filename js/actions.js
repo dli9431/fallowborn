@@ -88,13 +88,13 @@ window.FB = window.FB || {};
   }
   function administrationStandingTarget(state) {
     if (state.player.liege) {
-      return { kind:'realm', id:state.player.liege };
+      return FB.political.realmReference(state.player.liege);
     }
     const localRealm = (state.holder &&
       state.holder[state.player.provinceId]) ||
       (state.owner && state.owner[state.player.provinceId]);
     if (localRealm && localRealm !== 'player') {
-      return { kind:'realm', id:localRealm };
+      return FB.political.realmReference(localRealm);
     }
     const lord = FB.getRole(state, 'lord', false);
     return lord ? { kind:'character', id:lord.id } : null;
@@ -327,7 +327,7 @@ window.FB = window.FB || {};
           FB.playerGreatHolyWarHostActive(s))) {
         const command = FB.activeMilitaryCommand && FB.activeMilitaryCommand(s);
         const patronId = command ? command.patronRealmId : s.player.liege;
-        FB.adjustStanding(s, { kind:'realm', id:patronId }, FBDATA.actionPolicies.lead_host.standing / D,
+        FB.adjustStanding(s, FB.political.realmReference(patronId), FBDATA.actionPolicies.lead_host.standing / D,
           'focus:lead_host');
       }
       if (skillDch(FBDATA.actionPolicies.lead_host.trainingChance)) skillUp(s, 'mar');
@@ -1308,12 +1308,12 @@ window.FB = window.FB || {};
     }
     if (status.oldFoldRealmIds.length) {
       for (let i = 0; i < status.oldFoldRealmIds.length; i++) {
-        FB.adjustStanding(state, { kind:'realm', id:status.oldFoldRealmIds[i] },
+        FB.adjustStanding(state, FB.political.realmReference(status.oldFoldRealmIds[i]),
           status.foldStanding, kind === 'faith' ? 'deed:convert_faith' : 'deed:adopt_culture');
       }
     }
     for (let i = 0; i < status.vassalIds.length; i++) {
-      FB.adjustStanding(state, { kind:'realm', id:status.vassalIds[i] },
+      FB.adjustStanding(state, FB.political.realmReference(status.vassalIds[i]),
         status.vassalStanding, kind === 'faith' ? 'deed:convert_faith' : 'deed:adopt_culture');
     }
 
@@ -5577,7 +5577,7 @@ window.FB = window.FB || {};
   }
   function routineStandingTarget(state, step) {
     if (step.role === 'administration') return administrationStandingTarget(state);
-    if (step.role === 'liege' || step.role === 'liegeOrLord' && state.player.liege) return state.player.liege ? { kind:'realm', id:state.player.liege } : null;
+    if (step.role === 'liege' || step.role === 'liegeOrLord' && state.player.liege) return state.player.liege ? FB.political.realmReference(state.player.liege) : null;
     const c = FB.getRole(state, step.role === 'liegeOrLord' ? 'lord' : step.role, step.create);
     return c ? { kind:'character', id:c.id } : null;
   }
@@ -6920,7 +6920,7 @@ window.FB = window.FB || {};
       directVassals.push({
         realmId:rid,
         countyIds:FB.realmHeldCounties(state, rid).slice().sort(),
-        standing:FB.standingOf(state, { kind:'realm', id:rid }),
+        standing:FB.standingOf(state, FB.political.realmReference(rid)),
         taxContribution:FB.vassalTaxContribution(state, rid),
         levyContribution:FB.vassalLevyContribution
           ? FB.vassalLevyContribution(state, rid) : 0,
@@ -7579,7 +7579,7 @@ window.FB = window.FB || {};
           }),
           FB.T('{relation} · Standing {standing}', {
             relation:relation,
-            standing:Math.round(FB.standingOf(state, { kind:'realm', id:rid }))
+            standing:Math.round(FB.standingOf(state, FB.political.realmReference(rid)))
           }),
           '✉', { realmId:rid }
         ));
@@ -7757,7 +7757,7 @@ window.FB = window.FB || {};
   }
 
   FB.faithAdjustedRealmStanding = function (state, rid, stored) {
-    return faithAdjustedStanding(state, { kind:'realm', id:rid }, stored);
+    return faithAdjustedStanding(state, FB.political.realmReference(rid), stored);
   };
 
   FB.markRealmStandingFaithBaseline = function (state, rid) {
@@ -7769,7 +7769,7 @@ window.FB = window.FB || {};
       p.realmStandingFaithBases = {};
     }
     const baseline = FB.standingFaithBaseline(
-      state, { kind:'realm', id:rid });
+      state, FB.political.realmReference(rid));
     p.realmStandingFaithBases[rid] = baseline;
     return baseline;
   };
@@ -7805,7 +7805,7 @@ window.FB = window.FB || {};
     for (const rid in realms) {
       if (rid === 'player' || !realms[rid] || !realms[rid].alive) continue;
       const currentBase = FB.standingFaithBaseline(
-        state, { kind:'realm', id:rid });
+        state, FB.political.realmReference(rid));
       const oldBase = Object.prototype.hasOwnProperty.call(oldBases, rid) &&
         isFinite(Number(oldBases[rid])) ? Number(oldBases[rid]) : 0;
       const stored = rid === p.liege ? p.liegeOp :
@@ -7840,7 +7840,7 @@ window.FB = window.FB || {};
       if (!c || c.dead || c.id === state.player.charId) return 0;
       const rid = FB.realmIdForRulerCharacter &&
         FB.realmIdForRulerCharacter(state, c);
-      if (rid) return FB.standingOf(state, { kind:'realm', id:rid });
+      if (rid) return FB.standingOf(state, FB.political.realmReference(rid));
       return faithAdjustedStanding(state, target, c.opinion);
     }
     if (target.kind === 'realm') {
@@ -7872,7 +7872,7 @@ window.FB = window.FB || {};
       const rid = FB.realmIdForRulerCharacter &&
         FB.realmIdForRulerCharacter(state, c);
       if (rid) {
-        return FB.adjustStanding(state, { kind:'realm', id:rid }, amount,
+        return FB.adjustStanding(state, FB.political.realmReference(rid), amount,
           source);
       }
       c.opinion = FB.clamp(FB.standingOf(state, target) + amount, -100, 100);
@@ -7916,9 +7916,9 @@ window.FB = window.FB || {};
       return rid;
     }
     const oldStanding = oldRid && oldRid !== 'player'
-      ? FB.standingOf(state, { kind:'realm', id:oldRid }) : 0;
+      ? FB.standingOf(state, FB.political.realmReference(oldRid)) : 0;
     const nextStanding = rid
-      ? FB.standingOf(state, { kind:'realm', id:rid }) : 0;
+      ? FB.standingOf(state, FB.political.realmReference(rid)) : 0;
     void source;
     p.liege = rid;
     p.liegeOp = 0;
@@ -7986,17 +7986,17 @@ window.FB = window.FB || {};
   /* Historical names remain compatibility adapters for saves, events, and
      mods. New code should use the typed Standing interface above. */
   FB.liegeOpOf = function (state, rid) {
-    return FB.standingOf(state, { kind:'realm', id:rid });
+    return FB.standingOf(state, FB.political.realmReference(rid));
   };
   FB.adjustLiegeOp = function (state, rid, amt) {
-    return FB.adjustStanding(state, { kind:'realm', id:rid }, amt,
+    return FB.adjustStanding(state, FB.political.realmReference(rid), amt,
       'legacy:adjustLiegeOp');
   };
   FB.realmOpinionOf = function (state, rid) {
-    return FB.standingOf(state, { kind:'realm', id:rid });
+    return FB.standingOf(state, FB.political.realmReference(rid));
   };
   FB.adjustRealmOpinion = function (state, rid, amt) {
-    return FB.adjustStanding(state, { kind:'realm', id:rid }, amt,
+    return FB.adjustStanding(state, FB.political.realmReference(rid), amt,
       'legacy:adjustRealmOpinion');
   };
 
@@ -8033,12 +8033,12 @@ window.FB = window.FB || {};
 
   FB.rulerGiftStatus = function (state, rid) {
     const realm = state.realms && state.realms[rid];
-    const access = FB.rankAccessStatus(state, { kind:'realm', id:rid });
+    const access = FB.rankAccessStatus(state, FB.political.realmReference(rid));
     const baseCost = realm ? FB.rulerCashGiftCost(state, rid) : 0;
     const cost = FB.rankAccessCashCost(state,
-      { kind:'realm', id:rid }, baseCost);
+      FB.political.realmReference(rid), baseCost);
     const standing = FB.rankAccessStandingEffect(state,
-      { kind:'realm', id:rid }, FB.rulerCashGiftOpinion());
+      FB.political.realmReference(rid), FB.rulerCashGiftOpinion());
     const days = realm && FB.rulerGiftDaysRemainingSnapshot
       ? FB.rulerGiftDaysRemainingSnapshot(state, rid) : 0;
     const delivery = realm && FB.giftDeliveryPreview
@@ -8100,7 +8100,7 @@ window.FB = window.FB || {};
       });
     }
     if (!FB.treasuryTransferPersonal(state, 'player', FB.treasuryCounterparty(state, rid), cost)) return false;
-    const standing = FB.adjustStanding(state, { kind:'realm', id:rid },
+    const standing = FB.adjustStanding(state, FB.political.realmReference(rid),
       boost, 'gift:cash');
     if (FB.noteRulerGift) FB.noteRulerGift(state, rid);
     if (FB.rulerGiftUsesFavor(state, rid)) {
@@ -8128,7 +8128,7 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     if (!r || !r.alive) return;
     const m = state.chars[p.charId];
-    FB.adjustStanding(state, { kind:'realm', id:rid },
+    FB.adjustStanding(state, FB.political.realmReference(rid),
       FBDATA.balance.homageOpinion + Math.floor(FB.skillOf(m, 'dip') / 2),
       'deed:homage');
     p.prestige += 2;
@@ -8180,7 +8180,7 @@ window.FB = window.FB || {};
     state.realms.player.war = null;
     FB.invalidateRealmCache();
     for (const pid of FB.realmTerritory(state, 'player')) state.owner[pid] = newTop;
-    FB.adjustStanding(state, { kind:'realm', id:rid }, 20,
+    FB.adjustStanding(state, FB.political.realmReference(rid), 20,
       'deed:swear_fealty');
     FB.invalidateRealmCache();
     FB.news(state, FB.msg('news.action.fealty',
@@ -8266,7 +8266,7 @@ window.FB = window.FB || {};
         until:active.until
       };
     }
-    const value = FB.standingOf(state, { kind:'realm', id:rid });
+    const value = FB.standingOf(state, FB.political.realmReference(rid));
     if (value < 40) {
       return {
         ready:false,
@@ -8292,7 +8292,7 @@ window.FB = window.FB || {};
       state.player.vassalLevyFavors = {};
     }
     state.player.vassalLevyFavors[rid] = state.turn + days;
-    FB.adjustStanding(state, { kind:'realm', id:rid }, -15,
+    FB.adjustStanding(state, FB.political.realmReference(rid), -15,
       'deed:exceptional_levy');
     FB.news(state, FB.msg('news.realm.vassal_levy_favor',
       '🛡 {realm} promises an exceptional levy for one year; Standing falls by 15.',
@@ -8477,7 +8477,7 @@ window.FB = window.FB || {};
       state.owner[pid] = owner;
     }
     const standing = projection.standingGain;
-    FB.adjustStanding(state, { kind:'realm', id:rid }, standing,
+    FB.adjustStanding(state, FB.political.realmReference(rid), standing,
       'deed:grant_existing_vassal');
     FB.invalidateRealmCache();
     options = options || {};
@@ -8610,7 +8610,7 @@ window.FB = window.FB || {};
       else if (revivedCourt && FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
     }
     installFeudalContract(state, vid, options.charterId, options.tenure);
-    FB.adjustStanding(state, { kind:'realm', id:vid }, preview.initialStanding,
+    FB.adjustStanding(state, FB.political.realmReference(vid), preview.initialStanding,
       'deed:grant_county');
     FB.invalidateRealmCache();
     if (recipient) {
@@ -8702,7 +8702,7 @@ window.FB = window.FB || {};
       else if (revivedCourt && FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
     }
     installFeudalContract(state, vid, options.charterId, options.tenure);
-    FB.adjustStanding(state, { kind:'realm', id:vid }, preview.initialStanding,
+    FB.adjustStanding(state, FB.political.realmReference(vid), preview.initialStanding,
       'deed:grant_duchy');
     FB.invalidateRealmCache();
     if (recipient) {
@@ -8825,9 +8825,9 @@ window.FB = window.FB || {};
         for (const pid of FB.realmHeldCounties(state, vid)) FB.addModifier(state, 'fiscal_extraction', pid);
       }
       eligible++;
-      FB.adjustStanding(state, { kind:'realm', id:vid }, -15,
+      FB.adjustStanding(state, FB.political.realmReference(vid), -15,
         'deed:demand_taxes');
-      if (FB.standingOf(state, { kind:'realm', id:vid }) <= -50) {
+      if (FB.standingOf(state, FB.political.realmReference(vid)) <= -50) {
         FB.queueEvent(state, 'vassal_revolt', { rid:vid });
       }
     }
@@ -8982,7 +8982,7 @@ window.FB = window.FB || {};
     const amount = FB.foreignPolicyAmount(state);
     for (const rid of active) {
       if (rid === warEnemy) continue;
-      FB.adjustStanding(state, { kind:'realm', id:rid },
+      FB.adjustStanding(state, FB.political.realmReference(rid),
         policy[rid] * amount, 'foreign_policy');
     }
   };
@@ -9333,7 +9333,7 @@ window.FB = window.FB || {};
     const diplomacy = FB.skillSnapshot
       ? FB.skillSnapshot(state, m, 'dip') : FB.skillOf(m, 'dip');
     let chance = 0.35 + diplomacy * 0.035 + p.prestige / 600 +
-      FB.standingOf(state, { kind:'realm', id:rid }) /
+      FB.standingOf(state, FB.political.realmReference(rid)) /
         B.foreignOpinionEnvoyDivisor;
     if (FB.playerExcommunicated && FB.playerExcommunicated(state) &&
         FB.faithHasSystem(FB.realmReligionId(state, rid), 'papacy', state)) {
@@ -9369,7 +9369,7 @@ window.FB = window.FB || {};
       const r = state.realms[rid];
       if (rid === 'player' || !r.alive || r.liege || !FB.realmRank.isRoyal(r, state) || r.war) continue;
       if (FB.allianceOf(state, rid) ||
-          FB.standingOf(state, { kind:'realm', id:rid }) < 60) continue;
+          FB.standingOf(state, FB.political.realmReference(rid)) < 60) continue;
       if (!FB.realmsAdjacent(state, 'player', rid)) continue;
       out.push(rid);
     }
@@ -9417,7 +9417,7 @@ window.FB = window.FB || {};
     const mine = state.realms && state.realms.player;
     const realm = state.realms && state.realms[rid];
     const standing = realm
-      ? FB.standingOf(state, { kind:'realm', id:rid }) : 0;
+      ? FB.standingOf(state, FB.political.realmReference(rid)) : 0;
     const status = {
       relevant:false,
       ready:false,
@@ -9936,7 +9936,7 @@ window.FB = window.FB || {};
       const candidate = options.county ? candidates.filter(function (q) { return q.provinceId === options.county; })[0] : candidates[0];
       grantorId = candidate && candidate.grantorId || null;
       site = candidate ? { provinceId:candidate.provinceId, settlement:0 } : null;
-      const standing = grantorId ? FB.standingOf(state, { kind:'realm', id:grantorId }) : 0;
+      const standing = grantorId ? FB.standingOf(state, FB.political.realmReference(grantorId)) : 0;
       if (!FB.landedBaron(state) || !candidate) {
         eligible = false;
         reason = FB.T('No higher ruler can grant a county. Their seat, last personal county and {term:vassal.other}’ counties are protected.');
@@ -10975,7 +10975,7 @@ window.FB = window.FB || {};
       const rid = ids[i];
       const realm = state.realms[rid];
       if (!realm || !realm.alive) continue;
-      const before = FB.standingOf(state, { kind:'realm', id:rid });
+      const before = FB.standingOf(state, FB.political.realmReference(rid));
       const after = FB.clamp(before + intended, -100, 100);
       out.push({
         realmId:rid,
@@ -11003,7 +11003,7 @@ window.FB = window.FB || {};
 
   FB.warEnemyStandingPreview = function (state, enemy, projectedStanding) {
     const current = projectedStanding === undefined
-      ? FB.standingOf(state, { kind:'realm', id:enemy })
+      ? FB.standingOf(state, FB.political.realmReference(enemy))
       : Number(projectedStanding) || 0;
     const configured = FBDATA.balance.warEnemyStandingCeiling;
     const ceiling = FB.clamp(configured === undefined ? -60 :
@@ -11025,7 +11025,7 @@ window.FB = window.FB || {};
     if (!state || !war || !war.enemy || war.enemyStandingApplied) return null;
     const preview = FB.warEnemyStandingPreview(state, war.enemy);
     if (preview.change) {
-      FB.adjustStanding(state, { kind:'realm', id:war.enemy },
+      FB.adjustStanding(state, FB.political.realmReference(war.enemy),
         preview.change, source || 'war:enemy');
     }
     war.enemyStandingApplied = 1;
@@ -11179,12 +11179,12 @@ window.FB = window.FB || {};
     // The campaign declaration applies county support penalties once.
     for (let i = 0; i < consequence.vassals.length; i++) {
       const entry = consequence.vassals[i];
-      FB.adjustStanding(state, { kind:'realm', id:entry.realmId },
+      FB.adjustStanding(state, FB.political.realmReference(entry.realmId),
         entry.change, 'war:aggression');
     }
     for (let j = 0; j < consequence.foreign.length; j++) {
       const entry = consequence.foreign[j];
-      FB.adjustStanding(state, { kind:'realm', id:entry.realmId },
+      FB.adjustStanding(state, FB.political.realmReference(entry.realmId),
         entry.change, 'war:aggression');
     }
     if (FB.recordAggressiveWar) FB.recordAggressiveWar(state, cause);
@@ -12362,7 +12362,7 @@ window.FB = window.FB || {};
 
     if (targetRid && targetRid !== 'player' && FB.adjustStanding) {
       const penalty = (FBDATA.balance && FBDATA.balance.raidStandingPenalty) || -25;
-      FB.adjustStanding(state, { kind:'realm', id:targetRid }, penalty, 'deed:raid_expedition');
+      FB.adjustStanding(state, FB.political.realmReference(targetRid), penalty, 'deed:raid_expedition');
     }
 
     if (spoils.wounded && state.chars && state.chars[p.charId]) {
@@ -12458,7 +12458,7 @@ window.FB = window.FB || {};
           state.player.plot.id === 'diplomatic_correspondence') FB.fns.plot_end(state);
       return false;
     }
-    FB.adjustStanding(state, { kind:'realm', id:realm.id }, -12,
+    FB.adjustStanding(state, FB.political.realmReference(realm.id), -12,
       'plot:correspondence_stolen');
     state.player.prestige += 7;
     const war = realm.war;
@@ -12493,7 +12493,7 @@ window.FB = window.FB || {};
           state.player.plot.id === 'diplomatic_correspondence') FB.fns.plot_end(state);
       return false;
     }
-    FB.adjustStanding(state, { kind:'realm', id:realm.id }, 10,
+    FB.adjustStanding(state, FB.political.realmReference(realm.id), 10,
       'plot:correspondence_preserved');
     if (state.pacts && state.pacts[realm.id] > state.turn) {
       state.pacts[realm.id] += 90;
@@ -12509,7 +12509,7 @@ window.FB = window.FB || {};
           state.player.plot.id === 'diplomatic_correspondence') FB.fns.plot_end(state);
       return false;
     }
-    FB.adjustStanding(state, { kind:'realm', id:realm.id }, -18,
+    FB.adjustStanding(state, FB.political.realmReference(realm.id), -18,
       'plot:correspondence_forged');
     FB.setForeignPolicy(state, realm.id, -1);
     state.player.prestige += 5;
@@ -12520,7 +12520,7 @@ window.FB = window.FB || {};
   FB.fns.plot_correspondence_failure = function (state, ctx) {
     const realm = plotRealmContext(state, 'diplomatic_correspondence', ctx);
     if (realm) {
-      FB.adjustStanding(state, { kind:'realm', id:realm.id }, -15,
+      FB.adjustStanding(state, FB.political.realmReference(realm.id), -15,
         'plot:correspondence_exposed');
       if (state.pacts && state.pacts[realm.id] > state.turn + 90) {
         state.pacts[realm.id] -= 90;
@@ -12657,7 +12657,7 @@ window.FB = window.FB || {};
       return false;
     }
     if (id === 'feudal_obligation' && ctx.realmId) {
-      FB.adjustStanding(state, { kind:'realm', id:ctx.realmId }, -8,
+      FB.adjustStanding(state, FB.political.realmReference(ctx.realmId), -8,
         'plot:obligation_abandoned');
     } else if (id === 'guild_monopoly' && FB.fns.plot_guild_discovery) {
       FB.fns.plot_guild_discovery(state, ctx, false);
@@ -12666,7 +12666,7 @@ window.FB = window.FB || {};
       FB.fns.plot_council_discovery(state, ctx, false);
       return true;
     } else if (id === 'diplomatic_correspondence' && ctx.realmId) {
-      FB.adjustStanding(state, { kind:'realm', id:ctx.realmId }, -8,
+      FB.adjustStanding(state, FB.political.realmReference(ctx.realmId), -8,
         'plot:correspondence_abandoned');
     } else if (id === 'rival_claimant') {
       const rival = state.chars[ctx.characterId];
