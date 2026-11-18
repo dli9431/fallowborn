@@ -134,7 +134,7 @@ for (const file of fixtureFiles) {
     (fixture.checks || []).forEach(function (check,index) { expect(result.values[index],check.path.join('.')).toEqual(check.equals); });
     result.starts.forEach(function (row) { expect(row.offered,row.id).toBe(true);expect(row.report,row.id).toMatchObject({valid:true}); });
     result.stories.forEach(function (row) { expect(row,row.id).toMatchObject({registered:true,attached:true}); });
-    expect(result.pack).toEqual({eras:['late_antique'],yearMin:451,yearMax:453});
+    expect(result.pack).toEqual({bookmarkIds:['451'],eras:['late_antique'],yearMin:451,yearMax:453});
     expect(result.periodFault).toBeFalsy();
   });
 }
