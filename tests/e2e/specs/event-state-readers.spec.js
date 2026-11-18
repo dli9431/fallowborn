@@ -2,7 +2,7 @@
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
-const {startHistoricalGame} = require('../support/game/historical-start');
+const {startPreparedParityGame} = require('../support/game/parity');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {engineSources} = require('../support/source-literals');
 const {contentIdMetric,metricProblems} = require('../support/content-id-reviews');
@@ -22,7 +22,7 @@ async function startImported(page,info,bookmark,code) {
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/event-state-readers-fictional.json'));
   await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
-  await startHistoricalGame(page,info,{bookmark:bookmark,code:code});
+  await startPreparedParityGame(page,{unhide:true,bookmark:bookmark,code:code});
   await page.evaluate(function () {
     window.exerciseReader = function (id,change) {
       const s = FB.state, all = FBDATA.events, ev = FB.eventById(id);

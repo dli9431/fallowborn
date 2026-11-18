@@ -5,7 +5,7 @@ const {test,expect} = require('../support/fixture');
 // Each case owns its page and any synthetic records it installs there.
 test.describe.configure({mode:'parallel'});
 const {openGame,prepareGameContent} = require('../support/game/navigation');
-const {startHistoricalGame} = require('../support/game/historical-start');
+const {startPreparedParityGame} = require('../support/game/parity');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {mockCrazyGames} = require('../support/crazygames');
 const {openCrazyGame} = require('../support/game/crazygames-title');
@@ -34,7 +34,7 @@ async function start(page,info,bookmark,code) {
   await page.locator('#modfile').setInputFiles(fixturePath);
   await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
-  await startHistoricalGame(page,info,{bookmark:bookmark || '476',code:code || 'MOMENTS-476-mobile_household_476-cherson-m-Clerk-established'});
+  await startPreparedParityGame(page,{unhide:true,bookmark:bookmark || '476',code:code || 'MOMENTS-476-mobile_household_476-cherson-m-Clerk-established'});
 }
 
 async function readyEvent(page) {

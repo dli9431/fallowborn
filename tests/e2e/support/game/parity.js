@@ -79,6 +79,10 @@ async function settleForParity(page) {
 
 async function startParityGame(page, testInfo, journey) {
   await openGame(page, testInfo);
+  return startPreparedParityGame(page, journey);
+}
+
+async function startPreparedParityGame(page, journey) {
   await prepareJourneyBookmark(page, journey);
   let code = journey.code;
   if (journey.declaredOpening) code = await page.evaluate(function (input) {
@@ -458,5 +462,6 @@ module.exports = {
   expectedScenarioTable:expectedScenarioTable,
   prepareJourneyBookmark:prepareJourneyBookmark,
   startParityGame:startParityGame,
+  startPreparedParityGame:startPreparedParityGame,
   startScenarioTable:startScenarioTable
 };
