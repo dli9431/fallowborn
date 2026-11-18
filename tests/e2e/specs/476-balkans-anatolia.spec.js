@@ -299,8 +299,8 @@ test('one regional daily season resolves both bounded rails and retains communit
       // Stage Zeno's return, then open the season in 482: the Thracian window
       // (477-481) has closed while the Amal window (479-483) remains open.
       s.turn = 180; FB.stories.get('zeno_return_476').day(s,s.stories.zeno_return_476);
-      s.turn = (482 - FB.campaignBookmark(s).date.year) * 360;
-      s.date = FB.dateAtTurn(s,s.turn);
+      s.date.year = 482;
+      s.turn = FB.dateOrdinal(s.date) - FB.dateOrdinal(FB.campaignBookmark(s).date);
     });
     try {
       for (let half = 0; half < 2; half++) {
