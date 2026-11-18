@@ -410,9 +410,13 @@ async function beginImportedCourt(page,info) {
   return mod;
 }
 
-test('ordinary JSON full-world content restores twice and malformed saves reject before mutation',async function ({page},info) {
+test('ordinary JSON full-world content restores twice with matching campaign facts',async function ({page},info) {
   await beginImportedCourt(page,info);
   await roundTrip(page);
+});
+
+test('reloaded ordinary JSON full-world content rejects malformed saves before mutation',async function ({page},info) {
+  await beginImportedCourt(page,info);
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
   await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page); await restoreBookmark(page,saved);
   expect(await page.evaluate(function (text) {
