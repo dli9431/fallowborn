@@ -1,0 +1,6151 @@
+{
+  "packId": "dated_1241",
+  "eventCount": {
+    "min": 10,
+    "max": 10
+  },
+  "rows": [
+    {
+      "eventId": "guarded_position_1241",
+      "bookmark": "1241",
+      "code": "PACK-1241-farmer-szekesfehervar-m-Reader",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1240
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1262
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 451
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 476
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 493
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 568
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 634
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 711
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 800
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 867
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1066
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1096
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1204
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "guarded_purse_1241",
+      "bookmark": "1241",
+      "code": "PACK-1241-farmer-szekesfehervar-m-Reader",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1240
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1262
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "guard_position_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "host_terms_1241",
+      "bookmark": "1241",
+      "code": "PACK-1241-farmer-szekesfehervar-m-Reader",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1240
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1262
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "private_purse_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "separate_camps_1241",
+      "bookmark": "1241",
+      "code": "PACK-1241-farmer-szekesfehervar-m-Reader",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1240
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1262
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "host_terms_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "later_departure_1241",
+      "bookmark": "1241",
+      "code": "PACK-1241-farmer-szekesfehervar-m-Reader",
+      "readers": [
+        "county_holder_government"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "regnum"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1240
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1262
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {}
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "hungary_1241"
+              ],
+              "value": {
+                "formId": "territorial"
+              }
+            },
+            {
+              "path": [
+                "player",
+                "flags"
+              ],
+              "value": {
+                "camp_positions_considered_1241": true
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "column_stores_1241",
+      "bookmark": "1241",
+      "code": "PACK-1241-farmer-volodymyr-m-Reader",
+      "readers": [
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241",
+                "mobile",
+                "status"
+              ],
+              "value": "inactive"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1240
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1262
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "column_reunion_1241",
+      "bookmark": "1241",
+      "code": "PACK-1241-farmer-volodymyr-m-Reader",
+      "readers": [
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241",
+                "mobile",
+                "status"
+              ],
+              "value": "inactive"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1240
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1262
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "column_scope_1241",
+      "bookmark": "1241",
+      "code": "PACK-1241-farmer-volodymyr-m-Reader",
+      "readers": [
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241",
+                "mobile",
+                "status"
+              ],
+              "value": "inactive"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1240
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1262
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "mongol_western_command_1241"
+              ],
+              "value": {
+                "formId": "expedition_command",
+                "mobile": {
+                  "profileId": "western_command_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "hosted_stores_1241",
+      "bookmark": "1241",
+      "code": "PACK-1241-farmer-szekesfehervar-m-Reader",
+      "readers": [
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241",
+                "mobile",
+                "status"
+              ],
+              "value": "inactive"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1240
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1262
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventId": "hosted_presence_1241",
+      "bookmark": "1241",
+      "code": "PACK-1241-farmer-szekesfehervar-m-Reader",
+      "readers": [
+        "mobile_scarcity"
+      ],
+      "cases": [
+        {
+          "expected": true,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241",
+                "mobile",
+                "food"
+              ],
+              "value": 1000000000
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241",
+                "mobile",
+                "status"
+              ],
+              "value": "inactive"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1240
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "player",
+                "provinceId"
+              ],
+              "value": "london"
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "date",
+                "year"
+              ],
+              "value": 1262
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "451",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "476",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "493",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "568",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "634",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "711",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "800",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "867",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1066",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1096",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        },
+        {
+          "expected": false,
+          "patches": [
+            {
+              "path": [
+                "authority",
+                "governments",
+                "koten_following_1241"
+              ],
+              "value": {
+                "formId": "hosted_following",
+                "mobile": {
+                  "profileId": "koten_households_1241",
+                  "status": "active",
+                  "food": 0,
+                  "members": [
+                    {
+                      "civilians": [
+                        {
+                          "count": 100
+                        }
+                      ],
+                      "reserve": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "path": [
+                "start"
+              ],
+              "value": {
+                "id": "1204",
+                "era": "high_medieval"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
