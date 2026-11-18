@@ -335,13 +335,13 @@ test('one regional daily season resolves both bounded rails and retains communit
       const result = await page.evaluate(function () {
         const thracian = FB.state.stories.thracian_pressure_476, amal = FB.state.stories.amal_epirus_476;
         return {date:FB.state.date,thracian:[thracian.phase,thracian.result,thracian.reason],
-          amal:amal.phase === 'resolved' && ['won','failed'].indexOf(amal.result) >= 0,
+          amal:[amal.phase,amal.result,amal.reason],
           scope:FB.state.owner.nicosia === 'byzantium' && ['antioch','jerusalem','tarsos'].every(function (id) {
             return FB.state.owner[id] === 'byzantium';
           })};
       });
       expect(result).toEqual({date:{year:482,season:1,day:1},thracian:['resolved','diverted','window_closed'],
-        amal:true,scope:true});
+        amal:['resolved',expect.stringMatching(/^(won|failed)$/),expect.any(String)],scope:true});
     } finally {
       await page.evaluate(function () { FB.chance = window.regionalChance; delete window.regionalChance; });
     }
