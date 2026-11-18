@@ -3,7 +3,7 @@
   'use strict';
   function eventReviewData(c) {
     var data = c.data || FBDATA;
-    return !c.runtime && FB.bookmarkSources && FB.bookmarkSources.eventReviewData ? FB.bookmarkSources.eventReviewData(data) : data;
+    return !c.runtime && FB.bookmarkSources && FB.bookmarkSources.eventReviewData ? FB.bookmarkSources.eventReviewData(data,c.event) : data;
   }
   // Review references are checked against their own candidate composition, not
   // by compiling unrelated dated stories against the installed catalogue.

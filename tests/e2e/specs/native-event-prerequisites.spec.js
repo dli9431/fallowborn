@@ -75,9 +75,10 @@ test('native optional story reviews validate without installing their graphs int
   await openTitle(page,info);await load(page,['568']);
   const selected = await page.evaluate(function () {
     const report = FB.bookmarkSources.prepareSetup('476');
-    return {ready:report.published,faults:report.worldFaults,optional:!!FBDATA.storyInstances.ravenna_household_track_568};
+    return {ready:report.published,faults:report.worldFaults,indexed:!!FB.eventById('source_household_review'),
+      optional:!!FBDATA.storyInstances.ravenna_household_track_568};
   });
-  expect(selected).toEqual({ready:true,faults:[],optional:false});
+  expect(selected).toEqual({ready:true,faults:[],indexed:true,optional:false});
   await prepareGameContent(page);
   const result = await page.evaluate(function () {
     const event = FB.eventById('source_household_review');

@@ -11,6 +11,7 @@
   var publishing = false, setup = null, setupFaults = Object.create(null);
   var retainedTransitions = [];
   var eventBoundaries = Object.create(null), eventSources = Object.create(null), eventReviewReferences = null;
+  var datedEvents = new WeakSet();
   var eventRoots = ['events','eventPacks','eventChances'];
   C.eventBoundary = function (source) {
     var boundary = {};
@@ -78,6 +79,7 @@
     eventSources[source] = {primary:file.primary,secondary:file.secondary,seq:fileOrder.indexOf(source),after:file.after,data:data};
     try { publishEventPacks(); }
     catch (error) { if (previous) eventSources[source] = previous; else delete eventSources[source]; throw error; }
+    data.events.forEach(function (event) { datedEvents.add(event); });
   };
   /* Per-date source loading. Every contributor is recorded at its original
      document position. Boot runs the eager subset exactly as before; a later
@@ -338,8 +340,10 @@
   C.current = function () { return active; };
   // Only the native proof base carries this exact sealed reference identity.
   // Ordinary detached imports never gain access to unpublished optional graphs.
-  C.eventReviewData = function (data) {
-    if (!frozen || !eventReviewReferences || data.bookmarkCompositionReferences !== frozen.startScenarios) return data;
+  C.eventReviewData = function (data,event) {
+    if (!frozen || !eventReviewReferences) return data;
+    var selected = setup && setup.data === data && datedEvents.has(event);
+    if (!selected && data.bookmarkCompositionReferences !== frozen.startScenarios) return data;
     return Object.assign({},data,{bookmarks:Object.assign({},eventReviewReferences.bookmarks,data.bookmarks),
       startScenarios:eventReviewReferences.startScenarios,storyInstances:Object.assign({},eventReviewReferences.storyInstances,data.storyInstances)});
   };
