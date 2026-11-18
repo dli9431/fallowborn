@@ -111,14 +111,22 @@ test('fresh position preflight rejects disconnected, inaccessible, stale and mis
 });
 
 test('an existing ordinary war permits a hostile opening footprint while peace and an inaccessible intervening county do not',async function ({page},info) {
-  await imported(page,info,'dune');
+  const input=JSON.parse(JSON.stringify(examples.dune)), world=input.bookmarks.dune_world;
+  const hostileRealms=JSON.parse(JSON.stringify(world.realms));
+  hostileRealms.find(r=>r.mobile).mobile.columns.entries[0].openingLocation={countyId:'dune_pass'};
+  const blockedRealms=JSON.parse(JSON.stringify(hostileRealms));
+  blockedRealms.find(r=>r.mobile).mobile.hostedAccess.countyIds=['dune_well'];
+  world.revision='baseline';
+  world.revisions={baseline:{},hostile_route:{realms:hostileRealms},blocked_route:{realms:blockedRealms}};
+  await imported(page,info,'dune',input);
   const result=await page.evaluate(function () {
     const M=FB.mobile,s=FB.state,d=FB.campaignBookmark(s).realms.find(function (r) {return r.mobile;}),rid=d.id,r=M.row(s,rid);
     const q=M.reviewColumns(s,{realmId:rid,action:'war',terms:{columnId:r.columns.entries[0].id,
       causes:[{type:'aggression',enemy:'dune_gate',target:'dune_pass'}]},actor:{kind:'character',id:r.leaderId}});
     if (!q.review.allowed || !M.commit(s,q)) throw new Error('Ordinary column war did not begin');
-    const candidate=JSON.parse(JSON.stringify(d));candidate.mobile.columns.entries[0].openingLocation={countyId:'dune_pass'};
     const fresh=JSON.parse(JSON.stringify(s));
+    fresh.start.revision='hostile_route';
+    const candidate=FB.campaignBookmark(fresh).realms.find(v=>v.id===rid);
     fresh.armies=fresh.armies.filter(function (a) {return a.realm!==rid;});
     fresh.authority.migrations=fresh.authority.migrations.filter(function (m) {return m.realmId!==rid;});
     delete fresh.authority.governments[rid].mobile;
@@ -130,8 +138,9 @@ test('an existing ordinary war permits a hostile opening footprint while peace a
       if (!FB.settleOrdinaryWar(peace,war.id,'white_peace')) throw new Error('Ordinary peace refused');
     });
     const noPeace=!M.openingPlan(peace,candidate).allowed;
-    const transit=JSON.parse(JSON.stringify(candidate));transit.mobile.hostedAccess.countyIds=['dune_well'];
-    return {hostile:hostile,pure:pure,noPeace:noPeace,noTransit:!M.openingPlan(fresh,transit).allowed};
+    const blocked=JSON.parse(JSON.stringify(fresh));blocked.start.revision='blocked_route';
+    const transit=FB.campaignBookmark(blocked).realms.find(v=>v.id===rid);
+    return {hostile:hostile,pure:pure,noPeace:noPeace,noTransit:!M.openingPlan(blocked,transit).allowed};
   });
   expect(result).toEqual({hostile:true,pure:true,noPeace:true,noTransit:true});
 });
