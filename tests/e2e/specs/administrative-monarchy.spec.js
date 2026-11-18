@@ -334,7 +334,13 @@ test('a recognized player sovereign retains the public form and commissions thro
     const applied = !!FB.publicAccede(s,q);
     const effectiveBefore = FB.publicAppointmentEffective(s,row);
     const confirm = FB.publicOfficeQuote(s,{kind:'realm',id:'player'},row.id,'confirm');
-    FB.publicOfficeApply(s,confirm);
+    if (effectiveBefore || !confirm || !confirm.allowed || !FB.publicOfficeApply(s,confirm)) {
+      throw new Error('Absorbed commission confirmation failed: ' + JSON.stringify({
+        effectiveBefore, confirm, row, readiness:FB.governments.publicAuthorityReadiness(s,'player'),
+        suspension:FB.officeMandates.suspension(s,row), holder:s.holder[a.pid], owner:s.owner[a.pid],
+        generation:FB.realmRulerGeneration(s,'player')
+      }));
+    }
     const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
     R.candidates(s,'player'); R.accessionQuote(s,'player','abdication');
     const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
