@@ -4,6 +4,7 @@ const {test, expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
+const {startPreparedParityGame} = require('../support/game/parity');
 const {installRestoreFacts} = require('../support/game/restore-facts');
 const {expectModAdmission} = require('../support/game/mod-admission');
 
@@ -232,7 +233,7 @@ test('retained saves do not acquire island people, counties or optional assembly
   })).toEqual({revision:'baseline',geography:'europe_regional',court:false,delegates:false,county:false});
 });
 
-test('ordinary JSON imports can vary the assembly policy and reject invalid island references without publication', async function ({page}, info) {
+test('ordinary JSON imports reject invalid island references without publication', async function ({page}, info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
     const copy = function (v) { return JSON.parse(JSON.stringify(v)); };
@@ -254,6 +255,10 @@ test('ordinary JSON imports can vary the assembly policy and reject invalid isla
         before === JSON.stringify(root) && rng === FB.getRngState() && uid === FB.getUidCounter();
     });
   })).toEqual([true,true,true]);
+});
+
+test('ordinary JSON imports can vary the assembly policy for a new campaign', async function ({page}, info) {
+  await openGame(page,info);
   const mod = await page.evaluate(function (revision) {
     const b = JSON.parse(JSON.stringify(FB.bookmark('1066',revision)));
     // Import one complete adopting world without duplicating unrelated worlds
@@ -286,7 +291,7 @@ test('ordinary JSON imports can vary the assembly policy and reject invalid isla
     }).constituency,term:p.selection.termDays,threshold:p.selection.threshold,
     weight:p.members[0].weight,noNewCapability:!p.obligations.maxLevy};
   })).toEqual({faults:[],profile:'island_review_voice',term:720,threshold:0.6,weight:1,noNewCapability:true});
-  await startHistoricalGame(page,info,{bookmark:'1066',
+  await startPreparedParityGame(page,{unhide:true,bookmark:'1066',
     code:'IMPORTEDISLANDS-1066-farmer-iceland_southwest-m-Review-established'});
   expect(await page.evaluate(function () {
     const s = FB.state, C = FB.governments.support, r = C.row(s,'iceland_commonwealth_1066');
