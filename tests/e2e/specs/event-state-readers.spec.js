@@ -1,6 +1,7 @@
 'use strict';
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {startPreparedParityGame} = require('../support/game/parity');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');

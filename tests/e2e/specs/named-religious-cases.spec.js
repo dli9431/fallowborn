@@ -1,6 +1,7 @@
 'use strict';
 const path = require('path');
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { openGame, prepareGameContent } = require('../support/game/navigation');
 const { beginBookmarkFromTitle, restoreBookmark } = require('../support/game/bookmark-acceptance');

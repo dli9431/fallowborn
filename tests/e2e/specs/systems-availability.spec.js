@@ -21,6 +21,7 @@ dependsOnRuntime(__filename, [
   'js/ui_misc.js', 'js/ui_tournaments.js', 'js/mapview.js'
 ]);
 const { test, expect } = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { startParityGame } = require('../support/game/parity');

@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {eagerDocument,manifestRuns} = require('../fixtures/bookmark-manifest/eager-document');
