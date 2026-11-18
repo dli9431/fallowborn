@@ -2483,10 +2483,11 @@
           marker.authority.forEach(function (entry,index) {
             var source=sourceRealms.filter(function (d) {return d.id===next;})[0],c=entry && s.chars[entry.characterId];
             var actor=index===0 && FB.bookmarkActor(s,hosted.partnerActorId), ruler=source && source.ruler;
+            // The named host can be an elected magistrate with a generated character id.
+            var originalId=index===0 ? actor && actor.id : source && FB.openingRulerCharacterId(source);
             if (!keys(entry,['realmId','characterId','generation']) || Object.keys(entry).length!==3 || !source || seenCourts[next] ||
-                entry.realmId!==next || !c || index===0 && (!actor || actor.id!==entry.characterId && s.bookmarkSetup.actors[hosted.partnerActorId]!==entry.characterId) ||
-                entry.generation!==(ruler && ruler.generation!==undefined ? ruler.generation : 1) ||
-                entry.characterId!==FB.openingRulerCharacterId(source)) fault(rid,'openingAccess');
+                entry.realmId!==next || !c || entry.characterId!==originalId ||
+                entry.generation!==(ruler && ruler.generation!==undefined ? ruler.generation : 1)) fault(rid,'openingAccess');
             seenCourts[next]=true;next=source.liege;
           });
           if (next) fault(rid,'openingAccess');
