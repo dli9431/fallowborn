@@ -38,9 +38,15 @@ async function begin(page,info,label,modified) {
           rid=FB.stories.get(this.preparationId).declaration.realmId,
           def=FB.campaignBookmark(s).realms.find(function (r) {return r.id===rid;}),
           leader=t.bindings.find(function (b) {return b.memberId===def.mobile.opening.leaderMemberId;}).characterId;
-        return P.commit(s,P.review(s,this.preparationId,'authorize',t.provider.characterId)) &&
-          P.commit(s,P.review(s,this.preparationId,'grant',t.provider.characterId)) &&
-          P.commit(s,P.review(s,this.preparationId,'form',leader));
+        for (const action of ['authorize','grant','form']) {
+          const review=P.review(s,this.preparationId,action,action==='form' ? leader : t.provider.characterId);
+          if (!P.commit(s,review)) throw new Error('Expedition preparation '+action+' failed: '+JSON.stringify({
+            reason:review.reason, cost:review.cost, funds:review.facts && review.facts.money,
+            provisions:review.provisions, funding:review.funding && review.funding.reason,
+            current:review.facts && review.facts.current
+          }));
+        }
+        return true;
       }
     };
   },label);
