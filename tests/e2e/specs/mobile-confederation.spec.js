@@ -189,20 +189,25 @@ test('bilateral seasonal access spends once, respects capacity and never grants 
     const repeated=!M.commit(s,M.review(s,req));
     function act(action,terms,actor) {return M.commit(s,M.review(s,{realmId:rid,action:action,terms:terms,actor:actor || {kind:'realm',id:rid}}));}
     function agree(terms) {act('propose',{operation:'agreement',proposal:terms});M.members(s,rid).forEach(function (m) {act('assent',{assent:true},m.principal);});}
+    const dailyCapacity=Math.ceil(M.total(s,rid)/90);
     r.lastAI=Math.floor((s.turn+1)/90);s.turn++;M.day(s);const harvested=s.mobilePastures.used.cherson;
-    s.turn++;M.day(s);agree(args.terms);const renewed=act('offer',args.terms);
+    s.turn++;M.day(s);const usedBeforeRenewal=s.mobilePastures.used.cherson;agree(args.terms);const renewed=act('offer',args.terms);
     const next=r.agreements.find(function (a) {return a.status==='offered';});
     const acceptedAgain=act('accept',{agreementId:next.id},{kind:'realm',id:'byzantium'}),stock=r.food;
     const need=r.members.reduce(function (n,m) {return n+m.civilians.concat(m.reserve).reduce(function (v,c) {return v+c.count;},0);},0)*M.profile(s,rid).foodPerPerson;
-    s.turn++;M.day(s);const noSecondHarvest=Math.abs(stock-r.food-need)<0.000001 && s.mobilePastures.used.cherson===harvested;
+    const pasture=M.roundPasture(s,rid,'cherson');
+    const sharedBudget=pasture.used===usedBeforeRenewal && pasture.remaining===pasture.capacity-usedBeforeRenewal;
+    s.turn++;M.day(s);
+    const dailyHarvest=Math.abs(r.food-stock+need-pasture.food)<0.000001 &&
+      s.mobilePastures.used.cherson===usedBeforeRenewal+Math.min(dailyCapacity,pasture.remaining);
     const excessive=Object.assign({},args.terms,{capacity:100000000});agree(excessive);
     const current=M.review(s,{realmId:rid,action:'offer',terms:excessive,actor:{kind:'realm',id:rid}});
     return {offered:offered,accepted:accepted,repeated:repeated,gold:gold===FB.treasuryAvailable(s,rid)+FB.treasuryAvailable(s,'byzantium'),
-      sovereignty:owner===s.owner.cherson && holder===s.holder.cherson,capacity:current.review.reason==='capacity',harvested:harvested,
-      renewed:renewed,acceptedAgain:acceptedAgain,noSecondHarvest:noSecondHarvest,valid:M.validate(s)};
+      sovereignty:owner===s.owner.cherson && holder===s.holder.cherson,capacity:current.review.reason==='capacity',firstDay:harvested===dailyCapacity,
+      renewed:renewed,acceptedAgain:acceptedAgain,sharedBudget:sharedBudget,dailyHarvest:dailyHarvest,valid:M.validate(s)};
   },{rid:rid,terms:terms});
   expect(result).toMatchObject({offered:true,accepted:true,repeated:true,gold:true,sovereignty:true,capacity:true,
-    renewed:true,acceptedAgain:true,noSecondHarvest:true,valid:true});expect(result.harvested).toBe(capacity);
+    renewed:true,acceptedAgain:true,sharedBudget:true,dailyHarvest:true,firstDay:true,valid:true});
 });
 test('consented land uses ordinary contracts and cannot bypass a conserved settlement decision',async function ({page},testInfo) {
   const rid=await start(page,testInfo),terms={countyId:'cherson'};
