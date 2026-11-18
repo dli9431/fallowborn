@@ -1,4 +1,59 @@
 FB.bookmarkSources.stage({source:'data/starts_451.js',bookmarks:['451'],catalogs:[],shared:[]}, function (FBDATA) {
-/* Authored dated starts. The generic scaffold household is declared separately. */
-FBDATA.startScenarios_451 = [];
+/* Personal selection grants no additional public authority or resources. */
+FBDATA.startScenarios_451 = [
+  {id:'attila_451',bookmarkIds:['451'],alwaysUnlocked:true,
+    name:'Attila and the coalition',
+    desc:'Lead the existing countyless following. Members retain their voices and public supplies remain separate from your private purse.',
+    mobilePrincipal:{realmId:'hunnic_coalition_451',memberId:'central_following'},
+    fixedProvinceId:'sirmium',characterName:'Attila',sex:'m',startAge:50,
+    startCulture:'hunnic_451',startReligion:'hunnic_court_practices_451',
+    tier:1,profession:'farmer',gold:12,prestige:5,piety:0,
+    familyPresets:{standard:{name:'The existing principal',diff:'No invented relatives'}},
+    tracks:['attila_agenda_451','opening_attila_451'],
+    trackLocations:{attila_agenda_451:['sirmium'],opening_attila_451:['sirmium']},
+    intro:'You are {name}, the existing coalition leader at {province}. Open the coalition story in Deeds to propose actual terms, or defer without spending. Other members and outside courts decide separately. Your private livelihood grants no county or additional public funds. This beginning invents no household kin or family carriage.'},
+  {id:'aetius_451',bookmarkIds:['451'],alwaysUnlocked:true,
+    name:'Aetius in western court service',
+    desc:'Use the existing finite court-service warrant at Ravenna. It commissions no forces and grants no battlefield command.',
+    existingPerson:{realmId:'italy',memberId:'aetius',householdMemberIds:['aetius']},
+    fixedProvinceId:'ravenna',characterName:'Aetius',sex:'m',startAge:60,
+    startCulture:'roman',startReligion:'nicene',tier:1,profession:'soldier',gold:35,prestige:25,piety:0,
+    familyPresets:{standard:{name:'The existing officer',diff:'No invented relatives'}},
+    tracks:['aetius_service_track_451','opening_aetius_451'],
+    trackLocations:{aetius_service_track_451:['ravenna'],opening_aetius_451:['ravenna']},
+    intro:'You are {name}, the existing western court officer. Review your finite service warrant in Deeds. Consent needs an actual offered contract and its other party; closing the sheet retains current arrangements. Your appointment grants no host, land or public money to your household.'},
+  {id:'federate_soldier_451',bookmarkIds:['451'],alwaysUnlocked:true,
+    name:'A Gothic soldier household',
+    desc:'A fictional household at Toulouse, earning through ordinary garrison work. No opening enlistment or federate contract is supplied.',
+    fixedProvinceId:'toulouse',sex:'m',startAge:24,startCulture:'gothic',startReligion:'homoian',
+    tier:1,profession:'soldier',gold:20,prestige:5,piety:0,
+    familyPresets:{established:{name:'Free household'},standard:{name:'Unmarried soldier'}},
+    tracks:['federate_soldier_track_451','opening_federate_soldier_451','gallic_household_party_451'],
+    trackLocations:{federate_soldier_track_451:['toulouse'],opening_federate_soldier_451:['toulouse']},
+    intro:'You are {name}, a fictional soldier at {province}. Choose ordinary work in your household story, then earn through actual days. No label enrolls you in a host or pays an extra wage. Named relatives may separately consent to household association; association grants no travel or shelter.'},
+  {id:'gallic_curialis_451',bookmarkIds:['451'],alwaysUnlocked:true,hidden:true,
+    name:'Aurelianum civic household',
+    desc:'Held: ordinary records work currently requires the administration career and cannot be selected by a curialis. No substitute profession is offered.',
+    fixedProvinceId:'orleans',sex:'m',startAge:30,startCulture:'gallo_roman',startReligion:'nicene',
+    tier:2,profession:'curialis',gold:80,prestige:30,piety:10,
+    familyPresets:{established:{name:'Civic household'},standard:{name:'Unmarried curialis'}},
+    tracks:['gallic_curialis_track_451','opening_gallic_curialis_451','gallic_household_party_451'],
+    trackLocations:{gallic_curialis_track_451:['orleans'],opening_gallic_curialis_451:['orleans']},
+    intro:'You are {name}, a fictional curialis at {province}. Review ordinary records work in Deeds. Selecting work pays nothing immediately. Local war and a changed sovereign open separate reviews; they grant no office, refuge or relocation. Named relatives decide household association separately.'},
+  {id:'gallic_colonus_451',bookmarkIds:['451'],systems:['colonate'],alwaysUnlocked:true,hidden:true,
+    name:'An Arles tenant household',
+    desc:'Held: no estate archetype admits this date, so this household cannot receive actual tenure and recurring obligations. A tenant label alone grants neither.',
+    fixedProvinceId:'arles',sex:'m',startAge:24,startCulture:'gallo_roman',startReligion:'nicene',
+    tier:0,profession:'colonus',gold:5,prestige:0,piety:0,
+    familyPresets:{standard:{name:'Young tenant household'},established:{name:'Established tenant household'}},
+    tracks:['gallic_colonus_track_451','opening_gallic_colonus_451','gallic_household_party_451'],
+    trackLocations:{gallic_colonus_track_451:['arles'],opening_gallic_colonus_451:['arles']},
+    intro:'You are {name}, a fictional colonus at {province}. Review estate & freedom in Deeds for your possessor, recurring dues and permitted release routes. Ordinary work must actually pay before the household story completes. Household association grants neither release, refuge nor carriage.'}
+];
+/* Association is deliberately separate from admission, shelter and carriage. */
+FBDATA.storyInstances.gallic_household_party_451 = {
+  id:'gallic_household_party_451',type:'household_party',title:'Your household',
+  intro:'This costs no money, action days or population and grants no travel or admission.',
+  maxMembers:8,allowDependents:true,invitationDays:90,adultPolicy:'volunteers'
+};
 });

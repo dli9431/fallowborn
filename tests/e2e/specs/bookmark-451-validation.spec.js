@@ -14,6 +14,121 @@ const {expectModAdmission} = require('../support/game/mod-admission');
 const governmentFixture = require('../fixtures/authoring/government-451-catalogues.json');
 governmentFixture.malformedGroups.push.apply(governmentFixture.malformedGroups,require('../fixtures/authoring/stories-451-validation.json').malformedGroups);
 const courtPersonImport = require('../fixtures/authoring/court-person-451-import.json');
+const startFixtureFiles = ['starts-451-openings.json'];
+const {useReleasedStartRules} = require('../support/game/released-starts');
+dependsOnRuntime(__filename,['js/story_household_party.js','js/story_household.js','js/story_opening_goals.js','js/story_ruler_agenda.js','js/events.js','data/starts.js','data/economy.js']);
+
+for (const file of startFixtureFiles) {
+  const fixture = JSON.parse(fs.readFileSync(path.join(fixtureDirectory,file),'utf8'));
+  test(file + ': complete offered starts and explicit holds',async function ({page},info) {
+    await useReleasedStartRules(page);
+    await openGame(page,info);
+    const result = await page.evaluate(function (fixture) {
+      const bm = FB.bookmark('451');
+      const offered = bm.starts.filter(function (id) {
+        const sc = FBDATA.startScenarios.find(function (sc) { return sc.id === id; });
+        return sc && !sc.hidden;
+      });
+      return {ids:offered.filter(function (id) { return id !== 'farmer_451'; }).sort(),
+        held:fixture.held.filter(function (id) { return offered.indexOf(id) >= 0; }),
+        hidden:fixture.heldDefinitions.map(function (row) {
+          const sc = FBDATA.startScenarios.find(function (sc) { return sc.id === row.id; });
+          return {id:row.id,hidden:sc && sc.hidden};
+        }),
+        starts:fixture.starts.map(function (row) {
+          const sc = FBDATA.startScenarios.find(function (sc) { return sc.id === row.id; });
+          if (!sc) return {id:row.id,errors:FB.bookmarkSources.reports()};
+          return {id:row.id,report:FB.startRuntimeReport(sc,bm),families:Object.keys(sc.familyPresets),
+            tracks:sc.tracks};
+        })};
+    },fixture);
+    expect(result.ids).toEqual(fixture.starts.map(function (row) { return row.id; }).sort());
+    expect(result.held).toEqual([]);
+    result.hidden.forEach(function (row) { expect(row.hidden,row.id).toBe(true); });
+    result.starts.forEach(function (row,index) {
+      const expected = fixture.starts[index];
+      expect(row.report,JSON.stringify(row)).toMatchObject({valid:true});
+      expect(row.families).toEqual(expected.families);
+      expect(row.tracks).toContain(expected.story);
+      expect(row.tracks).toContain(expected.opening);
+      if (expected.party) expect(row.tracks).toContain(expected.party);
+    });
+  });
+  for (const row of fixture.starts) for (const family of row.families) {
+    test(row.id + ' / ' + family + ': code, actual person and first decision',async function ({page},info) {
+      await useReleasedStartRules(page);
+      await openGame(page,info);
+      await page.evaluate(function () { FBDATA.bookmarks['451'].hidden = false; });
+      const full = page.locator('#btn-choose-beginning');
+      if (await full.isVisible()) await full.click();
+      else await page.getByRole('button',{name:'New Game',exact:true}).click();
+      await page.locator('#btn-bm-seed').click();
+      await page.locator('#ng-seed').fill('OPENINGS-451-' + row.id + '-' + row.province + '-m-' + (row.name || 'Review') + '-' + family + '-0-' + row.culture + '.' + row.religion);
+      await page.locator('#ng-seed').press('Enter');
+      await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+      await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+      await page.getByRole('button',{name:'Begin',exact:true}).click();
+      const result = await page.evaluate(function (row) {
+        FB.game.setPaused(true);
+        const s = FB.state, sc = FB.campaignStart(s), me = s.chars[s.player.charId];
+        const tracks = FB.startTracks(sc,row.province);
+        return {scenario:s.start.scenarioId,code:s.seed,name:me.name,culture:me.culture,religion:me.religion,
+          tracks:tracks,choices:FB.stories.choices(s,row.story).map(function (c) { return c.id; }),
+          opening:!!s.stories[row.opening],
+          actor:row.actor ? FB.bookmarkActor(s,row.actor).id === me.id : null,
+          forces:row.mandate ? FB.officeMandates.snapshot(s,s.bookmarkSetup.appointments[row.mandate].id).forces : null};
+      },row);
+      expect(result.scenario).toBe(row.id);
+      expect(result.culture).toBe(row.culture);
+      expect(result.religion).toBe(row.religion);
+      expect(result.code).toContain('-451-' + row.id + '-' + row.province + '-');
+      expect(result.code.split('-')[6] || 'standard').toBe(family);
+      expect(result.tracks).toContain(row.story);
+      expect(result.tracks).toContain(row.opening);
+      expect(result.opening).toBe(true);
+      expect(result.choices).toContain(row.choice);
+      if (row.name) expect(result.name).toBe(row.name);
+      if (row.actor) expect(result.actor).toBe(true);
+      if (row.mandate) expect(result.forces).toEqual([]);
+      await page.evaluate(function () { FB.ui.showMenu(); });
+      await expect(page.locator('#m-seed')).toHaveValue(result.code);
+      await page.evaluate(function (row) { FB.ui.closeModal();FB.ui.showStorySheet(row.story); },row);
+      const choice = page.locator('[data-story-choice="' + row.choice + '"]');
+      await expect(choice).toBeVisible();
+      // Blocked service still exposes its canonical review and actual blocker.
+      if (!row.reviewOnly) {
+        await expect(choice).toHaveAttribute('aria-disabled','false');
+        await choice.click();
+        await expect(page.locator('#gm-story-confirm')).toBeVisible();
+        await page.locator('#gm-story-confirm').click();
+        await expect(page.locator('#gm-story-continue')).toBeVisible();
+      }
+      if (row.party) {
+        const party = await page.evaluate(function (row) {
+          const s = FB.state;
+          return {attached:!!s.stories[row.party],choices:FB.stories.choices(s,row.party).length};
+        },row);
+        expect(party.attached).toBe(true);
+        expect(party.choices).toBeGreaterThan(0);
+      }
+    });
+  }
+  test(file + ': held definitions reject ordinary start codes',async function ({page},info) {
+    await useReleasedStartRules(page);
+    await openGame(page,info);
+    await page.evaluate(function () { FBDATA.bookmarks['451'].hidden = false; });
+    const full = page.locator('#btn-choose-beginning');
+    if (await full.isVisible()) await full.click();
+    else await page.getByRole('button',{name:'New Game',exact:true}).click();
+    await page.locator('#btn-bm-seed').click();
+    for (const row of fixture.heldDefinitions) {
+      await page.locator('#ng-seed').fill('HELD-451-' + row.id + '-' + row.province + '-m-Review-standard');
+      await page.locator('#ng-seed').press('Enter');
+      await expect(page.locator('#ng-seed-err')).not.toHaveText('');
+      await expect(page.locator('#chargen:not(.hidden)')).toHaveCount(0);
+    }
+  });
+}
 test.describe.configure({mode:'parallel'});
 // Append registrations. Regional corrections, declarations, starts and stories
 // share the canonical checks and literal value assertions below.
