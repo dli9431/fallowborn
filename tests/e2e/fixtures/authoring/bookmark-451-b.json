@@ -1,0 +1,2600 @@
+{
+  "bookmarkId": "451",
+  "checks": [
+    {
+      "path": [
+        "provinces",
+        "@palermo",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@messina",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@siracusa",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@cagliari",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sassari",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ajaccio",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@augsburg",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@konstanz",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@zurich",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@torino",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@aosta",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@genoa",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@milano",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@pavia",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@brescia",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@verona",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@trento",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@padova",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@venezia",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@aquileia",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@friuli",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@parma",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@modena",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@bologna",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ravenna",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@firenze",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@pisa",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@siena",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@lucca",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@spoleto",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@perugia",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ancona",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@roma",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@viterbo",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@benevento",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@capua",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@salerno",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@bari",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@taranto",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@foggia",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@brindisi",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@reggio",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@cosenza",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@kotor",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@knin",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@split",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@zadar",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@zagreb",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sisak",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@tunis",
+        "realm"
+      ],
+      "equals": "aghlabids"
+    },
+    {
+      "path": [
+        "provinces",
+        "@kairouan",
+        "realm"
+      ],
+      "equals": "aghlabids"
+    },
+    {
+      "path": [
+        "provinces",
+        "@tripoli",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sirte",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@fes",
+        "realm"
+      ],
+      "equals": "tingitana_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@tangier",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@tlemcen",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@tahert",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@algiers",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@constantine",
+        "realm"
+      ],
+      "equals": "mauri_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@oran",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@bosna",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@aghmat",
+        "realm"
+      ],
+      "equals": "atlas_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sale",
+        "realm"
+      ],
+      "equals": "bouregreg_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sijilmasa",
+        "realm"
+      ],
+      "equals": "tafilalt_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@draa_oases",
+        "realm"
+      ],
+      "equals": "draa_oases_local_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@garama",
+        "realm"
+      ],
+      "equals": "garama_local_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ghadames_oasis",
+        "realm"
+      ],
+      "equals": "ghadames_oasis_local_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@awjila_oasis",
+        "realm"
+      ],
+      "equals": "awjila_oasis_local_476"
+    },
+    {
+      "path": [
+        "realms",
+        "@italy",
+        "capital"
+      ],
+      "equals": "ravenna"
+    },
+    {
+      "path": [
+        "realms",
+        "@italy",
+        "government"
+      ],
+      "equals": "roman_civic"
+    },
+    {
+      "path": [
+        "realms",
+        "@italy",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "realms",
+        "@italy",
+        "governingIdentity"
+      ],
+      "equals": {
+        "eliteCultureId": "roman",
+        "eliteFaithId": "nicene",
+        "legalIdentityId": "late_roman",
+        "tolerance": "preference",
+        "taxation": "equal",
+        "justicePolicy": "personal"
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@italy",
+        "ruler"
+      ],
+      "equals": {
+        "name": "Valentinian III",
+        "sex": "m",
+        "culture": "roman",
+        "born": 419,
+        "mar": 3,
+        "trait": "patient"
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@italy",
+        "royalCourt"
+      ],
+      "equals": {
+        "spouseId": "eudoxia",
+        "members": [
+          {
+            "id": "eudoxia",
+            "name": "Licinia Eudoxia",
+            "sex": "f",
+            "born": 422,
+            "culture": "roman",
+            "religion": "nicene",
+            "spouseId": "ruler",
+            "homeProvinceId": "ravenna"
+          },
+          {
+            "id": "eudocia",
+            "name": "Eudocia",
+            "sex": "f",
+            "born": 439,
+            "culture": "roman",
+            "religion": "nicene",
+            "fatherId": "ruler",
+            "motherId": "eudoxia",
+            "homeProvinceId": "ravenna"
+          },
+          {
+            "id": "placidia",
+            "name": "Placidia",
+            "sex": "f",
+            "born": 440,
+            "culture": "roman",
+            "religion": "nicene",
+            "fatherId": "ruler",
+            "motherId": "eudoxia",
+            "homeProvinceId": "ravenna"
+          },
+          {
+            "id": "aetius",
+            "name": "Aetius",
+            "sex": "m",
+            "born": 391,
+            "culture": "roman",
+            "religion": "nicene",
+            "spouseId": null,
+            "homeProvinceId": "ravenna"
+          }
+        ]
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@aghlabids",
+        "capital"
+      ],
+      "equals": "tunis"
+    },
+    {
+      "path": [
+        "realms",
+        "@aghlabids",
+        "government"
+      ],
+      "equals": "regnum"
+    },
+    {
+      "path": [
+        "realms",
+        "@aghlabids",
+        "religion"
+      ],
+      "equals": "homoian"
+    },
+    {
+      "path": [
+        "realms",
+        "@aghlabids",
+        "governingIdentity"
+      ],
+      "equals": {
+        "eliteCultureId": "vandal",
+        "eliteFaithId": "homoian",
+        "legalIdentityId": "vandal_custom",
+        "tolerance": "preference",
+        "taxation": "discriminatory",
+        "justicePolicy": "personal"
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@aghlabids",
+        "ruler"
+      ],
+      "equals": {
+        "name": "Gaiseric",
+        "sex": "m",
+        "culture": "vandal",
+        "born": 389,
+        "mar": 12,
+        "trait": "ambitious"
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@aghlabids",
+        "royalCourt"
+      ],
+      "equals": {
+        "spouseId": null,
+        "members": []
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@croatia"
+      ]
+    },
+    {
+      "path": [
+        "realms",
+        "@federates_476"
+      ]
+    },
+    {
+      "path": [
+        "realms",
+        "@altava_476"
+      ]
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "orestes"
+      ]
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "basilius"
+      ]
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "venantius"
+      ]
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "simplicius"
+      ]
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "orestes_honor"
+      ]
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "bosna_civil_delegate",
+        "realmId"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "senator",
+        "name"
+      ]
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "roman_cleric",
+        "name"
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@palermo",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9000
+        },
+        {
+          "culture": "vandal",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@palermo",
+        "dev"
+      ],
+      "equals": 5
+    },
+    {
+      "path": [
+        "provinces",
+        "@messina",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "vandal",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@messina",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@siracusa",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "vandal",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@siracusa",
+        "dev"
+      ],
+      "equals": 4
+    },
+    {
+      "path": [
+        "provinces",
+        "@cagliari",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "vandal",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@cagliari",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@sassari",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9700
+        },
+        {
+          "culture": "vandal",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 300
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@sassari",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@ajaccio",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9700
+        },
+        {
+          "culture": "vandal",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 300
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@ajaccio",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@augsburg",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@augsburg",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@konstanz",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9700
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 300
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@konstanz",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@zurich",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9700
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 300
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@zurich",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@torino",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@torino",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@aosta",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9700
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 300
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@aosta",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@genoa",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@genoa",
+        "dev"
+      ],
+      "equals": 4
+    },
+    {
+      "path": [
+        "provinces",
+        "@milano",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@milano",
+        "dev"
+      ],
+      "equals": 5
+    },
+    {
+      "path": [
+        "provinces",
+        "@pavia",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@pavia",
+        "dev"
+      ],
+      "equals": 4
+    },
+    {
+      "path": [
+        "provinces",
+        "@brescia",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9300
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 700
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@brescia",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@verona",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@verona",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@trento",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@trento",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@padova",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@padova",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@venezia",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@venezia",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@aquileia",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@aquileia",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@friuli",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9300
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 700
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@friuli",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@parma",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9300
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 700
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@parma",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@modena",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9300
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 700
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@modena",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@bologna",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9300
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 700
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@bologna",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@ravenna",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@ravenna",
+        "dev"
+      ],
+      "equals": 7
+    },
+    {
+      "path": [
+        "provinces",
+        "@firenze",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@firenze",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@pisa",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@pisa",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@siena",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@siena",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@lucca",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@lucca",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@spoleto",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@spoleto",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@perugia",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@perugia",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@ancona",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@ancona",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@roma",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@roma",
+        "dev"
+      ],
+      "equals": 8
+    },
+    {
+      "path": [
+        "provinces",
+        "@viterbo",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@viterbo",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@benevento",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@benevento",
+        "dev"
+      ],
+      "equals": 4
+    },
+    {
+      "path": [
+        "provinces",
+        "@capua",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@capua",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@salerno",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@salerno",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@bari",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@bari",
+        "dev"
+      ],
+      "equals": 4
+    },
+    {
+      "path": [
+        "provinces",
+        "@taranto",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@taranto",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@foggia",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@foggia",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@brindisi",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@brindisi",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@reggio",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@reggio",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@cosenza",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@cosenza",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@kotor",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@kotor",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@knin",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@knin",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@split",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@split",
+        "dev"
+      ],
+      "equals": 6
+    },
+    {
+      "path": [
+        "provinces",
+        "@zadar",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@zadar",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@zagreb",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@zagreb",
+        "dev"
+      ],
+      "equals": 1
+    },
+    {
+      "path": [
+        "provinces",
+        "@sisak",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@sisak",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@tunis",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "vandal",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@tunis",
+        "dev"
+      ],
+      "equals": 7
+    },
+    {
+      "path": [
+        "provinces",
+        "@kairouan",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "vandal",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1000
+        },
+        {
+          "culture": "moorish",
+          "religion": "berber_traditional",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@kairouan",
+        "dev"
+      ],
+      "equals": 4
+    },
+    {
+      "path": [
+        "provinces",
+        "@tripoli",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 8500
+        },
+        {
+          "culture": "vandal",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        },
+        {
+          "culture": "moorish",
+          "religion": "berber_traditional",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@tripoli",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@sirte",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 6000
+        },
+        {
+          "culture": "moorish",
+          "religion": "berber_traditional",
+          "paired": true,
+          "populationShare0": 3500
+        },
+        {
+          "culture": "vandal",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@sirte",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@fes",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "moorish",
+          "religion": "berber_traditional",
+          "populationShare0": 6000
+        },
+        {
+          "culture": "moorish",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2000
+        },
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@fes",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@tangier",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 5500
+        },
+        {
+          "culture": "moorish",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2000
+        },
+        {
+          "culture": "moorish",
+          "religion": "berber_traditional",
+          "paired": true,
+          "populationShare0": 2500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@tangier",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@tlemcen",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "moorish",
+          "religion": "nicene",
+          "populationShare0": 5000
+        },
+        {
+          "culture": "moorish",
+          "religion": "berber_traditional",
+          "paired": true,
+          "populationShare0": 2500
+        },
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@tlemcen",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@tahert",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "moorish",
+          "religion": "berber_traditional",
+          "populationShare0": 6000
+        },
+        {
+          "culture": "moorish",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2500
+        },
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@tahert",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@algiers",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 5500
+        },
+        {
+          "culture": "moorish",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2500
+        },
+        {
+          "culture": "moorish",
+          "religion": "berber_traditional",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@algiers",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@constantine",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "moorish",
+          "religion": "nicene",
+          "populationShare0": 5000
+        },
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 3000
+        },
+        {
+          "culture": "moorish",
+          "religion": "berber_traditional",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@constantine",
+        "dev"
+      ],
+      "equals": 3
+    },
+    {
+      "path": [
+        "provinces",
+        "@oran",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "moorish",
+          "religion": "nicene",
+          "populationShare0": 4500
+        },
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 3000
+        },
+        {
+          "culture": "moorish",
+          "religion": "berber_traditional",
+          "paired": true,
+          "populationShare0": 2500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@oran",
+        "dev"
+      ],
+      "equals": 2
+    },
+    {
+      "path": [
+        "provinces",
+        "@bosna",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@bosna",
+        "dev"
+      ],
+      "equals": 1
+    },
+    {
+      "path": [
+        "provinces",
+        "@aghmat",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "berber",
+          "religion": "berber_traditional",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@aghmat",
+        "dev"
+      ],
+      "equals": 1
+    },
+    {
+      "path": [
+        "provinces",
+        "@sale",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "berber",
+          "religion": "berber_traditional",
+          "populationShare0": 6500,
+          "paired": true
+        },
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 3500,
+          "paired": true
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@sale",
+        "dev"
+      ],
+      "equals": 1
+    },
+    {
+      "path": [
+        "provinces",
+        "@sijilmasa",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "berber",
+          "religion": "berber_traditional",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@sijilmasa",
+        "dev"
+      ],
+      "equals": 1
+    },
+    {
+      "path": [
+        "provinces",
+        "@draa_oases",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "berber",
+          "religion": "berber_traditional",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@draa_oases",
+        "dev"
+      ],
+      "equals": 1
+    },
+    {
+      "path": [
+        "provinces",
+        "@garama",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "berber",
+          "religion": "berber_traditional",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@garama",
+        "dev"
+      ],
+      "equals": 1
+    },
+    {
+      "path": [
+        "provinces",
+        "@ghadames_oasis",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "berber",
+          "religion": "berber_traditional",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@ghadames_oasis",
+        "dev"
+      ],
+      "equals": 1
+    },
+    {
+      "path": [
+        "provinces",
+        "@awjila_oasis",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "berber",
+          "religion": "berber_traditional",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@awjila_oasis",
+        "dev"
+      ],
+      "equals": 1
+    },
+    {
+      "path": [
+        "opening",
+        "estates"
+      ],
+      "equals": []
+    },
+    {
+      "path": [
+        "opening",
+        "claims"
+      ],
+      "equals": []
+    },
+    {
+      "path": [
+        "opening",
+        "migrations"
+      ],
+      "equals": []
+    }
+  ]
+}
