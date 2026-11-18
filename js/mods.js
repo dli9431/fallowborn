@@ -1421,16 +1421,18 @@ window.FBMODS = window.FBMODS || [];
           }
           for (const bookmarkId of (Array.isArray(scenario.bookmarkIds) ? scenario.bookmarkIds : [])) {
             if (!own(rules.bookmarks, bookmarkId) || runtimeWorld && runtimeWorld.id !== bookmarkId) continue;
-            const bookmark = freshBookmark(bookmarkId);
-            // Effective replacement maps are checked per revision by world validation.
-            if (FB.startTrackSet(scenario, bookmark) !== scenario) continue;
-            const locations = bookmark && bookmark.startLocations && bookmark.startLocations[scenario.id];
-            for (const provinceId of list) {
-              const province = bookmark && Array.isArray(bookmark.provinces) &&
-                bookmark.provinces.find(function (p) { return p.id === provinceId; });
-              if (!province || province.wasteland ||
-                  (!(Array.isArray(locations) && !locations.length) && !FB.startProvinceAllowed(scenario, bookmark, provinceId, stories))) {
-                fail(placePath, provinceId + ' is not an available beginning of bookmark ' + bookmarkId + '.');
+            const revisions = scenario.fixedProvinceId ? offeringBookmarks(bookmarkId, scenario) : [freshBookmark(bookmarkId)];
+            for (const bookmark of revisions) {
+              // Effective replacement maps are checked per revision by world validation.
+              if (FB.startTrackSet(scenario, bookmark) !== scenario) continue;
+              const locations = bookmark && bookmark.startLocations && bookmark.startLocations[scenario.id];
+              for (const provinceId of list) {
+                const province = bookmark && Array.isArray(bookmark.provinces) &&
+                  bookmark.provinces.find(function (p) { return p.id === provinceId; });
+                if (!province || province.wasteland ||
+                    (!(Array.isArray(locations) && !locations.length) && !FB.startProvinceAllowed(scenario, bookmark, provinceId, stories))) {
+                  fail(placePath, provinceId + ' is not an available beginning of bookmark ' + bookmarkId + '.');
+                }
               }
             }
           }
