@@ -1,0 +1,690 @@
+{
+  "bookmarkId": "451",
+  "checks": [
+    {
+      "path": [
+        "provinces",
+        "@paris",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@laon",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@orleans",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@lyon",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@geneva",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@arles",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@marseille",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@narbonne",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@clermont",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@toulouse",
+        "realm"
+      ],
+      "equals": "toulouse_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@bordeaux",
+        "realm"
+      ],
+      "equals": "toulouse_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@barcelona",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@tarragona",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@zaragoza",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@leon",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@merida",
+        "realm"
+      ],
+      "equals": "suebi_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sevilla",
+        "realm"
+      ],
+      "equals": "suebi_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@toledo",
+        "realm"
+      ],
+      "equals": "suebi_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@lugo",
+        "realm"
+      ],
+      "equals": "suebi_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@alava",
+        "realm"
+      ],
+      "equals": "basques_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@oviedo",
+        "realm"
+      ],
+      "equals": "cantabri_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@mallorca",
+        "realm"
+      ],
+      "equals": "aghlabids"
+    },
+    {
+      "path": [
+        "provinces",
+        "@canterbury",
+        "realm"
+      ],
+      "equals": "kentish_settlers_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@york",
+        "realm"
+      ],
+      "equals": "northern_britons_476"
+    },
+    {
+      "path": [
+        "realms",
+        "@toulouse_451",
+        "capital"
+      ],
+      "equals": "toulouse"
+    },
+    {
+      "path": [
+        "realms",
+        "@toulouse_451",
+        "government"
+      ],
+      "equals": "regnum"
+    },
+    {
+      "path": [
+        "realms",
+        "@toulouse_451",
+        "religion"
+      ],
+      "equals": "homoian"
+    },
+    {
+      "path": [
+        "realms",
+        "@toulouse_451",
+        "governingIdentity"
+      ],
+      "equals": {
+        "eliteCultureId": "gothic",
+        "eliteFaithId": "homoian",
+        "legalIdentityId": "late_roman",
+        "tolerance": "preference",
+        "taxation": "equal",
+        "justicePolicy": "personal"
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@toulouse_451",
+        "ruler"
+      ],
+      "equals": {
+        "name": "Theodoric I",
+        "sex": "m",
+        "culture": "gothic",
+        "born": 391,
+        "mar": 13,
+        "trait": "ambitious"
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@toulouse_451",
+        "royalCourt"
+      ],
+      "equals": {
+        "members": [
+          {
+            "id": "thorismund",
+            "name": "Thorismund",
+            "sex": "m",
+            "born": 421,
+            "culture": "gothic",
+            "religion": "homoian",
+            "fatherId": "ruler",
+            "homeProvinceId": "toulouse"
+          },
+          {
+            "id": "theodoric",
+            "name": "Theodoric",
+            "sex": "m",
+            "born": 425,
+            "culture": "gothic",
+            "religion": "homoian",
+            "fatherId": "ruler",
+            "homeProvinceId": "toulouse"
+          }
+        ]
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@suebi_476",
+        "capital"
+      ],
+      "equals": "lugo"
+    },
+    {
+      "path": [
+        "realms",
+        "@suebi_476",
+        "government"
+      ],
+      "equals": "regnum"
+    },
+    {
+      "path": [
+        "realms",
+        "@suebi_476",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "realms",
+        "@suebi_476",
+        "ruler"
+      ],
+      "equals": {
+        "name": "Rechiar",
+        "sex": "m",
+        "culture": "suevic",
+        "born": 421,
+        "mar": 8,
+        "trait": "patient"
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@burgundian_settlement_451",
+        "capital"
+      ],
+      "equals": "geneva"
+    },
+    {
+      "path": [
+        "realms",
+        "@burgundian_settlement_451",
+        "government"
+      ],
+      "equals": "federate_polity"
+    },
+    {
+      "path": [
+        "realms",
+        "@burgundian_settlement_451",
+        "nonTerritorial"
+      ],
+      "equals": true
+    },
+    {
+      "path": [
+        "realms",
+        "@burgundian_settlement_451",
+        "ruler"
+      ],
+      "equals": {
+        "generated": true,
+        "sex": "m",
+        "culture": "burgundian",
+        "born": 415,
+        "mar": 9,
+        "trait": "patient"
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@alan_orleans_451",
+        "capital"
+      ],
+      "equals": "orleans"
+    },
+    {
+      "path": [
+        "realms",
+        "@alan_orleans_451",
+        "government"
+      ],
+      "equals": "federate_polity"
+    },
+    {
+      "path": [
+        "realms",
+        "@alan_orleans_451",
+        "nonTerritorial"
+      ],
+      "equals": true
+    },
+    {
+      "path": [
+        "realms",
+        "@alan_orleans_451",
+        "ruler"
+      ],
+      "equals": {
+        "generated": true,
+        "sex": "m",
+        "culture": "alan_476",
+        "born": 411,
+        "mar": 9,
+        "trait": "patient"
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@franks_476",
+        "ruler"
+      ],
+      "equals": {
+        "generated": true,
+        "sex": "m",
+        "culture": "frankish",
+        "born": 415,
+        "mar": 10,
+        "trait": "ambitious"
+      }
+    },
+    {
+      "path": [
+        "provinces",
+        "@orleans",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "gallo_roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@lyon",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "gallo_roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@arles",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "gallo_roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@barcelona",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@toledo",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@sevilla",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@lugo",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 7500
+        },
+        {
+          "culture": "suevic",
+          "religion": "germanic_pagan",
+          "populationShare0": 2000
+        },
+        {
+          "culture": "suevic",
+          "religion": "nicene",
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@geneva",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "gallo_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "burgundian",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "orleans_council"
+      ],
+      "equals": {
+        "city": "Aurelianum",
+        "kind": "council",
+        "provinceId": "orleans",
+        "site": "orleans_476",
+        "religion": "nicene",
+        "culture": "gallo_roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "geneva_council"
+      ],
+      "equals": {
+        "city": "Genava",
+        "kind": "council",
+        "provinceId": "geneva",
+        "site": "geneva_476",
+        "religion": "nicene",
+        "culture": "gallo_roman"
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@franks_476"
+      ],
+      "equals": {
+        "id": "franks_476",
+        "name": "Salian Franks",
+        "color": "#5e7b92",
+        "capital": "ghent",
+        "aggression": 1,
+        "rank": 3,
+        "religion": "germanic_pagan",
+        "governingIdentity": {
+          "eliteCultureId": "frankish",
+          "eliteFaithId": "germanic_pagan",
+          "legalIdentityId": "frankish_custom",
+          "tolerance": "preference",
+          "taxation": "equal",
+          "justicePolicy": "personal"
+        },
+        "ruler": {
+          "generated": true,
+          "sex": "m",
+          "culture": "frankish",
+          "born": 415,
+          "mar": 10,
+          "trait": "ambitious"
+        }
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "lugo_council"
+      ],
+      "equals": {
+        "city": "Lucus Augusti",
+        "kind": "council",
+        "provinceId": "lugo",
+        "site": "lugo_476",
+        "religion": "nicene",
+        "culture": "hispano_roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "lugo_see"
+      ],
+      "equals": {
+        "city": "Lucus Augusti",
+        "kind": "see",
+        "provinceId": "lugo",
+        "site": "lugo_476",
+        "religion": "nicene",
+        "culture": "hispano_roman",
+        "officeId": "lugo_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "toledo_council"
+      ],
+      "equals": {
+        "city": "Toletum",
+        "kind": "council",
+        "provinceId": "toledo",
+        "site": "toledo_476",
+        "religion": "nicene",
+        "culture": "hispano_roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "toledo_see"
+      ],
+      "equals": {
+        "city": "Toletum",
+        "kind": "see",
+        "provinceId": "toledo",
+        "site": "toledo_476",
+        "religion": "nicene",
+        "culture": "hispano_roman",
+        "officeId": "toledo_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "tarragona_council"
+      ],
+      "equals": {
+        "city": "Tarraco",
+        "kind": "council",
+        "provinceId": "tarragona",
+        "site": "tarragona_476",
+        "religion": "nicene",
+        "culture": "hispano_roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "tarragona_see"
+      ],
+      "equals": {
+        "city": "Tarraco",
+        "kind": "see",
+        "provinceId": "tarragona",
+        "site": "tarragona_476",
+        "religion": "nicene",
+        "culture": "hispano_roman",
+        "officeId": "tarragona_bishop"
+      }
+    }
+  ],
+  "starts": [],
+  "stories": []
+}
