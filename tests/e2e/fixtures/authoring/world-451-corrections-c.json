@@ -1,0 +1,5665 @@
+{
+  "bookmarkId": "451",
+  "checks": [
+    {
+      "path": [
+        "provinces",
+        "@salzburg",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@salzburg",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@salzburg",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@salzburg",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@wien",
+        "realm"
+      ],
+      "equals": "rugi_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@wien",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@wien",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@wien",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 6500
+        },
+        {
+          "culture": "rugian",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 3500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@linz",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@linz",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@linz",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@linz",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@klagenfurt",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@klagenfurt",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@klagenfurt",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@klagenfurt",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@graz",
+        "realm"
+      ],
+      "equals": "italy"
+    },
+    {
+      "path": [
+        "provinces",
+        "@graz",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@graz",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@graz",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 9500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@szekesfehervar",
+        "realm"
+      ],
+      "equals": "gepids_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@szekesfehervar",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@szekesfehervar",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@szekesfehervar",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 6000
+        },
+        {
+          "culture": "gepid",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2500
+        },
+        {
+          "culture": "rugian",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@moson",
+        "realm"
+      ],
+      "equals": "gepids_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@moson",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@moson",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@moson",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 6000
+        },
+        {
+          "culture": "gepid",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        },
+        {
+          "culture": "rugian",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@sirmium",
+        "realm"
+      ],
+      "equals": "sirmium_local_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sirmium",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sirmium",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sirmium",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "gepid",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@osijek",
+        "realm"
+      ],
+      "equals": "gepids_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@osijek",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@osijek",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@osijek",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 7500
+        },
+        {
+          "culture": "gepid",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@constantinople",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@constantinople",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@constantinople",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@constantinople",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 8500
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@adrianople",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@adrianople",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@adrianople",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@adrianople",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 8500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@thessaloniki",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@thessaloniki",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@thessaloniki",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@thessaloniki",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 8500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@serres",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@serres",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@serres",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@serres",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 8500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@larissa",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@larissa",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@larissa",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@larissa",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@athens",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@athens",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@athens",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@athens",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@thebes",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@thebes",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@thebes",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@thebes",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@korinth",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@korinth",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@korinth",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@korinth",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@sparta",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sparta",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sparta",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sparta",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@ioannina",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ioannina",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ioannina",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ioannina",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 3000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@dyrrachion",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@dyrrachion",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@dyrrachion",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@dyrrachion",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 3000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@nicaea",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@nicaea",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@nicaea",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@nicaea",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 8500
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@dorylaion",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@dorylaion",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@dorylaion",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@dorylaion",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@ancyra",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ancyra",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ancyra",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ancyra",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 8500
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@amorion",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@amorion",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@amorion",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@amorion",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@smyrna",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@smyrna",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@smyrna",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@smyrna",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@sardis",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sardis",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sardis",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sardis",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@ephesos",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ephesos",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ephesos",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ephesos",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 8500
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@attaleia",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@attaleia",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@attaleia",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@attaleia",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@ikonion",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ikonion",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ikonion",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ikonion",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "isaurian",
+          "religion": "nicene",
+          "populationShare0": 2000
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@caesarea",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@caesarea",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@caesarea",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@caesarea",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 8500
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@sebasteia",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sebasteia",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sebasteia",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sebasteia",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 8500
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@sinope",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sinope",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sinope",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@sinope",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@pliska",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@pliska",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@pliska",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@pliska",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 2000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@silistra",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@silistra",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@silistra",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@silistra",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 2000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@vidin",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@vidin",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@vidin",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@vidin",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 7500
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 1500
+        },
+        {
+          "culture": "gepid",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@serdica",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@serdica",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@serdica",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@serdica",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@philippopolis",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@philippopolis",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@philippopolis",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@philippopolis",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 8500
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@skopje",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@skopje",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@skopje",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@skopje",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@ohrid",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ohrid",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ohrid",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ohrid",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 3000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@tarsos",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@tarsos",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@tarsos",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@tarsos",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 6500
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "paired": true,
+          "populationShare0": 3500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@adana",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@adana",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@adana",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@adana",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 6500
+        },
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "paired": true,
+          "populationShare0": 3500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@antioch",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@antioch",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@antioch",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@antioch",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "populationShare0": 4500
+        },
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "paired": true,
+          "populationShare0": 3500
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@aleppo",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@aleppo",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@aleppo",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@aleppo",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 6500
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 3500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@hama",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@hama",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@hama",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@hama",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 6500
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 3500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@homs",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@homs",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@homs",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@homs",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 6500
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 3500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@damascus",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@damascus",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@damascus",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@damascus",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 6000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2500
+        },
+        {
+          "culture": "syriac",
+          "religion": "jewish",
+          "paired": true,
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@manbij",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@manbij",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@manbij",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@manbij",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 6500
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 3500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@raqqa",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@raqqa",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@raqqa",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@raqqa",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 6500
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 3500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@edessa",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@edessa",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@edessa",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@edessa",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 6500
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 3500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@amida",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@amida",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@amida",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@amida",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 6500
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 3500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@harran",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@harran",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@harran",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@harran",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 5000
+        },
+        {
+          "culture": "syriac",
+          "religion": "mesopotamian_scaffold_451",
+          "paired": true,
+          "populationShare0": 5000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@jerusalem",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@jerusalem",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@jerusalem",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@jerusalem",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 5500
+        },
+        {
+          "culture": "syriac",
+          "religion": "jewish",
+          "paired": true,
+          "populationShare0": 2500
+        },
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@acre",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@acre",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@acre",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@acre",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 6000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2500
+        },
+        {
+          "culture": "syriac",
+          "religion": "jewish",
+          "paired": true,
+          "populationShare0": 1500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@amman",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@amman",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@amman",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@amman",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 6500
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 3500
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@munich",
+        "realm"
+      ],
+      "equals": "raetian_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@munich",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@munich",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@munich",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@regensburg",
+        "realm"
+      ],
+      "equals": "raetian_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@regensburg",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@regensburg",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@regensburg",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@passau",
+        "realm"
+      ],
+      "equals": "raetian_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@passau",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@passau",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@passau",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@veligrad",
+        "realm"
+      ],
+      "equals": "morava_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@veligrad",
+        "culture"
+      ],
+      "equals": "elbegermanic_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@veligrad",
+        "religion"
+      ],
+      "equals": "germanic_pagan"
+    },
+    {
+      "path": [
+        "provinces",
+        "@veligrad",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "elbegermanic_476",
+          "religion": "germanic_pagan",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@olomouc",
+        "realm"
+      ],
+      "equals": "morava_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@olomouc",
+        "culture"
+      ],
+      "equals": "elbegermanic_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@olomouc",
+        "religion"
+      ],
+      "equals": "germanic_pagan"
+    },
+    {
+      "path": [
+        "provinces",
+        "@olomouc",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "elbegermanic_476",
+          "religion": "germanic_pagan",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@brno",
+        "realm"
+      ],
+      "equals": "morava_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@brno",
+        "culture"
+      ],
+      "equals": "elbegermanic_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@brno",
+        "religion"
+      ],
+      "equals": "germanic_pagan"
+    },
+    {
+      "path": [
+        "provinces",
+        "@brno",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "elbegermanic_476",
+          "religion": "germanic_pagan",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@nitra",
+        "realm"
+      ],
+      "equals": "middle_danube_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@nitra",
+        "culture"
+      ],
+      "equals": "elbegermanic_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@nitra",
+        "religion"
+      ],
+      "equals": "germanic_pagan"
+    },
+    {
+      "path": [
+        "provinces",
+        "@nitra",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "elbegermanic_476",
+          "religion": "germanic_pagan",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@bratislava",
+        "realm"
+      ],
+      "equals": "middle_danube_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@bratislava",
+        "culture"
+      ],
+      "equals": "elbegermanic_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@bratislava",
+        "religion"
+      ],
+      "equals": "germanic_pagan"
+    },
+    {
+      "path": [
+        "provinces",
+        "@bratislava",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "elbegermanic_476",
+          "religion": "germanic_pagan",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@gyula",
+        "realm"
+      ],
+      "equals": "gepids_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@gyula",
+        "culture"
+      ],
+      "equals": "gepid"
+    },
+    {
+      "path": [
+        "provinces",
+        "@gyula",
+        "religion"
+      ],
+      "equals": "homoian"
+    },
+    {
+      "path": [
+        "provinces",
+        "@gyula",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "gepid",
+          "religion": "homoian",
+          "populationShare0": 6000,
+          "paired": true
+        },
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 4000,
+          "paired": true
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@cluj",
+        "realm"
+      ],
+      "equals": "gepids_476"
+    },
+    {
+      "path": [
+        "provinces",
+        "@cluj",
+        "culture"
+      ],
+      "equals": "gepid"
+    },
+    {
+      "path": [
+        "provinces",
+        "@cluj",
+        "religion"
+      ],
+      "equals": "homoian"
+    },
+    {
+      "path": [
+        "provinces",
+        "@cluj",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "gepid",
+          "religion": "homoian",
+          "populationShare0": 6000,
+          "paired": true
+        },
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 4000,
+          "paired": true
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@cherson",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@cherson",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@cherson",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@cherson",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@candia",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@candia",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@candia",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@candia",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@trebizond",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@trebizond",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@trebizond",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@trebizond",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@nicosia",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@nicosia",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@nicosia",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@nicosia",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@ras",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ras",
+        "culture"
+      ],
+      "equals": "roman"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ras",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@ras",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "roman",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@barqa",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@barqa",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@barqa",
+        "religion"
+      ],
+      "equals": "nicene"
+    },
+    {
+      "path": [
+        "provinces",
+        "@barqa",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@alexandria",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@alexandria",
+        "culture"
+      ],
+      "equals": "greek"
+    },
+    {
+      "path": [
+        "provinces",
+        "@alexandria",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@alexandria",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "populationShare0": 5000
+        },
+        {
+          "culture": "coptic",
+          "religion": "miaphysite",
+          "populationShare0": 3000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@rosetta",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@rosetta",
+        "culture"
+      ],
+      "equals": "coptic"
+    },
+    {
+      "path": [
+        "provinces",
+        "@rosetta",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@rosetta",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "coptic",
+          "religion": "miaphysite",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2000
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@fustat",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@fustat",
+        "culture"
+      ],
+      "equals": "coptic"
+    },
+    {
+      "path": [
+        "provinces",
+        "@fustat",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@fustat",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "coptic",
+          "religion": "miaphysite",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2000
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@fayyum",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@fayyum",
+        "culture"
+      ],
+      "equals": "coptic"
+    },
+    {
+      "path": [
+        "provinces",
+        "@fayyum",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@fayyum",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "coptic",
+          "religion": "miaphysite",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2000
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@asyut",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@asyut",
+        "culture"
+      ],
+      "equals": "coptic"
+    },
+    {
+      "path": [
+        "provinces",
+        "@asyut",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@asyut",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "coptic",
+          "religion": "miaphysite",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2000
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@luxor",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@luxor",
+        "culture"
+      ],
+      "equals": "coptic"
+    },
+    {
+      "path": [
+        "provinces",
+        "@luxor",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@luxor",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "coptic",
+          "religion": "miaphysite",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2000
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@aswan",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@aswan",
+        "culture"
+      ],
+      "equals": "coptic"
+    },
+    {
+      "path": [
+        "provinces",
+        "@aswan",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@aswan",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "coptic",
+          "religion": "miaphysite",
+          "populationShare0": 7000
+        },
+        {
+          "culture": "greek",
+          "religion": "nicene",
+          "paired": true,
+          "populationShare0": 2000
+        },
+        {
+          "culture": "greek",
+          "religion": "miaphysite",
+          "paired": true,
+          "populationShare0": 1000
+        }
+      ]
+    },
+    {
+      "path": [
+        "provinces",
+        "@palmyra_district",
+        "realm"
+      ],
+      "equals": "east_451"
+    },
+    {
+      "path": [
+        "provinces",
+        "@palmyra_district",
+        "culture"
+      ],
+      "equals": "syriac"
+    },
+    {
+      "path": [
+        "provinces",
+        "@palmyra_district",
+        "religion"
+      ],
+      "equals": "miaphysite"
+    },
+    {
+      "path": [
+        "provinces",
+        "@palmyra_district",
+        "communities"
+      ],
+      "equals": [
+        {
+          "culture": "syriac",
+          "religion": "miaphysite",
+          "populationShare0": 10000
+        }
+      ]
+    },
+    {
+      "path": [
+        "realms",
+        "@sirmium_local_451"
+      ],
+      "equals": {
+        "id": "sirmium_local_451",
+        "name": "Sirmium District",
+        "color": "#8b8975",
+        "capital": "sirmium",
+        "government": "lineage_kingship",
+        "rank": 1,
+        "aggression": 0,
+        "religion": "nicene",
+        "ruler": {
+          "generated": true,
+          "sex": "m",
+          "culture": "roman",
+          "born": 416,
+          "mar": 7,
+          "trait": "patient"
+        },
+        "royalCourt": {
+          "founderId": "ruler",
+          "members": []
+        }
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@rugi_476"
+      ],
+      "equals": {
+        "id": "rugi_476",
+        "name": "Rugian Kingdom",
+        "color": "#87987e",
+        "capital": "wien",
+        "aggression": 0,
+        "rank": 3,
+        "religion": "homoian",
+        "techTraditions": [
+          "latin"
+        ],
+        "governingIdentity": {
+          "eliteCultureId": "rugian",
+          "eliteFaithId": "homoian",
+          "legalIdentityId": "gothic_custom",
+          "tolerance": "preference",
+          "taxation": "equal",
+          "justicePolicy": "personal"
+        },
+        "ruler": {
+          "sex": "m",
+          "culture": "rugian",
+          "born": 415,
+          "mar": 8,
+          "trait": "patient",
+          "generated": true
+        },
+        "government": "regnum"
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@east_451"
+      ],
+      "equals": {
+        "id": "east_451",
+        "name": "Eastern Roman Court",
+        "color": "#a04fb0",
+        "capital": "constantinople",
+        "aggression": 0,
+        "rank": 4,
+        "religion": "nicene",
+        "techTraditions": [
+          "byzantine"
+        ],
+        "government": "roman_civic",
+        "governingIdentity": {
+          "eliteCultureId": "greek",
+          "eliteFaithId": "nicene",
+          "legalIdentityId": "late_roman",
+          "tolerance": "preference",
+          "taxation": "equal",
+          "justicePolicy": "personal"
+        },
+        "ruler": {
+          "name": "Marcian",
+          "sex": "m",
+          "culture": "greek",
+          "born": 391,
+          "mar": 8,
+          "trait": "patient"
+        },
+        "royalCourt": {
+          "spouseId": "pulcheria",
+          "members": [
+            {
+              "id": "pulcheria",
+              "name": "Pulcheria",
+              "sex": "f",
+              "culture": "greek",
+              "religion": "nicene",
+              "born": 399,
+              "spouseId": "ruler",
+              "alive": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@pannonia"
+      ],
+      "equals": {
+        "id": "pannonia",
+        "name": "Gothic Following",
+        "color": "#809b73",
+        "capital": "thessaloniki",
+        "nonTerritorial": true,
+        "government": "federate_polity",
+        "aggression": 1,
+        "rank": 3,
+        "religion": "homoian",
+        "governingIdentity": {
+          "eliteCultureId": "gothic",
+          "eliteFaithId": "homoian",
+          "legalIdentityId": "gothic_custom",
+          "tolerance": "preference",
+          "taxation": "equal",
+          "justicePolicy": "personal"
+        },
+        "ruler": {
+          "sex": "m",
+          "culture": "gothic",
+          "born": 429,
+          "mar": 12,
+          "trait": "ambitious",
+          "generated": true
+        }
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@gepids_476"
+      ],
+      "equals": {
+        "id": "gepids_476",
+        "name": "Pannonian Communities",
+        "color": "#6c846c",
+        "capital": "szekesfehervar",
+        "aggression": 0,
+        "rank": 2,
+        "religion": "homoian",
+        "techTraditions": [
+          "latin"
+        ],
+        "governingIdentity": {
+          "eliteCultureId": "gepid",
+          "eliteFaithId": "homoian",
+          "legalIdentityId": "gothic_custom",
+          "tolerance": "preference",
+          "taxation": "equal",
+          "justicePolicy": "personal"
+        },
+        "ruler": {
+          "generated": true,
+          "sex": "m",
+          "culture": "gepid",
+          "born": 415,
+          "mar": 8,
+          "trait": "patient"
+        },
+        "government": "lineage_kingship",
+        "royalCourt": {
+          "founderId": "ruler",
+          "members": []
+        }
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@thracian_goths_476"
+      ],
+      "equals": {
+        "id": "thracian_goths_476",
+        "name": "Thracian Gothic Host",
+        "color": "#7b846f",
+        "capital": "adrianople",
+        "aggression": 0,
+        "rank": 3,
+        "religion": "homoian",
+        "techTraditions": [
+          "latin"
+        ],
+        "nonTerritorial": true,
+        "government": "federate_polity",
+        "governingIdentity": {
+          "eliteCultureId": "gothic",
+          "eliteFaithId": "homoian",
+          "legalIdentityId": "gothic_custom",
+          "tolerance": "preference",
+          "taxation": "equal",
+          "justicePolicy": "personal"
+        },
+        "ruler": {
+          "sex": "m",
+          "culture": "gothic",
+          "born": 405,
+          "mar": 8,
+          "trait": "patient",
+          "generated": true
+        }
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@pontic_following_476"
+      ],
+      "equals": {
+        "id": "pontic_following_476",
+        "name": "Pontic Followings",
+        "color": "#ac8959",
+        "capital": "cherson",
+        "nonTerritorial": true,
+        "government": "mobile_confederation",
+        "culture": "turkic",
+        "religion": "tengri",
+        "rank": 3,
+        "mobile": {
+          "profileId": "pontic_wider_following",
+          "patronRealmId": "east_451",
+          "origin": "cherson",
+          "target": "cherson",
+          "food": 7200,
+          "fighters": 120,
+          "treasury": 60
+        }
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@raetian_476"
+      ],
+      "equals": {
+        "id": "raetian_476",
+        "name": "Raetian Communities",
+        "capital": "regensburg",
+        "government": "roman_civic",
+        "rank": 1,
+        "aggression": 0,
+        "religion": "nicene",
+        "color": "#7386a1",
+        "ruler": {
+          "generated": true,
+          "sex": "m",
+          "culture": "roman",
+          "born": 415,
+          "mar": 7,
+          "trait": "patient"
+        }
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@morava_476"
+      ],
+      "equals": {
+        "id": "morava_476",
+        "name": "Morava Valley Communities",
+        "capital": "veligrad",
+        "government": "regnum",
+        "rank": 1,
+        "aggression": 0,
+        "religion": "germanic_pagan",
+        "color": "#81936c",
+        "ruler": {
+          "generated": true,
+          "sex": "m",
+          "culture": "elbegermanic_476",
+          "born": 415,
+          "mar": 7,
+          "trait": "patient"
+        }
+      }
+    },
+    {
+      "path": [
+        "realms",
+        "@middle_danube_476"
+      ],
+      "equals": {
+        "id": "middle_danube_476",
+        "name": "Northern Danubian Communities",
+        "capital": "bratislava",
+        "government": "regnum",
+        "rank": 1,
+        "aggression": 0,
+        "religion": "germanic_pagan",
+        "color": "#92745c",
+        "ruler": {
+          "generated": true,
+          "sex": "m",
+          "culture": "elbegermanic_476",
+          "born": 415,
+          "mar": 7,
+          "trait": "patient"
+        }
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "constantinople_senate"
+      ],
+      "equals": {
+        "city": "Constantinople",
+        "kind": "senate",
+        "provinceId": "constantinople",
+        "site": "constantinople",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "constantinople_see"
+      ],
+      "equals": {
+        "city": "Constantinople",
+        "kind": "patriarchate",
+        "provinceId": "constantinople",
+        "site": "constantinople",
+        "religion": "chalcedonian",
+        "culture": "greek",
+        "officeId": "constantinople_patriarch",
+        "historicalName": "Anatolius"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "alexandria_see"
+      ],
+      "equals": {
+        "city": "Alexandria",
+        "kind": "patriarchate",
+        "provinceId": "alexandria",
+        "site": "alexandria_wider_476",
+        "religion": "miaphysite",
+        "culture": "greek",
+        "officeId": "alexandria_patriarch",
+        "historicalName": "Dioscorus"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "antioch_see"
+      ],
+      "equals": {
+        "city": "Antioch",
+        "kind": "patriarchate",
+        "provinceId": "antioch",
+        "site": "antioch_outer_476",
+        "religion": "miaphysite",
+        "culture": "greek",
+        "officeId": "antioch_patriarch"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "jerusalem_see"
+      ],
+      "equals": {
+        "city": "Jerusalem",
+        "kind": "see",
+        "provinceId": "jerusalem",
+        "site": "jerusalem_outer_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "jerusalem_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "thessalonica_see"
+      ],
+      "equals": {
+        "city": "Thessalonica",
+        "kind": "see",
+        "provinceId": "thessaloniki",
+        "site": "thessalonica_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "thessalonica_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "dyrrachium_see"
+      ],
+      "equals": {
+        "city": "Dyrrachium",
+        "kind": "see",
+        "provinceId": "dyrrachion",
+        "site": "dyrrachium_476",
+        "religion": "nicene",
+        "culture": "roman",
+        "officeId": "dyrrachium_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "serdica_see"
+      ],
+      "equals": {
+        "city": "Serdica",
+        "kind": "see",
+        "provinceId": "serdica",
+        "site": "serdica_476",
+        "religion": "nicene",
+        "culture": "roman",
+        "officeId": "serdica_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "nicaea_see"
+      ],
+      "equals": {
+        "city": "Nicaea",
+        "kind": "see",
+        "provinceId": "nicaea",
+        "site": "nicaea_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "nicaea_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "ephesus_see"
+      ],
+      "equals": {
+        "city": "Ephesus",
+        "kind": "see",
+        "provinceId": "ephesos",
+        "site": "ephesus_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "ephesus_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "caesarea_see"
+      ],
+      "equals": {
+        "city": "Caesarea",
+        "kind": "see",
+        "provinceId": "caesarea",
+        "site": "caesarea_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "caesarea_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "thessalonica_council"
+      ],
+      "equals": {
+        "city": "Thessalonica",
+        "kind": "council",
+        "provinceId": "thessaloniki",
+        "site": "thessalonica_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "serdica_council"
+      ],
+      "equals": {
+        "city": "Serdica",
+        "kind": "council",
+        "provinceId": "serdica",
+        "site": "serdica_476",
+        "religion": "nicene",
+        "culture": "roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "sirmium_council"
+      ],
+      "equals": {
+        "city": "Sirmium",
+        "kind": "council",
+        "provinceId": "sirmium",
+        "site": "sirmium_476",
+        "religion": "nicene",
+        "culture": "roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "sirmium_see"
+      ],
+      "equals": {
+        "city": "Sirmium",
+        "kind": "see",
+        "provinceId": "sirmium",
+        "site": "sirmium_476",
+        "religion": "nicene",
+        "culture": "roman",
+        "officeId": "sirmium_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "mursa_council"
+      ],
+      "equals": {
+        "city": "Mursa",
+        "kind": "council",
+        "provinceId": "osijek",
+        "site": "mursa_476",
+        "religion": "nicene",
+        "culture": "roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "mursa_see"
+      ],
+      "equals": {
+        "city": "Mursa",
+        "kind": "see",
+        "provinceId": "osijek",
+        "site": "mursa_476",
+        "religion": "nicene",
+        "culture": "roman",
+        "officeId": "mursa_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "hadrianopolis_council"
+      ],
+      "equals": {
+        "city": "Hadrianopolis",
+        "kind": "council",
+        "provinceId": "adrianople",
+        "site": "hadrianopolis_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "hadrianopolis_see"
+      ],
+      "equals": {
+        "city": "Hadrianopolis",
+        "kind": "see",
+        "provinceId": "adrianople",
+        "site": "hadrianopolis_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "hadrianopolis_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "philippopolis_council"
+      ],
+      "equals": {
+        "city": "Philippopolis",
+        "kind": "council",
+        "provinceId": "philippopolis",
+        "site": "philippopolis_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "philippopolis_see"
+      ],
+      "equals": {
+        "city": "Philippopolis",
+        "kind": "see",
+        "provinceId": "philippopolis",
+        "site": "philippopolis_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "philippopolis_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "durostorum_council"
+      ],
+      "equals": {
+        "city": "Durostorum",
+        "kind": "council",
+        "provinceId": "silistra",
+        "site": "durostorum_476",
+        "religion": "nicene",
+        "culture": "roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "durostorum_see"
+      ],
+      "equals": {
+        "city": "Durostorum",
+        "kind": "see",
+        "provinceId": "silistra",
+        "site": "durostorum_476",
+        "religion": "nicene",
+        "culture": "roman",
+        "officeId": "durostorum_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "bononia_danube_council"
+      ],
+      "equals": {
+        "city": "Bononia",
+        "kind": "council",
+        "provinceId": "vidin",
+        "site": "bononia_danube_476",
+        "religion": "nicene",
+        "culture": "roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "bononia_danube_see"
+      ],
+      "equals": {
+        "city": "Bononia",
+        "kind": "see",
+        "provinceId": "vidin",
+        "site": "bononia_danube_476",
+        "religion": "nicene",
+        "culture": "roman",
+        "officeId": "bononia_danube_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "scupi_council"
+      ],
+      "equals": {
+        "city": "Scupi",
+        "kind": "council",
+        "provinceId": "skopje",
+        "site": "scupi_476",
+        "religion": "nicene",
+        "culture": "roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "scupi_see"
+      ],
+      "equals": {
+        "city": "Scupi",
+        "kind": "see",
+        "provinceId": "skopje",
+        "site": "scupi_476",
+        "religion": "nicene",
+        "culture": "roman",
+        "officeId": "scupi_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "lychnidus_council"
+      ],
+      "equals": {
+        "city": "Lychnidus",
+        "kind": "council",
+        "provinceId": "ohrid",
+        "site": "lychnidus_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "lychnidus_see"
+      ],
+      "equals": {
+        "city": "Lychnidus",
+        "kind": "see",
+        "provinceId": "ohrid",
+        "site": "lychnidus_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "lychnidus_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "dyrrachium_council"
+      ],
+      "equals": {
+        "city": "Dyrrachium",
+        "kind": "council",
+        "provinceId": "dyrrachion",
+        "site": "dyrrachium_476",
+        "religion": "nicene",
+        "culture": "roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "corinth_council"
+      ],
+      "equals": {
+        "city": "Corinth",
+        "kind": "council",
+        "provinceId": "korinth",
+        "site": "corinth_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "corinth_see"
+      ],
+      "equals": {
+        "city": "Corinth",
+        "kind": "see",
+        "provinceId": "korinth",
+        "site": "corinth_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "corinth_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "athens_council"
+      ],
+      "equals": {
+        "city": "Athens",
+        "kind": "council",
+        "provinceId": "athens",
+        "site": "athens_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "athens_see"
+      ],
+      "equals": {
+        "city": "Athens",
+        "kind": "see",
+        "provinceId": "athens",
+        "site": "athens_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "athens_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "nicaea_council"
+      ],
+      "equals": {
+        "city": "Nicaea",
+        "kind": "council",
+        "provinceId": "nicaea",
+        "site": "nicaea_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "ancyra_council"
+      ],
+      "equals": {
+        "city": "Ancyra",
+        "kind": "council",
+        "provinceId": "ancyra",
+        "site": "ancyra_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "ancyra_see"
+      ],
+      "equals": {
+        "city": "Ancyra",
+        "kind": "see",
+        "provinceId": "ancyra",
+        "site": "ancyra_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "ancyra_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "sardis_council"
+      ],
+      "equals": {
+        "city": "Sardis",
+        "kind": "council",
+        "provinceId": "sardis",
+        "site": "sardis_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "sardis_see"
+      ],
+      "equals": {
+        "city": "Sardis",
+        "kind": "see",
+        "provinceId": "sardis",
+        "site": "sardis_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "sardis_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "ephesus_council"
+      ],
+      "equals": {
+        "city": "Ephesus",
+        "kind": "council",
+        "provinceId": "ephesos",
+        "site": "ephesus_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "attalea_council"
+      ],
+      "equals": {
+        "city": "Attalea",
+        "kind": "council",
+        "provinceId": "attaleia",
+        "site": "attalea_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "attalea_see"
+      ],
+      "equals": {
+        "city": "Attalea",
+        "kind": "see",
+        "provinceId": "attaleia",
+        "site": "attalea_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "attalea_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "caesarea_council"
+      ],
+      "equals": {
+        "city": "Caesarea",
+        "kind": "council",
+        "provinceId": "caesarea",
+        "site": "caesarea_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "sebastea_council"
+      ],
+      "equals": {
+        "city": "Sebastea",
+        "kind": "council",
+        "provinceId": "sebasteia",
+        "site": "sebastea_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "sebastea_see"
+      ],
+      "equals": {
+        "city": "Sebastea",
+        "kind": "see",
+        "provinceId": "sebasteia",
+        "site": "sebastea_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "sebastea_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "iconium_council"
+      ],
+      "equals": {
+        "city": "Iconium",
+        "kind": "council",
+        "provinceId": "ikonion",
+        "site": "ikonion_476",
+        "religion": "nicene",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "iconium_see"
+      ],
+      "equals": {
+        "city": "Iconium",
+        "kind": "see",
+        "provinceId": "ikonion",
+        "site": "ikonion_476",
+        "religion": "nicene",
+        "culture": "greek",
+        "officeId": "iconium_bishop"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "sirmium_homoian_congregation"
+      ],
+      "equals": {
+        "city": "Sirmium",
+        "kind": "congregation",
+        "provinceId": "sirmium",
+        "site": "sirmium_476",
+        "religion": "homoian",
+        "culture": "gepid"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "thessalonica_homoian_congregation"
+      ],
+      "equals": {
+        "city": "Thessalonica",
+        "kind": "congregation",
+        "provinceId": "thessaloniki",
+        "site": "thessalonica_476",
+        "religion": "homoian",
+        "culture": "gothic"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "hadrianopolis_homoian_congregation"
+      ],
+      "equals": {
+        "city": "Hadrianopolis",
+        "kind": "congregation",
+        "provinceId": "adrianople",
+        "site": "hadrianopolis_476",
+        "religion": "homoian",
+        "culture": "gothic"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "isaurian_congregation"
+      ],
+      "equals": {
+        "city": "Isauria",
+        "kind": "congregation",
+        "provinceId": "ikonion",
+        "site": "isauria_476",
+        "religion": "nicene",
+        "culture": "isaurian"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "ephesus_miaphysite_congregation"
+      ],
+      "equals": {
+        "city": "Ephesus",
+        "kind": "congregation",
+        "provinceId": "ephesos",
+        "site": "ephesus_476",
+        "religion": "miaphysite",
+        "culture": "greek",
+        "representative": {
+          "born": 405,
+          "role": "priest",
+          "station": 3
+        }
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "lauriacum_council"
+      ],
+      "equals": {
+        "kind": "council",
+        "city": "Lauriacum",
+        "provinceId": "linz",
+        "site": "lauriacum_476",
+        "religion": "nicene",
+        "culture": "roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "lauriacum_see"
+      ],
+      "equals": {
+        "kind": "see",
+        "city": "Lauriacum",
+        "provinceId": "linz",
+        "site": "lauriacum_476",
+        "religion": "nicene",
+        "culture": "roman",
+        "officeId": "lauriacum_bishop",
+        "representative": {
+          "born": 395,
+          "role": "priest",
+          "skills": {
+            "lea": 9,
+            "dip": 10
+          }
+        }
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "iuvavum_council"
+      ],
+      "equals": {
+        "kind": "council",
+        "city": "Iuvavum",
+        "provinceId": "salzburg",
+        "site": "salzburg_476",
+        "religion": "nicene",
+        "culture": "roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "favianis_council"
+      ],
+      "equals": {
+        "city": "Favianis",
+        "kind": "council",
+        "provinceId": "wien",
+        "site": "favianis_476",
+        "religion": "nicene",
+        "culture": "roman"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "favianis_congregation"
+      ],
+      "equals": {
+        "city": "Favianis",
+        "kind": "congregation",
+        "provinceId": "wien",
+        "site": "favianis_476",
+        "religion": "nicene",
+        "culture": "roman",
+        "representative": {
+          "born": 385,
+          "role": "monk",
+          "station": 2,
+          "skills": {
+            "lea": 11,
+            "dip": 12
+          }
+        }
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "antioch_council"
+      ],
+      "equals": {
+        "city": "Antioch",
+        "kind": "council",
+        "provinceId": "antioch",
+        "site": "antioch_outer_476",
+        "religion": "miaphysite",
+        "culture": "greek"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "edessa_council_476"
+      ],
+      "equals": {
+        "city": "Edessa",
+        "kind": "council",
+        "provinceId": "edessa",
+        "site": "edessa_outer_476",
+        "religion": "miaphysite",
+        "culture": "syriac"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "edessa_see_476"
+      ],
+      "equals": {
+        "city": "Edessa",
+        "kind": "see",
+        "provinceId": "edessa",
+        "site": "edessa_outer_476",
+        "religion": "miaphysite",
+        "culture": "syriac",
+        "officeId": "edessa_bishop_476"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "alexandria_council_476"
+      ],
+      "equals": {
+        "city": "Alexandria",
+        "kind": "council",
+        "provinceId": "alexandria",
+        "site": "alexandria_wider_476",
+        "culture": "greek",
+        "religion": "miaphysite"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "fustat_council_476"
+      ],
+      "equals": {
+        "city": "Babylon of Egypt",
+        "kind": "council",
+        "provinceId": "fustat",
+        "site": "fustat_wider_476",
+        "culture": "coptic",
+        "religion": "miaphysite"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "fayyum_council_476"
+      ],
+      "equals": {
+        "city": "Arsinoe",
+        "kind": "council",
+        "provinceId": "fayyum",
+        "site": "fayyum_wider_476",
+        "culture": "coptic",
+        "religion": "miaphysite"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "trebizond_council_476"
+      ],
+      "equals": {
+        "city": "Trapezus",
+        "kind": "council",
+        "provinceId": "trebizond",
+        "site": "trebizond_wider_476",
+        "culture": "greek",
+        "religion": "nicene"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "candia_council_476"
+      ],
+      "equals": {
+        "city": "Gortyna",
+        "kind": "council",
+        "provinceId": "candia",
+        "site": "candia_wider_476",
+        "culture": "greek",
+        "religion": "nicene"
+      }
+    },
+    {
+      "path": [
+        "localInstitutions",
+        "nicosia_council_476"
+      ],
+      "equals": {
+        "city": "Tamassos",
+        "kind": "council",
+        "provinceId": "nicosia",
+        "site": "nicosia_wider_476",
+        "culture": "greek",
+        "religion": "nicene"
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "amal_ruler"
+      ],
+      "equals": {
+        "ref": {
+          "kind": "realm_ruler",
+          "realmId": "pannonia"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "thracian_ruler"
+      ],
+      "equals": {
+        "ref": {
+          "kind": "realm_ruler",
+          "realmId": "thracian_goths_476"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "thessalonica_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 406,
+        "station": 3,
+        "role": "notable",
+        "home": "thessaloniki",
+        "skills": {
+          "ste": 10,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "serdica_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "roman",
+        "religion": "nicene",
+        "born": 407,
+        "station": 3,
+        "role": "notable",
+        "home": "serdica",
+        "skills": {
+          "ste": 9,
+          "lea": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "thracia_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 409,
+        "station": 3,
+        "role": "notable",
+        "home": "philippopolis",
+        "skills": {
+          "ste": 9,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "haemimontus_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 408,
+        "station": 3,
+        "role": "notable",
+        "home": "adrianople",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "moesia_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "roman",
+        "religion": "nicene",
+        "born": 405,
+        "station": 3,
+        "role": "notable",
+        "home": "silistra",
+        "skills": {
+          "ste": 9,
+          "lea": 7
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "dacia_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "roman",
+        "religion": "nicene",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "vidin",
+        "skills": {
+          "ste": 8,
+          "dip": 7
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "dardania_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "roman",
+        "religion": "nicene",
+        "born": 406,
+        "station": 3,
+        "role": "notable",
+        "home": "skopje",
+        "skills": {
+          "ste": 8,
+          "lea": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "epirus_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "roman",
+        "religion": "nicene",
+        "born": 409,
+        "station": 3,
+        "role": "notable",
+        "home": "dyrrachion",
+        "skills": {
+          "ste": 9,
+          "dip": 9
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "bithynia_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 405,
+        "station": 3,
+        "role": "notable",
+        "home": "nicaea",
+        "skills": {
+          "ste": 10,
+          "lea": 9
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "galatia_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 407,
+        "station": 3,
+        "role": "notable",
+        "home": "ancyra",
+        "skills": {
+          "ste": 10,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "lydia_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 409,
+        "station": 3,
+        "role": "notable",
+        "home": "sardis",
+        "skills": {
+          "ste": 9,
+          "lea": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "pamphylia_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 408,
+        "station": 3,
+        "role": "notable",
+        "home": "attaleia",
+        "skills": {
+          "ste": 9,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "cappadocia_governor"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 405,
+        "station": 3,
+        "role": "notable",
+        "home": "caesarea",
+        "skills": {
+          "ste": 9,
+          "lea": 9
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "isaurian_magnate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "isaurian",
+        "religion": "nicene",
+        "born": 425,
+        "station": 3,
+        "role": "notable",
+        "home": "ikonion",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "amal_captain"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "gothic",
+        "religion": "homoian",
+        "born": 416,
+        "station": 3,
+        "role": "commander",
+        "home": "thessaloniki",
+        "skills": {
+          "mar": 10,
+          "dip": 7
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "thracian_captain"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "gothic",
+        "religion": "homoian",
+        "born": 411,
+        "station": 3,
+        "role": "commander",
+        "home": "adrianople",
+        "skills": {
+          "mar": 10,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "candia_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "candia",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "trebizond_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "trebizond",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "nicosia_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "nicosia",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "barqa_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "nicene",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "barqa",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "alexandria_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "greek",
+        "religion": "miaphysite",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "alexandria",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "rosetta_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "coptic",
+        "religion": "miaphysite",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "rosetta",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "fustat_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "coptic",
+        "religion": "miaphysite",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "fustat",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "fayyum_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "coptic",
+        "religion": "miaphysite",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "fayyum",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "asyut_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "coptic",
+        "religion": "miaphysite",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "asyut",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "luxor_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "coptic",
+        "religion": "miaphysite",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "luxor",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "aswan_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "coptic",
+        "religion": "miaphysite",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "aswan",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "actors",
+        "ras_civil_delegate"
+      ],
+      "equals": {
+        "sex": "m",
+        "culture": "roman",
+        "religion": "nicene",
+        "born": 410,
+        "station": 3,
+        "role": "notable",
+        "home": "ras",
+        "skills": {
+          "ste": 8,
+          "dip": 8
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "thessalonica_governor"
+      ],
+      "equals": {
+        "officeId": "consularis",
+        "actorId": "thessalonica_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "thessaloniki"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "serdica_governor"
+      ],
+      "equals": {
+        "officeId": "consularis",
+        "actorId": "serdica_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "serdica"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "thracia_governor"
+      ],
+      "equals": {
+        "officeId": "consularis",
+        "actorId": "thracia_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "philippopolis"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "haemimontus_governor"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "haemimontus_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "adrianople"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "moesia_governor"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "moesia_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "silistra"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "dacia_governor"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "dacia_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "vidin"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "dardania_governor"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "dardania_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "skopje"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "epirus_governor"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "epirus_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "dyrrachion"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "bithynia_governor"
+      ],
+      "equals": {
+        "officeId": "consularis",
+        "actorId": "bithynia_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "nicaea"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "galatia_governor"
+      ],
+      "equals": {
+        "officeId": "consularis",
+        "actorId": "galatia_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "ancyra"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "lydia_governor"
+      ],
+      "equals": {
+        "officeId": "consularis",
+        "actorId": "lydia_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "sardis"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "pamphylia_governor"
+      ],
+      "equals": {
+        "officeId": "consularis",
+        "actorId": "pamphylia_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "attaleia"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "cappadocia_governor"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "cappadocia_governor",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "caesarea"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "candia_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "candia_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "candia"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "trebizond_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "trebizond_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "trebizond"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "nicosia_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "nicosia_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "nicosia"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "barqa_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "barqa_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "barqa"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "alexandria_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "alexandria_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "alexandria"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "rosetta_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "rosetta_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "rosetta"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "fustat_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "fustat_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "fustat"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "fayyum_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "fayyum_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "fayyum"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "asyut_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "asyut_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "asyut"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "luxor_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "luxor_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "luxor"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "aswan_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "aswan_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "aswan"
+        }
+      }
+    },
+    {
+      "path": [
+        "opening",
+        "appointments",
+        "ras_civil_delegate"
+      ],
+      "equals": {
+        "officeId": "praeses",
+        "actorId": "ras_civil_delegate",
+        "realmId": "east_451",
+        "scope": {
+          "kind": "county",
+          "id": "ras"
+        }
+      }
+    }
+  ]
+}
