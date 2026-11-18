@@ -29,11 +29,14 @@ async function startImported(page,info,bookmark,code) {
       const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
       const read = FB.checkTrigger(s,ev.trigger);
       const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
-      FBDATA.events = [ev]; FB.invalidateEventIndex();
+      const subscriptions = FBDATA.eventSubscriptions;
+      FBDATA.events = [ev];
+      FBDATA.eventSubscriptions = subscriptions[ev.id] ? {[ev.id]:subscriptions[ev.id]} : {};
+      FB.invalidateEventIndex();
       function pick() {s.eventQueue=[];s.slotDays=[s.date.day];return FB.pickDailyEvents(s).map(function (e) {return e.id;});}
       const positive = pick(); change();
       const after = FB.getRngState(), negative = pick();
-      FBDATA.events = all; FB.invalidateEventIndex();
+      FBDATA.events = all; FBDATA.eventSubscriptions = subscriptions; FB.invalidateEventIndex();
       return {id:id,read:read,pure:pure,positive:positive,negative:negative,rejectionPure:after === FB.getRngState()};
     };
   });

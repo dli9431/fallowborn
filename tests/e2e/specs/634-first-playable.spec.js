@@ -62,7 +62,7 @@ test('634 loads every start and story contributor before the native manifest clo
     'data/starts_634_ordinary.js','data/bookmark_634.js','data/bookmark_634_campaigns.js','data/story_campaigns_634.js',
     'data/starts_634_ctesiphon.js','data/starts_634_rulers.js','data/starts_634_damascus.js',
     'data/starts_634_frontier.js','data/starts_634_medina.js','data/story_ruler_agendas_634.js',
-    'data/story_households_634_ctesiphon.js','data/story_households_634_damascus.js',
+    'data/events_634.js','data/story_households_634_ctesiphon.js','data/story_households_634_damascus.js',
     'data/story_households_634_frontier.js','data/story_households_634_medina.js',
     'data/story_household_effects_634.js','data/story_opening_goals_634.js','data/start_ambitions_634.js']));
   expect(scripts.filter(function (script) { return /634/.test(script[1]); })).toEqual([]);

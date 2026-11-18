@@ -234,7 +234,8 @@ test('invalid complete candidates reject purely and missing court input withhold
   const failed=await page.evaluate(function () {
     return {absent:!FB.bookmark('634'),diagnostics:FB.bookmarkRuntimeDiagnostics(),other:!!FB.bookmark('867')};
   });
-  expect(failed.absent).toBe(true); expect(failed.other).toBe(true);
+  expect(failed.absent).toBe(true);
+  expect(failed.other,JSON.stringify(failed.diagnostics)).toBe(true);
   expect(JSON.stringify(failed.diagnostics)).toContain('Missing 634 court declaration: t');
 });
 

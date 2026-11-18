@@ -50,7 +50,7 @@ for (const crazygames of [false]) {
             const ids = FB.faithAvailability(id,null).bookmarkIds;
             const expected = id === 'buddhist_476' ? ['476','493','1204'] :
               id === 'sahel_traditional_476' ? ['476','493','711','800','867','1204'] : ['476','493'];
-            return JSON.stringify(ids.slice().sort()) === JSON.stringify(expected.concat(['568','634']).sort());
+            return JSON.stringify(ids.slice().sort()) === JSON.stringify(expected.concat(['451','568','634']).sort());
           }),
           culturesValid:FB.configureCultures(null),
           religionsValid:FB.validateReligionData(null),

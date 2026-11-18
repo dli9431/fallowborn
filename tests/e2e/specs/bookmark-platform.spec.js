@@ -94,6 +94,7 @@ async function registerReview(page, hidden) {
     delete scenario.trackLocations;
     scenario.intro = 'A civic household begins its review campaign.';
     def.starts = [scenario.id];
+    delete def.startTrackOverrides;
     // A sibling world extends the 476-scoped faiths its copied communities use.
     const religions = {};
     Object.keys(FBDATA.religions).forEach(function (id) {
@@ -279,6 +280,7 @@ test('visibility composes with legacy mod restrictions and explicit empty instit
       const def = JSON.parse(JSON.stringify(FB.bookmark('476')));
       def.id = 'empty_review'; def.stories = []; def.localInstitutions = {};
       delete def.revision; def.starts = [];
+      delete def.startTrackOverrides;
       // without its stories the copy keeps no story-bound opening actors or courts
       def.opening = { actors:{}, appointments:{}, estates:[], claims:[], migrations:[] };
       delete def.openingRevision; delete def.openingRevisions; delete def.openingLegacyRevision;
