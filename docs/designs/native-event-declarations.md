@@ -6,6 +6,8 @@ Native event review references
 
 Mandatory native world validation may resolve event arguments against optional story declarations in the complete sealed authoring view. This is permitted only while the detached proof carries the exact private source-reference identity created by the native source owner. The helper returns a separate reference view, with candidate declarations taking precedence. Optional graphs are not added to the mandatory publication or installed into another selected date. Ordinary JSON candidates cannot supply that identity and continue to reject unknown stories, stages and choices. Runtime review and eligibility still use the actual attached compiled story and canonical transaction.
 
+A native dated event can declare an optional story dependency as the third eventPack argument, mapping its event ID to the required story ID. A missing graph withholds that event. When a whole date fails publication, the source owner omits event groups exclusive to that date. Independent dates and sibling events keep their authored order.
+
 Court office availability
 
 courtOfficeSystemEnabled(state, realmId) rejects missing realms and selects the public-office system for a court with an administration profile, otherwise the Roman-office system. The public owner exposes publicOfficeSystemEnabled and retains its existing scoped system check. These predicates project availability only; appointment eligibility, host scope, current holders, consent, costs, public authority and commit-time checks remain owned by their existing transactions. No content identifiers move into a new engine file and no save record changes.

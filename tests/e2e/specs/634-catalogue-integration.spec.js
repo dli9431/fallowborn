@@ -314,12 +314,13 @@ test('malformed complete content rejects atomically and an absent personal graph
   await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page);
   expect(await page.evaluate(function () {
     const b = FB.bookmark('634','core_courts_v4');
-    return {world:!!b,diagnostics:FB.bookmarkRuntimeDiagnostics().some(function (r) { return r.startId === 'medina_household_634'; }),
+    return {world:!!b,unavailableEvent:!FB.eventById('medina_independent_accounts_634'),
+      siblingEvent:!!FB.eventById('medina_household_letters_634'),diagnostics:FB.bookmarkRuntimeDiagnostics().some(function (r) { return r.startId === 'medina_household_634'; }),
       withheld:!FBDATA.startScenarios.some(function (r) { return r.id === 'medina_household_634'; }),
       siblings:['farmer_634','frontier_household_634','damascus_household_634','ctesiphon_household_634'].every(function (id) {
         return FBDATA.startScenarios.some(function (r) { return r.id === id; });
       }),other:FB.validateBookmark(FB.bookmark('867'))};
-  })).toEqual({world:true,diagnostics:true,withheld:true,siblings:true,other:[]});
+  })).toEqual({world:true,unavailableEvent:true,siblingEvent:true,diagnostics:true,withheld:true,siblings:true,other:[]});
 });
 
 test('Damascus full program and goals have literal display owners with identical effective definitions',async function ({page},info) {

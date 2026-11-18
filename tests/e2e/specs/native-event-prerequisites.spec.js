@@ -66,7 +66,7 @@ test('native optional story reviews validate without installing their graphs int
     options:[{label:'Review supplies',review:{type:'story_choice',args:{storyId:'ravenna_household_track_568',choiceId:'buy_supplies'},refusalOption:1}},
       {label:'Keep current plans',effects:{}}]
   };
-  const at = source.lastIndexOf('\n});');
+  const at = source.lastIndexOf('\n}, {');
   expect(at).toBeGreaterThan(0);
   await page.route('**/' + file + '*',function (route) {
     return route.fulfill({contentType:'application/javascript',body:source.slice(0,at) +

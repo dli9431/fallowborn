@@ -20,7 +20,7 @@
     });
     eventBoundaries[source] = boundary;
   };
-  function publishEventPacks() {
+  function publishEventPacks(references,worlds) {
     var groups = Object.keys(eventSources).map(function (source) { return eventSources[source]; }).sort(compareRows);
     var result = {};
     eventRoots.forEach(function (root) {
@@ -42,7 +42,14 @@
       groups.forEach(function (group) {
         var prefix = after[group.after] || eventBoundaries[group.after][root], at = 0;
         prefix.forEach(function (id) { var index = keys.indexOf(id); if (index >= 0) at = Math.max(at,index + 1); });
-        var rows = group.data[root], ids = listRoot ? rows.map(function (row) { return row.id; }) : Object.keys(rows);
+        if (worlds && !group.dates.some(function (id) { return own(worlds,id); })) return;
+        var rows = group.data[root];
+        if (references && listRoot && group.storyDependencies) {
+          rows = rows.filter(function (row) {
+            return !own(group.storyDependencies,row.id) || own(references,group.storyDependencies[row.id]);
+          });
+        }
+        var ids = listRoot ? rows.map(function (row) { return row.id; }) : Object.keys(rows);
         ids.forEach(function (id,i) { values[id] = listRoot ? rows[i] : rows[id]; });
         keys.splice.apply(keys,[at,0].concat(ids));
         after[group.after] = prefix.concat(ids);
@@ -53,7 +60,7 @@
     eventRoots.forEach(function (root) { FBDATA[root] = result[root]; });
     if (FB.invalidateEventIndex) FB.invalidateEventIndex();
   }
-  C.eventPack = function (source,author) {
+  C.eventPack = function (source,author,storyDependencies) {
     var file = files[source];
     if (!file || !eventBoundaries[file.after] || typeof author !== 'function') throw new Error('Unknown dated event source: ' + source);
     var data = {events:[],eventPacks:{},eventChances:{}};
@@ -63,7 +70,10 @@
         Object.keys(data).some(function (root) { return eventRoots.indexOf(root) < 0; }))
       throw new Error('Invalid dated event declarations: ' + source);
     var previous = eventSources[source];
-    if (previous && canonical(previous.data) !== canonical(data)) throw new Error('Dated event source changed: ' + source);
+    if (storyDependencies && Object.keys(storyDependencies).some(function (id) {
+      return typeof storyDependencies[id] !== 'string' || !data.events.some(function (event) { return event.id === id; });
+    })) throw new Error('Invalid dated event story dependency: ' + source);
+    if (previous && (canonical(previous.data) !== canonical(data) || canonical(previous.storyDependencies || {}) !== canonical(storyDependencies || {}))) throw new Error('Dated event source changed: ' + source);
     eventRoots.forEach(function (root) {
       var listRoot = root === 'events', known = Object.create(null);
       Object.keys(eventSources).forEach(function (key) {
@@ -76,7 +86,7 @@
           throw new Error('Conflicting dated event declaration: ' + id);
       });
     });
-    eventSources[source] = {primary:file.primary,secondary:file.secondary,seq:fileOrder.indexOf(source),after:file.after,data:data};
+    eventSources[source] = {primary:file.primary,secondary:file.secondary,seq:fileOrder.indexOf(source),after:file.after,data:data,dates:file.dates,storyDependencies:storyDependencies};
     try { publishEventPacks(); }
     catch (error) { if (previous) eventSources[source] = previous; else delete eventSources[source]; throw error; }
     data.events.forEach(function (event) { datedEvents.add(event); });
@@ -432,6 +442,7 @@
     if (frozen) return;
     deltaPrimary = scriptIndex(document.currentScript);
     refresh(); seal(ids);
+    if (Object.keys(eventSources).length) publishEventPacks(eventReviewReferences.storyInstances);
     // Manifest files present in the document already ran in place.
     fileOrder.forEach(function (path) { if (documentScript(path)) { files[path].state = LOADED; files[path].boot = true; } });
     validateManifest();
@@ -1025,7 +1036,10 @@
     }
     if (!own(worlds,next.defaultBookmark)) next.defaultBookmark = Object.keys(worlds)[0];
     legacyRoots.forEach(function (root) { if (own(frozen,root)) next[root] = copy(frozen[root]); });
-    window.FBDATA = next; if (FB.game) FB.game.SCENARIOS = next.startScenarios;
+    window.FBDATA = next;
+    if (Object.keys(eventSources).length && (failed.length || Object.keys(rejected).length))
+      publishEventPacks(next.storyInstances,worlds);
+    if (FB.game) FB.game.SCENARIOS = next.startScenarios;
     FB.invalidateCultureData(); FB.invalidateReligionData(); FB.lexicon.reset(); FB.governments.invalidate();
     FB.stories.publish(FB.stories.compile(next.storyInstances),[]);
     results.forEach(function (row) {
@@ -1279,7 +1293,7 @@
       var next = replayRows(recorded);
       frozen = null; seal(ids);
       publishSandbox(previous,next);
-      if (Object.keys(eventSources).length) publishEventPacks();
+      if (Object.keys(eventSources).length) publishEventPacks(eventReviewReferences.storyInstances);
       lastSandbox = next;
     } catch (error) {
       view = state.view; frozen = state.frozen; orders = state.orders; declared = state.declared; faults = state.faults;
