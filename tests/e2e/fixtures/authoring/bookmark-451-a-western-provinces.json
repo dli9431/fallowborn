@@ -574,6 +574,7 @@
       "equals": {
         "id": "franks_476",
         "name": "Salian Franks",
+        "government": "regnum",
         "color": "#5e7b92",
         "capital": "ghent",
         "aggression": 1,
