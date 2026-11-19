@@ -1,27 +1,29 @@
 'use strict';
-const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { openGame, prepareGameContent } = require('../support/game/navigation');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = require('../fixtures/authoring/household-graphs.json');
 dependsOnRuntime(__filename, ['index.html','data/bookmarks.js','data/starts.js','data/technology.js',
   'js/story_household.js','js/stories.js','js/starts.js','js/mods.js','js/world.js','js/main.js',
-  'js/save.js','js/save_v4.js','js/actions.js','js/travel.js','js/i18n.js','js/model.js']);
+  'js/save.js','js/save_v4.js','js/actions.js','js/travel.js','js/i18n.js','js/model.js','js/ui_modals.js']);
 
-async function importExamples(page, info) {
+async function beginImportedHousehold(page, info, scenario) {
   await openGame(page, info);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/household-graphs.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
-  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('quay_household_example'); });
+  expect(await page.evaluate(function () {
+    return ['quay_household_example', 'hill_household_example'].map(function (id) { return !!FB.stories.get(id); });
+  })).toEqual([true, true]);
+  // Start from the title produced by Apply & reload and reuse its prepared catalogue.
+  await beginBookmarkFromTitle(page, '867', scenario);
 }
 
 test('ordinary JSON import supplies two different household graphs with durable decisions', async function ({ page }, info) {
-  await importExamples(page, info);
-  await beginBookmark(page, info, '867', 'quay_household_example_start');
+  await beginImportedHousehold(page, info, 'quay_household_example_start');
   const result = await page.evaluate(function () {
     let s = FB.state;
     const id = 'quay_household_example', before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -53,8 +55,7 @@ test('ordinary JSON import supplies two different household graphs with durable 
 });
 
 test('the independent dated graph expires without a reward or replay', async function ({ page }, info) {
-  await importExamples(page, info);
-  await beginBookmark(page, info, '867', 'hill_household_example_start');
+  await beginImportedHousehold(page, info, 'hill_household_example_start');
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'hill_household_example', t = s.stories[id];
     const money = s.player.gold, rng = FB.getRngState();
@@ -101,8 +102,7 @@ for (const fault of ['operation','predicate','reference','unreachable','dead_end
 }
 
 test('control receipts prefer the personal track before dispatch and remain closed across restore', async function ({ page }, info) {
-  await importExamples(page, info);
-  await beginBookmark(page, info, '867', 'hill_household_example_start');
+  await beginImportedHousehold(page, info, 'hill_household_example_start');
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'hill_household_example', t = s.stories[id];
     const baseline = FB.stories.quote(s, id, 'remain').allowed;
@@ -127,8 +127,7 @@ test('control receipts prefer the personal track before dispatch and remain clos
 });
 
 test('invalid household records reject before save adoption', async function ({ page }, info) {
-  await importExamples(page, info);
-  await beginBookmark(page, info, '867', 'quay_household_example_start');
+  await beginImportedHousehold(page, info, 'quay_household_example_start');
   expect(await page.evaluate(function () {
     const saved = JSON.parse(FB.save.serialize()), before = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
     saved.state.stories.quay_household_example.decisions.invitation = { choiceId:'missing', turn:0, actorId:FB.state.player.charId };
@@ -139,8 +138,7 @@ test('invalid household records reject before save adoption', async function ({ 
 });
 
 test('dated journey gates apply before departure and preserve an existing commitment', async function ({ page }, info) {
-  await importExamples(page, info);
-  await beginBookmark(page, info, '867', 'quay_household_example_start');
+  await beginImportedHousehold(page, info, 'quay_household_example_start');
   expect(await page.evaluate(function () {
     const s = FB.state, purpose = 'household_example_journey';
     const early = FB.travelEligible(s, purpose, { readOnly:true }) === true;
