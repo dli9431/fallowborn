@@ -6,7 +6,7 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/counties.js', 'data/tournaments.js',
   'data/events_common.js', 'data/events_noble.js', 'data/events_paths.js',
-  'data/events_peasant.js',
+  'data/events_peasant.js', 'data/events_451.js',
   'js/climate.js', 'js/world.js', 'js/events.js', 'js/armies.js',
   'js/logistics.js', 'js/tournaments.js', 'js/ui_tournaments.js',
   'js/mods.js', 'js/ui_panels.js', 'js/ui_modals.js'
@@ -32,7 +32,9 @@ const FORMER_SEASON_TRIGGERS = {
   lean_winter:[3], serf_seed_grain_requisition:[2, 3], tax_collector:[2],
   village_festival:[1], wolves:[3], good_ox_year:[2], mill_will_not_turn:[1, 2],
   after_reapers:[2], swarm_in_eaves:[0, 1], ford_in_flood:[0],
-  gentry_rent_arrears:[2]
+  gentry_rent_arrears:[2], constantinople_church_copy_451:[3],
+  constantinople_church_questions_451:[3], antioch_church_messenger_451:[3],
+  alexandria_church_waiting_451:[3], rome_church_correspondence_451:[3]
 };
 
 async function activate(page, id) {
@@ -45,9 +47,8 @@ async function activate(page, id) {
   }, id);
 }
 
-test('shipped climate data is valid and medieval bookmarks keep the calendar seasons',
+test('shipped climate data is valid',
   async function ({ page }, testInfo) {
-    test.setTimeout(180 * 1000);
     await openGame(page, testInfo);
     const data = await page.evaluate(function () {
       return {
@@ -74,7 +75,12 @@ test('shipped climate data is valid and medieval bookmarks keep the calendar sea
       ['hot_dry', true, false], ['cool_season', false, false]
     ]);
 
-    for (const id of ['867', '1066']) {
+  });
+
+for (const id of ['867', '1066']) {
+  test(id + ' keeps the calendar seasons in every county',
+    async function ({ page }, testInfo) {
+      await openGame(page, testInfo);
       expect(await activate(page, id)).toBe(null);
       const parity = await page.evaluate(function (kinds) {
         const mismatches = [];
@@ -95,8 +101,8 @@ test('shipped climate data is valid and medieval bookmarks keep the calendar sea
       }, KINDS);
       expect(parity.count).toBeGreaterThan(100);
       expect(parity.mismatches).toEqual([]);
-    }
-  });
+    });
+}
 
 test('shipped events use season kinds that reproduce their former calendar seasons',
   async function ({ page }, testInfo) {

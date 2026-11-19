@@ -876,8 +876,8 @@ FB.bookmarkSources.eventPack('data/events_451.js',function (FBDATA) {
       "notHoldings": [
         "letters"
       ],
-      "seasons": [
-        3
+      "seasonKinds": [
+        "winter"
       ]
     },
     "weight": 3,
@@ -925,8 +925,8 @@ FB.bookmarkSources.eventPack('data/events_451.js',function (FBDATA) {
           }
         }
       ],
-      "seasons": [
-        3
+      "seasonKinds": [
+        "winter"
       ]
     },
     "weight": 3,
@@ -992,8 +992,8 @@ FB.bookmarkSources.eventPack('data/events_451.js',function (FBDATA) {
           }
         }
       ],
-      "seasons": [
-        3
+      "seasonKinds": [
+        "winter"
       ]
     },
     "weight": 3,
@@ -1055,8 +1055,8 @@ FB.bookmarkSources.eventPack('data/events_451.js',function (FBDATA) {
           }
         }
       ],
-      "seasons": [
-        3
+      "seasonKinds": [
+        "winter"
       ]
     },
     "weight": 3,
@@ -1101,8 +1101,8 @@ FB.bookmarkSources.eventPack('data/events_451.js',function (FBDATA) {
           }
         }
       ],
-      "seasons": [
-        3
+      "seasonKinds": [
+        "winter"
       ]
     },
     "weight": 3,
