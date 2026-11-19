@@ -1,8 +1,8 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle, openGame } = require('../support/game/navigation');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-const { useReleasedStartRules } = require('../support/game/released-starts');
+const { useReleasedStartRules, useReviewStartRules } = require('../support/game/released-starts');
 
 dependsOnRuntime(__filename, [
   'index.html', 'css/style.css', 'data/starts.js', 'data/wardrobes.js', 'data/eras.js',
@@ -10,11 +10,14 @@ dependsOnRuntime(__filename, [
   'data/mobile_confederations.js', 'data/bookmark_711.js', 'data/bookmark_800.js',
   'data/bookmark_1204.js', 'data/bookmark_1204_terrain.js',
   'js/main.js', 'js/ui_misc.js', 'js/portrait.js', 'js/starts.js', 'js/station.js', 'js/world.js',
-  'js/mapview.js'
+  'js/mapview.js', 'js/bookmark_sources.js', 'js/save.js'
 ]);
 
 /* The ordinary new-game path: starting date, beginning, birthplace and
    character. Each case opens only the dates it inspects. */
+
+// Every case uses a fresh browser context, including its profile and review flag.
+test.describe.configure({ mode:'parallel' });
 
 async function newGame(page) {
   await page.getByRole('button', { name:'New Game', exact:true }).click();
@@ -37,6 +40,85 @@ function quickStartPortraits(page) {
 function scrollOf(page, id) {
   return page.evaluate(function (id) { return document.getElementById(id).scrollTop; }, id);
 }
+
+test('an unconfigured installation keeps earned beginnings locked in the ordinary picker',
+  async function ({ page }, testInfo) {
+    await openTitle(page, testInfo);
+    expect(await page.evaluate(function () {
+      return { review:FBDATA.reviewOpenStarts, progression:FB.startProgression.snapshot(), state:FB.state };
+    })).toEqual({ review:false, progression:{ v:1, highestAchievedTier:0, highestStartTier:0 }, state:null });
+    await newGame(page);
+    await expect(page.locator('#quickstartlist [data-quick-start]')).toHaveCount(7);
+    await chooseDate(page, '867');
+    await expect(page.locator('#scenariolist [data-scenario="serf"]')).not.toHaveAttribute('aria-disabled');
+    for (const id of ['farmer','apprentice','monk','soldier','knight','baron']) {
+      const card = page.locator('#scenariolist [data-scenario="' + id + '"]');
+      await expect(card).toHaveClass(/locked/);
+      await expect(card).toHaveAttribute('aria-disabled', 'true');
+    }
+    await expect(page.locator('#scenariolist [data-scenario="farmer"]')).toContainText('Reach Freeholder');
+    await expect(page.locator('#scenariolist [data-scenario="knight"]')).toContainText('Reach Gentry');
+    await expect(page.locator('#scenariolist [data-scenario="baron"]')).toContainText('Reach Baron');
+    await page.locator('#scenariolist [data-scenario="farmer"]').evaluate(function (card) { card.click(); });
+    await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
+    await expect(page.locator('#pickprov')).toHaveClass(/hidden/);
+    await page.locator('#btn-ng-back').click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('CADENCE-867-farmer-london-f-Ada');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#ng-seed-err')).toContainText('Reach Freeholder in any life');
+    await expect(page.locator('#chargen')).toHaveClass(/hidden/);
+  });
+
+test('earned stations survive reload without enabling review access', async function ({ page }, testInfo) {
+  await openTitle(page, testInfo);
+  expect(await page.evaluate(function () { return FBDATA.reviewOpenStarts; })).toBe(false);
+  await page.evaluate(function () { FB.startProgression.noteTier(1); });
+  await openTitle(page, testInfo);
+  expect(await page.evaluate(function () {
+    return { review:FBDATA.reviewOpenStarts, progression:FB.startProgression.snapshot() };
+  })).toEqual({ review:false, progression:{ v:1, highestAchievedTier:1, highestStartTier:1 } });
+  await newGame(page);
+  await chooseDate(page, '867');
+  for (const id of ['farmer','apprentice','monk','soldier']) {
+    const card = page.locator('#scenariolist [data-scenario="' + id + '"]');
+    await expect(card).not.toHaveClass(/locked/);
+    await expect(card).not.toHaveAttribute('aria-disabled');
+  }
+  for (const id of ['knight','baron']) {
+    await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toHaveAttribute('aria-disabled', 'true');
+  }
+  await page.locator('#scenariolist [data-scenario="farmer"]').click();
+  await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+});
+
+test('an unconfigured installation withholds hidden starts from picker, codes and direct creation',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    expect(await page.evaluate(function () { return FBDATA.reviewOpenStarts; })).toBe(false);
+    await newGame(page);
+    await chooseDate(page, '476');
+    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Story starts', 'Open starts']);
+    for (const id of ['peroz_476','peroz_sasanian_476','nepos_476','odoacer_476','syagrius_476']) {
+      await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toHaveCount(0);
+    }
+    await expect(page.locator('#scenariolist [data-scenario="farmer_476"]')).not.toHaveAttribute('aria-disabled');
+    await page.locator('#btn-ng-back').click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('RULERS-476-nepos_476-split-m-Julius_Nepos');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#ng-seed-err')).not.toBeEmpty();
+    await expect(page.locator('#chargen')).toHaveClass(/hidden/);
+    await page.locator('#ng-cancel').click();
+    expect(await page.evaluate(function () {
+      FB.activateBookmark('476');
+      FB.game.pending = { scenario:FBDATA.startScenarios.find(function (sc) { return sc.id === 'nepos_476'; }),
+        seed:'RULERS', bookmarkId:'476', provinceId:'split' };
+      return { ready:FB.game.campaignReady('476'), result:FB.game.start(), state:FB.state };
+    })).toEqual({ ready:true, result:false, state:null });
+    await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
+    await expect(page.locator('#scenariolist [data-scenario="nepos_476"]')).toHaveCount(0);
+  });
 
 test('Quick Start portraits keep their own date’s dress after another date is previewed',
   async function ({ page }, testInfo) {
@@ -222,7 +304,8 @@ test('an existing court reads as a fixed identity and a Constantinople household
     })).toMatchObject({ bookmark:'1204', county:'constantinople', culture:'greek', religion:'orthodox', tier:1 });
   });
 
-test('the 476 branch review switch opens hidden and earned beginnings', async function ({ page }, testInfo) {
+test('a preconfigured review session opens hidden and earned beginnings', async function ({ page }, testInfo) {
+  await useReviewStartRules(page);
   await openGame(page, testInfo);
   expect(await page.evaluate(function () { return FBDATA.reviewOpenStarts; })).toBe(true);
   await newGame(page);
@@ -231,8 +314,14 @@ test('the 476 branch review switch opens hidden and earned beginnings', async fu
   await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts', 'Story starts', 'Open starts']);
   await expect(page.locator('#scenariolist [data-scenario="nepos_476"]')).toHaveCount(1);
   await expect(page.locator('#scenariolist .scencard.locked')).toHaveCount(0);
+  await page.locator('#scenariolist [data-scenario="nepos_476"]').click();
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await expect(page.locator('#cg-fixed .pick-location-title')).toHaveText('Julius Nepos');
+  await page.locator('#btn-cg-back').click();
   await page.locator('#btn-ng-back').click();
   await chooseDate(page, '867');
   await expect(page.locator('#scenariolist [data-scenario="baron"]')).not.toHaveClass(/locked/);
   await expect(page.locator('#scenariolist .scen-note')).toHaveCount(0);
+  expect(await page.evaluate(function () { return FB.startProgression.snapshot(); }))
+    .toEqual({ v:1, highestAchievedTier:0, highestStartTier:0 });
 });

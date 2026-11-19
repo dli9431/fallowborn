@@ -215,12 +215,10 @@ window.FBDATA = window.FBDATA || {};
       intro:'You are {name}, a craftsman of {province}. Baldwin holds the city, the crusaders’ partition is unfinished, and Greek courts gather beyond the walls. Your workshop must find a living under whichever authority prevails.' }
   ];
 
-  /* 476 BRANCH REVIEW SWITCH. While true, every beginning is open to every
-     player: hidden candidates (the 476 courts) are offered and the
-     earned-station ladder is unlocked. Owner testing only; set this to false
-     or delete it before the branch ships. Specifications of the released
-     rules preset it to false before the data scripts run. */
-  if (FBDATA.reviewOpenStarts === undefined) FBDATA.reviewOpenStarts = true;
+  /* Released rules apply by default: hidden candidates stay withheld and
+     ordinary beginnings require their earned station. Review sessions may
+     explicitly preset this switch to true before the data scripts run. */
+  if (FBDATA.reviewOpenStarts === undefined) FBDATA.reviewOpenStarts = false;
 
   /* Curated one-click Serf lives. Each one names an exact physical settlement
      site, which the start screen resolves to that bookmark's stable slot and
