@@ -17,6 +17,7 @@ const courtPersonImport = require('../fixtures/authoring/court-person-451-import
 const startFixtureFiles = ['starts-451-openings.json'];
 const {useReleasedStartRules} = require('../support/game/released-starts');
 dependsOnRuntime(__filename,['js/story_household_party.js','js/story_household.js','js/story_opening_goals.js','js/story_ruler_agenda.js','js/events.js','data/starts.js','data/economy.js']);
+dependsOnRuntime(__filename,['data/actions.js','js/actions.js','js/day_phases.js','js/treasury.js','js/ui_misc.js','js/ui_panels.js']);
 
 for (const file of startFixtureFiles) {
   const fixture = JSON.parse(fs.readFileSync(path.join(fixtureDirectory,file),'utf8'));
@@ -447,4 +448,110 @@ test('an ordinary JSON import binds a different court person and retains the exa
   const again = await page.evaluate(function () { return FB.save.serialize(); });
   await restoreBookmark(page,again);
   expect(await facts(page)).toEqual(expected);
+});
+
+test('the hidden date review offers a civic household whose records earnings survive a cold Continue',async function ({page},info) {
+  const fixture = require('../fixtures/authoring/starts-451-openings.json');
+  const {civicReview} = require('../fixtures/authoring/stories-451-validation.json');
+  await useReleasedStartRules(page);
+  await openGame(page,info);
+  const full = page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+  const date = page.locator('#bookmarklist [data-bookmark="451"]');
+  await expect(date).toHaveCount(0);
+  await page.locator('#btn-bm-seed').click();
+  const seed = page.locator('#ng-seed');
+  await seed.fill(civicReview.code);
+  await seed.press('Enter');
+  await expect(page.locator('#ng-seed-err')).toContainText('This starting date is hidden for new campaigns.');
+  await expect(page.locator('#chargen:not(.hidden)')).toHaveCount(0);
+
+  await page.evaluate(function () { FBDATA.bookmarks['451'].hidden = false; });
+  await seed.fill('CIVICREVIEW');
+  await seed.press('Enter');
+  await date.click();
+  await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
+  const cards = page.locator('#scenariolist [data-scenario]');
+  const offered = await cards.evaluateAll(function (rows) {
+    return rows.map(function (row) { return row.getAttribute('data-scenario'); }).sort();
+  });
+  expect(offered).toEqual(fixture.starts.map(function (row) { return row.id; }).concat('farmer_451').sort());
+  for (const id of fixture.held) expect(offered).not.toContain(id);
+  await cards.filter({hasText:'Aurelianum civic household'}).click();
+  await expect(page.locator('#btn-pick-random')).toHaveText('Continue');
+  await page.locator('#btn-pick-random').click();
+  await expect(page.locator('#cg-family label')).toHaveCount(2);
+  await expect(page.locator('input[name=cg-family][value="established"]')).toBeChecked();
+  await page.locator('#cg-name').fill('Review');
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+
+  function snapshot(input) {
+    const s = FB.state, p = s.player, me = s.chars[p.charId];
+    return {start:s.start,code:s.seed,turn:s.turn,date:s.date,focus:p.focus,
+      identity:{id:me.id,name:me.name,sex:me.sex,born:me.born,culture:me.culture,religion:me.religion,
+        profession:me.career.profession,rank:me.career.rank,home:p.provinceId,tier:p.tier},
+      family:{founder:p.houseFounderId,spouse:me.spouseId,children:me.childrenIds},
+      finances:{gold:p.gold,prestige:p.prestige,piety:p.piety},
+      story:s.stories[input.storyId],goal:s.stories[input.openingId].goals.earned};
+  }
+  const opening = await page.evaluate(snapshot,civicReview);
+  expect(opening).toMatchObject({start:{id:'451',scenarioId:civicReview.scenarioId},
+    code:'CIVICREVIEW-451-gallic_curialis_451-orleans-m-Review-established',turn:0,
+    identity:{name:'Review',sex:'m',born:421,culture:'gallo_roman',religion:'nicene',
+      profession:'curialis',rank:'journeyman',home:'orleans',tier:2},
+    finances:{gold:80,prestige:30,piety:10},story:{actorId:opening.identity.id,phase:'livelihood'},
+    goal:{status:'pending'}});
+  expect(opening.family.founder).toBe(opening.identity.id);
+  expect(opening.family.spouse).toBeTruthy();
+  expect(opening.family.children.length).toBeGreaterThan(0);
+
+  await page.locator('[data-tab="actions"]').click();
+  await page.locator('[data-story-card="' + civicReview.storyId + '"]').click();
+  const work = page.locator('[data-story-choice="work"]');
+  await expect(work).toHaveAttribute('aria-disabled','false');
+  await work.click();
+  await page.locator('#gm-story-confirm').click();
+  await page.locator('#gm-story-continue').click();
+  const selected = await page.evaluate(snapshot,civicReview);
+  expect(selected).toMatchObject({turn:opening.turn,date:opening.date,identity:opening.identity,
+    family:opening.family,finances:opening.finances,focus:'keep_records',goal:{status:'pending'},
+    story:{phase:'working',decisions:{livelihood:{choiceId:'work',actorId:opening.identity.id,turn:0}}}});
+
+  const payment = await page.evaluate(function () {
+    const s = FB.state, ordinaryTick = FB.tickFocus, payments = [];
+    FB.game.auto.all = true;
+    FB.game.auto.style = 'first';
+    delete s.player.flags.tutorial;
+    FB.tickFocus = function (state) {
+      const gold = state.player.gold, sovereign = FB.topRealm(state,state.owner.orleans);
+      const publicGold = FB.treasuryAvailable(state,sovereign);
+      ordinaryTick(state);
+      payments.push({gain:state.player.gold - gold,
+        publicFundsUnchanged:FB.treasuryAvailable(state,sovereign) === publicGold});
+    };
+    try { FB.game.passDay({deferUi:true}); }
+    finally { FB.tickFocus = ordinaryTick; }
+    return payments;
+  });
+  expect(payment).toHaveLength(1);
+  expect(payment[0].gain).toBeGreaterThan(0);
+  expect(payment[0].publicFundsUnchanged).toBe(true);
+  const paid = await page.evaluate(snapshot,civicReview);
+  expect(paid).toMatchObject({turn:1,identity:opening.identity,family:opening.family,
+    finances:{gold:opening.finances.gold + payment[0].gain},focus:'keep_records',
+    story:{phase:'paid'},goal:{status:'completed'}});
+
+  await page.evaluate(function () {
+    return new Promise(function (resolve,reject) {
+      FB.save.toSlot('auto',function (ok) { if (ok) resolve(); else reject(new Error('Save failed')); });
+    });
+  });
+  await openTitle(page,info);
+  expect(await page.evaluate(function () { return FB.bookmarkSources.dateLoaded('451'); })).toBe(false);
+  await page.locator('#btn-continue').click();
+  await expect(page.locator('#game:not(.hidden)')).toBeVisible({timeout:30000});
+  expect(await page.evaluate(snapshot,civicReview)).toEqual(paid);
+  expect(await page.evaluate(function () { return FB.bookmarkAvailable('451'); })).toBe(false);
 });
