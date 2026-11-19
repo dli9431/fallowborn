@@ -1,12 +1,5 @@
 name: Regression smoke and inventory
-run-name: Regression gate ${{ inputs.request_id }}
-on:
-  workflow_dispatch:
-    inputs:
-      request_id:
-        description: Unique regression request
-        required: true
-        type: string
+on: workflow_call
 permissions:
   contents: read
   actions: read

@@ -21,7 +21,7 @@ on:
       mode:
         description: Changed tests, all tests, selected specs, or explicit shard groups
         type: choice
-        options: [changed, all, specs, groups]
+        options: [changed, all, specs, groups, regression-gate]
         default: changed
       specs:
         description: Spec paths relative to tests/e2e, or a JSON array of file lists for groups mode
@@ -64,7 +64,11 @@ permissions:
   actions: read
 
 jobs:
+  gate:
+    if: ${{ inputs.mode == 'regression-gate' }}
+    uses: ./.github/workflows/regression-gate.yml
   tests:
+    if: ${{ inputs.mode != 'regression-gate' }}
     uses: ./.github/workflows/e2e.yml
     with:
       ref: ${{ inputs.target || github.sha }}
