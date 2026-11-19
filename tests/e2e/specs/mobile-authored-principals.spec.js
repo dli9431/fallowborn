@@ -1,8 +1,7 @@
 'use strict';
-const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const openings={harbor:require('../fixtures/authoring/mobile-opening-harbor.json'),
   dune:require('../fixtures/authoring/mobile-opening-dune.json')};
@@ -15,7 +14,7 @@ dependsOnRuntime(__filename,[
   'js/governments.js','js/government_selection.js','js/government_continuity.js','js/government_support.js',
   'js/starts.js','js/model.js','js/station.js','js/mods.js','js/stories.js','js/authority.js',
   'js/federates.js','js/population.js','js/armies.js','js/technology.js','js/treasury.js',
-  'js/main.js','js/save.js','js/save_v4.js']);
+  'js/main.js','js/ui_modals.js','js/save.js','js/save_v4.js']);
 
 async function startImported(page,info,prefix,input) {
   await openGame(page,info);
@@ -23,11 +22,7 @@ async function startImported(page,info,prefix,input) {
   await page.locator('#modfile').setInputFiles({name:'mobile-principals-'+prefix+'.json',
     mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
-  await page.waitForFunction(function (prefix) {
-    return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];
-  },prefix);
-  await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
 }
 
 function adoptionExample(prefix) {
@@ -55,6 +50,10 @@ for (const prefix of ['harbor','dune']) {
       const scenario=FBDATA.startScenarios.find(function (sc) {return sc.id===prefix+'_principal_review';});
       const before=JSON.stringify([r,M.host(s,d.id),M.migration(s,d.id),s.bookmarkSetup.actors]);
       const people=Object.keys(s.chars).sort(),treasury=FB.treasuryAvailable(s,d.id);
+      function realmArmies(state) {
+        return state.armies.filter(function (army) {return army.realm===d.id;}).map(function (army) {return army.id;}).sort();
+      }
+      const openingMuster=realmArmies(s);
       const rng=FB.getRngState(),uid=FB.getUidCounter();
       s.player.charId=personId;s.player.tier=scenario.tier;
       const adopted=FB.adoptStartingRealm(s,scenario,{deferSetup:true});
@@ -65,11 +64,14 @@ for (const prefix of ['harbor','dune']) {
           FB.bookmarkActor(s,b.person.actorId).id===personId;});
       const adoptionPure=before===JSON.stringify([r,M.host(s,d.id),M.migration(s,d.id),s.bookmarkSetup.actors]) &&
         rng===FB.getRngState() && uid===FB.getUidCounter() && JSON.stringify(people)===JSON.stringify(Object.keys(s.chars).sort());
+      const adoptedMuster=realmArmies(s);
       M.initialize(s,bm.realms);FB.mobileInitializeAuthored(s,bm.realms);
       const repeatPure=before===JSON.stringify([r,M.host(s,d.id),M.migration(s,d.id),s.bookmarkSetup.actors]) &&
         rng===FB.getRngState() && uid===FB.getUidCounter();
+      const repeatedMuster=realmArmies(s);
       const saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
       return {adopted:adopted,canonical:canonical,adoptionPure:adoptionPure,repeatPure:repeatPure,
+        musters:[openingMuster,adoptedMuster,repeatedMuster,realmArmies(FB.state)],
         onePerson:JSON.stringify(people)===JSON.stringify(Object.keys(FB.state.chars).sort()) &&
           FB.state.player.charId===personId && M.leader(FB.state,d.id).id===personId,
         retained:before===JSON.stringify([M.row(FB.state,d.id),M.host(FB.state,d.id),M.migration(FB.state,d.id),FB.state.bookmarkSetup.actors]),
@@ -78,8 +80,10 @@ for (const prefix of ['harbor','dune']) {
         noLand:FB.state.player.provs.length===0 && FB.realmTerritory(FB.state,d.id).length===0,
         valid:M.validate(FB.state),rng:(saved.rng>>>0)===(FB.getRngState()>>>0),uid:saved.uid===FB.getUidCounter()};
     },prefix);
+    const hostId=prefix==='harbor' ? 'following_harbor_following' : 'following_dune_coalition';
     expect(result).toEqual({adopted:true,canonical:true,adoptionPure:true,repeatPure:true,onePerson:true,
-      retained:true,generation:true,publicRealm:true,privateGold:7,publicGold:true,noLand:true,valid:true,rng:true,uid:true});
+      musters:[[hostId],[hostId],[hostId],[hostId]],retained:true,generation:true,
+      publicRealm:true,privateGold:7,publicGold:true,noLand:true,valid:true,rng:true,uid:true});
   });
 
   test(prefix+' omission retains generated principals and the legacy infantry opening',async function ({page},info) {
