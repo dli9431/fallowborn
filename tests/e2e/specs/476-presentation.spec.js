@@ -4,7 +4,8 @@ dependsOnRuntime(__filename, [
   'data/actions.js', 'tests/e2e/support/game/story-placement.js',
   'data/story_household_effects_476_493.js', 'js/story_household_observer.js',
   'data/story_courts_476.js',
-  'index.html', 'css/style.css', 'data/eras.js', 'data/wardrobes.js',
+  'index.html', 'css/style.css', 'data/bookmark_manifest.js', 'js/bookmark_sources.js',
+  'data/eras.js', 'data/wardrobes.js',
   'data/cultures.js', 'data/lexicons.js', 'data/map_data.js', 'data/units.js',
   'data/technology.js', 'data/starts.js', 'data/bookmark_476.js', 'data/story_campaigns.js',
   'data/bookmark_476_africa.js', 'data/bookmark_476_gaul_iberia.js',
@@ -15,8 +16,8 @@ dependsOnRuntime(__filename, [
   'js/story_courts.js', 'js/story_track.js', 'data/distribution_crazygames.js', 'js/crazygames.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
-const { useReleasedStartRules } = require('../support/game/released-starts');
+test.describe.configure({ mode:'parallel' });
+const { openGame, openTitle } = require('../support/game/navigation');
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { waitForUiRefresh } = require('../support/game/ui');
 const { revealStoryCard, openStoryAffairs } = require('../support/game/story-placement');
@@ -60,7 +61,7 @@ for (const crazygames of [false, true]) {
   test('476 purse draws a visible coin without an emoji font, distribution ' + crazygames,
     async function ({ page }, testInfo) {
       await page.setViewportSize({ width:390, height:844 });
-      await startHistoricalGame(page, testInfo, { bookmark:'476',
+      await startHistoricalGame(page, testInfo, { bookmark:'476', unhide:false,
         code:'COIN476-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' }, crazygames);
       await page.evaluate(function () {
         FB.state.player.gold = 32;
@@ -251,11 +252,11 @@ test('period stock and unit restrictions retain owned equipment and reject malfo
 for (const scenario of ['federate_476','curialis_476']) {
   test('476 '+scenario+' opening and purse fit the phone start flow',async function({page},testInfo){
     await page.setViewportSize({width:390,height:844});
-    await useReleasedStartRules(page);
-    await openGame(page,testInfo);
+    await openTitle(page,testInfo);
     await expect(page.locator('#title .subtitle')).toContainText('late antiquity');
     await page.evaluate(function(){FB.game.uiPrefs.hideTips=true;FB.game.uiPrefs.hideBeginnerHints=true;});
     await page.getByRole('button',{name:'New Game',exact:true}).click();
+    await expect(page.locator('#bookmarklist [data-bookmark="451"], #bookmarklist [data-bookmark="493"]')).toHaveCount(0);
     const bookmark=page.locator('#bookmarklist .scencard').filter({hasText:'476: The Last Western Court'});
     await expect(bookmark).toContainText('Roman cities');
     await bookmark.click();

@@ -38,12 +38,11 @@ dependsOnRuntime(__filename, [
   'data/actions.js', 'js/actions.js', 'js/systems.js'
 ]);
 const { test, expect } = require('../support/fixture');
+test.describe.configure({ mode:'parallel' });
 const { openGame } = require('../support/game/navigation');
-const { useReleasedStartRules } = require('../support/game/released-starts');
 
 async function startCode(page, testInfo, code, loaded) {
   if (!loaded) await openGame(page, testInfo);
-  await page.evaluate(function () { FB.startProgression.noteTier(3); });
   const fullStartButton = page.locator('#btn-choose-beginning');
   if (await fullStartButton.isVisible()) await fullStartButton.click();
   else await page.getByRole('button', { name:'New Game', exact:true }).click();
@@ -294,7 +293,6 @@ test('invalid story records are rejected before adoption',
 
 test('the start picker and family presets follow scenario data',
   async function ({ page }, testInfo) {
-    await useReleasedStartRules(page);
     await startCode(page, testInfo, CODE_476);
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     const family = page.locator('#cg-family label');
@@ -314,6 +312,9 @@ test('the start picker and family presets follow scenario data',
     const cards = page.locator('#scenariolist .scencard');
     // Fourteen public starts plus Observe, including the new camp and court households.
     await expect(cards).toHaveCount(15);
+    for (const id of ['nepos_476','odoacer_476','syagrius_476','peroz_sasanian_476']) {
+      await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toHaveCount(0);
+    }
     const federate = cards.filter({ hasText:'Federate Soldier' });
     await expect(federate).toHaveCount(1);
     await expect(federate).not.toHaveClass(/locked/);
@@ -323,7 +324,8 @@ test('the start picker and family presets follow scenario data',
     await page.locator('#btn-bm-back').click();
     for (const code of ['STORIES-476-serf-ravenna-m-Marcus',
       'STORIES-476-federate_476-ravenna-m-Marcus-elder-0-gothic.homoian',
-      'STORIES-867-federate_476-ravenna-m-Marcus']) {
+      'STORIES-867-federate_476-ravenna-m-Marcus',
+      'STORIES-476-nepos_476-split-m-Julius_Nepos']) {
       await startCode(page, testInfo, code, true);
       await expect(page.locator('#ng-seed-err')).toHaveText(
         'That start code doesn’t parse — check it was copied whole.');
@@ -333,6 +335,7 @@ test('the start picker and family presets follow scenario data',
     }
 
     /* Scenarios without a familyPresets map keep every shape. */
+    await page.evaluate(function () { FB.startProgression.noteTier(1); });
     await startCode(page, testInfo, 'STORIES-867-farmer-london-m-Ada-elder', true);
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await expect(page.locator('#cg-family label')).toHaveCount(3);

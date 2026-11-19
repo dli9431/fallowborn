@@ -4,8 +4,8 @@ const {test,expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
-const { useReleasedStartRules } = require('../support/game/released-starts');
-const {startRegion,startBaseline476,saveBudget} = require('../support/game/476-wider');
+const {startBaseline476,saveBudget} = require('../support/game/476-wider');
+const {startHistoricalGame} = require('../support/game/historical-start');
 const {advanceBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {injectBrowserHarness} = require('../support/game/browser-harness');
 const {expectModAdmission} = require('../support/game/mod-admission');
@@ -23,9 +23,14 @@ dependsOnRuntime(__filename,[
   'js/travel.js','js/armies.js','js/tournaments.js','js/ui_panels.js','js/ui_tournaments.js','js/ui_modals.js'
 ]);
 
-for (const flag of [false]) test('all wider 476 districts have accountable inhabitants, flag ' + flag,
+async function startRegion(page,testInfo,county) {
+  return startHistoricalGame(page,testInfo,{bookmark:'476',unhide:false,
+    code:'WIDER476-476-farmer_476-' + county + '-m-Review-established'},false);
+}
+
+test('all wider 476 districts have accountable inhabitants under released starts',
   async function ({page},testInfo) {
-    await startRegion(page,testInfo,'alexandria',flag);
+    await startRegion(page,testInfo,'alexandria');
     const result = await page.evaluate(function () {
       const b = FB.bookmark('476'), old = FB.bookmark('476','baseline'), s = FB.state;
       const region = FBDATA.bookmarkRegions476.wider;
@@ -307,7 +312,6 @@ test('regional starts, border seams, client holders and mobile coalitions share 
 
 test('colonus codes, map picks and direct creation reject counties without estate tenure',async function ({page},testInfo) {
   await openGame(page,testInfo);
-  await page.evaluate(function () { FB.startProgression.noteTier(3); });
   await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();
   for (const id of ['lewis','turku','sarysu_corridor']) {
@@ -593,7 +597,6 @@ test('expanded observer checkpoints retain the existing budgets',async function 
 
 test('open federate and curialis roles begin where their institutions live and attach the Ravenna story only there',
   async function ({page},testInfo) {
-    await useReleasedStartRules(page);
     await openGame(page,testInfo);
     const rules = await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -650,7 +653,7 @@ test('open federate and curialis roles begin where their institutions live and a
     await page.getByRole('button',{name:'Begin',exact:true}).click();
     expect(await page.evaluate(function () {
       const s = FB.state;
-      return {province:s.player.provinceId,scenario:s.telemetry.scenario,
+      return {province:s.player.provinceId,scenario:s.telemetry.scenario,revision:s.start.revision,
         western:!!s.stories.western_court_476,track:!!s.stories.federate_track_476};
-    })).toEqual({province:rules.away,scenario:'federate_476',western:true,track:false});
+    })).toEqual({province:rules.away,scenario:'federate_476',revision:'wider_v2',western:true,track:false});
   });
