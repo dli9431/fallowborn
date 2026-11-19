@@ -21,17 +21,28 @@ async function start(page,info,kind,member) {
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/mobile-seasonal-round-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  await prepareOpeningTitle(page);
+  await beginExactCode(page,openingCode(kind,member));
+  await installRestoreFacts(page);
+}
+
+async function prepareOpeningTitle(page) {
   await page.evaluate(function () {
     FB.game.uiPrefs.onboardingStarted=true;FB.game.saveUiPrefs();FB.ui.closeModal();FB.ui.showScreen('title');
   });
+}
+
+function openingCode(kind,member) {
   const prefix=kind==='glassroad' ? 'dune' : 'reed',name=kind==='glassroad' ? member ? 'Nari_Ash' : 'Sela_Vey' : member ? 'Mira_Fen' : 'Iri_Vale';
-  const code='ROUND-'+prefix+'_world-'+prefix+'_'+(member ? 'member' : 'leader')+'_start-'+prefix+'_well-f-'+name+'-standard';
+  return 'ROUND-'+prefix+'_world-'+prefix+'_'+(member ? 'member' : 'leader')+'_start-'+prefix+'_well-f-'+name+'-standard';
+}
+
+async function beginExactCode(page,code) {
   if (await page.locator('#btn-choose-beginning').isVisible()) await page.locator('#btn-choose-beginning').click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();await page.locator('#ng-seed').fill(code);await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.evaluate(function () {FB.game.start();FB.game.setPaused(true);});
-  await installRestoreFacts(page);
 }
 
 for (const kind of Object.keys(examples)) for (const member of [false,true]) {
@@ -73,17 +84,23 @@ for (const kind of Object.keys(examples)) for (const member of [false,true]) {
 }
 
 for (const kind of Object.keys(examples)) test(kind+' replays an exact opening code on a cold page',async function ({page},info) {
-  await start(page,info,kind,true);
+  // Both roles exercise file import above. Seed the persisted mod once so both
+  // replay boots use normal stored-mod admission in this case's fresh context.
+  await page.addInitScript(function (mod) {
+    if (!sessionStorage.getItem('coalitionReplaySeeded')) {
+      localStorage.setItem('fb_mods',JSON.stringify([mod]));
+      sessionStorage.setItem('coalitionReplaySeeded','1');
+    }
+  },JSON.stringify(examples[kind]));
+  await openGame(page,info);
+  await prepareOpeningTitle(page);
+  await beginExactCode(page,openingCode(kind,true));
   const before=await page.evaluate(function () {
     return {seed:FB.state.seed,facts:FB.contentValues.canonical([FB.save.expandedSnapshot(FB.state),FB.getRngState(),FB.getUidCounter()])};
   });
   await page.reload({waitUntil:'domcontentloaded'});await prepareGameContent(page);
   await page.evaluate(function () {FB.ui.closeModal();FB.ui.showScreen('title');});
-  if (await page.locator('#btn-choose-beginning').isVisible()) await page.locator('#btn-choose-beginning').click();
-  else await page.getByRole('button',{name:'New Game',exact:true}).click();
-  await page.locator('#btn-bm-seed').click();await page.locator('#ng-seed').fill(before.seed);await page.locator('#ng-seed').press('Enter');
-  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
-  await page.evaluate(function () {FB.game.start();FB.game.setPaused(true);});
+  await beginExactCode(page,before.seed);
   expect(await page.evaluate(function () {return FB.contentValues.canonical([FB.save.expandedSnapshot(FB.state),FB.getRngState(),FB.getUidCounter()]);})).toBe(before.facts);
 });
 
