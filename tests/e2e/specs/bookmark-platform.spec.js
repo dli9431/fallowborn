@@ -20,14 +20,17 @@ dependsOnRuntime(__filename, [
 ]);
 
 const CIVIC_CODE = FRESH_JOURNEYS.find(function (row) { return row.id === 'fresh-476-curialis_476'; }).code;
-async function reviewCode(page) {
-  const county = await page.evaluate(function () {
+async function reviewCounty(page) {
+  return page.evaluate(function () {
     const bm = FB.bookmark('sibling_review');
     const scenario = FBDATA.startScenarios.find(function (s) { return s.id === 'sibling_commoner'; });
     return bm.provinces.find(function (p) { return FB.startProvinceAllowed(scenario,bm,p.id); }).id;
   });
+}
+
+async function reviewCode(page) {
   return CIVIC_CODE.replace('PARITY-476-curialis_476-ravenna-',
-    'SIBLING-sibling_review-sibling_commoner-' + county + '-');
+    'SIBLING-sibling_review-sibling_commoner-' + await reviewCounty(page) + '-');
 }
 
 test('data-only starts accept an empty track list and reject malformed or unknown tracks atomically',
@@ -138,9 +141,8 @@ async function activate(page, id) {
   }, id)).toBe(null);
 }
 
-test('hidden bookmarks reject picker, start codes, Quick Start, direct creation and observer without mutation',
+test('hidden bookmarks are omitted from the picker and Quick Start and reject start codes',
   async function ({ page }, testInfo) {
-    test.setTimeout(120 * 1000);
     await openGame(page, testInfo);
     expect(await registerReview(page, true)).toEqual([]);
     await page.evaluate(function () { FBDATA.bookmarks['867'].hidden = true; });
@@ -152,36 +154,40 @@ test('hidden bookmarks reject picker, start codes, Quick Start, direct creation 
     await page.locator('#ng-seed').press('Enter');
     await expect(page.locator('#ng-seed-err')).toContainText('hidden for new campaigns');
     await page.locator('#ng-cancel').click();
-    await activate(page, 'sibling_review'); // inspection remains available
-    const result = await page.evaluate(function () {
-      FB.game.pending = { bookmarkId:'sibling_review', seed:'SIBLING', provinceId:'ravenna',
-        scenario:FBDATA.startScenarios.filter(function (s) { return s.id === 'sibling_commoner'; })[0] };
-      const state = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
-      const start = FB.game.start(), observer = FB.game.startObserve();
-      return { visible:FB.bookmarkAvailable('sibling_review'),
-        all:FB.bookmarks(true).some(function (d) { return d.id === 'sibling_review'; }),
-        start:start, observer:observer, preserved:FB.state === state &&
-          FB.getRngState() === rng && FB.getUidCounter() === uid && !FB.game.observe };
-    });
-    expect(result).toEqual({ visible:false, all:true, start:false, observer:false, preserved:true });
-    await page.evaluate(function () {
-      FBDATA.bookmarks.sibling_review.hidden = false;
-      FBDATA.bookmarks['867'].hidden = false;
-    });
-    await beginReview(page);
-    expect(await page.evaluate(function () { return FB.state.start.id; })).toBe('sibling_review');
   });
 
-test('data-only institutions remain independent across activation orders and matching hidden save loads',
+test('hidden bookmarks allow inspection but reject direct creation and observation without mutation',
   async function ({ page }, testInfo) {
-    test.setTimeout(120 * 1000);
-    await startParityGame(page, testInfo, {
-      bookmark:'476', code:CIVIC_CODE
-    });
-    const original = await page.evaluate(function () { return FB.save.serialize(); });
-    expect(await registerReview(page, false)).toEqual([]);
-    await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showScreen('title'); });
+    await openGame(page, testInfo);
+    expect(await registerReview(page, true)).toEqual([]);
+    await activate(page, 'sibling_review'); // inspection remains available
+    const result = await page.evaluate(function (provinceId) {
+      FB.game.pending = { bookmarkId:'sibling_review', seed:'SIBLING', provinceId:provinceId,
+        scenario:FBDATA.startScenarios.filter(function (s) { return s.id === 'sibling_commoner'; })[0] };
+      const state = FB.state, world = FB.world, rng = FB.getRngState(), uid = FB.getUidCounter();
+      const preserved = function () {
+        return FB.state === state && FB.world === world && FB.getRngState() === rng &&
+          FB.getUidCounter() === uid && !FB.game.observe;
+      };
+      const ready = FB.game.campaignReady('sibling_review') && FB.activeBookmarkId === 'sibling_review';
+      const start = FB.game.start(), startPreserved = preserved();
+      const observer = FB.game.startObserve();
+      return { visible:FB.bookmarkAvailable('sibling_review'),
+        all:FB.bookmarks(true).some(function (d) { return d.id === 'sibling_review'; }),
+        ready:ready, start:start, startPreserved:startPreserved, observer:observer, observerPreserved:preserved() };
+    }, await reviewCounty(page));
+    expect(result).toEqual({ visible:false, all:true, ready:true, start:false, startPreserved:true,
+      observer:false, observerPreserved:true });
+  });
+
+test('unhiding a sibling bookmark permits creation with independent institutions after 476',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    expect(await registerReview(page, true)).toEqual([]);
+    await activate(page, '476');
+    await page.evaluate(function () { FBDATA.bookmarks.sibling_review.hidden = false; });
     await beginReview(page);
+    expect(await page.evaluate(function () { return FB.state.start.id; })).toBe('sibling_review');
     const facts = await page.evaluate(function () {
       const s = FB.state, rome = FB.religiousOfficeSnapshot(s, 'rome_bishop');
       const east = FB.religiousOfficeSnapshot(s, 'constantinople_patriarch');
@@ -194,6 +200,13 @@ test('data-only institutions remain independent across activation orders and mat
     });
     expect(facts).toEqual({ rome:'Roman reviewer', born:453, role:'priest', learning:12,
       east:'Eastern reviewer', vacant:true, isolated:true, cast:true, opening:true, catalogue:'Simplicius' });
+  });
+
+test('sibling institutions survive 476 activation and a matching hidden save load',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    expect(await registerReview(page, false)).toEqual([]);
+    await beginReview(page);
     await installRestoreFacts(page);
     const saved = await page.evaluate(function () {
       const s = FB.state;
@@ -215,8 +228,12 @@ test('data-only institutions remain independent across activation orders and mat
       FBDATA.bookmarks.sibling_review.localInstitutions.constantinople_see.representative.name = 'Changed seed';
     });
     expect(await page.evaluate(function (json) {
-      return FB.game.loadData(JSON.parse(json));
+      window.hiddenSaveRestored = false;
+      return FB.game.loadData(JSON.parse(json), function () { window.hiddenSaveRestored = true; });
     }, saved)).toBe(true);
+    await expect.poll(function () {
+      return page.evaluate(function () { return window.hiddenSaveRestored; });
+    }).toBe(true);
     await expect(page.locator('#game:not(.hidden)')).toBeVisible();
     const restored = await page.evaluate(function (json) {
       const before = JSON.parse(json).state, s = FB.state;
@@ -231,14 +248,28 @@ test('data-only institutions remain independent across activation orders and mat
     }, saved);
     expect(restored).toEqual({ ledger:true, vacancies:true, heads:true, dead:true,
       east:'Eastern reviewer', error:null, count:true });
-    // Saves bind to the exact effective catalogue: the pre-review save is another
-    // world while the review mod is active. The 476 definitions stay uncontaminated.
-    expect(await page.evaluate(function (json) { return FB.save.otherWorld(JSON.parse(json)); }, original)).toBe(true);
     expect(await page.evaluate(function () {
       const local = FB.bookmark('476').localInstitutions;
       return { rome:local.rome_see.historicalName, east:local.constantinople_see.historicalName,
         faults:FB.validateBookmark(FB.bookmark('476')) };
     })).toEqual({ rome:'Simplicius', east:'Acacius', faults:[] });
+  });
+
+test('the sibling catalogue rejects a pre-mod 476 save without adopting campaign state',
+  async function ({ page }, testInfo) {
+    await startParityGame(page, testInfo, { bookmark:'476', code:CIVIC_CODE });
+    const original = await page.evaluate(function () { return FB.save.serialize(); });
+    expect(await registerReview(page, false)).toEqual([]);
+    const result = await page.evaluate(function (json) {
+      const save = JSON.parse(json), state = FB.state, world = FB.world, bookmark = FB.activeBookmark;
+      const rng = FB.getRngState(), uid = FB.getUidCounter();
+      const otherWorld = FB.save.otherWorld(save);
+      const accepted = FB.game.loadData(save);
+      return { otherWorld:otherWorld, accepted:accepted, stage:FB.game.lastLoadStage,
+        preserved:FB.state === state && FB.world === world && FB.activeBookmark === bookmark &&
+          FB.getRngState() === rng && FB.getUidCounter() === uid };
+    }, original);
+    expect(result).toEqual({ otherWorld:true, accepted:false, stage:'save preflight', preserved:true });
   });
 
 test('bookmark and runtime-mod validation reject invalid visibility, seats, offices and representative profiles',
