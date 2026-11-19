@@ -11,11 +11,24 @@ class DiscoveryReporter {
   onBegin(config, suite) {
     const tests = suite.allTests();
     if (process.env.CI_DISCOVERY_INVENTORY) {
+      const scopes = new Map();
       const cases = tests.map(test => {
         let owner = test.parent;
         while (owner && owner.type !== 'file') owner = owner.parent;
         assert(owner && owner.location, 'Could not resolve spec for ' + test.id);
-        return { id:test.id, project:test.parent.project().name,
+        let scope;
+        if (process.env.CI_ROLLING) {
+          if (!scopes.has(owner.location.file)) {
+            const source = fs.readFileSync(owner.location.file, 'utf8');
+            const lifecycle = /test\.(?:beforeAll|afterAll|describe\.serial)\s*\(|mode\s*:\s*['"]serial['"]/m;
+            scopes.set(owner.location.file, lifecycle.test(source) ?
+              (/^test\.(?:beforeAll|afterAll|describe\.configure)\s*\(/m.test(source) ? 'file' : 'suite') : '');
+          }
+          const rule = scopes.get(owner.location.file);
+          if (rule === 'file') scope = 'file';
+          else if (rule === 'suite') scope = test.titlePath()[3];
+        }
+        return { id:test.id, project:test.parent.project().name, scope,
           file:path.relative(process.cwd(), owner.location.file).split(path.sep).join('/'),
           line:test.location.file === owner.location.file ? test.location.line : null,
           title:test.titlePath().slice(3).join(' > ') };
@@ -48,6 +61,30 @@ async function plan() {
     assert.equal(new Set(files).size, files.length, 'A file appears in multiple shard groups');
   }
   const execute = promisify(execFile);
+
+  if (process.env.CI_ROLLING) {
+    const rolling = require('./ci-rolling');
+    const inventory = path.join(temp, 'inventory.json');
+    const emptyBlob = path.join(temp, 'empty.zip');
+    await execute(process.execPath, [cli, 'test', ...selection, '--list', '--workers=1',
+      '--reporter=blob,' + __filename], {env:{...process.env, CI_DISCOVERY_INVENTORY:inventory,
+      PLAYWRIGHT_BLOB_OUTPUT_FILE:emptyBlob}, maxBuffer:16 * 1024 * 1024});
+    const timings = fs.existsSync(rolling.historyFile()) ? JSON.parse(fs.readFileSync(rolling.historyFile())) : {};
+    const cases = JSON.parse(fs.readFileSync(inventory));
+    const plan = rolling.makePlan(cases, timings);
+    if (!cases.length) fs.copyFileSync(emptyBlob, path.join(out, 'empty.zip'));
+    fs.writeFileSync(path.join(out, 'rolling.json'), JSON.stringify(plan));
+    fs.writeFileSync(path.join(out, 'selection.json'), JSON.stringify(plan.ids));
+    const partitions = plan.batches.map(b => b.groups.flat());
+    fs.writeFileSync(path.join(out, 'partitions.json'), JSON.stringify(partitions.length ? partitions : [[]]));
+    const jobs = plan.jobs.map((_, i) => i + 1);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, 'shards=' + JSON.stringify(jobs) + '\n');
+    const message = cases.length + ' cases, ' + cases.filter(c => timings[c.id]).length + ' measured, ' +
+      partitions.length + ' bounded shards in ' + jobs.length + ' jobs (maximum 16 concurrent).';
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, message + '\n');
+    console.log(message);
+    return;
+  }
 
   async function list(shard) {
     const idsFile = path.join(temp, shard + '.json');

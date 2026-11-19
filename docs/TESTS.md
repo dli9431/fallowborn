@@ -709,9 +709,9 @@ Workflows live in `.github/workflows/`:
 - `tests.yml`: every push to `main`, `dev`, and `476`, pull requests, and manual runs. It runs
   `npm run check` and `npm run test:server`, then Playwright with `--only-changed` against the
   pushed range's base and the bounded runtime dependencies of `test:changed`, across all four
-  projects in 4 shards. A manual run accepts `target` (any pushed branch or commit; default the
+  projects. A 476 push first verifies a real game start on all four projects, then discovers the exact pushed change range. It schedules runtime-balanced batches on single browser workers with at most 16 browser jobs active. Passing cases supply timings for later pushes. Cold cases use a conservative estimate. A ten-minute batch deadline can retry that batch in two smaller parts when its report shows no test failure. The merged report checks the discovered test IDs. Other pushes and pull requests use four shards. A manual run accepts `target` (any pushed branch or commit; default the
   ref the run was started on), `mode` (`changed`, `all`, or `specs` with a space-separated `specs`
-  list relative to `tests/e2e`), `base`, `projects`, `shards`, and `request_id`, which names the
+  list relative to `tests/e2e`, or `rolling` and `rolling-plan` on the dispatch commit for execution or discovery only), `base`, `projects`, `shards`, and `request_id`, which names the
   run (`Tests <id>`) and keeps concurrent manual runs from cancelling each other. Failing shards
   also upload their `test-results` folders (error contexts, screenshots, traces) as
   `results-<label>-<shard>`. Example: `gh workflow run tests.yml --ref main -f target=476

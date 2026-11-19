@@ -21,7 +21,7 @@ on:
       mode:
         description: Changed tests, all tests, selected specs, or explicit shard groups
         type: choice
-        options: [changed, all, specs, groups, regression-gate]
+        options: [changed, all, specs, groups, regression-gate, rolling, rolling-plan]
         default: changed
       specs:
         description: Spec paths relative to tests/e2e, or a JSON array of file lists for groups mode
@@ -65,10 +65,22 @@ permissions:
 
 jobs:
   gate:
-    if: ${{ inputs.mode == 'regression-gate' }}
+    if: ${{ inputs.mode == 'regression-gate' || startsWith(inputs.mode, 'rolling') || (github.event_name == 'push' && github.ref_name == '476') }}
     uses: ./.github/workflows/regression-gate.yml
+  rolling:
+    needs: gate
+    if: ${{ startsWith(inputs.mode, 'rolling') || (github.event_name == 'push' && github.ref_name == '476') }}
+    uses: ./.github/workflows/e2e.yml
+    with:
+      ref: ${{ github.sha }}
+      label: tests
+      mode: ${{ inputs.mode || 'rolling' }}
+      base: ${{ inputs.base || github.event.before || '' }}
+      specs: ${{ inputs.specs || '' }}
+      projects: ${{ inputs.projects || 'all' }}
+      workers: 1
   tests:
-    if: ${{ inputs.mode != 'regression-gate' }}
+    if: ${{ inputs.mode != 'regression-gate' && !startsWith(inputs.mode, 'rolling') && !(github.event_name == 'push' && github.ref_name == '476') }}
     uses: ./.github/workflows/e2e.yml
     with:
       ref: ${{ inputs.target || github.sha }}
