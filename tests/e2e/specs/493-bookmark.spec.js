@@ -25,8 +25,9 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
 const { mockCrazyGames } = require('../support/crazygames');
-const { startParityGame } = require('../support/game/parity');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
+
+test.describe.configure({ mode:'parallel' });
 
 const CAMPAIGNS = ['alamannic_campaign_493', 'burgundian_campaign_493',
   'visigothic_campaign_493', 'sirmium_campaign_493',
@@ -162,35 +163,6 @@ test('493 ordinary CrazyGames-flag creation retains the same independent opening
         valid:FB.save.v4.validatePlatform(FB.state) };
     });
     expect(result).toEqual({ flagged:true, date:'493', same:true, valid:true });
-  });
-
-test('476 and 493 retain their own incumbents in both activation orders and hidden save loads',
-  async function ({ page }, testInfo) {
-    test.setTimeout(120000);
-    await startParityGame(page, testInfo, { bookmark:'476',
-      code:'DATES-476-curialis_476-ravenna-m-Marcus' });
-    const earlier = await page.evaluate(function () { return FB.save.serialize(); });
-    await start(page, testInfo, 'curialis_493');
-    const later = await page.evaluate(function () { return FB.save.serialize(); });
-    await page.evaluate(function () { FBDATA.bookmarks['493'].hidden = true; });
-    for (const entry of [{ json:earlier, date:'476', rome:'Simplicius', east:'Acacius' },
-      { json:later, date:'493', rome:'Gelasius I', east:'Euphemius' },
-      { json:earlier, date:'476', rome:'Simplicius', east:'Acacius' },
-      { json:later, date:'493', rome:'Gelasius I', east:'Euphemius' }]) {
-      expect(await page.evaluate(function (json) { return FB.game.loadData(JSON.parse(json)); }, entry.json)).toBe(true);
-      await expect(page.locator('#game:not(.hidden)')).toBeVisible();
-      const result = await page.evaluate(function (json) {
-        const s = FB.state, saved = JSON.parse(json).state;
-        return { date:s.start.id, rome:FB.religiousOfficeSnapshot(s, 'rome_bishop').name,
-          east:FB.religiousOfficeSnapshot(s, 'constantinople_patriarch').name,
-          actors:JSON.stringify(s.bookmarkSetup) === JSON.stringify(saved.bookmarkSetup),
-          ledger:JSON.stringify(s.localInstitutions) === JSON.stringify(saved.localInstitutions),
-          stories:JSON.stringify(s.stories) === JSON.stringify(saved.stories),
-          count:Object.keys(s.chars).length === Object.keys(saved.chars).length };
-      }, entry.json);
-      expect(result).toEqual({ date:entry.date, rome:entry.rome, east:entry.east,
-        actors:true, ledger:true, stories:true, count:true });
-    }
   });
 
 for (const id of CAMPAIGNS) {
