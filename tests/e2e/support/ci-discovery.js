@@ -73,7 +73,9 @@ function verify(selectionFile, reportFile) {
   const actual = [];
   function visit(suite) {
     for (const spec of suite.specs) {
-      for (const test of spec.tests) actual.push(test.id);
+      for (const test of spec.tests) {
+        if (test.results.length) actual.push(test.id);
+      }
     }
     suite.suites.forEach(visit);
   }
