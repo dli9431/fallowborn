@@ -34,6 +34,8 @@ const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
 
+test.describe.configure({ mode:'parallel' });
+
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
@@ -78,7 +80,7 @@ async function prepareRaidTarget(page, home) {
     });
     if (!target) throw new Error('Raid fixture needs an adjacent land county');
     s.realms.raid_fixture = {
-      id:'raid_fixture', name:'Raid Border County', rank:1, alive:true,
+      id:'raid_fixture', name:'Raid Border County', color:'#775544', rank:1, alive:true,
       capital:target, liege:null, religion:'catholic',
       ruler:{ name:'Border Defender', sex:'m', culture:FB.world.byId[target].culture,
         age:40, mar:4, generation:1 }
@@ -89,6 +91,7 @@ async function prepareRaidTarget(page, home) {
     s.buildings[target] = [];
     s.alliances = [];
     s.pacts = {};
+    FB.invalidateRealmCache();
     FB.invalidateBuildingIndex(s, target);
     FB.invalidateSettlementLordships(s, target);
     return target;
@@ -760,6 +763,7 @@ test('captive resolution options function correctly for bonding and ransoming',
       var bondReport = FB.executeRaid(s, targetPid, 'sack', p.charId, 'bond');
       var workersAfterBond = p.bondedWorkers;
 
+      // Stage a ready host for the second choice without advancing the campaign.
       p.raidCooldownUntil = 0;
       if (s.armyDown) delete s.armyDown.player;
       if (s.armyDownSurvival) delete s.armyDownSurvival.player;
@@ -767,21 +771,32 @@ test('captive resolution options function correctly for bonding and ransoming',
       var ransomReport = FB.executeRaid(s, targetPid, 'sack', p.charId, 'ransom');
       var goldAfterRansom = p.gold;
 
+      FB.ui.mapDirty();
       return {
         bondSuccess:bondReport.success,
         ransomSuccess:ransomReport.success,
+        bondChoice:bondReport.captiveChoice,
+        ransomChoice:ransomReport.captiveChoice,
         bondedCaptives:bondReport.captives,
+        ransomedCaptives:ransomReport.captives,
         workersAfterBond: workersAfterBond,
+        workersAfterRansom: p.bondedWorkers,
         ransomGoldPaid: goldAfterRansom - goldBeforeRansom - ransomReport.gold,
         ransomReportExtra: ransomReport.ransomGold
       };
     }, targetPid);
+    await waitForUiRefresh(page);
 
     expect(result.bondSuccess).toBe(true);
     expect(result.ransomSuccess).toBe(true);
+    expect(result.bondChoice).toBe('bond');
+    expect(result.ransomChoice).toBe('ransom');
+    expect(result.bondedCaptives).toBeGreaterThan(0);
     expect(result.workersAfterBond).toBe(Math.max(1, Math.round(result.bondedCaptives / 25)));
     expect(result.workersAfterBond).toBeGreaterThan(0);
+    expect(result.workersAfterRansom).toBe(result.workersAfterBond);
     expect(result.ransomReportExtra).toBeGreaterThan(0);
+    expect(result.ransomReportExtra).toBe(Math.round(result.ransomedCaptives * 0.25));
     expect(result.ransomGoldPaid).toBe(result.ransomReportExtra);
   });
 
@@ -1133,7 +1148,7 @@ test('raid against overwhelming garrison resistance is repelled with troop casua
       s.owner = s.owner || {};
       s.owner[targetPid] = 'france';
       s.realms = s.realms || {};
-      s.realms.france = { id:'france', name:'Kingdom of France', alive:true, military:5000 };
+      s.realms.france = { id:'france', name:'Kingdom of France', color:'#445577', alive:true, military:5000 };
       if (FB.invalidateRealmCache) FB.invalidateRealmCache();
 
       // Calculate combat odds
@@ -1221,7 +1236,7 @@ test('raid calculates multi-county route passage battles sequentially through in
       }
       s.realms = s.realms || {};
       s.realms.raid_route_fixture = {
-        id:'raid_route_fixture', name:'March Defenders', rank:1,
+        id:'raid_route_fixture', name:'March Defenders', color:'#775544', rank:1,
         capital:target, liege:null, alive:true, religion:'catholic',
         ruler:{ name:'March Defender', sex:'m', age:40, mar:4, generation:1 }
       };
@@ -1278,7 +1293,7 @@ test('hostile fortifications block raider passage to interior counties and forti
       s.owner = s.owner || {};
       s.owner[fortPid] = 'france';
       s.realms = s.realms || {};
-      s.realms.france = { id:'france', name:'Kingdom of France', alive:true, military:1000 };
+      s.realms.france = { id:'france', name:'Kingdom of France', color:'#445577', alive:true, military:1000 };
       if (FB.invalidateRealmCache) FB.invalidateRealmCache();
 
       // Verify whether the fort county itself is targetable
@@ -1325,7 +1340,7 @@ test('raid target list and map overlay properly indicate intermediate and destin
       s.owner = s.owner || {};
       s.owner[targetPid] = 'france';
       s.realms = s.realms || {};
-      s.realms.france = { id:'france', name:'Kingdom of France', alive:true, military:1000 };
+      s.realms.france = { id:'france', name:'Kingdom of France', color:'#445577', alive:true, military:1000 };
       if (FB.invalidateRealmCache) FB.invalidateRealmCache();
 
       var targets = FB.raidTargets(s, p.charId);
@@ -1374,7 +1389,7 @@ test('assaulting fortified counties inflicts significantly higher casualties tha
       s.owner.paris = 'france';
       s.holder.paris = 'france';
       s.realms = s.realms || {};
-      s.realms.france = { id:'france', name:'Kingdom of France', alive:true,
+      s.realms.france = { id:'france', name:'Kingdom of France', color:'#445577', alive:true,
         rank:1, capital:'paris', liege:null, religion:'catholic',
         ruler:{ name:'Paris Defender', sex:'m', age:40, mar:4, generation:1 } };
       if (FB.invalidateRealmCache) FB.invalidateRealmCache();
@@ -1529,7 +1544,7 @@ test('raid defenders use the county share of the realm host, not a flat tithe of
       s.dev[targetPid] = 3;
       s.owner[targetPid] = 'big_realm';
       s.holder[targetPid] = 'big_realm';
-      s.realms.big_realm = { id:'big_realm', name:'Great Kingdom', alive:true,
+      s.realms.big_realm = { id:'big_realm', name:'Great Kingdom', color:'#775544', alive:true,
         capital:targetPid, rank:3, liege:null, religion:'catholic',
         ruler:{ name:'Border Defender', sex:'m', culture:FB.world.byId[targetPid].culture,
           age:40, mar:4, generation:1 } };
