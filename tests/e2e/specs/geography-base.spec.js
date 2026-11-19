@@ -8,16 +8,35 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/settlements.js', 'data/settlements_real.js',
   'data/geographies.js', 'data/eras.js', 'data/cultures.js',
-  'js/util.js', 'js/world.js', 'js/bookmark_composition.js', 'js/title_ids.js', 'js/mods.js', 'js/mapview.js',
+  'js/util.js', 'js/world.js', 'js/bookmark_sources.js', 'js/bookmark_composition.js',
+  'js/title_ids.js', 'js/mods.js', 'js/mapview.js',
   'js/actions.js', 'js/main.js', 'js/save.js', 'js/save_v4.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openGame, openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+
+// Each case has its own page and catalogue. Keep multi-activation proofs in
+// one case when they depend on the same live world cache or activation queue.
+test.describe.configure({ mode:'parallel' });
 
 /* Geography bases (docs/designs/provinces.md, Geography bases): retained
    bookmarks draw on europe_regional and expanded 476 uses its additive child; names follow the start year, layouts
    fall back to the base's default, and legacy geometry mods still apply. */
+
+async function openBookmarkSetup(page, testInfo, id) {
+  await openTitle(page, testInfo);
+  await page.evaluate(async function (id) {
+    await new Promise(function (resolve, reject) {
+      FB.bookmarkSources.loadDates([id], function (error) {
+        if (error) reject(error); else resolve();
+      });
+    });
+    FB.bookmarkSources.prepareSetup(id);
+    FB.configureReligions();
+    FB.configureCultures();
+  }, id);
+}
 
 async function activate(page, id, revision) {
   return page.evaluate(function (input) {
@@ -31,7 +50,6 @@ async function activate(page, id, revision) {
 
 test('europe_regional retains the legacy geometry and every core baseline names it',
   async function ({ page }, testInfo) {
-    test.setTimeout(120 * 1000);
     await openGame(page, testInfo);
     expect(await activate(page, '867', 'baseline')).toBe(null);
     const result = await page.evaluate(function () {
@@ -70,7 +88,7 @@ test('europe_regional retains the legacy geometry and every core baseline names 
 
 test('dated names prefer a matching culture and respect inclusive year windows',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     const result = await page.evaluate(function () {
       const list = [
         { to:499, name:'Ticinum' },
@@ -92,8 +110,7 @@ test('dated names prefer a matching culture and respect inclusive year windows',
 
 test('476 resolves its period county names and heads from the date without mutating data',
   async function ({ page }, testInfo) {
-    test.setTimeout(120 * 1000);
-    await openGame(page, testInfo);
+    await openBookmarkSetup(page, testInfo, '476');
     const original = await page.evaluate(function () { return JSON.stringify(FBDATA.bookmarks['476']); });
     expect(await activate(page, '476')).toBe(null);
     const late = await page.evaluate(function () {
@@ -128,118 +145,102 @@ test('476 resolves its period county names and heads from the date without mutat
     expect(late.raw).toEqual([['barcelona', 'Barcino', true], ['split', 'Salona', true]]);
     expect(await page.evaluate(function () { return JSON.stringify(FBDATA.bookmarks['476']); })).toBe(original);
     expect(late.geography).toBe('europe_regional_2');
-
-    for (const id of ['867', '1066']) {
-      expect(await activate(page, id)).toBe(null);
-      const medieval = await page.evaluate(function () {
-        return ['barcelona', 'split', 'tunis'].map(function (pid) {
-          return FB.world.byId[pid].name;
-        }).concat([FB.world.sitesByProv.barcelona.list[0].site]);
-      });
-      expect(medieval.slice(0, 3)).toEqual(['Barcelona', 'Split', 'Tunis']);
-      expect(medieval[3]).not.toBe('barcelona_476');
-    }
   });
+
+for (const id of ['867', '1066']) {
+  test(id + ' resolves medieval county and site names', async function ({ page }, testInfo) {
+    await openBookmarkSetup(page, testInfo, id);
+    expect(await activate(page, id)).toBe(null);
+    const medieval = await page.evaluate(function () {
+      return ['barcelona', 'split', 'tunis'].map(function (pid) {
+        return FB.world.byId[pid].name;
+      }).concat([FB.world.sitesByProv.barcelona.list[0].site]);
+    });
+    expect(medieval.slice(0, 3)).toEqual(['Barcelona', 'Split', 'Tunis']);
+    expect(medieval[3]).not.toBe('barcelona_476');
+  });
+}
 
 test('site names and province names follow a bookmark start year and culture',
   async function ({ page }, testInfo) {
-    test.setTimeout(120 * 1000);
-    await openGame(page, testInfo);
+    await openBookmarkSetup(page, testInfo, '476');
     await page.evaluate(function () {
       const names = FBDATA.geographies.europe_regional.names;
-      window.__savedNames = { roma:names.provinces.roma, ostia:names.sites.ostia };
-      window.__savedNames.revision = FBDATA.bookmarks['476'].revision;
       names.provinces.roma = [{ to:600, name:'Urbs' },
         { to:600, name:'Urbs Roma', culture:'roman' }];
       names.sites.ostia = [{ to:600, name:'Ostia Antica' }];
-      // Retain the registered bookmark identity and its dated start contracts.
-      FBDATA.bookmarks['476'].revision = 'baseline';
     });
-    try {
-      expect(await activate(page, '476')).toBe(null);
-      const result = await page.evaluate(function () {
-        return {
-          roma:FB.world.byId.roma.name,
-          romaCulture:FB.world.byId.roma.culture,
-          sites:FB.world.sitesByProv.roma.list.slice(0, 2).map(function (site) {
-            return site.site + ':' + site.name;
-          })
-        };
-      });
-      expect(result.romaCulture).toBe('roman');
-      expect(result.roma).toBe('Urbs Roma');
-      expect(result.sites).toEqual(['roma:Roma', 'ostia:Ostia Antica']);
-    } finally {
-      await page.evaluate(function () {
-        const names = FBDATA.geographies.europe_regional.names;
-        if (window.__savedNames.roma) names.provinces.roma = window.__savedNames.roma;
-        else delete names.provinces.roma;
-        if (window.__savedNames.ostia) names.sites.ostia = window.__savedNames.ostia;
-        else delete names.sites.ostia;
-        FBDATA.bookmarks['476'].revision = window.__savedNames.revision;
-        delete window.__savedNames;
-      });
-    }
+
+    expect(await activate(page, '476', 'baseline')).toBe(null);
+    const result = await page.evaluate(function () {
+      return {
+        roma:FB.world.byId.roma.name,
+        romaCulture:FB.world.byId.roma.culture,
+        sites:FB.world.sitesByProv.roma.list.slice(0, 2).map(function (site) {
+          return site.site + ':' + site.name;
+        })
+      };
+    });
+    expect(result.romaCulture).toBe('roman');
+    expect(result.roma).toBe('Urbs Roma');
+    expect(result.sites).toEqual(['roma:Roma', 'ostia:Ostia Antica']);
   });
+
+async function registerLayoutBookmark(page, id, optsOut) {
+  await page.evaluate(function (input) {
+    const base = FB.bookmark('867', 'baseline');
+    const provinces = base.provinces.map(function (p) {
+      if (p.wasteland) return p;
+      const q = Object.assign({}, p);
+      delete q.settlements;
+      if (!input.optsOut && q.id === 'london') q.x += 0.5;
+      return q;
+    });
+    const bookmark = Object.assign({}, base, { id:input.id, provinces:provinces });
+    if (input.optsOut) bookmark.settlementLayout = null;
+    FBDATA.bookmarks[input.id] = bookmark;
+  }, {id:id,optsOut:optsOut});
+}
 
 test('a bookmark without layouts of its own falls back to the default layout',
   async function ({ page }, testInfo) {
-    test.setTimeout(180 * 1000);
-    await openGame(page, testInfo);
-    await page.evaluate(function () {
-      const base = FB.bookmark('867','baseline');
-      function stripped(move) {
-        return base.provinces.map(function (p) {
-          if (p.wasteland) return p;
-          const q = Object.assign({}, p);
-          delete q.settlements;
-          if (move && q.id === 'london') q.x += 0.5;
-          return q;
-        });
-      }
-      FBDATA.bookmarks.geo_fallback = Object.assign({}, base,
-        { id:'geo_fallback', provinces:stripped(true) });
-      FBDATA.bookmarks.geo_none = Object.assign({}, base,
-        { id:'geo_none', provinces:stripped(false), settlementLayout:null });
+    await openBookmarkSetup(page, testInfo, '867');
+    await registerLayoutBookmark(page, 'geo_fallback', false);
+    expect(await activate(page, 'geo_fallback')).toBe(null);
+    const fallback = await page.evaluate(function () {
+      const roma = FB.activeBookmark.provinces.filter(function (p) {
+        return p.id === 'roma';
+      })[0];
+      const expected = FBDATA.settlementLayouts['867'].roma;
+      return {
+        sameEntries:JSON.stringify(roma.settlements) === JSON.stringify(expected),
+        copied:roma.settlements !== expected && roma.settlements[0] !== expected[0],
+        romaHead:FB.world.sitesByProv.roma.list[0].site,
+        romaAuthored:FB.world.sitesByProv.roma.list[0].authored,
+        movedLondonAuthored:FB.world.sitesByProv.london.list[0].authored,
+        rawUntouched:FBDATA.bookmarks.geo_fallback.provinces.every(function (p) {
+          return p.wasteland || p.settlements === undefined;
+        })
+      };
     });
-    try {
-      expect(await activate(page, 'geo_fallback')).toBe(null);
-      const fallback = await page.evaluate(function () {
-        const roma = FB.activeBookmark.provinces.filter(function (p) {
-          return p.id === 'roma';
-        })[0];
-        const expected = FBDATA.settlementLayouts['867'].roma;
-        return {
-          sameEntries:JSON.stringify(roma.settlements) === JSON.stringify(expected),
-          copied:roma.settlements !== expected && roma.settlements[0] !== expected[0],
-          romaHead:FB.world.sitesByProv.roma.list[0].site,
-          romaAuthored:FB.world.sitesByProv.roma.list[0].authored,
-          movedLondonAuthored:FB.world.sitesByProv.london.list[0].authored,
-          rawUntouched:FBDATA.bookmarks.geo_fallback.provinces.every(function (p) {
-            return p.wasteland || p.settlements === undefined;
-          })
-        };
-      });
-      expect(fallback).toEqual({ sameEntries:true, copied:true, romaHead:'roma',
-        romaAuthored:true, movedLondonAuthored:false, rawUntouched:true });
+    expect(fallback).toEqual({ sameEntries:true, copied:true, romaHead:'roma',
+      romaAuthored:true, movedLondonAuthored:false, rawUntouched:true });
+  });
 
-      expect(await activate(page, 'geo_none')).toBe(null);
-      const none = await page.evaluate(function () {
-        return FB.world.sitesByProv.roma.list[0].authored;
-      });
-      expect(none).toBe(false);
-    } finally {
-      await page.evaluate(function () {
-        delete FBDATA.bookmarks.geo_fallback;
-        delete FBDATA.bookmarks.geo_none;
-      });
-    }
+test('a bookmark can opt out of the default settlement layout',
+  async function ({ page }, testInfo) {
+    await openBookmarkSetup(page, testInfo, '867');
+    await registerLayoutBookmark(page, 'geo_none', true);
+    expect(await activate(page, 'geo_none')).toBe(null);
+    const none = await page.evaluate(function () {
+      return FB.world.sitesByProv.roma.list[0].authored;
+    });
+    expect(none).toBe(false);
   });
 
 test('loading uses the saved geography while new activation uses the edited bookmark and its own cache',
   async function ({ page }, testInfo) {
-    test.setTimeout(180 * 1000);
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const result = await page.evaluate(async function () {
       const saved = JSON.parse(FB.save.serialize()), originalWorld = FB.world;
@@ -294,8 +295,7 @@ test('loading uses the saved geography while new activation uses the edited book
 
 test('concurrent activations of one bookmark keep different saved bases separate',
   async function ({ page }, testInfo) {
-    test.setTimeout(180 * 1000);
-    await openGame(page, testInfo);
+    await openBookmarkSetup(page, testInfo, '867');
     const result = await page.evaluate(async function () {
       const bm = FB.bookmark('867','baseline'), baseId = FB.bookmarkGeography(bm);
       const base = FBDATA.geographies[baseId];
