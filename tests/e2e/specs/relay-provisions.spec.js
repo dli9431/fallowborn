@@ -10,11 +10,15 @@ dependsOnRuntime(__filename,['index.html','data/relay_services.js','data/product
   'js/mobile_confederations.js','js/mobile_columns.js','js/mobile_command.js','js/treasury.js','js/world.js','js/mods.js',
   'js/ui_modals.js','js/ui_misc.js','js/main.js','js/save.js','js/save_v4.js','js/model.js']);
 async function boot(page,info,kind) {
-  await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
+  const start=Date.now();
+  await openGame(page,info);
+  const opened=Date.now();
+  await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/relay-services-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
+  const applied=Date.now();
   const full=page.locator('#btn-choose-beginning');
   if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();
@@ -26,6 +30,7 @@ async function boot(page,info,kind) {
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.evaluate(function(){FB.game.setPaused(true);});
+  console.log('Relay setup ms',kind,JSON.stringify({open:opened-start,apply:applied-opened,start:Date.now()-applied}));
   if(kind!=='mobile')await stage(page,kind);
 }
 async function stage(page,kind) {
