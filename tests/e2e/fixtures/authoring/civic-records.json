@@ -1,0 +1,96 @@
+{
+  "name": "Archive household records work",
+  "careers": {
+    "archive_keeper": {
+      "role": "civic",
+      "name": "Archive service",
+      "icon": "📜",
+      "skill": "lea",
+      "apprenticeAge": 12,
+      "apprenticeCost": 0,
+      "tierMin": 1,
+      "wage": 1,
+      "masterWage": 2,
+      "ranks": {
+        "apprentice": "Archive pupil",
+        "journeyman": "Archive keeper",
+        "master": "Senior archive keeper"
+      },
+      "desc": "Keep private accounts and copies without a public commission."
+    }
+  },
+  "actionPolicies": {
+    "keep_records": { "professions": ["administration", "archive_keeper"] }
+  },
+  "storyInstances": {
+    "archive_records_track": {
+      "id": "archive_records_track",
+      "type": "household_track",
+      "title": "Earn the household's records pay",
+      "intro": "Private work pays only after an actual working day.",
+      "homeProvinceId": "paris",
+      "continuity": "protagonist",
+      "interruptedStage": "closed",
+      "initialStage": "select_work",
+      "stages": {
+        "select_work": {
+          "name": "Choose records work",
+          "text": "Select ordinary records work without an advance payment or public appointment.",
+          "choices": [{
+            "id": "work",
+            "label": "Keep the records",
+            "detail": "Select the ordinary daily focus. Its normal wages accrue during actual work.",
+            "operation": { "kind": "set_focus", "focusId": "keep_records" },
+            "next": "working"
+          }],
+          "transitions": []
+        },
+        "working": {
+          "name": "Await earned pay",
+          "text": "The records plan completes only when the daily focus actually pays at home.",
+          "choices": [{
+            "id": "stop",
+            "label": "Leave the plan",
+            "detail": "Close this plan without a reward or appointment.",
+            "operation": { "kind": "record_decision" },
+            "next": "closed"
+          }],
+          "transitions": [],
+          "afterWork": { "focusId": "keep_records", "provinceId": "paris", "next": "paid" }
+        },
+        "paid": {
+          "name": "Records work paid",
+          "text": "Ordinary daily work earned the pay. This review grants no extra reward.",
+          "terminal": true, "choices": [], "transitions": []
+        },
+        "closed": {
+          "name": "Plan closed",
+          "text": "The household carries on without a reward from this plan.",
+          "terminal": true, "choices": [], "transitions": []
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "archive_household",
+      "name": "Archive household",
+      "desc": "An invented household earning its living from records.",
+      "intro": "Choose ordinary records work and earn its pay over working days.",
+      "bookmarkIds": ["867"],
+      "fixedProvinceId": "paris",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "startAge": 24,
+      "alwaysUnlocked": true,
+      "tier": 1,
+      "profession": "archive_keeper",
+      "gold": 15,
+      "prestige": 5,
+      "piety": 0,
+      "tracks": ["archive_records_track"],
+      "trackLocations": { "archive_records_track": ["paris"] },
+      "startEffects": { "careerRank": "journeyman" }
+    }
+  ]
+}

@@ -251,7 +251,9 @@ window.FB = window.FB || {};
 
   { id: 'keep_records',
     show: function (s) {
-      return !FB.station.isLanded(s.player, s) && qualifiedCareer(s, 'administration');
+      const career = workingCareer(s);
+      return !FB.station.isLanded(s.player, s) && !!career &&
+        FBDATA.actionPolicies.keep_records.professions.indexOf(career.profession) >= 0;
     } },
   { id: 'practice_physic',
     show: function (s) {
@@ -5042,7 +5044,7 @@ window.FB = window.FB || {};
   FB.validateActionData = function (focusDefinitions, deedDefinitions, references) {
     const refs = references || FBDATA;
     return FB.validateDeedSections(refs.deedSections || FBDATA.deedSections, refs).concat(
-      FB.validateActionPolicies(refs.actionPolicies || FBDATA.actionPolicies),
+      FB.validateActionPolicies(refs.actionPolicies || FBDATA.actionPolicies, refs),
       FB.validateDeedRoutines(refs.deedRoutines || FBDATA.deedRoutines, deedDefinitions || FBDATA.deeds, refs),
       FB.validateDeedEvents(refs.deedEvents || FBDATA.deedEvents, deedDefinitions || FBDATA.deeds, refs),
       FB.validateFocusRoutines(refs.focusRoutines || FBDATA.focusRoutines, focusDefinitions || FBDATA.focuses, refs),
@@ -5370,8 +5372,9 @@ window.FB = window.FB || {};
     return preview;
   }
 
-  FB.validateActionPolicies = function (table) {
+  FB.validateActionPolicies = function (table, refs) {
     const schemas = {
+      keep_records:{},
       toil:{ injuryChance:[0,1], injuryHealth:[0,10] },
       trade_run:{ successBase:[0,1], skillChance:[0,.1], profitBase:[0,100], profitSkillDivisor:[1,100], loss:[0,100], stockThreshold:[0,10000], poorStockFactor:[0,1], minimum:[0,100], trainingChance:[0,1] },
       lead_host:{ standing:[-100,100], trainingChance:[0,1] },
@@ -5383,6 +5386,16 @@ window.FB = window.FB || {};
     for (const id of Object.keys(table)) if (!Object.prototype.hasOwnProperty.call(schemas,id)) errors.push('actionPolicies.' + id + ' is not a registered transaction.');
     for (const id of Object.keys(schemas)) {
       const policy = table[id], schema = schemas[id], at = 'actionPolicies.' + id;
+      if (id === 'keep_records') {
+        errors.push.apply(errors, FB.schema.faults(policy, {
+          type:'object', fields:{
+            professions:{ type:'array', minItems:1, maxItems:16, unique:true,
+              items:{ type:'string', ref:{ table:'careers' } },
+              test:function (ids) { return ids.indexOf('administration') >= 0; } }
+          }
+        }, at, { data:refs || FBDATA }));
+        continue;
+      }
       if (!policy || typeof policy !== 'object' || Array.isArray(policy)) { errors.push(at + ' needs a complete policy.'); continue; }
       for (const key of Object.keys(policy)) if (!Object.prototype.hasOwnProperty.call(schema,key)) errors.push(at + '.' + key + ' is unsupported.');
       for (const key of Object.keys(schema)) {

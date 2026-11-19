@@ -393,6 +393,12 @@ FBDATA.careers = {
   }
 };
 
+/* Records work uses exact professions, not the whole civic or learned role.
+   Selection still requires an adult with a chosen, qualified working career. */
+FBDATA.actionPolicies.keep_records = {
+  professions:['administration','curialis']
+};
+
 /* Personal positions and household offices sit beside a character's career
    and the player's station. Earned positions come from events; retainer
    offices are filled by paid named characters in the household network. */
