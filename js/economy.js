@@ -7649,7 +7649,7 @@ window.FB = window.FB || {};
   };
 
   FB.tradeVentureReturnEligible = function (state) {
-    if (!state || !state.player) return FB.T('No traveler is ready to trade.');
+    if (!state || !state.player || state.player.dead) return FB.T('No traveler is ready to trade.');
     const p = state.player;
     const t = p.travel;
     if (!t || t.phase !== 'arrived' || FB.travelPurposeKind(t.purpose) !== 'trade') {
@@ -7664,6 +7664,7 @@ window.FB = window.FB || {};
     if (FB.atWarPersonally(state)) {
       return FB.T('You cannot purchase return cargo while personally at war.');
     }
+    if (!FB.travelTradeReturnRoad(t)) return FB.T('The saved road home is no longer passable.');
     return true;
   };
 
@@ -7672,14 +7673,14 @@ window.FB = window.FB || {};
     const t = state && state.player && state.player.travel;
     if (!t) return out;
     const goods = FBDATA.marketGoods || {};
-    const destId = t.destinationId || t.currentId;
-    const homeId = t.homeId;
-    const destCounty = FB.marketCounty ? FB.marketCounty(state, destId) : null;
+    const destCounty = FB.marketCounty(state, t.destinationId);
+    const homeCounty = FB.marketCounty(state, t.homeId);
+    if (!destCounty || !homeCounty) return out;
     for (const id in goods) {
-      const destPrice = FB.marketPrice ? FB.marketPrice(state, destId, id) : 1;
-      const homePrice = FB.marketPrice ? FB.marketPrice(state, homeId, id) : 1;
+      const local = destCounty.goods[id], home = homeCounty.goods[id];
+      if (!local || !home) continue;
+      const destPrice = local.price, homePrice = home.price;
       const quantity = Math.max(0, Number(stake) || 0) / destPrice;
-      const stock = destCounty && destCounty.goods[id] ? destCounty.goods[id].stock : Infinity;
       out.push({
         id:id,
         def:goods[id],
@@ -7687,8 +7688,8 @@ window.FB = window.FB || {};
         homePrice:homePrice,
         priceRatio:destPrice > 0 ? homePrice / destPrice : 1,
         quantity:quantity,
-        stock:stock,
-        available:stock + 0.0001 >= quantity
+        stock:local.stock,
+        available:local.stock + 0.0001 >= quantity
       });
     }
     out.sort(function (a, b) {
@@ -7704,17 +7705,19 @@ window.FB = window.FB || {};
     if (!def || FB.tradeVentureStakes(state).indexOf(stake) < 0) return null;
     const t = state && state.player && state.player.travel;
     if (!t || t.phase !== 'arrived' || FB.travelPurposeKind(t.purpose) !== 'trade') return null;
-    const destId = t.destinationId || t.currentId;
+    const road = FB.travelTradeReturnRoad(t);
+    if (!road) return null;
+    const destId = t.destinationId;
     const homeId = t.homeId;
-    const commodity = goodId && FBDATA.marketGoods && FBDATA.marketGoods[goodId];
-    if (!commodity) return null;
-    const destPrice = FB.marketPrice ? FB.marketPrice(state, destId, goodId) : 1;
-    const homePrice = FB.marketPrice ? FB.marketPrice(state, homeId, goodId) : 1;
+    const destCounty = FB.marketCounty(state, destId);
+    const homeCounty = FB.marketCounty(state, homeId);
+    const local = destCounty && Object.prototype.hasOwnProperty.call(destCounty.goods, goodId) && destCounty.goods[goodId];
+    const home = homeCounty && homeCounty.goods[goodId];
+    if (!local || !home) return null;
+    const destPrice = local.price, homePrice = home.price;
     const quantity = stake / destPrice;
-    const destCounty = FB.marketCounty ? FB.marketCounty(state, destId) : null;
-    const destStock = destCounty && destCounty.goods[goodId] ? destCounty.goods[goodId].stock : Infinity;
     const retDef = def.returnCargo || {};
-    const ladingRate = tradeVentureNumber(retDef.ladingFeeRate, 0.10);
+    const ladingRate = Math.max(0, tradeVentureNumber(retDef.ladingFeeRate, 0.10));
     const ladingFee = Math.round(stake * ladingRate * 100) / 100;
     const totalCost = stake + ladingFee;
     const cautiousMult = tradeVentureNumber(retDef.cautiousMultiplier, 1.20);
@@ -7722,24 +7725,29 @@ window.FB = window.FB || {};
     const boldFailureMult = tradeVentureNumber(retDef.boldFailureMultiplier, 0.35);
     const boldChance = FB.namedChance ? FB.namedChance(state, 'travel_trade') : 0.60;
     const charterBonus = FB.marketCharterReturnBonus ? FB.marketCharterReturnBonus(
-      state, goodId, destId, homeId, t.outboundRoute) : 0;
+      state, goodId, destId, homeId, road.route) : 0;
     const baseUnitReturnCautious = homePrice * cautiousMult * (1 + charterBonus);
     const baseUnitReturnBoldSuccess = homePrice * boldSuccessMult * (1 + charterBonus);
     const baseUnitReturnBoldFailure = homePrice * boldFailureMult * (1 + charterBonus);
 
     return {
+      payerId:state.player.charId,
+      journeyTurn:t.startTurn,
       stake:stake,
       goodId:goodId,
       destId:destId,
       homeId:homeId,
+      road:road,
       destPrice:destPrice,
       homePrice:homePrice,
       priceRatio:destPrice > 0 ? homePrice / destPrice : 1,
       quantity:quantity,
-      destStock:destStock,
-      stockAvailable:destStock + 0.0001 >= quantity,
+      destStock:local.stock,
+      stockAvailable:local.stock + 0.0001 >= quantity,
       ladingFee:ladingFee,
       totalCost:totalCost,
+      funds:state.player.gold,
+      cashLeft:state.player.gold - totalCost,
       charterBonus:charterBonus,
       cautiousMultiplier:cautiousMult,
       boldSuccessMultiplier:boldSuccessMult,
@@ -7751,37 +7759,38 @@ window.FB = window.FB || {};
     };
   };
 
-  FB.tradeVentureCanLoadReturn = function (state, stake, goodId) {
+  function returnCargoBlocker(state, preview) {
     const eligible = FB.tradeVentureReturnEligible(state);
     if (eligible !== true) return eligible;
-    const preview = FB.tradeVentureReturnPreview(state, stake, goodId);
     if (!preview) return FB.T('That return cargo is not available.');
-    if (state.player.gold + 0.000001 < preview.totalCost) {
+    if (!isFinite(preview.cashLeft) || preview.cashLeft < 0) {
       return FB.T('The return stake and lading fee cost {money:cost}; you have {money:gold}.', {
-        cost:preview.totalCost, gold:Math.floor(state.player.gold)
+        cost:preview.totalCost, gold:preview.funds
       });
     }
     if (!preview.stockAvailable) {
       return FB.T('The market cannot supply that quantity of {good}.', {
-        good:FB.dataText ? FB.dataText(state, state.player.charId,
-          'marketGood', goodId, FBDATA.marketGoods[goodId], 'name', {}) :
-          FBDATA.marketGoods[goodId].name
+        good:FB.dataText(state, state.player.charId, 'marketGood', preview.goodId,
+          FBDATA.marketGoods[preview.goodId], 'name', {})
       });
     }
     return true;
   };
 
-  FB.loadTradeVentureReturn = function (state, stake, goodId, strategy) {
+  FB.tradeVentureCanLoadReturn = function (state, stake, goodId) {
+    return returnCargoBlocker(state, FB.tradeVentureReturnPreview(state, stake, goodId));
+  };
+
+  FB.loadTradeVentureReturn = function (state, stake, goodId, strategy, reviewed) {
     if (strategy !== 'cautious' && strategy !== 'bold') return null;
-    if (FB.tradeVentureCanLoadReturn(state, stake, goodId) !== true) return null;
     const preview = FB.tradeVentureReturnPreview(state, stake, goodId);
-    if (!preview) return null;
+    if (returnCargoBlocker(state, preview) !== true ||
+        (reviewed && JSON.stringify(preview) !== JSON.stringify(reviewed))) return null;
     const t = state.player.travel;
-    if (!t) return null;
     if (!FB.marketTakeStock(state, preview.destId, preview.goodId, preview.quantity)) {
       return null;
     }
-    state.player.gold -= preview.totalCost;
+    state.player.gold = preview.cashLeft;
     const ret = {
       kind:'trade_venture_return',
       goodId:preview.goodId,
@@ -7814,7 +7823,8 @@ window.FB = window.FB || {};
   };
 
   FB.resolveReturnTradeVenture = function (state, travel) {
-    if (!travel || !travel.returnVenture || travel.returnVenture.status !== 'active') {
+    if (!travel || state.player.travel !== travel ||
+        !travel.returnVenture || travel.returnVenture.status !== 'active') {
       return false;
     }
     const ret = travel.returnVenture;
@@ -7843,8 +7853,9 @@ window.FB = window.FB || {};
 
     const homeId = travel.homeId;
     const liveHomePrice = FB.marketPrice ? FB.marketPrice(state, homeId, ret.goodId) : 1;
-    const charter = FB.marketCharterReturnBonus ? FB.marketCharterReturnBonus(
-      state, ret.goodId, ret.originId, homeId, travel.outboundRoute) : 0;
+    const road = FB.travelTradeReturnRoad(travel);
+    const charter = road && FB.marketCharterReturnBonus ? FB.marketCharterReturnBonus(
+      state, ret.goodId, ret.originId, homeId, road.route) : 0;
     const payout = Math.round(ret.quantity * liveHomePrice * multiplier *
       (1 + charter) * 100) / 100;
     const deliveredQuantity = ret.quantity * Math.min(1, Math.max(0, multiplier));
