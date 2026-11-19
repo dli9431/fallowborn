@@ -1,17 +1,18 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
-const { openCrazyGame } = require('../support/game/crazygames-title');
+const { openTitle, prepareGameContent } = require('../support/game/navigation');
+const { openCrazyTitle } = require('../support/game/crazygames-title');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
-  'index.html', 'css/style.css', 'data/bookmarks.js', 'data/bookmark_476.js',
+  'index.html', 'css/style.css', 'data/bookmarks.js', 'data/bookmark_manifest.js',
+  'data/bookmark_476.js',
   'data/bookmark_711.js', 'data/story_campaigns_711.js',
   'data/bookmark_800.js', 'data/bookmark_800_history.js',
   'data/bookmark_1204.js', 'data/bookmark_1204_campaigns.js',
   'data/bookmark_1096.js',
   'data/starts.js', 'data/cultures.js', 'data/geographies.js', 'data/settlements.js',
-  'data/distribution_crazygames.js', 'js/crazygames.js', 'js/world.js',
+  'data/distribution_crazygames.js', 'js/crazygames.js', 'js/bookmark_sources.js', 'js/world.js',
   'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/stories.js',
   'js/ui_misc.js', 'js/ui_modals.js'
 ]);
@@ -28,9 +29,9 @@ test.beforeEach(async function ({}, testInfo) {
     'Exercise ordinary bookmark registration on both Chromium origins.');
 });
 
-async function openTitle(page, testInfo, crazygames) {
-  if (crazygames) await openCrazyGame(page, testInfo);
-  else await openGame(page, testInfo);
+async function openDistributionTitle(page, testInfo, crazygames) {
+  if (crazygames) await openCrazyTitle(page, testInfo);
+  else await openTitle(page, testInfo);
 }
 
 async function chooseStartingDate(page) {
@@ -42,6 +43,8 @@ async function chooseStartingDate(page) {
 
 for (const crazygames of [false, true]) {
   test.describe('ordinary starting dates, CrazyGames flag ' + crazygames, function () {
+    test.describe.configure({ mode:'parallel' });
+
     test.beforeEach(async function ({ page }) {
       if (crazygames) await page.addInitScript(function () {
         window.FB_DISTRIBUTION = 'crazygames';
@@ -50,19 +53,19 @@ for (const crazygames of [false, true]) {
     });
 
     for (const width of [1280, 390]) {
-      test('the picker offers merged dates and activates their scenarios at width ' + width,
-        async function ({ page }, testInfo) {
-          test.setTimeout(120 * 1000);
-          await page.setViewportSize({ width:width, height:800 });
-          await openTitle(page, testInfo, crazygames);
-          await chooseStartingDate(page);
-          const cards = page.locator('#bookmarklist button');
-          // Additional dates have their own content coverage; retained dates stay in order.
-          await expect(cards.locator('h3')).toContainText([
-            /Spring 476:/, /Spring 711:/, /Winter 800:/,
-            /Spring 867:/, /Spring 1066:/, /Spring 1204:/
-          ]);
-          for (const start of STARTS) {
+      for (const start of STARTS) {
+        test('the picker offers merged dates and previews ' + start.id + ' at width ' + width,
+          async function ({ page }, testInfo) {
+            await page.setViewportSize({ width:width, height:800 });
+            await openDistributionTitle(page, testInfo, crazygames);
+            await prepareGameContent(page);
+            await chooseStartingDate(page);
+            const cards = page.locator('#bookmarklist button');
+            // Additional dates have their own content coverage; retained dates stay in order.
+            await expect(cards.locator('h3')).toContainText([
+              /Spring 476:/, /Spring 711:/, /Winter 800:/,
+              /Spring 867:/, /Spring 1066:/, /Spring 1204:/
+            ]);
             const card = cards.filter({ hasText:start.name });
             await expect(card).toBeEnabled();
             await card.press('Enter');
@@ -76,15 +79,14 @@ for (const crazygames of [false, true]) {
             })).toBeEnabled();
             await page.locator('#btn-ng-back').click();
             await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
-          }
-        });
+          });
+      }
     }
 
     for (const start of STARTS) {
       test(start.id + ' ordinary start code and save remain usable after a fresh boot',
         async function ({ page }, testInfo) {
-          test.setTimeout(120 * 1000);
-          await openTitle(page, testInfo, crazygames);
+          await openDistributionTitle(page, testInfo, crazygames);
           await chooseStartingDate(page);
           const canonicalCode = 'BOOKMARKLOAD-' + start.id + '-serf-' + start.county + '-m-Leo';
           const code = canonicalCode + '-standard-0-' + start.identity;
@@ -104,7 +106,7 @@ for (const crazygames of [false, true]) {
             delete FB.state.player.flags.tutorial;
             return FB.save.serialize();
           });
-          await openTitle(page, testInfo, crazygames);
+          await openDistributionTitle(page, testInfo, crazygames);
           expect(await page.evaluate(function (json) {
             return FB.game.loadData(JSON.parse(json));
           }, saved)).toBe(true);
