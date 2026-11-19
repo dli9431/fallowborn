@@ -4,8 +4,8 @@ FBDATA.householdTracks_451 = {
   "gallic_curialis_track_451": {
     "id": "gallic_curialis_track_451",
     "type": "household_track",
-    "title": "A livelihood amid uncertain rule",
-    "intro": "Local war and a changed sovereign open reviews; distant reports and calendar dates do not move the household. Ordinary work must actually pay before this opening completes.",
+    "title": "Records work in Aurelianum",
+    "intro": "Earn for your household by keeping records in Aurelianum. Local war and a change of sovereign may affect when you review the work. Council service and relocation have their own decisions.",
     "homeProvinceId": "orleans",
     "continuity": "protagonist",
     "interruptedStage": "interrupted",
@@ -17,13 +17,17 @@ FBDATA.householdTracks_451 = {
     },
     "stages": {
       "livelihood": {
-        "name": "Keep the household supplied",
-        "text": "Choose ordinary work, then wait for actual earnings. No story wage or military enlistment is granted. You may close this sheet without spending.",
+        "name": "Choose records work",
+        "text": "Keeping records earns private income on worked days. Selecting it costs no gold or time. To defer, close this review and return to it in Deeds.",
         "choices": [
           {
             "id": "work",
-            "label": "Select ordinary work",
-            "detail": "Set the daily focus; earnings depend on actual work and its ordinary eligibility.",
+            "label": "Keep records",
+            "detail": "Choose Keep records as your Daily Focus. Earnings go to the household after a worked day. Council appointments are separate.",
+            "when": {
+              "kind": "home",
+              "provinceId": "orleans"
+            },
             "operation": {
               "kind": "set_focus",
               "focusId": "keep_records"
@@ -34,28 +38,32 @@ FBDATA.householdTracks_451 = {
         "transitions": [
           {
             "when": {
-              "kind": "at_war",
-              "provinceId": "orleans"
-            },
-            "next": "upheaval"
-          },
-          {
-            "when": {
               "kind": "control_changed",
               "stageId": "control"
             },
             "next": "control"
+          },
+          {
+            "when": {
+              "kind": "at_war",
+              "provinceId": "orleans"
+            },
+            "next": "upheaval"
           }
         ]
       },
       "working": {
-        "name": "Wait for real earnings",
-        "text": "Selecting a focus has not paid the household. Continue work through ordinary days. Closing this sheet leaves the goal pending.",
+        "name": "Await records earnings",
+        "text": "The household goal stays pending until a day of records work pays in Aurelianum. If you change your Daily Focus, you can resume records work here.",
         "choices": [
           {
             "id": "continue_work",
-            "label": "Keep ordinary work selected",
-            "detail": "No immediate wage, public authority or refuge is granted.",
+            "label": "Resume records work",
+            "detail": "Select Keep records again. Your first paid day in Aurelianum completes the goal.",
+            "when": {
+              "kind": "home",
+              "provinceId": "orleans"
+            },
             "operation": {
               "kind": "set_focus",
               "focusId": "keep_records"
@@ -71,17 +79,17 @@ FBDATA.householdTracks_451 = {
         "transitions": [
           {
             "when": {
-              "kind": "at_war",
-              "provinceId": "orleans"
-            },
-            "next": "upheaval"
-          },
-          {
-            "when": {
               "kind": "control_changed",
               "stageId": "control"
             },
             "next": "control"
+          },
+          {
+            "when": {
+              "kind": "at_war",
+              "provinceId": "orleans"
+            },
+            "next": "upheaval"
           }
         ]
       },
@@ -91,16 +99,62 @@ FBDATA.householdTracks_451 = {
         "choices": [
           {
             "id": "retain_livelihood",
-            "label": "Retain ordinary livelihood",
-            "detail": "Return to the earnings review without claiming evacuation, refuge or exemption from dues.",
+            "label": "Keep records during the war",
+            "detail": "Select Keep records and stay at your current home. Travel and refuge require separate decisions.",
+            "when": {
+              "kind": "home",
+              "provinceId": "orleans"
+            },
             "operation": {
               "kind": "set_focus",
               "focusId": "keep_records"
             },
-            "next": "working"
+            "next": "wartime_work"
           }
         ],
-        "transitions": []
+        "transitions": [
+          {
+            "when": {
+              "kind": "control_changed",
+              "stageId": "control"
+            },
+            "next": "control"
+          }
+        ]
+      },
+      "wartime_work": {
+        "name": "Await wartime records earnings",
+        "text": "Records work continues at home. The household goal stays pending until a day of this work pays.",
+        "choices": [
+          {
+            "id": "continue_work",
+            "label": "Resume records work",
+            "detail": "Select Keep records again. Your first paid day in Aurelianum completes the goal.",
+            "when": {
+              "kind": "home",
+              "provinceId": "orleans"
+            },
+            "operation": {
+              "kind": "set_focus",
+              "focusId": "keep_records"
+            },
+            "next": "wartime_work"
+          }
+        ],
+        "afterWork": {
+          "focusId": "keep_records",
+          "provinceId": "orleans",
+          "next": "paid"
+        },
+        "transitions": [
+          {
+            "when": {
+              "kind": "control_changed",
+              "stageId": "control"
+            },
+            "next": "control"
+          }
+        ]
       },
       "control": {
         "name": "A different sovereign",
@@ -114,8 +168,12 @@ FBDATA.householdTracks_451 = {
         "choices": [
           {
             "id": "resume_work",
-            "label": "Review work under the present rule",
-            "detail": "Retain ordinary work without a conversion, grant or free journey.",
+            "label": "Resume records work under the present rule",
+            "detail": "Record the change of sovereign and select Keep records. Your household keeps its home and existing obligations.",
+            "when": {
+              "kind": "home",
+              "provinceId": "orleans"
+            },
             "operation": {
               "kind": "set_focus",
               "focusId": "keep_records"
@@ -127,7 +185,7 @@ FBDATA.householdTracks_451 = {
       },
       "paid": {
         "name": "Work has supported the household",
-        "text": "Actual ordinary earnings completed this local opening. No further reward is added.",
+        "text": "A day of records work paid into the private purse. The opening goal is complete.",
         "terminal": true,
         "choices": [],
         "transitions": []
@@ -140,13 +198,17 @@ FBDATA.householdTracks_451 = {
         "transitions": []
       },
       "resettled_work": {
-        "name": "Wait for real earnings",
-        "text": "Selecting a focus has not paid the household. Continue work through ordinary days. Closing this sheet leaves the goal pending.",
+        "name": "Await records earnings",
+        "text": "The household goal stays pending until a day of records work pays in Aurelianum. If you change your Daily Focus, you can resume records work here.",
         "choices": [
           {
             "id": "continue_work",
-            "label": "Keep ordinary work selected",
-            "detail": "No immediate wage, public authority or refuge is granted.",
+            "label": "Resume records work",
+            "detail": "Select Keep records again. Your first paid day in Aurelianum completes the goal.",
+            "when": {
+              "kind": "home",
+              "provinceId": "orleans"
+            },
             "operation": {
               "kind": "set_focus",
               "focusId": "keep_records"
@@ -950,8 +1012,8 @@ FBDATA.openingProfiles_451 = {
     "goals": [
       {
         "id": "earned",
-        "name": "Earn through ordinary work",
-        "text": "Complete the local opening only after ordinary work actually pays.",
+        "name": "Earn through records work",
+        "text": "Earn private income from a worked day of keeping records in Aurelianum.",
         "criterion": {
           "kind": "household_phase",
           "storyId": "gallic_curialis_track_451",

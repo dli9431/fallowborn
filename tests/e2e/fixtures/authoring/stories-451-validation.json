@@ -1,4 +1,67 @@
 {
+  "civicReview": {
+    "bookmarkId": "451",
+    "scenarioId": "gallic_curialis_451",
+    "provinceId": "orleans",
+    "storyId": "gallic_curialis_track_451",
+    "openingId": "opening_gallic_curialis_451",
+    "code": "CIVICREVIEW-451-gallic_curialis_451-orleans-m-Review-established-0-gallo_roman.nicene"
+  },
+  "civicRecordsImport": {
+    "name": "Ravenna ledger household",
+    "startScenarios": [
+      {
+        "id": "curialis_476",
+        "name": "A Ravenna records household",
+        "desc": "A fictional curial household prepares the next ledger.",
+        "intro": "Find the household ledger in Deeds.",
+        "bookmarkIds": ["476"],
+        "fixedProvinceId": "ravenna",
+        "startCulture": "roman",
+        "startReligion": "nicene",
+        "alwaysUnlocked": true,
+        "tier": 2,
+        "profession": "curialis",
+        "gold": 31,
+        "prestige": 10,
+        "piety": 0,
+        "tracks": ["ravenna_ledger_work"],
+        "trackLocations": {"ravenna_ledger_work": ["ravenna"]}
+      }
+    ],
+    "storyInstances": {
+      "ravenna_ledger_work": {
+        "id": "ravenna_ledger_work",
+        "type": "household_track",
+        "title": "The Ravenna ledger",
+        "intro": "Decide whether to take private records work.",
+        "homeProvinceId": "ravenna",
+        "requirements": {"provinces": ["ravenna"]},
+        "continuity": "household",
+        "initialStage": "offer",
+        "stages": {
+          "offer": {
+            "name": "An open ledger",
+            "text": "Choose work with the ledger or decline the offer.",
+            "choices": [
+              {"id": "open_ledger", "label": "Work on the ledger", "detail": "Select records work without spending a day or receiving a wage.", "operation": {"kind": "set_focus", "focusId": "keep_records"}, "next": "working"},
+              {"id": "decline_ledger", "label": "Decline the ledger", "detail": "Keep your current work and funds.", "operation": {"kind": "record_decision"}, "next": "declined"}
+            ],
+            "transitions": []
+          },
+          "working": {
+            "name": "At the ledger",
+            "text": "A day of keeping records must pay before the ledger is complete.",
+            "choices": [],
+            "transitions": [],
+            "afterWork": {"focusId": "keep_records", "provinceId": "ravenna", "next": "entered"}
+          },
+          "declined": {"name": "Ledger declined", "text": "The household continues its current work.", "terminal": true, "choices": [], "transitions": []},
+          "entered": {"name": "Ledger entered", "text": "The household earned its ordinary pay.", "terminal": true, "choices": [], "transitions": []}
+        }
+      }
+    }
+  },
   "malformedGroups": [
     {
       "name": "coalition transaction stories",
