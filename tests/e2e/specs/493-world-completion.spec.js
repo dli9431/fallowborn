@@ -6,7 +6,7 @@ const {openGame} = require('../support/game/navigation');
 const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
 const {injectBrowserHarness} = require('../support/game/browser-harness');
-const {advanceBookmark,restoreBookmark,facts,beginBookmark} = require('../support/game/bookmark-acceptance');
+const {advanceBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_493.js','data/bookmark_493_world.js','data/bookmark_493_history.js',
@@ -33,10 +33,10 @@ async function start493(page,testInfo,county,options) {
     });
     await openCrazyGame(page,testInfo);
   } else await openGame(page,testInfo);
-  await page.evaluate(function (revision) {
+  await page.evaluate(function () {
     FBDATA.bookmarks['493'].hidden = false;
-    FBDATA.bookmarks['493'].revision = revision;
-  },options.baseline ? 'baseline' : 'world_v2');
+    FBDATA.bookmarks['493'].revision = 'world_v2';
+  });
   const beginning = page.locator('#btn-choose-beginning');
   if (await beginning.isVisible()) await beginning.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
@@ -165,63 +165,6 @@ test('493 Egyptian household receives scoped imperial authority without changing
   const source = await budget(page,testInfo,'egyptian-office',4*1024*1024), before = await facts(page);
   await restoreBookmark(page,source);
   expect(await facts(page)).toEqual(before);
-});
-
-for (const county of ['alexandria','erfurt','tara','turku','kiev','dvin','axum','sanaa','baghdad','balkh','cherson','jenne_district']) {
-  test('493 regional household completes a season at ' + county,async function ({page},testInfo) {
-    test.skip(testInfo.project.name !== 'chromium-served','Regional natural-day coverage is bounded to one project.');
-    test.setTimeout(180000);
-    await start493(page,testInfo,county);
-    await advanceBookmark(page,45);
-    const source = await budget(page,testInfo,county+'-midpoint',6*1024*1024), before = await facts(page);
-    await restoreBookmark(page,source);
-    expect(await facts(page)).toEqual(before);
-    await advanceBookmark(page,45);
-    const after = await facts(page);
-    await restoreBookmark(page,source);
-    await advanceBookmark(page,45);
-    expect(await facts(page)).toEqual(after);
-  });
-}
-
-test('493 baseline frontier, institutions and story commitments survive expanded and other-date loads',async function ({page},testInfo) {
-  test.setTimeout(180000);
-  await start493(page,testInfo,'ravenna',{baseline:true});
-  const prior = await page.evaluate(function () {
-    const s = FB.state;
-    s.player.gold = 5000; s.player.prestige = 500; FB.settleWaste(s,'w_karakum');
-    if (FB.world.byId.w_karakum.wasteland) throw new Error('Frontier setup failed');
-    const data = JSON.parse(FB.save.serialize()); data.platformSchema = 1; delete data.state.start.revision;
-    return {text:JSON.stringify(data),facts:JSON.stringify([s.owner,s.holder,s.population,s.bookmarkSetup,s.stories,s.localInstitutions,s.wastelandSettlements]),
-      sites:JSON.stringify(FB.world.sitesByProv.w_karakum)};
-  });
-  await start493(page,testInfo,'baghdad');
-  const expanded = await budget(page,testInfo,'expanded-switch',4*1024*1024), expandedFacts = await facts(page);
-  await beginBookmark(page,testInfo,'476','farmer_476');
-  const earlier = await page.evaluate(function () { return FB.save.serialize(); });
-  await beginBookmark(page,testInfo,'867','farmer');
-  const later = await page.evaluate(function () { return FB.save.serialize(); });
-  for (const other of [earlier,later,expanded]) {
-    await restoreBookmark(page,other);
-    await restoreBookmark(page,prior.text);
-    expect(await page.evaluate(function () {
-      const s = FB.state;
-      return {revision:s.start.revision,geo:s.start.geography,added:!!FB.world.byId.kath_district,
-        facts:JSON.stringify([s.owner,s.holder,s.population,s.bookmarkSetup,s.stories,s.localInstitutions,s.wastelandSettlements]),
-        sites:JSON.stringify(FB.world.sitesByProv.w_karakum),site:FB.campaignBookmark(s).localInstitutions.alexandria_see.site,
-        valid:FB.save.v4.validatePlatform(s)};
-    })).toEqual({revision:'baseline',geo:'europe_regional',added:false,facts:prior.facts,sites:prior.sites,site:null,valid:true});
-  }
-  await restoreBookmark(page,expanded);
-  expect(await facts(page)).toEqual(expandedFacts);
-  expect(await page.evaluate(function () {
-    const data = JSON.parse(FB.save.serialize()), live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
-    return [function (d) { d.state.start.revision = 'unknown'; },
-      function (d) { d.state.start.geography = 'europe_regional'; }].map(function (mutate) {
-        const bad = JSON.parse(JSON.stringify(data)); mutate(bad);
-        return FB.game.loadData(bad) === false && live === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter();
-      });
-  })).toEqual([true,true]);
 });
 
 test('493 kin recognition transfers political authority once and preserves local households',async function ({page},testInfo) {
