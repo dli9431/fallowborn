@@ -277,7 +277,7 @@ jobs:
           MODE: ${{ inputs.mode }}
         run: |
           mkdir -p merged
-          (cd tooling/tests/e2e && npx playwright merge-reports --reporter="$GITHUB_WORKSPACE/tooling/tests/e2e/support/ci-report.js" "$GITHUB_WORKSPACE/blobs")
+          (cd tooling/tests/e2e && npx playwright merge-reports --config=playwright.config.js --reporter="$GITHUB_WORKSPACE/tooling/tests/e2e/support/ci-report.js" "$GITHUB_WORKSPACE/blobs")
           node tooling/tests/e2e/support/ci-summary.js merged/results.json "$REF" "$MODE" >> "$GITHUB_STEP_SUMMARY"
           if [[ -f blobs/selection.json ]]; then
             node tooling/tests/e2e/support/ci-discovery.js verify blobs/selection.json merged/results.json
@@ -290,7 +290,7 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=6144
           PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ github.workspace }}/merged/html
         run: |
-          (cd tooling/tests/e2e && npx playwright merge-reports --reporter=html "$GITHUB_WORKSPACE/blobs")
+          (cd tooling/tests/e2e && npx playwright merge-reports --config=playwright.config.js --reporter=html "$GITHUB_WORKSPACE/blobs")
           if [ ! -d merged/html ] && [ -d tooling/tests/e2e/playwright-report ]; then
             cp -r tooling/tests/e2e/playwright-report merged/html
           fi

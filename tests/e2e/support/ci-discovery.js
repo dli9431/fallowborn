@@ -31,7 +31,7 @@ async function plan() {
 
   async function list(shard) {
     const idsFile = path.join(temp, shard + '.json');
-    const blobFile = path.join(temp, 'empty-' + shard + '.zip');
+    const blobFile = path.join(temp, String(shard), 'empty-' + shard + '.zip');
     const args = [cli, 'test', ...selection, '--list', '--workers=' + process.env.WORKERS];
     if (shard) args.push('--shard=' + shard + '/' + total);
     args.push('--reporter=' + (shard ? 'blob,' : '') + __filename);
