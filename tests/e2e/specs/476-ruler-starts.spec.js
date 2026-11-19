@@ -12,13 +12,13 @@ dependsOnRuntime(__filename, [
   'js/authority.js', 'js/federates.js', 'js/mobile_confederations.js', 'data/mobile_confederations.js',
   'data/bookmark_476_wider.js', 'js/institutions.js', 'js/treasury.js',
   'js/station.js', 'js/governments.js', 'js/technology.js', 'js/logistics.js',
-  'js/mods.js', 'js/save.js', 'js/save_v4.js', 'js/ui_panels.js',
+  'js/mods.js', 'js/save.js', 'js/save_v4.js', 'js/ui_panels.js', 'data/bookmarks.js',
   'js/modifiers.js', 'js/events.js', 'js/bookmark_setup.js', 'js/religion.js', 'js/ui_misc.js'
 ]);
 const { test, expect } = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
-const { useReleasedStartRules } = require('../support/game/released-starts');
+const { useReviewStartRules } = require('../support/game/released-starts');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 
 const STARTS = [
@@ -29,20 +29,28 @@ const STARTS = [
   { id:'syagrius_476', realm:'west_francia', province:'laon', name:'Syagrius', age:46,
     worldField:'syagriusId', form:'roman_civic', tier:6 }
 ];
-async function fullStart(page) {
+async function openBookmarkPicker(page) {
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button', { name:'New Game', exact:true }).click();
+}
+async function fullStart(page) {
+  await openBookmarkPicker(page);
   await page.locator('#btn-bm-seed').click();
 }
+async function choose476(page) {
+  await openBookmarkPicker(page);
+  await page.locator('#bookmarklist [data-bookmark="476"]').click();
+  await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
+}
+function rulerCode(def) {
+  return 'RULERS-476-' + def.id + '-' + def.province + '-m-' + def.name;
+}
 async function start(page, testInfo, def) {
+  await useReviewStartRules(page);
   await openGame(page, testInfo);
-  // Owner review enables only this candidate in this fresh browser context.
-  await page.evaluate(function (id) {
-    FBDATA.startScenarios.find(function (sc) { return sc.id === id; }).hidden = false;
-  }, def.id);
   await fullStart(page);
-  await page.locator('#ng-seed').fill('RULERS-476-' + def.id + '-' + def.province + '-m-' + def.name);
+  await page.locator('#ng-seed').fill(rulerCode(def));
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await expect(page.locator('#cg-name')).toHaveValue(def.name.replace(/_/g, ' '));
@@ -72,9 +80,9 @@ async function winRavenna(page) {
   expect(result).toEqual({ launched:true, noAward:true, phase:'won' });
 }
 
-test('unreviewed ruler starts reject start codes and direct creation', async function ({ page }, testInfo) {
-  await useReleasedStartRules(page);
+test('unreviewed ruler starts stay out of the picker and reject start codes and direct creation', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
+  expect(await page.evaluate(function () { return FBDATA.reviewOpenStarts; })).toBe(false);
   const hidden = await page.evaluate(function () {
     return FBDATA.startScenarios.filter(function (sc) {
       return sc.rulerRealmId && sc.bookmarkIds && sc.bookmarkIds.includes('476');
@@ -82,20 +90,49 @@ test('unreviewed ruler starts reject start codes and direct creation', async fun
       .every(function (sc) { return sc.hidden && sc.alwaysUnlocked; });
   });
   expect(hidden).toBe(true);
-  await fullStart(page);
-  await page.locator('#ng-seed').fill('RULERS-476-nepos_476-split-m-Julius_Nepos');
-  await page.locator('#ng-seed').press('Enter');
-  await expect(page.locator('#chargen:not(.hidden)')).toHaveCount(0);
+  await choose476(page);
+  const picker = page.locator('#scenariolist');
+  await expect(picker.locator('[data-scenario="farmer_476"]')).toBeVisible();
+  for (const def of STARTS) {
+    await expect(picker.locator('[data-scenario="' + def.id + '"]')).toHaveCount(0);
+  }
+  await expect(picker.getByRole('button', { name:'Julius Nepos at Salona' })).toHaveCount(0);
+  await expect(picker.getByRole('button', { name:'Odoacer and the federate host' })).toHaveCount(0);
+  await expect(picker.getByRole('button', { name:'Syagrius at Soissons' })).toHaveCount(0);
+
+  await page.locator('#btn-ng-back').click();
+  await page.locator('#btn-bm-seed').click();
+  for (const def of STARTS) {
+    await page.locator('#ng-seed').fill(rulerCode(def));
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#ng-seed-err')).not.toBeEmpty();
+    await expect(page.locator('#chargen:not(.hidden)')).toHaveCount(0);
+  }
+  await page.locator('#ng-cancel').click();
   const result = await page.evaluate(function () {
     FB.activateBookmark('476');
     FB.game.pending = { scenario:FBDATA.startScenarios.find(function (sc) { return sc.id === 'nepos_476'; }),
       seed:'RULERS', bookmarkId:'476', provinceId:'split' };
-    return FB.game.start();
+    return { ready:FB.game.campaignReady('476'), started:FB.game.start(), state:FB.state };
   });
-  expect(result).toBe(false);
-  await expect(page.getByRole('button', { name:'Julius Nepos at Salona' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name:'Odoacer and the federate host' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name:'Syagrius at Soissons' })).toHaveCount(0);
+  expect(result).toEqual({ ready:true, started:false, state:null });
+});
+
+test('an explicit review session opens the authored rulers in the 476 picker', async function ({ page }, testInfo) {
+  await useReviewStartRules(page);
+  await openGame(page, testInfo);
+  await choose476(page);
+  await expect(page.locator('#scenariolist .scen-group').first()).toHaveText('Historical starts');
+  for (const def of STARTS) {
+    const card = page.locator('#scenariolist [data-scenario="' + def.id + '"]');
+    await expect(card).not.toHaveAttribute('aria-disabled');
+    await card.click();
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await expect(page.locator('#cg-fixed .pick-location-title')).toHaveText(def.name.replace(/_/g, ' '));
+    await page.locator('#btn-cg-back').click();
+  }
+  expect(await page.evaluate(function () { return FB.startProgression.snapshot(); }))
+    .toEqual({ v:1, highestAchievedTier:0, highestStartTier:0 });
 });
 
 for (const def of STARTS) {
@@ -272,10 +309,8 @@ test('Odoacer choices, stale review, standing host and contract consent stay pla
 });
 
 test('visible ruler codes reject changes to bookmark, named actor, family, site and community', async function ({ page }, testInfo) {
+  await useReviewStartRules(page);
   await openGame(page, testInfo);
-  await page.evaluate(function () {
-    FBDATA.startScenarios.find(function (sc) { return sc.id === 'odoacer_476'; }).hidden = false;
-  });
   await fullStart(page);
   const codes = [
     'RULERS-867-odoacer_476-pavia-m-Odoacer',

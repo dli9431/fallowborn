@@ -4,10 +4,13 @@ const { expect } = require('../fixture');
 const { mockCrazyGames } = require('../crazygames');
 const { startParityGame, prepareJourneyBookmark } = require('./parity');
 const { openCrazyGame } = require('./crazygames-title');
+const { useReviewStartRules } = require('./released-starts');
 
 // Historical review journeys choose their title contract explicitly. Keep the
 // standard parity helper and the universal navigation fixture unchanged.
 async function startHistoricalGame(page, testInfo, journey, crazygames) {
+  // These historical review journeys may use a candidate start on a public date.
+  await useReviewStartRules(page);
   // Historical reviews expose hidden dates by default; callers can retain the
   // ordinary visibility gate explicitly. Parity journeys keep their defaults.
   journey = Object.assign({ unhide:true }, journey);

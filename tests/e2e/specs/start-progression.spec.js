@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'js/main.js', 'js/lordships.js',
+  'index.html', 'js/main.js', 'js/starts.js', 'js/lordships.js', 'js/actions.js',
   'js/events.js',
   'js/save.js',
   'js/ui_modals.js',
@@ -21,12 +21,14 @@ dependsOnRuntime(__filename, [
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { useReleasedStartRules } = require('../support/game/released-starts');
+
+test.describe.configure({mode:'parallel'});
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await useReleasedStartRules(page);
   await openGame(page, testInfo);
-  await page.evaluate(function () { FB.startProgression.reset(); });
+  expect(await page.evaluate(function () {
+    return { review:FBDATA.reviewOpenStarts, progression:FB.startProgression.snapshot() };
+  })).toEqual({ review:false, progression:{ v:1, highestAchievedTier:0, highestStartTier:0 } });
 });
 
 async function openScenarioPicker(page) {
@@ -101,13 +103,23 @@ test('earning Freeholder unlocks every tier-one beginning across reloads',
   async function ({ page }, testInfo) {
     await startSerfLife(page);
     const result = await page.evaluate(function () {
-      const changed = FB.setPlayerTier(FB.state, 1);
+      const state = FB.state;
+      const before = state.player.tier;
+      // Stage the savings and let the ordinary purchase resolve the promotion.
+      const price = FB.freedomPurchaseQuote(state).price;
+      state.player.gold = price;
+      const purchase = FB.resolveSerfFreedom(state, { route:'purchase' }, {});
       return {
-        changed:changed,
+        before:before,
+        after:state.player.tier,
+        route:purchase && purchase.route,
+        charged:price - state.player.gold,
+        price:price,
         progression:FB.startProgression.snapshot()
       };
     });
-    expect(result.changed).toBe(true);
+    expect(result.price).toBeGreaterThan(0);
+    expect(result).toMatchObject({ before:0, after:1, route:'purchase', charged:result.price });
     expect(result.progression).toMatchObject({
       highestAchievedTier:1,
       highestStartTier:1
@@ -116,6 +128,9 @@ test('earning Freeholder unlocks every tier-one beginning across reloads',
       .toContainText('Freeholder');
 
     await openGame(page, testInfo);
+    expect(await page.evaluate(function () {
+      return { review:FBDATA.reviewOpenStarts, progression:FB.startProgression.snapshot(), state:FB.state };
+    })).toEqual({ review:false, progression:{ v:1, highestAchievedTier:1, highestStartTier:1 }, state:null });
     await openScenarioPicker(page);
     for (const name of [
       /Free Farmer/, /Craftsman/, /Novice of the Faith/, /Man-at-Arms/
@@ -127,6 +142,16 @@ test('earning Freeholder unlocks every tier-one beginning across reloads',
       .toHaveAttribute('aria-disabled', 'true');
     await expect(page.getByRole('button', { name:/Petty Baron/ }))
       .toHaveAttribute('aria-disabled', 'true');
+
+    await page.getByRole('button', { name:/Free Farmer/ }).click();
+    await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+    await page.locator('#btn-pick-back').click();
+    await page.locator('#btn-ng-back').click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('CADENCE-867-farmer-london-f-Ada');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    expect(await page.evaluate(function () { return FB.game.pending.scenario.id; })).toBe('farmer');
   });
 
 test('Settings resets unlocked beginnings to Serf-only',
