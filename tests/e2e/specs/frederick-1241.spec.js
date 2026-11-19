@@ -129,7 +129,11 @@ for (const loss of ['death','succession','office']) {
       const s=FB.state,id='frederick_agenda_1241',t=s.stories[id],q=FB.stories.quote(s,id,'fi_household');
       if (loss==='death') s.chars[s.player.charId].dead=true;
       if (loss==='succession') s.realms.player.ruler.generation++;
-      if (loss==='office') s.realms.player.alive=false;
+      if (loss==='office') {
+        s.realms.player.alive=false;
+        // The army panel can still request the levy breakdown during the transition.
+        FB.playerCompositionBreakdown(s);
+      }
       const refused=FB.stories.apply(s,id,'fi_household',q)===false;
       FB.stories.get(id).day(s,t);
       const ended=JSON.stringify(t);FB.stories.get(id).day(s,t);

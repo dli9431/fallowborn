@@ -8,6 +8,8 @@
     catch (error) { return {error:{name:error.name,message:error.message}}; }
   };
   H.equal = function (actual, expected, label) {
+    // State and catalogue snapshots have already been serialized in pure().
+    if (typeof actual === 'string' && actual === expected) return;
     if (JSON.stringify(actual) !== JSON.stringify(expected))
       throw new Error(label + ': ' + JSON.stringify({actual:actual,expected:expected}));
   };

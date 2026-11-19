@@ -9753,8 +9753,8 @@ window.FB = window.FB || {};
       for (const pid of FB.realmHeldCounties(state, 'player')) {
         if (FB.recruitmentCountyBlocked(state, 'player', pid)) continue;
         for (let slot = 0; slot < FB.settlementVisibleCount(state, pid); slot++) {
-          const a = FB.settlementFiscalProjection(state, pid, slot, fiscalContext).amounts;
-          localDues += a.levyDues + a.specialistDues;
+          const fiscal = FB.settlementFiscalProjection(state, pid, slot, fiscalContext);
+          if (fiscal) localDues += fiscal.amounts.levyDues + fiscal.amounts.specialistDues;
         }
       }
       if (localDues) add(levyClass, 'settlement_contribution', localDues);
