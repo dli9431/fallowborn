@@ -1,9 +1,7 @@
 'use strict';
 
-/* The 476 branch opens every beginning for owner review
-   (FBDATA.reviewOpenStarts in data/starts.js). Specifications of the
-   released rules, hidden candidates and earned-station locks, preset the
-   switch off before the data scripts run. Call before openGame. */
+/* Released rules are the default. Fixtures can still explicitly pin either
+   released locks or review access before openTitle/openGame loads data. */
 async function useReleasedStartRules(page) {
   await page.addInitScript(function () {
     window.FBDATA = window.FBDATA || {};
@@ -11,4 +9,14 @@ async function useReleasedStartRules(page) {
   });
 }
 
-module.exports = { useReleasedStartRules:useReleasedStartRules };
+async function useReviewStartRules(page) {
+  await page.addInitScript(function () {
+    window.FBDATA = window.FBDATA || {};
+    window.FBDATA.reviewOpenStarts = true;
+  });
+}
+
+module.exports = {
+  useReleasedStartRules:useReleasedStartRules,
+  useReviewStartRules:useReviewStartRules
+};

@@ -1,3 +1,19 @@
+Fresh-install start rules
+
+An unconfigured boot sets FBDATA.reviewOpenStarts to false. Hidden candidate
+starts remain absent from the picker and rejected by start codes and direct
+creation. Ordinary starting stations use browser-profile progression; dated
+alwaysUnlocked starts keep their existing availability. Quick Start retains
+its ordinary Serf lives.
+
+A review fixture may explicitly set FBDATA.reviewOpenStarts to true before the
+data scripts load. That session offers hidden candidate starts and bypasses
+earned-station locks without granting profile achievements. An explicit false
+also survives boot. The switch does not expose hidden bookmarks, change
+revision availability, or alter existing campaign saves. This repairs the
+default of the existing progression and review gates and adds no technology
+capability or saved field.
+
 Spring 451 scaffold
 
 The hidden 451 authoring world uses independent widened-476 regional literals,
