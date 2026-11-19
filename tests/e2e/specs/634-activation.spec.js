@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openTitle,openGame} = require('../support/game/navigation');
-const {useReleasedStartRules} = require('../support/game/released-starts');
+const {useReleasedStartRules,useReviewStartRules} = require('../support/game/released-starts');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {manifestRuns,manifestFiles} = require('../fixtures/bookmark-manifest/eager-document');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
@@ -103,8 +103,11 @@ async function preserveTwice(page,saved,before) {
 }
 
 for (const review of [false,true]) test('634 offers exactly the approved starts with review '+review,async function ({page},info) {
-  if (!review) await useReleasedStartRules(page);
-  await openTitle(page,info); await chooseBeginning(page);
+  if (review) await useReviewStartRules(page);
+  else await useReleasedStartRules(page);
+  await openTitle(page,info);
+  expect(await page.evaluate(function () { return FBDATA.reviewOpenStarts; })).toBe(review);
+  await chooseBeginning(page);
   await page.locator('#bookmarklist [data-bookmark="634"]').click();
   await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
   expect(await page.locator('#scenariolist .scen-group').allTextContents())
