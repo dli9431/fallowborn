@@ -56,12 +56,64 @@ same without spending money, piety or property.
 Either party may offer settlement; only the other party can accept. Acceptance
 debits the actual player household purse, existing NPC barony account, or NPC
 personal wealth. Public realm money is never substituted for private wealth.
-The Roman fee is 2 to the see's institutional treasury; settlement is 15% of
-available private money, capped at 100, paid to the identified living victim.
+The customary Roman fee is 2 to the see's institutional treasury. Compensation
+is 15% of available private money, capped at 100, paid to the identified living victim.
 An unavailable victim cannot receive a settlement and no heir is invented.
 Offers expire after 30 days. Reviews, accusations and dismissals charge no fee.
 The bishop's private purse receives nothing. Unique fee and settlement receipts
 use the shared authority receipt ledger and the episcopal claim payment boundary.
+
+## Diocesan settlement fee ceiling
+
+The Roman 1204 profile allows the competent local bishop to enact a ceiling of
+1 on the see's institutional settlement fee. Keeping custom leaves the fee at
+2. Only the current recognized bishop of the declared see may enact it, within
+the profile's years and county and with the same temporal readiness and Peace
+required by the court. Enactment records a rule for future offers and itself
+collects no money, creates no case and grants no jurisdiction.
+
+An enacted ceiling applies when a new offer is made by either party, including
+a new offer in a case already open. Acceptance charges the fee and compensation
+recorded in that offer, including a customary offer already made on the day of
+enactment. Previously paid receipts stay as recorded. A zero ceiling waives the
+institutional fee and produces no fee receipt. Compensation uses the existing
+formula and recipient, and the bishop's private purse remains separate.
+
+[Fourth Lateran canon 6 (1215)](https://sourcebooks.fordham.edu/basis/lateran4.asp)
+describes provincial synods for correcting abuses and publication of their
+decisions in episcopal synods. This later evidence supplies the setting for
+synodal discipline in the Innocent III campaign. The amounts and the local
+court's option to lower its own fee are simulation choices. Neither canon 6
+nor Second Lateran canon 15 attests a Roman settlement tariff of 2 or 1.
+
+Technology impact `synodal_settlement_fee` is **none**. The recognized office
+and its existing temporal competence supply the authority for the decision.
+
+### Authority and persistence
+
+`FB.religiousCases.synodalFeeReview(state, profileId, actorId)` returns the
+customary fee, proposed terms and any blocker. `enactSynodalFee(state, review)`
+recomputes the review before writing its rule. `synodalFeeRule(state, profileId)`
+returns a copy of the saved enactment. Keeping custom requires no write.
+
+The optional `authority.synodalFees` ledger allows one enactment per enabled
+profile and up to 32 records. An enactment binds the bookmark, county, declared
+see, actual issuing incumbent and realm generation, enactment turn, typed terms
+and exact profile fingerprint. The rule belongs to the see across changes in
+the incumbent. Current authority remains required for each case and transaction.
+Reduced offers and payments reference the exact enactment. Payments retain the
+offer turn so a customary offer can still be accepted after enactment. Detached
+validation checks the rule, frozen fee and exact institutional and compensation
+receipts together. Saves without enactments keep their customary commitments
+without a migration or a new save envelope.
+
+The fictional ordinary JSON example `synodal-fee-spoleto.json` declares its
+own Spoleto jurisdiction, a customary fee of 4 and a ceiling of 0. Its
+compensation is 25% capped at 40 and still goes to the victim. The Spoleto
+enactment leaves Roma's offers at its customary rate until Roma enacts its own
+rule.
+
+## Custody and judgments
 
 The bishop can seek actual custody, impose justified public penance or
 imprisonment where current law permits, or refer to the competent temporal

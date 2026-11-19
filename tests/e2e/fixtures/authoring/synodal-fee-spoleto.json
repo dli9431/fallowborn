@@ -1,0 +1,29 @@
+{
+  "name": "Spoleto court fee ceiling",
+  "religiousCases": {
+    "spoleto_synodal_discipline": {
+      "name": "Spoleto clerical discipline",
+      "desc": "A fictional local court considers recorded attacks on clergy and may remove its institutional settlement fee.",
+      "cause": "clerical_violence",
+      "bookmarkId": "1204",
+      "provinceId": "spoleto",
+      "realmId": "papacy_1204",
+      "faiths": ["catholic"],
+      "yearMin": 1204,
+      "yearMax": 1220,
+      "fee": 4,
+      "synodalFee": {"kind": "settlement_fee_ceiling", "ceiling": 0},
+      "settlementShare": 0.25,
+      "settlementMax": 40,
+      "settlementRecipient": "victim",
+      "offerDays": 12,
+      "penanceSentence": "penance",
+      "prisonSentence": "imprisonment",
+      "secularSentence": "imprisonment",
+      "allowFief": false,
+      "defendantPolicy": "settlement",
+      "bishopPolicy": "imprison",
+      "enforcementPolicy": "reject"
+    }
+  }
+}
