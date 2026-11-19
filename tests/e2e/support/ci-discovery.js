@@ -17,6 +17,7 @@ class DiscoveryReporter {
         assert(owner && owner.location, 'Could not resolve spec for ' + test.id);
         return { id:test.id, project:test.parent.project().name,
           file:path.relative(process.cwd(), owner.location.file).split(path.sep).join('/'),
+          line:test.location.file === owner.location.file ? test.location.line : null,
           title:test.titlePath().slice(3).join(' > ') };
       });
       fs.writeFileSync(process.env.CI_DISCOVERY_INVENTORY, JSON.stringify(cases));
@@ -81,6 +82,7 @@ async function plan() {
   assert.equal(new Set(ids).size, ids.length, 'Duplicate planned test ID');
   const shards = partitions.flatMap((tests, index) => tests.length ? [index + 1] : []);
   fs.writeFileSync(path.join(out, 'selection.json'), JSON.stringify(ids));
+  fs.writeFileSync(path.join(out, 'partitions.json'), JSON.stringify(partitions));
   fs.appendFileSync(process.env.GITHUB_OUTPUT, 'shards=' + JSON.stringify(shards) + '\n');
   const summary = ids.length + ' selected test/project cases in ' + shards.length + ' of ' + total + ' requested browser shards.';
   fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + '\n');

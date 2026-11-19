@@ -9,16 +9,38 @@ dependsOnRuntime(__filename,['index.html','data/relay_services.js','data/product
   'js/relay_services.js','js/production.js','js/production_economy.js','js/building_seasons.js','js/armies.js','js/logistics.js',
   'js/mobile_confederations.js','js/mobile_columns.js','js/mobile_command.js','js/treasury.js','js/world.js','js/mods.js',
   'js/ui_modals.js','js/ui_misc.js','js/main.js','js/save.js','js/save_v4.js','js/model.js']);
-async function boot(page,info,kind) {
-  const start=Date.now();
+// Keep only pristine serialized inputs in this worker. Every case still gets a fresh page and context.
+const startingSaves = new Map();
+
+async function boot(page,info,kind,fullJourney) {
+  const key = info.project.name + '/' + kind;
+  const snapshot = startingSaves.get(key);
+  if (snapshot && !fullJourney) {
+    await page.addInitScript(function (mod) {
+      localStorage.setItem(mod.key, mod.value);
+    }, snapshot.mod);
+    await openGame(page,info);
+    await page.evaluate(function (save) {
+      window.__relayLoaded = false;
+      FB.game.loadData(JSON.parse(save), function () {
+        FB.game.setPaused(true);
+        window.__relayLoaded = true;
+      });
+    }, snapshot.save);
+    await page.waitForFunction(function () {
+      if (FB.game.lastLoadError) throw FB.game.lastLoadError;
+      return window.__relayLoaded;
+    });
+    expect(await page.evaluate(function () { return FB.state.start.id; })).toBe('relay_services_' + kind);
+    await stage(page,kind);
+    return;
+  }
   await openGame(page,info);
-  const opened=Date.now();
   await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/relay-services-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
-  const applied=Date.now();
   const full=page.locator('#btn-choose-beginning');
   if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();
@@ -30,7 +52,14 @@ async function boot(page,info,kind) {
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.evaluate(function(){FB.game.setPaused(true);});
-  console.log('Relay setup ms',kind,JSON.stringify({open:opened-start,apply:applied-opened,start:Date.now()-applied}));
+  if (kind !== 'mobile' && !snapshot) {
+    const fresh = await page.evaluate(function () {
+      const key = FB.storageKey('fb_mods');
+      return { mod:{key:key,value:localStorage.getItem(key)}, save:FB.save.serialize() };
+    });
+    expect(fresh.mod.value).toBeTruthy();
+    startingSaves.set(key,fresh);
+  }
   if(kind!=='mobile')await stage(page,kind);
 }
 async function stage(page,kind) {
@@ -60,7 +89,7 @@ async function arrive(page,kind) {
 }
 for(const kind of ['road','coast']) {
   test(kind+' normal Mods import, pure current consent and exact real arrival',async function({page},info){
-    await boot(page,info,kind);
+    await boot(page,info,kind,true);
     const before=await page.evaluate(function(){const s=FB.state,R=FB.relayServices,base=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
       const q=R.aiQuote(s,'arrival_provisions','relay_test_host','consent'),collect=R.aiQuote(s,'arrival_provisions','relay_test_host','collect',1);
       return {consent:q.allowed,collect:collect.allowed,pure:base===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter(),
@@ -196,7 +225,7 @@ test('player and AI callers commit identical deterministic transactions without 
   expect(r).toEqual({sameQuote:true,one:true,two:true,same:true,rng:true,ids:true});
 });
 for(const width of [390,1280])test('relay review retains list, scroll and focus at width '+width,async function({page},info){
-  await page.setViewportSize({width:width,height:820});await boot(page,info,'road');await consent(page);await arrive(page,'road');
+  await page.setViewportSize({width:width,height:820});await boot(page,info,'road',true);await consent(page);await arrive(page,'road');
   await page.evaluate(function(){FB.ui.showProduction('resource_quay',0,function(){FB.ui.showSettlement('resource_quay',0);});});
   const collect=page.getByRole('button',{name:/^Collect one provision unit\b/});
   await expect(collect).toBeEnabled();await collect.click();
