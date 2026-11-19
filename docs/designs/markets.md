@@ -331,6 +331,34 @@ delivers only `quantity × min(1, outcomeMultiplier)`. Thus a loss destroys
 goods and an exceptional return cannot manufacture them. A saved venture with
 no `goodId` follows the old fixed-stake payout path.
 
+The existing pre-departure venture review compares cautious/bold dispatch,
+personal accompaniment, and leaving the offer with the household at home.
+It combines current household capital with the canonical venture preview's
+stake, route fees, total payment, actual cargo quantity, origin and current
+destination prices, route time and dispatch maturity, and shows remaining
+capital or shortfall. Dispatch keeps normal work available. Accompaniment states
+the minimum round trip plus the configured destination stay, pauses personal work,
+and leaves the household home and property in place. Arrival prices and road
+outcomes remain uncertain.
+Leaving the offer buys no stock, spends no money and starts no travel cooldown.
+
+Both dispatch strategies use the canonical dispatch gate. Accompaniment retains
+the separate personal travel cooldown, completed-market rule and ordinary travel
+preflight. If that preflight blocks departure for insufficient funds, the review
+distinguishes the requirement from the amount actually charged. Passive partnership
+slots neither grant nor consume self-founded venture capacity.
+Activation re-reads the displayed terms, payer identity, capital, cargo stock,
+route, timing, risks and eligibility. Changed terms replace the review and
+require another decision without spending; an accepted choice invokes the
+existing dispatch or travel transaction once. Destination market inspection
+retains the review's scroll, disclosures and focus through Back or Escape,
+including commodity changes inside that inspection.
+
+This is presentation and confirmation of existing capabilities, with no new
+technology gate, data schema, saved record or migration. Existing finance,
+travel and market definitions (including ordinary JSON overrides) remain the
+source of variation; the existing technology-impact decisions still apply.
+
 Incoming and outgoing guild-monopoly records may add `mode`, `goodId`,
 `originId`, `destinationId`, and `route`. A Craft charter matches local Workshop
 output. A Trade charter covers either local merchant exchange or one exact

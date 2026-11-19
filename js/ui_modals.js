@@ -3327,26 +3327,96 @@ window.FB = window.FB || {};
     });
   }
 
-  function reviewTradeVentureChoice() {
+  function tradeVentureChoiceQuote(s, picker) {
+    const destinationId = picker.selected.destinationId;
+    const preview = FB.tradeVenturePreview(s, picker.stake, destinationId, picker.goodId);
+    const stay = FBDATA.balance.travelMinStayDays;
+    const dispatch = FB.tradeVentureCanStart(s, 'dispatch', picker.stake, destinationId, picker.goodId);
+    const personalEligibility = FB.travelEligible(s, 'trade', {readOnly:true});
+    let accompany = dispatch !== true ? dispatch : personalEligibility !== true
+      ? personalEligibility : FB.tradeVentureCanStart(s, 'accompany', picker.stake, destinationId, picker.goodId);
+    let personalFunds = null;
+    if (accompany === true) {
+      // Ordinary travel checks its standard quote before charging venture terms.
+      personalFunds = Math.max(preview.totalCost, FB.travelCost('trade', preview.route, s));
+      if (s.player.gold < personalFunds) accompany = FB.T('Personal departure requires {money:gold} available. Only {money:cost} is charged for this venture.', {
+        gold:personalFunds, cost:preview.totalCost
+      });
+    }
+    return {
+      charId:s.player.charId, gold:s.player.gold, turn:s.turn,
+      preview:preview && preview.goodId ? preview : null,
+      dispatch:dispatch, accompany:accompany, personalFunds:personalFunds,
+      minimumStay:stay === undefined ? 90 : stay,
+      personalChance:FB.namedChance(s, 'travel_trade')
+    };
+  }
+
+  function reviewTradeVentureChoice(warning, replaceView) {
     if (!SH.travelPicker || !SH.travelPicker.selected) return;
-    const item = SH.travelPicker.selected;
+    const picker = SH.travelPicker;
     const s = FB.state;
-    const preview = FB.tradeVenturePreview(
-      s, SH.travelPicker.stake, item.destinationId, SH.travelPicker.goodId);
+    const quote = tradeVentureChoiceQuote(s, picker);
+    const preview = quote.preview;
+    const quoteStamp = JSON.stringify(quote);
+    const options = {dismissable:false, historyBack:true, replaceView:!!replaceView,
+      returnFocus:document.querySelector('.travel-destination.selected')};
+    let finished = false;
+    function leaveOffer() {
+      if (finished || SH.travelPicker !== picker) return;
+      finished = true;
+      UI.cancelTravelPicker(true);
+      UI.closeModal();
+    }
+    function refreshQuote(message) {
+      const body = $('gm-body'), scroll = body.scrollTop;
+      const focusId = document.activeElement && document.activeElement.id;
+      const expanded = Array.prototype.map.call(body.querySelectorAll(
+        '[aria-expanded="true"][aria-controls]'), function (button) {
+        return button.getAttribute('aria-controls');
+      });
+      reviewTradeVentureChoice(message, true);
+      expanded.forEach(function (id) {
+        const details = $(id), toggle = body.querySelector('[aria-controls="' + id + '"]');
+        if (details && toggle) {
+          details.classList.remove('hidden');
+          toggle.setAttribute('aria-expanded', 'true');
+        }
+      });
+      const target = focusId && $(focusId) || $('venture-keep-home');
+      if (target) (target.disabled ? target.closest('.review-action-card') : target).focus({preventScroll:true});
+      body.scrollTop = scroll;
+    }
     if (!preview) {
-      UI.toast(FB.T('That venture is no longer available.'));
+      openModal(FB.T('Review your venture'),
+        reviewFactsCard(FB.T('Venture unavailable'),
+          kv('Available capital', esc(FB.money(quote.gold))) +
+          '<p class="warnote" role="status">' + esc(quote.dispatch === true
+            ? FB.T('That commodity is not available.') : quote.dispatch) + '</p>',
+          ' data-venture-review') + reviewActionsHtml(reviewActionCardHtml({
+            id:'venture-keep-home', label:FB.T('Keep the household at home'),
+            note:FB.T('No payment, cargo purchase or journey. Normal work continues.')
+          })) + '<div class="gm-footer"><button type="button" class="btn" id="venture-review-back">' +
+          esc(FB.T('Back')) + '</button></div>',
+        options);
+      $('venture-keep-home').addEventListener('click', leaveOffer);
       return;
     }
-    const pr = FB.world.byId[item.destinationId];
+    const pr = FB.world.byId[preview.destinationId];
     const cautiousRisk = Math.round(preview.strategies.cautious.lossChance * 100);
     const boldRisk = Math.round(preview.strategies.bold.lossChance * 100);
     const modifier = Math.round(preview.modifiers.total * 1000) / 10;
-    const accompany = FB.tradeVentureCanStart(
-      s, 'accompany', preview.stake, preview.destinationId, preview.goodId);
-    const personalDays = preview.roundTripDays +
-      (FBDATA.balance.travelMinStayDays || 90);
-    const currentBoldChance = Math.round(FB.namedChance(s, 'travel_trade') * 100);
-    const facts = kv('Stake', esc(FB.T('{money:amount}', { amount:preview.stake }))) +
+    const dispatch = quote.dispatch;
+    const accompany = quote.accompany;
+    const personalDays = preview.roundTripDays + quote.minimumStay;
+    const currentBoldChance = Math.round(quote.personalChance * 100);
+    const paymentDetails = '<p>' + esc(FB.T(
+      '{money:stake} buys cargo; {money:overhead} pays route fees. Total payment now: {money:total}. Available capital: {money:gold}.', {
+        stake:preview.stake, overhead:preview.overhead,
+        total:preview.totalCost, gold:quote.gold
+      })) + '</p>';
+    const facts = kv('Available capital', esc(FB.money(quote.gold))) +
+      kv('Stake', esc(FB.T('{money:amount}', { amount:preview.stake }))) +
       kv('Commodity', esc((FBDATA.marketGoods[preview.goodId].icon || '') + ' ' +
         FB.dataText(s, s.player.charId, 'marketGood', preview.goodId,
           FBDATA.marketGoods[preview.goodId], 'name', {}))) +
@@ -3359,6 +3429,8 @@ window.FB = window.FB || {};
       }))) +
       kv('Route overhead', esc(FB.T('{money:amount}', { amount:preview.overhead }))) +
       kv('Total paid now', esc(FB.T('{money:amount}', { amount:preview.totalCost }))) +
+      kv(quote.gold >= preview.totalCost ? FB.T('Capital left after departure') : FB.T('Shortfall'),
+        esc(FB.money(Math.abs(quote.gold - preview.totalCost)))) +
       kv('Road', esc(FB.T('{legs} county legs · {days} days each way', {
         legs:preview.legs, days:preview.oneWayDays
       }))) +
@@ -3368,19 +3440,26 @@ window.FB = window.FB || {};
       kv('Captured roll adjustment', esc(FB.T('{amount}%', {
         amount:(modifier > 0 ? '+' : '') + modifier
       })));
-    const h = reviewFactsCard(FB.T('Your venture to {destination}', { destination:pr.name }),
+    const h = (warning ? '<p class="warnote" role="status">' + esc(warning) + '</p>' : '') +
+      reviewFactsCard(FB.T('Your venture to {destination}', { destination:pr.name }),
       facts, ' data-venture-review') +
       reviewActionsHtml(reviewActionCardHtml({
         id:'venture-dispatch-cautious', labelHtml:'🧭 ' + esc(FB.T('Dispatch cautiously')),
-        note:FB.T('{risk}% risk of total loss · you stay home', { risk:cautiousRisk }),
-        details:'<p>' + esc(FB.T(
+        disabled:dispatch !== true, warn:dispatch !== true,
+        note:dispatch === true ? FB.T('Pay {money:cost} now · {days} days committed · {risk}% risk of total loss · you stay home and continue normal work', {
+          cost:preview.totalCost, days:preview.durationDays, risk:cautiousRisk
+        }) : dispatch,
+        details:paymentDetails + '<p>' + esc(FB.T(
           '{risk}% risk of total loss. You remain home and continue normal work.', {
             risk:cautiousRisk
           })) + '</p><p>' + esc(ventureReturnsText(preview.strategies.cautious)) + '</p>'
       }) + reviewActionCardHtml({
         id:'venture-dispatch-bold', labelHtml:'⚖ ' + esc(FB.T('Dispatch boldly')),
-        note:FB.T('{risk}% risk of total loss · you stay home', { risk:boldRisk }),
-        details:'<p>' + esc(FB.T(
+        disabled:dispatch !== true, warn:dispatch !== true,
+        note:dispatch === true ? FB.T('Pay {money:cost} now · {days} days committed · {risk}% risk of total loss · you stay home and continue normal work', {
+          cost:preview.totalCost, days:preview.durationDays, risk:boldRisk
+        }) : dispatch,
+        details:paymentDetails + '<p>' + esc(FB.T(
           '{risk}% risk of total loss, with larger gains and harsher losses. You remain home.', {
             risk:boldRisk
           })) + '</p><p>' + esc(ventureReturnsText(preview.strategies.bold)) + '</p>'
@@ -3388,55 +3467,64 @@ window.FB = window.FB || {};
         id:'venture-accompany', labelHtml:'🧭 ' + esc(FB.T('Accompany personally')),
         disabled:accompany !== true, warn:accompany !== true,
         note:accompany === true
-          ? FB.T('At least {days} days away · personal work pauses', { days:personalDays })
+          ? FB.T('Pay {money:cost} now · at least {days} days away · personal work pauses', {
+            cost:preview.totalCost, days:personalDays
+          })
           : accompany,
-        details:'<p>' + esc(FB.T('At least {days} days away. Personal work pauses; at the market you choose a guaranteed cautious return or a bold bargain (currently {chance}% success).', {
+        details:paymentDetails + '<p>' + esc(FB.T('You travel personally; the household home and property stay here. The destination stay is at least {days} days before the road home.', {
+          days:quote.minimumStay
+        })) + '</p><p>' + esc(FB.T('At least {days} days away. Personal work pauses; at the market you choose a guaranteed cautious return or a bold bargain (currently {chance}% success).', {
           days:personalDays, chance:currentBoldChance
         })) + '</p><p>' + esc(FB.T(
           'Cautious returns 1.2×; bold returns 2.5× on success or 0.3× on failure.')) + '</p>'
+      }) + reviewActionCardHtml({
+        id:'venture-keep-home', label:FB.T('Keep the household at home'),
+        note:FB.T('Pay {money:cost} · keep {money:gold} available · normal work continues', {
+          cost:0, gold:quote.gold
+        }),
+        details:'<p>' + esc(FB.T('Leave this offer without investing. No payment, cargo purchase, travel cooldown or journey.')) + '</p>'
       }) + reviewActionCardHtml({
         id:'venture-market-details', labelHtml:'⚖ ' + esc(FB.T('Inspect destination market'))
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="venture-review-back">' +
       esc(FB.T('Back')) + '</button></div>';
-    openModal(FB.T('Review your venture'), h,
-      {dismissable:false, historyBack:true, titleDetailsHtml:'<p>' + esc(FB.T(
-        'The adjustment captures Stewardship, guild standing, a Trading House, national trade knowledge, destination development, and route risk now. Later changes do not alter a dispatched venture.')) + '</p>'});
-    $('venture-dispatch-cautious').addEventListener('click', function () {
-      if (!currentVentureStake(preview.stake)) return;
-      if (!FB.startTradeVenture(s, preview.stake, preview.destinationId,
-          'cautious', SH.travelPicker.source, preview.goodId)) return;
+    options.titleDetailsHtml = '<p>' + esc(FB.T(
+      'The adjustment captures Stewardship, guild standing, a Trading House, national trade knowledge, destination development, and route risk now. Later changes do not alter a dispatched venture.')) + '</p>';
+    openModal(FB.T('Review your venture'), h, options);
+    const reviewNode = document.querySelector('[data-venture-review]');
+    function commit(mode, strategy) {
+      if (finished || FB.state !== s || SH.travelPicker !== picker ||
+          document.querySelector('[data-venture-review]') !== reviewNode) return;
+      if (JSON.stringify(tradeVentureChoiceQuote(s, picker)) !== quoteStamp) {
+        refreshQuote(FB.T('The venture terms changed. Review the current quote before deciding.'));
+        return;
+      }
+      if ((mode === 'accompany' ? accompany : dispatch) !== true) return;
+      const result = mode === 'accompany'
+        ? FB.travelStart(s, 'trade', preview.destinationId, preview.destinationRealm, {
+          kind:'trade_venture', stake:preview.stake, goodId:preview.goodId
+        })
+        : FB.startTradeVenture(s, preview.stake, preview.destinationId,
+          strategy, picker.source, preview.goodId);
+      if (!result) {
+        refreshQuote(FB.T('That venture is no longer available.'));
+        return;
+      }
+      finished = true;
       UI.cancelTravelPicker(true);
       UI.closeModal();
       UI.refresh();
+    }
+    $('venture-dispatch-cautious').addEventListener('click', function () {
+      commit('dispatch', 'cautious');
     });
     $('venture-dispatch-bold').addEventListener('click', function () {
-      if (!currentVentureStake(preview.stake)) return;
-      if (!FB.startTradeVenture(s, preview.stake, preview.destinationId,
-          'bold', SH.travelPicker.source, preview.goodId)) return;
-      UI.cancelTravelPicker(true);
-      UI.closeModal();
-      UI.refresh();
+      commit('dispatch', 'bold');
     });
-    if (accompany === true) {
-      $('venture-accompany').addEventListener('click', function () {
-        if (!currentVentureStake(preview.stake)) return;
-        if (!FB.travelStart(s, 'trade', preview.destinationId,
-            preview.destinationRealm, {
-              kind:'trade_venture', stake:preview.stake,
-              goodId:preview.goodId
-            })) return;
-        UI.cancelTravelPicker(true);
-        UI.closeModal();
-      });
-    }
+    $('venture-accompany').addEventListener('click', function () { commit('accompany'); });
+    $('venture-keep-home').addEventListener('click', leaveOffer);
     $('venture-market-details').addEventListener('click', function () {
-      UI.showMarket(preview.destinationId, preview.goodId);
-    });
-    $('venture-review-back').addEventListener('click', function () {
-      UI.closeModal();
-      const selected = document.querySelector('.travel-destination.selected');
-      if (selected) selected.focus();
+      UI.showMarket(preview.destinationId, preview.goodId, {});
     });
   }
 
@@ -9615,7 +9703,7 @@ window.FB = window.FB || {};
     return (amount > 0 ? '+' : '') + amount + '%';
   }
 
-  UI.showMarket = function (pid, goodId) {
+  UI.showMarket = function (pid, goodId, view) {
     const s = FB.state;
     const pr = s && FB.world.byId[pid];
     const goodIds = Object.keys(FBDATA.marketGoods || {});
@@ -9793,8 +9881,9 @@ window.FB = window.FB || {};
         })) + '</div>';
     }
     h += '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
-      esc(FB.T('Close')) + '</button></div>';
+      esc(view ? FB.T('Back') : FB.T('Close')) + '</button></div>';
     openModal(FB.T('{county} market', { county:pr.name }), h, {
+      historyView:!!view, replaceView:!!(view && view.replace),
       guide:guideModalOption('market-guide', 'resources', 'Guide: resources and markets')
     });
     const marketMenu = $('market-sheet-good');
@@ -9810,7 +9899,7 @@ window.FB = window.FB || {};
     });
     for (let i = 0; i < marketOptions.length; i++) {
       marketOptions[i].addEventListener('click', function () {
-        UI.showMarket(pid, this.getAttribute('data-good'));
+        UI.showMarket(pid, this.getAttribute('data-good'), view ? {replace:true} : null);
       });
       marketOptions[i].addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
@@ -9830,7 +9919,7 @@ window.FB = window.FB || {};
         marketOptions[at].focus();
       });
     }
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', view ? function () { modalHistoryBack(); } : UI.closeModal);
   };
 
   /* ================= bounded market auction ================= */
