@@ -1,16 +1,17 @@
 # Spring 451 beginnings
 
-The hidden date offers three personal beginnings alongside its unchanged generic
-farmer. Each personal beginning attaches a complete native storyline and its
-matching optional opening profile. All use the ordinary picker, fixed birthplace,
-family selection, start code and shared Deeds story review. No opening changes
-the date's visibility or supplies an automatic historical outcome.
+Spring 451 is hidden from the ordinary date picker and new campaign codes. When
+the date is explicitly enabled for review, it offers four personal beginnings
+alongside the generic farmer. Each personal beginning uses the ordinary picker,
+fixed birthplace, family selection and start code, with a native storyline in
+Deeds and a matching optional opening profile.
 
 | Beginning | Identity and family | First decision |
 | --- | --- | --- |
 | Attila | Existing central-following principal at Sirmium, simulated age 50; protagonist only | Propose actual coalition terms or defer without spending |
 | Aetius in court service | Existing western court member at Ravenna, simulated age 60; protagonist only | Review consent under the existing finite service warrant; actual contract eligibility still applies |
 | Gothic soldier household | Fictional Gothic/Homoian household at Toulouse, age 24; unmarried or established | Select ordinary garrison work; wages require actual work |
+| Aurelianum civic household | Fictional Gallo-Roman/Nicene curialis at Aurelianum, age 30; unmarried or established | Select Keep records in Deeds. A paid day of work at home completes the opening goal. |
 
 Named selection reuses the original person. Attila uses `mobilePrincipal`, keeps
 the countyless coalition's institutional identity and public account, and does
@@ -19,9 +20,9 @@ ordinary livelihood only. No named spouse, heir or household carriage is invente
 Aetius uses `existingPerson`, retaining his dated appointment and its original
 360-day limit. He is neither emperor nor commander of an authored host.
 
-The held local Roman households use the counties' authored `gallo_roman` community,
-not the western court's separate `roman` identity. The soldier uses Toulouse's
-explicit Gothic/Homoian minority; its code preserves that exact resident pair.
+The civic and tenant declarations use their counties' authored `gallo_roman`
+community. The soldier uses Toulouse's explicit Gothic/Homoian minority.
+Start codes preserve the chosen resident community.
 
 The fictional household definitions also attach `gallic_household_party_451`. This is
 an eight-person, ninety-day invitation plan using the existing voluntary adult
@@ -34,12 +35,20 @@ The soldier profession supplies ordinary work, not an opening federate contract,
 enlistment receipt or command. Local work stories observe real war and changed
 sovereigns; selecting a focus alone does not finish their earnings goals.
 
+The civic household starts with 80 private gold, 30 prestige and 10 piety.
+Choosing Keep records costs no gold or time. The ordinary daily focus pays the
+household for work and the story observes those earnings. Council appointments
+and the court's relocation decision require their own authority and reviews.
+The opening reuses the existing `none` technology decisions for civic careers,
+household decisions and paid household work. The independent Ravenna ledger
+example uses the same work rules through an ordinary JSON import, as described
+in [the dated story design](bookmark-451-story-tracks.md).
+
 ## Held beginnings and capabilities
 
 | Beginning or capability | Reason |
 | --- | --- |
 | Ardaric, subject principal | His personal faith remains unestablished. Neither a Homoian substitution nor a different named principal is offered. |
-| Aurelianum civic household | `js/actions.js` limits `keep_records` to the exact `administration` career through `qualifiedCareer`. The dated graph selects that focus, which rejects a `curialis`. No replacement profession or acknowledgment stands in for paid civic work. |
 | Arles tenant household | The estate archetypes in `data/economy.js` admit only 476 and 493. `js/events.js` cannot initialize a matching 451 colonate tenure or living possessor from these declarations. No tenant label substitutes for actual estate duties. |
 | Valentinian III, Theodoric and Marcian | The dated story set holds their court agendas: the current nonmobile agenda contract advances on priority acknowledgment rather than canonical transaction evidence. Complete matching personal graphs and opening profiles are absent. No reduced ruler start substitutes for them. |
 | Camp household | No dated complete camp household graph and opening profile is present. The camp-household reader observes residence and presence, granting no membership or whole-family carriage. A nearby farm is not offered as a following household. |
@@ -47,13 +56,11 @@ sovereigns; selecting a focus alone does not finish their earnings goals.
 | Opening federate service | The existing declaration requires a broader court-settlement story and its host. The soldier beginning promises neither a standing contract nor paid enlistment. |
 | Camp carriage and refuge | Household association alone supplies neither a civilian admission/migration carrier nor a dated provider, seat and finite shelter terms. |
 
-The civic and tenant definitions retain `hidden:true`, their family presets and
-personal graph attachments as held declarations. Ordinary picker and start-code
-entry reject them. This retains the authored graph catalogue without offering
-unfinished work or a tenant lacking real obligations. The other held beginnings
-have no scenario declaration. The existing `reviewOpenStarts` switch overrides
-hidden candidate gating for inspection; focused entry checks use the normal
-start rules with that switch disabled.
+Six perspectives remain held. The Arles tenant declaration retains `hidden:true`,
+its family presets and graph attachments. Ardaric, Valentinian III, Theodoric,
+Marcian and the camp household have no scenario declarations. The date review
+uses the normal start rules with `reviewOpenStarts` disabled, so those six
+perspectives remain unavailable in the review picker and by code.
 
 The court, contract and camp boundaries are also described in
 [the dated story design](bookmark-451-story-tracks.md). Existing government,
@@ -65,9 +72,9 @@ without new extractor registration. English fallback remains available and no
 generated catalogue changes are needed.
 
 Focused fixture coverage enumerates the offered and held ids, validates each
-runtime start, boots every offered personal family preset, rejects ordinary codes
-for held definitions, checks the displayed
-start code and original named actor, and reaches the first shared story decision.
-It also checks optional profile and household-party attachment and preserves the
-no-commissioned-forces boundary. Historical, device and play acceptance remain
-separate from those bounded checks.
+runtime start, boots every offered personal family preset, rejects the held
+tenant's code, checks the displayed start code and original named actors, and
+reaches the first shared story decision. It checks optional profile and
+household-party attachment and the absence of commissioned forces. The civic
+journey checks date visibility, the review picker, paid work and resumption
+from the title with the original person, family and earnings.

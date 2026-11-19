@@ -18,15 +18,11 @@ dependsOnRuntime(__filename, [
 
 test.describe.configure({ mode:'parallel' });
 
-async function startReview(page, info, checkHeld) {
+async function startReview(page, info, checkHiddenDate) {
   await useReleasedStartRules(page);
   await openGame(page, info);
-  expect(await page.evaluate(function (fixture) {
-    const scenario = FBDATA.startScenarios.find(function (row) { return row.id === fixture.scenarioId; });
-    const availability = FB.bookmarkAvailable(fixture.bookmarkId);
-    FBDATA.bookmarks[fixture.bookmarkId].hidden = false;
-    return { availability:availability, held:scenario.hidden };
-  }, civicReview)).toEqual({ availability:false, held:true });
+  expect(await page.evaluate(function (id) { return FB.bookmarkAvailable(id); },
+    civicReview.bookmarkId)).toBe(false);
 
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
@@ -34,12 +30,12 @@ async function startReview(page, info, checkHeld) {
   await page.locator('#btn-bm-seed').click();
   const seed = page.locator('#ng-seed');
   await seed.fill(civicReview.code);
-  if (checkHeld) {
+  if (checkHiddenDate) {
     await seed.press('Enter');
-    await expect(page.locator('#ng-seed-err')).not.toBeEmpty();
+    await expect(page.locator('#ng-seed-err')).toContainText('This starting date is hidden for new campaigns.');
     await expect(page.locator('#chargen:not(.hidden)')).toHaveCount(0);
   }
-  await page.evaluate(function () { FBDATA.reviewOpenStarts = true; });
+  await page.evaluate(function (id) { FBDATA.bookmarks[id].hidden = false; }, civicReview.bookmarkId);
   await seed.press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
@@ -115,7 +111,7 @@ function expectDailyRecords(result) {
   expect(result.pay[0].gain).toBeCloseTo(result.pay[0].expected, 10);
 }
 
-test('the held civic household defers, resumes and saves ordinary records work through Deeds', async function ({ page }, info) {
+test('the civic household defers, resumes and saves ordinary records work through Deeds', async function ({ page }, info) {
   await startReview(page, info, true);
   let card = await deeds(page, civicReview.storyId);
   const opening = await snapshot(page);
