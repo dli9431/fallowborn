@@ -127,13 +127,16 @@ jobs:
           fi
           echo "args=$args" >> "$GITHUB_OUTPUT"
       - name: Load recent 476 case durations
+        continue-on-error: true
         if: startsWith(inputs.mode, 'rolling')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           timing=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=case-timings-476&per_page=100" --jq '[.artifacts[] | select(.expired == false and .workflow_run.head_branch == "476")] | first | .workflow_run.id // empty')
           if [[ -n "$timing" ]]; then
-            gh run download "$timing" -R "$GITHUB_REPOSITORY" -n case-timings-476 -D "$RUNNER_TEMP"
+            gh run download "$timing" -R "$GITHUB_REPOSITORY" -n case-timings-476 -D "$RUNNER_TEMP/prior"
+            jq -e 'type == "object" and all(.[]; type == "number" and . > 0)' "$RUNNER_TEMP/prior/case-timings.json" >/dev/null
+            cp "$RUNNER_TEMP/prior/case-timings.json" "$RUNNER_TEMP/"
           else
             prior=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/tests.yml/runs?branch=476&event=push&status=completed&per_page=1" --jq '.workflow_runs[0].id // empty')
             if [[ -n "$prior" ]]; then

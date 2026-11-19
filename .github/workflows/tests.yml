@@ -67,6 +67,8 @@ jobs:
   gate:
     if: ${{ inputs.mode == 'regression-gate' || startsWith(inputs.mode, 'rolling') || (github.event_name == 'push' && github.ref_name == '476') }}
     uses: ./.github/workflows/regression-gate.yml
+    with:
+      full_inventory: ${{ inputs.mode == 'regression-gate' }}
   rolling:
     needs: gate
     if: ${{ startsWith(inputs.mode, 'rolling') || (github.event_name == 'push' && github.ref_name == '476') }}

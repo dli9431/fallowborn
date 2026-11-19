@@ -11,22 +11,20 @@ class DiscoveryReporter {
   onBegin(config, suite) {
     const tests = suite.allTests();
     if (process.env.CI_DISCOVERY_INVENTORY) {
-      const scopes = new Map();
       const cases = tests.map(test => {
         let owner = test.parent;
         while (owner && owner.type !== 'file') owner = owner.parent;
         assert(owner && owner.location, 'Could not resolve spec for ' + test.id);
         let scope;
         if (process.env.CI_ROLLING) {
-          if (!scopes.has(owner.location.file)) {
-            const source = fs.readFileSync(owner.location.file, 'utf8');
-            const lifecycle = /test\.(?:beforeAll|afterAll|describe\.serial)\s*\(|mode\s*:\s*['"]serial['"]/m;
-            scopes.set(owner.location.file, lifecycle.test(source) ?
-              (/^test\.(?:beforeAll|afterAll|describe\.configure)\s*\(/m.test(source) ? 'file' : 'suite') : '');
+          // The pinned runner retains hook ownership on the discovered suite tree,
+          // including hooks registered by imported helpers. Keep the outermost
+          // shared lifecycle or serial suite intact inside one worker.
+          for (let parent = test.parent; parent && parent.type !== 'project'; parent = parent.parent) {
+            assert(Array.isArray(parent._hooks), 'Missing suite lifecycle metadata');
+            if (parent._parallelMode === 'serial' || parent._hooks.some(h => h.type === 'beforeAll' || h.type === 'afterAll'))
+              scope = JSON.stringify(parent.titlePath());
           }
-          const rule = scopes.get(owner.location.file);
-          if (rule === 'file') scope = 'file';
-          else if (rule === 'suite') scope = test.titlePath()[3];
         }
         return { id:test.id, project:test.parent.project().name, scope,
           file:path.relative(process.cwd(), owner.location.file).split(path.sep).join('/'),

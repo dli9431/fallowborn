@@ -1,5 +1,10 @@
 name: Regression smoke and inventory
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      full_inventory:
+        type: boolean
+        default: true
 permissions:
   contents: read
   actions: read
@@ -36,17 +41,21 @@ jobs:
               .projectName] | sort == ["chromium-file","chromium-served","firefox-served","webkit-served"])
           ' smoke/results.json
       - uses: actions/setup-node@v7
+        if: inputs.full_inventory
         with:
           node-version: 24
           package-manager-cache: false
       - run: npm ci
+        if: inputs.full_inventory
         working-directory: tests/e2e
       - name: Discover all test cases and projects
+        if: inputs.full_inventory
         working-directory: tests/e2e
         env:
           CI_DISCOVERY_INVENTORY: ${{ runner.temp }}/inventory.json
         run: npx playwright test --list --reporter=./support/ci-discovery.js
       - uses: actions/upload-artifact@v7
+        if: inputs.full_inventory
         with:
           name: regression-inventory
           path: ${{ runner.temp }}/inventory.json
