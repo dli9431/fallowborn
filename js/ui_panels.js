@@ -772,6 +772,58 @@ window.FB = window.FB || {};
       });
   }
 
+  function householdWorkActivity(s) {
+    const rows = {};
+    function add(c, text) {
+      if (!c || c.dead) return;
+      if (!rows[c.id]) rows[c.id] = { character:c, meta:[] };
+      rows[c.id].meta.push(text);
+    }
+    const focus = currentFocusDef(s);
+    if (focus) add(s.chars[s.player.charId], FB.T('{work}: {status}', {
+      work:FB.focusLabel(s, focus),
+      status:s.player.travel ? FB.T('Paused while traveling') : FB.T('Active daily focus')
+    }));
+    const assigned = {};
+    for (const e of FB.enterpriseList(s)) {
+      const active = FB.enterpriseOperationalWorkerIds(s, e);
+      const def = FBDATA.enterprises[e.type];
+      for (const id of FB.enterpriseWorkerIds(e)) {
+        assigned[id] = true;
+        add(s.chars[id], FB.T('{work}: {status}', {
+          work:def ? dt(s, 'enterprise', e.type, def, 'name') : e.type,
+          status:s.player.travel && id === s.player.charId
+            ? FB.T('Paused while traveling')
+            : active.indexOf(id) < 0 ? FB.T('Unavailable for staffing')
+              : FB.enterpriseFullyStaffed(s, e)
+                ? FB.T('Staffing continues') : FB.T('Assigned; business inactive')
+        }));
+      }
+    }
+    for (const c of FB.householdMembers(s)) {
+      if (c.id === s.player.charId || assigned[c.id]) continue;
+      const career = FB.careerOf(s, c);
+      if (!career || !career.chosen) continue;
+      const def = FBDATA.careers[career.profession];
+      if (!def || !(career.rank === 'master' ? def.masterWage : def.wage)) continue;
+      const away = FB.householdParties && FB.householdParties.journeys &&
+        FB.householdParties.journeys.away(s, c.id);
+      if (away || FB.ageOf(c, s.date.year) < 16 || career.rank === 'apprentice') continue;
+      add(c, FB.T('{work}: household livelihood continues', {
+        work:FB.careerTitle(s, c)
+      }));
+    }
+    for (const office of FB.retainerRecords(s).concat(FB.familyOfficeRecords(s))) {
+      const c = s.chars[office.charId];
+      if (!c || FB.characterResidence(s, c) !== s.player.provinceId) continue;
+      add(c, FB.T('{work}: household duty continues', { work:positionName(s, office.office) }));
+    }
+    for (const labor of FB.enterpriseLaborRecords(s)) {
+      add(s.chars[labor.charId], FB.T('Wage contract: {money:pay}/season', { pay:labor.pay }));
+    }
+    return rows;
+  }
+
   function travelCommitmentText(s, travel) {
     const here = FB.world.byId[travel.currentId];
     const destination = FB.world.byId[travel.destinationId];
@@ -997,6 +1049,14 @@ window.FB = window.FB || {};
         action:travel.phase === 'return' ? FB.T('In progress') : FB.T('Options…'),
         disabled:travel.phase === 'return'
       });
+      const work = householdWorkActivity(s);
+      h += '<div data-travel-household-work><h4>' + esc(FB.T('Household work')) +
+        '</h4><p>' + esc(FB.T(
+          'Travel pauses your daily focus and your enterprise labor. Resident assignments, property and wage contracts remain in place.')) + '</p>';
+      for (const id in work) {
+        h += reviewPersonHtml(work[id].character, work[id].meta.join(' · '));
+      }
+      h += '</div>';
     }
     if (finance) {
       h += ongoingCommitmentRow({
@@ -2061,6 +2121,7 @@ window.FB = window.FB || {};
       });
     });
     FB.localizeTree(box);
+    FB.paintFaces(box, s);
     observeBuildingSummaries(box);
     if (SH.bindCardInfoToggles) SH.bindCardInfoToggles(box);
     actionsRenderedState = s;
@@ -4788,6 +4849,10 @@ window.FB = window.FB || {};
       if (record) record.retainer = retainer;
     }
     const householdRows = [];
+    const workActivity = householdWorkActivity(s);
+    for (const labor of FB.enterpriseLaborRecords(s)) {
+      householdRecord(s.chars[labor.charId]);
+    }
     for (const cid in householdById) {
       const source = householdById[cid];
       const c = source.character;
@@ -4815,6 +4880,7 @@ window.FB = window.FB || {};
           work:workAssignments[c.id].join(', ')
         }));
       }
+      if (workActivity[c.id]) meta.push(workActivity[c.id].meta.join(' · '));
       const unpaid = source.retainer && source.retainer.unpaid;
       if (unpaid) {
         meta.push(FB.T('Pay missed this season'));

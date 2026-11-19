@@ -150,6 +150,18 @@ suppressed, but already queued events still resolve. In the `arrived` phase the
 same daily tick schedules repeatable `travel.kind: "work"` stories; it does not
 advance a route.
 
+The ongoing journey and Network household rows project actual daily focus,
+enterprise assignments and adult family livelihoods. They distinguish the
+travelling protagonist's paused focus/labor from continuing resident staffing,
+unavailable workers and understaffed businesses. Named local enterprise hires
+also appear in the household roster with their existing seasonal pay. The
+journey keeps portraits beside the named workers throughout outbound travel,
+destination stays and return travel. Dispatching cargo leaves personal work
+active because it creates no personal journey. These are presentation-only
+projections: residence, property, assignments, wage contracts and saved journey
+records retain their existing owners and seasonal settlement rules. No new
+technology gate or data capability is introduced.
+
 County arrivals can queue `travel.kind: "culture"` or `"road"` events. A journey
 has caps of three culture and four road encounters. A genuinely foreign
 destination guarantees a culture event if the route supplied none. A purpose
