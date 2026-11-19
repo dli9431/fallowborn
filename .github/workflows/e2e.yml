@@ -57,6 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       shards: ${{ steps.plan.outputs.shards }}
+      args: ${{ steps.select.outputs.args }}
       image: ${{ steps.plan.outputs.image }}
       commit: ${{ steps.checkout.outputs.commit }}
     steps:
@@ -65,18 +66,76 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           persist-credentials: false
-          sparse-checkout: tests/e2e/package-lock.json
+          path: game
+          fetch-depth: ${{ inputs.mode == 'changed' && '0' || '1' }}
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          path: tooling
+          persist-credentials: false
+          sparse-checkout: tests/e2e/support/ci-discovery.js
           sparse-checkout-cone-mode: false
-      - id: plan
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm ci
+        working-directory: game/tests/e2e
+      - id: select
+        name: Select tests
+        working-directory: game/tests/e2e
         env:
+          MODE: ${{ inputs.mode }}
+          BASE: ${{ inputs.base }}
+          PROJECTS: ${{ inputs.projects }}
+          SPECS: ${{ inputs.specs }}
+        run: |
+          args=""
+          if [ "$MODE" = specs ] || { [ "$MODE" = changed ] && [ -n "$SPECS" ]; }; then
+            for spec in $SPECS; do
+              if [[ ! "$spec" =~ ^specs/([a-zA-Z0-9_-]+/)*[a-zA-Z0-9_.-]+\.spec\.js(:[1-9][0-9]*)?$ ]]; then
+                echo "Invalid spec path or line: $spec" >&2; exit 2
+              fi
+              args="$args $spec"
+            done
+            if [ -z "$args" ]; then echo "specs mode needs specs" >&2; exit 2; fi
+          fi
+          if [ "$MODE" = changed ]; then
+            base="$BASE"
+            if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+              base="$(git rev-parse HEAD~1)"
+            fi
+            base=$(git rev-parse --verify --end-of-options "$base^{commit}")
+            echo "Changed-test base: $base"
+            args="--only-changed=$base --pass-with-no-tests $args"
+          fi
+          if [ "$PROJECTS" != all ]; then
+            for project in $PROJECTS; do
+              case "$project" in
+                chromium-file|chromium-served|firefox-served|webkit-served) args="$args --project=$project" ;;
+                *) echo "Unknown project: $project" >&2; exit 2 ;;
+              esac
+            done
+          fi
+          echo "args=$args" >> "$GITHUB_OUTPUT"
+      - id: plan
+        working-directory: game/tests/e2e
+        env:
+          PLAYWRIGHT_ARGS: ${{ steps.select.outputs.args }}
+          WORKERS: ${{ inputs.workers }}
+          FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES: ${{ inputs.bounded && '1' || '0' }}
           SHARDS: ${{ inputs.shards }}
         run: |
-          version=$(jq -er '.packages["node_modules/playwright-core"].version' tests/e2e/package-lock.json)
+          version=$(jq -er '.packages["node_modules/playwright-core"].version' package-lock.json)
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           echo "image=mcr.microsoft.com/playwright:v${version}-noble" >> "$GITHUB_OUTPUT"
-          list=""; i=1
-          while [ "$i" -le "$SHARDS" ]; do list="$list${list:+,}$i"; i=$((i + 1)); done
-          echo "shards=[$list]" >> "$GITHUB_OUTPUT"
+          node "$GITHUB_WORKSPACE/tooling/tests/e2e/support/ci-discovery.js"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: blob-${{ inputs.label }}-plan
+          path: ${{ runner.temp }}/ci-selection
+          retention-days: 5
+          if-no-files-found: error
 
   check:
     # Arbitrary game refs must not populate shared dependency or browser caches.
@@ -106,7 +165,7 @@ jobs:
         working-directory: tools
 
   e2e:
-    if: ${{ inputs.report_source_run == '' }}
+    if: ${{ inputs.report_source_run == '' && needs.plan.outputs.shards != '[]' }}
     needs: plan
     runs-on: ubuntu-latest
     container:
@@ -133,54 +192,15 @@ jobs:
           package-manager-cache: false
       - run: npm ci
         working-directory: tests/e2e
-      - id: select
-        name: Select tests
-        env:
-          MODE: ${{ inputs.mode }}
-          BASE: ${{ inputs.base }}
-          PROJECTS: ${{ inputs.projects }}
-          SPECS: ${{ inputs.specs }}
-        run: |
-          # The runner mounts its checkout into the browser container under a different UID.
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          args=""
-          if [ "$MODE" = specs ] || { [ "$MODE" = changed ] && [ -n "$SPECS" ]; }; then
-            for spec in $SPECS; do
-              if [[ ! "$spec" =~ ^specs/([a-zA-Z0-9_-]+/)*[a-zA-Z0-9_.-]+\.spec\.js(:[1-9][0-9]*)?$ ]]; then
-                echo "Invalid spec path or line: $spec" >&2; exit 2
-              fi
-              args="$args $spec"
-            done
-            if [ -z "$args" ]; then echo "specs mode needs specs" >&2; exit 2; fi
-          fi
-          if [ "$MODE" = changed ]; then
-            base="$BASE"
-            if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
-              base="$(git rev-parse HEAD~1)"
-            fi
-            echo "Changed-test base: $base"
-            args="--only-changed=$base --pass-with-no-tests $args"
-          fi
-          if [ "$PROJECTS" != all ]; then
-            for project in $PROJECTS; do
-              case "$project" in
-                chromium-file|chromium-served|firefox-served|webkit-served) args="$args --project=$project" ;;
-                *) echo "Unknown project: $project" >&2; exit 2 ;;
-              esac
-            done
-          fi
-          echo "args=$args" >> "$GITHUB_OUTPUT"
       - name: Run Playwright
         working-directory: tests/e2e
         env:
-          PLAYWRIGHT_ARGS: ${{ steps.select.outputs.args }}
+          PLAYWRIGHT_ARGS: ${{ needs.plan.outputs.args }}
           FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES: ${{ inputs.bounded && '1' || '0' }}
-        run: >-
-          timeout --signal=INT --kill-after=30s 600s
-          npx playwright test $PLAYWRIGHT_ARGS
-          --shard=${{ matrix.shard }}/${{ inputs.shards }}
-          --workers=${{ inputs.workers }}
-          --reporter=blob,line
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          timeout --signal=INT --kill-after=30s 600s npx playwright test $PLAYWRIGHT_ARGS \
+            --shard=${{ matrix.shard }}/${{ inputs.shards }} --workers=${{ inputs.workers }} --reporter=blob,line
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
@@ -198,8 +218,8 @@ jobs:
           if-no-files-found: ignore
 
   report:
-    needs: e2e
-    if: ${{ !cancelled() }}
+    needs: [plan, e2e]
+    if: ${{ !cancelled() && (inputs.report_source_run != '' || needs.plan.result == 'success') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -226,7 +246,9 @@ jobs:
         env:
           EXPECTED_SHARDS: ${{ inputs.shards }}
           SOURCE_RUN: ${{ inputs.report_source_run || github.run_id }}
+          REPLAY: ${{ inputs.report_source_run }}
         run: |
+          if [[ -z "$REPLAY" ]]; then test -f blobs/selection.json; fi
           shopt -s nullglob
           report_files=(blobs/*.zip)
           echo "shards=${#report_files[@]}" >> "$GITHUB_OUTPUT"
@@ -257,6 +279,9 @@ jobs:
           mkdir -p merged
           (cd tooling/tests/e2e && npx playwright merge-reports --reporter="$GITHUB_WORKSPACE/tooling/tests/e2e/support/ci-report.js" "$GITHUB_WORKSPACE/blobs")
           node tooling/tests/e2e/support/ci-summary.js merged/results.json "$REF" "$MODE" >> "$GITHUB_STEP_SUMMARY"
+          if [[ -f blobs/selection.json ]]; then
+            node tooling/tests/e2e/support/ci-discovery.js verify blobs/selection.json merged/results.json
+          fi
       - name: Render bounded HTML report
         id: html
         if: ${{ steps.reports.outputs.html == 'true' }}

@@ -61,6 +61,7 @@ class CompactJsonReporter {
       const outcome = test.outcome();
       stats[outcome] = (stats[outcome] || 0) + 1;
       spec.tests.push({
+        id:test.id,
         projectName:project ? project.name : '',
         status:outcome,
         results:test.results.map(function (r) {
