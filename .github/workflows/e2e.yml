@@ -208,7 +208,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           read -ra args <<< "$PLAYWRIGHT_ARGS"
           if [[ -n "$SHARD_GROUPS" ]]; then
-            files=$(jq -er --argjson i "$SHARD" '.[$i-1] | join(" ")' <<< "$SHARD_GROUPS")
+            files=$(node -p 'JSON.parse(process.env.SHARD_GROUPS)[Number(process.env.SHARD) - 1].join(" ")')
             read -ra group <<< "$files"
             for arg in "${args[@]}"; do
               if [[ "$arg" == --project=* ]]; then group+=("$arg"); fi
