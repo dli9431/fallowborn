@@ -141,6 +141,8 @@ jobs:
           PROJECTS: ${{ inputs.projects }}
           SPECS: ${{ inputs.specs }}
         run: |
+          # The runner mounts its checkout into the browser container under a different UID.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           args=""
           if [ "$MODE" = specs ] || { [ "$MODE" = changed ] && [ -n "$SPECS" ]; }; then
             for spec in $SPECS; do
