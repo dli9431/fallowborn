@@ -59,7 +59,14 @@ async function startCourt(page, info, court, method) {
     const adopt = FB.adoptStartingRealm;
     FB.adoptStartingRealm = function (s, scenario) {
       const c = s.chars[s.player.charId], r = s.realms[scenario.rulerRealmId];
-      window.__openingCourt = { id:c.id, spouse:c.spouseId, children:c.childrenIds.slice(),
+      window.__courtNamesakes = function (state) {
+        return Object.keys(state.chars).filter(function (id) {
+          return !state.chars[id].dead && state.chars[id].name === c.name;
+        }).sort();
+      };
+      window.__openingCourt = { id:FB.realmRulerCharacterSnapshot(s,scenario.rulerRealmId).id,
+        spouse:c.spouseId, children:c.childrenIds.slice(),
+        namesakes:window.__courtNamesakes(s),
         gold:r.treasury.gold, capital:r.capital, source:scenario.rulerRealmId,
         owned:Object.keys(s.owner).filter(function (id) { return s.owner[id] === scenario.rulerRealmId; }).sort(),
         held:Object.keys(s.holder).filter(function (id) { return s.holder[id] === scenario.rulerRealmId; }).sort() };
@@ -85,7 +92,7 @@ for (const court of COURTS) {
         const actualCounties = Object.keys(s.owner).filter(function (id) { return s.owner[id] === 'player'; }).sort();
         const facts = { review:FBDATA.reviewOpenStarts, name:c.name, sex:c.sex, age:FB.ageOf(c,s.date.year),
           culture:c.culture, faith:c.religion, tier:p.tier, source:s.start.rulerRealmId,
-          original:old.id === c.id, unique:Object.values(s.chars).filter(function (person) { return !person.dead && person.name === court.name; }).length,
+          original:old.id === c.id, samePeople:JSON.stringify(window.__courtNamesakes(s)) === JSON.stringify(old.namesakes),
           family:JSON.stringify([c.spouseId,c.childrenIds]) === JSON.stringify([old.spouse,old.children]),
           purse:p.gold === old.gold, home:p.provinceId, capital:s.realms.player.capital,
           site:FB.settlementsOf(s,p.provinceId)[p.homeSettlement].site,
@@ -111,7 +118,7 @@ for (const court of COURTS) {
           return facts;
         };
       }, court)).toEqual({ review:false, name:court.name, sex:court.sex, age:court.age,
-        culture:court.culture, faith:court.faith, tier:7, source:court.realm, original:true, unique:1,
+        culture:court.culture, faith:court.faith, tier:7, source:court.realm, original:true, samePeople:true,
         family:true, purse:true, home:court.home, capital:court.capital, site:court.site, residents:true,
         territory:true, holders:true, noDuplicate:true, mapping:'player', form:'administrative_monarchy', profile:court.profile,
         noCopyist:true, restored:true, restoredHome:court.home });
