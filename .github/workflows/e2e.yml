@@ -91,7 +91,10 @@ jobs:
           SPECS: ${{ inputs.specs }}
         run: |
           args=""
-          if [ "$MODE" = specs ] || { [ "$MODE" = changed ] && [ -n "$SPECS" ]; }; then
+          if [ "$MODE" = groups ]; then
+            SPECS=$(jq -er 'if type == "array" and length > 0 and all(.[]; type == "array" and length > 0 and all(.[]; type == "string" and test("^specs/([a-zA-Z0-9_-]+/)*[a-zA-Z0-9_.-]+\\.spec\\.js$"))) then flatten | join(" ") else error("Invalid shard groups") end' <<< "$SPECS")
+          fi
+          if [ "$MODE" = specs ] || [ -n "$SPECS" ]; then
             for spec in $SPECS; do
               if [[ ! "$spec" =~ ^specs/([a-zA-Z0-9_-]+/)*[a-zA-Z0-9_.-]+\.spec\.js(:[1-9][0-9]*)?$ ]]; then
                 echo "Invalid spec path or line: $spec" >&2; exit 2
@@ -122,6 +125,7 @@ jobs:
         working-directory: game/tests/e2e
         env:
           PLAYWRIGHT_ARGS: ${{ steps.select.outputs.args }}
+          SHARD_GROUPS: ${{ inputs.mode == 'groups' && inputs.specs || '' }}
           WORKERS: ${{ inputs.workers }}
           FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES: ${{ inputs.bounded && '1' || '0' }}
           SHARDS: ${{ inputs.shards }}
@@ -140,7 +144,7 @@ jobs:
   check:
     # Arbitrary game refs must not populate shared dependency or browser caches.
     # A spec-only run (the task runner's targeted checks) is judged by its specs alone.
-    if: ${{ inputs.report_source_run == '' && inputs.mode != 'specs' }}
+    if: ${{ inputs.report_source_run == '' && inputs.mode != 'specs' && inputs.mode != 'groups' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -195,12 +199,26 @@ jobs:
       - name: Run Playwright
         working-directory: tests/e2e
         env:
+          SHARD_GROUPS: ${{ inputs.mode == 'groups' && inputs.specs || '' }}
+          SHARD: ${{ matrix.shard }}
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: report-${{ matrix.shard }}.zip
           PLAYWRIGHT_ARGS: ${{ needs.plan.outputs.args }}
           FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES: ${{ inputs.bounded && '1' || '0' }}
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          timeout --signal=INT --kill-after=30s 600s npx playwright test $PLAYWRIGHT_ARGS \
-            --shard=${{ matrix.shard }}/${{ inputs.shards }} --workers=${{ inputs.workers }} --reporter=blob,line
+          read -ra args <<< "$PLAYWRIGHT_ARGS"
+          if [[ -n "$SHARD_GROUPS" ]]; then
+            files=$(jq -er --argjson i "$SHARD" '.[$i-1] | join(" ")' <<< "$SHARD_GROUPS")
+            read -ra group <<< "$files"
+            for arg in "${args[@]}"; do
+              if [[ "$arg" == --project=* ]]; then group+=("$arg"); fi
+            done
+            args=("${group[@]}")
+          else
+            args+=("--shard=$SHARD/${{ inputs.shards }}")
+          fi
+          timeout --signal=INT --kill-after=30s 600s npx playwright test "${args[@]}" \
+            --workers=${{ inputs.workers }} --reporter=blob,line
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:

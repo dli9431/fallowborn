@@ -27,13 +27,20 @@ async function plan() {
   fs.mkdirSync(out, { recursive:true });
   const cli = path.resolve('node_modules/@playwright/test/cli.js');
   const selection = process.env.PLAYWRIGHT_ARGS.trim().split(/\s+/).filter(Boolean);
+  const groups = process.env.SHARD_GROUPS ? JSON.parse(process.env.SHARD_GROUPS) : null;
+  if (groups) {
+    assert.equal(groups.length, total, 'Supply one file list per requested shard');
+    const files = groups.flat();
+    assert.equal(new Set(files).size, files.length, 'A file appears in multiple shard groups');
+  }
   const execute = promisify(execFile);
 
   async function list(shard) {
     const idsFile = path.join(temp, shard + '.json');
     const blobFile = path.join(temp, String(shard), 'empty-' + shard + '.zip');
-    const args = [cli, 'test', ...selection, '--list', '--workers=' + process.env.WORKERS];
-    if (shard) args.push('--shard=' + shard + '/' + total);
+    const filters = shard && groups ? groups[shard - 1].concat(selection.filter(arg => arg.startsWith('--project='))) : selection;
+    const args = [cli, 'test', ...filters, '--list', '--workers=' + process.env.WORKERS];
+    if (shard && !groups) args.push('--shard=' + shard + '/' + total);
     args.push('--reporter=' + (shard ? 'blob,' : '') + __filename);
     try {
       await execute(process.execPath, args, {env:{...process.env, CI_DISCOVERY_IDS:idsFile,

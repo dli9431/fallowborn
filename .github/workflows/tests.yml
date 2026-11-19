@@ -19,12 +19,12 @@ on:
         type: string
         default: ''
       mode:
-        description: changed, all, or specs
+        description: Changed tests, all tests, selected specs, or explicit shard groups
         type: choice
-        options: [changed, all, specs]
+        options: [changed, all, specs, groups]
         default: changed
       specs:
-        description: Space-separated spec paths relative to tests/e2e, required for specs mode and optional for changed mode
+        description: Spec paths relative to tests/e2e, or a JSON array of file lists for groups mode
         type: string
         default: ''
       base:
