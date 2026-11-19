@@ -111,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ${{ needs.plan.outputs.image }}
-      options: --init --shm-size=1g
+      options: --user pwuser --init --shm-size=1g
     defaults:
       run:
         shell: bash
