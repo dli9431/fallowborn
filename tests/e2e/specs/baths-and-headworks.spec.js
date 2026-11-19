@@ -1,5 +1,6 @@
 'use strict';
 const {test,expect}=require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {bootInputs,prepareInputs}=require('../support/game/water-operation-inputs');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');

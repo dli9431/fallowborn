@@ -1,6 +1,7 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
+test.describe.configure({mode:'parallel'});
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 const { useReleasedStartRules } = require('../support/game/released-starts');
