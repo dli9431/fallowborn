@@ -1,0 +1,60 @@
+name: Regression smoke and inventory
+run-name: Regression gate ${{ inputs.request_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: Unique regression request
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  smoke:
+    uses: ./.github/workflows/e2e.yml
+    with:
+      ref: ${{ github.sha }}
+      label: smoke
+      mode: all
+      specs: specs/journeys.spec.js:25
+      projects: all
+      workers: 1
+      shards: 4
+
+  inventory:
+    needs: smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: report-smoke
+          path: smoke
+      - name: Verify the game-start check on every project
+        run: |
+          jq -e '
+            .coverage.complete and .stats.expected == 4 and .stats.unexpected == 0 and
+            ([.suites[] | recurse(.suites[]) | .specs[] |
+              select(.title == "a full start code creates the expected deterministic new game") |
+              .tests[] | select(.status == "expected" and (.results | last.status) == "passed") |
+              .projectName] | sort == ["chromium-file","chromium-served","firefox-served","webkit-served"])
+          ' smoke/results.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm ci
+        working-directory: tests/e2e
+      - name: Discover all test cases and projects
+        working-directory: tests/e2e
+        env:
+          CI_DISCOVERY_INVENTORY: ${{ runner.temp }}/inventory.json
+        run: npx playwright test --list --reporter=./support/ci-discovery.js
+      - uses: actions/upload-artifact@v7
+        with:
+          name: regression-inventory
+          path: ${{ runner.temp }}/inventory.json
+          if-no-files-found: error

@@ -9,7 +9,20 @@ const { promisify } = require('node:util');
 
 class DiscoveryReporter {
   onBegin(config, suite) {
-    fs.writeFileSync(process.env.CI_DISCOVERY_IDS, JSON.stringify(suite.allTests().map(test => test.id)));
+    const tests = suite.allTests();
+    if (process.env.CI_DISCOVERY_INVENTORY) {
+      const cases = tests.map(test => {
+        let owner = test.parent;
+        while (owner && owner.type !== 'file') owner = owner.parent;
+        assert(owner && owner.location, 'Could not resolve spec for ' + test.id);
+        return { id:test.id, project:test.parent.project().name,
+          file:path.relative(process.cwd(), owner.location.file).split(path.sep).join('/'),
+          title:test.titlePath().slice(3).join(' > ') };
+      });
+      fs.writeFileSync(process.env.CI_DISCOVERY_INVENTORY, JSON.stringify(cases));
+    } else {
+      fs.writeFileSync(process.env.CI_DISCOVERY_IDS, JSON.stringify(tests.map(test => test.id)));
+    }
   }
 
   onError(error) {
