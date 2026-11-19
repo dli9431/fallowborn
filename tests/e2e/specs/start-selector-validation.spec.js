@@ -91,28 +91,57 @@ test('strict bookmark validation retains selector faults and applicable-start di
   await openGame(page,info);
   const result = await page.evaluate(function () {
     const before = JSON.stringify(FBDATA), state = FB.state, world = FB.world;
+    const active = FB.activeBookmark;
     const rng = FB.getRngState(), uid = FB.getUidCounter(), original = FBDATA.startScenarios;
-    const scenario = Object.assign({},original.find(function (row) { return row.id === 'farmer_493'; }),
+    const farmer = original.find(function (row) { return row.id === 'farmer_493'; });
+    const scenario = Object.assign({},farmer,
       {id:'selector_probe',bookmarkIds:['493','selector_missing_bookmark'],
         requirements:{provinces:['selector_missing_province']}});
-    let faults, excluded;
+    const control = Object.assign({},farmer,{id:'selector_control'}), purity = [];
+    function validate(candidate) {
+      const input = JSON.stringify(candidate), data = JSON.stringify(FBDATA);
+      const live = JSON.stringify([FB.state,FB.world]);
+      const errors = FB.validateBookmark(candidate);
+      purity.push(input === JSON.stringify(candidate) && data === JSON.stringify(FBDATA) &&
+        live === JSON.stringify([FB.state,FB.world]) && state === FB.state && world === FB.world &&
+        active === FB.activeBookmark && rng === FB.getRngState() && uid === FB.getUidCounter());
+      return errors;
+    }
+    let faults, excluded, applicable, admitted;
     try {
-      FBDATA.startScenarios = original.concat([scenario]);
+      FBDATA.startScenarios = original.concat([scenario,control]);
       faults = ['493','867'].map(function (id) {
-        return FB.validateBookmark(FB.bookmark(id)).filter(function (line) { return line.indexOf('start selector_probe:') >= 0; });
+        return validate(FB.bookmark(id)).filter(function (line) { return line.indexOf('start selector_probe:') >= 0; });
       });
       scenario.bookmarkIds = ['867'];
-      excluded = FB.validateBookmark(Object.assign({},FB.bookmark('493'),{starts:['selector_probe']}))
-        .filter(function (line) { return line.indexOf('start selector_probe:') >= 0; });
+      const bookmark = FB.bookmark('493');
+      // Keep native offerings: their track overrides require those starts to
+      // remain selected before strict validation reaches the probe's body.
+      const matching = original.filter(function (row) {
+        return FB.startSelectorReport(row,bookmark).matches;
+      });
+      const starts = Array.isArray(bookmark.starts) ? bookmark.starts.slice() :
+        FB.startRequirementReports(matching,bookmark).filter(function (report) {
+          return report.applicable;
+        }).map(function (report) { return report.startId; });
+      const candidate = Object.assign({},bookmark,{starts:starts.concat(['selector_probe','selector_control'])});
+      excluded = validate(candidate);
+      const report = FB.startRequirementReport(control,candidate);
+      applicable = {matches:report.matches,applicable:report.applicable,valid:report.valid,faults:report.faults};
+      scenario.bookmarkIds = ['493'];
+      delete scenario.requirements;
+      admitted = validate(candidate);
     } finally { FBDATA.startScenarios = original; }
-    return {faults:faults,excluded:excluded,unchanged:before === JSON.stringify(FBDATA) && state === FB.state &&
-      world === FB.world && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    return {faults:faults,excluded:excluded,applicable:applicable,admitted:admitted,purity:purity,
+      unchanged:before === JSON.stringify(FBDATA) && state === FB.state && world === FB.world &&
+        active === FB.activeBookmark && rng === FB.getRngState() && uid === FB.getUidCounter()};
   });
   expect(result).toEqual({faults:[[
     'Bookmark 493: start selector_probe: unknown bookmark selector_missing_bookmark.',
     'Bookmark 493: start selector_probe: unknown provinces requirement selector_missing_province.'
   ],['Bookmark 867: start selector_probe: unknown bookmark selector_missing_bookmark.']],
-    excluded:['Bookmark 493: start selector_probe: cannot apply to this bookmark.'],unchanged:true});
+    excluded:['Bookmark 493: start selector_probe: cannot apply to this bookmark.'],
+    applicable:{matches:true,applicable:true,valid:true,faults:[]},admitted:[],purity:[true,true,true,true],unchanged:true});
 });
 
 for (const prefix of ['harbor','dune']) {
