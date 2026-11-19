@@ -35,6 +35,24 @@ paid-work terminal stages without further rewards. These personal graphs are
 available for owning start declarations; the generic scaffold farmer remains
 unchanged.
 
+The Aurelianum civic household remains held in normal selection. In an
+explicitly enabled review, its qualified curialis can choose Keep records
+through the household card in Deeds. Closing the review defers the decision.
+Selecting or resuming the focus spends no gold or action day. A worked day
+that pays private gold at the Aurelianum home completes the story and the
+opening goal. Council appointments and the court's relocation decision stay
+with their respective owners.
+
+The local war review lets the household resume work even while the war lasts.
+An actual change of sovereign takes priority over that review and requires an
+explicit decision to resume under the current rule. Closing the sheet leaves
+the occurrence pending, and confirming it records the change without moving
+any household member. The restored pending and completed stages retain the
+ordinary focus and purse without replaying a payment. This uses the existing
+`household_story_decisions` and `household_story_work` technology decisions
+(none) and the existing curialis qualification. An ordinary JSON example
+varies the home, continuity, and decision routes with a Ravenna ledger offer.
+
 All declarations reuse existing capability decisions: `mobile_story_transactions`,
 `mobile_campaign_principal_review`, `household_story_decisions` and conserved
 civilian migration. Their political, resource and consent gates have no new
