@@ -268,10 +268,12 @@ for (const boundary of ['window','death','successor']) {
   });
 }
 
-test('unrelated starts attach no soldier story and a missing optional record stays missing on restore', async function ({ page }, info) {
+test('the Toledo household start attaches no soldier story', async function ({ page }, info) {
   await beginBookmark(page, info, '711', 'toledo_household_711');
   expect(await page.evaluate(function () { return !!FB.state.stories.crossing_soldier_track_711; })).toBe(false);
-  await page.reload();
+});
+
+test('a missing optional soldier record stays missing on restore', async function ({ page }, info) {
   await begin(page, info);
   expect(await page.evaluate(function () {
     const saved = JSON.parse(FB.save.serialize()); delete saved.state.stories.crossing_soldier_track_711;
