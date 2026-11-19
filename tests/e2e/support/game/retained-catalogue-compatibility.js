@@ -139,29 +139,59 @@ async function retention(page,old,fixture) {
   },{old:old,fixture:fixture});
 }
 
-function registerGroup(index,family) {
+function createPredecessorSource() {
+  let pendingContext, guard, closed = false;
+
+  return {
+    async open(browser) {
+      if (closed) throw new Error('The predecessor source is already closed.');
+      pendingContext = browser.newContext();
+      const context = await pendingContext;
+      if (closed) throw new Error('The predecessor source closed during context creation.');
+      const page = await context.newPage();
+      if (closed) throw new Error('The predecessor source closed during page creation.');
+      guard = installPageGuards(page);
+      return page;
+    },
+    async close() {
+      if (closed) return;
+      // Claim cleanup before awaiting an in-flight acquisition or close.
+      closed = true;
+      if (!pendingContext) return;
+      // The opening hook already reports any context creation failure.
+      const context = await pendingContext.catch(function () { return null; });
+      if (!context) return;
+      try {
+        if (guard) expect(guard.faults).toEqual([]);
+      } finally {
+        await context.close();
+      }
+    }
+  };
+}
+
+function registerGroup(index,family,options = {}) {
   const fixture = fixtures[index];
   test.describe(fixture.bookmark.id,function () {
-  var old, sourceContext, sourcePage, sourceGuard, sourcePrepared = false;
+  const source = createPredecessorSource();
+  let old, sourcePage;
   test.beforeAll(async function ({browser},info) {
-    sourceContext = await browser.newContext(); sourcePage = await sourceContext.newPage(); sourceGuard = installPageGuards(sourcePage);
-    await preparePredecessor(sourcePage,info,fixture);
-    sourcePrepared = true;
+    const page = await source.open(browser);
+    await preparePredecessor(page,info,fixture);
+    sourcePage = page;
   });
   test.beforeAll(async function () {
-    if (!sourcePrepared) throw new Error('The predecessor source was not prepared.');
-    try { old = await finishPredecessor(sourcePage,fixture); }
-    finally {
-      try { expect(sourceGuard.faults).toEqual([]); }
-      finally { const context = sourceContext; sourceContext = null; await context.close(); }
-    }
+    if (!sourcePage) return;
+    old = await finishPredecessor(sourcePage,fixture);
+    await source.close();
   });
+  // Keep failure cleanup in its own hook so it cannot replace a setup error.
   test.afterAll(async function () {
-    if (sourceContext) { const context = sourceContext; sourceContext = null; await context.close(); }
+    await source.close();
   });
   if (family === 'journeys') registerJourneyCases(fixture,function () { return old; });
   else if (family === 'mutations') registerMutationCases(fixture,function () { return old; });
-  else if (family === 'admission') registerAdmissionCases(fixture,function () { return old; });
+  else if (family === 'admission') registerAdmissionCases(fixture,function () { return old; },options.verifyMatchingPredecessor);
   else throw new Error('Unknown retained catalogue case family: ' + family);
   });
 }
@@ -294,7 +324,7 @@ function registerMutationCases(fixture,getOld) {
   }
 }
 
-function registerAdmissionCases(fixture,getOld) {
+function registerAdmissionCases(fixture,getOld,verifyMatchingPredecessor) {
 if (fixture === fixtures[0]) test.describe('native transition declaration boundaries',function () {
   let context,page,guard;
   test.beforeAll(async function ({browser},info) {
@@ -369,6 +399,12 @@ test('rejects foreign save ' + selection.join(', '),async function ({page},info)
     });
   },{save:old.save,selection:selection});
   for (const result of results) expect(result,result.kind).toMatchObject({rejected:true,loaded:false,pure:true});
+  if (verifyMatchingPredecessor && selection[0] === 'signature') {
+    expect(await page.evaluate(function (data) { return FB.mods.saveCompatibility(data); },old.save))
+      .toEqual({compatible:true,path:null,transition:fixture.bookmark.id + '_transition'});
+    await load(page,old.save);
+    expect(await retention(page,old,fixture)).toMatchObject({same:true,rng:true,uid:true,converted:true,retained:fixture.retainedRevision});
+  }
 });
 }
 test('ordinary JSON rejects every compatibility forgery without publication',async function ({page},info) {
@@ -427,4 +463,5 @@ test('unchanged modded controls and empty standard signatures need no transition
 });
 }
 
-module.exports = {registerRuntime:registerRuntime,registerGroup:registerGroup,registerStandardControl:registerStandardControl};
+module.exports = {registerRuntime:registerRuntime,registerGroup:registerGroup,registerStandardControl:registerStandardControl,
+  createPredecessorSource:createPredecessorSource};

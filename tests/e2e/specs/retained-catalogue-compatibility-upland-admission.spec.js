@@ -2,4 +2,4 @@
 const {registerRuntime,registerGroup} = require('../support/game/retained-catalogue-compatibility');
 
 registerRuntime(__filename);
-registerGroup(1,'admission');
+registerGroup(1,'admission',{verifyMatchingPredecessor:true});
