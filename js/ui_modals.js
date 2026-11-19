@@ -3528,233 +3528,233 @@ window.FB = window.FB || {};
     });
   }
 
-  UI.showReturnCargoPrompt = function () {
-    const s = FB.state;
-    const t = s && s.player && s.player.travel;
-    if (!t) return;
-    const dest = FB.world.byId[t.destinationId || t.currentId];
-    const home = FB.world.byId[t.homeId];
-    const destName = dest ? dest.name : '?';
-    const homeName = home ? home.name : '?';
-    const h = reviewFactsCard(FB.T('Road home'), kv('Buy in', esc(destName)) +
-      kv('Sell in', esc(homeName)), ' data-return-cargo-prompt') +
-      reviewActionsHtml(reviewActionCardHtml({
-        id:'return-cargo-load', labelHtml:'📦 ' + esc(FB.T('Buy return cargo…')),
-        note:FB.T('Select commodities from {destination} to sell in {home}.', {
-          destination:destName, home:homeName
-        })
-      }) + reviewActionCardHtml({
-        id:'return-cargo-unladen', labelHtml:'↩ ' + esc(FB.T('Return unladen (empty-handed)')),
-        note:FB.T('Travel home without cargo. No investment at risk on the return road.')
-      })) +
-      '<div class="gm-footer"><button type="button" class="btn" id="return-cargo-cancel">' +
-      esc(FB.T('Stay longer')) + '</button></div>';
-    openModal(FB.T('Prepare for the road home'), h, { historyBack:true, titleDetailsHtml:'<p>' + esc(FB.T(
-      'Your business in {destination} is concluded. Before taking the road home, would you like to purchase a return cargo from this market to transport and sell in {home}, or return unladen?', {
-        destination:destName,
-        home:homeName
-      })) + '</p><p>' + esc(FB.T(
-        'Returning with cargo allows you to profit from price differences between {destination} and {home}, but carries road risk.', {
-          destination:destName,
-          home:homeName
-        })) + '</p>' });
-    $('return-cargo-load').addEventListener('click', function () {
-      UI.closeModal();
-      UI.showReturnCargoSetup();
+  function returnCargoHomeQuote(s) {
+    const t = s.player.travel;
+    return {
+      payerId:s.player.charId, journeyTurn:t.startTurn,
+      homeId:t.homeId, destinationId:t.destinationId, funds:s.player.gold,
+      road:FB.travelTradeReturnRoad(t),
+      eligible:t.returnVenture || t.phase !== 'arrived'
+        ? FB.T('Returning without a purchase is no longer available.') : FB.travelReturnEligible(s)
+    };
+  }
+
+  function returnWithoutCargoCard(q) {
+    return reviewActionCardHtml({
+      id:'return-cargo-unladen', labelHtml:'↩ ' + esc(FB.T('Return without buying cargo')),
+      disabled:q.eligible !== true, warn:q.eligible !== true,
+      note:q.eligible !== true ? q.eligible : FB.T('Pay nothing now · Keep {money:cash} for the household.', { cash:q.funds })
     });
-    $('return-cargo-unladen').addEventListener('click', function () {
+  }
+
+  function returnCargoViewActive(button) {
+    return !$('genmodal').classList.contains('hidden') && $('gm-body').contains(button);
+  }
+
+  function bindReturnWithoutCargo(s, t, quote, refresh) {
+    const button = $('return-cargo-unladen');
+    button.addEventListener('click', function () {
+      if (!returnCargoViewActive(button)) return;
+      if (FB.state !== s || s.player.travel !== t) return UI.closeModal();
+      const live = returnCargoHomeQuote(s);
+      if (live.eligible !== true || JSON.stringify(live) !== JSON.stringify(quote) ||
+          !FB.travelTurnBack(s)) {
+        refresh(FB.T('The return terms changed. Review the current choice.'));
+        return;
+      }
       UI.closeModal();
-      if (FB.travelTurnBack) FB.travelTurnBack(s);
       UI.refresh();
     });
-    $('return-cargo-cancel').addEventListener('click', function () {
-      UI.closeModal();
-    });
-  };
+  }
 
-  UI.showReturnCargoSetup = function () {
-    const s = FB.state;
-    const eligible = FB.tradeVentureReturnEligible ? FB.tradeVentureReturnEligible(s) : true;
-    if (eligible !== true) { UI.toast(eligible); return; }
-    const t = s.player.travel;
-    const dest = FB.world.byId[t.destinationId || t.currentId];
-    const home = FB.world.byId[t.homeId];
-    const destName = dest ? dest.name : '?';
-    const homeName = home ? home.name : '?';
+  function returnCargoCashFacts(q) {
+    return kv('Household cash now', esc(FB.money(q.funds))) +
+      kv('Lading fee', esc(FB.money(q.ladingFee))) +
+      kv('Total paid now', esc(FB.money(q.totalCost))) +
+      kv(q.cashLeft >= 0 ? FB.T('Cash left after purchase') : FB.T('Shortfall'),
+        esc(FB.money(Math.abs(q.cashLeft))));
+  }
+
+  function returnCargoRoadFacts(q) {
+    const dest = FB.world.byId[q.destinationId], home = FB.world.byId[q.homeId];
+    return kv('Buy in', esc(dest ? dest.name : '')) +
+      kv('Sell in', esc(home ? home.name : '')) +
+      (q.road ? kv('Road home', esc(FB.T('{legs} legs · {days} days', {
+        legs:q.road.route.length, days:q.road.days
+      }))) : '');
+  }
+
+  function returnCargoWarning(warning) {
+    return warning ? '<p class="warnote" role="status">' + esc(warning) + '</p>' : '';
+  }
+
+  function refreshReturnCargo(render) {
+    const body = $('gm-body'), scroll = body.scrollTop;
+    const expanded = Array.prototype.map.call($('genmodal').querySelectorAll(
+      '[aria-expanded="true"][aria-controls]'), function (button) {
+      return button.getAttribute('aria-controls');
+    });
+    render();
+    expanded.forEach(function (id) {
+      const details = $(id), toggle = $('genmodal').querySelector('[aria-controls="' + id + '"]');
+      if (details && toggle) toggle.click();
+    });
+    body.scrollTop = scroll;
+  }
+
+  UI.showReturnCargoPrompt = function (warning, replaceView) {
+    const s = FB.state, t = s && s.player.travel;
+    if (!t) return;
+    const homeQuote = returnCargoHomeQuote(s);
+    const eligible = FB.tradeVentureReturnEligible(s);
     const stakes = FB.tradeVentureStakes(s);
     let cards = '';
     for (let i = 0; i < stakes.length; i++) {
-      const stake = stakes[i];
-      const goods = FB.tradeVentureReturnGoods(s, stake);
-      const affordable = goods.some(function (good) {
-        const preview = FB.tradeVentureReturnPreview(s, stake, good.id);
-        return preview && preview.stockAvailable && preview.totalCost <= s.player.gold;
-      });
+      const stake = stakes[i], goods = FB.tradeVentureReturnGoods(s, stake);
+      const preview = goods.length ? FB.tradeVentureReturnPreview(s, stake, goods[0].id) : null;
+      const available = goods.some(function (good) { return good.available; });
+      const blocker = eligible !== true ? eligible : !preview || !available
+        ? FB.T('The market cannot supply a load at this stake.') : preview.cashLeft < 0
+          ? FB.T('The return stake and lading fee cost {money:cost}; you have {money:gold}.', {
+            cost:preview.totalCost, gold:preview.funds
+          }) : '';
       cards += reviewActionCardHtml({
-        data:{ returnStake:stake }, disabled:!affordable, warn:!affordable,
-        labelHtml:'⚖ ' + esc(FB.T('Invest {money:stake} in return cargo…', { stake:stake })),
-        note:affordable
-          ? FB.T('{count} commodity baskets available in {destination}.', {
-            count:goods.filter(function (g) { return g.available; }).length,
-            destination:destName
-          })
-          : FB.T('Insufficient gold or destination stock for this stake.')
+        data:{ returnStake:stake }, disabled:!!blocker, warn:!!blocker,
+        labelHtml:'⚖ ' + esc(FB.T('Choose cargo with a {money:stake} stake', { stake:stake })),
+        note:blocker || FB.T('{money:total} with lading · {money:cash} left', {
+          total:preview.totalCost, cash:preview.cashLeft
+        })
       });
     }
-    const h = reviewFactsCard('', kv('Buy in', esc(destName)) + kv('Sell in', esc(homeName)) +
-      kv('Lading fee', esc(FB.T('10% of the stake')))) + reviewActionsHtml(cards) +
-      '<div class="gm-footer"><button type="button" class="btn" id="return-setup-back">' +
-      esc(FB.T('Back')) + '</button></div>';
-    openModal(FB.T('Load return cargo'), h, { titleDetailsHtml:'<p>' + esc(FB.T(
-      'Choose the capital to commit for cargo on the journey home. You will purchase goods at local market prices in {destination} to transport and sell in {home}.', {
-        destination:destName,
-        home:homeName
-      })) + '</p><p>' + esc(FB.T(
-        'A modest 10% lading fee covers pack supplies and handling. The cargo will be sold in {home} upon your return.', {
-          home:homeName
-        })) + '</p><p>' + esc(ventureStakeScalingText()) + '</p>' });
+    const h = returnCargoWarning(warning) +
+      reviewFactsCard('', returnCargoRoadFacts(homeQuote) +
+        kv('Household cash now', esc(FB.money(homeQuote.funds))), ' data-return-cargo-prompt') +
+      reviewActionsHtml(returnWithoutCargoCard(homeQuote) + cards);
+    openModal(FB.T('Prepare for the road home'), h, {
+      replaceView:!!replaceView, noFocus:!!warning,
+      titleDetailsHtml:'<p>' + esc(FB.T(
+        'A return load is a new purchase from the household purse. The earlier trade is settled separately.')) +
+        '</p><p>' + esc(ventureStakeScalingText()) + '</p>'
+    });
     document.querySelectorAll('[data-return-stake]').forEach(function (button) {
       button.addEventListener('click', function () {
-        const stake = parseInt(button.dataset.returnStake, 10);
+        if (!returnCargoViewActive(button)) return;
+        if (FB.state !== s || s.player.travel !== t) return UI.closeModal();
+        const stake = Number(button.dataset.returnStake);
+        if (FB.tradeVentureStakes(s).indexOf(stake) < 0) {
+          refreshReturnCargo(function () {
+            UI.showReturnCargoPrompt(FB.T('The available stakes have changed. Choose again.'), true);
+          });
+          return;
+        }
         UI.showReturnCargoGoods(stake);
       });
     });
-    $('return-setup-back').addEventListener('click', function () {
-      UI.closeModal();
+    bindReturnWithoutCargo(s, t, homeQuote, function (message) {
+      refreshReturnCargo(function () { UI.showReturnCargoPrompt(message, true); });
     });
   };
+
+  UI.showReturnCargoSetup = UI.showReturnCargoPrompt;
 
   UI.showReturnCargoGoods = function (stake) {
-    const s = FB.state;
-    const t = s.player.travel;
+    const s = FB.state, t = s.player.travel;
     if (!t) return;
-    const dest = FB.world.byId[t.destinationId || t.currentId];
-    const home = FB.world.byId[t.homeId];
-    const destName = dest ? dest.name : '?';
-    const homeName = home ? home.name : '?';
     const goods = FB.tradeVentureReturnGoods(s, stake);
-    let cards = '';
-    for (let i = 0; i < goods.length; i++) {
-      const good = goods[i];
-      const preview = FB.tradeVentureReturnPreview(s, stake, good.id);
-      const canAfford = preview && preview.totalCost <= s.player.gold;
-      const enabled = good.available && canAfford;
-      const ratio = Math.round(good.priceRatio * 100);
-      cards += reviewActionCardHtml({
+    const preview = goods.length ? FB.tradeVentureReturnPreview(s, stake, goods[0].id) : null;
+    const eligible = FB.tradeVentureReturnEligible(s);
+    const cards = goods.map(function (good) {
+      const blocker = eligible !== true ? eligible : !preview
+        ? FB.T('That return cargo is no longer available.') : preview.cashLeft < 0
+          ? FB.T('Cannot afford the total cost.') : !good.available ? FB.T('Insufficient local stock.') : '';
+      return reviewActionCardHtml({
         data:{ returnGood:good.id }, detailsId:'return-good-details-' + good.id,
-        disabled:!enabled, warn:!enabled,
+        disabled:!!blocker, warn:!!blocker,
         labelHtml:esc((good.def.icon || '') + ' ' + FB.dataText(s, s.player.charId,
           'marketGood', good.id, good.def, 'name', {})),
-        note:!good.available ? FB.T('insufficient local stock')
-          : !canAfford ? FB.T('cannot afford total cost')
-          : FB.T('{quantity} units · buy {destPrice}× · sell {homePrice}×', {
-            quantity:Math.round(good.quantity * 10) / 10,
-            destPrice:good.destPrice, homePrice:good.homePrice
-          }),
-        details:'<p>' + esc(FB.T(
-          '{quantity} units · Buy at {destPrice}× in {dest} · Sell at {homePrice}× in {home} ({ratio}% price comparison).', {
-            quantity:Math.round(good.quantity * 10) / 10,
-            destPrice:good.destPrice,
-            dest:destName,
-            homePrice:good.homePrice,
-            home:homeName,
-            ratio:ratio
-          })) + '</p>'
+        note:blocker || FB.T('{quantity} units · Buy {destPrice}× · Current home price {homePrice}×', {
+          quantity:Math.round(good.quantity * 10) / 10,
+          destPrice:good.destPrice, homePrice:good.homePrice
+        }),
+        details:'<p>' + esc(FB.T('{stock} units in the market.', { stock:good.stock })) + '</p>'
       });
-    }
-    const h = reviewActionsHtml(cards) +
-      '<div class="gm-footer"><button type="button" class="btn" id="return-good-back">' +
-      esc(FB.T('Back')) + '</button></div>';
-    openModal(FB.T('Choose return cargo'), h, { titleDetailsHtml:'<p>' + esc(FB.T(
-      'Select a commodity to buy in {destination} and transport back to {home}.', {
-        destination:destName,
-        home:homeName
-      })) + '</p>' });
+    }).join('');
+    openModal(FB.T('Choose return cargo'),
+      (preview ? reviewFactsCard('', returnCargoCashFacts(preview)) : '') +
+      (!cards ? returnCargoWarning(FB.T('That return cargo is no longer available.')) : '') +
+      reviewActionsHtml(cards), { historyView:true });
     document.querySelectorAll('[data-return-good]').forEach(function (button) {
       button.addEventListener('click', function () {
-        const goodId = button.getAttribute('data-return-good');
-        UI.reviewReturnCargoChoice(stake, goodId);
+        if (!returnCargoViewActive(button)) return;
+        if (FB.state !== s || s.player.travel !== t) return UI.closeModal();
+        UI.reviewReturnCargoChoice(stake, button.dataset.returnGood);
       });
-    });
-    $('return-good-back').addEventListener('click', function () {
-      UI.showReturnCargoSetup();
     });
   };
 
-  UI.reviewReturnCargoChoice = function (stake, goodId) {
-    const s = FB.state;
+  UI.reviewReturnCargoChoice = function (stake, goodId, warning, replaceView) {
+    const s = FB.state, t = s.player.travel;
+    if (!t) return;
+    const homeQuote = returnCargoHomeQuote(s);
     const preview = FB.tradeVentureReturnPreview(s, stake, goodId);
-    if (!preview) {
-      UI.toast(FB.T('That return cargo is no longer available.'));
-      return;
-    }
-    const dest = FB.world.byId[preview.destId];
-    const home = FB.world.byId[preview.homeId];
-    const destName = dest ? dest.name : '?';
-    const homeName = home ? home.name : '?';
-    const goodDef = FBDATA.marketGoods[preview.goodId];
-    const goodName = (goodDef.icon || '') + ' ' +
-      FB.dataText(s, s.player.charId, 'marketGood', preview.goodId, goodDef, 'name', {});
-    const boldChance = Math.round(preview.boldChance * 100);
-
-    const facts = kv('Purchase market', esc(destName)) +
-      kv('Selling market (Home)', esc(homeName)) +
-      kv('Return stake', esc(FB.T('{money:amount}', { amount:preview.stake }))) +
-      kv('Lading fee (10%)', esc(FB.T('{money:amount}', { amount:preview.ladingFee }))) +
-      kv('Total paid now', esc(FB.T('{money:amount}', { amount:preview.totalCost }))) +
-      kv('Purchase price', esc(FB.T('{price}× in {dest}', { price:preview.destPrice, dest:destName }))) +
-      kv('Current home price', esc(FB.T('{price}× in {home}', { price:preview.homePrice, home:homeName }))) +
-      kv('Quantity purchased', esc(FB.T('{quantity} units', { quantity:Math.round(preview.quantity * 10) / 10 }))) +
-      kv('Estimated cautious payout', esc(FB.T('{money:amount}', { amount:preview.estimatedPayoutCautious }))) +
-      kv('Estimated bold payout', esc(FB.T('{money:success} on success / {money:failure} on failure', {
-        success:preview.estimatedPayoutBoldSuccess,
-        failure:preview.estimatedPayoutBoldFailure
-      })));
-    const h = reviewFactsCard(FB.T('Return Cargo: {good}', { good:goodName }), facts,
-      ' data-return-cargo-review') +
+    const blocker = FB.tradeVentureCanLoadReturn(s, stake, goodId);
+    const goodDef = FBDATA.marketGoods[goodId];
+    const goodName = goodDef ? (goodDef.icon || '') + ' ' +
+      FB.dataText(s, s.player.charId, 'marketGood', goodId, goodDef, 'name', {}) : '';
+    const boldChance = preview ? Math.round(preview.boldChance * 100) : 0;
+    const facts = returnCargoRoadFacts(homeQuote) + (preview
+      ? kv('Return stake', esc(FB.money(preview.stake))) + returnCargoCashFacts(preview) +
+        kv('Purchase price', esc(FB.T('{price}×', { price:preview.destPrice }))) +
+        kv('Current home price', esc(FB.T('{price}×', { price:preview.homePrice }))) +
+        kv('Quantity purchased', esc(FB.T('{quantity} units', {
+          quantity:Math.round(preview.quantity * 10) / 10
+        })))
+      : kv('Household cash now', esc(FB.money(homeQuote.funds))));
+    const h = returnCargoWarning(warning) +
+      reviewFactsCard(goodName, facts, ' data-return-cargo-review') +
       reviewActionsHtml(reviewActionCardHtml({
         id:'return-load-cautious', labelHtml:'🧭 ' + esc(FB.T('Load cautiously')),
-        note:FB.T('Reliable delivery · 1.20× margin'),
-        details:'<p>' + esc(FB.T(
-          'Careful packing and cautious transport. Delivers return cargo reliably at 1.20× margin.')) + '</p>'
+        disabled:blocker !== true, warn:blocker !== true,
+        note:blocker !== true ? blocker : FB.T('Estimated payout {money:payout}', {
+          payout:preview.estimatedPayoutCautious
+        }),
+        details:preview ? '<p>' + esc(FB.T('Careful packing uses the cautious rate of {rate}× the home price on arrival.', {
+          rate:preview.cautiousMultiplier
+        })) + '</p>' : ''
       }) + reviewActionCardHtml({
         id:'return-load-bold', labelHtml:'⚖ ' + esc(FB.T('Load boldly')),
-        note:FB.T('{chance}% success · 2.25× or 0.35×', { chance:boldChance }),
-        details:'<p>' + esc(FB.T(
-          'Maximum lading and rapid pace ({chance}% success). Returns 2.25× on success or 0.35× on spoilage.', {
-            chance:boldChance
-          })) + '</p>'
-      })) +
-      '<div class="gm-footer"><button type="button" class="btn" id="return-review-back">' +
-      esc(FB.T('Back')) + '</button></div>';
-
-    openModal(FB.T('Review return cargo'), h, { dismissable:false, historyBack:true,
+        disabled:blocker !== true, warn:blocker !== true,
+        note:blocker !== true ? blocker : FB.T('{chance}% success · {money:success} on success or {money:failure} on spoilage', {
+          chance:boldChance, success:preview.estimatedPayoutBoldSuccess,
+          failure:preview.estimatedPayoutBoldFailure
+        }),
+        details:'<p>' + esc(FB.T('Bold delivery tests Stewardship. Spoilage can destroy part of the load.')) + '</p>'
+      }) + returnWithoutCargoCard(homeQuote));
+    openModal(FB.T('Review return cargo'), h, {
+      historyView:true, replaceView:!!replaceView, noFocus:!!warning,
       titleDetailsHtml:'<p>' + esc(FB.T(
-        'Return cargo is carried on the road home and sold in {home} upon your arrival. Cautious delivery guarantees safe arrival; bold delivery tests your Stewardship ({chance}% success) for a greater margin.', {
-          home:homeName, chance:boldChance
-        })) + '</p>' });
-
-    $('return-load-cautious').addEventListener('click', function () {
-      if (!currentVentureStake(preview.stake)) return;
-      if (!FB.loadTradeVentureReturn(s, preview.stake, preview.goodId, 'cautious')) return;
+        'Loading buys cargo now. Use the return deed when you are ready to depart. Sale proceeds depend on the home market on arrival.')) + '</p>'
+    });
+    function refresh(message) {
+      refreshReturnCargo(function () { UI.reviewReturnCargoChoice(stake, goodId, message, true); });
+    }
+    const cautious = $('return-load-cautious');
+    function commit(strategy) {
+      if (!returnCargoViewActive(cautious)) return;
+      if (FB.state !== s || s.player.travel !== t) return UI.closeModal();
+      if (!FB.loadTradeVentureReturn(s, stake, goodId, strategy, preview)) {
+        refresh(FB.T('The return terms changed. Review the current choice.'));
+        return;
+      }
       UI.closeModal();
+      UI.refresh();
       UI.toast(FB.T('Return cargo loaded. It will be sold upon your return to {home}.', {
-        home:homeName
+        home:FB.world.byId[preview.homeId].name
       }));
-      UI.refresh();
-    });
-    $('return-load-bold').addEventListener('click', function () {
-      if (!currentVentureStake(preview.stake)) return;
-      if (!FB.loadTradeVentureReturn(s, preview.stake, preview.goodId, 'bold')) return;
-      UI.closeModal();
-      UI.toast(FB.T('Return cargo loaded boldly. It will be sold upon your return to {home}.', {
-        home:homeName
-      }));
-      UI.refresh();
-    });
-    $('return-review-back').addEventListener('click', function () {
-      UI.showReturnCargoGoods(preview.stake);
-    });
+    }
+    cautious.addEventListener('click', function () { commit('cautious'); });
+    $('return-load-bold').addEventListener('click', function () { commit('bold'); });
+    bindReturnWithoutCargo(s, t, homeQuote, refresh);
   };
 
   function reviewTravelChoice() {

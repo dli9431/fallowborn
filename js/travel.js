@@ -1867,6 +1867,25 @@ window.FB = window.FB || {};
     return stayDays(state, FB.travelEnsure(state));
   };
 
+  FB.travelTradeReturnRoad = function (travel) {
+    if (!travel || travel.householdPartyId || travel.participationId ||
+        !settled(travel.destinationId) || !settled(travel.homeId) ||
+        travel.destinationId === travel.homeId ||
+        (travel.phase === 'arrived' && travel.currentId !== travel.destinationId)) return null;
+    const outbound = travel.outboundRoute;
+    if (!Array.isArray(outbound) || outbound[outbound.length - 1] !== travel.destinationId) return null;
+    const route = outbound.slice(0, -1).reverse().concat(travel.homeId);
+    let from = travel.destinationId;
+    for (let i = 0; i < route.length; i++) {
+      const to = route[i];
+      if (!settled(to) || !(FB.world.adj[from] || {})[to]) return null;
+      from = to;
+    }
+    const legDays = Number(travel.legDays);
+    const days = isFinite(legDays) && legDays >= 1 ? legDays : Math.max(1, balance('travelLegDays', 3));
+    return {route:route, days:FB.travelRouteUnits(travel.destinationId, route) * days};
+  };
+
   FB.travelReturnEligible = function (state, options) {
     const t = FB.travelEnsure(state);
     if (!t) return FB.T('No journey is in progress.');
@@ -1876,6 +1895,9 @@ window.FB = window.FB || {};
     if (t.phase === 'return') return FB.T('Already returning home.');
     if (FB.travelPurposeKind(t.purpose) === 'tournament') return true;
     if (t.phase !== 'arrived') return true;
+    if (!t.householdPartyId && FB.travelPurposeKind(t.purpose) === 'trade' && !FB.travelTradeReturnRoad(t)) {
+      return FB.T('The saved road home is no longer passable.');
+    }
     const remaining = balance('travelMinStayDays', 90) - stayDays(state, t);
     if (remaining <= 0) return true;
     if (FB.travelPurposeKind(t.purpose) === 'relationship') {
@@ -2159,7 +2181,9 @@ window.FB = window.FB || {};
       t.venture.status = 'cancelled';
       t.venture.cancelledTurn = state.turn;
     }
-    const route = (t.visited || [t.homeId]).slice(0, -1).reverse();
+    const tradeRoad = t.phase === 'arrived' && FB.travelPurposeKind(t.purpose) === 'trade'
+      ? FB.travelTradeReturnRoad(t) : null;
+    const route = tradeRoad ? tradeRoad.route : (t.visited || [t.homeId]).slice(0, -1).reverse();
     if (t.currentId !== t.homeId && (!route.length || route[route.length - 1] !== t.homeId)) {
       route.push(t.homeId);
     }
@@ -2178,9 +2202,12 @@ window.FB = window.FB || {};
     if (t && t.householdPartyId) return false;
     if (t && FB.travelPurposeKind(t.purpose) === 'tournament' && FB.tournaments) return FB.tournaments.returnHome(state, false);
     if (!t || t.phase !== 'arrived' || FB.travelReturnEligible(state) !== true) return false;
+    const route = FB.travelPurposeKind(t.purpose) === 'trade'
+      ? FB.travelTradeReturnRoad(t).route
+      : [t.homeId].concat(t.outboundRoute.slice(0, -1)).reverse();
     clearQueued(state);
     t.phase = 'return';
-    t.remainingRoute = [t.homeId].concat(t.outboundRoute.slice(0, -1)).reverse();
+    t.remainingRoute = route;
     t.legDaysLeft = FB.travelNextLegDays(t);
     if (!t.remainingRoute.length) finishAtHome(state);
     if (FB.map) FB.map.request();

@@ -359,6 +359,29 @@ technology gate, data schema, saved record or migration. Existing finance,
 travel and market definitions (including ordinary JSON overrides) remain the
 source of variation; the existing technology-impact decisions still apply.
 
+At an accompanied trade destination, both the return deed and the cargo deed
+lead to the same household decision. The household can keep all its current cash
+and take the saved road home once the ordinary stay is complete, or review a new
+purchase using the existing fixed and treasury-scaled stakes. A load review
+compares the actual commodity quantity and current market prices, the lading
+fee, total paid now, cash left or shortfall, and estimated cautious and bold
+sale proceeds. Loading can take place during the stay. Departure remains a
+separate action after loading, and the outbound sale has its own accounting.
+
+The purchase rereads the household funds, saved road, local stock, current
+prices and purchase terms at confirmation. Changed terms refresh the review
+before any payment. The road retraces the saved outward route through the
+current map, with the journey's saved leg clock. Applicable return corridor
+charters match that direction. Buying withdraws local stock and charges the
+stake and lading once, saving the existing `returnVenture` record. Returning
+without buying leaves cash and stock intact. A matching restore keeps a paid
+load aboard for one sale at the live home price, without replaying the purchase.
+
+Return cargo remains an ordinary market purchase with technology impact
+`none` (`trade_venture_return_cargo`). Its existing `finance.tradeVenture`
+stake and `returnCargo` terms apply to native and ordinary JSON definitions,
+with no additional saved fields or technology gate.
+
 Incoming and outgoing guild-monopoly records may add `mode`, `goodId`,
 `originId`, `destinationId`, and `route`. A Craft charter matches local Workshop
 output. A Trade charter covers either local merchant exchange or one exact
