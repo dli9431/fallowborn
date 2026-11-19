@@ -57,21 +57,23 @@ async function startCourt(page, info, court, method) {
   await expect(page.locator('#cg-community')).toHaveClass(/hidden/);
   await page.evaluate(function () {
     const adopt = FB.adoptStartingRealm;
-    FB.adoptStartingRealm = function (s, scenario) {
+    FB.adoptStartingRealm = function (s, scenario, options) {
       const c = s.chars[s.player.charId], r = s.realms[scenario.rulerRealmId];
-      window.__courtNamesakes = function (state) {
-        return Object.keys(state.chars).filter(function (id) {
-          return !state.chars[id].dead && state.chars[id].name === c.name;
+      function namesakeIds() {
+        return Object.keys(s.chars).filter(function (id) {
+          return !s.chars[id].dead && s.chars[id].name === c.name;
         }).sort();
-      };
+      }
+      const before = namesakeIds();
       window.__openingCourt = { id:FB.realmRulerCharacterSnapshot(s,scenario.rulerRealmId).id,
         spouse:c.spouseId, children:c.childrenIds.slice(),
-        namesakes:window.__courtNamesakes(s),
         gold:r.treasury.gold, capital:r.capital, source:scenario.rulerRealmId,
         owned:Object.keys(s.owner).filter(function (id) { return s.owner[id] === scenario.rulerRealmId; }).sort(),
         held:Object.keys(s.holder).filter(function (id) { return s.holder[id] === scenario.rulerRealmId; }).sort() };
       FB.adoptStartingRealm = adopt;
-      return adopt(s, scenario);
+      const result = adopt(s, scenario, options);
+      window.__openingCourt.samePeople = JSON.stringify(namesakeIds()) === JSON.stringify(before);
+      return result;
     };
   });
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
@@ -92,7 +94,7 @@ for (const court of COURTS) {
         const actualCounties = Object.keys(s.owner).filter(function (id) { return s.owner[id] === 'player'; }).sort();
         const facts = { review:FBDATA.reviewOpenStarts, name:c.name, sex:c.sex, age:FB.ageOf(c,s.date.year),
           culture:c.culture, faith:c.religion, tier:p.tier, source:s.start.rulerRealmId,
-          original:old.id === c.id, samePeople:JSON.stringify(window.__courtNamesakes(s)) === JSON.stringify(old.namesakes),
+          original:old.id === c.id, samePeople:old.samePeople,
           family:JSON.stringify([c.spouseId,c.childrenIds]) === JSON.stringify([old.spouse,old.children]),
           purse:p.gold === old.gold, home:p.provinceId, capital:s.realms.player.capital,
           site:FB.settlementsOf(s,p.provinceId)[p.homeSettlement].site,
