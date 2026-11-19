@@ -160,7 +160,7 @@ test('focus and deed restrictions use named permissions and the form eligibility
       return j.bookmark === '867' && j.scenario === 'baron';
     }));
     const result = await page.evaluate(function () {
-      const s = FB.state, p = s.player;
+      const s = JSON.parse(JSON.stringify(FB.state)), p = s.player;
       const ladder = { bands:{ 3:{ isLanded:false, mayCommand:false, eligibilityTier:6 } } };
       FB.governments.register('ladder', 'e2e_action_ladder', ladder);
       FBDATA.governmentForms.e2e_action = Object.assign({}, FBDATA.governmentForms.territorial,
