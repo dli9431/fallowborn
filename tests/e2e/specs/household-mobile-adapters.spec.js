@@ -1,10 +1,9 @@
 'use strict';
-const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const examples = require('../fixtures/authoring/camp-work-example.json');
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { openGame, prepareGameContent } = require('../support/game/navigation');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, ['index.html','data/mobile_confederations.js','data/technology.js',
@@ -20,7 +19,7 @@ async function importedStart(page, info) {
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('short_camp_service_example'); });
-  await beginBookmark(page, info, '476', 'mobile_household_476');
+  await beginBookmarkFromTitle(page, '476', 'mobile_household_476');
 }
 
 test('an ordinary JSON import pays canonical camp work once and restores without replay', async function ({ page }, info) {
@@ -53,10 +52,11 @@ test('a changed stock or actual location invalidates work without charging', asy
     const stale = FB.stories.apply(s, id, 'work', q), unchanged = s.player.gold === gold;
     const current = FB.stories.quote(s, id, 'work');
     // Only the location owner is needed to test canonical presence, without ticking a journey.
-    s.player.travel = { currentId:'tomis' };
+    const destination = FB.world.byId.constantinople.id;
+    s.player.travel = { currentId:destination };
     const away = FB.stories.quote(s, id, 'work').allowed;
     const staleLocation = FB.stories.apply(s, id, 'work', current);
-    FB.mobile.migration(s, rid).at = 'tomis';
+    FB.mobile.migration(s, rid).at = destination;
     const there = FB.stories.quote(s, id, 'work').allowed;
     s.player.travel = null;
     return { stale:stale, unchanged:unchanged, away:away, staleLocation:staleLocation, there:there,
