@@ -282,7 +282,7 @@ FBDATA.deeds = [
   { id:'ecclesiastical_court', systems:['papacy'], label:'⚖ Hold ecclesiastical court', order:55,
     desc:'Review named ecclesiastical accusations, actual defendants and lawful judgments where supported. Existing civil rent claims retain their separate review.', section:'faith', group:'faith', flow:'choices', cooldownDays:90, handler:'ecclesiastical_court' },
   { id:'convene_synod', systems:['papacy'], label:'📜 Convene a synod', order:56,
-    desc:'Spend 10 gold to gather the clergy for reform, learning, or alms.', section:'faith', group:'faith', flow:'immediate', cooldownDays:360, handler:'convene_synod' },
+    desc:'Gather the clergy for discipline, learning or alms. A competent local bishop can also review the court’s settlement fee.', section:'faith', group:'faith', flow:'immediate', cooldownDays:360, handler:'convene_synod' },
   { id:'extraordinary_tithe', systems:['papacy'], label:'💰 Levy an extraordinary tithe', order:57,
     desc:'Collect fully, moderate the demand, or remit it for pastoral standing.', section:'faith', group:'faith', flow:'immediate', cooldownDays:360, handler:'extraordinary_tithe' },
   { id:'adopt_tech', label:'💡 Technology…', order:58,

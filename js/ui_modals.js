@@ -2260,6 +2260,15 @@ window.FB = window.FB || {};
         '</p></div></div>';
     }
     bodyHtml += freedomOfferTermsHtml(s, ev);
+    if (ev.id === 'bishop_synod' && ctx.synodalFeeAgenda) {
+      const option = ev.options.find(function (o) { return o.review && o.review.type === 'synodal_fee'; });
+      const reviewed = FB.eventReviews.quote(s,option,ctx);
+      if (reviewed) {
+        bodyHtml += reviewFactsCard(FB.T('Local settlement fee'),FB.eventReviews.details(s,reviewed).map(function (line) {
+          return '<p>' + esc(line) + '</p>';
+        }).join(''));
+      }
+    }
     if (ev.id === 'ruler_marriage_offer' || ev.id === 'proposal_made' || ev.id === 'sibling_proposal_made') {
       const lineage = ev.id === 'ruler_marriage_offer' ? ctx && ctx.lineage :
         s.player.courtshipTerms && s.player.courtshipTerms.lineage;
@@ -2476,7 +2485,9 @@ window.FB = window.FB || {};
       if (chooseOption(ev,opt,ctx,reviewed) === false) {
         restore();
         const note = document.createElement('p');note.className = 'hint';
-        note.textContent = FB.T('This decision changed while it was open. Review the current terms again. Nothing was spent.');
+        note.textContent = opt.review.type === 'synodal_fee'
+          ? FB.T('The terms or authority changed. The synod issued no fee decree and there was no further charge.')
+          : FB.T('This decision changed while it was open. Review the current terms again. Nothing was spent.');
         body.appendChild(note);
       } else {
         finished = true;cancelWarConfirmation = null;
@@ -23668,6 +23679,7 @@ window.FB = window.FB || {};
       const item = available[powerIds[i]];
       if (!item) continue;
       const detailsId = 'bishop-power-' + item.a.id + '-details';
+      const costs = item.a.id === 'convene_synod' && item.preview && item.preview.costs;
       h += '<div class="ui-action-card settcard"' + (item.can ? '' : ' tabindex="0"') +
         '><div class="settcard-head"><button class="actionbtn" data-bishop-power="' + item.a.id + '"' +
         (item.can ? '' : ' disabled') + '>' +
@@ -23677,7 +23689,7 @@ window.FB = window.FB || {};
             rentClaims && ['visit_diocese','ecclesiastical_court'].indexOf(item.a.id) >= 0 ?
             FB.T('Free rent review; ordinary pastoral events remain available.') :
             FB.T('1 day · {days}-day cooldown', { days:item.a.cd }) : item.reason) +
-        (item.a.id === 'convene_synod' ? ' · ' + esc(FB.T('Cost: {money:10}')) : '') +
+        (costs && costs.length ? ' · ' + esc(costs.map(function (cost) { return FB.eventImpactText(s,cost,'resolved'); }).join(', ')) : '') +
         '</span></button>' + cardInfoButton(detailsId) + '</div>' +
         '<div class="settcard-details hidden" id="' + detailsId + '">' +
         esc(FB.translateKnown(item.a.desc(s))) + '</div></div>';

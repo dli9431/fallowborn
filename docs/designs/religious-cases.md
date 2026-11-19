@@ -89,6 +89,25 @@ nor Second Lateran canon 15 attests a Roman settlement tariff of 2 or 1.
 Technology impact `synodal_settlement_fee` is **none**. The recognized office
 and its existing temporal competence supply the authority for the decision.
 
+### Convening the synod
+
+The existing Convene a synod Deed charges its configured gathering cost of 10
+gold and starts its 360-day cooldown when the clergy assemble. A bishop with
+current competence who convenes in the profile's county can review a lower
+fee. The agenda names the jurisdiction and affected cause, compares the
+current and proposed institutional fees, and shows the gathering cost already
+paid. Discipline, learning and alms remain available. Closing with current
+terms or cancelling the fee confirmation leaves the rate in force. The fee
+decree requires personal confirmation, including when events are automated.
+There is no additional charge for the decision.
+
+A queued gathering retains the convening turn, issuer and definition identity.
+Confirmation checks the original issuer, current local competence and the exact
+reviewed terms before using the ordinary enactment transaction. The case docket
+shows the effective fee for new offers separately from the fee, compensation,
+recipient and deadline on an outstanding offer. Settled cases show the amount
+paid.
+
 ### Authority and persistence
 
 `FB.religiousCases.synodalFeeReview(state, profileId, actorId)` returns the
@@ -104,8 +123,9 @@ the incumbent. Current authority remains required for each case and transaction.
 Reduced offers and payments reference the exact enactment. Payments retain the
 offer turn so a customary offer can still be accepted after enactment. Detached
 validation checks the rule, frozen fee and exact institutional and compensation
-receipts together. Saves without enactments keep their customary commitments
-without a migration or a new save envelope.
+receipts together. It checks counties against the saved bookmark revision before
+the campaign map is activated. Saves without enactments keep their customary
+commitments without a migration or a new save envelope.
 
 The fictional ordinary JSON example `synodal-fee-spoleto.json` declares its
 own Spoleto jurisdiction, a customary fee of 4 and a ceiling of 0. Its
