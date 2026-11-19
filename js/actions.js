@@ -3778,7 +3778,10 @@ window.FB = window.FB || {};
     } },
   { id: 'convene_synod',
     show: function (s) {
-      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+      return !!(FB.bishopricSnapshot(s, me(s)) || FB.religiousCases.synodalFeeAgenda(s));
+    },
+    routineEventContext: function (s, routine) {
+      return routine.queueEvent === 'bishop_synod' ? FB.religiousCases.synodalGathering(s, routine.costs) : {};
     } },
   { id: 'extraordinary_tithe',
     show: function (s) {
@@ -5460,11 +5463,11 @@ window.FB = window.FB || {};
     if (routine.effects) out.effects = FB.previewEventOption(state,{id:def.id},{effects:deedRoutineEffects(state,routine)},{}).sections.reduce(function (rows,section) { return rows.concat(section.impacts); },[]);
     return out;
   }
-  function runDeedRoutine(state, routine) {
+  function runDeedRoutine(state, routine, eventContext) {
     if (!declarativeCostStatus(state,routine).ready) return false;
     for (const resource of Object.keys(routine.costs || {})) state.player[resource] -= routine.costs[resource];
     if (routine.effects) FB.applyEffects(state,deedRoutineEffects(state,routine));
-    if (routine.queueEvent) FB.queueEvent(state,routine.queueEvent,{});
+    if (routine.queueEvent) FB.queueEvent(state,routine.queueEvent,eventContext ? eventContext(state,routine) : {});
     if (routine.message) FB.news(state,FB.message(routine.message.key,{}));
     return true;
   }
@@ -5723,7 +5726,7 @@ window.FB = window.FB || {};
       const routine = FBDATA.deedRoutines[def.id], originalCan = out.can;
       out.can = function (state) { const guarded = originalCan ? originalCan(state) : true; if (guarded !== true) return guarded; const cost = declarativeCostStatus(state,routine); return cost.ready ? true : cost.reason; };
       out.preview = function (state) { return deedRoutinePreview(state,out,routine); };
-      out.run = function (state) { return runDeedRoutine(state,routine); };
+      out.run = function (state) { return runDeedRoutine(state,routine,handler.routineEventContext); };
     }
     if (kind === 'action' && FBDATA.deedEvents[def.id]) out.run = function (state) { FB.queueEvent(state, FBDATA.deedEvents[def.id], {}); };
     if (kind === 'focus' && FBDATA.focusRoutines[def.id]) {

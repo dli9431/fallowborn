@@ -240,14 +240,18 @@ FBDATA.events.push(
   ]},
 { id:'bishop_synod', systems:['papacy'], title:'The Diocesan Synod',
   trigger:{ never:true },
-  text:'Clergy and learned advisers assemble beneath your seal. The ten measures of silver spent on the gathering can now be turned toward discipline, learning, or mercy.',
+  text:'Clergy and learned advisers assemble beneath your seal to consider discipline, learning, and alms.',
   options:[
     { label:'Reform clerical discipline.', desc:'Rome approves; comfortable local habits do not.',
       effects:{ piety:12, papalOpinion:8, popularOpinion:-4 } },
     { label:'Found a cathedral school.', desc:'Put ink, masters, and books behind the see’s authority.',
       effects:{ research:20, skills:{lea:1}, prestige:5 } },
     { label:'Organize diocesan alms.', desc:'Make the synod visible in bread rather than decrees.',
-      effects:{ popularOpinion:10, piety:8 } }
+      effects:{ popularOpinion:10, piety:8 } },
+    { label:'Keep current terms and close the synod.', desc:'Conclude the gathering without issuing a new decree.', effects:{} },
+    { label:'Enact the lower settlement fee.', desc:'Review a ceiling on the institutional fee for new settlement offers.',
+      require:{state:[{reader:'synodal_fee_agenda',args:{}}]}, manualOnly:true,
+      review:{type:'synodal_fee',args:{},refusalOption:3} }
   ]},
 { id:'bishop_extraordinary_tithe', systems:['papacy'], title:'An Extraordinary Tithe',
   trigger:{ never:true },

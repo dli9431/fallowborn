@@ -358,6 +358,7 @@
     return p.settlementRecipient === 'victim' ? s.chars[id] ? FB.fullName(s.chars[id]) : FB.T('The recorded victim is unavailable') :
       s.realms[id] ? s.realms[id].name : FB.T('The competent secular treasury');
   }
+  function courtFee(fee) { return FB.T('{money:fee} to the see’s institutional treasury',{fee:fee}); }
   function facts(s,snap,chosen) {
     var p = FBDATA.religiousCases[snap.profileId], r = snap.record, x = r ? r.principals : snap.principals;
     var people = '', seen = {};
@@ -368,20 +369,24 @@
     });
     var a = chosen || r && r.asset, site = a && FB.world.sitesByProv[a.provinceId] && FB.world.sitesByProv[a.provinceId].list[a.settlement];
     var t = r && (r.offer || r.paid), custody = FB.justiceCustodyOf(s,snap.defendantId);
+    var offerDays = r && r.offer ? r.offer.turn + p.offerDays - s.turn : null;
     var body = SH.reviewPeopleHtml(people) + kv(FB.T('Cause'),FB.dataText(s,s.player.charId,'religiousCase',snap.profileId,p,'name',{})) +
       kv(FB.T('Status'),r ? statuses()[r.status] : FB.T('Eligible recorded matter; no prosecution opened')) +
       kv(FB.T('Accusation'),snap.accusation.kind === 'abduction' ? FB.T('A recorded abduction of the identified cleric') : FB.T('A recorded killing of the identified cleric')) +
       kv(FB.T('Evidence'),snap.accusation.evidence === 'testimony' ? FB.T('Testimony') : snap.accusation.evidence === 'material' ? FB.T('Material evidence') : FB.T('Caught in the act')) +
       kv(FB.T('Actual private funds'),FB.money(snap.account.gold,s)) +
-      kv(FB.T('Court fee on settlement'),FB.T('{money:fee} to the see’s institutional treasury',{fee:p.fee})) +
-      kv(FB.T('Settlement'),t ? FB.money(t.amount,s) : FB.T('{share}% of available private funds, capped at {money:cap}',{share:p.settlementShare * 100,cap:p.settlementMax})) +
+      kv(FB.T('Court fee for new offers'),courtFee(snap.settlementFee)) +
+      (t ? kv(r.paid ? FB.T('Court fee paid') : offerDays < 0 ? FB.T('Court fee in the expired offer') : FB.T('Court fee in the pending offer'),
+        courtFee(t.fee)) : '') +
+      kv(t ? r.paid ? FB.T('Compensation paid') : FB.T('Compensation in the offer') : FB.T('Settlement compensation'),
+        t ? FB.money(t.amount,s) : FB.T('{share}% of available private funds, capped at {money:cap}',{share:p.settlementShare * 100,cap:p.settlementMax})) +
       kv(FB.T('Settlement recipient'),recipient(s,p,snap)) +
       kv(FB.T('Bishop’s private purse'),FB.T('Receives nothing')) +
       kv(FB.T('Selected property'),a ? site ? site.name : FB.world.byId[a.provinceId].name : FB.T('No asset selected; confiscation unavailable')) +
       (a ? kv(FB.T('Property recipient'),s.realms[a.recipientRealmId].name) : '') +
       kv(FB.T('Custody'),custody ? FB.T('Held by the identified court; sentence eligibility is checked separately') : FB.T('No actual custody; imprisonment and confiscation are unavailable')) +
       kv(FB.T('Review and dismissal'),FB.T('No payment or day spent; dismissal leaves money, piety and property untouched'));
-    if (r && r.offer) body += kv(FB.T('Offer expires'),FB.T('In {days} days',{days:Math.max(0,r.offer.turn + p.offerDays - s.turn)}));
+    if (offerDays !== null) body += offerDays < 0 ? kv(FB.T('Offer deadline'),FB.T('Expired')) : kv(FB.T('Offer expires'),FB.T('In {days} days',{days:offerDays}));
     if (r) body += kv(FB.T('Popular support change'),FB.T('Last decision in this {term:county}: {amount}',{amount:r.lastSupport}));
     if (snap.stale) body += kv(FB.T('Interrupted process'),FB.T('A principal, jurisdiction, local presence or recorded fact changed. Close this proceeding without a new penalty.'));
     body += '<p>' + esc(FB.dataText(s,s.player.charId,'religiousCase',snap.profileId,p,'desc',{})) + '</p>';
@@ -439,7 +444,12 @@
       if (!r) snap.assets.forEach(function (a) { add('charge',a.settlement); });
       h += '<section id="' + rowId + '" tabindex="-1">' + facts(s,snap) + SH.reviewActionsHtml(actions) + '</section>';
     });
-    if (!snaps.length) h += '<p>' + esc(FB.T('No supported local accusation is recorded. Faith, wealth and rank alone establish no offense.')) + '</p>';
+    if (!snaps.length) {
+      var agenda = R.synodalFeeAgenda(s);
+      if (agenda) h += SH.reviewFactsCard(FB.T('Local settlement fee'),
+        kv(FB.T('Court fee for new offers'),courtFee(R.effectiveSettlementFee(s,agenda.profileId))));
+      h += '<p>' + esc(FB.T('No supported local accusation is recorded. Faith, wealth and rank alone establish no offense.')) + '</p>';
+    }
     if (FB.episcopalClaims.entry(s,'ecclesiastical_court')) h += '<button class="actionbtn" id="religious-civil">' + esc(FB.T('Review separate civil rent claims')) + '</button>';
     h += '</div>';
     UI.openModal(FB.T('Named ecclesiastical cases'),h,{modalClass:'fullsheet-modal',historyView:!!view.parentHistory,historyBack:!!view.parentHistory,

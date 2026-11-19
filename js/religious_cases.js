@@ -66,6 +66,11 @@
     return x;
   }
   function jurisdiction(p) { return {bookmarkId:p.bookmarkId,provinceId:p.provinceId,seeId:p.realmId}; }
+  function settlementFee(p,rule) { return rule ? rule.terms.ceiling : p.fee; }
+  R.effectiveSettlementFee = function (s,pid) {
+    var p = profile(pid);
+    return p ? settlementFee(p,feeRule(s,pid)) : null;
+  };
   function synodalFeeId(pid,turn) { return 'synodal-fee:' + pid + ':' + turn; }
   R.synodalFeeRule = function (s,pid) { return copy(feeRule(s,pid)); };
   R.synodalFeeReview = function (s,pid,actor) {
@@ -88,6 +93,69 @@
     s.authority.synodalFees.push(q.rule);
     return true;
   };
+  R.synodalFeeAgenda = function (s) {
+    if (!s.start) return null;
+    var actor = s.player.charId, county = local(s,actor);
+    var ids = Object.keys(FBDATA.religiousCases || {}).sort();
+    for (var i = 0; i < ids.length; i++) {
+      var id = ids[i], p = profile(id);
+      if (!p.synodalFee || p.bookmarkId !== s.start.id || p.provinceId !== county) continue;
+      if (!FB.eventStateReaders.ownerEnabled(s,'religious_cases')) return null;
+      var q = R.synodalFeeReview(s,id,actor);
+      if (q.allowed || q.reason === 'enacted') return q;
+    }
+    return null;
+  };
+  R.synodalGathering = function (s,costs) {
+    var q = R.synodalFeeAgenda(s);
+    if (!q || !q.allowed) return {};
+    return {synodalFeeAgenda:{profileId:q.profileId,definitionFingerprint:q.rule.definitionFingerprint,
+      issuer:q.rule.issuer,turn:s.turn,costs:copy(costs || {})}};
+  };
+  function synodalEventQuote(s,a,ctx) {
+    var agenda = ctx.synodalFeeAgenda;
+    if (!agenda || !Number.isSafeInteger(agenda.turn) || !agenda.costs || !s.player.cooldowns ||
+        s.player.cooldowns.convene_synod !== agenda.turn) return null;
+    var q = R.synodalFeeAgenda(s);
+    if (!q || q.profileId !== agenda.profileId || q.rule.definitionFingerprint !== agenda.definitionFingerprint ||
+        !same(q.rule.issuer,agenda.issuer)) return null;
+    return {allowed:q.allowed,enactment:q,costs:agenda.costs};
+  }
+  var synodalEventArgs = {type:'object',fields:{}};
+  FB.eventStateReaders.register({id:'synodal_fee_agenda',system:'religious_cases',args:synodalEventArgs,
+    read:function (s,a,ctx) { return !!ctx.synodalFeeAgenda; }});
+  FB.msg('news.religious.synodal_fee','The synod set the institutional fee on new settlement offers to {money:fee}.');
+  FB.eventReviews.register('synodal_fee',{
+    owner:'religious_cases',quote:synodalEventQuote,
+    args:{type:'object',fields:{},test:function (a,c) {
+      return c.runtime || !!(c.event && c.event.id === 'bishop_synod' && c.event.options.every(function (o) {
+        return !o || !o.review || o.review.type !== 'synodal_fee' || o.manualOnly === true;
+      }));
+    }},
+    apply:function (s,a,q) {
+      if (!R.enactSynodalFee(s,q.enactment)) return false;
+      FB.news(s,FB.message('news.religious.synodal_fee',{fee:q.enactment.rule.terms.ceiling}));
+      return true;
+    },
+    details:function (s,a,q) {
+      var r = q.enactment.rule, id = r.jurisdiction.provinceId, p = profile(r.profileId);
+      var costs = [];
+      if (q.costs.gold) costs.push(FB.T('{money:amount}',{amount:q.costs.gold}));
+      if (q.costs.prestige) costs.push(FB.T('{amount} prestige',{amount:q.costs.prestige}));
+      if (q.costs.piety) costs.push(FB.T('{amount} piety',{amount:q.costs.piety}));
+      return [
+        FB.T('Jurisdiction: {county}, {see}.',{county:FB.world.byId[id].name,see:s.realms[r.issuer.realmId].name}),
+        FB.T('Institutional fee on new settlement offers: {money:current} now, {money:proposed} with the ceiling.',
+          {current:R.effectiveSettlementFee(s,r.profileId),proposed:r.terms.ceiling}),
+        FB.T('Gathering cost already paid: {cost}. The decision has no further charge.',
+          {cost:costs.length ? costs.join(', ') : FB.T('Nothing')}),
+        FB.T('Applies to new offers in {caseName} cases in this jurisdiction, including open cases. Existing offers and payments keep their original terms.',
+          {caseName:FB.dataText(s,s.player.charId,'religiousCase',r.profileId,p,'name',{})}),
+        q.allowed ? FB.T('The lower fee goes to the see’s treasury on acceptance. Compensation to the named recipient follows the same terms.') :
+          FB.T('This jurisdiction cannot enact another ceiling.')
+      ];
+    }
+  });
   function principals(x) {
     return { bishopId:x.bishopId, realmId:x.realmId, bishopGeneration:x.bishopGeneration,
       courtId:x.courtId, courtRealmId:x.courtRealmId, courtGeneration:x.courtGeneration };
@@ -206,7 +274,7 @@
     for (var slot = 1; slot < 8; slot++) { var a = asset(s,p,o,slot,x); if (a) assets.push(a); }
     return { profileId:pid, offenseId:oid, defendantId:o.accusedId, victimId:o.victimId, principals:principals(x),
       record:copy(r), accusation:facts(o), stale:stale(s,p,o,r,x), reason:x.reason,
-      account:C.privateAccount(s,o.accusedId), assets:assets };
+      account:C.privateAccount(s,o.accusedId), assets:assets, settlementFee:R.effectiveSettlementFee(s,pid) };
   };
   R.list = function (s,cid) {
     var out = [];
@@ -326,7 +394,7 @@
         if (action === 'accept') terms = r.offer;
         else {
           var rule = feeRule(s,pid), basis = C.privateAccount(s,o.accusedId).gold;
-          terms = {by:actor,turn:s.turn,fee:rule ? rule.terms.ceiling : p.fee,
+          terms = {by:actor,turn:s.turn,fee:settlementFee(p,rule),
             basis:basis,amount:Math.min(p.settlementMax,Math.floor(basis * p.settlementShare))};
           if (rule) {
             terms.feeRuleId = rule.id;
@@ -478,7 +546,7 @@
           !p || !p.synodalFee || byProfile[r.profileId] || !s.start || s.start.id !== p.bookmarkId ||
           !fields(r.jurisdiction,['bookmarkId','provinceId','seeId']) ||
           r.jurisdiction.bookmarkId !== p.bookmarkId || r.jurisdiction.provinceId !== p.provinceId ||
-          r.jurisdiction.seeId !== p.realmId || !own(FB.world.byId,p.provinceId) ||
+          r.jurisdiction.seeId !== p.realmId || !FB.campaignProvince(s,p.provinceId) ||
           !Number.isSafeInteger(r.enactedTurn) || r.enactedTurn < 0 || r.enactedTurn > s.turn ||
           r.id !== synodalFeeId(r.profileId,r.enactedTurn) || r.definitionFingerprint !== FB.mods.fingerprint(p) ||
           !fields(r.terms,['kind','ceiling']) || r.terms.kind !== p.synodalFee.kind || r.terms.ceiling !== p.synodalFee.ceiling ||
@@ -513,7 +581,7 @@
     (s.justice && s.justice.offenses || []).forEach(function (o) {
       var v = o.clericalVictim;
       if (v !== undefined && (!v || !same(Object.keys(v).sort(),['faithId','provinceId']) ||
-          !FBDATA.religions[v.faithId] || !FB.world.byId[v.provinceId] ||
+          !FBDATA.religions[v.faithId] || !FB.campaignProvince(s,v.provinceId) ||
           ['abduction','assassination'].indexOf(o.kind) < 0 || !o.successful || !s.chars[o.victimId])) fail();
     });
     list.forEach(function (r) {
