@@ -80,6 +80,9 @@ test('634 loads every start and story contributor before the native manifest clo
 });
 
 test('634 is offered chronologically and all nine implemented starts are selectable',async function ({page},info) {
+  await page.addInitScript(function () {
+    window.FBDATA = window.FBDATA || {}; window.FBDATA.reviewOpenStarts = true;
+  });
   await openTitle(page,info);
   await chooseBeginning(page);
   await expect(page.locator('#bookmarklist [data-bookmark="634"]')).toContainText('The Early Conquests');
