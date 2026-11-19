@@ -246,31 +246,42 @@ for (const revision of ['inherited','empty']) {
     await restoreBookmark(page,r.save);
     expect(await page.evaluate(knowledgeSnapshot)).toEqual(knowledge);
     expect(await page.evaluate(function () { return FB.state.buildings; })).toEqual(r.buildings);
-    // A change to either policy is incompatible, under the same mod name.
-    await page.evaluate(function (revision) {
-      const mods = JSON.parse(localStorage.getItem('fb_mods')), mod = JSON.parse(mods[0]);
-      const policy = mod.bookmarks.composition_world.revisions[revision].openingInfrastructure;
-      if (revision === 'inherited') policy.placements[0].condition = 'ruined';
-      else policy.placements.push({ countyId:'composition_port',siteId:'composition_hall',buildingId:'library',condition:'standing' });
-      localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(mod)]));
-    },revision);
-    await openGame(page,info);
-    expect(await page.evaluate(function (text) {
-      const s = FB.state, world = FB.world, rng = FB.getRngState(), uid = FB.getUidCounter();
-      return FB.save.otherWorld(JSON.parse(text)) && FB.game.loadData(JSON.parse(text)) === false &&
-        s === FB.state && world === FB.world && rng === FB.getRngState() && uid === FB.getUidCounter();
-    },r.save)).toBe(true);
-    await page.evaluate(function () { FB.mods.clear(); });
-    await prepareGameContent(page);
-    await page.waitForFunction(function () {
-      return window.FB && FB.game && FB.game.bootReady && !FBDATA.bookmarks.composition_world;
-    });
-    expect(await page.evaluate(function (text) {
-      const s = FB.state, world = FB.world, rng = FB.getRngState(), uid = FB.getUidCounter();
-      return FB.game.loadData(JSON.parse(text)) === false && s === FB.state && world === FB.world &&
-        rng === FB.getRngState() && uid === FB.getUidCounter();
-    },r.save)).toBe(true);
   });
+
+  for (const change of ['changed','removed']) {
+    test(revision+' inventory save rejects a '+change+' policy', async function ({page},info) {
+      await page.addInitScript(function (source) {
+        if (sessionStorage.getItem('inventory-seeded')) return;
+        localStorage.setItem('fb_mods',JSON.stringify([source]));
+        sessionStorage.setItem('inventory-seeded','1');
+      },JSON.stringify(example));
+      await openGame(page,info);
+      await startCampaign(page,'composition_world',revision);
+      const save = await page.evaluate(function () { return FB.save.serialize(); });
+      if (change === 'changed') {
+        await page.evaluate(function (revision) {
+          const mods = JSON.parse(localStorage.getItem('fb_mods')), mod = JSON.parse(mods[0]);
+          const policy = mod.bookmarks.composition_world.revisions[revision].openingInfrastructure;
+          if (revision === 'inherited') policy.placements[0].condition = 'ruined';
+          else policy.placements.push({ countyId:'composition_port',siteId:'composition_hall',buildingId:'library',condition:'standing' });
+          localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(mod)]));
+        },revision);
+        await openGame(page,info);
+      } else {
+        await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),
+          page.evaluate(function () { FB.mods.clear(); })]);
+        await prepareGameContent(page);
+        await page.waitForFunction(function () {
+          return window.FB && FB.game && FB.game.bootReady && !FBDATA.bookmarks.composition_world;
+        });
+      }
+      expect(await page.evaluate(function (text) {
+        const s = FB.state, world = FB.world, rng = FB.getRngState(), uid = FB.getUidCounter();
+        return FB.save.otherWorld(JSON.parse(text)) && FB.game.loadData(JSON.parse(text)) === false &&
+          s === FB.state && world === FB.world && rng === FB.getRngState() && uid === FB.getUidCounter();
+      },save)).toBe(true);
+    });
+  }
 }
 
 test('composed scopes, group occupancy, research and inherited repair share paid transactions', async function ({ page }, info) {

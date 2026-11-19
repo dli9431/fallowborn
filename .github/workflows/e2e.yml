@@ -186,10 +186,10 @@ jobs:
           args=""
           if [ "$MODE" = specs ] || { [ "$MODE" = changed ] && [ -n "$SPECS" ]; }; then
             for spec in $SPECS; do
-              case "$spec" in
-                specs/*.spec.js) args="$args $spec" ;;
-                *) echo "Not a spec path: $spec" >&2; exit 2 ;;
-              esac
+              if [[ ! "$spec" =~ ^specs/([a-zA-Z0-9_-]+/)*[a-zA-Z0-9_.-]+\.spec\.js(:[1-9][0-9]*)?$ ]]; then
+                echo "Invalid spec path or line: $spec" >&2; exit 2
+              fi
+              args="$args $spec"
             done
             if [ -z "$args" ]; then echo "specs mode needs specs" >&2; exit 2; fi
           fi

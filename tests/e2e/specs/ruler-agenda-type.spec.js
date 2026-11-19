@@ -6,6 +6,8 @@ const { startParityGame } = require('../support/game/parity');
 const { expectModAdmission } = require('../support/game/mod-admission');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const proof = require('../fixtures/authoring/ruler-agendas.json');
+test.describe.configure({ mode:'parallel' });
+
 dependsOnRuntime(__filename, ['index.html','js/story_ruler_agenda.js','js/story_campaign.js','data/story_campaigns.js','js/stories.js','js/starts.js',
   'js/government_aristocracy.js','js/government_administration.js','js/government_recognition.js',
   'js/government_support.js','js/government_collective.js','js/government_assembly.js','js/mobile_confederations.js',

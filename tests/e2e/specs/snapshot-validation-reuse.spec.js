@@ -9,6 +9,8 @@ const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/adopted-public-treasury-harbor.json'),
   dune:require('../fixtures/authoring/adopted-public-treasury-dune.json')};
 
+test.describe.configure({ mode:'parallel' });
+
 dependsOnRuntime(__filename,['index.html','js/save.js','js/save_v4.js','js/title_ids.js',
   'js/story_expedition_preparation.js','js/story_expedition_agreements.js','js/stories.js',
   'js/world.js','js/model.js','js/mods.js','js/starts.js','js/station.js','data/eras.js','js/bookmark_setup.js','js/home_authority.js',

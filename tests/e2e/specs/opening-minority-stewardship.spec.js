@@ -7,6 +7,8 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const charter = require('../fixtures/opening-minority-stewardship/young-charter.json');
 const river = require('../fixtures/opening-minority-stewardship/river-minority.json');
 
+test.describe.configure({ mode:'parallel' });
+
 dependsOnRuntime(__filename,[
   'data/aristocratic_courts.js','data/political_institutions.js','data/eras.js','data/technology.js',
   'js/governments.js','js/government_aristocracy.js','js/government_administration.js',
@@ -311,31 +313,34 @@ test('confirmation, enforcement and governor replacement recheck stewardship whi
   expect(result).toEqual({withheld:true,denied:true,repaid:true,confirmed:true,enforced:true,removed:true,replaced:true,fee:true,property:true});
 });
 
-test('invalid opening actors and policy imports remain detached and unpublished',async function ({page},info) {
-  await start(page,info,'river');
-  const result=await page.evaluate(function (mod) {
-    const mutations=[
-      function (p) { p.openingStewardActorId=null; },function (p) { p.openingStewardActorId=17; },
-      function (p) { p.openingStewardActorId=''; },function (p) { p.openingStewardActorId='missing'; },
-      function (p) { p.openingStewardActorId='hazel_heir'; },
-      function (p,b) { delete b.opening.actors.hazel_principal; },
-      function (p,b) { b.opening.actors.hazel_principal.dyn='foreign'; },
-      function (p,b) { b.opening.actors.hazel_principal.born=b.date.year-17; },
-      function (p,b) { b.opening.actors.hazel_principal.captive=true; },
-      function (p,b) { b.opening.actors.hazel_principal={ref:{kind:'realm_ruler',realmId:'river_court'}}; },
-      function (p,b) { b.provinces[2].realm='foreign_court'; },
-      function (p) { p.minimumAge=19; }
-    ];
-    return mutations.map(function (mutate) {
-      const input=JSON.parse(JSON.stringify(mod)), p=input.aristocraticProfiles.river_stewardship,b=input.bookmarks.river_minority_world;
-      mutate(p,b);
-      const bytes=JSON.stringify(input),before=MINORITY.snapshot(), faults=FB.mods.validate(input);
-      let threw=false; try { FB.mods.apply(input); } catch (error) { threw=true; }
-      return {rejected:faults.length>0 && threw,pure:MINORITY.same(before),input:bytes===JSON.stringify(input)};
-    });
-  },river);
-  expect(result).toEqual(Array.from({length:12},function () { return {rejected:true,pure:true,input:true}; }));
-});
+for (const group of [0,1,2,3]) {
+  test('invalid opening actors and policy imports remain detached and unpublished: '+group,async function ({page},info) {
+    await start(page,info,'river');
+    const result=await page.evaluate(function (inputGroup) {
+      const mod=inputGroup.mod;
+      const mutations=[
+        function (p) { p.openingStewardActorId=null; },function (p) { p.openingStewardActorId=17; },
+        function (p) { p.openingStewardActorId=''; },function (p) { p.openingStewardActorId='missing'; },
+        function (p) { p.openingStewardActorId='hazel_heir'; },
+        function (p,b) { delete b.opening.actors.hazel_principal; },
+        function (p,b) { b.opening.actors.hazel_principal.dyn='foreign'; },
+        function (p,b) { b.opening.actors.hazel_principal.born=b.date.year-17; },
+        function (p,b) { b.opening.actors.hazel_principal.captive=true; },
+        function (p,b) { b.opening.actors.hazel_principal={ref:{kind:'realm_ruler',realmId:'river_court'}}; },
+        function (p,b) { b.provinces[2].realm='foreign_court'; },
+        function (p) { p.minimumAge=19; }
+      ];
+      return mutations.slice(inputGroup.start,inputGroup.start+3).map(function (mutate) {
+        const input=JSON.parse(JSON.stringify(mod)), p=input.aristocraticProfiles.river_stewardship,b=input.bookmarks.river_minority_world;
+        mutate(p,b);
+        const bytes=JSON.stringify(input),before=MINORITY.snapshot(), faults=FB.mods.validate(input);
+        let threw=false; try { FB.mods.apply(input); } catch (error) { threw=true; }
+        return {rejected:faults.length>0 && threw,pure:MINORITY.same(before),input:bytes===JSON.stringify(input)};
+      });
+    },{mod:river,start:group*3});
+    expect(result).toEqual(Array.from({length:3},function () { return {rejected:true,pure:true,input:true}; }));
+  });
+}
 
 test('AI fails closed without capable interests, then uses the same lawful replacement and recognition',async function ({page},info) {
   await start(page,info,'river');

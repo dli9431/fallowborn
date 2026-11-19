@@ -50,9 +50,15 @@ async function startClovis(page, info, revision, picker) {
     FBDATA.bookmarks['493'].revision = revision || 'world_v2';
     FBDATA.startScenarios.find(function (sc) { return sc.id === 'clovis_493'; }).hidden = false;
     const adopt = FB.adoptStartingRealm;
-    FB.adoptStartingRealm = function (s, sc) {
+    FB.adoptStartingRealm = function (s, sc, options) {
       const r = s.realms[sc.rulerRealmId], me = s.chars[s.player.charId];
-      window.__clovisCourt = { rulerId:me.id, spouseId:me.spouseId,
+      function livingNamesakes() {
+        return Object.keys(s.chars).filter(function (id) {
+          return !s.chars[id].dead && s.chars[id].name === me.name;
+        }).sort();
+      }
+      const before = livingNamesakes();
+      window.__clovisCourt = { rulerId:FB.realmRulerCharacterSnapshot(s,sc.rulerRealmId).id, spouseId:me.spouseId,
         children:me.childrenIds.slice(), gold:r.treasury.gold,
         owners:JSON.parse(JSON.stringify(s.owner)), holders:JSON.parse(JSON.stringify(s.holder)),
         family:me.childrenIds.concat(me.spouseId ? [me.spouseId] : []).map(function (id) {
@@ -60,7 +66,9 @@ async function startClovis(page, info, revision, picker) {
           return { id:c.id, name:c.name, born:c.born, fatherId:c.fatherId, motherId:c.motherId };
         }) };
       FB.adoptStartingRealm = adopt;
-      return adopt(s, sc);
+      const result = adopt(s, sc, options);
+      window.__clovisCourt.samePeople = JSON.stringify(before) === JSON.stringify(livingNamesakes());
+      return result;
     };
     return FB.validateBookmark(FB.bookmark('493'));
   }, revision)).toEqual([]);
@@ -159,7 +167,7 @@ for (const revision of ['baseline','world_v2','jewish_samaritan_v3']) {
       const facts = { name:me.name, id:me.id === old.rulerId, born:me.born, tier:s.player.tier,
         culture:me.culture, faith:me.religion, form:FB.political.government(s,{kind:'realm',id:'player'}).formId,
         location:s.player.provinceId, settlement:s.player.homeSettlement, source:s.start.rulerRealmId,
-        unique:Object.values(s.chars).filter(function (c) { return c.name === 'Clovis' && !c.dead; }).length,
+        samePeople:old.samePeople,
         adopted:!s.realms.franks_493 && s.realms.player.id === 'player',
         gold:s.player.gold === old.gold, owners:expected(old.owners), holders:expected(old.holders),
         family:family && me.spouseId === old.spouseId && JSON.stringify(me.childrenIds) === JSON.stringify(old.children),
@@ -182,7 +190,7 @@ for (const revision of ['baseline','world_v2','jewish_samaritan_v3']) {
         return facts;
       };
     })).toEqual({ name:'Clovis', id:true, born:466, tier:6, culture:'frankish', faith:'germanic_pagan',
-      form:'regnum', location:'laon', settlement:0, source:'franks_493', unique:1, adopted:true,
+      form:'regnum', location:'laon', settlement:0, source:'franks_493', samePeople:true, adopted:true,
       gold:true, owners:true, holders:true, family:true, theuderic:1, retained:true, valid:true });
   });
 }

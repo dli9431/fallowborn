@@ -180,9 +180,7 @@ test('711 public recognition remains serializable at the annual boundary', async
   expect(await facts(page)).toEqual(before);
 });
 
-test('a persisted data-only mod supplies a different campaign and independent institution seeds', async function ({ page }, testInfo) {
-  await installStoryProof(page);
-  await openGame(page, testInfo);
+function proofCampaignMod() {
   // These ordinary roles keep their county bindings without claiming a personal storyline.
   const mod = JSON.parse(JSON.stringify(proofMod)), world = mod.bookmarks.proof_bookmark;
   world.startLocations = {};
@@ -190,6 +188,13 @@ test('a persisted data-only mod supplies a different campaign and independent in
     world.startLocations[row.id] = [row.fixedProvinceId];
     delete row.fixedProvinceId;
   });
+  return mod;
+}
+
+test('a persisted data-only mod supplies a different campaign and independent institution seeds', async function ({ page }, testInfo) {
+  await installStoryProof(page);
+  await openGame(page, testInfo);
+  const mod = proofCampaignMod();
   // Keep the installed story source and add the independent campaign through Mods.
   expect(await page.evaluate(function (input) { FB.mods.assertReady(); return FB.mods.validate(input); },mod)).toEqual([]);
   await page.evaluate(function () { FB.ui.showMods(); });
@@ -222,6 +227,11 @@ test('a persisted data-only mod supplies a different campaign and independent in
   for (const province of opening.communities) expect(province.communities).toEqual([
     { culture:'proof_culture', religion:'nicene', populationShare0:10000 }
   ]);
+});
+
+test('the persisted proof campaign restores a checkpoint and repeats its continuation', async function ({page},testInfo) {
+  await installStoryProof(page,[proofCampaignMod()]);
+  await beginBookmark(page,testInfo,'proof_bookmark','proof_coastal');
   await advanceBookmark(page, 30);
   const checkpoint = await saveWithinBudget(page, testInfo, 'proof-checkpoint', SAVE_BUDGETS.checkpoint);
   const original = await facts(page);
