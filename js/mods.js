@@ -271,6 +271,19 @@ window.FBMODS = window.FBMODS || [];
       if (roots && (key === 'episcopalClaims' || key === 'religiousCases') && !roots[key]) return;
       if (own(data, key)) effective[key] = data[key];
     });
+    if (roots && effective.religiousCases && !roots.romanClericalViolence) {
+      // Keep the pre-extension signature for mods that inherit this native
+      // profile. Enacted terms pin the full declaration in the court ledger.
+      var roman = Object.assign({},effective.religiousCases.roman_clerical_violence);
+      delete roman.synodalFee;
+      effective.religiousCases = Object.assign({},effective.religiousCases,{roman_clerical_violence:roman});
+    }
+    if (roots && effective.techImpactReviews && !roots.synodalFeeImpact) {
+      // This native review is metadata. Authored replacements remain exact.
+      var features = Object.assign({},effective.techImpactReviews.features);
+      delete features.synodal_settlement_fee;
+      effective.techImpactReviews = Object.assign({},effective.techImpactReviews,{features:features});
+    }
     return effective;
   }
   // Native authoring evidence for roots deliberately omitted from effective-1
@@ -3614,6 +3627,8 @@ window.FBMODS = window.FBMODS || [];
     authoringRoots.forEach(function (key) { if (own(mod, key)) authoredRoots[key] = true; });
     if (own(mod,'episcopalClaims')) authoredRoots.episcopalClaims = true;
     if (own(mod,'religiousCases')) authoredRoots.religiousCases = true;
+    if (own(mod.religiousCases || {},'roman_clerical_violence')) authoredRoots.romanClericalViolence = true;
+    if (own(mod.techImpactReviews && mod.techImpactReviews.features || {},'synodal_settlement_fee')) authoredRoots.synodalFeeImpact = true;
     // Newly exposed roots join the fingerprint only when authored. Otherwise
     // exposing an existing engine table would invalidate unchanged older mods.
     // Bind to the definitions actually installed, including inherited defaults

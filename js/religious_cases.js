@@ -2,6 +2,9 @@
 (function () {
   'use strict';
   var R = FB.religiousCases = {}, C = FB.episcopalClaims, MAX = 64;
+  var MAX_PROFILES = 32;
+  var ROMAN_PROFILE = 'roman_clerical_violence';
+  var PRE_SYNOD_ROMAN = '36bd30dba65ea73580e96dd3aca510d8ad9ce7a1ccff561b8c349ccf0ad025b2';
   var ACTIVE = ['charged','offered','referred','accepted'];
   FB.eventStateReaders.register({id:'open_religious_case',system:'religious_cases',
     args:{type:'object',fields:{profileId:{type:'string',ref:{table:'religiousCases'}}}},
@@ -19,10 +22,26 @@
     'penance','imprison','refer','accept_referral','reject_referral','confiscate','enforce','close_stale'];
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
   function same(a,b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function own(o,k) { return !!o && Object.prototype.hasOwnProperty.call(o,k); }
+  function fields(v,required,optional) {
+    return !!v && typeof v === 'object' && !Array.isArray(v) &&
+      required.every(function (key) { return own(v,key); }) &&
+      Object.keys(v).every(function (key) { return required.indexOf(key) >= 0 || optional && optional.indexOf(key) >= 0; });
+  }
   function rows(s) { return s.authority && s.authority.religiousCases || []; }
+  function feeRules(s) { return s.authority && s.authority.synodalFees || []; }
+  function feeRule(s,pid) { return feeRules(s).find(function (r) { return r.profileId === pid; }) || null; }
   function offense(s,id) { return (s.justice && s.justice.offenses || []).filter(function (o) { return o.id === id; })[0] || null; }
   function record(s,id) { return rows(s).filter(function (r) { return r.offenseId === id; })[0] || null; }
-  function profile(id) { return (FBDATA.religiousCases || {})[id]; }
+  function profile(id) { return own(FBDATA.religiousCases,id) ? FBDATA.religiousCases[id] : null; }
+  function matchesDefinition(r,p) {
+    if (r.definitionFingerprint === FB.mods.fingerprint(p)) return true;
+    // The original Roman declaration had no prospective fee option.
+    if (r.profileId !== ROMAN_PROFILE || r.definitionFingerprint !== PRE_SYNOD_ROMAN || !p.synodalFee) return false;
+    var predecessor = Object.assign({},p);
+    delete predecessor.synodalFee;
+    return FB.mods.fingerprint(predecessor) === PRE_SYNOD_ROMAN;
+  }
   function live(s,id) { return !!(s.chars[id] && !s.chars[id].dead); }
   function local(s,id) { return id === s.player.charId ? s.player.travel && s.player.travel.currentId || s.player.provinceId :
     s.chars[id] && FB.characterResidence(s,s.chars[id]); }
@@ -46,13 +65,36 @@
       !FB.justiceCivilRentJurisdiction(s,x.bishopId,x.realmId,p.provinceId) ? 'jurisdiction' : null;
     return x;
   }
+  function jurisdiction(p) { return {bookmarkId:p.bookmarkId,provinceId:p.provinceId,seeId:p.realmId}; }
+  function synodalFeeId(pid,turn) { return 'synodal-fee:' + pid + ':' + turn; }
+  R.synodalFeeRule = function (s,pid) { return copy(feeRule(s,pid)); };
+  R.synodalFeeReview = function (s,pid,actor) {
+    var p = profile(pid);
+    if (!p || !p.synodalFee) return null;
+    var x = C.courtContext(s,p);
+    var reason = !s.authority || !x.allowed || s.date.year < p.yearMin || s.date.year > p.yearMax ||
+      !FB.justiceCivilRentJurisdiction(s,x.bishopId,x.realmId,p.provinceId) ? 'jurisdiction' :
+      actor !== x.bishopId || p.faiths.indexOf(s.chars[actor].religion) < 0 ? 'actor' :
+      feeRule(s,pid) || feeRules(s).length >= MAX_PROFILES ? 'enacted' : null;
+    return {profileId:pid,actorId:actor,allowed:!reason,reason:reason,customaryFee:p.fee,
+      rule:{id:synodalFeeId(pid,s.turn),profileId:pid,definitionFingerprint:FB.mods.fingerprint(p),
+        jurisdiction:jurisdiction(p),issuer:{realmId:x.realmId,characterId:x.bishopId,generation:x.bishopGeneration},
+        enactedTurn:s.turn,terms:copy(p.synodalFee)}};
+  };
+  R.enactSynodalFee = function (s,reviewed) {
+    var q = reviewed && R.synodalFeeReview(s,reviewed.profileId,reviewed.actorId);
+    if (!q || !q.allowed || !same(q,reviewed)) return false;
+    if (!s.authority.synodalFees) s.authority.synodalFees = [];
+    s.authority.synodalFees.push(q.rule);
+    return true;
+  };
   function principals(x) {
     return { bishopId:x.bishopId, realmId:x.realmId, bishopGeneration:x.bishopGeneration,
       courtId:x.courtId, courtRealmId:x.courtRealmId, courtGeneration:x.courtGeneration };
   }
   function stale(s,p,o,r,x) {
     return !!(r && (x.reason || !same(r.principals,principals(x)) || !same(r.accusation,facts(o)) ||
-      r.definitionFingerprint !== FB.mods.fingerprint(p)));
+      !matchesDefinition(r,p)));
   }
   function property(s,p,slot) {
     var county = s.settlementLordships && s.settlementLordships.counties[p.provinceId];
@@ -119,6 +161,9 @@
     }}},
     yearMin:{type:'integer',min:1139,max:10000}, yearMax:{type:'integer',min:function (c) { return c.root.yearMin; },max:10000},
     fee:{type:'number',min:0,max:100}, settlementShare:{type:'number',min:0,max:0.5}, settlementMax:{type:'number',min:0,max:1000},
+    synodalFee:{type:'object',optional:'absent',fields:{
+      kind:{value:'settlement_fee_ceiling'}, ceiling:{type:'number',min:0,exclusiveMax:function (c) { return c.root.fee; }}
+    }},
     settlementRecipient:{enum:['victim','secular']}, offerDays:{type:'integer',min:1,max:90},
     penanceSentence:{type:'string',ref:{table:'justiceSentences'},test:function (id,c) { var d = c.data.justiceSentences[id]; return d.kind === 'penance' && d.closesCase !== false && !d.forgive; }},
     prisonSentence:{type:'string',ref:{table:'justiceSentences'},test:function (id,c) { var d = c.data.justiceSentences[id]; return d.kind === 'custody' && d.closesCase !== false && !d.forgive; }},
@@ -133,10 +178,18 @@
     });
   }};
   R.catalogFaults = function (data) {
-    var faults = FB.schema.faults(data.religiousCases,{type:'object',maxProperties:32,keys:idSpec},'religiousCases',{data:data});
+    var faults = FB.schema.faults(data.religiousCases,{type:'object',maxProperties:MAX_PROFILES,keys:idSpec},'religiousCases',{data:data});
     if (faults.length) return faults;
+    var jurisdictions = Object.create(null);
     Object.keys(data.religiousCases).forEach(function (id) {
-      faults = faults.concat(FB.schema.faults(data.religiousCases[id],definition,'religiousCases.' + id,{data:data}));
+      var p = data.religiousCases[id], path = 'religiousCases.' + id;
+      var invalid = FB.schema.faults(p,definition,path,{data:data});
+      faults = faults.concat(invalid);
+      if (!invalid.length && p.synodalFee) {
+        var key = JSON.stringify(jurisdiction(p));
+        if (jurisdictions[key]) faults.push(FB.T('Invalid data at {path}.',{path:path + '.synodalFee'}));
+        jurisdictions[key] = true;
+      }
     });
     return faults;
   };
@@ -270,10 +323,17 @@
         else if (!lawSecular.procedures.hearing || !forfeits.length) reason = 'severity';
       }
       if (!reason && ['settlement','accept'].indexOf(action) >= 0) {
-        terms = action === 'accept' ? r.offer : { by:actor, turn:s.turn, fee:p.fee,
-          basis:C.privateAccount(s,o.accusedId).gold,
-          amount:Math.min(p.settlementMax,Math.floor(C.privateAccount(s,o.accusedId).gold * p.settlementShare)) };
-        if (!C.paymentReady(s,o.accusedId,payments(p,r,terms))) reason = 'funds';
+        if (action === 'accept') terms = r.offer;
+        else {
+          var rule = feeRule(s,pid), basis = C.privateAccount(s,o.accusedId).gold;
+          terms = {by:actor,turn:s.turn,fee:rule ? rule.terms.ceiling : p.fee,
+            basis:basis,amount:Math.min(p.settlementMax,Math.floor(basis * p.settlementShare))};
+          if (rule) {
+            terms.feeRuleId = rule.id;
+            if (rule.definitionFingerprint !== FB.mods.fingerprint(p)) reason = 'stale';
+          }
+        }
+        if (!reason && !C.paymentReady(s,o.accusedId,payments(p,r,terms))) reason = 'funds';
       }
     }
     var chance = FB.justiceDefenseChance(s,o.accusedId,o.evidence,action === 'defend');
@@ -310,7 +370,8 @@
     else if (a === 'decline') { r.offer = null; r.status = 'charged'; }
     else if (a === 'accept') {
       if (!C.payReceipts(s,o.accusedId,p.provinceId,payments(p,r,q.terms))) return false;
-      r.paid = {fee:q.terms.fee,amount:q.terms.amount,basis:q.terms.basis,turn:s.turn};
+      r.paid = {fee:q.terms.fee,amount:q.terms.amount,basis:q.terms.basis,turn:s.turn,offerTurn:q.terms.turn};
+      if (q.terms.feeRuleId) r.paid.feeRuleId = q.terms.feeRuleId;
       release(s,r); finish(s,r,'settled'); fallout(s,r,-1);
     } else if (a === 'refuse') { r.refused = true; r.refusalImpact = fallout(s,r,-3); }
     else if (a === 'arrest' || a === 'submit') {
@@ -397,11 +458,58 @@
       p.bishopPolicy === 'imprison' ? p.prisonSentence : null;
     return id && FB.justicePunishmentProjection(s,actor,target,id,o.id,R.courtKind(s,o.id)).ready ? id : null;
   };
+  function savedIncumbent(s,rid) {
+    var E = FB.ecclesiasticalGovernment, binding = E.row(s,rid), office = E.profile(s,rid);
+    var holder = binding && s.religiousHeads && s.religiousHeads[binding.officeId];
+    if (!office || !holder) return null;
+    // Detached saves compact realm and character IDs. Read the canonical
+    // office assignment by key and compare the resulting character row.
+    if (office.source === 'papal_election')
+      return holder === rid ? FB.papalOfficeIncumbentSnapshot(s,binding.officeId) : null;
+    return own(s.chars,holder) && !s.chars[holder].dead ? s.chars[holder] : null;
+  }
+  function checkedFeeRules(s,fail) {
+    var rules = s.authority && s.authority.synodalFees, byProfile = Object.create(null);
+    if (rules === undefined) return byProfile;
+    if (!Array.isArray(rules) || rules.length > MAX_PROFILES) fail();
+    rules.forEach(function (r) {
+      var p = r && profile(r.profileId), issuer = r && r.issuer;
+      if (!fields(r,['id','profileId','definitionFingerprint','jurisdiction','issuer','enactedTurn','terms']) ||
+          !p || !p.synodalFee || byProfile[r.profileId] || !s.start || s.start.id !== p.bookmarkId ||
+          !fields(r.jurisdiction,['bookmarkId','provinceId','seeId']) ||
+          r.jurisdiction.bookmarkId !== p.bookmarkId || r.jurisdiction.provinceId !== p.provinceId ||
+          r.jurisdiction.seeId !== p.realmId || !own(FB.world.byId,p.provinceId) ||
+          !Number.isSafeInteger(r.enactedTurn) || r.enactedTurn < 0 || r.enactedTurn > s.turn ||
+          r.id !== synodalFeeId(r.profileId,r.enactedTurn) || r.definitionFingerprint !== FB.mods.fingerprint(p) ||
+          !fields(r.terms,['kind','ceiling']) || r.terms.kind !== p.synodalFee.kind || r.terms.ceiling !== p.synodalFee.ceiling ||
+          !fields(issuer,['realmId','characterId','generation']) || !own(s.chars,issuer.characterId) ||
+          !own(s.realms,issuer.realmId) || issuer.realmId !== p.realmId &&
+          !(issuer.realmId === 'player' && s.start.rulerRealmId === p.realmId) ||
+          !Number.isSafeInteger(issuer.generation) || issuer.generation < 1 ||
+          issuer.generation > FB.realmRulerGeneration(s,issuer.realmId)) fail();
+      var incumbent = savedIncumbent(s,issuer.realmId);
+      if (incumbent && issuer.generation === FB.realmRulerGeneration(s,issuer.realmId) &&
+          incumbent !== s.chars[issuer.characterId]) fail();
+      byProfile[r.profileId] = r;
+    });
+    return byProfile;
+  }
+  function validFee(p,rule,terms,offerTurn) {
+    if (own(terms,'feeRuleId'))
+      return !!rule && terms.feeRuleId === rule.id && terms.fee === rule.terms.ceiling && offerTurn >= rule.enactedTurn;
+    // One turn may contain both a customary offer and the new enactment.
+    return terms.fee === p.fee && (!rule || offerTurn <= rule.enactedTurn);
+  }
+  function validAmount(p,terms) {
+    return Number.isFinite(terms.basis) && terms.basis >= 0 &&
+      terms.amount === Math.min(p.settlementMax,Math.floor(terms.basis * p.settlementShare));
+  }
   R.validateState = function (s) {
     function fail() { throw new Error(FB.T('Invalid named religious proceeding or payment receipt in this save.')); }
     var list = rows(s), seen = {}, receipts = s.authority && s.authority.receipts || [];
     if (s.authority && s.authority.religiousCases !== undefined && !Array.isArray(s.authority.religiousCases)) fail();
     if (!Array.isArray(list) || list.length > MAX) fail();
+    var rules = checkedFeeRules(s,fail);
     (s.justice && s.justice.offenses || []).forEach(function (o) {
       var v = o.clericalVictim;
       if (v !== undefined && (!v || !same(Object.keys(v).sort(),['faithId','provinceId']) ||
@@ -411,7 +519,7 @@
     list.forEach(function (r) {
       var p = r && profile(r.profileId), o = r && offense(s,r.offenseId);
       if (!p || !o || typeof o.sourceId !== 'string' || !o.sourceId || o.severity !== (o.kind === 'assassination' ? 3 : 2) ||
-          r.id !== 'religious:' + o.id || seen[o.sourceId] || r.definitionFingerprint !== FB.mods.fingerprint(p) ||
+          r.id !== 'religious:' + o.id || seen[o.sourceId] || !matchesDefinition(r,p) ||
           !eligible(p,o) || !same(r.accusation,facts(o)) || !s.start || s.start.id !== p.bookmarkId ||
           !same(Object.keys(r).sort(),['id','profileId','definitionFingerprint','offenseId','accusation','principals','asset','status','openedTurn','changedTurn','lastSupport','defended','answered','refused','refusalImpact','referred','offer','paid'].sort()) ||
           !Number.isFinite(r.lastSupport) || r.lastSupport < -3 || r.lastSupport > 3 ||
@@ -430,11 +538,10 @@
           [p.realmId,'player'].indexOf(x.realmId) < 0 || !s.realms[x.realmId] || !s.realms[x.courtRealmId] ||
           !Number.isInteger(x.bishopGeneration) || x.bishopGeneration < 1 || !Number.isInteger(x.courtGeneration) || x.courtGeneration < 1 ||
           o.closed !== (CLOSED.indexOf(r.status) >= 0)) fail();
-      var t = r.offer;
-      if (r.status === 'offered' ? !t || !same(Object.keys(t).sort(),['by','turn','fee','amount','basis'].sort()) ||
+      var t = r.offer, rule = rules[r.profileId];
+      if (r.status === 'offered' ? !fields(t,['by','turn','fee','amount','basis'],['feeRuleId']) ||
           [x.bishopId,o.accusedId].indexOf(t.by) < 0 || !Number.isInteger(t.turn) || t.turn < r.openedTurn || t.turn > r.changedTurn ||
-          t.fee !== p.fee || !Number.isFinite(t.basis) || t.basis < 0 ||
-          t.amount !== Math.min(p.settlementMax,Math.floor(t.basis * p.settlementShare)) : t !== null) fail();
+          !validFee(p,rule,t,t.turn) || !validAmount(p,t) : t !== null) fail();
       if (r.asset && (!same(Object.keys(r.asset).sort(),['provinceId','settlement','grant','recipientRealmId'].sort()) ||
           !p.allowFief || r.asset.provinceId !== p.provinceId || r.asset.recipientRealmId !== x.courtRealmId ||
           !Number.isInteger(r.asset.settlement) || r.asset.settlement < 1 || r.asset.settlement > 7 ||
@@ -444,8 +551,11 @@
       var expected = [];
       if (r.status === 'settled') {
         t = r.paid;
-        if (!t || !same(Object.keys(t).sort(),['fee','amount','basis','turn'].sort()) || t.fee !== p.fee ||
-            !Number.isFinite(t.basis) || t.basis < 0 || t.amount !== Math.min(p.settlementMax,Math.floor(t.basis * p.settlementShare)) || t.turn !== r.changedTurn) fail();
+        var offerTurn = own(t,'offerTurn') ? t.offerTurn : t && t.turn;
+        if (!fields(t,['fee','amount','basis','turn'],['offerTurn','feeRuleId']) ||
+            own(t,'feeRuleId') && !own(t,'offerTurn') || t.turn !== r.changedTurn ||
+            !Number.isInteger(offerTurn) || offerTurn < r.openedTurn || offerTurn > t.turn || t.turn > offerTurn + p.offerDays ||
+            !validFee(p,rule,t,offerTurn) || !validAmount(p,t)) fail();
         expected = payments(p,r,t).filter(function (e) { return e.amount > 0; });
       } else if (r.paid !== null) fail();
       expected.forEach(function (e) {
@@ -467,7 +577,8 @@
   };
   var referenced = FB.publicAdministrationReferencesCharacter;
   FB.publicAdministrationReferencesCharacter = function (s,cid) {
-    return referenced(s,cid) || (s.justice && s.justice.offenses || []).some(function (o) {
+    return referenced(s,cid) || feeRules(s).some(function (r) { return r.issuer.characterId === cid; }) ||
+      (s.justice && s.justice.offenses || []).some(function (o) {
       return !!o.clericalVictim && o.victimId === cid;
     }) || rows(s).some(function (r) {
       return [r.accusation.accusedId,r.accusation.victimId,r.principals.bishopId,r.principals.courtId,

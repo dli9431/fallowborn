@@ -616,6 +616,16 @@ see, `settlementShare` is 0–0.5 of actual available private money,
 `settlementMax` is 0–1000, and `settlementRecipient` is `victim` or `secular`.
 `offerDays` is 1–90. Review/opening fees are zero; money moves on acceptance only.
 
+An optional `synodalFee` object has exactly `kind: "settlement_fee_ceiling"`
+and a finite numeric `ceiling` from 0 up to but below the customary `fee`.
+Only one profile with a ceiling may name the same bookmark, county and see.
+The declaration makes the lower fee available to the competent recognized local
+bishop. Enactment is required before new offers use it. Existing offers and
+payments keep their agreed fee. A zero ceiling waives the institutional charge
+without altering compensation. See the ordinary JSON example
+`tests/e2e/fixtures/authoring/synodal-fee-spoleto.json` and the
+[diocesan rule design](designs/religious-cases.md#diocesan-settlement-fee-ceiling).
+
 `penanceSentence` references a penance kind; `prisonSentence` references custody;
 `secularSentence` references custody. These sentences must close the selected
 case without forgiving unrelated cases. Current law, justification and

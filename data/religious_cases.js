@@ -8,6 +8,7 @@
       cause:'clerical_violence', bookmarkId:'1204', provinceId:'roma', realmId:'papacy_1204',
       faiths:['catholic'], yearMin:1198, yearMax:1216,
       fee:2, settlementShare:0.15, settlementMax:100, settlementRecipient:'victim',
+      synodalFee:{kind:'settlement_fee_ceiling',ceiling:1},
       offerDays:30, penanceSentence:'penance', prisonSentence:'imprisonment',
       secularSentence:'imprisonment', allowFief:true,
       defendantPolicy:'challenge', bishopPolicy:'penance', enforcementPolicy:'accept'
