@@ -164,8 +164,12 @@ jobs:
             if [ "$attempt" -gt 1 ]; then
               # A single stuck file on the runner's default mirror stalls every retry
               # that uses it, so retries use the main Ubuntu archive instead.
-              echo "Using archive.ubuntu.com for attempt $attempt"
-              sudo sed -i 's#mirror+file:/etc/apt/apt-mirrors.txt#http://archive.ubuntu.com/ubuntu/#' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
+              echo "Using the Ubuntu archive over HTTPS for attempt $attempt"
+              for source in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do
+                [ -f "$source" ] || continue
+                sudo sed -i -e 's#mirror+file:/etc/apt/apt-mirrors.txt#https://archive.ubuntu.com/ubuntu/#g' \
+                  -e 's#http://archive.ubuntu.com/#https://archive.ubuntu.com/#g' "$source"
+              done
             fi
             if phase "system packages" npx playwright install-deps $browsers \
               && DEBUG=pw:install phase "browser download" npx playwright install $browsers; then
