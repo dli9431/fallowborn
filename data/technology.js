@@ -695,6 +695,7 @@ window.FBDATA = window.FBDATA || {};
         rationale:'Exclusive route protection depends on formal guild charters while ordinary commodity ventures remain visible and available.'
       },
       trade_venture_return_cargo:{
+        // The same review covers smaller stakes below the configured presets.
         mode:'none',
         rationale:'Baseline return cargo is an ordinary merchant commodity purchase at destination markets available to any accompanied trade traveler.'
       },
