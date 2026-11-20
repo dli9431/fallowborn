@@ -814,6 +814,9 @@ FBDATA.techImpactReviews.features.religious_activity_participation = {
 FBDATA.techImpactReviews.features.religious_activity_patronage = {
   mode:'none', rationale:'Foundation and giving transfer authorized property to a restricted institution fund without a discovery requirement.'
 };
+FBDATA.techImpactReviews.features.religious_service_shortfall_funding = {
+  mode:'none', rationale:'Households can meet the shortfall for existing local services using their own purse and the institution’s declared fund capacity.'
+};
 FBDATA.techImpactReviews.features.religious_activity_outreach = {
   mode:'none', rationale:'Funding an existing permitted community project uses its existing policy and population limits, not a new conversion capability.'
 };

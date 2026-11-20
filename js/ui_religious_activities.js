@@ -11,6 +11,8 @@
       route:FB.T('No qualifying route is available for this participant.'), funds:FB.T('The payer cannot meet the cost and reserve.'),
       service:FB.T('The institution lacks the required prepaid service.'), property:FB.T('A foundation needs an available local freehold group.'),
       recipient:FB.T('The receiving institution has no matching property record.'), fund:FB.T('The restricted fund cannot accept this amount.'),
+      serviceUnavailable:FB.T('No matching local service can use this fund.'), funded:FB.T('The fund already covers this target.'),
+      payer:FB.T('Only an authorized household payer can fund this shortfall.'),
       project:FB.T('An eligible, controlled project with this sponsor is required.') }[code] || FB.T('Review the current terms again.');
   }
   function name(s, cid, id, d, patron) {
@@ -32,13 +34,13 @@
     return out.join('; ') || FB.T('No additional personal reward');
   }
   function facts(s, entry) {
-    var q = entry.quote, d = q.facts.definition, patron = !!q.profileId;
+    var q = entry.quote, d = q.facts.definition, patron = !!q.profileId, f = q.funding;
     var destination = q.travel ? place(q.travel.destinationId) : d.institutionId ? FB.localInstitutionName(d.institutionId, s) : place(q.facts.location);
     var payer = q.payer && q.payer.kind === 'household' ? FB.T('Household purse') :
       q.payer && s.realms[q.payer.id] ? s.realms[q.payer.id].name : FB.T('No eligible payer');
     var h = SH.reviewPeopleHtml(SH.reviewPersonHtml(s.chars[q.cid], FB.T('Participant'))) + kv(FB.T('Destination'), destination) +
-      kv(FB.T('Payer'), payer) + kv(FB.T('Cost on acceptance'), FB.money(q.cost, s)) +
-      kv(FB.T('Required reserve'), FB.money(d.reserve, s));
+      kv(FB.T('Payer'), payer) + kv(f ? FB.T('Exact gift') : FB.T('Cost on acceptance'), FB.money(q.cost, { state:s, exact:!!f })) +
+      kv(FB.T('Required reserve'), FB.money(d.reserve, { state:s, exact:!!f }));
     if (d.provinceIds) h += kv(FB.T('Permitted locations'), d.provinceIds.map(place).join('; '));
     if (d.protectedWorship) h += kv(FB.T('Access'), FB.T('Participation requires protected local worship.'));
     if (!patron) return h + kv(FB.T('Time'), q.travel ? FB.T('{days} days outward, plus the return journey and any delays.', { days:q.travel.days }) :
@@ -49,6 +51,21 @@
       kv(FB.T('Benefit'), q.action === 'outreach' ? FB.T('One prepaid service supports the existing project for up to 360 days. Existing progress and resistance remain.') :
         FB.T('Property or restricted service funding remains with the receiving institution.')) +
       kv(FB.T('Interruption'), FB.T('Accepted gifts are not refunded. Death or loss of access preserves the institution and its property.'));
+    if (f) {
+      return h + kv(FB.T('Receiving fund'), fundName(s, q, q.terms.fund)) +
+        kv(FB.T('Current fund balance'), FB.money(f.balance, { state:s, exact:true })) +
+        kv(FB.T('Cost per use'), FB.money(f.unitCost, { state:s, exact:true })) +
+        kv(FB.T('Target prepaid uses'), f.targetUses) +
+        kv(FB.T('Balance at target'), FB.money(f.targetBalance, { state:s, exact:true })) +
+        kv(FB.T('Remaining capacity'), FB.T('{remaining} of {capacity} uses', { remaining:f.remainingUses, capacity:f.capacity })) +
+        kv(FB.T('Capacity after gift'), FB.T('{remaining} of {capacity} uses', {
+          remaining:f.capacity - Math.max(f.fundedUses, f.targetUses), capacity:f.capacity })) +
+        kv(FB.T('Household money after gift'), FB.money(f.householdLeft, { state:s, exact:true })) +
+        kv(FB.T('Local services'), f.services.map(function (service) {
+          return name(s, q.cid, service.id, service.definition, false);
+        }).join(', ')) +
+        kv(FB.T('Access'), FB.T('Participants must qualify separately and complete the service to use the funding.'));
+    }
     if (q.land) h += kv(FB.T('Land transferred'), FB.T('{count} plots at {place}, settlement {settlement}', {
       count:q.land.count, place:place(q.land.provinceId), settlement:q.land.settlement + 1 }));
     if (q.action === 'foundation') h += kv(FB.T('Startup consumed'), FB.money(d.foundation.startup, s)) +
@@ -65,15 +82,19 @@
     var s = FB.state; if (!s) return;
     view = view || {}; FB.game.setPaused(true);
     var people = FB.religiousActivityPeople(s), cid = people.indexOf(view.personId) >= 0 ? view.personId : s.player.charId;
-    var entries = [], h = '<div data-activity-list data-modal-scroll><label>' + esc(FB.T('Household participant')) +
+    var entries = [], fundingTargets = view.fundingTargets || {};
+    var h = '<div data-activity-list data-modal-scroll><label>' + esc(FB.T('Household participant')) +
       '<select class="field" id="activity-person">';
     people.forEach(function (id) { h += '<option value="' + esc(id) + '"' + (id === cid ? ' selected' : '') + '>' + esc(s.chars[id].name) + '</option>'; });
     h += '</select></label>';
     function add(q, label, key) {
       if (!q) return;
-      var entry = { quote:q, label:label }; entries.push(entry);
+      var entry = { quote:q, label:label, key:key }; entries.push(entry);
+      var note = !q.allowed ? reason(q.reason) : q.funding ? FB.T('Gift of {amount} for a prepaid-use target of {target}.', {
+        amount:FB.money(q.cost, { state:s, exact:true }), target:q.funding.targetUses }) :
+        FB.T('Cost on acceptance: {money:amount}.', { amount:q.cost });
       h += SH.reviewActionCardHtml({ id:'activity-review-' + key, label:label, disabled:!q.allowed, warn:!q.allowed,
-        note:q.allowed ? FB.T('Cost on acceptance: {money:amount}.', { amount:q.cost }) : reason(q.reason),
+        note:note,
         details:facts(s, entry), data:{ activityReview:entries.length - 1 } });
     }
     Object.keys(FBDATA.religiousActivities).sort().forEach(function (id) {
@@ -89,6 +110,10 @@
         add(FB.religiousPatronageQuote(s, id, cid, option.action, option.terms),
           FB.T('{action}: {name}', { action:action, name:name(s, cid, id, d, true) }), id + '-' + index);
       });
+      FB.religiousServiceFundingOptions(s, id, cid).forEach(function (terms) {
+        var q = FB.religiousPatronageQuote(s, id, cid, 'donation', terms);
+        if (q && q.funding) add(q, FB.T('Fund {fund}', { fund:fundName(s, q, terms.fund) }), 'fund-' + id + '-' + terms.fund);
+      });
     });
     var active = s.chars[cid].religiousActivity;
     if (active) h += SH.reviewFactsCard(name(s, cid, active.activityId, active.definition, false),
@@ -101,34 +126,68 @@
       historyBack:!!view.returnTo, historyBackRender:view.returnTo,
       titleDetailsHtml:'<p>' + esc(FB.T('Review the participant, destination, payer, time and interruption terms before accepting.')) + '</p>' });
     var list = SH.$('gm-body').querySelector('[data-activity-list]');
-    SH.$('activity-person').onchange = function () { UI.showReligiousActivities({ personId:this.value, returnTo:view.returnTo }); };
+    SH.$('activity-person').onchange = function () { UI.showReligiousActivities({ personId:this.value, returnTo:view.returnTo, fundingTargets:fundingTargets }); };
     (view.expanded || []).forEach(function (id) {
       var detail = SH.$(id), toggle = list.querySelector('[aria-controls="' + id + '"]');
       if (detail && toggle) { detail.classList.remove('hidden'); toggle.setAttribute('aria-expanded', 'true'); }
     });
     list.scrollTop = view.scrollTop || 0; SH.$('gm-body').scrollTop = view.bodyScroll || 0;
-    if (view.focusId && SH.$(view.focusId)) SH.$(view.focusId).focus({ preventScroll:true });
+    var focus = view.focusId && SH.$(view.focusId);
+    if (focus) (focus.disabled && view.focusId.indexOf('activity-review-fund-') === 0 ?
+      focus.closest('.review-action-card') : focus).focus({ preventScroll:true });
     function review(button, entry) {
       var expanded = [];
       list.querySelectorAll('.settcard-details:not(.hidden)').forEach(function (detail) { expanded.push(detail.id); });
       var pos = { personId:cid, scrollTop:list.scrollTop, bodyScroll:SH.$('gm-body').scrollTop,
-        focusId:button.id, expanded:expanded, returnTo:view.returnTo };
+        focusId:button.id, expanded:expanded, returnTo:view.returnTo, fundingTargets:fundingTargets };
       function back() { UI.showReligiousActivities(pos); }
       var cancellation = !entry, saved = cancellation && JSON.parse(JSON.stringify(active));
       var label = cancellation ? FB.T('Cancel participation') : entry.label;
-      UI.openModal(label, SH.reviewFactsCard(FB.T('Exact decision terms'), cancellation ?
-        kv(FB.T('Interruption'), FB.T('Paid costs remain spent. No completion reward is granted. Property and restricted funds remain.')) : facts(s, entry)) +
-        SH.reviewActionCardHtml({ id:'activity-confirm', label:FB.T('Confirm decision'),
-          note:FB.T('Eligibility and funds are checked again before anything changes.') }),
+      var initial = entry && entry.quote, f = initial && initial.funding, picker = '';
+      var current = entry;
+      function chooseTarget(target) {
+        var q = FB.religiousPatronageQuote(s, initial.profileId, cid, 'donation', { fund:initial.terms.fund, targetUses:target });
+        current = { quote:q, label:label };
+      }
+      if (f) {
+        var target = fundingTargets[entry.key];
+        if (target > f.fundedUses && target <= f.capacity && target !== f.targetUses) chooseTarget(target);
+        else target = f.targetUses;
+        picker = '<label>' + esc(FB.T('Choose prepaid-use target')) + '<select class="field" id="activity-funding-target">';
+        for (var uses = f.fundedUses + 1; uses <= f.capacity; uses++) {
+          picker += '<option value="' + uses + '"' + (uses === target ? ' selected' : '') + '>' + uses + '</option>';
+        }
+        picker += '</select></label>';
+      }
+      function decisionTerms() {
+        var q = current && current.quote, blocked = !cancellation && (!q || !q.allowed);
+        var detail = cancellation ? kv(FB.T('Interruption'),
+          FB.T('Paid costs remain spent. No completion reward is granted. Property and restricted funds remain.')) :
+          q && (!f || q.funding && q.funding.targetUses !== undefined) ? facts(s, current) : '';
+        return SH.reviewFactsCard(FB.T('Exact decision terms'), detail) +
+          SH.reviewActionCardHtml({ id:'activity-confirm', label:FB.T('Confirm decision'), disabled:blocked, warn:blocked,
+            note:blocked ? reason(q && q.reason) : FB.T('Eligibility and funds are checked again before anything changes.') });
+      }
+      UI.openModal(label, picker + '<div id="activity-decision-terms">' + decisionTerms() + '</div>',
         { modalClass:'fullsheet-modal', historyView:true, historyBack:true, historyBackRender:back });
-      SH.$('activity-confirm').onclick = function () {
-        var success = s === FB.state && (cancellation ? FB.religiousActivityCancel(s, cid, saved) : entry.quote.profileId ?
-          FB.religiousPatronageApply(s, entry.quote) : FB.religiousActivityApply(s, entry.quote));
-        UI.openModal(success ? FB.T('Decision recorded') : FB.T('Terms changed'), SH.reviewFactsCard('',
-          esc(success ? FB.T('The decision is recorded.') : FB.T('Review the current terms again. Nothing was spent.'))) +
-          '<button class="actionbtn" type="button" id="activity-continue">' + esc(FB.T('Continue')) + '</button>', { replaceView:true });
-        SH.$('activity-continue').onclick = function () { SH.modalHistoryBack(back); };
-        if (SH.markActionsDirty) SH.markActionsDirty();
+      function bindConfirm() {
+        SH.$('activity-confirm').onclick = function () {
+          var q = current && current.quote;
+          var success = s === FB.state && (cancellation ? FB.religiousActivityCancel(s, cid, saved) : q && (q.profileId ?
+            FB.religiousPatronageApply(s, q) : FB.religiousActivityApply(s, q)));
+          UI.openModal(success ? FB.T('Decision recorded') : FB.T('Terms changed'), SH.reviewFactsCard('',
+            esc(success ? FB.T('The decision is recorded.') : FB.T('Review the current terms again. Nothing was spent.'))) +
+            '<button class="actionbtn" type="button" id="activity-continue">' + esc(FB.T('Continue')) + '</button>', { replaceView:true });
+          SH.$('activity-continue').onclick = function () { SH.modalHistoryBack(back); };
+          if (SH.markActionsDirty) SH.markActionsDirty();
+        };
+      }
+      bindConfirm();
+      if (f) SH.$('activity-funding-target').onchange = function () {
+        fundingTargets[entry.key] = Number(this.value);
+        chooseTarget(fundingTargets[entry.key]);
+        SH.$('activity-decision-terms').innerHTML = decisionTerms();
+        bindConfirm();
       };
     }
     list.querySelectorAll('[data-activity-review]').forEach(function (button) {

@@ -1,0 +1,47 @@
+{
+  "name": "Sardis service funding example",
+  "religiousPatronage": {
+    "jewish_sardis_giving_493": {
+      "name": "Support congregational supplies",
+      "period": { "yearMin": 493, "yearMax": 493 },
+      "openings": [{ "id": "493", "revision": "jewish_samaritan_v3" }],
+      "faithIds": ["jewish"],
+      "affiliationIds": [],
+      "roleIds": [],
+      "institutionId": "jewish_sardis_congregation_493",
+      "payer": "household",
+      "reserve": 4,
+      "foundation": { "startup": 1, "capital": 2, "treasury": 1, "landRequired": true },
+      "funds": {
+        "building_care": { "name": "Care supplies", "capacity": 4, "unitCost": 2.5 },
+        "hospitality": { "name": "Hospitality supplies", "capacity": 3, "unitCost": 1 }
+      },
+      "outreach": []
+    }
+  },
+  "religiousActivities": {
+    "sardis_supplies_care_493": {
+      "name": "Prepare supplies for synagogue care",
+      "period": { "yearMin": 493, "yearMax": 493 },
+      "openings": [{ "id": "493", "revision": "jewish_samaritan_v3" }],
+      "faithIds": ["jewish"],
+      "affiliationIds": [],
+      "roleIds": ["worshipper"],
+      "institutionId": "jewish_sardis_congregation_493",
+      "mode": "local",
+      "purpose": null,
+      "siteId": null,
+      "payer": "household",
+      "cost": 0,
+      "reserve": 0,
+      "duration": 3,
+      "calendar": "any_day",
+      "interruption": "retain_cost",
+      "recipient": "institution",
+      "milestone": "jewish_synagogue_care_done",
+      "reward": { "piety": 2, "prestige": 0, "skills": {} },
+      "legacy": null,
+      "service": { "fund": "building_care", "cost": 2.5 }
+    }
+  }
+}
