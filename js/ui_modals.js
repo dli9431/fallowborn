@@ -26349,38 +26349,122 @@ window.FB = window.FB || {};
     const s = FB.state;
     const status = FB.familyManumissionStatus(s, cid);
     if (!status.relevant) return;
-    const c = status.character;
-    const h = '<p>' + esc(FB.T(
-      'Purchase lawful freedom for {name}? This changes only their personal station; no parent or sibling is freed automatically.', {
-        name:FB.fullName(c)
-      })) + '</p><div class="decision-cost"><b>' +
-      esc(FB.T('Price')) + ':</b> ' +
-      esc(FB.T('{money:price}', { price:status.price })) + '</div>' +
-      (!status.ready ? '<p class="warnote">' + esc(status.reason) + '</p>' : '') +
-      '<div class="gm-list"><button type="button" class="actionbtn" ' +
-      'id="family-manumission-confirm"' + (status.ready ? '' : ' disabled') + '>' +
-      esc(FB.T('Manumit {name}', { name:c.name })) + '</button></div>' +
-      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
-      esc(FB.T('Not now')) + '</button></div>';
+    const candidates = FB.familyManumissionCandidates(s);
+    let people = '';
+    if (candidates.length > 1 && candidates.some(function (candidate) {
+      return candidate.character.id === cid;
+    })) {
+      for (const candidate of candidates) {
+        const c = candidate.character;
+        people += '<label class="autorow freedom-relative-row"><input type="checkbox" ' +
+          'data-family-manumission-relative="' + esc(c.id) + '"' +
+          (c.id === cid ? ' checked' : '') + '> ' + FB.faceTag(c, 44, 50) +
+          '<span class="freedom-relative-copy"><b>' + esc(FB.fullName(c)) +
+          '</b><span class="adesc" data-family-manumission-price>' + esc(FB.T('{money:price}', {
+            price:candidate.price
+          })) + '</span></span></label>';
+      }
+    } else {
+      people = reviewPeopleHtml(reviewPersonHtml(status.character, FB.T('{money:price}', {
+        price:status.price
+      })));
+    }
+    const h = reviewFactsCard('', '<div id="family-manumission-recipient"></div>' +
+        '<div id="family-manumission-quote" aria-live="polite"></div>' +
+        kv('Benefit', esc(FB.T('Each selected relative becomes a {station}.', {
+          station:FB.stationName(1)
+        }))) +
+        '<p class="warnote hidden" id="family-manumission-warning" role="status" tabindex="-1"></p>') +
+      reviewFactsCard(FB.T('Relatives to redeem'), people) +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'family-manumission-confirm',
+        disabled:true,
+        labelHtml:'<span id="family-manumission-action-label"></span>',
+        note:FB.T('Takes 1 day'),
+        details:'<div id="family-manumission-cost-details"></div>'
+      }));
     openModal(FB.T('Family Manumission'), h, {
       historyView:true,
-      historyBackRender:function () {
+      historyBackRender:$('genmodal').classList.contains('hidden') ? function () {
         UI.showCharModal(cid, returnContext);
-      }
+      } : null
     });
+    FB.paintFaces($('gm-body'), s);
+    const boxes = $('gm-body').querySelectorAll('[data-family-manumission-relative]');
     const confirm = $('family-manumission-confirm');
-    if (confirm) confirm.addEventListener('click', function () {
-      if (!FB.resolveFamilyManumission(s, cid)) {
-        UI.showFamilyManumissionConfirm(cid, returnContext);
+    const actionCard = confirm.closest('.review-action-card');
+    const warning = $('family-manumission-warning');
+    let displayedLord;
+    let quote;
+    function setReady(ready) {
+      confirm.disabled = !ready;
+      if (ready) actionCard.removeAttribute('tabindex');
+      else actionCard.tabIndex = 0;
+    }
+    function showWarning(reason) {
+      warning.textContent = reason;
+      warning.classList.toggle('hidden', !reason);
+    }
+    function updateQuote() {
+      const selected = Array.prototype.filter.call(boxes, function (box) {
+        return box.checked;
+      });
+      const ids = boxes.length ? selected.map(function (box) {
+        return box.dataset.familyManumissionRelative;
+      }) : [cid];
+      quote = FB.familyManumissionQuote(s, ids);
+      const lord = ids.length ? quote.lord : status.lord;
+      if (lord !== displayedLord) {
+        const recipient = $('family-manumission-recipient');
+        recipient.innerHTML = lord
+          ? reviewPeopleHtml(reviewPersonHtml(lord, FB.T('Lawful recipient'))) : '';
+        FB.paintFaces(recipient, s);
+        displayedLord = lord;
+      }
+      if (quote.terms) selected.forEach(function (box, i) {
+        box.parentNode.querySelector('[data-family-manumission-price]').textContent =
+          FB.T('{money:price}', { price:quote.terms.members[i].price });
+      });
+      $('family-manumission-quote').innerHTML =
+        (quote.price !== null ? kv('Total price', esc(FB.T('{money:price}', {
+          price:quote.price
+        }))) : '') +
+        (quote.remaining !== null ? kv('Funds remaining', esc(FB.T('{money:gold}', {
+          gold:quote.remaining
+        }))) : '');
+      $('family-manumission-cost-details').innerHTML = quote.terms
+        ? quote.terms.members.map(function (member) {
+          return '<p>' + esc(FB.T('{name} · {money:price}', {
+            name:FB.fullName(s.chars[member.id]), price:member.price
+          })) + '</p>';
+        }).join('')
+        : '<p>' + esc(quote.reason) + '</p>';
+      const single = ids.length === 1 && s.chars[ids[0]];
+      $('family-manumission-action-label').textContent = single
+        ? FB.T('Manumit {name}', { name:FB.fullName(single) })
+        : FB.T('Manumit selected relatives');
+      setReady(quote.ready);
+      showWarning(quote.reason);
+    }
+    for (let i = 0; i < boxes.length; i++) {
+      boxes[i].addEventListener('change', updateQuote);
+    }
+    updateQuote();
+    confirm.addEventListener('click', function () {
+      if (s !== FB.state || !quote.ready || !FB.resolveFamilyManumissionGroup(s, quote.terms)) {
+        const current = s === FB.state && quote.terms
+          ? FB.familyManumissionQuote(s, quote.terms.members.map(function (member) {
+            return member.id;
+          })) : null;
+        setReady(false);
+        for (let i = 0; i < boxes.length; i++) boxes[i].disabled = true;
+        showWarning(current && current.reason || FB.T(
+          'The terms changed. Return to the character sheet to review the deed again.'));
+        warning.focus();
         return;
       }
       UI.closeModal();
       FB.game.passDay({ skipFocus:true });
-    });
-    $('gm-cancel').addEventListener('click', function () {
-      modalHistoryBack(function () {
-        UI.showCharModal(cid, returnContext);
-      });
     });
   };
 
@@ -27003,13 +27087,13 @@ window.FB = window.FB || {};
         group:'management',
         label:FB.T('Purchase their freedom…'),
         detail:FB.T(
-          'A separate lawful manumission costs {money:price} and spends the day.', {
+          'Their share costs {money:price}. You can add eligible relatives to the same one-day deed.', {
             price:familyManumission.price
           }),
         enabled:familyManumission.ready,
         blockedReason:familyManumission.reason || null,
         consequence:FB.T(
-          'Their personal station becomes Freeholder; other relatives are unchanged.'),
+          'Each selected relative becomes a {station}.', { station:FB.stationName(1) }),
         route:'family-manumission'
       });
     }

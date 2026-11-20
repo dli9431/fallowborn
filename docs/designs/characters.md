@@ -1295,11 +1295,14 @@ retainer, equipment, education, work, arranged-match, and exact-relative
 manumission mechanics. An available royal family member's sheet also opens the negotiated
 picker for pairing that person with a managed child or grandchild; the marriage
 engine retains all access, faith, rank, kinship, dowry, acceptance, and refusal rules.
-A free household head may redeem a living serf parent,
-sibling, spouse, or descendant from that person's sheet; the quoted action changes only
-that character's station and spends one day. The card
-does not store a relationship model and does not replace biography, the
-Household Plan, or the long Network roster.
+A free adult household head can open Family Manumission from a living bound parent,
+sibling, spouse, or descendant's sheet. The opened relative starts selected. The
+review lists eligible relatives who live in and are present in the home county and
+come under the same current authority. The household head can choose one or
+several, see each person's price, and review the lawful recipient, total price,
+and remaining household funds. Back retains the character sheet's scroll and focus.
+The card derives its relationships for display alongside biography, the Household
+Plan, and the long Network roster.
 
 `FB.rankAccessStatus`, `FB.socialAttentionStatus`, and `FB.friendshipStatus` expose read-only,
 localized gate results. Assignment and naming still revalidate through the
@@ -1308,13 +1311,21 @@ character shares the realm target's typed Standing but has no personal gift
 action; **Realm and court** opens the political sheet that owns ruler gifts
 and ruler-generation commitments.
 
-Individual family manumission has technology impact **none**: redeeming a named bound
-relative is baseline personal and legal recovery, not a capability credibly controlled
-by sovereign research.
+The deed adds each separately rounded individual share using the existing
+`balance.freedomCost`, `freedomDescendantFactor`, and `freedomRelativeFactor`.
+Confirmation rechecks the sponsor, current county authority and Standing, location,
+custody, exact kin, bound status, individual prices and funds before any payment or
+release. A stale or refused selection spends neither money nor time. Success spends
+one day and charges the combined price once. Each selected person becomes a
+Freeholder and receives their usual personal manumission receipt and Standing gain.
+Property, debt, other relatives and negotiated household charters remain separate.
+Direct rulers of the home county authorize the deed themselves at the ordinary price.
+Only personal receipts persist, using the existing character fields.
 
-When the household head directly rules the home county, they authorize individual
-family manumission themselves; no separate local lord or self-Standing check is
-required. The ordinary quoted price and personal Freeholder outcome remain.
+The existing `individual_family_manumission` technology impact remains **none**.
+Redeeming several named relatives together extends the same baseline legal recovery
+available through an individual deed.
+
 A free adult relative may receive a settlement grant, which raises them to Baron.
 Unrelated recipients retain the Gentry requirement.
 

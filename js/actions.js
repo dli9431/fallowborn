@@ -1786,27 +1786,27 @@ window.FB = window.FB || {};
     return out;
   }
 
+  const FREEDOM_FAMILY_KINDS = ['spouse', 'parent', 'sibling', 'descendant'];
+
+  function freedomFamilyOfKind(state, me, kind) {
+    if (kind === 'spouse') {
+      if (FB.spousesSnapshot) return FB.spousesSnapshot(state, me);
+      const spouse = me.spouseId && state.chars[me.spouseId];
+      return spouse ? [spouse] : [];
+    }
+    if (kind === 'parent') return FB.parentsOf ? FB.parentsOf(state, me) : [];
+    if (kind === 'sibling') return FB.siblingsOf ? FB.siblingsOf(state, me) : [];
+    return freedomDescendants(state, me);
+  }
+
   function freedomFamilyKind(state, c) {
     if (!state || !state.player || !state.chars || !c) return null;
     const me = state.chars[state.player.charId];
     if (!me || c.id === me.id) return null;
-    const spouses = FB.spousesSnapshot ? FB.spousesSnapshot(state, me) :
-      (me.spouseId && state.chars[me.spouseId]
-        ? [state.chars[me.spouseId]] : []);
-    for (let i = 0; i < spouses.length; i++) {
-      if (spouses[i].id === c.id) return 'spouse';
-    }
-    const parents = FB.parentsOf ? FB.parentsOf(state, me) : [];
-    for (let i = 0; i < parents.length; i++) {
-      if (parents[i].id === c.id) return 'parent';
-    }
-    const siblings = FB.siblingsOf ? FB.siblingsOf(state, me) : [];
-    for (let i = 0; i < siblings.length; i++) {
-      if (siblings[i].id === c.id) return 'sibling';
-    }
-    const descendants = freedomDescendants(state, me);
-    for (let i = 0; i < descendants.length; i++) {
-      if (descendants[i].id === c.id) return 'descendant';
+    for (const kind of FREEDOM_FAMILY_KINDS) {
+      if (freedomFamilyOfKind(state, me, kind).some(function (relative) {
+        return relative.id === c.id;
+      })) return kind;
     }
     return null;
   }
@@ -2590,7 +2590,7 @@ window.FB = window.FB || {};
     }
   };
 
-  function familyManumissionCost(state, kind) {
+  function familyManumissionCost(kind) {
     const base = Math.ceil(Number(FBDATA.balance.freedomCost));
     if (!isFinite(base) || base <= 0) return 0;
     const factor = kind === 'descendant'
@@ -2599,80 +2599,192 @@ window.FB = window.FB || {};
     return Math.ceil(base * factor);
   }
 
-  FB.familyManumissionStatus = function (state, characterId) {
-    const out = {
-      relevant:false, ready:false, reason:'', character:null,
-      kind:null, price:0, lord:null
-    };
-    if (!state || !state.player || !state.chars) return out;
-    const c = state.chars[characterId];
-    const kind = freedomFamilyKind(state, c);
-    if (!c || !kind || c.dead || !FB.isUnfreeCharacter(state, c)) return out;
-    out.relevant = true;
-    out.character = c;
-    out.kind = kind;
-    out.price = familyManumissionCost(state, kind);
-    if (!FB.station.isFree(state.player, state)) {
+  function familyManumissionAuthority(state) {
+    const p = state.player;
+    const out = { lord:null, reason:'' };
+    if (!FB.station.isFree(p, state)) {
       out.reason = FB.T(
         'Secure your own lawful freedom before redeeming relatives separately.');
       return out;
     }
-    const me = state.chars[state.player.charId];
+    const me = state.chars[p.charId];
     if (!me || me.dead || FB.ageOf(me, state.date.year) < 16) {
       out.reason = adultDeedReason();
       return out;
     }
-    if (state.player.travel) {
+    if (p.travel || FB.characterLocation(state, me) !== p.provinceId) {
       out.reason = FB.T('Return home before arranging a manumission.');
       return out;
     }
-    if (state.player.flags && state.player.flags.in_prison) {
+    if ((p.flags && p.flags.in_prison) || FB.justiceCustodyOf(state, me.id)) {
       out.reason = FB.T('A captive cannot arrange a manumission.');
       return out;
     }
-    const ownsHomeCounty = FB.settlementCountyHolder(state, state.player.provinceId) === 'player';
+    const ownsHomeCounty = FB.settlementCountyHolder(state, p.provinceId) === 'player';
     const lord = ownsHomeCounty ? me : freedomCurrentLord(state);
-    out.lord = lord;
-    if (!lord) {
+    if (!lord || lord.dead || FB.justiceCustodyOf(state, lord.id)) {
       out.reason = FB.T('No local lord can authorize this manumission.');
       return out;
     }
+    out.lord = lord;
     if (!ownsHomeCounty && FB.standingOf(state, { kind:'character', id:lord.id }) < -20) {
       out.reason = FB.T('The lord despises you and refuses.');
-      return out;
     }
-    if (!out.price) {
-      out.reason = FB.T('The manumission price is unavailable.');
-      return out;
-    }
-    if (state.player.gold < out.price) {
-      out.reason = FB.T('Requires {money:price}; you have {money:gold}.', {
-        price:out.price, gold:Math.floor(state.player.gold)
+    return out;
+  }
+
+  function familyManumissionTerms(state, c, kind, authority) {
+    const out = {
+      relevant:false, ready:false, reason:'', character:null,
+      kind:null, price:0, lord:null
+    };
+    if (!c || !kind || c.dead || !FB.isUnfreeCharacter(state, c)) return out;
+    out.relevant = true;
+    out.character = c;
+    out.kind = kind;
+    out.price = familyManumissionCost(kind);
+    authority = authority || familyManumissionAuthority(state);
+    out.lord = authority.lord;
+    if (authority.reason) {
+      out.reason = authority.reason;
+    } else if (FB.justiceCustodyOf(state, c.id)) {
+      out.reason = FB.T('{name} is in custody.', { name:FB.fullName(c) });
+    } else if (FB.characterResidence(state, c) !== state.player.provinceId ||
+        FB.characterLocation(state, c) !== state.player.provinceId) {
+      out.reason = FB.T('{name} must live in and be present in your home {term:county}.', {
+        name:FB.fullName(c)
       });
-      return out;
+    } else if (!Number.isSafeInteger(out.price) || out.price <= 0) {
+      out.reason = FB.T('The manumission price is unavailable.');
     }
-    out.ready = true;
+    return out;
+  }
+
+  function familyManumissionFundsReason(price, gold) {
+    if (!Number.isFinite(gold)) return FB.T('Household funds are unavailable.');
+    return gold >= price ? '' :
+      FB.T('Requires {money:price}; you have {money:gold}.', {
+        price:price, gold:Math.floor(gold)
+      });
+  }
+
+  FB.familyManumissionStatus = function (state, characterId) {
+    const c = state && state.chars && state.chars[characterId];
+    const out = familyManumissionTerms(state, c, freedomFamilyKind(state, c));
+    if (!out.relevant) return out;
+    out.reason = out.reason || familyManumissionFundsReason(out.price, state.player.gold);
+    out.ready = !out.reason;
     return out;
   };
 
-  FB.resolveFamilyManumission = function (state, characterId) {
-    const status = FB.familyManumissionStatus(state, characterId);
-    if (!status.ready) return false;
-    state.player.gold -= status.price;
-    status.character.station = 1;
-    delete status.character.unfree;
-    FB.adjustStanding(state, { kind:'character', id:characterId }, 20, 'freedom:purchased');
-    status.character.manumission = {
-      turn:state.turn || 0, year:state.date.year,
-      sponsorId:state.player.charId,
-      lordId:status.lord ? status.lord.id : null,
-      price:status.price
+  FB.familyManumissionCandidates = function (state) {
+    if (!state || !state.player || !state.chars) return [];
+    const me = state.chars[state.player.charId];
+    const authority = familyManumissionAuthority(state);
+    if (authority.reason) return [];
+    const seen = new Set([me.id]);
+    const out = [];
+    for (const kind of FREEDOM_FAMILY_KINDS) {
+      for (const relative of freedomFamilyOfKind(state, me, kind)) {
+        if (seen.has(relative.id)) continue;
+        seen.add(relative.id);
+        const terms = familyManumissionTerms(state, relative, kind, authority);
+        if (terms.relevant && !terms.reason) out.push(terms);
+      }
+    }
+    return out;
+  };
+
+  FB.familyManumissionQuote = function (state, ids) {
+    const out = {
+      ready:false, reason:'', terms:null, lord:null, price:null, remaining:null
     };
-    FB.news(state, FB.msg('news.freedom.family_manumission',
-      '📜 {name} receives lawful freedom for {money:price}.', {
-        name:FB.fullName(status.character), price:status.price
-      }));
-    return status.character;
+    if (!state || !state.player || !state.chars) return out;
+    if (!Array.isArray(ids) || !ids.length) {
+      out.reason = FB.T('Choose at least one relative.');
+      return out;
+    }
+    const authority = familyManumissionAuthority(state);
+    out.lord = authority.lord;
+    if (authority.reason) {
+      out.reason = authority.reason;
+      return out;
+    }
+    const members = [];
+    const seen = new Set();
+    let price = 0;
+    for (const id of ids) {
+      const c = typeof id === 'string' && state.chars[id];
+      const member = familyManumissionTerms(state, c, freedomFamilyKind(state, c), authority);
+      if (seen.has(id) || !member.relevant) {
+        out.reason = FB.T('One of the selected people is no longer an eligible bound relative.');
+        return out;
+      }
+      if (member.reason) {
+        out.reason = member.reason;
+        return out;
+      }
+      seen.add(id);
+      members.push({ id:id, kind:member.kind, price:member.price });
+      price += member.price;
+    }
+    if (!Number.isSafeInteger(price)) {
+      out.reason = FB.T('The manumission price is unavailable.');
+      return out;
+    }
+    const p = state.player;
+    out.terms = {
+      sponsorId:p.charId, provinceId:p.provinceId, lordId:authority.lord.id,
+      members:members
+    };
+    out.price = price;
+    out.remaining = Number.isFinite(p.gold) ? p.gold - price : null;
+    out.reason = familyManumissionFundsReason(price, p.gold);
+    out.ready = !out.reason;
+    return out;
+  };
+
+  function commitFamilyManumission(state, terms, price) {
+    state.player.gold -= price;
+    const released = [];
+    for (const member of terms.members) {
+      const c = state.chars[member.id];
+      c.station = 1;
+      delete c.unfree;
+      c.manumission = {
+        turn:state.turn || 0, year:state.date.year,
+        sponsorId:terms.sponsorId, lordId:terms.lordId, price:member.price
+      };
+      released.push(c);
+    }
+    for (const member of terms.members) {
+      FB.adjustStanding(state, { kind:'character', id:member.id }, 20, 'freedom:purchased');
+      FB.news(state, FB.msg('news.freedom.family_manumission',
+        '📜 {name} receives lawful freedom for {money:price}.', {
+          name:FB.fullName(state.chars[member.id]), price:member.price
+        }));
+    }
+    return released;
+  }
+
+  FB.resolveFamilyManumissionGroup = function (state, terms) {
+    if (!terms || !Array.isArray(terms.members) ||
+        terms.members.some(function (member) { return !member; })) return false;
+    const quote = FB.familyManumissionQuote(state, terms.members.map(function (member) {
+      return member.id;
+    }));
+    if (!quote.ready || quote.terms.sponsorId !== terms.sponsorId ||
+        quote.terms.provinceId !== terms.provinceId || quote.terms.lordId !== terms.lordId ||
+        quote.terms.members.some(function (member, i) {
+          return member.kind !== terms.members[i].kind || member.price !== terms.members[i].price;
+        })) return false;
+    return commitFamilyManumission(state, quote.terms, quote.price);
+  };
+
+  FB.resolveFamilyManumission = function (state, characterId) {
+    if (!state || !state.player || !state.chars) return false;
+    const quote = FB.familyManumissionQuote(state, [characterId]);
+    return quote.ready ? commitFamilyManumission(state, quote.terms, quote.price)[0] : false;
   };
 
   function queueFreedomOfferEvent(state, record) {

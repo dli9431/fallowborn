@@ -1,0 +1,8 @@
+{
+  "name": "River family redemption prices",
+  "balance": {
+    "freedomCost": 101,
+    "freedomDescendantFactor": 0.4,
+    "freedomRelativeFactor": 0.7
+  }
+}
