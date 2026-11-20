@@ -252,19 +252,22 @@
         FB.maritimeWork.constructionReady(t,a.id,who,key,d.maritimeWorkProfileId) : P.outletReady(t,a.id,recipe.outputs);
     });
   };
+  P.outputRoom = function (s,extra,live) {
+    var r = s.production;
+    return !!r && (live || P.liveCounts(s)).lots + extra + r.batches.reduce(function (n,b) {
+      return n + (b.status === 'reserved' ? FBDATA.productionRecipes[b.recipeId].outputs.length : 0);
+    },0) <= LIMIT;
+  };
   P.outletReady = function (s,siteId,outputs) {
     var r = s.production, live = r && P.liveCounts(s);
-    if (!FB.productionEconomy || !r || !r.economy || live.trades >= LIMIT || r.nextId >= MAX - 4 || r.revision >= MAX ||
-        live.lots + outputs.length + r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0) >= LIMIT) return false;
+    // Leave room for both the new batch output and a later destination lot.
+    if (!FB.productionEconomy || !r || !r.economy || !P.outputRoom(s,outputs.length + 1,live)) return false;
     var p = plan(s), routes = FB.productionEconomy.compilePrepared(FB.campaignBookmark(s),p.sites).routes;
     return outputs.every(function (output) {
       return routes.some(function (route) {
         var profile = FBDATA.productionExchangeProfiles[route.profileId];
         if (route.fromSiteId !== siteId || profile.goodId !== output.goodId || profile.mode !== 'market') return false;
-        var q = FB.productionEconomy.aiQuote(s,route.id,output.quantity,'sell');
-        var funds = q.buyer && P.account(s,q.buyer).funds;
-        return !!q.signature && q.remainingDemand >= output.quantity && q.remainingBudget >= q.cost &&
-          funds && funds.available >= q.cost + funds.reserve;
+        return FB.productionEconomy.aiQuote(s,route.id,output.quantity,'sell').outletReady;
       });
     });
   };
@@ -272,6 +275,19 @@
     var held=FB.maritimeWork ? FB.maritimeWork.reservations({production:r}) : {};
     if (r) r.batches.forEach(function(b){if(b.status==='reserved')b.inputs.forEach(function(x){held[x.lotId]=(held[x.lotId] || 0)+x.quantity;});});
     return held;
+  }
+  function validDisposition(recipe,choice) {
+    return choice === 'store' || choice === 'use' && !recipe.requiresSale;
+  }
+  function outputPreview(s,batch,recipe,choice,held) {
+    return recipe.outputs.map(function (output) {
+      var available = s.production.lots.reduce(function (n,lot) {
+        return lot.assetId === batch.assetId && lot.goodId === output.goodId
+          ? n + Math.max(0,FB.buildingSeasons.lotAvailable(s,lot)-(held[lot.id] || 0)) : n;
+      },0);
+      var stored = choice === 'store' ? output.quantity : 0;
+      return {goodId:output.goodId,quantity:output.quantity,available:available+stored,consumed:output.quantity-stored};
+    });
   }
   // Construction enrolls an empty asset only; opening inventories remain once-only.
   P.constructionReady = function(s,siteId,who) {
@@ -304,7 +320,10 @@
   P.quote = function (s,request) {
     var q = {allowed:false,reason:'request',request:object(request) ? copy(request) : null};
     if (!keys(request,['operation','siteId','actor','recipeId','disposition','batchId']) || !actor(request.actor) ||
-        !id(request.siteId) || ['reserve','work','finish','cancel'].indexOf(request.operation) < 0) return q;
+        !id(request.siteId) || ['reserve','work','finish','cancel','amend'].indexOf(request.operation) < 0) return q;
+    var amend = request.operation === 'amend';
+    if (amend && request.disposition !== 'store' && request.disposition !== 'use') return q;
+    var settleOutput = amend || request.operation === 'finish';
     var p = plan(s), a = p.sites.find(function (x) { return x.id === request.siteId; });
     if (p.errors.length || !a) return q;
     P.validate(s);
@@ -342,37 +361,61 @@
         // Settled history does not count; only live lots, batches and their provenance do.
         q.allowed = !!r && !!asset && eq(asset.owner,request.actor) && !q.short && (!q.water || q.water.allowed) &&
           !q.missingTech.length && worker(s,a,auth.characterId) && funds.available >= recipe.workPrice + funds.reserve &&
-          live.batches < LIMIT && live.lots + recipe.outputs.length + r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0) <= LIMIT && r.assets.length <= 128 &&
+          live.batches < LIMIT && P.outputRoom(s,recipe.outputs.length,live) && r.assets.length <= 128 &&
           !r.batches.some(function (b) { return b.status === 'reserved' && b.assetId === asset.id; });
-        if (recipe.requiresSale && (request.disposition !== 'store' || !P.outletReady(s,a.id,recipe.outputs))) {
+        if (recipe.requiresSale && (!validDisposition(recipe,request.disposition) || !P.outletReady(s,a.id,recipe.outputs))) {
           q.allowed = false;q.reason = 'outlet';
         }
         if (q.missingTech.length) q.reason='tech';
         else if (!q.allowed && !q.short && q.reason !== 'outlet') q.reason = q.missingTech.length ? 'tech' : !worker(s,a,auth.characterId) ? 'work' : 'funds';
       } else {
-        if (request.recipeId !== undefined || request.disposition !== undefined) return q;
-        q.reason = 'batch';
+        if (request.recipeId !== undefined || (!amend && request.disposition !== undefined)) return q;
+        q.reason = amend ? 'amendBatch' : 'batch';
         q.allowed = !!batch && batch.status === 'reserved' && batch.siteId === a.id && eq(batch.actor,request.actor) &&
           auth.characterId === batch.workerId && auth.generation === batch.generation && asset && asset.id === batch.assetId;
         // Already funded work retains its original recipe and technology terms.
         if (q.allowed && request.operation === 'work') q.allowed = batch.workTurns.length < recipe.workDays && worker(s,a,batch.workerId);
-        if (q.allowed && request.operation === 'finish') q.allowed = batch.workTurns.length === recipe.workDays &&
+        if (q.allowed && settleOutput) q.allowed = (amend || batch.workTurns.length === recipe.workDays) &&
           FB.characterLocation(s,s.chars[batch.workerId])===a.countyId &&
           (batch.workerId!==s.player.charId || !s.player.travel && s.player.provinceId===a.countyId);
-        if (q.allowed && batch.inputs.some(function(x){var lot=r.lots.find(function(l){return l.id===x.lotId;});return FB.buildingSeasons.lotAvailable(s,lot)<x.quantity;})) q.allowed=false;
+        if (q.allowed && batch.inputs.some(function(x){var lot=r.lots.find(function(l){return l.id===x.lotId;});return FB.buildingSeasons.lotAvailable(s,lot)<x.quantity;})) {
+          q.allowed = false;
+          q.reason = 'reservedInputs';
+        }
         if (batch && batch.waterClaimId !== null) {
           q.water = FB.siteResources.quote(s,{operation:'consume',sourceId:a.sourceId,actor:request.actor,reservationId:batch.waterClaimId});
           var sourceRow=FB.siteResources.snapshot(s,a.countyId,a.siteId).find(function(row){return row.id===a.sourceId;});
           var actualClaim=sourceRow && sourceRow.reservations.find(function(c){return c.id===batch.waterClaimId;});
-          q.allowed = q.allowed && q.water.allowed && actualClaim && actualClaim.amount===recipe.water && sourceRow.period===batch.waterPeriod;
+          if (q.allowed && !(q.water.allowed && actualClaim && actualClaim.amount===recipe.water && sourceRow.period===batch.waterPeriod)) {
+            q.allowed = false;
+            q.reason = 'reservedWater';
+          }
+        }
+        if (q.allowed && settleOutput) {
+          q.priorDisposition = batch.disposition;
+          q.disposition = amend ? request.disposition : batch.disposition;
+          // Finishing a funded store batch does not promise or require a present buyer.
+          if (!validDisposition(recipe,q.disposition)) q.reason = 'disposition';
+          else if (amend && q.disposition === batch.disposition) q.reason = 'sameDisposition';
+          else if (!P.outputRoom(s,0)) q.reason = 'outputRoom';
+          else {
+            q.output = outputPreview(s,batch,recipe,q.disposition,held);
+            q.recipeId = batch.recipeId;
+            q.workDone = batch.workTurns.length;
+          }
+          q.allowed = !!q.output;
+          q.cost = 0;
         }
       }
     }
-    if (r && (!int(r.nextId,1,MAX-16) || !int(r.revision,0,MAX-1))) q.allowed = false;
+    if (r && (!int(r.nextId,1,MAX-16) || !int(r.revision,0,MAX-1))) {
+      q.allowed = false;
+      if (settleOutput) q.reason = 'outputRoom';
+    }
     q.allowed = !!q.allowed;
     q.reason = q.allowed ? null : q.reason;
     q.signature = JSON.stringify([s.turn,p.sites,r || null,request,auth,who,built(s,a),q.inputs,q.water,q.funds,q.missingTech,q.allowed,
-      FBDATA.productionRecipes,FBDATA.productionGoods]);
+      q.output,FBDATA.productionRecipes,FBDATA.productionGoods]);
     return q;
   };
   /* Transactions stage only their owned ledgers and payment accounts. */
@@ -389,7 +432,13 @@
     if (!review || !review.allowed) return false;
     var q = P.quote(s,review.request);
     if (!q.allowed || q.signature !== review.signature) return false;
-    var request = q.request, p = plan(s), a = p.sites.find(function (x) { return x.id === request.siteId; });
+    var request = q.request;
+    if (request.operation === 'amend') {
+      // The saved choice is mutable. The revision counts conserved ledger entries.
+      s.production.batches.find(function (b) { return b.id === request.batchId; }).disposition = q.disposition;
+      return true;
+    }
+    var a = plan(s).sites.find(function (x) { return x.id === request.siteId; });
     var person = original(s,request.actor);
     if (request.operation === 'work' && person.characterId === s.player.charId && !day) return false;
     var t = shadow(s), r = t.production, result = true, batch = r.batches.find(function (b) { return b.id === request.batchId; });
@@ -455,12 +504,18 @@
     return P.commit(s,q);
   };
   P.reason = function (q) {
-    if (q.reason === 'season') return FB.T('Review the local seasonal operating term before reserving or working this batch.');
+    if (q.reason === 'season') return FB.T('This batch needs a current local seasonal operating term.');
     if (q.allowed) return FB.T('Current terms are available. Processing costs are non-refundable; only completed paid work can produce the declared output.');
     if (q.reason === 'tech') return FB.T('Missing technology: {tech}.',{tech:(q.missingTech || []).map(function (key) { return FB.dataText(FB.state,FB.state.player.charId,'tech',key,FBDATA.tech[key],'name',{}); }).join(', ')});
     if (q.reason === 'inputs') return FB.T('The actual asset needs enough owned, unreserved input lots and lawful water.');
     if (q.reason === 'work') return FB.T('One available local adult must spend an ordinary action day, without enterprise, service or military work.');
     if (q.reason === 'outlet') return FB.T('Store this batch for a declared real buyer with current cash, reserves and remaining demand. Immediate use grants no sale or benefit.');
+    if (q.reason === 'disposition') return FB.T('This recipe requires stored output.');
+    if (q.reason === 'sameDisposition') return FB.T('This batch already has that output choice.');
+    if (q.reason === 'outputRoom') return FB.T('Production storage or receipt space is full.');
+    if (q.reason === 'reservedInputs') return FB.T('The original reserved inputs must still be usable.');
+    if (q.reason === 'reservedWater') return FB.T('The original water reservation is no longer usable.');
+    if (q.reason === 'amendBatch') return FB.T('Only the original local operator can change an open batch at its standing asset.');
     if (q.reason === 'funds') return FB.T('The same lawful payer needs the full processing cost and ordinary reserves, with no other pending batch at this asset.');
     if (q.reason === 'batch') return FB.T('The original batch, worker, asset and authority must remain available. Complete each workday before finishing.');
     return FB.T('A living lawful asset holder, the original owner and an actual standing building are required.');
@@ -794,7 +849,7 @@
           !identity(b.actor) || !eq(b.actor,asset.owner) || !own(s.chars,b.workerId) || !identity(b.payer) ||
           !(eq(b.payer,b.actor) || b.actor.kind === 'realm' && b.actor.id === 'player' && b.payer.kind === 'character' && b.payer.id === b.workerId) ||
           (b.actor.kind === 'character' ? b.actor.id !== b.workerId || b.generation !== null : !int(b.generation,0,FB.realmRulerGeneration(s,b.actor.id))) ||
-          ['reserved','committed','cancelled'].indexOf(b.status) < 0 || ['store','use'].indexOf(b.disposition) < 0 || b.paid !== recipe.workPrice ||
+          ['reserved','committed','cancelled'].indexOf(b.status) < 0 || !validDisposition(recipe,b.disposition) || b.paid !== recipe.workPrice ||
           !int(b.openedTurn,asset.openedTurn,s.turn) || (b.status === 'reserved' ? b.closedTurn !== null : !int(b.closedTurn,b.openedTurn,s.turn)) ||
           !Array.isArray(b.workTurns) || b.workTurns.length > recipe.workDays || !Array.isArray(b.inputs) || !b.inputs.length || b.inputs.length > LIMIT ||
           !Array.isArray(b.outputs) || b.outputs.length !== (b.status === 'committed' ? recipe.outputs.length : 0) ||
