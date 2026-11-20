@@ -10668,8 +10668,8 @@ window.FB = window.FB || {};
   };
 
   UI.showProduction = function (pid,idx,back,view,replace) {
-    view = view || {dispositions:{},scroll:0};
-    const s=FB.state,P=FB.production,site=FB.settlementsOf(s,pid)[idx],actions=[];
+    view = view || {dispositions:{},exchangeQuantities:{},scroll:0};
+    const s=FB.state,P=FB.production,E=FB.productionEconomy,site=FB.settlementsOf(s,pid)[idx],actions=[];
     if (!site) return;
     const holder=FB.settlementHolder(s,pid,idx);
     const actor=holder && holder.kind === 'realm' && holder.id === 'player' ? holder : {kind:'character',id:s.player.charId};
@@ -10683,8 +10683,98 @@ window.FB = window.FB || {};
       return c ? c.name : r ? r.name : FB.T('Unavailable');
     }
     function action(label,request) {
-      const q=request.serviceId ? FB.relayServices.quote(s,request) : request.routeId ? FB.productionEconomy.quote(s,request) : P.quote(s,request),n=actions.length;actions.push(q);
-      return reviewActionCardHtml({id:'production-action-'+n,label:label,data:{productionReview:n},disabled:!q.allowed,warn:!q.allowed,note:q.relay?FB.relayServices.reason(q):q.exchange?FB.productionEconomy.reason(q):P.reason(q)});
+      return reviewedAction(label,request.serviceId ? FB.relayServices.quote(s,request) : P.quote(s,request));
+    }
+    function reviewedAction(label,q,id) {
+      const n=actions.length;actions.push(q);
+      return reviewActionCardHtml({id:id || 'production-action-'+n,label:label,data:{productionReview:n},disabled:!q.allowed,
+        warn:!q.allowed,note:q.relay?FB.relayServices.reason(q):q.exchange?(q.allowed?'':E.reason(q)):P.reason(q)});
+    }
+    function worksName(works) {
+      const local=works && FB.settlementsOf(FB.state,works.countyId)[works.slot];
+      return local ? local.name : FB.T('Unavailable');
+    }
+    function paymentAccount(who) {
+      if (!who) return FB.T('Unavailable');
+      const params={name:accountName(who)};
+      return who.kind==='realm'?FB.T('{name} (public treasury)',params):FB.T('{name} (private account)',params);
+    }
+    function exchangeAmount(q,quantity) {
+      return esc(FB.T('{amount} ({unit})',{amount:quantity,unit:FBDATA.productionGoods[q.goodId].unit}));
+    }
+    function exchangeOption(title,q,quantity,cost,id,single) {
+      const payment=esc(FB.money(cost));
+      return '<div class="governance-card review-fact-card" id="'+id+'"><div class="panelh">'+esc(title)+'</div>'+
+        kv('Quantity moved',exchangeAmount(q,quantity))+(single?kv('Current price',payment):kv('Total payment',payment))+
+        kv('Supplier stock remaining',exchangeAmount(q,q.sourceRemaining-quantity))+
+        kv('Unreserved supplier stock remaining',exchangeAmount(q,q.sourceAvailable-quantity))+
+        kv('Destination stock after exchange',exchangeAmount(q,q.targetRemaining+quantity))+'</div>';
+    }
+    function exchangeTerms(q) {
+      if (!q.maxQuantity) return '';
+      return kv('Maximum now',exchangeAmount(q,q.maxQuantity))+
+        kv('Remaining demand this season',exchangeAmount(q,q.remainingDemand))+
+        (q.mode==='market'?kv('Remaining budget this season',esc(FB.money(q.remainingBudget))):'');
+    }
+    function reviewExchange(one,restore) {
+      const request=one.request, routeId=request.routeId;
+      const quantity=Object.prototype.hasOwnProperty.call(view.exchangeQuantities,routeId)?view.exchangeQuantities[routeId]:1;
+      function quote(amount) {
+        return Number.isSafeInteger(amount) && amount>=1 && amount<=10000
+          ? E.quote(FB.state,Object.assign({},request,{quantity:amount})) : null;
+      }
+      let chosen=quote(quantity);
+      let terms=chosen;
+      function parties(q) {
+        return kv('Supplier',esc(accountName(q.seller)))+kv('Buyer',esc(accountName(q.buyer)))+
+          kv('Payer',esc(q.mode==='market'?paymentAccount(q.payer):FB.T('None')))+
+          kv('Payment recipient',esc(q.mode==='market'?paymentAccount(q.recipient):FB.T('None')));
+      }
+      function limitText(q,selected) {
+        if (!q.maxQuantity || selected && !q.allowed) return E.reason(q);
+        return FB.T('Choose a whole quantity from 1 to {maximum}.',{maximum:q.maxQuantity});
+      }
+      function comparison(q,selected) {
+        return exchangeTerms(q)+
+          (q.maxQuantity ? exchangeOption(FB.T('Move one unit'),q,1,q.oneCost,'production-exchange-one',true):'')+
+          (selected && q.allowed ? exchangeOption(FB.T('Move chosen quantity'),q,q.request.quantity,q.cost,'production-exchange-chosen'):'')+
+          (q.sourceRemaining!==undefined ? exchangeOption(FB.T('Keep current stock'),q,0,0,'production-exchange-keep'):'');
+      }
+      const details='<div class="governance-card review-fact-card">'+
+        kv('Material',esc(name('productionGood',one.goodId,FBDATA.productionGoods)))+
+        kv('From',esc(worksName(one.fromSite)))+kv('To',esc(worksName(one.toSite)))+
+        '<div id="production-exchange-parties">'+parties(terms)+'</div>'+
+        '<label for="production-exchange-quantity">'+esc(FB.T('Quantity to exchange'))+'</label>'+
+        '<input id="production-exchange-quantity" type="number" inputmode="numeric" min="1" max="'+
+        (terms.maxQuantity || 0)+'" step="1" value="'+quantity+'" aria-describedby="production-exchange-limit">'+
+        '<p id="production-exchange-limit" role="status">'+esc(limitText(terms,true))+'</p></div>';
+      const footer='<div class="modal-body-actions"><button type="button" class="btn primary" id="production-confirm">'+
+        esc(FB.T('Confirm exchange'))+'</button><button type="button" class="btn" id="production-keep-stock">'+esc(FB.T('Keep stock'))+'</button></div>';
+      openModal(FB.T('Review production exchange'),details+'<div id="production-exchange-comparison">'+comparison(terms,true)+'</div>'+footer,
+        {historyView:true,historyBack:true,historyBackRender:restore});
+      const input=$('production-exchange-quantity'), confirm=$('production-confirm');
+      input.setAttribute('aria-invalid',chosen.allowed?'false':'true');
+      confirm.disabled=!chosen.allowed;
+      let reviewedValue=input.value;
+      input.oninput=function () {
+        reviewedValue=input.value;
+        chosen=quote(input.valueAsNumber);
+        if (chosen) {
+          view.exchangeQuantities[routeId]=input.valueAsNumber;
+          terms=chosen;
+          input.max=terms.maxQuantity || 0;
+          $('production-exchange-parties').innerHTML=parties(terms);
+        }
+        $('production-exchange-limit').textContent=limitText(terms,!!chosen);
+        input.setAttribute('aria-invalid',chosen && chosen.allowed?'false':'true');
+        $('production-exchange-comparison').innerHTML=comparison(terms,!!chosen);
+        confirm.disabled=!chosen || !chosen.allowed;
+      };
+      $('production-keep-stock').onclick=function () { modalHistoryBack(restore); };
+      confirm.onclick=function () {
+        if (!chosen || input.value!==reviewedValue || !E.commit(FB.state,chosen)) UI.toast(FB.T('Exchange terms changed. Review the current route.'));
+        UI.refresh();modalHistoryBack(restore);
+      };
     }
     let h='<p class="hint">'+esc(FB.T('Batches reserve actual owned materials and pay the full processing cost upfront. Work replaces the ordinary daily focus. Cancellation releases materials but does not refund processing costs. Completed lots can be exchanged only with a declared funded counterparty.'))+'</p>';
     rows.forEach(function (row) {
@@ -10718,17 +10808,18 @@ window.FB = window.FB || {};
         h+='</div>';
       });h+='</div>';
     });
-    FB.productionEconomy.snapshot(s,pid,site.site).forEach(function(route) {
+    E.snapshot(s,pid,site.site).forEach(function(route) {
       const profile=FBDATA.productionExchangeProfiles[route.profileId];
       const operation=profile.mode==='owned'?'transfer':(rows.some(function(row){return row.site.id===route.fromSiteId;})?'sell':'buy');
-      const q=FB.productionEconomy.quote(s,{operation:operation,routeId:route.id,actor:actor,quantity:1});
-      h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(name('productionGood',profile.goodId,FBDATA.productionGoods))+'</div>'+
-        kv('Quantity',esc(FB.T('1 ({unit})',{unit:FBDATA.productionGoods[profile.goodId].unit})))+
-        kv('Supplier',esc(accountName(q.seller)))+kv('Buyer',esc(accountName(q.buyer)))+
-        kv('Current price',esc(FB.money(q.cost || 0)))+
-        kv('Remaining demand',String(q.remainingDemand===undefined?profile.quantityLimit:q.remainingDemand))+
-        kv('Remaining budget',esc(FB.money(q.remainingBudget===undefined?profile.budget:q.remainingBudget)))+
-        reviewActionsHtml(action(operation==='transfer'?FB.T('Move one owned unit'):operation==='sell'?FB.T('Sell one unit'):FB.T('Buy one unit'),q.request))+'</div>';
+      const exchangeActor=P.eventActor(s,pid,idx) || actor;
+      const q=E.quote(s,{operation:operation,routeId:route.id,actor:exchangeActor,quantity:1});
+      const id='production-exchange-'+route.id;
+      h+='<div class="governance-card review-fact-card" id="'+esc(id)+'-route" tabindex="-1">'+
+        '<div class="panelh">'+esc(name('productionGood',profile.goodId,FBDATA.productionGoods))+'</div>'+
+        kv('From',esc(worksName(q.fromSite)))+kv('To',esc(worksName(q.toSite)))+
+        (q.allowed?kv('Price for one unit',esc(FB.money(q.cost)))+exchangeTerms(q):'')+
+        reviewActionsHtml(reviewedAction(operation==='transfer'?FB.T('Move one owned unit or choose a quantity'):
+          operation==='sell'?FB.T('Sell one unit or choose a quantity'):FB.T('Buy one unit or choose a quantity'),q,id))+'</div>';
     });
     FB.relayServices.snapshot(s,pid,site.site).forEach(function(service) {
       const profile=FBDATA.relayServiceProfiles[service.profileId],rid=FB.startRealmId(s,service.recipientRealmId);
@@ -10757,18 +10848,17 @@ window.FB = window.FB || {};
     $('gm-body').querySelectorAll('[data-production-review]').forEach(function (button) {
       button.onclick=function () {
         remember();const q=actions[Number(button.dataset.productionReview)],origin=button.id;
-        function restore() { list();if($(origin))$(origin).focus({preventScroll:true});$('gm-body').scrollTop=view.scroll; }
-        const reserve=q.request.operation==='reserve',exchange=q.exchange,relay=q.relay;
+        function restore() {
+          list();
+          const control=$(origin), focus=control && control.disabled && q.exchange ? $(origin+'-route') : control;
+          if(focus)focus.focus({preventScroll:true});
+          $('gm-body').scrollTop=view.scroll;
+        }
+        if(q.exchange) { reviewExchange(q,restore);return; }
+        const reserve=q.request.operation==='reserve',relay=q.relay;
         let info='<div class="governance-card review-fact-card">'+kv('Processing cost',esc(reserve?FB.T('{gold} gold, non-refundable',{gold:q.cost}):FB.T('Already paid')))+
           kv('Payer',esc(q.payer && q.payer.kind==='realm'?FB.T('Public treasury'):FB.T('Original private account')))+
-          kv('Action day',esc(q.request.operation==='work'?FB.T('One day; replaces Daily Focus'):FB.T('None')))+'<p>'+esc(exchange?FB.productionEconomy.reason(q):P.reason(q))+'</p></div>';
-        if(exchange)info='<div class="governance-card review-fact-card">'+kv('Current price',esc(FB.money(q.cost || 0)))+
-          kv('Supplier',esc(accountName(q.seller)))+kv('Buyer',esc(accountName(q.buyer)))+
-          kv('Material',esc(name('productionGood',q.goodId,FBDATA.productionGoods)))+
-          kv('Quantity',esc(FB.T('{amount} ({unit})',{amount:q.request.quantity,unit:FBDATA.productionGoods[q.goodId].unit})))+
-          kv('Supplier account',esc(q.recipient && q.recipient.kind==='realm'?FB.T('Supplier public account'):FB.T('Supplier private account')))+
-          kv('Buyer account',esc(q.payer && q.payer.kind==='realm'?FB.T('Buyer public account'):FB.T('Buyer private account')))+
-          '<p>'+esc(FB.productionEconomy.reason(q))+'</p></div>';
+          kv('Action day',esc(q.request.operation==='work'?FB.T('One day; replaces Daily Focus'):FB.T('None')))+'<p>'+esc(P.reason(q))+'</p></div>';
         if (reserve) {
           const recipe=FBDATA.productionRecipes[q.request.recipeId];
           info+='<p>'+esc(FB.T('Reserve {inputs}; after {days} paid workdays, produce {outputs}.',{inputs:goods(recipe.inputs),days:recipe.workDays,outputs:goods(recipe.outputs)}))+'</p>';
@@ -10786,7 +10876,7 @@ window.FB = window.FB || {};
         openModal(relay?FB.T('Review relay provisions'):FB.T('Review production batch'),info,{historyView:true,historyBack:true,historyBackRender:restore});
         $('production-confirm').disabled=!q.allowed;
         $('production-confirm').onclick=function () {
-          if (!(relay?FB.relayServices.commit(FB.state,q):exchange?FB.productionEconomy.commit(FB.state,q):P.perform(FB.state,q))) UI.toast(FB.T('Terms changed. Review the current batch.'));
+          if (!(relay?FB.relayServices.commit(FB.state,q):P.perform(FB.state,q))) UI.toast(FB.T('Terms changed. Review the current batch.'));
           UI.refresh();modalHistoryBack(restore);
         };
       };
