@@ -11,7 +11,7 @@
   var nativeStories = [], typesSealed = false;
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
-    'status', 'choices', 'quote', 'blocker', 'review', 'apply',
+    'status', 'choices', 'quote', 'blocker', 'review', 'reviewFacts', 'apply',
     'validate', 'migrate', 'restore', 'foundRevolt', 'appliesToBookmark', 'observe', 'people',
     'validatesBookmarkReference'];
   function own(o, key) {
@@ -653,10 +653,11 @@
       });
       for (var choice of FB.stories.choices(s, id)) {
         var quote = FB.stories.quote(s, id, choice.id);
+        var detail = choice.showBlocker && !quote.allowed ? blockerText(story, s, quote) : choice.detail;
         html += '<button type="button" class="actionbtn" data-story-choice="' +
           esc(choice.id) + '" aria-disabled="' + (!quote.allowed) + '">' +
           '<b>' + esc(choice.label) + '</b><br><span class="hint">' +
-          esc(choice.detail) + '</span></button>';
+          esc(detail) + '</span></button>';
       }
       var navigation = returnToCard(id);
       if (options && options.fromAffairs) {
@@ -685,19 +686,27 @@
       var reviewed = FB.stories.quote(FB.state, id, choiceId);
       var rec = record(FB.state, id), shared = UI._shared;
       var people = story.reviewPeople ? story.reviewPeople(FB.state, rec, choiceId, reviewed) : [];
-      var body = '<div class="gm-body-text"><p>' + esc(selected.detail) + '</p>' +
+      var facts = reviewed.allowed && story.reviewFacts && story.reviewFacts(FB.state, rec, choiceId, reviewed);
+      var body = (facts ? '' : '<div class="gm-body-text">' +
+        (selected.showBlocker && !reviewed.allowed ? '' : '<p>' + esc(selected.detail) + '</p>') +
         (reviewed.allowed ? '' : '<p class="hint">' +
-          esc(blockerText(story, FB.state, reviewed)) + '</p>') + '</div>';
+          esc(blockerText(story, FB.state, reviewed)) + '</p>') + '</div>');
       if (people.length) body += shared.reviewPeopleHtml(people.map(function (row) {
         var person = FB.state.chars[row.characterId];
         return person ? shared.reviewPersonHtml(person, row.label) : '';
+      }).join(''));
+      if (facts) body += shared.reviewFactsCard('', facts.map(function (row) {
+        return shared.rawKv(row[0], esc(row[1]));
       }).join(''));
       if (reviewed.allowed && story.review) {
         for (var line of story.review(FB.state, rec, choiceId, reviewed) || [])
           body += '<p class="hint">' + esc(line) + '</p>';
       }
-      if (reviewed.allowed) body += '<button type="button" class="btn primary" id="gm-story-confirm">' +
-        esc(FB.T('Confirm {choice}', { choice:selected.label })) + '</button>';
+      if (reviewed.allowed) {
+        var confirmLabel = FB.T('Confirm {choice}', { choice:selected.label });
+        body += facts ? shared.reviewActionsHtml(shared.reviewActionCardHtml({ id:'gm-story-confirm', label:confirmLabel })) :
+          '<button type="button" class="btn primary" id="gm-story-confirm">' + esc(confirmLabel) + '</button>';
+      }
       UI.openModal(FB.T('Review {choice}', { choice:selected.label }),
         body, { historyView:true, historyBack:true });
       if (people.length) FB.paintFaces(document.getElementById('gm-body'), FB.state);

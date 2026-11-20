@@ -1,0 +1,45 @@
+{
+  "name": "A quay inventory contract",
+  "storyInstances": {
+    "quay_inventory_work": {
+      "id": "quay_inventory_work", "type": "household_track", "title": "Taking inventory at the quay",
+      "intro": "The local court offers three shifts counting goods brought to the quay.",
+      "homeProvinceId": "paris", "continuity": "household", "initialStage": "offer",
+      "requirements": {"realms": ["west_francia"], "provinces": ["paris"]},
+      "jobs": {"inventory": {"payerRealmId": "west_francia", "provinceId": "paris", "days": 3, "fee": 17,
+        "completionGold": 11, "settlementGold": 2, "expiresDays": 12, "yearMin": 867, "yearMax": 867}},
+      "stages": {
+        "offer": {"name": "A quay inventory offer", "text": "Count the goods over three working days.", "choices": [
+          {"id": "accept", "label": "Work the first inventory shift", "detail": "Reserve {money:17} and use one action day.",
+            "operation": {"kind": "start_job", "jobId": "inventory"}, "next": "working"},
+          {"id": "decline", "label": "Decline the inventory work", "detail": "Keep the day free.",
+            "operation": {"kind": "record_decision"}, "next": "closed"}
+        ], "transitions": []},
+        "working": {"name": "Counting goods", "text": "Each shift takes one action day.", "choices": [
+          {"id": "shift", "label": "Work another inventory shift", "detail": "Use one action day to count the next goods.",
+            "operation": {"kind": "work_job", "jobId": "inventory"}, "next": "working"}
+        ], "transitions": [
+          {"when": {"kind": "job_state", "jobId": "inventory", "states": ["disputed"]}, "next": "account"},
+          {"when": {"kind": "job_state", "jobId": "inventory", "states": ["cancelled", "expired"]}, "next": "closed"}
+        ]},
+        "account": {"name": "The inventory account", "text": "The court disputes the remaining charge.", "choices": [
+          {"id": "settlement", "label": "Take the smaller inventory settlement", "detail": "Collect {money:2} and return {money:4} to the payer.",
+            "operation": {"kind": "settle_job", "jobId": "inventory", "resolution": "settlement"}, "next": "closed"},
+          {"id": "hearing", "label": "Hear the inventory account", "detail": "Spend an action day and collect {money:6}.",
+            "operation": {"kind": "settle_job", "jobId": "inventory", "resolution": "hearing"}, "next": "closed"}
+        ], "transitions": [
+          {"when": {"kind": "job_state", "jobId": "inventory", "states": ["cancelled", "expired"]}, "next": "closed"}
+        ]},
+        "closed": {"name": "The inventory account is closed", "text": "The household returns to its usual work.",
+          "terminal": true, "choices": [], "transitions": []}
+      }
+    }
+  },
+  "startScenarios": [
+    {"id": "quay_inventory_start", "name": "Quay inventory household", "desc": "A Paris household with a local offer of paid work.",
+      "intro": "Consider an inventory contract.", "bookmarkIds": ["867"], "fixedProvinceId": "paris",
+      "startCulture": "frankish", "startReligion": "catholic", "alwaysUnlocked": true, "tier": 1,
+      "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["quay_inventory_work"],
+      "trackLocations": {"quay_inventory_work": ["paris"]}}
+  ]
+}
