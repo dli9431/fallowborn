@@ -817,6 +817,9 @@ FBDATA.techImpactReviews.features.religious_activity_patronage = {
 FBDATA.techImpactReviews.features.religious_service_shortfall_funding = {
   mode:'none', rationale:'Households can meet the shortfall for existing local services using their own purse and the institution’s declared fund capacity.'
 };
+FBDATA.techImpactReviews.features.religious_service_sponsored_enrollment = {
+  mode:'none', rationale:'Combining a voluntary restricted gift and local attendance uses existing household money, admission and service capacity.'
+};
 FBDATA.techImpactReviews.features.religious_activity_outreach = {
   mode:'none', rationale:'Funding an existing permitted community project uses its existing policy and population limits, not a new conversion capability.'
 };

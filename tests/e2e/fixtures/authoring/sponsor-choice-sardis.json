@@ -1,0 +1,46 @@
+{
+  "name": "Sardis service enrollment example",
+  "religiousPatronage": {
+    "jewish_sardis_giving_493": {
+      "name": "Support congregational provisions",
+      "period": { "yearMin": 493, "yearMax": 493 },
+      "openings": [{ "id": "493", "revision": "jewish_samaritan_v3" }],
+      "faithIds": ["jewish"],
+      "affiliationIds": [],
+      "roleIds": [],
+      "institutionId": "jewish_sardis_congregation_493",
+      "payer": "household",
+      "reserve": 6,
+      "foundation": { "startup": 1, "capital": 2, "treasury": 1, "landRequired": true },
+      "funds": {
+        "building_care": { "name": "Provision supplies", "capacity": 4, "unitCost": 2.5 }
+      },
+      "outreach": []
+    }
+  },
+  "religiousActivities": {
+    "sardis_provisions_service_493": {
+      "name": "Help prepare congregational provisions",
+      "period": { "yearMin": 493, "yearMax": 493 },
+      "openings": [{ "id": "493", "revision": "jewish_samaritan_v3" }],
+      "faithIds": ["jewish"],
+      "affiliationIds": [],
+      "roleIds": ["worshipper"],
+      "institutionId": "jewish_sardis_congregation_493",
+      "mode": "local",
+      "purpose": null,
+      "siteId": null,
+      "payer": "household",
+      "cost": 2.75,
+      "reserve": 3,
+      "duration": 3,
+      "calendar": "any_day",
+      "interruption": "retain_cost",
+      "recipient": "institution",
+      "milestone": "sardis_provisions_service_done",
+      "reward": { "piety": 2, "prestige": 0, "skills": {} },
+      "legacy": null,
+      "service": { "fund": "building_care", "cost": 2.5 }
+    }
+  }
+}

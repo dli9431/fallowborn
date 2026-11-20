@@ -40,6 +40,10 @@ The target is the total number of whole uses to prepay in that fund. The gift is
 
 The shortfall is a donation with fund and targetUses instead of a fixed amount. Apply requotes the balance, offer declarations, eligibility, payer and property before transferring the gift into the same restricted account. The target is review data only. A later eligible participant consumes one unit through ordinary completion. Funding grants no admission, reservation, reward or public spending authority. Native Sardis synagogue care demonstrates the path. Ordinary JSON can vary the local activity, fund cost, capacity and household reserve through the same religiousActivities and religiousPatronage schemas.
 
+A named household participant reviewing an ordinary local service can choose Donate and enroll when the existing matching restricted fund is short of one unit and every other enrollment and patronage check passes. The offer uses the receiving house's stored patronage profile, matches the service's declared unit cost and saved fund capacity, and quotes the current balance, exact shortfall donation, ordinary attendance fee and total. The shared household purse must cover the total and retain enough for both reserves. Leave funding unchanged, Back and Escape spend nothing and keep the selected participant, disclosures, scroll and focus. A fully funded service uses ordinary enrollment and charges only its fee. Separate gifts remain available.
+
+religiousActivitySponsorshipQuote composes both canonical quotes. Confirmation recomputes and compares both before a single household debit, a restricted gift into the existing institutional account, and an ordinary paid commitment for the selected character. Confirmation records no service use or reward, and the gift remains available to other participants. Completion still requires and consumes a funded unit through the normal activity tick. Interruption retains the ordinary fee and leaves any unspent gift with the institution. The canonical account and frozen commitment restore without replaying the payment or keeping a separate sponsorship record. Both built-in and imported activities use the existing typed fee, reserve, duration, admission and fund fields.
+
 Legacy abbey queries and repair preserve these explicit property records but exclude them from Catholic appointments, residents, automatic succession, allowance and finance. Legacy houses are unchanged and cannot be relabeled into a new tradition by this adapter. Historical family profiles must declare their own service and property rules. This separation does not enable papacy or medieval abbeys in an ancient campaign.
 
 Outreach
@@ -50,6 +54,8 @@ Technology and integration
 
 religious_service_shortfall_funding has technology impact none. The household can cover a shortfall using its existing purse and a declared institutional service account. No discovery is needed to make the gift.
 
+religious_service_sponsored_enrollment has technology impact none. Local admission and the actual combined payment govern this choice.
+
 religious_activity_participation, religious_activity_patronage and religious_activity_outreach have technology impact none. Presence, admission, lawful property and actual funding govern these baseline activities; no discovery gate is credible. Optional route improvements keep their existing technology rules. Household participation and autonomous decisions separately declare technology impact none. The new optional state is created only by explicit starts; no restore path initializes an activity or endowment.
 
 Coverage
@@ -57,6 +63,8 @@ Coverage
 kufa_hanafi_learning_800, baghdad_shafii_learning_1066 and nishapur_shafii_ashari_learning_1066 use qualified learner membership and explicit scholarly affiliations in the dated circles. Seven days, no fee and one intelligence point per actor milestone are simulation terms. Kufa's window is 800 only and the other windows are 1066 only. data/islamic_rollout.js selects their accepted fresh revisions, preserving every predecessor and saved commitment. No prayer/judicial office, career rank, Hajj completion or endowment follows from learning. islamic_scholarly_learning has technology impact none. The Islamic specification uses fictional property terms to cover funding conservation, unused restricted gifts on interruption, public/AI payer separation and retained service property; no historical waqf or recurring revenue is declared. Sources and geographical limits are in docs/designs/religions.md.
 
 tests/e2e/specs/religious-activities.spec.js covers an existing pilgrimage adapter and independently declared fictional local learning/service, pure and stale proposals, date/revision gates, unsupported calendars, single rewards, interruption, exact land and gold conservation, restricted funding, service delivery, property holds, capacity, county/settlement project progress and legacy reward suppression. Fixture institutions are fictional and are not shipped placements.
+
+tests/e2e/specs/sponsor-choice.spec.js covers the retained household service review, separate funding, stale refusal, exact settlement, ordinary funded enrollment and loss of funding before completion. Its ordinary JSON import varies the activity's fee, duration and reserve and the fund's unit cost, reserve and capacity. Restore checks retain the canonical commitment and account at enrollment and after delivery.
 
 Household review and profession gates
 
