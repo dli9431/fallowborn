@@ -15,26 +15,36 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { openGame } = require('../support/game/navigation');
+const { useReviewStartRules } = require('../support/game/released-starts');
 
 async function start(page, testInfo) {
   await startHistoricalGame(page, testInfo, { bookmark:'476',
     code:'ITALYFOLLOWUP-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' });
 }
 async function startOdoacer(page, testInfo) {
+  await useReviewStartRules(page);
   await openGame(page, testInfo);
-  await page.evaluate(function () {
-    FBDATA.startScenarios.find(function (s) { return s.id === 'odoacer_476'; }).hidden = false;
-  });
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#bookmarklist [data-bookmark="476"]').click();
+  const card = page.locator('#newgame:not(.hidden) #scenariolist [data-scenario="odoacer_476"]');
+  await expect(card).toBeVisible();
+  await expect(card).not.toHaveAttribute('aria-disabled');
+  await page.locator('#btn-ng-back').click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill('ITALYFOLLOWUP-476-odoacer_476-pavia-m-Odoacer');
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
   await page.getByRole('button', { name:'Begin', exact:true }).click();
-  await page.evaluate(function () { FB.game.setPaused(true); });
+  expect(await page.evaluate(function () {
+    FB.game.setPaused(true);
+    const s = FB.state;
+    return { bookmark:s.start.id, scenario:s.start.scenarioId, realm:s.start.rulerRealmId,
+      nativeActor:s.player.charId === s.stories.western_court_476.odoacerId,
+      hidden:FBDATA.startScenarios.find(function (sc) { return sc.id === 'odoacer_476'; }).hidden };
+  })).toEqual({ bookmark:'476', scenario:'odoacer_476', realm:'federates_476', nativeActor:true, hidden:true });
 }
 
 for (const crazygames of [false]) {
