@@ -1,0 +1,31 @@
+{
+  "name": "Winter lamps",
+  "householdStandards": {
+    "winter_lamps": {
+      "name": "Winter lamps",
+      "desc": "Oil and fittings maintained for reading after dark.",
+      "kind": "general",
+      "titleFloor": false,
+      "levels": [
+        {
+          "name": "Reading lamp",
+          "desc": "Adds 1 percentage point to yearly education chances.",
+          "cost": 12,
+          "upkeep": 1,
+          "tierMin": 0,
+          "marketBasket": { "wares": 1 },
+          "fx": { "education": 0.01 }
+        },
+        {
+          "name": "Lamps for every room",
+          "desc": "Adds 4 percentage points to yearly education chances.",
+          "cost": 32,
+          "upkeep": 2,
+          "tierMin": 1,
+          "marketBasket": { "materials": 1 },
+          "fx": { "education": 0.04 }
+        }
+      ]
+    }
+  }
+}

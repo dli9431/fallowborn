@@ -164,12 +164,30 @@ standard level continues to enforce its existing authored `requiresTech` require
 
 At a season boundary, ordinary household and livelihood income settles first.
 `FB.householdStandardsSeason` then pays maintained standards before retainers,
-schooling, and finance. When the purse cannot cover the total, reducible levels lapse:
-luxuries, wares, transport, quarters, board, then active work outfits. Work outfits lose
-the highest active level first, with definition order breaking ties. A landed ruler's
+schooling, and finance. When the purse cannot cover the total, reducible levels lapse.
+The customary order is luxuries, wares, transport, quarters, board, then other
+non-work standards in definition order, and finally active work outfits. Work outfits
+lose the highest active level first, with definition order breaking ties. A landed ruler's
 remaining title-floor upkeep is compulsory and may leave a cash shortfall. A lost or
 voluntarily reduced level gives no refund and must be bought again at full setup cost.
 Every purchase and lapse writes a locale-neutral durable Chronicle descriptor.
+
+Better the Household lets the head designate one active, reducible standard whose
+next reduction saves upkeep, or restore the customary order. The review shows the
+current market-quoted saving per season, remaining upkeep, lost level, and resulting
+benefit or dormancy. Setting the order costs nothing and changes no maintained level.
+The optional `player.householdShortfallFirst` stores the standard id with the
+household. Saves without it use the customary order. Funded settlements leave the
+choice in place. At the next actual standards shortfall, settlement clears the
+choice and tries one level of that standard. If its rank floor, activity, maintained
+level, or price makes it ineligible, settlement proceeds in the customary order.
+That order also covers any gap after the first reduction. Children can restore a
+stale inherited choice through the same sheet.
+
+Technology impact is **none** (`household_shortfall_priority`). Choosing which
+expense to give up uses ordinary household authority and the existing catalogue.
+Bundled and JSON-authored standards use the same live eligibility, pricing, and
+reduction rules, including each level's authored technology gates.
 
 The household sheet is a compact catalogue rather than a stack of complete
 asset ledgers. Each maintained living standard or work outfit is one three-part
@@ -201,9 +219,8 @@ On touch, tablet-width, and short layouts, button hover tooltips are suppressed
 and one visible 48 px `?` control on the current-state card toggles both adjustment
 breakdowns inline; roomy pointer layouts hide that disclosure control. There are
 no separate standard-detail or confirmation sheets. Permanent property
-continues to use its distinct compact purchase and owned rows. This is presentation
-only; the level map, purchase eligibility, no-refund reduction, and seasonal lapse
-order remain authoritative.
+continues to use its distinct compact purchase and owned rows. The stepper uses the
+authoritative level map, purchase eligibility, and no-refund reduction rules.
 
 Profession outfits multiply positive vocational focus resources, resident-family wages
 or clerical yield, and matching staffed-enterprise output. Soldier outfits affect paid

@@ -469,6 +469,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'A child household head or landed ruler giving up an inherited household standard within the floor allowed by their station is a baseline recovery control; no innovation credibly unlocks abandoning an expense.'
       },
+      household_shortfall_priority:{
+        mode:'none',
+        rationale:'A household can plan which expense to surrender first within the existing upkeep, rank and work rules.'
+      },
       landed_household_standards:{
         mode:'none',
         rationale:'Ruler households maintaining the same living standards and work outfits as commoner households needs no separate innovation; every purchased level retains its existing authored technology requirement.'
