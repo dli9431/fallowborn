@@ -1,0 +1,29 @@
+{
+  "storyInstances": {
+    "hill_refuge": {
+      "id": "hill_refuge",
+      "type": "household_refuge",
+      "title": "Hill temporary shelter",
+      "intro": "Review exact places, permission and finite terms.",
+      "locality": {
+        "provinceId": "shelter_hill_marsh",
+        "siteId": "shelter_hill_marsh_town"
+      },
+      "provider": {
+        "institutionId": "hill_refuge_seat",
+        "officeId": "hill_refuge_bishop",
+        "realmId": "shelter_hill_estuary_court"
+      },
+      "capacity": 4,
+      "acceptanceDays": 2,
+      "termDays": 4,
+      "funding": {
+        "perPersonDay": 0.5
+      },
+      "partyIds": ["hill_party"],
+      "threatIds": ["hill_attempt"],
+      "providerPolicy": "review",
+      "adultPolicy": "review"
+    }
+  }
+}
