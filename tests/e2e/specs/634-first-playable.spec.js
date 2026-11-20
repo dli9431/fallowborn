@@ -4,6 +4,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame,openTitle} = require('../support/game/navigation');
 const {beginBookmark,beginBookmarkFromTitle,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
+const {useReleasedStartRules,useReviewStartRules} = require('../support/game/released-starts');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {manifestRuns,manifestFiles} = require('../fixtures/bookmark-manifest/eager-document');
 
@@ -49,6 +50,23 @@ async function chooseBeginning(page) {
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
 }
 
+async function expectUnlocked634Roster(page) {
+  await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
+  expect(await page.locator('#scenariolist .scen-group').allTextContents())
+    .toEqual(['Historical starts','Story starts','Open starts']);
+  expect(await page.locator('#scenariolist [data-scenario]').evaluateAll(function (cards) {
+    return cards.map(function (card) { return card.getAttribute('data-scenario'); });
+  })).toEqual(['umar_634','heraclius_634','yazdegerd_634','ctesiphon_household_634','damascus_household_634',
+    'frontier_household_634','medina_household_634','farmer_634','craftsman_634']);
+  for (const id of startIds) {
+    const card = page.locator('#scenariolist [data-scenario="' + id + '"]');
+    await expect(card).toBeVisible();
+    await expect(card).not.toHaveAttribute('aria-disabled','true');
+    await expect(card).not.toHaveClass(/locked/);
+  }
+  expect(await page.locator('#scenariolist [data-scenario="yazdegerd_634"]').count()).toBe(1);
+}
+
 test('634 loads every start and story contributor before the native manifest closes',async function () {
   const html = fs.readFileSync(path.resolve(__dirname,'../../../index.html'),'utf8');
   const scripts = Array.from(html.matchAll(/<script\b[^>]*src="([^"]+)"[^>]*>/g));
@@ -79,10 +97,8 @@ test('634 loads every start and story contributor before the native manifest clo
     });
 });
 
-test('634 is offered chronologically and all nine implemented starts are selectable',async function ({page},info) {
-  await page.addInitScript(function () {
-    window.FBDATA = window.FBDATA || {}; window.FBDATA.reviewOpenStarts = true;
-  });
+test('634 is offered chronologically and all nine implemented starts are selectable in review',async function ({page},info) {
+  await useReviewStartRules(page);
   await openTitle(page,info);
   await chooseBeginning(page);
   await expect(page.locator('#bookmarklist [data-bookmark="634"]')).toContainText('The Early Conquests');
@@ -90,20 +106,7 @@ test('634 is offered chronologically and all nine implemented starts are selecta
     return cards.map(function (card) { return card.getAttribute('data-bookmark'); });
   })).toEqual(['476','568','634','711','800','867','1066','1096','1204','1241']);
   await page.locator('#bookmarklist [data-bookmark="634"]').click();
-  await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
-  expect(await page.locator('#scenariolist .scen-group').allTextContents())
-    .toEqual(['Historical starts','Story starts','Open starts']);
-  expect(await page.locator('#scenariolist [data-scenario]').evaluateAll(function (cards) {
-    return cards.map(function (card) { return card.getAttribute('data-scenario'); });
-  })).toEqual(['umar_634','heraclius_634','yazdegerd_634','ctesiphon_household_634','damascus_household_634',
-    'frontier_household_634','medina_household_634','farmer_634','craftsman_634']);
-  for (const id of startIds) {
-    const card = page.locator('#scenariolist [data-scenario="' + id + '"]');
-    await expect(card).toBeVisible();
-    await expect(card).not.toHaveAttribute('aria-disabled','true');
-    await expect(card).not.toHaveClass(/locked/);
-  }
-  expect(await page.locator('#scenariolist [data-scenario="yazdegerd_634"]').count()).toBe(1);
+  await expectUnlocked634Roster(page);
   expect(await page.evaluate(function () {
     const b = FB.bookmark('634');
     if (!b) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
@@ -127,21 +130,17 @@ test('634 is offered chronologically and all nine implemented starts are selecta
   await expect(page.locator('#scenariolist [data-scenario]')).toHaveCount(9);
 });
 
-test('634 and all three rulers remain selectable with review disabled',async function ({page},info) {
-  await page.addInitScript(function () {
-    window.FBDATA = window.FBDATA || {}; window.FBDATA.reviewOpenStarts = false;
-  });
+test('634 and all nine starts remain selectable with released rules',async function ({page},info) {
+  await useReleasedStartRules(page);
   await openTitle(page,info);
   await chooseBeginning(page);
   await page.locator('#bookmarklist [data-bookmark="634"]').click();
-  await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
-  expect(await page.locator('#scenariolist [data-scenario]').evaluateAll(function (cards) {
-    return cards.map(function (card) { return card.getAttribute('data-scenario'); });
-  })).toEqual(['umar_634','heraclius_634','yazdegerd_634','ctesiphon_household_634','damascus_household_634','frontier_household_634',
-    'medina_household_634','farmer_634','craftsman_634']);
+  await expectUnlocked634Roster(page);
+  expect(await page.evaluate(function () { return FBDATA.reviewOpenStarts; })).toBe(false);
 });
 
 test('634 Observe enters the selected opening through the ordinary picker',async function ({page},info) {
+  await useReleasedStartRules(page);
   await openTitle(page,info);
   await chooseBeginning(page);
   await page.locator('#bookmarklist [data-bookmark="634"]').click();
@@ -174,6 +173,7 @@ for (const opening of [
   ['medina_household_634','medina','Review','established','medina_household_track_634']
 ]) {
   test('selectable 634 start code creates and restores ' + opening[0] + ' without replay',async function ({page},info) {
+    await useReleasedStartRules(page);
     await openTitle(page,info);
     await chooseBeginning(page);
     await page.locator('#btn-bm-seed').click();
@@ -340,6 +340,7 @@ test('failed 634 composition leaves other bookmarks and ordinary starts playable
 });
 
 test('an explicitly rehidden 634 rejects picker, codes, direct creation and Observe',async function ({page},info) {
+  await useReleasedStartRules(page);
   await openGame(page,info);
   await page.evaluate(function () { FBDATA.bookmarks['634'].revisions.core_courts_v4.hidden = true; });
   const full = page.locator('#btn-choose-beginning');
