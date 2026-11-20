@@ -1,0 +1,23 @@
+{
+  "name": "Riverside school terms",
+  "schooling": {
+    "riverside_letters": {
+      "name": "Riverside letters school",
+      "icon": "📖",
+      "cost": 2.5,
+      "chance": 0.55,
+      "focuses": ["lea"],
+      "requiresTech": "manuscript_codex",
+      "desc": "Basic scholarship and letters by the river."
+    },
+    "bridge_reckoning": {
+      "name": "Bridge reckoning school",
+      "icon": "📚",
+      "cost": 4.75,
+      "chance": 0.7,
+      "focuses": ["ste"],
+      "requiresTech": "arithmetic",
+      "desc": "Practical figures and accounts for town households."
+    }
+  }
+}
