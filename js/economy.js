@@ -1773,14 +1773,17 @@ window.FB = window.FB || {};
     return false;
   };
 
+  function standardLevelActive(state, id, def, level) {
+    if (!level) return false;
+    if (def.kind === 'ruler' && !FB.station.isLanded(state.player, state)) return false;
+    if (level.requiresTech && !level.grandfatherTech &&
+        !FB.techRequirementMet(state, level.requiresTech)) return false;
+    return def.kind !== 'work' || FB.householdStandardWorkerEligible(state, id);
+  }
+
   FB.householdStandardActive = function (state, id) {
     const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
-    if (!def || !FB.householdStandardLevel(state, id)) return false;
-    if (def.kind === 'ruler' && !FB.station.isLanded(state.player, state)) return false;
-    const current = FB.householdStandardLevelDef(state, id);
-    if (current && current.requiresTech && !current.grandfatherTech &&
-        !FB.techRequirementMet(state, current.requiresTech)) return false;
-    return def.kind !== 'work' || FB.householdStandardWorkerEligible(state, id);
+    return !!def && standardLevelActive(state, id, def, FB.householdStandardLevelDef(state, id));
   };
 
   FB.householdStandardEffects = function (state) {
@@ -1837,6 +1840,12 @@ window.FB = window.FB || {};
     return 1 + bonus;
   };
 
+  function standardLevelUpkeep(state, def, level) {
+    const raw = Number(level.upkeep) || 0;
+    return raw && FB.marketCostQuote ? FB.marketCostQuote(state, raw,
+      level.marketBasket || def.marketBasket, state.player.provinceId) : raw;
+  }
+
   FB.householdStandardsUpkeepParts = function (state) {
     const lines = [];
     let total = 0;
@@ -1845,10 +1854,7 @@ window.FB = window.FB || {};
       if (!FB.householdStandardActive(state, id)) continue;
       const level = FB.householdStandardLevel(state, id);
       const current = table[id].levels && table[id].levels[level - 1];
-      const raw = current ? Number(current.upkeep) || 0 : 0;
-      const amount = raw && FB.marketCostQuote ? FB.marketCostQuote(state, raw,
-        current.marketBasket || table[id].marketBasket,
-        state.player.provinceId) : raw;
+      const amount = standardLevelUpkeep(state, table[id], current);
       if (!amount) continue;
       lines.push({ id:id, def:table[id], level:level, levelDef:current, amount:amount });
       total += amount;
@@ -1972,6 +1978,35 @@ window.FB = window.FB || {};
     return reduceStandard(state, id, false);
   };
 
+  FB.householdShortfallFirst = function (state) {
+    const id = state.player.householdShortfallFirst;
+    return typeof id === 'string' && id ? id : null;
+  };
+
+  FB.householdShortfallQuote = function (state, id) {
+    const table = FBDATA.householdStandards || {};
+    if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(table, id)) return null;
+    if (!FB.householdStandardActive(state, id) ||
+        FB.householdStandardReductionAvailable(state, id) !== true) return null;
+    const def = table[id];
+    const level = FB.householdStandardLevel(state, id);
+    const next = level > 1 ? def.levels[level - 2] : null;
+    const nextActive = standardLevelActive(state, id, def, next);
+    const nextUpkeep = nextActive ? standardLevelUpkeep(state, def, next) : 0;
+    const saving = standardLevelUpkeep(state, def, def.levels[level - 1]) - nextUpkeep;
+    return saving > 0 ? { level:level, nextActive:nextActive, nextUpkeep:nextUpkeep, saving:saving } : null;
+  };
+
+  FB.setHouseholdShortfallFirst = function (state, id) {
+    if (id === null) {
+      delete state.player.householdShortfallFirst;
+      return true;
+    }
+    if (!FB.householdShortfallQuote(state, id)) return false;
+    state.player.householdShortfallFirst = id;
+    return true;
+  };
+
   function standardToLapse(state) {
     const table = FBDATA.householdStandards || {};
     const priority = ['luxuries', 'wares', 'transport', 'quarters', 'board'];
@@ -2008,6 +2043,14 @@ window.FB = window.FB || {};
     const reduced = [];
     let upkeep = FB.householdStandardsUpkeep(state);
     let available = Math.max(0, state.player.gold);
+    if (upkeep > available + 0.0001) {
+      const first = FB.householdShortfallFirst(state);
+      FB.setHouseholdShortfallFirst(state, null);
+      if (first && FB.householdShortfallQuote(state, first) && reduceStandard(state, first, true)) {
+        reduced.push(first);
+        upkeep = FB.householdStandardsUpkeep(state);
+      }
+    }
     while (upkeep > available + 0.0001) {
       const id = standardToLapse(state);
       if (!id || !reduceStandard(state, id, true)) break;

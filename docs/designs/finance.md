@@ -201,6 +201,11 @@ pay the full result, not a free benefit at an empty purse. Locally quoted necess
 coin and record any unmet share as market hardship. Household standards still lapse,
 retainers may go unpaid, and schooling pauses instead of silently financing those
 choices. Raised-host logistics are an incurred obligation and do deepen the shortfall.
+The household's first-lapse choice is checked only when liquid coin at maintained
+standards settlement cannot cover their live upkeep. It changes one reduction at
+most, with the customary order covering any remaining gap. The same ledger charges
+remaining standards, including compulsory landed upkeep, and leaves an existing
+negative balance intact except for compulsory charges.
 Coin & Credit appears for a serf with a negative balance and explains this distinction;
 the topbar and resource breakdown render the signed amount in the warning tone.
 

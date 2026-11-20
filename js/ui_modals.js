@@ -20042,6 +20042,87 @@ window.FB = window.FB || {};
       detailsId + '">' + esc(FB.T(details)) + '</div></div>';
   }
 
+  function householdShortfallStatus(s) {
+    const first = FB.householdShortfallFirst(s);
+    if (!first) return FB.T('Customary order');
+    return FB.householdShortfallQuote(s, first)
+      ? householdStandardName(s, first)
+      : FB.T('Unavailable · Customary order applies');
+  }
+
+  function householdShortfallPreview(s, id) {
+    if (!id) return '';
+    const quote = FB.householdShortfallQuote(s, id);
+    if (!quote) return '<p class="op-bad">' + esc(FB.T(
+      'This expense can no longer be chosen to lapse first.')) + '</p>';
+    const remaining = quote.level === 1 ? FB.T('Baseline · No maintained improvement')
+      : FB.T('{level} · {effect}', {
+        level:householdStandardLevelName(s, id, quote.level - 1),
+        effect:quote.nextActive ? householdStandardLevelDesc(s, id, quote.level - 1)
+          : FB.T('Dormant — no current benefit')
+      });
+    return kv('Seasonal upkeep saved', esc(FB.money(quote.saving))) +
+      kv('Seasonal upkeep after lapse', esc(FB.money(quote.nextUpkeep))) +
+      kv('Level lost without refund', esc(householdStandardLevelName(s, id, quote.level))) +
+      kv('After one level lapses', esc(remaining));
+  }
+
+  function householdShortfallHtml(s) {
+    const first = FB.householdShortfallFirst(s);
+    const choices = FB.householdStandardIds().filter(function (id) {
+      return !!FB.householdShortfallQuote(s, id);
+    });
+    if (!first && !choices.length) return '';
+    let options = '<option value="">' + esc(FB.T('Customary order')) + '</option>';
+    for (const id of choices) {
+      options += '<option value="' + esc(id) + '"' + (id === first ? ' selected' : '') +
+        '>' + esc(householdStandardName(s, id)) + '</option>';
+    }
+    if (first && choices.indexOf(first) < 0) {
+      options += '<option value="' + esc(first) + '" selected disabled>' +
+        esc(FB.T('Previous choice unavailable')) + '</option>';
+    }
+    return '<section class="household-catalogue-section" aria-labelledby="household-shortfall-title">' +
+      householdSectionHeading('household-shortfall-title', 'Upkeep shortfall',
+        'The choice applies once, when the purse cannot cover standards upkeep. The customary order covers any remaining shortfall and applies if the chosen expense is no longer eligible.') +
+      '<div class="household-catalogue-list"><div id="household-shortfall-status" aria-live="polite">' +
+      kv('First to lapse', esc(householdShortfallStatus(s))) + '</div>' +
+      '<label for="household-shortfall-choice">' + esc(FB.T('Choose first expense to lapse')) + '</label>' +
+      '<select id="household-shortfall-choice" aria-describedby="household-shortfall-preview">' +
+      options + '</select><div id="household-shortfall-preview" aria-live="polite">' +
+      householdShortfallPreview(s, first) + '</div><p class="household-warning">' +
+      esc(FB.T('Setting the order costs nothing. It applies to the first level lost in the next upkeep shortfall.')) +
+      '</p><button type="button" class="actionbtn done" id="household-shortfall-save" aria-disabled="true">' +
+      esc(first ? FB.T('Set first expense') : FB.T('Restore customary order')) +
+      '</button></div></section>';
+  }
+
+  function bindHouseholdShortfall(s) {
+    const choice = $('household-shortfall-choice');
+    if (!choice) return;
+    const save = $('household-shortfall-save');
+    function update() {
+      const id = choice.value || null;
+      $('household-shortfall-preview').innerHTML = householdShortfallPreview(s, id);
+      save.textContent = id ? FB.T('Set first expense') : FB.T('Restore customary order');
+      const disabled = id === FB.householdShortfallFirst(s) ||
+        (!!id && !FB.householdShortfallQuote(s, id));
+      save.setAttribute('aria-disabled', String(disabled));
+      save.classList.toggle('done', disabled);
+    }
+    choice.addEventListener('change', update);
+    save.addEventListener('click', function () {
+      if (save.getAttribute('aria-disabled') === 'true') return;
+      if (FB.setHouseholdShortfallFirst(s, choice.value || null)) {
+        $('household-shortfall-status').innerHTML = kv('First to lapse', esc(householdShortfallStatus(s)));
+        const stale = choice.querySelector('option[disabled]');
+        if (stale) stale.parentNode.removeChild(stale);
+        UI.refresh();
+      }
+      update();
+    });
+  }
+
   UI.showHousehold = function () {
     const s = FB.state;
     const protagonist = s.chars && s.chars[s.player.charId];
@@ -20062,10 +20143,11 @@ window.FB = window.FB || {};
       '</p>' + (minor ? '<p class="household-warning">' + esc(FB.T(
         'During childhood you may reduce inherited standards, but new standards and property purchases unlock at age 16.')) +
         '</p>' : '') + (projected < 0 ? '<p class="household-warning op-bad">' + esc(FB.T(
-        'The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty.')) +
+        'The projected purse is negative. If the purse cannot cover upkeep, reducible standards will lapse. Compulsory upkeep may leave a cash shortfall.')) +
         '</p>' : '');
 
-    h += '<section class="household-catalogue-section" id="household-living" ' +
+    h += householdShortfallHtml(s) +
+      '<section class="household-catalogue-section" id="household-living" ' +
       'aria-labelledby="household-living-title">' + householdSectionHeading(
         'household-living-title', 'Living standards',
         'Living standards benefit the whole resident household.') +
@@ -20119,6 +20201,7 @@ window.FB = window.FB || {};
       guide:guideModalOption('household-guide', 'careers',
         'Guide: careers and household work')
     });
+    bindHouseholdShortfall(s);
     document.querySelectorAll('[data-household-standard-adjust]').forEach(function (button) {
       button.addEventListener('click', function () {
         if (button.disabled || button.getAttribute('aria-disabled') === 'true') return;

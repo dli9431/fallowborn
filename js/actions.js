@@ -3481,6 +3481,7 @@ window.FB = window.FB || {};
     show: function () { return true; },
     can: function (s) {
       if (!adult(s)) {
+        if (FB.householdShortfallFirst(s)) return true;
         FB.ensureHouseholdStandards(s);
         for (const id of FB.householdStandardIds()) {
           if (FB.householdStandardLevel(s, id) > 0) return true;
