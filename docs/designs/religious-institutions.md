@@ -60,6 +60,45 @@ The profile's existing abbeyId, when present on its local declaration, reference
 
 An optional abbeyId may name a receiving property that has not yet been explicitly founded. Its absence does not block otherwise qualified lay membership, withdrawal or consent, and these actions cannot create or spend property. Foundation and funded service still require their own exact property and restricted-account reviews. Spiritual eligibility never imposes landed patronage through an unrelated optional property reference.
 
+Local spiritual candidacy
+
+The Bishoprics institution review accepts candidacy for a vacant local see
+with a declared legacy congregation as its chapter. The existing
+`localInstitutions` definitions provide seat, faith, `chapterId` and
+`officeProfile`. A chapter has its own existing row and representative in
+the same county and faith. The Carthage opening in 476 links its vacant
+Nicene see to a separate chapter, a simulation abstraction for this review.
+The fictional Lantern import uses a different minimum age and clerical role,
+and binds the office to a public jurisdiction with an appointment fee and
+separate lay recognition.
+
+Filing and withdrawal are free. Filing reserves no authority or office and
+leaves the bishopric vacant. Back from the pending review leaves the request
+scheduled, and withdrawal closes it before the hearing. Both reviews and their
+outcomes return to the same list, with focus, scroll and Details retained.
+
+The next ordinary 90-day institution session processes the petition after
+the chapter's existing consent procedure. The canonical appointment owner
+rechecks the recorded vacancy, present residence, qualifications and
+availability, the chapter representative and the appointing ruler's generation.
+The chapter's consent is its effective bargain with that realm. The candidate
+cannot act as the chapter representative or appointing ruler. The competent
+realm uses its ordinary office appointment willingness policy after the
+canonical gates pass. Refusal records the reason, and the candidate can
+file again if eligible. An intervening appointment closes a pending petition
+for the previous vacancy. No fee is due on refusal. Spiritual office and
+temporal jurisdiction retain the separate rules in
+[ecclesiastical-principality.md](ecclesiastical-principality.md).
+
+Each see may retain one optional `officePetition` record in its existing
+institution row. It records the exact office, chapter, candidate, representative,
+appointing realm and generation, vacancy and filing turns, and decision status.
+The filing serial distinguishes new requests from earlier reviews of the same
+candidate and vacancy.
+Detached restore validates those references and dates without reevaluating a
+hearing. The older ledger shape remains valid, and a missing opening chapter
+in a retained campaign is not created. The technology impact is none.
+
 Public entry points
 
 FB.religiousInstitutionSnapshot exposes the definition, profile, effective availability, bounded membership, canonical holder, vacancy, existing recognition records and referenced property. FB.religiousInstitutionRoleEligibility resolves declared qualifications. Existing episcopal appointment and civic bargain APIs reject profile institutions, ensuring that their legacy defaults cannot bypass declared qualification or consent. Legacy sees, patriarchates, congregations, papal elections and caliphal claims keep their original paths and ids.
@@ -71,6 +110,10 @@ religious_institution_membership, religious_institution_selection and religious_
 Regression coverage
 
 tests/e2e/specs/religious-institutions.spec.js authors independent patron-selected and headless communal profiles and a fictional leaderless third. Its coverage includes repeated pure reads, affiliation exclusions, household qualifications, canonical office use, quorum, disputed recognition, protected mediation, stale rejection, death, vacancy, property continuity, detached validation and retained campaign absence. All example placements are test fixtures.
+
+The local-office petition regressions cover the Carthage opening and a separate
+Lantern JSON import, including filing, withdrawal, deferred review, refusal,
+adjudication, costs and matching restores.
 
 Household work and advancement
 

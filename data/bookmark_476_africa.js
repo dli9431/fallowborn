@@ -92,7 +92,8 @@ FBDATA.bookmarkRegions476['africa'] = {
   },
   institutions:{
     carthage_council:{ city:'Carthage', kind:'council', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman' },
-    carthage_see:{ city:'Carthage', kind:'see', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', officeId:'carthage_bishop', vacant:true },
+    carthage_see:{ city:'Carthage', kind:'see', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', officeId:'carthage_bishop', chapterId:'carthage_nicene_chapter', vacant:true },
+    carthage_nicene_chapter:{ city:'Carthage', kind:'congregation', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', freshOnly:true },
     carthage_homoian_see:{ city:'Carthage', kind:'see', provinceId:'tunis', site:'carthage_476', religion:'homoian', culture:'vandal', officeId:'carthage_homoian_bishop' },
     sufetula_council:{ city:'Sufetula', kind:'council', provinceId:'kairouan', site:'sufetula_476', religion:'nicene', culture:'roman' },
     hippo_council:{ city:'Hippo Regius', kind:'council', provinceId:'constantine', site:'hippo_regius_476', religion:'nicene', culture:'roman' },

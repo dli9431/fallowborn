@@ -3427,10 +3427,15 @@ window.FB = window.FB || {};
     var period = Math.floor(s.turn / 90);
     if (period < 1) return;
     if (s.localInstitutionPeriod === period) return;
-    if (!FB.localInstitutionList(s).length) return;
+    var items = FB.localInstitutionList(s);
+    var candidacies = Object.keys(s.localInstitutions).filter(function (id) {
+      var p = s.localInstitutions[id].officePetition;
+      return p && p.status === 'pending';
+    });
+    if (!items.length && !candidacies.length) return;
     s.localInstitutionPeriod = period;
     FB.ensureLocalInstitutions(s);
-    FB.localInstitutionList(s).forEach(function (item) {
+    items.forEach(function (item) {
       var def = item.def, r = row(s, item.id), owner = controller(s, def);
       if (!owner || !FB.political.actor(s, { kind:'realm', id:owner })) return;
       var subject = { kind:'realm', id:owner }, key = subjectKey(subject);
@@ -3457,6 +3462,7 @@ window.FB = window.FB || {};
       FB.localInstitutionSettle(s, item.id, subject, { provision:FB.treasuryAvailable(s, owner) >= 5,
         protection:true, courts:true, tolerance:!policy.persecution, taxRelief:!policy.extraction });
     });
+    candidacies.forEach(function (id) { FB.localOfficePetitionSeason(s,id); });
   };
   FB.validateLocalInstitutionState = function (s) {
     function plain(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
@@ -3505,6 +3511,7 @@ window.FB = window.FB || {};
           ['character','realm'].indexOf(entry.subject.kind) < 0 || ['ratified','refused'].indexOf(entry.result) < 0 ||
           !Number.isInteger(entry.turn) || !validTerms(entry.terms);
       })) fail(path + '.history');
+      if (r.officePetition !== undefined && !FB.validateLocalOfficePetition(s,id)) fail(path + '.officePetition');
     }
     return true;
   };

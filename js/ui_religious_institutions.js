@@ -332,6 +332,90 @@
   };
 })();
 
+/* Candidacy cards belong to the ordinary Bishoprics institution list. */
+(function () {
+  'use strict';
+  var UI = FB.ui, SH = UI._shared;
+  function fact(label,value) { return SH.kv(label,FB.esc(String(value))); }
+  function reason(code) {
+    return {
+      occupied:FB.T('The appointing realm lacks control of the see.'),
+      occupied_office:FB.T('A recorded vacancy is required.'),
+      chapter_unavailable:FB.T('The chapter needs a living representative independent of the candidate.'),
+      qualification:FB.T('You must meet the office requirements and reside at the see.'),
+      authority:FB.T('The petition needs an appointing realm independent of your household.'),
+      pending:FB.T('A candidacy already awaits this hearing.'),
+      vacancy_changed:FB.T('The vacancy changed before the hearing.'),
+      authority_changed:FB.T('The appointing ruler or jurisdiction changed before the hearing.'),
+      chapter_changed:FB.T('The chapter’s representative changed before the hearing.'),
+      chapter:FB.T('The chapter withheld current assent.'),
+      funds:FB.T('The public treasury could not cover the appointment while retaining its reserve.'),
+      authority_refused:FB.T('The appointing realm declined the candidacy.')
+    }[code] || FB.T('The terms changed. Review them again.');
+  }
+  function status(p) {
+    return { pending:FB.T('Awaiting hearing'), withdrawn:FB.T('Withdrawn'),
+      refused:FB.T('Refused'), appointed:FB.T('Appointed to the spiritual office') }[p.status];
+  }
+  function waiting(s,q) {
+    return FB.T('Days until the next institution session: {days}.',{ days:Math.max(0,q.hearingTurn - s.turn) });
+  }
+  function terms() {
+    return FB.T('Filing reserves no office and grants no powers. The chapter’s current assent and the appointing realm’s decision are required. An appointment grants the spiritual office. Any temporal powers follow their own government’s rules.');
+  }
+  UI.localOfficePetitionCard = function (s,id) {
+    var q = FB.localOfficePetitionQuote(s,id,'file');
+    if (!q) return '';
+    var p = q.petition, pending = p && p.status === 'pending';
+    var result = p ? fact(FB.T('Candidacy'),status(p)) + (p.reason ? fact(FB.T('Reason for refusal'),reason(p.reason)) : '') : '';
+    if (p && !pending && q.reason === 'occupied_office') return result;
+    return result + SH.reviewActionsHtml(SH.reviewActionCardHtml({
+      data:{ localReview:id,localAction:'office-candidacy' }, detailsId:'candidacy-' + id,
+      label:pending ? FB.T('Review pending candidacy') : FB.T('Review candidacy for the vacant office'),
+      note:pending ? waiting(s,q) : q.allowed ? FB.T('Free to file. The decision is made at a later session.') : reason(q.reason),
+      disabled:!pending && !q.allowed,warn:!pending && !q.allowed,details:'<p>' + FB.esc(terms()) + '</p>'
+    }));
+  };
+  UI.showLocalOfficePetition = function (s,id,back) {
+    var q = FB.localOfficePetitionQuote(s,id,'file');
+    if (!q) return;
+    var pending = q.petition && q.petition.status === 'pending';
+    if (pending) q = FB.localOfficePetitionQuote(s,id,'withdraw');
+    var appointer = s.realms[q.realmId];
+    var title = pending ? FB.T('Review pending candidacy') : FB.T('Review candidacy for the vacant office');
+    var facts = SH.reviewPeopleHtml(SH.reviewPersonHtml(s.chars[s.player.charId],FB.T('Candidate'),null)) +
+      fact(FB.T('Spiritual office'),FB.localInstitutionName(id,s)) + fact(FB.T('Chapter'),FB.localInstitutionName(q.chapterId,s)) +
+      (appointer ? fact(FB.T('Appointing realm'),appointer.name) : '') +
+      fact(FB.T('Next institution session'),waiting(s,q)) +
+      fact(FB.T('Personal cost'),FB.money(0,s)) + fact(FB.T('Public cost on appointment'),FB.money(q.appointmentCost,s)) +
+      '<p>' + FB.esc(terms()) + '</p>';
+    UI.openModal(title,SH.reviewFactsCard(FB.T('Petition terms'),facts) +
+      SH.reviewActionsHtml(SH.reviewActionCardHtml({
+        id:'local-office-petition-confirm', label:pending ? FB.T('Withdraw candidacy') : FB.T('File candidacy'),
+        disabled:!q.allowed,warn:!q.allowed,
+        note:!q.allowed ? reason(q.reason) : pending ? FB.T('Withdraw for free before the hearing.') : waiting(s,q)
+      })),
+      { modalClass:'fullsheet-modal',historyView:true,historyBack:true,historyBackRender:back });
+    var defer = SH.$('gm-body').querySelector('[data-modal-nav="back"]');
+    var deferLabel = pending ? FB.T('Not now') : FB.T('Cancel');
+    defer.id = 'local-office-petition-defer';
+    defer.textContent = deferLabel;
+    defer.setAttribute('aria-label',deferLabel);
+    defer.removeAttribute('data-i18n');
+    SH.$('local-office-petition-confirm').onclick = function () {
+      var success = s === FB.state && FB.localOfficePetitionApply(s,q);
+      var result = !success ? FB.T('The terms changed. Review them again.') : pending ?
+        FB.T('Your candidacy was withdrawn.') : FB.T('Your candidacy awaits the institution session. The office is still vacant.');
+      if (SH.markActionsDirty) SH.markActionsDirty();
+      UI.openModal(success ? FB.T('Candidacy updated') : FB.T('Terms changed'),
+        SH.reviewFactsCard('', '<p>' + FB.esc(result) + '</p>') +
+        '<button type="button" class="actionbtn" id="local-office-petition-continue">' + FB.esc(FB.T('Continue')) + '</button>',
+        { replaceView:true });
+      SH.$('local-office-petition-continue').onclick = function () { SH.modalHistoryBack(back); };
+    };
+  };
+})();
+
 /* Named proceedings use the same retained review components as civil claims. */
 (function () {
   'use strict';

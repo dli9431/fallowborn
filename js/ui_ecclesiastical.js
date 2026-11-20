@@ -13,6 +13,7 @@
       canonical_election:FB.T('Selection belongs to the existing religious election.'),
       qualification:FB.T('The candidate must meet the declared spiritual office requirements and reside at the see.'),
       occupied_office:FB.T('The spiritual office already has an incumbent.'),
+      petition_required:FB.T('File your candidacy through Bishoprics for the next institution session.'),
       no_incumbent:FB.T('Only the current incumbent may resign.'),
       no_cause:FB.T('Removal requires loss of the canonical office qualification.'),
       funds:FB.T('The public treasury cannot pay this cost while retaining its reserve.'),
