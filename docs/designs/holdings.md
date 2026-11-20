@@ -396,8 +396,25 @@ option is recommended as profitable when its projected gain is negative.
 Standard Back/Close navigation remains available. The shared header tooltip/touch
 disclosure explains eligibility, locks, reservations, and estimate assumptions.
 Mobile uses the shared full-screen sheet. Individual assignments and hiring remain
-in each enterprise's manager, reached from Work & Enterprises. This is presentation
-of existing actions and needs no new technology gate.
+in each enterprise's manager, reached from Work & Enterprises.
+
+**Exchange family assignments** in Enterprise Plan reviews one named worker from
+each of two owned enterprises. The picker offers exchanges that fit both crews and
+honor the existing occupation, guild, residence and work-availability rules.
+Traveling workers, unfree or captive workers, paid retainers, contracted local hires,
+reserved workers and staff on locked enterprises cannot be exchanged. Other workers
+keep their places, including the lead worker when that person is outside the exchange.
+The review shows both assignments, current and proposed adult-equivalent labor,
+gross seasonal yield, any affected household production chains and existing wages.
+An exchange can leave a crew too short to produce. It spends no money or time and
+leaves paid contracts in place. Leave assignments in place returns to the picker.
+
+The exchange reviews both crews on detached state using ordinary staffing and yield
+readers. Confirmation recomputes the review and writes both crews together only if
+the terms still match. Existing assignment fields carry both crews through save and
+restore. Ordinary `enterprises` definitions supply staffing levels, career and guild
+requirements, production chains, yields and payroll. Technology impact is **none**
+(`enterprise_staff_exchange`). Voluntary reassignment needs no separate research.
 
 Upgrades provides a settlement selector and a type selector, each with one batch
 button. Each click buys one next level for every eligible enterprise in that scope,

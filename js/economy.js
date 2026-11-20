@@ -4903,6 +4903,163 @@ window.FB = window.FB || {};
     return true;
   };
 
+  /* The ordinary staffing readers lazily normalize careers and contracts.
+     Run the review against detached state so even a stale refusal leaves the
+     live crews and ledgers alone. Old holdings can migrate in the projection. */
+  function enterpriseExchangeRead(state, calculate) {
+    const rng = FB.getRngState(), uid = FB.getUidCounter();
+    try { return calculate(JSON.parse(JSON.stringify(state))); }
+    finally {
+      if (FB.getRngState() !== rng) FB.setRngState(rng);
+      if (FB.getUidCounter() !== uid) FB.setUidCounter(uid);
+    }
+  }
+
+  function enterpriseExchangeRows(state, original) {
+    const saved = Object.create(null), claims = Object.create(null);
+    for (const e of original.player.enterprises) {
+      if (!e) continue;
+      saved[e.uid] = saved[e.uid] === undefined ? e : null;
+      for (const id of enterpriseAssignedIds(e)) claims[id] = (claims[id] || 0) + 1;
+    }
+    const enterprises = FB.enterpriseList(state);
+    const rows = [], available = Object.create(null);
+    const p = state.player, service = FB.householdServiceRecord(state);
+    function exchangeWorker(c) {
+      const id = c.id;
+      if (available[id] === undefined) {
+        available[id] = managedCareerCharacter(state, c) && !FB.isUnfreeCharacter(state, c) &&
+          !FB.enterpriseLaborRecord(state, id) && !FB.retainerRecord(state, id) &&
+          !FB.isProtected(state, 'staffingWorker', id) &&
+          !c.captive && !c.imprisoned && !c.prisonerOf && !c.travel && !c.armyId &&
+          !FB.intrigueCaptivityOf(state, id) && !FB.justiceCustodyOf(state, id) &&
+          !(id === p.charId && (p.dead || p.travel || p.war || p.flags.in_prison ||
+            service && service.status === 'active'));
+      }
+      return available[id];
+    }
+    for (const enterprise of enterprises) {
+      const live = saved[enterprise.uid];
+      if (!live || live.workerLocked || enterprise.workerLocked ||
+          live.provinceId !== enterprise.provinceId || live.settlement !== enterprise.settlement) continue;
+      const ids = enterpriseAssignedIds(enterprise);
+      if (!staffingIdsEqual(ids, enterpriseAssignedIds(live))) continue;
+      const eligible = FB.enterpriseWorkersFor(state, enterprise);
+      const workers = eligible.filter(function (c) {
+        return exchangeWorker(c) && FB.characterLocation(state, c) === enterprise.provinceId;
+      }).map(function (c) { return c.id; });
+      const movable = ids.filter(function (id) { return claims[id] === 1 && workers.indexOf(id) >= 0; });
+      if (movable.length) rows.push({ enterprise:enterprise, ids:ids,
+        workers:workers, movable:movable, staff:enterpriseStaffFromIds(state, ids),
+        required:FB.enterpriseStaffRequired(enterprise) });
+    }
+    return rows;
+  }
+
+  function enterpriseExchangeFits(state, row, outgoing, incoming) {
+    return row.workers.indexOf(incoming) >= 0 &&
+      row.staff - FB.enterpriseWorkerStaff(state, outgoing) +
+        FB.enterpriseWorkerStaff(state, incoming) <= row.required + 0.0001;
+  }
+
+  FB.enterpriseExchangeChoices = function (state) {
+    const owned = state.player.enterprises;
+    if (!Array.isArray(owned) || owned.length < 2) return [];
+    return enterpriseExchangeRead(state, function (snapshot) {
+      return enterpriseRead(snapshot, function () {
+        const rows = enterpriseExchangeRows(snapshot, state), choices = [];
+        for (const row of rows) {
+          for (const cid of row.movable) {
+            const partners = [];
+            for (const other of rows) {
+              if (row === other) continue;
+              for (const partner of other.movable) {
+                if (enterpriseExchangeFits(snapshot, row, cid, partner) &&
+                    enterpriseExchangeFits(snapshot, other, partner, cid)) {
+                  partners.push({ uid:other.enterprise.uid, cid:partner });
+                }
+              }
+            }
+            if (partners.length) choices.push({ uid:row.enterprise.uid, cid:cid, partners:partners });
+          }
+        }
+        return choices;
+      });
+    });
+  };
+
+  function enterpriseExchangeOutput(state, enterprise) {
+    return { staff:FB.enterpriseStaffAssigned(state, enterprise),
+      yield:FB.enterpriseYield(state, enterprise) };
+  }
+
+  FB.enterpriseExchangeQuote = function (state, first, second) {
+    if (!first || !second || first.uid === second.uid || first.cid === second.cid ||
+        !Array.isArray(state.player.enterprises)) return null;
+    return enterpriseExchangeRead(state, function (snapshot) {
+      let pair, outputs;
+      const terms = enterpriseRead(snapshot, function () {
+        const rows = enterpriseExchangeRows(snapshot, state);
+        pair = [first, second].map(function (choice) {
+          return rows.find(function (row) {
+            return row.enterprise.uid === choice.uid && row.movable.indexOf(choice.cid) >= 0;
+          });
+        });
+        if (!pair[0] || !pair[1] || !enterpriseExchangeFits(snapshot, pair[0], first.cid, second.cid) ||
+            !enterpriseExchangeFits(snapshot, pair[1], second.cid, first.cid)) return null;
+        outputs = FB.enterpriseList(snapshot).map(function (e) {
+          return { enterprise:e, current:enterpriseExchangeOutput(snapshot, e) };
+        });
+        return pair.map(function (row, i) {
+          const e = row.enterprise, outgoing = i ? second.cid : first.cid;
+          const incoming = i ? first.cid : second.cid;
+          return { uid:e.uid, type:e.type, provinceId:e.provinceId, settlement:e.settlement,
+            level:FB.enterpriseUpgradeLevel(e), required:row.required, outgoing:outgoing,
+            before:row.ids, after:row.ids.map(function (id) { return id === outgoing ? incoming : id; }),
+            payroll:FB.enterpriseLaborRecords(snapshot).filter(function (record) {
+              return record.enterpriseUid === e.uid;
+            }) };
+        });
+      });
+      if (!terms) return null;
+      for (let i = 0; i < pair.length; i++) syncEnterpriseAssignedIds(pair[i].enterprise, terms[i].after);
+      // Both proposed crews must be visible to the canonical chain and yield readers.
+      return enterpriseRead(snapshot, function () {
+        FB.enterpriseList(snapshot);
+        for (let i = 0; i < pair.length; i++) {
+          if (!staffingIdsEqual(enterpriseAssignedIds(pair[i].enterprise), terms[i].after)) return null;
+        }
+        const linked = [];
+        for (const output of outputs) {
+          const e = output.enterprise, after = enterpriseExchangeOutput(snapshot, e);
+          const row = terms.find(function (item) { return item.uid === e.uid; });
+          if (row) {
+            row.current = output.current;
+            row.proposed = after;
+          } else if (output.current.yield !== after.yield) {
+            linked.push({ uid:e.uid, type:e.type, provinceId:e.provinceId, settlement:e.settlement,
+              level:FB.enterpriseUpgradeLevel(e), current:output.current.yield, proposed:after.yield });
+          }
+        }
+        return { actorId:state.player.charId, turn:state.turn, rows:terms, linked:linked };
+      });
+    });
+  };
+
+  FB.applyEnterpriseExchange = function (state, reviewed) {
+    if (!reviewed || !Array.isArray(reviewed.rows) || reviewed.rows.length !== 2 ||
+        !reviewed.rows[0] || !reviewed.rows[1]) return false;
+    const fresh = FB.enterpriseExchangeQuote(state, { uid:reviewed.rows[0].uid, cid:reviewed.rows[0].outgoing },
+      { uid:reviewed.rows[1].uid, cid:reviewed.rows[1].outgoing });
+    if (!fresh || JSON.stringify(fresh) !== JSON.stringify(reviewed)) return false;
+    // Validation is complete. No intermediate normalization, reassignment or payment.
+    for (const row of fresh.rows) {
+      const target = state.player.enterprises.find(function (e) { return e && e.uid === row.uid; });
+      syncEnterpriseAssignedIds(target, row.after);
+    }
+    return true;
+  };
+
   function enterpriseWorkerYield(state, e, worker, chainSeen) {
     const def = FBDATA.enterprises[e.type];
     if (!def || !worker || worker.dead) return 0;

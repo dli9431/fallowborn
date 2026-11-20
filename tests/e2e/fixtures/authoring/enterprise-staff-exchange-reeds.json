@@ -1,0 +1,40 @@
+{
+  "name": "Reed garden and press staffing",
+  "enterprises": {
+    "exchange_reed_garden": {
+      "name": "Reed Garden",
+      "desc": "A garden that cuts reeds for local processors.",
+      "icon": "🌿",
+      "profession": "farmer",
+      "cost": 24,
+      "yield": 4,
+      "laborPay": 1.75
+    },
+    "exchange_reed_press": {
+      "name": "Reed Press",
+      "desc": "A press that produces more when supplied by a working reed garden.",
+      "icon": "🏺",
+      "profession": "farmer",
+      "cost": 40,
+      "yield": 7,
+      "laborPay": 2.75,
+      "chainFrom": "exchange_reed_garden",
+      "upgrades": [{
+        "name": "Reed Press Yard",
+        "desc": "A larger press with two staffing positions.",
+        "cost": 90,
+        "staff": 2
+      }]
+    },
+    "exchange_reed_baskets": {
+      "name": "Reed Basket Yard",
+      "desc": "A basket yard that uses the same local harvest.",
+      "icon": "🧺",
+      "profession": "farmer",
+      "cost": 32,
+      "yield": 5,
+      "laborPay": 1.25,
+      "chainFrom": "exchange_reed_garden"
+    }
+  }
+}
