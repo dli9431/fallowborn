@@ -215,8 +215,11 @@
     activeIndexes.set(s, activeIds(s).filter(function (id) { return id !== cid; }));
     if (!valid) return false;
     if (d.service) {
-      h.restrictedFunds[d.service.fund] -= d.service.cost;
-      h.activitySpent = (h.activitySpent || 0) + d.service.cost;
+      var fund = d.service.fund, cost = d.service.cost, balance = h.restrictedFunds[fund];
+      var uses = Math.round(balance / cost);
+      // Keep exact whole-use targets on their unit boundary as they are consumed.
+      h.restrictedFunds[fund] = balance === uses * cost ? (uses - 1) * cost : balance - cost;
+      h.activitySpent = (h.activitySpent || 0) + cost;
     }
     d = copy(d); d.id = a.activityId; reward(s, cid, d);
     return true;
@@ -247,14 +250,47 @@
     }).length;
     return count === g.count ? copy(g) : null;
   }
+  function serviceFunding(s, d, profileId, fund, h, location) {
+    if (d.payer !== 'household' || !h || h.activityInstitutionId !== d.institutionId ||
+        h.activityProfileId !== profileId || !ident(fund) || !Object.prototype.hasOwnProperty.call(d.funds, fund)) return null;
+    var declared = d.funds[fund], saved = h.activityServices && h.activityServices[fund];
+    if (!saved || saved.unitCost !== declared.unitCost || saved.capacity !== declared.capacity) return null;
+    var unitCost = saved.unitCost, capacity = saved.capacity;
+    var balance = Object.prototype.hasOwnProperty.call(h.restrictedFunds, fund) ? h.restrictedFunds[fund] : 0;
+    if (!number(balance) || !number(capacity * unitCost) || balance > capacity * unitCost) return null;
+    var services = Object.keys(FBDATA.religiousActivities).sort().filter(function (id) {
+      var a = FBDATA.religiousActivities[id];
+      return a.mode === 'local' && a.institutionId === d.institutionId && a.service &&
+        a.service.fund === fund && a.service.cost === unitCost && live(s, a) &&
+        (!a.provinceIds || a.provinceIds.indexOf(location) >= 0);
+    }).map(function (id) { return { id:id, definition:FBDATA.religiousActivities[id] }; });
+    if (!services.length) return null;
+    var funded = 0;
+    while (funded < capacity && balance >= (funded + 1) * unitCost) funded++;
+    return { balance:balance, unitCost:unitCost, capacity:capacity, fundedUses:funded,
+      remainingUses:capacity - funded, services:services };
+  }
+  FB.religiousServiceFundingOptions = function (s, profileId, cid) {
+    var d = FBDATA.religiousPatronage[profileId];
+    if (!d || d.payer !== 'household' || !live(s, d) || !FB.religiousActivityManaged(s, cid)) return [];
+    var h = house(s, d.institutionId), location = at(s, cid), out = [];
+    var def = h && FB.localInstitutionDefinitions(s)[d.institutionId];
+    if (!def || def.provinceId !== location && !(def.offMap && def.jurisdictionIds.indexOf(location) >= 0)) return out;
+    Object.keys(d.funds).sort().forEach(function (fund) {
+      var f = serviceFunding(s, d, profileId, fund, h, location);
+      if (f) out.push({ fund:fund, targetUses:Math.min(f.capacity, f.fundedUses + 1) });
+    });
+    return out;
+  };
   FB.religiousPatronageQuote = function (s, profileId, cid, action, terms) {
     var d = FBDATA.religiousPatronage[profileId], c = s.chars[cid], t = terms || {};
-    if (!d || !c || FB.religiousActivityCatalogFaults(FBDATA).length || !keys(t, ['fund','amount','land','provinceId','settlement','target','policy'])) return null;
+    if (!d || !c || FB.religiousActivityCatalogFaults(FBDATA).length || !keys(t, ['fund','amount','land','provinceId','settlement','target','policy','targetUses'])) return null;
     var ins = FB.religiousInstitutionSnapshot(s, d.institutionId), h = house(s, d.institutionId), p = payer(s, cid, d.payer);
     var reason = participant(s, d, cid) ? null : 'eligibility', g = t.land && land(s, t.land), cost = 0, project = null;
+    var shortfall = action === 'donation' && Object.prototype.hasOwnProperty.call(t, 'targetUses'), funding;
     if (s.player.travel && cid === s.player.charId) reason = reason || 'travel';
     if (['foundation','donation','outreach'].indexOf(action) < 0) reason = reason || 'action';
-    if (action === 'foundation' && !keys(t, ['land']) || action === 'donation' && !keys(t, t.land ? ['land'] : ['fund','amount']) ||
+    if (action === 'foundation' && !keys(t, ['land']) || action === 'donation' && !keys(t, shortfall ? ['fund','targetUses'] : t.land ? ['land'] : ['fund','amount']) ||
         action === 'outreach' && !keys(t, ['fund','amount','provinceId','settlement','target','policy'])) reason = reason || 'terms';
     if (action === 'foundation') {
       cost = d.foundation.startup + d.foundation.capital + d.foundation.treasury;
@@ -273,7 +309,19 @@
     if (g && h && h.plots.length >= 64 && !h.plots.some(function (v) {
       return v.provinceId === g.provinceId && v.settlement === g.settlement;
     })) reason = reason || 'capacity';
-    if (action === 'donation' || action === 'outreach') {
+    if (shortfall) {
+      funding = serviceFunding(s, d, profileId, t.fund, h, at(s, cid));
+      if (d.payer !== 'household' || !p) reason = reason || 'payer';
+      if (!funding) reason = reason || 'serviceUnavailable';
+      else if (!Number.isInteger(t.targetUses) || t.targetUses < 1 || t.targetUses > funding.capacity) reason = reason || 'fund';
+      else {
+        funding.targetUses = t.targetUses;
+        funding.targetBalance = t.targetUses * funding.unitCost;
+        cost = Math.max(0, funding.targetBalance - funding.balance);
+        funding.householdLeft = p ? p.funds - cost : null;
+        if (!cost) reason = reason || 'funded';
+      }
+    } else if (action === 'donation' || action === 'outreach') {
       cost = t.land ? 0 : t.amount;
       if (!t.land && (!number(cost) || cost <= 0 || !d.funds[t.fund] ||
           h && (h.restrictedFunds[t.fund] || 0) + cost > d.funds[t.fund].capacity * d.funds[t.fund].unitCost)) reason = reason || 'fund';
@@ -289,7 +337,7 @@
     if (!p || !number(cost) || p.funds - cost < d.reserve) reason = reason || 'funds';
     return copy({ profileId:profileId, cid:cid, action:action, terms:t, allowed:!reason, reason:reason, payer:p, cost:cost,
       recipient:d.institutionId, land:g || null, startup:action === 'foundation' ? d.foundation.startup : 0,
-      upkeep:d.funds, capacity:d.funds, project:project,
+      upkeep:d.funds, capacity:d.funds, project:project, funding:funding,
       facts:{ turn:s.turn, date:s.date, start:s.start, definition:d, actor:c, location:at(s, cid), institution:ins,
         house:h, houses:s.abbeys || null, land:s.player.landPlots || [], manor:s.player.manor || null,
         finance:s.economy || null, owner:s.owner, holder:s.holder, payer:p } });
@@ -312,7 +360,9 @@
       s.player.landPlots = s.player.landPlots.filter(function (v) { return v.provinceId !== q.land.provinceId || v.settlement !== q.land.settlement; });
       var old = h.plots.filter(function (v) { return v.provinceId === q.land.provinceId && v.settlement === q.land.settlement; })[0];
       if (old) old.count += q.land.count; else h.plots.push(copy(q.land));
-    } else if (q.action === 'donation') h.restrictedFunds[t.fund] = (h.restrictedFunds[t.fund] || 0) + q.cost;
+    } else if (q.action === 'donation') {
+      h.restrictedFunds[t.fund] = q.funding ? q.funding.targetBalance : (h.restrictedFunds[t.fund] || 0) + q.cost;
+    }
     if (q.action === 'outreach') {
       /* A prepaid service is consumed once. Population owns its one support record. */
       h.activitySpent = (h.activitySpent || 0) + q.cost;

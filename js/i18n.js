@@ -225,6 +225,10 @@ window.FBDATA = window.FBDATA || {};
     if (style === 'icon') return currency.icon;
     if (typeof amount !== 'number' || !isFinite(amount)) return '—';
     const total = Math.round(Math.abs(amount) * currency.smallestPerGold);
+    if (opts && opts.exact && (total / currency.smallestPerGold !== Math.abs(amount) || total > 9007199254740991)) {
+      return FB.T('{amount} {currency}', { amount:amount.toLocaleString(FB.locale, { maximumSignificantDigits:21 }),
+        currency:FB.L(currency.label) });
+    }
     if (!isFinite(total) || total > 9007199254740991) return '—';
     let terms = [];
     let remainder = total;
