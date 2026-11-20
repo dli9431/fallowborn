@@ -152,7 +152,7 @@
     need(plain(jobs) && Object.keys(jobs).length <= 8, 'jobs');
     Object.keys(jobs).forEach(function (id) {
       var j = jobs[id], req = def.requirements || {};
-      need(slug(id) && keys(j, ['payerRealmId','provinceId','days','fee','completionGold','settlementGold','expiresDays','yearMin','yearMax']), 'job fields');
+      need(slug(id) && keys(j, ['payerRealmId','provinceId','days','fee','completionGold','settlementGold','expiresDays','yearMin','yearMax','patronJobId']), 'job fields');
       need(slug(j.payerRealmId) && slug(j.provinceId) && (req.realms || []).indexOf(j.payerRealmId) >= 0 &&
         (req.provinces || []).indexOf(j.provinceId) >= 0, 'job references');
       need(integer(j.days) && j.days >= 1 && j.days <= 30 && integer(j.fee) && j.fee >= 1 && j.fee <= 1000 &&
@@ -160,6 +160,13 @@
         j.settlementGold <= j.fee - j.completionGold && integer(j.expiresDays) &&
         j.expiresDays >= j.days && j.expiresDays <= 360 && integer(j.yearMin) && integer(j.yearMax) &&
         j.yearMin <= j.yearMax && j.yearMax <= 10000, 'job bounds');
+    });
+    Object.keys(jobs).forEach(function (id) {
+      var job = jobs[id];
+      if (!own(job, 'patronJobId')) return;
+      var anchor = jobs[job.patronJobId];
+      need(slug(job.patronJobId) && own(jobs, job.patronJobId) && !own(anchor, 'patronJobId') &&
+        anchor.payerRealmId === job.payerRealmId && anchor.provinceId === job.provinceId, 'job patron binding');
     });
     function mobileRealm(id) {
       need(slug(id) && (def.requirements && def.requirements.realms || []).indexOf(id) >= 0, 'mobile realm dependency');
@@ -337,6 +344,7 @@
 
   function factory(def) {
     var controls = Object.create(null), places = Object.create(null), mobileRealms = Object.create(null);
+    var patronJobs = Object.keys(def.jobs || {}).filter(function (id) { return !own(def.jobs[id], 'patronJobId'); });
     var localities = Object.keys(def.stages).filter(function (id) { return def.stages[id].localEvent; }).map(function (id) {
       return def.stages[id].localEvent;
     });
@@ -353,11 +361,12 @@
     scan(def.stages);
     scan(def.jobs);
     function payer(s, j) { return FB.startRealmId(s, j.payerRealmId); }
+    function boundPatron(t, id) { return t.jobPatrons && t.jobPatrons[def.jobs[id].patronJobId || id]; }
     function patron(s, t, id) {
       var j = def.jobs[id], rid = payer(s, j), r = s.realms[rid];
       var person = FB.stories.ruler(s, j.payerRealmId);
       return rid !== 'player' && !!r && r.alive && !!person && !person.dead &&
-        !!t.jobPatrons && !!t.jobPatrons[id] && person.id === t.jobPatrons[id] && sovereign(s, j.provinceId) === rid;
+        person.id === boundPatron(t, id) && sovereign(s, j.provinceId) === rid;
     }
     function localJob(s, j) { return s.player.provinceId === j.provinceId && present(s) === j.provinceId; }
     function availableJob(s, t, id) {
@@ -545,11 +554,17 @@
       if (op.kind === 'spend_day') return { allowed:freeDay(s), terms:null, reason:FB.T('A free action day at home is required.') };
       if (op.kind === 'start_job' || op.kind === 'work_job' || op.kind === 'settle_job') {
         var j = def.jobs[op.jobId], row = t.jobs && t.jobs[op.jobId], rid = payer(s, j);
+        var funds = FB.treasuryAvailable(s, rid), originalPatron = patron(s, t, op.jobId);
+        var expires = row ? row.expiresTurn : s.turn + j.expiresDays;
+        var lastDay = FB.dateFromOrdinal(Math.min(FB.dateOrdinal(FB.dateAtTurn(s, expires - 1)), (j.yearMax + 1) * 360 - 1));
         return { allowed:op.kind === 'start_job' ? availableJob(s, t, op.jobId) :
           liveJob(s, t, op.jobId) && row.status === (op.kind === 'work_job' ? 'working' : 'disputed'),
-          reason:FB.T('The original living payer must still control this county. Work needs a free local day and a funded, unexpired contract.'),
+          reason:op.kind === 'start_job' && originalPatron && funds < j.fee ?
+            FB.T('The payer has {money:funds} available and must reserve {money:fee}.', { funds:funds, fee:j.fee }) :
+            FB.T('The original living payer must still control this county. Work needs a free local day and a funded, unexpired contract.'),
           terms:{ definition:j, row:row || null, payerId:rid, rulerId:FB.stories.resolve(s, { kind:'realm_ruler', realmId:j.payerRealmId }),
-            funds:FB.treasuryAvailable(s, rid), ready:freeDay(s), patron:patron(s, t, op.jobId), accounting:s.treasuryAccounting && s.treasuryAccounting.mode } };
+            funds:funds, ready:freeDay(s), patron:originalPatron, accounting:s.treasuryAccounting && s.treasuryAccounting.mode,
+            date:s.date, lastDay:lastDay } };
       }
       if (op.kind === 'convert_faith') {
         var c = FB.conversionStatus(s, 'faith', op.faithId, op.scope);
@@ -671,7 +686,7 @@
           revision:0, stageTurn:s.turn, decisions:{}, controls:rows, householdReceipts:{} };
         if (def.jobs) {
           rec.jobs = {}; rec.jobPatrons = {};
-          Object.keys(def.jobs).forEach(function (id) {
+          patronJobs.forEach(function (id) {
             rec.jobPatrons[id] = FB.stories.resolve(s, { kind:'realm_ruler', realmId:def.jobs[id].payerRealmId });
           });
         }
@@ -725,7 +740,10 @@
         if (op.kind === 'spend_day') return [FB.T('Spend one action day. Daily Focus income is replaced for that day.')];
         if (op.kind === 'start_job' || op.kind === 'work_job' || op.kind === 'settle_job') {
           var j = def.jobs[op.jobId], row = t.jobs && t.jobs[op.jobId];
-          return [FB.T('Payer: {name}. Total reserved fee: {fee} gold for {days} action days.',
+          function dateLabel(date) {
+            return FB.T('{season} {year}, day {day}', { season:FB.seasonName(date.season), year:date.year, day:date.day });
+          }
+          var lines = [FB.T('Payer: {name}. Total reserved fee: {fee} gold for {days} action days.',
             { name:FB.fullName(FB.stories.ruler(s, j.payerRealmId)), fee:j.fee, days:j.days }),
           FB.T('Paid on completion: {gold} gold. Disputed balance: {balance} gold.', { gold:j.completionGold, balance:j.fee - j.completionGold }),
           FB.T('Completed working days: {days}. Payment already received: {gold} gold.', { days:row ? row.daysWorked : 0, gold:row ? row.paid : 0 }),
@@ -733,7 +751,14 @@
             { gold:op.resolution === 'hearing' ? row.escrow : op.resolution === 'settlement' ? j.settlementGold : 0 }) :
             FB.T('Work one day now, replacing Daily Focus income. Further shifts require another reviewed action.'),
           dayOperation(op) ? FB.T('Spend one action day. Daily Focus income is replaced for that day.') : FB.T('This settlement spends no action day.'),
-          FB.T('Interrupted work earns only its completed share of the undisputed fee. Completed work keeps its full reserved entitlement. The contract expires {days} days after acceptance.', { days:j.expiresDays })];
+          FB.T('Interrupted work earns only its completed share of the undisputed fee. Completed work keeps its full reserved entitlement. The contract expires {days} days after acceptance.', { days:j.expiresDays }),
+          op.kind === 'start_job' ? FB.T('First working day: {start}. Last day to act: {last}.', { start:dateLabel(terms.date), last:dateLabel(terms.lastDay) }) :
+            FB.T('Last day to act: {last}.', { last:dateLabel(terms.lastDay) })];
+          if (op.kind === 'start_job' && j.fee > j.completionGold) {
+            lines.push(FB.T('A settlement pays {money:settlement} and returns {money:refund}. A hearing takes one action day and pays {money:balance}. Waiving returns the whole disputed balance.',
+              { settlement:j.settlementGold, refund:j.fee - j.completionGold - j.settlementGold, balance:j.fee - j.completionGold }));
+          }
+          return lines;
         }
         if (op.kind === 'household_expense') return [FB.T('Pay {money:amount} from the private household purse once for this stage.', { amount:terms.amount }),
           FB.T('This buys the described household supplies. It grants no land, workshop holding or income bonus.')];
@@ -770,9 +795,9 @@
         need(own(t, 'jobs') === own(t, 'jobPatrons'));
         if (own(t, 'jobs')) {
           need(!!def.jobs && plain(t.jobs) && plain(t.jobPatrons) && Object.keys(t.jobs).length <= 8 &&
-            Object.keys(t.jobPatrons).length === Object.keys(def.jobs).length);
+            Object.keys(t.jobPatrons).length === patronJobs.length);
           Object.keys(t.jobPatrons).forEach(function (id) {
-            need(own(def.jobs, id) && (t.jobPatrons[id] === null || typeof t.jobPatrons[id] === 'string'));
+            need(patronJobs.indexOf(id) >= 0 && (t.jobPatrons[id] === null || typeof t.jobPatrons[id] === 'string'));
           });
           Object.keys(t.jobs).forEach(function (id) {
             var r = t.jobs[id], j = def.jobs[id];
@@ -782,7 +807,7 @@
               integer(r.daysWorked) && r.daysWorked >= 1 && r.daysWorked <= j.days && integer(r.paid) &&
               integer(r.refunded) && integer(r.escrow) && r.paid + r.refunded + r.escrow === j.fee &&
               ['working','disputed','settled','cancelled','expired'].indexOf(r.status) >= 0);
-            need(!!t.jobPatrons[id] && (!s || r.payerId === payer(s, j)));
+            need(!!boundPatron(t, id) && (!s || r.payerId === payer(s, j)));
             need(!s || r.daysWorked <= s.turn - r.openedTurn + 1);
             var open = r.status === 'working' || r.status === 'disputed';
             need(open ? r.resolution === null && r.closedTurn === null && r.refunded === 0 :

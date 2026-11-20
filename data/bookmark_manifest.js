@@ -208,6 +208,7 @@ if (FB.bookmarkSources && FB.bookmarkSources.manifest) FB.bookmarkSources.manife
       ['data/starts_courts_800.js',['800']],
       ['data/starts_rulers_800.js',['800']],
       ['data/story_households_baghdad_800.js',['800']],
+      ['data/story_baghdad_commissions_800.js',['800']],
       ['data/starts_clovis_493.js',['493']],
       ['data/starts_novgorod_1241.js',['1241']],
       ['data/story_novgorod_1241.js',['1241']],

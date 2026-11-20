@@ -1,0 +1,32 @@
+{
+  "name": "Paris copying commission example",
+  "storyInstances": {
+    "paris_copy_terms_example": {
+      "id": "paris_copy_terms_example", "type": "household_track", "title": "Copying in Paris",
+      "intro": "An invented buyer offers two forms of paid copying.",
+      "homeProvinceId": "paris", "continuity": "household", "initialStage": "offer",
+      "requirements": {"realms": ["west_francia"], "provinces": ["paris"]},
+      "jobs": {
+        "short_copy": {"payerRealmId": "west_francia", "provinceId": "paris", "days": 1, "fee": 4, "completionGold": 4, "settlementGold": 0, "expiresDays": 5, "yearMin": 867, "yearMax": 867},
+        "long_copy": {"payerRealmId": "west_francia", "provinceId": "paris", "patronJobId": "short_copy", "days": 2, "fee": 9, "completionGold": 5, "settlementGold": 1, "expiresDays": 8, "yearMin": 867, "yearMax": 867}
+      },
+      "stages": {
+        "offer": {"name": "A local offer", "text": "The local court can reserve a fee for either copy.", "choices": [
+          {"id": "short", "label": "Take the one-day copy", "detail": "Deliver the copy in one day for {money:4}.", "operation": {"kind": "start_job", "jobId": "short_copy"}, "next": "done"},
+          {"id": "long", "label": "Take the two-day copy", "detail": "Deliver the copy in two days for {money:5} with {money:4} disputed.", "operation": {"kind": "start_job", "jobId": "long_copy"}, "next": "work"},
+          {"id": "decline", "label": "Decline the offer", "detail": "Keep the day free.", "operation": {"kind": "record_decision"}, "next": "done"}
+        ], "transitions": []},
+        "work": {"name": "Deliver the copy", "text": "The court reserved the fee.", "choices": [
+          {"id": "deliver", "label": "Work the delivery day", "detail": "Spend the second action day on delivery.", "operation": {"kind": "work_job", "jobId": "long_copy"}, "next": "account"}
+        ], "transitions": [{"when": {"kind": "job_state", "jobId": "long_copy", "states": ["cancelled", "expired"]}, "next": "done"}]},
+        "account": {"name": "The reserved balance", "text": "The first part of the fee has been paid.", "choices": [
+          {"id": "settle", "label": "Settle the account", "detail": "Keep {money:1} and refund {money:3}.", "operation": {"kind": "settle_job", "jobId": "long_copy", "resolution": "settlement"}, "next": "done"}
+        ], "transitions": [{"when": {"kind": "job_state", "jobId": "long_copy", "states": ["cancelled", "expired"]}, "next": "done"}]},
+        "done": {"name": "The offer has ended", "text": "The household continues with its ordinary choices.", "terminal": true, "choices": [], "transitions": []}
+      }
+    }
+  },
+  "startScenarios": [
+    {"id": "paris_copy_terms_start", "name": "Paris copying household", "desc": "Review competing copying terms.", "intro": "The court seeks a copy.", "bookmarkIds": ["867"], "fixedProvinceId": "paris", "startCulture": "frankish", "startReligion": "catholic", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["paris_copy_terms_example"], "trackLocations": {"paris_copy_terms_example": ["paris"]}}
+  ]
+}

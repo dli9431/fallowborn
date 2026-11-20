@@ -3,7 +3,9 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
+test.describe.configure({ mode:'parallel' });
 dependsOnRuntime(__filename, ['index.html', 'data/starts_courts_800.js', 'data/story_households_baghdad_800.js',
+  'data/bookmark_manifest.js', 'data/story_baghdad_commissions_800.js',
   'data/starts.js', 'data/bookmark_800.js', 'data/bookmark_800_expansion.js', 'data/bookmark_800_history.js',
   'data/government_rollout.js', 'data/islamic_rollout.js', 'data/actions.js', 'data/economy.js', 'data/technology.js', 'data/travel.js',
   'js/starts.js', 'js/main.js', 'js/world.js', 'js/model.js', 'js/stories.js', 'js/story_household.js',
@@ -41,6 +43,25 @@ async function choose(page, choice) {
     return FB.stories.apply(s,id,choice,FB.stories.quote(s,id,choice));
   }, choice);
 }
+
+test('the selected Baghdad start has exactly its original track and three finite job declarations', async function ({ page }, info) {
+  await startCopyist(page, info);
+  expect(await page.evaluate(function (id) {
+    const graph = FB.stories.get(id).declaration, t = FB.state.stories[id];
+    return {
+      tracks:FB.state.start.storyAttachments.tracks,
+      jobs:Object.keys(graph.jobs).map(function (key) { return [key, graph.jobs[key]]; }),
+      patrons:Object.keys(t.jobPatrons), offer:graph.stages.offer.choices.map(function (row) { return row.id; }),
+      impact:FBDATA.techImpactReviews.features.household_finite_jobs.mode
+    };
+  }, ID)).toEqual({
+    tracks:[ID], jobs:[
+      ['first_copy',{ payerRealmId:'abbasid', provinceId:'baghdad', days:3, fee:6, completionGold:6, settlementGold:0, expiresDays:10, yearMin:800, yearMax:802 }],
+      ['later_copy',{ payerRealmId:'abbasid', provinceId:'baghdad', days:1, fee:2, completionGold:2, settlementGold:0, expiresDays:7, yearMin:800, yearMax:802 }],
+      ['extended_copy',{ payerRealmId:'abbasid', provinceId:'baghdad', patronJobId:'first_copy', days:4, fee:12, completionGold:8, settlementGold:2, expiresDays:14, yearMin:800, yearMax:802 }]
+    ], patrons:['first_copy','later_copy'], offer:['accept_order','accept_extended_copy','practice_first','decline_order'], impact:'none'
+  });
+});
 
 for (const culture of ['arabic','persian']) {
   test('the copyist retains the ' + culture + ' Sunni community and an apprentice household without extra privileges', async function ({ page }, info) {
