@@ -2,7 +2,8 @@
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame,prepareGameContent}=require('../support/game/navigation');
-const {startHistoricalGame}=require('../support/game/historical-start');
+const {startParityGame}=require('../support/game/parity');
+const {useReviewStartRules}=require('../support/game/released-starts');
 const {beginBookmark,beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const example=require('../fixtures/authoring/federate-event-reviews-estuary.json');
@@ -12,10 +13,14 @@ dependsOnRuntime(__filename,['index.html','data/events_federate_life.js','data/p
   'data/bookmark_manifest.js','data/bookmark_476_italy.js','data/story_courts_476.js','data/starts.js',
   'data/bookmark_1096_mainz.js','data/story_households_rhineland_1096.js','data/starts_mainz_1096.js',
   'js/federates.js','js/story_track.js','js/story_agreements.js','js/story_household_refuge.js',
-  'js/schema.js','js/events.js','js/stories.js','js/mods.js','js/starts.js','js/world.js','js/model.js',
+  'js/schema.js','js/events.js','js/stories.js','js/mods.js','js/starts.js','js/main.js','js/bookmark_sources.js',
+  'js/world.js','js/model.js',
   'js/authority.js','js/treasury.js','js/settlement.js','js/governments.js','js/systems.js',
   'js/population.js','js/home_authority.js','js/story_household_party.js','js/household_party_travel.js',
   'js/institutions.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);
+
+// Each case opens its own campaign and browser context, so CI can shard the cases independently.
+test.describe.configure({mode:'parallel'});
 
 async function imported(page,info,ruler) {
   await openGame(page,info);
@@ -39,7 +44,9 @@ async function imported(page,info,ruler) {
   await page.evaluate(function() {FB.game.setPaused(true);});
 }
 async function nativeRuler(page,info) {
-  await startHistoricalGame(page,info,{bookmark:'476',code:'SERVICE-476-odoacer_476-pavia-m-Odoacer-standard-0-gothic.homoian'});
+  // Odoacer is a review candidate on an available date. Install review access before boot.
+  await useReviewStartRules(page);
+  await startParityGame(page,info,{bookmark:'476',code:'SERVICE-476-odoacer_476-pavia-m-Odoacer-standard-0-gothic.homoian'});
 }
 async function helpers(page) {
   await page.evaluate(function() {
