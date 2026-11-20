@@ -104,6 +104,9 @@
     return !!live && live.trades<LIMIT && r.nextId<999990 && r.revision<1000000 &&
       live.lots+r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0)<LIMIT;
   }
+  function tradeCost(profile,price,quantity) {
+    return profile.mode==='market'?Math.ceil(quantity*profile.basePrice*price):0;
+  }
   E.quote = function(s,request) {
     var q={exchange:true,allowed:false,reason:'request',request:obj(request)?copy(request):null};
     if(!keys(request,['operation','routeId','actor','quantity']) || ['buy','sell','transfer'].indexOf(request.operation)<0 ||
@@ -112,9 +115,13 @@
     FB.buildingSeasons.validate(s);
     var p=plan(s),route=p.routes.find(function(a){return a.id===request.routeId;});
     if(p.errors.length || !route)return q;
-    var profile=FBDATA.productionExchangeProfiles[route.profileId],from=site(s,route.fromSiteId),to=site(s,route.toSiteId);
+    var profile=FBDATA.productionExchangeProfiles[route.profileId],sites=P.snapshot(s);
+    var from=sites.find(function(r){return r.site.id===route.fromSiteId;});
+    var to=sites.find(function(r){return r.site.id===route.toSiteId;});
     var seller=actor(s,from),buyer=actor(s,to),source=from && from.asset,target=to && to.asset;
     q.reason='authority';q.goodId=profile.goodId;q.seller=seller;q.buyer=buyer;
+    q.mode=profile.mode;q.fromSite=from && from.site;q.toSite=to && to.site;
+    q.maxQuantity=0;
     q.sellerIdentity=from && seller && P.authority(s,from.site,seller);
     q.buyerIdentity=to && buyer && P.authority(s,to.site,buyer);
     if (!from || !to || from.site.countyId!==to.site.countyId && !FB.productionMarketLink(copy(s),from.site.countyId,to.site.countyId,profile.marketGoodId)) return q;
@@ -125,24 +132,38 @@
       profile.mode==='market' && (eq(buyer,seller) || request.operation==='transfer' || eq(q.payer,q.recipient)))return q;
     if (profile.mode==='market' && q.recipient.kind==='character' && q.recipient.id!==s.player.charId &&
       !(s.settlementLordships && s.settlementLordships.accounts && s.settlementLordships.accounts[q.recipient.id])) return q;
-    q.reason='stock';q.inputs=[];
+    q.inputs=[];q.sourceAvailable=0;q.sourceRemaining=0;
     var left=request.quantity;
     from.lots.forEach(function(lot){
-      var n=lot.goodId===profile.goodId?Math.min(left,lot.available):0;
+      if(lot.goodId!==profile.goodId)return;
+      q.sourceAvailable+=lot.available;q.sourceRemaining+=lot.remaining;
+      var n=Math.min(left,lot.available);
       if(n>0){q.inputs.push({lotId:lot.id,quantity:n});left-=n;}
     });
+    q.targetRemaining=to.lots.reduce(function(n,lot){return n+(lot.goodId===profile.goodId?lot.remaining:0);},0);
     // Market/fiscal readers may normalize legacy fields. Quotes only read detached state.
     var t=copy(s),price=FB.marketPrice(t,from.site.countyId,profile.marketGoodId);
-    q.unitPrice=price;q.cost=profile.mode==='market'?Math.ceil(request.quantity*profile.basePrice*price):0;
+    q.unitPrice=price;q.cost=tradeCost(profile,price,request.quantity);q.oneCost=tradeCost(profile,price,1);
     var prior=receipts(s).filter(function(x){return x.kind==='exchange' && x.routeId===route.id && x.period===period(s);});
     q.remainingDemand=profile.quantityLimit-prior.reduce(function(n,x){return n+x.quantity;},0);
     q.remainingBudget=profile.budget-prior.reduce(function(n,x){return n+x.paid;},0);
-    q.allowed=!left && num(price,0.01,10000) && room(s) && request.quantity<=q.remainingDemand && q.cost<=q.remainingBudget &&
-      account.funds.available>=q.cost+account.funds.reserve;
-    if(!left && !q.allowed)q.reason='funds';
-    q.allowed=!!q.allowed;q.reason=q.allowed?null:q.reason;
+    var priced=num(price,0.01,10000),hasRoom=room(s),funds=account.funds;
+    if(priced && hasRoom) {
+      // A trade adds one destination lot. Search the unit bound with the same
+      // aggregate rounding and reserve comparison used for the requested trade.
+      var low=0,high=Math.min(q.sourceAvailable,q.remainingDemand,10000);
+      while(low<high) {
+        var mid=Math.ceil((low+high)/2),cost=tradeCost(profile,price,mid);
+        if(cost<=q.remainingBudget && funds.available>=cost+funds.reserve)low=mid;
+        else high=mid-1;
+      }
+      q.maxQuantity=low;
+    }
+    q.reason=left?'stock':!priced?'price':!hasRoom?'storage':request.quantity>q.remainingDemand?'demand':
+      q.cost>q.remainingBudget?'budget':!(funds.available>=q.cost+funds.reserve)?'funds':null;
+    q.allowed=q.reason===null;
     q.signature=JSON.stringify([s.turn,s.production,request,route,profile,source,target,seller,buyer,account,recipient,
-      q.inputs,q.cost,q.unitPrice,q.allowed,s.realms,s.settlementLordships,s.chars,s.buildings,s.player]);
+      q.inputs,q.cost,q.unitPrice,q.sourceAvailable,q.maxQuantity,q.allowed,s.realms,s.settlementLordships,s.chars,s.buildings,s.player]);
     return q;
   };
   E.aiQuote = function(s,routeId,quantity,operation) {
@@ -218,9 +239,14 @@
     return changed;
   };
   E.reason = function(q) {
+    if(q.allowed && q.mode==='owned')return FB.T('Move the reviewed lots between the same owner’s stores without payment.');
     if(q.allowed)return FB.T('Move only the reviewed owned lots. Payment goes to the original supplier account; transferred goods have no simultaneous sale or use.');
     if(q.reason==='stock')return FB.T('The supplier needs enough actual, unreserved lots of this exact material. A market basket cannot replace typed stock.');
-    if(q.reason==='funds')return FB.T('The buyer needs current cash, ordinary reserves, remaining declared demand and budget, and inventory room.');
+    if(q.reason==='price')return FB.T('The current market price is unavailable.');
+    if(q.reason==='storage')return FB.T('Production storage or receipt space is full.');
+    if(q.reason==='demand')return FB.T('The route has insufficient remaining demand this season.');
+    if(q.reason==='budget')return FB.T('The route has insufficient remaining budget this season.');
+    if(q.reason==='funds')return FB.T('The buyer needs enough cash to pay and keep ordinary reserves.');
     return FB.T('Both original asset owners need current lawful access to standing works with an accessible local market link.');
   };
   var eventFields = {routeId:P.eventId(),goodId:P.eventId('productionGoods'),countyId:P.eventId(),
@@ -314,7 +340,7 @@
           !identity(s,x.payer) || !identity(s,x.recipient) || !person(x.sellerIdentity,x.seller) || !person(x.buyerIdentity,x.buyer) ||
           !(eq(x.payer,x.buyer) || x.buyer.kind==='realm' && x.buyer.id==='player' && x.payer.kind==='character' && x.payer.id===x.buyerIdentity.characterId) ||
           !(eq(x.recipient,x.seller) || x.seller.kind==='realm' && x.seller.id==='player' && x.recipient.kind==='character' && x.recipient.id===x.sellerIdentity.characterId) ||
-          !num(x.unitPrice,0.01,10000) || x.paid!==(profile.mode==='owned'?0:Math.ceil(x.quantity*profile.basePrice*x.unitPrice)) ||
+          !num(x.unitPrice,0.01,10000) || x.paid!==tradeCost(profile,x.unitPrice,x.quantity) ||
           (profile.mode==='owned' ? !eq(x.seller,x.buyer) : eq(x.seller,x.buyer) || eq(x.payer,x.recipient)) ||
           !Array.isArray(x.inputs) || !x.inputs.length || x.inputs.length>LIMIT)fail();
         var n=0,inputs={};
