@@ -39,6 +39,13 @@
       V.eligible(s,rid,o.incumbentId,id).allowed ? person(s,o.incumbentId) : null;
   };
   V.chief = function (s,rid) { var p = V.profile(s,rid); return p ? V.incumbent(s,rid,p.offices[0].id) : null; };
+  V.isMagistrate = function (s,rid,cid) {
+    var r = V.row(s,rid);
+    return !!r && r.offices.some(function (o) {
+      var c = V.incumbent(s,rid,o.id);
+      return !!c && c.id === cid;
+    });
+  };
   V.candidates = function (s,rid,id) {
     return Object.keys(s.chars || {}).filter(function (cid) { return V.eligible(s,rid,cid,id).allowed; }).sort().slice(0,16);
   };

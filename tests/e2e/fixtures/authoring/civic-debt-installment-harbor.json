@@ -1,0 +1,17 @@
+{
+  "constituencyProfiles": {
+    "venetian_councils": {
+      "eligibility": { "minAge": 25, "minServiceYears": 0, "skills": { "dip": 4 }, "free": true },
+      "selection": { "threshold": 0.6, "tie": "id", "termDays": null, "nominationCost": 0 },
+      "recall": { "threshold": 0.75, "reasons": ["neglect", "overreach", "ineligible"] },
+      "obligations": { "revenueRate": 1, "levyRate": 1, "maxDues": 50, "maxLevy": 10000, "reserve": 29 },
+      "reserved": ["war", "treaty", "grant", "extraordinary_tax", "pledge", "conversion"],
+      "powers": ["ban", "peace", "revenue"],
+      "members": [
+        { "id": "ducal_counsellors", "name": "Harbor counsellors", "weight": 3, "basis": "service", "continuity": "institution", "support": 70 },
+        { "id": "civic_council", "name": "Harbor council", "weight": 4, "basis": "custom", "continuity": "institution", "support": 65 },
+        { "id": "electoral_interests", "name": "Harbor electors", "weight": 3, "basis": "custom", "continuity": "institution", "support": 60 }
+      ]
+    }
+  }
+}
