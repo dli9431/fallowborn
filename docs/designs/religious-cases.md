@@ -86,15 +86,19 @@ synodal discipline in the Innocent III campaign. The amounts and the local
 court's option to lower its own fee are simulation choices. Neither canon 6
 nor Second Lateran canon 15 attests a Roman settlement tariff of 2 or 1.
 
-Technology impact `synodal_settlement_fee` is **none**. The recognized office
-and its existing temporal competence supply the authority for the decision.
+Technology impact `synodal_settlement_fee` is **none** for enactment and repeal.
+The recognized office and its existing temporal competence supply the authority.
 
 ### Convening the synod
 
 The existing Convene a synod Deed charges its configured gathering cost of 10
 gold and starts its 360-day cooldown when the clergy assemble. A bishop with
 current competence who convenes in the profile's county can review a lower
-fee. The agenda names the jurisdiction and affected cause, compares the
+fee. Once the ceiling is enacted, the current competent bishop, including a
+successor, can keep it or confirm its repeal at a later synod. A former bishop,
+a vacant see or a bishop away from the county cannot repeal. The see carries
+the gathering cooldown across succession when a new protagonist has no
+personal cooldown. The agenda names the jurisdiction and affected cause, compares the
 current and proposed institutional fees, and shows the gathering cost already
 paid. Discipline, learning and alms remain available. Closing with current
 terms or cancelling the fee confirmation leaves the rate in force. The fee
@@ -102,26 +106,34 @@ decree requires personal confirmation, including when events are automated.
 There is no additional charge for the decision.
 
 A queued gathering retains the convening turn, issuer and definition identity.
-Confirmation checks the original issuer, current local competence and the exact
-reviewed terms before using the ordinary enactment transaction. The case docket
-shows the effective fee for new offers separately from the fee, compensation,
-recipient and deadline on an outstanding offer. Settled cases show the amount
-paid.
+A repeal agenda also binds the active rule. Confirmation checks the convening
+bishop's current local competence and the exact reviewed terms. Repeal restores
+the customary fee on new offers. The case docket identifies whether a pending
+offer uses the customary rate or the ceiling and displays its frozen fee,
+compensation, recipient and deadline separately from the current rate for new
+offers. Settled cases show the amount paid.
 
 ### Authority and persistence
 
-`FB.religiousCases.synodalFeeReview(state, profileId, actorId)` returns the
-customary fee, proposed terms and any blocker. `enactSynodalFee(state, review)`
-recomputes the review before writing its rule. `synodalFeeRule(state, profileId)`
-returns a copy of the saved enactment. Keeping custom requires no write.
+`FB.religiousCases.synodalFeeReview(state, profileId, actorId, operation)` returns
+the customary fee, proposed terms and any blocker. The default operation
+reviews enactment. `enactSynodalFee(state, review)` recomputes the review before
+writing its rule. The paid synod event review owns repeal.
+`synodalFeeRule(state, profileId)` returns a copy of the saved rule and its
+history. Retaining a ceiling leaves the rule in force and records the gathering
+for cooldown purposes.
 
 The optional `authority.synodalFees` ledger allows one enactment per enabled
-profile and up to 32 records. An enactment binds the bookmark, county, declared
+profile and up to 32 records. A repeal records its date and issuing incumbent on
+that enactment, which remains available as provenance. The latest related
+gathering supplies the cooldown. A rule saved before gathering dates were
+recorded uses its enactment date as the initial cooldown reference. An enactment
+binds the bookmark, county, declared
 see, actual issuing incumbent and realm generation, enactment turn, typed terms
 and exact profile fingerprint. The rule belongs to the see across changes in
 the incumbent. Current authority remains required for each case and transaction.
 Reduced offers and payments reference the exact enactment. Payments retain the
-offer turn so a customary offer can still be accepted after enactment. Detached
+offer turn to validate the applicable terms across enactment and repeal. Detached
 validation checks the rule, frozen fee and exact institutional and compensation
 receipts together. It checks counties against the saved bookmark revision before
 the campaign map is activated. Saves without enactments keep their customary

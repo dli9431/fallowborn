@@ -3780,6 +3780,11 @@ window.FB = window.FB || {};
     show: function (s) {
       return !!(FB.bishopricSnapshot(s, me(s)) || FB.religiousCases.synodalFeeAgenda(s));
     },
+    statusReadyTurn: synodalDeedReadyTurn,
+    can: function (s) {
+      const ready = synodalDeedReadyTurn(s);
+      return ready !== null && s.turn < ready ? FB.T('Ready in {days} days.',{days:ready - s.turn}) : true;
+    },
     routineEventContext: function (s, routine) {
       return routine.queueEvent === 'bishop_synod' ? FB.religiousCases.synodalGathering(s, routine.costs) : {};
     } },
@@ -12902,6 +12907,15 @@ window.FB = window.FB || {};
 
   function actionCooldownDays(state, action) {
     return action.cooldownDays ? action.cooldownDays(state) : action.cd;
+  }
+
+  function synodalDeedReadyTurn(state) {
+    const routine = FBDATA.deedRoutines.convene_synod, action = deedById.convene_synod;
+    if (!routine || routine.queueEvent !== 'bishop_synod' || !action) return null;
+    const days = actionCooldownDays(state,action);
+    if (!(days > 0)) return null;
+    const last = FB.religiousCases.synodalFeeLastGathering(state);
+    return last === null ? null : last + days;
   }
 
   function instantStatusReadyTurnForAction(state, action) {

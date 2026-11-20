@@ -378,6 +378,8 @@
       kv(FB.T('Court fee for new offers'),courtFee(snap.settlementFee)) +
       (t ? kv(r.paid ? FB.T('Court fee paid') : offerDays < 0 ? FB.T('Court fee in the expired offer') : FB.T('Court fee in the pending offer'),
         courtFee(t.fee)) : '') +
+      (r && r.offer ? kv(FB.T('Governing fee terms'),r.offer.feeRuleId ? FB.T('The ceiling in effect when offered') :
+        FB.T('The customary rate in effect when offered')) : '') +
       kv(t ? r.paid ? FB.T('Compensation paid') : FB.T('Compensation in the offer') : FB.T('Settlement compensation'),
         t ? FB.money(t.amount,s) : FB.T('{share}% of available private funds, capped at {money:cap}',{share:p.settlementShare * 100,cap:p.settlementMax})) +
       kv(FB.T('Settlement recipient'),recipient(s,p,snap)) +

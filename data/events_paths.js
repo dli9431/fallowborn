@@ -251,7 +251,10 @@ FBDATA.events.push(
     { label:'Keep current terms and close the synod.', desc:'Conclude the gathering without issuing a new decree.', effects:{} },
     { label:'Enact the lower settlement fee.', desc:'Review a ceiling on the institutional fee for new settlement offers.',
       require:{state:[{reader:'synodal_fee_agenda',args:{}}]}, manualOnly:true,
-      review:{type:'synodal_fee',args:{},refusalOption:3} }
+      review:{type:'synodal_fee',args:{},refusalOption:3} },
+    { label:'Repeal the settlement fee ceiling.', desc:'Review restoring the customary fee for new settlement offers.',
+      require:{state:[{reader:'synodal_fee_agenda',args:{operation:'repeal'}}]}, manualOnly:true,
+      review:{type:'synodal_fee',args:{operation:'repeal'},refusalOption:3} }
   ]},
 { id:'bishop_extraordinary_tithe', systems:['papacy'], title:'An Extraordinary Tithe',
   trigger:{ never:true },
