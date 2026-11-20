@@ -136,8 +136,54 @@
     });
   }
   function row(t,id) { return t.requests.filter(function(r) { return r.id === id; })[0] || null; }
-  function end(s,t,r,status,reason) { r.status=status;r.closedTurn=s.turn;r.reason=reason;t.revision++; }
+  function clearExtension(r) { if (r.extension && !r.extension.payment) delete r.extension; }
+  function end(s,t,r,status,reason) {
+    clearExtension(r);r.status=status;r.closedTurn=s.turn;r.reason=reason;t.revision++;
+  }
   function cost(def,count) { return def.funding.perPersonDay*def.termDays*count; }
+  function deadline(def,r) { return r.extension && r.extension.payment ? r.endTurn+def.termDays : r.endTurn; }
+  function extensionActors(r,ids) {
+    return r.members.filter(function(m) { return m.caregiverId === null && ids.indexOf(m.personId) >= 0; })
+      .map(function(m) { return m.personId; });
+  }
+  function extensionBlock(s,def,r,c,b,p,ids) {
+    if (r.status !== 'active' || s.turn >= r.endTurn || !r.payment || r.extension && r.extension.payment)
+      return 'extension_term';
+    if (p.length) return 'extension_threat';
+    if (!c.allowed || !same(c.binding,r.provider) || b.used > b.capacity) return 'extension_provider';
+    if (!same(ids,r.members.filter(protectivePlace).map(function(m) { return m.personId; })) ||
+        !eligibleMembers(s,r,ids) || !ids.every(function(id) { return countyPresent(s,id,def.locality.provinceId); }))
+      return 'extension_people';
+    return null;
+  }
+  function extensionReview(s,def,r,action,actor,c,b,p) {
+    var pending=r.extension && !r.extension.payment ? r.extension : null;
+    var ids=pending ? pending.personIds : r.members.filter(protectivePlace).map(function(m) { return m.personId; });
+    var adults=extensionActors(r,ids),provider=r.provider;
+    var account=r.payment && FB.treasuryPublicAccountSnapshot(s,r.payment.realmId);
+    var amount=cost(def,ids.length),reason=extensionBlock(s,def,r,c,b,p,ids);
+    if (action === 'extension_decline') {
+      reason=pending && r.status === 'active' && s.turn < r.endTurn && free(s,actor) &&
+        (adults.indexOf(actor) >= 0 || actor === provider.rulerId || actor === provider.incumbentId) ? null : 'extension_role';
+    } else if (!reason) {
+      if (action === 'extension_request' ? pending || actor !== s.player.charId || adults.indexOf(actor) < 0 :
+          !pending || (action === 'extension_consent' ? adults.indexOf(actor) < 0 ||
+            pending.consents.some(function(v) { return v.actorId === actor; }) :
+            action === 'extension_authorize' ? actor !== provider.rulerId || pending.authorization :
+              actor !== provider.incumbentId)) reason='extension_role';
+      else if (action === 'extension_authorize' && pending.consents.length !== adults.length ||
+          action === 'extension_fund' && !pending.authorization) reason='extension_consent';
+      else if (action !== 'extension_consent' && (!account || account.available < amount)) reason='extension_funds';
+    }
+    return {personIds:ids,oldEndTurn:r.endTurn,newEndTurn:r.endTurn === null ? null : r.endTurn+def.termDays,
+      amount:amount,account:account,provider:copy(provider),reason:reason};
+  }
+  var extensionActions=['extension_request','extension_consent','extension_authorize','extension_fund','extension_decline'];
+  function termDate(s,turn) {
+    var d=FB.dateAtTurn(s,turn);
+    return FB.T('{season} {year}, day {day}',{season:FB.seasonName(d.season),year:d.year,day:d.day});
+  }
+  function termMoney(s,amount) { return FB.money(amount,{state:s,style:'long',exact:true}); }
   function check(def,context,bm) {
     function need(ok,field) { if (!ok) throw new Error('Invalid household refuge: '+field+'.'); }
     need(keys(def,['id','type','title','intro','requires','registrationBefore','registrationAfter','locality','provider','capacity',
@@ -179,7 +225,7 @@
       terms=terms || {};
       var c=current(s,def),b=budget(s,def),p=pressure(s,def),r=terms.requestId && row(t,terms.requestId),allowed=false;
       var ids=terms.personIds,people=null,amount=0,now=copy(s.date);
-      var release=null;
+      var release=null,extension=null;
       if (action === 'request' && exact(terms,['partyId','personIds'])) {
         people=roster(s,terms.partyId,ids);
         var pt=party(s,terms.partyId),known=[];
@@ -217,12 +263,16 @@
           allowed=live && free(s,actorId) && (actorId === r.actorId && actorId === s.player.charId ||
             actorId === r.provider.incumbentId || actorId === r.provider.rulerId ||
             r.members.some(function(m) { return actorId === (m.caregiverId || m.personId); }));
+        } else if (extensionActions.indexOf(action) >= 0) {
+          extension=extensionReview(s,def,r,action,actorId,c,b,p);
+          allowed=extension.reason === null;
+          amount=action === 'extension_fund' ? extension.amount : 0;
         } else if (action === 'release_group') {
           // The acting adult supplies their own consent, never a target on behalf of another adult.
           var group=careGroup(r,actorId),occupants=r.members.filter(protectivePlace);
           var affected=group.map(function(m) { return m.personId; });
           var reason='release_care';
-          if (r.status !== 'active' && r.status !== 'challenged' || s.turn >= r.endTurn || !r.payment) reason='release_term';
+          if (r.status !== 'active' && r.status !== 'challenged' || s.turn >= deadline(def,r) || !r.payment) reason='release_term';
           else if (p.length && r.status === 'active') reason='release_attempt';
           else if (!c.allowed || !same(c.binding,r.provider) || b.used > b.capacity) reason='release_provider';
           else if (adult(s,actorId) && group.some(function(m) { return m.personId === actorId && m.caregiverId === null; }) &&
@@ -239,6 +289,7 @@
           characters:copy(s.chars),parties:def.partyIds.map(function(id) { return copy(party(s,id)); }),
           travel:copy(s.player.travel || null),player:copy(s.player),turn:s.turn,date:now}};
       if (release) { quoted.release=release;quoted.reason=release.reason; }
+      if (extension) { quoted.extension=extension;quoted.reason=extension.reason; }
       return quoted;
     }
     function commit(s,t,q) {
@@ -271,10 +322,36 @@
         r.members.forEach(function(m) { if (q.terms.personIds.indexOf(m.personId) >= 0) m.admittedTurn=s.turn; });
         r.status='active';r.endTurn=s.turn+def.termDays;
       } else if (q.action === 'release_group') {
+        clearExtension(r);
         careGroup(r,q.actorId).forEach(function(m) { m.releasedTurn=s.turn; });
         if (!q.release.remaining.length) { end(s,t,r,'ended','leave');return true; }
+      } else if (q.action === 'extension_request') {
+        r.extension={actorId:q.actorId,requestedTurn:s.turn,personIds:q.extension.personIds.slice(),
+          consents:[{actorId:q.actorId,turn:s.turn}],authorization:null,payment:null};
+      } else if (q.action === 'extension_consent') {
+        r.extension.consents.push({actorId:q.actorId,turn:s.turn});
+      } else if (q.action === 'extension_authorize') {
+        r.extension.authorization={actorId:q.actorId,generation:r.provider.generation,turn:s.turn};
+      } else if (q.action === 'extension_fund') {
+        var payer=r.payment.realmId;
+        if (q.cost > 0 && !FB.treasurySpend(s,payer,q.cost)) return false;
+        r.extension.payment={actorId:q.actorId,realmId:payer,amount:q.cost,turn:s.turn};
+      } else if (q.action === 'extension_decline') {
+        clearExtension(r);
       } else { end(s,t,r,q.action === 'decline' ? 'declined' : 'ended',q.action);return true; }
       t.revision++;return true;
+    }
+    function reviewExtensionAI(s,t,r) {
+      function decide(action,actor,policy) {
+        if (!r.extension || r.extension.payment || actor === s.player.charId || policy === 'review') return;
+        commit(s,t,quote(s,t,policy === 'refuse' ? 'extension_decline' : action,actor,{requestId:r.id}));
+      }
+      extensionActors(r,r.extension.personIds).forEach(function(id) {
+        if (r.extension && !r.extension.consents.some(function(v) { return v.actorId === id; }))
+          decide('extension_consent',id,def.adultPolicy);
+      });
+      if (r.extension && !r.extension.authorization) decide('extension_authorize',r.provider.rulerId,def.providerPolicy);
+      decide('extension_fund',r.provider.incumbentId,def.providerPolicy);
     }
     function tick(s,t) {
       var c=current(s,def),b=budget(s,def),p=pressure(s,def);
@@ -292,13 +369,17 @@
           if (!roster(s,r.partyId,ids) || r.status === 'offered' && !eligibleMembers(s,r,ids)) { end(s,t,r,'interrupted','consent');return; }
           if (p.length) { r.incident=copy(p[p.length-1]);end(s,t,r,'interrupted','attempt');return; }
         } else {
-          if (s.turn >= r.endTurn) { end(s,t,r,'expired','term');return; }
+          if (s.turn >= deadline(def,r)) { end(s,t,r,'expired','term');return; }
           var occupants=r.members.filter(protectivePlace);
           if (!occupants.length) { end(s,t,r,'ended','departure');return; }
           if (!eligibleMembers(s,r,occupants.map(function(m) { return m.personId; }))) {
             end(s,t,r,'interrupted','care');return;
           }
           if (p.length && r.status === 'active') { r.status='challenged';r.incident=copy(p[p.length-1]);t.revision++; }
+          if (r.extension && !r.extension.payment) {
+            if (extensionBlock(s,def,r,c,b,p,r.extension.personIds)) { clearExtension(r);t.revision++; }
+            else reviewExtensionAI(s,t,r);
+          }
         }
         if (r.status === 'requested') {
           r.members.forEach(function(m) {
@@ -318,13 +399,62 @@
     }
     function validate(t,s) {
       function need(ok) { if (!ok) throw new Error(FB.T('Invalid v4 save field at {path}.',{path:'state.stories.'+def.id})); }
+      function validateExtension(r) {
+        var x=r.extension,v=r.provider;
+        need(exact(x,['actorId','requestedTurn','personIds','consents','authorization','payment']) &&
+          r.endTurn !== null && whole(deadline(def,r)) && whole(x.requestedTurn) &&
+          x.requestedTurn >= r.endTurn-def.termDays && x.requestedTurn < r.endTurn &&
+          Array.isArray(x.personIds) && x.personIds.length > 0 && Array.isArray(x.consents));
+        var members=r.members.filter(function(m) { return x.personIds.indexOf(m.personId) >= 0; });
+        var adults=extensionActors(r,x.personIds),last=x.requestedTurn;
+        need(same(x.personIds,members.map(function(m) { return m.personId; })) && adults.indexOf(x.actorId) >= 0 &&
+          x.consents.length > 0 && x.consents.length <= adults.length);
+        var consented=[];
+        x.consents.forEach(function(c,i) {
+          need(exact(c,['actorId','turn']) && adults.indexOf(c.actorId) >= 0 && consented.indexOf(c.actorId) < 0 &&
+            whole(c.turn) && c.turn >= last && c.turn < r.endTurn && (i > 0 || c.actorId === x.actorId && c.turn === x.requestedTurn));
+          last=c.turn;consented.push(c.actorId);
+        });
+        if (x.authorization !== null) {
+          var a=x.authorization;
+          need(exact(a,['actorId','generation','turn']) && a.actorId === v.rulerId && a.generation === v.generation &&
+            consented.length === adults.length && whole(a.turn) && a.turn >= last && a.turn < r.endTurn);
+          last=a.turn;
+        }
+        if (x.payment !== null) {
+          var pay=x.payment;
+          need(exact(pay,['actorId','realmId','amount','turn']) && pay.actorId === v.incumbentId &&
+            pay.realmId === r.payment.realmId && pay.amount === cost(def,members.length) && x.authorization &&
+            whole(pay.turn) && pay.turn >= last && pay.turn < r.endTurn);
+          last=pay.turn;
+        } else need(r.status === 'active' && r.incident === null);
+        need((!s || last <= s.turn) && (r.closedTurn === null || last <= r.closedTurn) &&
+          (r.incident === null || last <= r.incident.turn));
+        r.members.forEach(function(m) {
+          if (x.personIds.indexOf(m.personId) >= 0) {
+            need(m.admittedTurn !== null && m.admittedTurn <= x.requestedTurn &&
+              (m.leftTurn === null || m.leftTurn >= last) &&
+              (m.releasedTurn === undefined || m.releasedTurn >= last) &&
+              (!m.caregiverId || adults.indexOf(m.caregiverId) >= 0));
+            if (s) {
+              var age=FB.ageOf(s.chars[m.personId],FB.dateAtTurn(s,last).year);
+              need(m.caregiverId === null ? age >= 16 : age < 16);
+            }
+          } else {
+            // Departure or release may share a turn with the next request.
+            need(m.admittedTurn === null || m.leftTurn !== null && m.leftTurn <= x.requestedTurn ||
+              m.releasedTurn !== undefined && m.releasedTurn <= x.requestedTurn);
+          }
+        });
+      }
       need(exact(t,['version','locality','revision','openedTurn','requests']) && t.version === 1 && same(t.locality,def.locality) &&
         whole(t.revision) && t.revision <= 1000000 && t.openedTurn === 0 && Array.isArray(t.requests) && t.requests.length <= 8);
       var known=[];
       var memberFields=['personId','caregiverId','partyConsentTurn','consentBy','consentTurn','admittedTurn','leftTurn'];
+      var requestFields=['id','partyId','actorId','provider','members','status','requestedTurn','replyTurn','endTurn','closedTurn','reason','authorization','payment','incident'];
       if (s) need((FB.campaignBookmark(s).stories || []).indexOf(def.id) >= 0 && FB.householdStories.localityValid(t.locality,FB.campaignBookmark(s)));
       t.requests.forEach(function(r,i) {
-        need(exact(r,['id','partyId','actorId','provider','members','status','requestedTurn','replyTurn','endTurn','closedTurn','reason','authorization','payment','incident']) &&
+        need(exact(r,r.extension === undefined ? requestFields : requestFields.concat('extension')) &&
           r.id === 'r'+(i+1) && def.partyIds.indexOf(r.partyId) >= 0 && ref(r.actorId) && whole(r.requestedTurn) &&
           r.replyTurn === r.requestedTurn+def.acceptanceDays && liveStates.concat(closedStates).indexOf(r.status) >= 0);
         var v=r.provider;
@@ -344,7 +474,7 @@
             m.admittedTurn >= m.consentTurn && m.admittedTurn < r.replyTurn && r.payment && m.admittedTurn >= r.payment.turn &&
             (m.leftTurn === null || whole(m.leftTurn) && m.leftTurn >= m.admittedTurn));
           if (m.releasedTurn !== undefined) need(whole(m.releasedTurn) && m.admittedTurn !== null &&
-            m.releasedTurn >= m.admittedTurn && m.releasedTurn < r.endTurn &&
+            m.releasedTurn >= m.admittedTurn && m.releasedTurn < deadline(def,r) &&
             (m.leftTurn === null || m.releasedTurn <= m.leftTurn) && (r.closedTurn === null || m.releasedTurn <= r.closedTurn));
           if (m.admittedTurn !== null) admitted.push(m.personId);
           if (s) {
@@ -379,6 +509,7 @@
         need(r.endTurn === null ? admitted.length === 0 : admitted.length > 0 && whole(r.endTurn) && r.members.every(function(m) {
           return m.admittedTurn === null || r.endTurn === m.admittedTurn+def.termDays;
         }));
+        if (r.extension !== undefined) validateExtension(r);
         if (r.status === 'requested') need(r.payment === null && !admitted.length);
         if (r.status === 'offered') need(r.payment !== null && !admitted.length);
         if (r.status === 'active' || r.status === 'challenged') need(r.payment !== null && admitted.length > 0 &&
@@ -390,7 +521,7 @@
             return (m.consentTurn === null || m.consentTurn <= r.closedTurn) && (m.admittedTurn === null || m.admittedTurn <= r.closedTurn);
           }));
         if (r.status === 'expired') need(r.reason === 'deadline' ? !admitted.length && r.closedTurn >= r.replyTurn :
-          r.reason === 'term' && admitted.length > 0 && r.closedTurn >= r.endTurn);
+          r.reason === 'term' && admitted.length > 0 && r.closedTurn >= deadline(def,r));
         if (r.status === 'declined') need(!admitted.length && r.reason === 'decline');
         if (r.reason === 'attempt') need(r.status === 'interrupted' && r.incident !== null);
         if (r.incident !== null) {
@@ -433,6 +564,26 @@
         }
       });
       t.requests.forEach(function(r) {
+        if (r.status === 'active' && s.turn < r.endTurn && (!r.extension || !r.extension.payment)) {
+          var x=r.extension,ids=x ? x.personIds : r.members.filter(protectivePlace).map(function(m) { return m.personId; });
+          var member=extensionActors(r,ids).indexOf(actor) >= 0;
+          var ruler=actor === r.provider.rulerId,host=actor === r.provider.incumbentId;
+          var detail=FB.T('Public cost {cost} for {days} days. Current expiry {oldDate}. Proposed expiry {newDate}.',
+            {cost:termMoney(s,cost(def,ids.length)),days:def.termDays,oldDate:termDate(s,r.endTurn),newDate:termDate(s,r.endTurn+def.termDays)});
+          function choice(action,label) {
+            out.push({id:action+'/'+r.id,action:action,actorId:actor,terms:{requestId:r.id},
+              label:label,detail:detail,reviewBlocker:true});
+          }
+          if (!x && member) choice('extension_request',FB.T('Request another shelter term'));
+          if (x) {
+            if (member && !x.consents.some(function(v) { return v.actorId === actor; }))
+              choice('extension_consent',FB.T('Consent to another shelter term'));
+            if (ruler && !x.authorization) choice('extension_authorize',FB.T('Authorize public payment for another shelter term'));
+            if (host) choice('extension_fund',FB.T('Agree to provide another shelter term'));
+            if (member || ruler || host) choice('extension_decline',actor === x.actorId ?
+              FB.T('Withdraw the additional shelter request') : FB.T('Decline the additional shelter request'));
+          }
+        }
         if (['active','challenged'].indexOf(r.status) >= 0 && r.members.some(function(m) {
           return m.personId === actor && m.caregiverId === null && protectivePlace(m);
         })) out.push({id:'release_group/'+r.id,action:'release_group',actorId:actor,terms:{requestId:r.id},
@@ -470,21 +621,53 @@
           {site:site ? site.name : def.locality.siteId,protector:(c.office || {}).name || FB.T('Unavailable person'),ruler:(c.ruler || {}).name || FB.T('Unavailable person')}),
         FB.T('Acceptance: {days} days. Protection: {term} days after entry. Public prepaid cost per person: {money:cost}.',
           {days:def.acceptanceDays,term:def.termDays,cost:cost(def,1)}),
-        FB.T('Payment is final when offered. Places promise no provisions, guards, safe road, conversion or property transfer.')].concat(t.requests.map(function(r) {
-          return FB.T('Request {id}: {status}. Days remaining in this offer or term: {days}. People still present at the shelter: {count}.',
-            {id:r.id,status:phaseLabel(r.status),days:liveStates.indexOf(r.status) >= 0 ? Math.max(0,(r.endTurn === null ? r.replyTurn : r.endTurn)-s.turn) : 0,count:r.members.filter(function(m) {
+        FB.T('Payment is final when offered. Places promise no provisions, guards, safe road, conversion or property transfer.')].concat(t.requests.reduce(function(lines,r) {
+          var endTurn=deadline(def,r);
+          lines.push(FB.T('Request {id}: {status}. Days remaining in this offer or term: {days}. People still present at the shelter: {count}.',
+            {id:r.id,status:phaseLabel(r.status),days:liveStates.indexOf(r.status) >= 0 ? Math.max(0,(endTurn === null ? r.replyTurn : endTurn)-s.turn) : 0,count:r.members.filter(function(m) {
             return admittedHere(m) && countyPresent(s,m.personId,def.locality.provinceId);
-          }).length});
-        }))}; },
+          }).length}));
+          if (r.extension) lines.push(r.extension.payment ?
+            FB.T('Additional term prepaid: {cost}. Original expiry {oldDate}. Extended expiry {newDate}.',
+              {cost:termMoney(s,r.extension.payment.amount),oldDate:termDate(s,r.endTurn),newDate:termDate(s,endTurn)}) :
+            FB.T('Additional term awaiting consent and funding. Current expiry {date}.',{date:termDate(s,r.endTurn)}));
+          return lines;
+        },[]))}; },
       choices:menu,
       quote:function(s,t,id) { var m=menu(s,t).filter(function(v) { return v.id === id; })[0];return m ? quote(s,t,m.action,m.actorId,m.terms) : {allowed:false}; },
       apply:function(s,t,id,q) { var m=menu(s,t).filter(function(v) { return v.id === id; })[0];return !!(m && q && q.action === m.action && q.actorId === m.actorId && same(q.terms,m.terms) && commit(s,t,q)); },
       reviewPeople:function(s,t,id,q) {
+        if (q.extension) return q.extension.personIds.map(function(personId) {
+          return {characterId:personId,label:FB.T('Keeps a protective place')};
+        }).concat([
+          {characterId:q.extension.provider.incumbentId,label:FB.T('Institutional host')},
+          {characterId:q.extension.provider.rulerId,label:FB.T('Civil spending authority')}
+        ]);
         if (!q.release) return [];
         return q.release.affected.map(function(personId) { return {characterId:personId,label:FB.T('Releases a protective place')}; })
           .concat(q.release.remaining.map(function(personId) { return {characterId:personId,label:FB.T('Keeps a protective place')}; }));
       },
+      reviewFacts:function(s,t,id,q) {
+        var x=q.extension;
+        if (!x) return null;
+        var payer=s.realms[x.provider.realmId],site=seat(s,def);
+        return [
+          [FB.T('Shelter site'),site ? site.name : FB.T('Unavailable')],
+          [FB.T('Protected places'),x.personIds.length],
+          [FB.T('Current expiry'),termDate(s,x.oldEndTurn)],
+          [FB.T('Proposed expiry'),termDate(s,x.newEndTurn)],
+          [FB.T('Public payer'),payer ? payer.name : FB.T('Unavailable')],
+          [FB.T('Public cost of the additional term'),termMoney(s,x.amount)],
+          [FB.T('Public funds available'),x.account ? termMoney(s,x.account.available) : FB.T('Unavailable')],
+          [FB.T('Public payment now'),termMoney(s,q.action === 'extension_fund' && q.allowed ? x.amount : 0)]
+        ];
+      },
       review:function(s,t,id,q) {
+        if (q.extension) return [
+          FB.T('The additional term requires each protected adult’s agreement for their care group, fresh civil authorization, and the original host’s consent. Requesting also gives your own care group’s consent.'),
+          FB.T('Only the host’s final confirmation prepays the entire term. Declining or putting off this decision leaves the current expiry in place.'),
+          FB.T('Everyone keeps their current place and residence. The additional term starts at the original expiry. There is no action day.')
+        ];
         if (q.release) return [
           FB.T('Protective places freed: {count}.',{count:q.release.affected.length}),
           q.release.remaining.length ? FB.T('The remaining places keep the same shelter term.') : FB.T('This ends the shelter agreement.'),
@@ -502,6 +685,13 @@
         FB.T('Every adult and actual caregiver decides separately. Ending protection does not move the occupants.'),
         FB.T('Use the ordinary named-party journey for departure, return or eligible settlement.')]; },
       blocker:function(s,t,reason) {
+        if (reason === 'extension_term') return FB.T('An active, unchallenged original term must still be running. Each agreement can be extended once.');
+        if (reason === 'extension_threat') return FB.T('A committed local attempt prevents an additional term.');
+        if (reason === 'extension_provider') return FB.T('The original host and civil authority must still be eligible at this site.');
+        if (reason === 'extension_people') return FB.T('The same protected people must still be present with valid consent and care.');
+        if (reason === 'extension_role') return FB.T('This person cannot give that decision for the additional term.');
+        if (reason === 'extension_consent') return FB.T('The protected adults must consent and the civil authority must authorize spending before the host can confirm.');
+        if (reason === 'extension_funds') return FB.T('The original public account must be able to prepay the full additional term.');
         if (reason === 'release_term') return FB.T('Only a current shelter term with admitted places can be released.');
         if (reason === 'release_attempt') return FB.T('A committed attempt has interrupted this review. Wait for the shelter to record the challenge.');
         if (reason === 'release_provider') return FB.T('The original provider, local permission and protective capacity must still be valid.');
@@ -527,7 +717,7 @@
   };
   var eventArgs={type:'object',fields:{
     storyId:{type:'string',minLength:1,maxLength:80,optional:true},
-    action:{enum:['request','consent','authorize','offer','enter','decline','leave']},
+    action:{enum:['request','consent','authorize','offer','enter','decline','leave'].concat(extensionActions)},
     partyId:{type:'string',minLength:1,maxLength:80,optional:true},
     requestId:{type:'string',minLength:1,maxLength:200,optional:true},
     personId:{type:'string',minLength:1,maxLength:200,optional:true}
@@ -556,7 +746,8 @@
     var request=choice.terms.requestId && row(t,choice.terms.requestId),c=current(s,m.declaration);
     return {refuge_host:request ? request.provider.incumbentId : c.binding.incumbentId,
       refuge_ruler:request ? request.provider.rulerId : c.binding.rulerId,
-      refuge_guest:request ? request.actorId : s.player.charId};
+      refuge_guest:choice.action === 'extension_request' ? choice.actorId : request ?
+        (extensionActions.indexOf(choice.action) >= 0 && request.extension ? request.extension.actorId : request.actorId) : s.player.charId};
   }
   function eventQuote(s,a,ctx) {
     var source=eventSource(s,a,ctx),people=source && eventParties(s,source);
@@ -575,7 +766,9 @@
     quote:eventQuote,
     apply:function(s,a,q) {return FB.stories.apply(s,q.source.storyId,q.source.choiceId,q.review);},
     details:function(s,a,q) {var m=FB.stories.get(q.source.storyId),t=FB.stories.record(s,q.source.storyId);
-      return m.review(s,t,q.source.choiceId,q.review).concat(q.allowed ? [] : [m.blocker()]);}
+      var facts=m.reviewFacts(s,t,q.source.choiceId,q.review) || [];
+      return facts.map(function(v) { return FB.T('{label}: {value}',{label:v[0],value:v[1]}); })
+        .concat(m.review(s,t,q.source.choiceId,q.review),q.allowed ? [] : [m.blocker(s,t,q.review.reason)]);}
   });
   FB.stories.registerType(TYPE,factory,'js/story_household_refuge.js',check);
   var validatePlatform=FB.save.v4.validatePlatform;

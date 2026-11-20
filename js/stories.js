@@ -653,10 +653,13 @@
       });
       for (var choice of FB.stories.choices(s, id)) {
         var quote = FB.stories.quote(s, id, choice.id);
+        var detail = choice.detail;
+        if (choice.reviewBlocker && !quote.allowed)
+          detail = FB.T('{terms} {blocker}', { terms:detail, blocker:blockerText(story, s, quote) });
         html += '<button type="button" class="actionbtn" data-story-choice="' +
           esc(choice.id) + '" aria-disabled="' + (!quote.allowed) + '">' +
           '<b>' + esc(choice.label) + '</b><br><span class="hint">' +
-          esc(choice.detail) + '</span></button>';
+          esc(detail) + '</span></button>';
       }
       var navigation = returnToCard(id);
       if (options && options.fromAffairs) {
@@ -685,21 +688,28 @@
       var reviewed = FB.stories.quote(FB.state, id, choiceId);
       var rec = record(FB.state, id), shared = UI._shared;
       var people = story.reviewPeople ? story.reviewPeople(FB.state, rec, choiceId, reviewed) : [];
-      var body = '<div class="gm-body-text"><p>' + esc(selected.detail) + '</p>' +
-        (reviewed.allowed ? '' : '<p class="hint">' +
-          esc(blockerText(story, FB.state, reviewed)) + '</p>') + '</div>';
+      var facts = story.reviewFacts && story.reviewFacts(FB.state, rec, choiceId, reviewed);
+      var blocker = reviewed.allowed ? '' : blockerText(story, FB.state, reviewed);
+      var warning = blocker ? '<p class="hint">' + esc(blocker) + '</p>' : '';
+      var body = facts ? shared.reviewFactsCard('', facts.map(function (pair) {
+        return shared.rawKv(pair[0], esc(pair[1]));
+      }).join('') + warning) : '<div class="gm-body-text"><p>' + esc(selected.detail) + '</p>' + warning + '</div>';
       if (people.length) body += shared.reviewPeopleHtml(people.map(function (row) {
         var person = FB.state.chars[row.characterId];
         return person ? shared.reviewPersonHtml(person, row.label) : '';
       }).join(''));
-      if (reviewed.allowed && story.review) {
+      if (!facts && reviewed.allowed && story.review) {
         for (var line of story.review(FB.state, rec, choiceId, reviewed) || [])
           body += '<p class="hint">' + esc(line) + '</p>';
       }
-      if (reviewed.allowed) body += '<button type="button" class="btn primary" id="gm-story-confirm">' +
-        esc(FB.T('Confirm {choice}', { choice:selected.label })) + '</button>';
+      var confirmLabel = FB.T('Confirm {choice}', { choice:selected.label });
+      if (reviewed.allowed) body += facts ? shared.reviewActionCardHtml({ id:'gm-story-confirm', label:confirmLabel }) :
+        '<button type="button" class="btn primary" id="gm-story-confirm">' + esc(confirmLabel) + '</button>';
+      var navigation = { historyView:true, historyBack:true };
+      if (facts && story.review) navigation.titleDetailsHtml = story.review(FB.state, rec, choiceId, reviewed)
+        .map(function (line) { return '<p>' + esc(line) + '</p>'; }).join('');
       UI.openModal(FB.T('Review {choice}', { choice:selected.label }),
-        body, { historyView:true, historyBack:true });
+        body, navigation);
       if (people.length) FB.paintFaces(document.getElementById('gm-body'), FB.state);
       var confirm = document.getElementById('gm-story-confirm');
       if (!confirm) return;
