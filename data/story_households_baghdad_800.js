@@ -21,8 +21,8 @@ FBDATA.householdTracks_baghdad_800 = {
           { id:'seek_study', label:'Give attention to ordinary study', detail:'Close the opening story. Choose study and pursue training through the usual household decisions.', operation:{ kind:'record_decision' }, next:'study_intention' },
           { id:'decline_story', label:'Continue without the opening story', detail:'Keep your family, purse and current career without taking a commission.', operation:{ kind:'record_decision' }, next:'declined' }
         ], transitions:[] },
+      // Offer prose and the alternative terms are supplied by the commission source.
       offer:{ name:'A small copying order',
-        text:'An unnamed buyer for the caliphal court seeks a copy of an unspecified Arabic text. The full fee must be reserved before work starts. Accepting uses the first of three action days; checking and delivery each use another. The order expires ten days after acceptance.',
         choices:[
           { id:'accept_order', label:'Review the three-day copying order', detail:'Reserve {money:6} from the living court and work the first day. Completing all three days pays {money:6}. An interruption pays only completed work and returns the unearned balance.', operation:{ kind:'start_job', jobId:'first_copy' }, next:'checking' },
           { id:'practice_first', label:'Practise comparison before accepting', detail:'Review a separate practice day before deciding whether to take the order. No contract or fee is created yet.', operation:{ kind:'record_decision' }, next:'practice' },
