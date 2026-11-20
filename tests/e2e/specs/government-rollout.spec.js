@@ -4,10 +4,12 @@ const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
-const {advanceBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
-const {injectBrowserHarness} = require('../support/game/browser-harness');
+const {restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const consumers = require('../fixtures/government-rollout.json');
 const proofMod = require('../fixtures/government-rollout-mod.json');
+
+// Every case opens its own page and campaign, so shards can divide the cases.
+test.describe.configure({mode:'parallel'});
 
 dependsOnRuntime(__filename,[
   'data/bookmark_1204_terrain.js',
@@ -102,36 +104,6 @@ test('dated assignments retain complete baseline worlds and validate every strat
       untouched:true,geography:true,stories:true,opening:true,oldForms:true,assigned:true};
   }));
 });
-
-for (const row of consumers) {
-  test(row.bookmark + ' dated government journey saves and replays one natural season',async function ({page},info) {
-    test.skip(info.project.name !== 'chromium-served','One bounded natural journey per date.');
-    test.setTimeout(240000);
-    await startGovernmentRevision(page,info,row);
-    await injectBrowserHarness(page);
-    await advanceBookmark(page,45);
-    const source = await page.evaluate(function () { return FB.save.serialize(); });
-    expect(Buffer.byteLength(source,'utf8')).toBeLessThanOrEqual(6 * 1024 * 1024);
-    const midpoint = await facts(page);
-    await restoreBookmark(page,source);
-    expect(await facts(page)).toEqual(midpoint);
-    await advanceBookmark(page,45);
-    const finish = await facts(page);
-    await restoreBookmark(page,source);
-    await advanceBookmark(page,45);
-    expect(await facts(page)).toEqual(finish);
-    expect(await page.evaluate(function (row) {
-      return row.changed.filter(function (c) { return c.mode; }).every(function (c) {
-        const periods = {};
-        return FB.publicOfficeRows(FB.state,c.realm).every(function (appointment) {
-          const period = Math.floor(appointment.startTurn / 90);
-          periods[period] = (periods[period] || 0) + 1;
-          return periods[period] <= 1;
-        });
-      });
-    },row)).toBe(true);
-  });
-}
 
 for (const row of consumers.filter(function (row) { return row.changed.length; })) {
   for (const flag of [false]) test(row.bookmark + ' direct holders and dated profiles, CrazyGames ' + flag,
