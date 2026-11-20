@@ -31,6 +31,7 @@
   function rows(s) { return s.authority && s.authority.religiousCases || []; }
   function feeRules(s) { return s.authority && s.authority.synodalFees || []; }
   function feeRule(s,pid) { return feeRules(s).find(function (r) { return r.profileId === pid; }) || null; }
+  function activeFeeRule(s,pid) { var r = feeRule(s,pid); return r && !r.repeal ? r : null; }
   function offense(s,id) { return (s.justice && s.justice.offenses || []).filter(function (o) { return o.id === id; })[0] || null; }
   function record(s,id) { return rows(s).filter(function (r) { return r.offenseId === id; })[0] || null; }
   function profile(id) { return own(FBDATA.religiousCases,id) ? FBDATA.religiousCases[id] : null; }
@@ -69,21 +70,28 @@
   function settlementFee(p,rule) { return rule ? rule.terms.ceiling : p.fee; }
   R.effectiveSettlementFee = function (s,pid) {
     var p = profile(pid);
-    return p ? settlementFee(p,feeRule(s,pid)) : null;
+    return p ? settlementFee(p,activeFeeRule(s,pid)) : null;
   };
   function synodalFeeId(pid,turn) { return 'synodal-fee:' + pid + ':' + turn; }
   R.synodalFeeRule = function (s,pid) { return copy(feeRule(s,pid)); };
-  R.synodalFeeReview = function (s,pid,actor) {
+  R.synodalFeeReview = function (s,pid,actor,operation) {
     var p = profile(pid);
     if (!p || !p.synodalFee) return null;
-    var x = C.courtContext(s,p);
+    var x = C.courtContext(s,p), rule = feeRule(s,pid);
+    var issuer = {realmId:x.realmId,characterId:x.bishopId,generation:x.bishopGeneration};
     var reason = !s.authority || !x.allowed || s.date.year < p.yearMin || s.date.year > p.yearMax ||
       !FB.justiceCivilRentJurisdiction(s,x.bishopId,x.realmId,p.provinceId) ? 'jurisdiction' :
-      actor !== x.bishopId || p.faiths.indexOf(s.chars[actor].religion) < 0 ? 'actor' :
-      feeRule(s,pid) || feeRules(s).length >= MAX_PROFILES ? 'enacted' : null;
+      actor !== x.bishopId || p.faiths.indexOf(s.chars[actor].religion) < 0 ? 'actor' : null;
+    if (operation === 'repeal') {
+      reason = reason || (local(s,actor) !== p.provinceId ? 'location' :
+        !rule || rule.repeal || rule.definitionFingerprint !== FB.mods.fingerprint(p) ? 'rule' : null);
+      return {profileId:pid,actorId:actor,allowed:!reason,reason:reason,customaryFee:p.fee,
+        rule:copy(rule),repeal:{turn:s.turn,issuer:issuer}};
+    }
+    reason = reason || (rule || feeRules(s).length >= MAX_PROFILES ? 'enacted' : null);
     return {profileId:pid,actorId:actor,allowed:!reason,reason:reason,customaryFee:p.fee,
       rule:{id:synodalFeeId(pid,s.turn),profileId:pid,definitionFingerprint:FB.mods.fingerprint(p),
-        jurisdiction:jurisdiction(p),issuer:{realmId:x.realmId,characterId:x.bishopId,generation:x.bishopGeneration},
+        jurisdiction:jurisdiction(p),issuer:issuer,
         enactedTurn:s.turn,terms:copy(p.synodalFee)}};
   };
   R.enactSynodalFee = function (s,reviewed) {
@@ -101,58 +109,85 @@
       var id = ids[i], p = profile(id);
       if (!p.synodalFee || p.bookmarkId !== s.start.id || p.provinceId !== county) continue;
       if (!FB.eventStateReaders.ownerEnabled(s,'religious_cases')) return null;
-      var q = R.synodalFeeReview(s,id,actor);
+      var q = R.synodalFeeReview(s,id,actor,activeFeeRule(s,id) ? 'repeal' : 'enact');
       if (q.allowed || q.reason === 'enacted') return q;
     }
     return null;
   };
+  R.synodalFeeLastGathering = function (s) {
+    var q = R.synodalFeeAgenda(s);
+    if (!q || !q.repeal) return null;
+    return own(q.rule,'lastGatheringTurn') ? q.rule.lastGatheringTurn : q.rule.enactedTurn;
+  };
   R.synodalGathering = function (s,costs) {
     var q = R.synodalFeeAgenda(s);
     if (!q || !q.allowed) return {};
-    return {synodalFeeAgenda:{profileId:q.profileId,definitionFingerprint:q.rule.definitionFingerprint,
-      issuer:q.rule.issuer,turn:s.turn,costs:copy(costs || {})}};
+    var agenda = {profileId:q.profileId,definitionFingerprint:q.rule.definitionFingerprint,
+      issuer:q.repeal ? q.repeal.issuer : q.rule.issuer,turn:s.turn,costs:copy(costs || {})};
+    if (q.repeal) {
+      agenda.ruleId = q.rule.id;
+      feeRule(s,q.profileId).lastGatheringTurn = s.turn;
+    }
+    return {synodalFeeAgenda:agenda};
   };
+  function matchingAgenda(a,ctx) {
+    var agenda = ctx && ctx.synodalFeeAgenda;
+    return agenda && (a.operation === 'repeal') === own(agenda,'ruleId') ? agenda : null;
+  }
   function synodalEventQuote(s,a,ctx) {
-    var agenda = ctx.synodalFeeAgenda;
+    var agenda = matchingAgenda(a,ctx);
     if (!agenda || !Number.isSafeInteger(agenda.turn) || !agenda.costs || !s.player.cooldowns ||
         s.player.cooldowns.convene_synod !== agenda.turn) return null;
     var q = R.synodalFeeAgenda(s);
-    if (!q || q.profileId !== agenda.profileId || q.rule.definitionFingerprint !== agenda.definitionFingerprint ||
-        !same(q.rule.issuer,agenda.issuer)) return null;
-    return {allowed:q.allowed,enactment:q,costs:agenda.costs};
+    if (!q || !q.allowed || q.profileId !== agenda.profileId || q.rule.definitionFingerprint !== agenda.definitionFingerprint ||
+        (q.repeal ? q.rule.id : undefined) !== agenda.ruleId || q.repeal && q.rule.lastGatheringTurn !== agenda.turn ||
+        !same(q.repeal ? q.repeal.issuer : q.rule.issuer,agenda.issuer)) return null;
+    return {allowed:true,decision:q,costs:agenda.costs,gatheringTurn:agenda.turn};
   }
-  var synodalEventArgs = {type:'object',fields:{}};
-  FB.eventStateReaders.register({id:'synodal_fee_agenda',system:'religious_cases',args:synodalEventArgs,
-    read:function (s,a,ctx) { return !!ctx.synodalFeeAgenda; }});
+  var synodalEventFields = {operation:{enum:['enact','repeal'],optional:'absent'}};
+  FB.eventStateReaders.register({id:'synodal_fee_agenda',system:'religious_cases',args:{type:'object',fields:synodalEventFields},
+    read:function (s,a,ctx) { return !!matchingAgenda(a,ctx); }});
   FB.msg('news.religious.synodal_fee','The synod set the institutional fee on new settlement offers to {money:fee}.');
+  FB.msg('news.religious.synodal_fee_repealed','The synod restored the customary institutional fee of {money:fee} on new settlement offers.');
   FB.eventReviews.register('synodal_fee',{
     owner:'religious_cases',quote:synodalEventQuote,
-    args:{type:'object',fields:{},test:function (a,c) {
+    args:{type:'object',fields:synodalEventFields,test:function (a,c) {
       return c.runtime || !!(c.event && c.event.id === 'bishop_synod' && c.event.options.every(function (o) {
         return !o || !o.review || o.review.type !== 'synodal_fee' || o.manualOnly === true;
       }));
     }},
     apply:function (s,a,q) {
-      if (!R.enactSynodalFee(s,q.enactment)) return false;
-      FB.news(s,FB.message('news.religious.synodal_fee',{fee:q.enactment.rule.terms.ceiling}));
+      var d = q.decision;
+      if (d.repeal) {
+        // The event review commits only after re-quoting the paid gathering and its exact rule.
+        feeRule(s,d.profileId).repeal = d.repeal;
+        FB.news(s,FB.message('news.religious.synodal_fee_repealed',{fee:d.customaryFee}));
+      } else {
+        if (!R.enactSynodalFee(s,d)) return false;
+        feeRule(s,d.profileId).lastGatheringTurn = q.gatheringTurn;
+        FB.news(s,FB.message('news.religious.synodal_fee',{fee:d.rule.terms.ceiling}));
+      }
       return true;
     },
     details:function (s,a,q) {
-      var r = q.enactment.rule, id = r.jurisdiction.provinceId, p = profile(r.profileId);
+      var d = q.decision, r = d.rule, id = r.jurisdiction.provinceId, p = profile(r.profileId);
+      var issuer = d.repeal ? d.repeal.issuer : r.issuer;
       var costs = [];
       if (q.costs.gold) costs.push(FB.T('{money:amount}',{amount:q.costs.gold}));
       if (q.costs.prestige) costs.push(FB.T('{amount} prestige',{amount:q.costs.prestige}));
       if (q.costs.piety) costs.push(FB.T('{amount} piety',{amount:q.costs.piety}));
       return [
-        FB.T('Jurisdiction: {county}, {see}.',{county:FB.world.byId[id].name,see:s.realms[r.issuer.realmId].name}),
-        FB.T('Institutional fee on new settlement offers: {money:current} now, {money:proposed} with the ceiling.',
-          {current:R.effectiveSettlementFee(s,r.profileId),proposed:r.terms.ceiling}),
+        FB.T('Jurisdiction: {county}, {see}.',{county:FB.world.byId[id].name,see:s.realms[issuer.realmId].name}),
+        d.repeal ? FB.T('Institutional fee on new settlement offers: {money:current} now, {money:proposed} after repeal.',
+          {current:r.terms.ceiling,proposed:d.customaryFee}) :
+          FB.T('Institutional fee on new settlement offers: {money:current} now, {money:proposed} with the ceiling.',
+            {current:d.customaryFee,proposed:r.terms.ceiling}),
         FB.T('Gathering cost already paid: {cost}. The decision has no further charge.',
           {cost:costs.length ? costs.join(', ') : FB.T('Nothing')}),
         FB.T('Applies to new offers in {caseName} cases in this jurisdiction, including open cases. Existing offers and payments keep their original terms.',
           {caseName:FB.dataText(s,s.player.charId,'religiousCase',r.profileId,p,'name',{})}),
-        q.allowed ? FB.T('The lower fee goes to the see’s treasury on acceptance. Compensation to the named recipient follows the same terms.') :
-          FB.T('This jurisdiction cannot enact another ceiling.')
+        d.repeal ? FB.T('The customary fee goes to the see’s treasury on acceptance of a new offer. Compensation to the named recipient follows the same terms.') :
+          FB.T('The lower fee goes to the see’s treasury on acceptance. Compensation to the named recipient follows the same terms.')
       ];
     }
   });
@@ -393,7 +428,7 @@
       if (!reason && ['settlement','accept'].indexOf(action) >= 0) {
         if (action === 'accept') terms = r.offer;
         else {
-          var rule = feeRule(s,pid), basis = C.privateAccount(s,o.accusedId).gold;
+          var rule = activeFeeRule(s,pid), basis = C.privateAccount(s,o.accusedId).gold;
           terms = {by:actor,turn:s.turn,fee:settlementFee(p,rule),
             basis:basis,amount:Math.min(p.settlementMax,Math.floor(basis * p.settlementShare))};
           if (rule) {
@@ -536,13 +571,21 @@
       return holder === rid ? FB.papalOfficeIncumbentSnapshot(s,binding.officeId) : null;
     return own(s.chars,holder) && !s.chars[holder].dead ? s.chars[holder] : null;
   }
+  function validFeeIssuer(s,p,issuer) {
+    if (!fields(issuer,['realmId','characterId','generation']) || !own(s.chars,issuer.characterId) ||
+        !own(s.realms,issuer.realmId) || issuer.realmId !== p.realmId &&
+        !(issuer.realmId === 'player' && s.start.rulerRealmId === p.realmId)) return false;
+    var generation = FB.realmRulerGeneration(s,issuer.realmId), incumbent = savedIncumbent(s,issuer.realmId);
+    return Number.isSafeInteger(issuer.generation) && issuer.generation >= 1 && issuer.generation <= generation &&
+      (!incumbent || issuer.generation < generation || incumbent === s.chars[issuer.characterId]);
+  }
   function checkedFeeRules(s,fail) {
     var rules = s.authority && s.authority.synodalFees, byProfile = Object.create(null);
     if (rules === undefined) return byProfile;
     if (!Array.isArray(rules) || rules.length > MAX_PROFILES) fail();
     rules.forEach(function (r) {
       var p = r && profile(r.profileId), issuer = r && r.issuer;
-      if (!fields(r,['id','profileId','definitionFingerprint','jurisdiction','issuer','enactedTurn','terms']) ||
+      if (!fields(r,['id','profileId','definitionFingerprint','jurisdiction','issuer','enactedTurn','terms'],['lastGatheringTurn','repeal']) ||
           !p || !p.synodalFee || byProfile[r.profileId] || !s.start || s.start.id !== p.bookmarkId ||
           !fields(r.jurisdiction,['bookmarkId','provinceId','seeId']) ||
           r.jurisdiction.bookmarkId !== p.bookmarkId || r.jurisdiction.provinceId !== p.provinceId ||
@@ -550,23 +593,27 @@
           !Number.isSafeInteger(r.enactedTurn) || r.enactedTurn < 0 || r.enactedTurn > s.turn ||
           r.id !== synodalFeeId(r.profileId,r.enactedTurn) || r.definitionFingerprint !== FB.mods.fingerprint(p) ||
           !fields(r.terms,['kind','ceiling']) || r.terms.kind !== p.synodalFee.kind || r.terms.ceiling !== p.synodalFee.ceiling ||
-          !fields(issuer,['realmId','characterId','generation']) || !own(s.chars,issuer.characterId) ||
-          !own(s.realms,issuer.realmId) || issuer.realmId !== p.realmId &&
-          !(issuer.realmId === 'player' && s.start.rulerRealmId === p.realmId) ||
-          !Number.isSafeInteger(issuer.generation) || issuer.generation < 1 ||
-          issuer.generation > FB.realmRulerGeneration(s,issuer.realmId)) fail();
-      var incumbent = savedIncumbent(s,issuer.realmId);
-      if (incumbent && issuer.generation === FB.realmRulerGeneration(s,issuer.realmId) &&
-          incumbent !== s.chars[issuer.characterId]) fail();
+          !validFeeIssuer(s,p,issuer)) fail();
+      if (own(r,'lastGatheringTurn') && (!Number.isSafeInteger(r.lastGatheringTurn) ||
+          r.lastGatheringTurn < 0 || r.lastGatheringTurn > s.turn)) fail();
+      if (own(r,'repeal')) {
+        var repeal = r.repeal, successor = repeal && repeal.issuer;
+        if (!fields(repeal,['turn','issuer']) || !Number.isSafeInteger(repeal.turn) ||
+            repeal.turn < r.enactedTurn || repeal.turn > s.turn || !own(r,'lastGatheringTurn') ||
+            r.lastGatheringTurn < r.enactedTurn || r.lastGatheringTurn > repeal.turn || !validFeeIssuer(s,p,successor) ||
+            successor.realmId === issuer.realmId && (successor.generation < issuer.generation ||
+              successor.generation === issuer.generation && successor.characterId !== issuer.characterId)) fail();
+      }
       byProfile[r.profileId] = r;
     });
     return byProfile;
   }
   function validFee(p,rule,terms,offerTurn) {
     if (own(terms,'feeRuleId'))
-      return !!rule && terms.feeRuleId === rule.id && terms.fee === rule.terms.ceiling && offerTurn >= rule.enactedTurn;
-    // One turn may contain both a customary offer and the new enactment.
-    return terms.fee === p.fee && (!rule || offerTurn <= rule.enactedTurn);
+      return !!rule && terms.feeRuleId === rule.id && terms.fee === rule.terms.ceiling &&
+        offerTurn >= rule.enactedTurn && (!rule.repeal || offerTurn <= rule.repeal.turn);
+    // A turn can contain offers on both sides of an enactment or repeal.
+    return terms.fee === p.fee && (!rule || offerTurn <= rule.enactedTurn || rule.repeal && offerTurn >= rule.repeal.turn);
   }
   function validAmount(p,terms) {
     return Number.isFinite(terms.basis) && terms.basis >= 0 &&
@@ -645,7 +692,9 @@
   };
   var referenced = FB.publicAdministrationReferencesCharacter;
   FB.publicAdministrationReferencesCharacter = function (s,cid) {
-    return referenced(s,cid) || feeRules(s).some(function (r) { return r.issuer.characterId === cid; }) ||
+    return referenced(s,cid) || feeRules(s).some(function (r) {
+      return r.issuer.characterId === cid || r.repeal && r.repeal.issuer.characterId === cid;
+    }) ||
       (s.justice && s.justice.offenses || []).some(function (o) {
       return !!o.clericalVictim && o.victimId === cid;
     }) || rows(s).some(function (r) {

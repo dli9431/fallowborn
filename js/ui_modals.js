@@ -2261,8 +2261,11 @@ window.FB = window.FB || {};
     }
     bodyHtml += freedomOfferTermsHtml(s, ev);
     if (ev.id === 'bishop_synod' && ctx.synodalFeeAgenda) {
-      const option = ev.options.find(function (o) { return o.review && o.review.type === 'synodal_fee'; });
-      const reviewed = FB.eventReviews.quote(s,option,ctx);
+      let reviewed = null;
+      ev.options.some(function (option) {
+        if (option.review && option.review.type === 'synodal_fee') reviewed = FB.eventReviews.quote(s,option,ctx);
+        return !!reviewed;
+      });
       if (reviewed) {
         bodyHtml += reviewFactsCard(FB.T('Local settlement fee'),FB.eventReviews.details(s,reviewed).map(function (line) {
           return '<p>' + esc(line) + '</p>';
