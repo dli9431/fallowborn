@@ -18,6 +18,7 @@
       unjustified:FB.T('Removal requires present evidence of neglect, overreach or ineligibility.'),
       outside_scope:FB.T('These terms exceed the institution’s public powers.'), partner_withheld:FB.T('The other polity withholds assent or cannot fund this commitment.'),
       source_assigned:FB.T('These receipts are already assigned.'), commitment_limit:FB.T('An existing commitment must end first.'),
+      installment_amount:FB.T('An installment must be at least {minimum} and leave a balance.',{ minimum:debtMoney(FB.state,V.minimumInstallment) }),
       existing_dues:FB.T('Current extraordinary dues remain in force.'), inactive_institution:FB.T('This institution is no longer governing.'),
       existing_obligations:FB.T('Resolve existing war, public appointments or service contracts before changing this constitution.')
     };
@@ -29,6 +30,15 @@
   }
   function rightName(kind) { return { quarter:FB.T('Foreign quarter'),warehouse:FB.T('Warehouse right'),jurisdiction:FB.T('Scoped jurisdiction'),
     revenue_share:FB.T('Assigned public receipts'),commercial:FB.T('Commercial agreement') }[kind] || FB.T('Foreign right'); }
+  function debtMoney(s,amount) { return FB.money(amount,{ state:s,exact:true }); }
+  function debtFacts(s,q) {
+    var days = q.debt.dueTurn - q.stamp.turn;
+    return kv(FB.T('Original lender'),s.realms[q.debt.lenderRealmId].name) +
+      kv(FB.T('Outstanding public debt'),debtMoney(s,q.debt.remaining)) +
+      kv(FB.T('Available above the public reserve'),debtMoney(s,q.paymentAvailable)) +
+      kv(FB.T('Due date'),days > 0 ? FB.T('In {days} days',{ days:days }) :
+        days < 0 ? FB.T('Overdue by {days} days',{ days:-days }) : FB.T('Due today'));
+  }
   function conversionPropertyFacts(s,rid,captured) {
     var household = captured ? captured.household : s.player, economy = captured ? captured.finance : s.economy;
     var authority = captured ? captured.authority : s.authority, turn = captured ? captured.turn : s.turn;
@@ -104,14 +114,18 @@
     var s = FB.state, r = V.row(s,rid), p = V.profile(s,rid), cp = C.profile(s,rid);
     if (!r || !p || !cp) return;
     view = view || {};
-    var entries = [], cards = '', actions = '', electorate = '', rights = '';
-    function add(label,q,apply,details) {
-      if (!q) return;
+    var entries = [], cards = '', actions = '', electorate = '', rights = '', debts = '';
+    function actionCard(label,q,apply,details,id) {
+      if (!q) return '';
       var index = entries.length; entries.push({ label:label,q:q,apply:apply });
-      actions += SH.reviewActionCardHtml({ id:'civic-action-' + index,label:label,disabled:!q.allowed,warn:!q.allowed,
-        note:q.allowed ? FB.T('Immediate cost: {money:amount}.',{ amount:q.cost || q.charge || 0 }) : reason(q.reason),
+      var note = q.operation === 'repay' ? FB.T('Pay {payment}. Balance afterward: {balance}.',{
+        payment:debtMoney(s,q.charge),balance:debtMoney(s,q.remainingAfter) }) :
+        FB.T('Immediate cost: {money:amount}.',{ amount:q.cost || q.charge || 0 });
+      return SH.reviewActionCardHtml({ id:id || 'civic-action-' + index,label:label,disabled:!q.allowed,warn:!q.allowed,
+        note:q.allowed ? note : reason(q.reason),
         details:'<p>' + esc(details) + '</p>',data:{ civicReview:index } });
     }
+    function add(label,q,apply,details) { actions += actionCard(label,q,apply,details); }
     var facts = kv(FB.T('Institution'),s.realms[rid].name) + kv(FB.T('Constitution'),FB.dataText(s,s.player.charId,'civicProfile',r.profileId,p,'name',{})) + kv(FB.T('Public treasury'),FB.money(FB.treasuryAvailable(s,rid),s)) +
       kv(FB.T('Household money'),FB.money(s.player.gold,s)) + kv(FB.T('Public reserve'),FB.money(cp.obligations.reserve,s)) +
       kv(FB.T('Minimum age'),cp.eligibility.minAge) + kv(FB.T('Required service'),FB.T('{years} years',{ years:cp.eligibility.minServiceYears })) +
@@ -162,7 +176,7 @@
     }
     var selects = selector('civic-partner',FB.T('Other polity'),peers,partner,function (id) { return s.realms[id].name; }) +
       selector('civic-county',FB.T('Foreign county'),foreignCounties,county,function (pid) { return FB.world.byId[pid].name; });
-    var publicActor = r.offices.some(function (o) { var c = V.incumbent(s,rid,o.id); return c && c.id === s.player.charId; });
+    var actorId = s.player.charId, publicActor = V.isMagistrate(s,rid,actorId);
     if (publicActor) {
       add(FB.T('Review extraordinary dues'),V.proposalQuote(s,rid,'extraordinary_tax',{ amount:Math.min(5,cp.obligations.maxDues),duration:90 }),V.proposalApply,
         FB.T('The additional seasonal public receipts last 90 days and require civic assent. They never enter a magistrate’s private wallet.'));
@@ -181,11 +195,20 @@
         add(FB.T('Review county grant: {county}',{ county:FB.world.byId[pid].name }),V.proposalQuote(s,rid,'grant',{ provinceId:pid,recipientId:partner }),V.proposalApply,
           FB.T('This permanent public grant transfers the named county’s sovereignty and public holder to the accepting polity. Private households and enterprises retain their owners.'));
       });
-      r.debts.filter(function (d) { return d.status === 'active'; }).forEach(function (d) {
-        add(FB.T('Review public repayment'),V.proposalQuote(s,rid,'repay',{ debtId:d.id }),V.proposalApply,
-          FB.T('The city pays its actual outstanding public debt. The household wallet pays nothing.'));
-      });
     }
+    r.debts.filter(function (d) { return d.status === 'active'; }).forEach(function (d) {
+      var full = V.proposalQuote(s,rid,'repay',{ debtId:d.id }), id = 'civic-payment-' + d.id;
+      var content = debtFacts(s,full);
+      if (publicActor && V.localRealm(s) === rid) {
+        var amount = Math.max(V.minimumInstallment,Math.floor(Math.min(d.remaining / 2,full.paymentAvailable) * 100) / 100);
+        var partial = V.proposalQuote(s,rid,'repay',{ debtId:d.id,amount:amount });
+        content += SH.reviewActionsHtml(actionCard(FB.T('Review installment'),partial,V.proposalApply,
+          FB.T('The city pays the original lender now. The remaining balance keeps its original due date.'),id + '-part') +
+          actionCard(FB.T('Review full repayment'),full,V.proposalApply,
+            FB.T('The city pays the original lender and clears this public debt.'),id + '-full'));
+      }
+      debts += SH.reviewFactsCard(FB.T('Public pledge'),content);
+    });
     r.rights.forEach(function (right) {
       var site = FB.settlementsOf(s,right.provinceId)[right.settlement];
       rights += kv(rightName(right.kind),(site ? site.name : FB.world.byId[right.provinceId].name) + ', ' + s.realms[right.grantorRealmId].name) +
@@ -198,7 +221,8 @@
     });
     UI.openModal(FB.T('Civic government'),'<div data-civic-list data-modal-scroll>' + SH.reviewFactsCard(FB.T('Public institution'),facts) +
       cards + SH.reviewFactsCard(FB.T('Represented civic interests'),electorate) + SH.reviewFactsCard(FB.T('Foreign rights'),rights || esc(FB.T('No foreign rights'))) +
-      SH.reviewFactsCard(FB.T('Proposal counterpart'),selects) + SH.reviewActionsHtml(actions) + '</div>',
+      SH.reviewFactsCard(FB.T('Proposal counterpart'),selects) + SH.reviewActionsHtml(actions) +
+      '<div id="civic-debts" tabindex="-1">' + (debts || (view.debtReview ? SH.reviewFactsCard('',esc(FB.T('No outstanding public pledges'))) : '')) + '</div></div>',
       { modalClass:'fullsheet-modal',titleDetailsHtml:'<p>' + esc(FB.T('Political influence, qualification and proposal numbers are simulation rules. Public office, family property, the city treasury and foreign sovereignty have independent owners.')) + '</p>' });
     var body = SH.$('gm-body'), list = body.querySelector('[data-civic-list]');
     function position() { return { partner:SH.$('civic-partner').value,county:SH.$('civic-county').value,
@@ -206,15 +230,23 @@
       details:Array.from(list.querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (n) { return n.getAttribute('aria-controls'); }) }; }
     (view.details || []).forEach(function (id) { var n = list.querySelector('[aria-controls="' + id + '"]'); if (n) n.click(); });
     list.scrollTop = view.scroll || 0; body.scrollTop = view.bodyScroll || 0;
-    if (view.focus && SH.$(view.focus)) SH.$(view.focus).focus({ preventScroll:true });
+    var focus = view.focus && SH.$(view.focus);
+    if (focus && focus.disabled) focus = focus.closest('.review-action-card');
+    if (!focus && view.debtReview) focus = SH.$('civic-debts');
+    if (focus) focus.focus({ preventScroll:true });
     SH.$('civic-partner').onchange = function () { var v = position(); delete v.county; UI.showCivicGovernment(rid,v); };
     SH.$('civic-county').onchange = function () { UI.showCivicGovernment(rid,position()); };
     r.offices.forEach(function (o) { var button = SH.$('civic-person-' + o.id), c = V.incumbent(s,rid,o.id); if (button && c) button.onclick = function () { UI.showCharModal(c.id); }; });
     list.querySelectorAll('[data-civic-review]').forEach(function (button) {
       button.onclick = function () {
         var entry = entries[Number(button.getAttribute('data-civic-review'))], q = entry.q, pos = position();
+        var repayment = q.operation === 'repay';
+        if (repayment) { pos.debtReview = true; pos.focus = button.id; }
         function back() { UI.showCivicGovernment(rid,pos); }
-        var detail = kv(FB.T('Immediate cost'),FB.money(q.cost || q.charge || 0,s));
+        var detail = repayment ? debtFacts(s,q) + kv(FB.T('Payment now'),debtMoney(s,q.charge)) +
+          kv(FB.T('Remaining liability'),debtMoney(s,q.remainingAfter)) +
+          '<p>' + esc(FB.T('The city treasury pays this amount. Go back to defer payment and keep the current terms.')) + '</p>' :
+          kv(FB.T('Immediate cost'),FB.money(q.cost || q.charge || 0,s));
         var other = q.terms.grantorRealmId || q.terms.lenderRealmId || q.terms.recipientId || q.partnerId;
         if (other) detail += kv(FB.T('Other polity'),s.realms[other].name);
         if (q.terms.provinceId) detail += kv(FB.T('County'),FB.world.byId[q.terms.provinceId].name);
@@ -222,13 +254,16 @@
         if (q.terms.kind) detail += kv(FB.T('Right'),rightName(q.terms.kind));
         if (q.terms.causes) q.terms.causes.forEach(function (cause) { detail += kv(FB.T('Campaign objective'),FB.world.byId[cause.target].name + ', ' + s.realms[cause.enemy].name); });
         if (q.war) detail += kv(FB.T('Campaign'),s.realms[q.war.attacker].name + ', ' + s.realms[q.war.defender].name);
-        if (q.terms.amount !== undefined) detail += kv(FB.T('Public amount'),FB.money(q.terms.amount,s));
+        if (!repayment && q.terms.amount !== undefined) detail += kv(FB.T('Public amount'),FB.money(q.terms.amount,s));
         if (q.terms.duration) detail += kv(FB.T('Duration'),FB.T('{days} days',{ days:q.terms.duration }));
         if (q.terms.interest !== undefined) detail += kv(FB.T('Repayment'),FB.money(q.terms.amount * (1 + q.terms.interest),s));
         if (q.terms.share !== undefined) detail += kv(FB.T('Receipt share'),FB.T('{percent}%',{ percent:Math.round(q.terms.share * 100) }));
         var cid = q.selectedId || q.terms.candidateId || q.terms.characterId;
         if (cid && s.chars[cid]) detail = SH.reviewPeopleHtml(SH.reviewPersonHtml(s.chars[cid],FB.T('Participant'),null)) + detail;
-        var ballots = q.ballots && q.ballots.length ? q.ballots : q.decision && q.decision.ballots || [];
+        if (repayment) q.decision.executive.forEach(function (o) {
+          detail += kv(officeName(s,rid,{ id:o.officeId }),o.assent ? FB.T('Assent') : FB.T('Withheld'));
+        });
+        var ballots = repayment ? [] : q.ballots && q.ballots.length ? q.ballots : q.decision && q.decision.ballots || [];
         ballots.forEach(function (b) { var def = cp.members.filter(function (m) { return m.id === b.memberId; })[0];
           detail += kv(FB.dataText(s,s.player.charId,'constituencyMember',p.constituency + '.' + b.memberId,def,'name',{}),b.assent ? FB.T('Assent') : FB.T('Withheld')); });
         UI.openModal(entry.label,SH.reviewFactsCard(FB.T('Exact decision terms'),detail) + SH.reviewActionsHtml(SH.reviewActionCardHtml({
@@ -236,7 +271,8 @@
           details:'<p>' + esc(FB.T('A changed review applies no charge or public authority.')) + '</p>' })),
           { modalClass:'fullsheet-modal',historyView:true,historyBack:true,historyBackRender:back });
         SH.$('civic-confirm').onclick = function () {
-          var success = s === FB.state && entry.apply(s,q);
+          var success = s === FB.state && (!repayment || s.player.charId === actorId && V.localRealm(s) === rid &&
+            V.isMagistrate(s,rid,actorId)) && entry.apply(s,q);
           UI.openModal(success ? FB.T('Decision recorded') : FB.T('Terms changed'),SH.reviewFactsCard('',
             '<p>' + esc(success ? FB.T('The civic decision is recorded.') : FB.T('Review current terms again. Nothing was spent.')) + '</p>') +
             '<button class="actionbtn" type="button" id="civic-continue">' + esc(FB.T('Continue')) + '</button>',{ replaceView:true });

@@ -79,11 +79,14 @@
     // pledged by their county sovereign through this public contract.
     return source && source.kind === 'realm' && source.id === t.grantorRealmId;
   }
+  V.minimumInstallment = 0.01;
   V.proposalQuote = function (s,rid,operation,terms) {
     var r = V.row(s,rid), p = V.profile(s,rid), cp = C.profile(s,rid);
     if (!r || !p || !cp) return null;
-    var t = copy(terms || {}), decision = V.decision(s,rid,operation === 'renew' || operation === 'revoke' ? 'treaty' : operation,t), reason = decision.reason;
+    var t = copy(terms || {}), decision = V.decision(s,rid,
+      operation === 'renew' || operation === 'revoke' ? 'treaty' : operation,operation === 'repay' ? null : t), reason = decision.reason;
     var charge = 0, counterpart = null, source = null, debt = null, right = null;
+    var paymentAvailable, remainingAfter;
     if (operation === 'treaty') {
       if (!validRight(s,rid,t)) reason = reason || 'outside_scope';
       else {
@@ -121,9 +124,21 @@
       }
       if (r.debts.filter(function (d) { return d.status === 'active'; }).length >= 8) reason = reason || 'commitment_limit';
     } else if (operation === 'repay') {
-      debt = r.debts.filter(function (d) { return d.id === t.debtId; })[0];
-      if (!keys(t,['debtId']) || !debt || debt.status !== 'active' || !FB.treasuryCounterparty(s,debt.lenderRealmId)) reason = reason || 'outside_scope';
-      charge = debt ? debt.remaining : 0;
+      debt = r.debts.find(function (d) { return d.id === t.debtId; });
+      var installment = keys(terms,['debtId','amount']), payer = FB.treasuryPublicAccountSnapshot(s,rid);
+      var lender = debt && FB.treasuryPublicAccountSnapshot(s,debt.lenderRealmId,true);
+      paymentAvailable = payer ? Math.max(0,payer.available - cp.obligations.reserve) : 0;
+      remainingAfter = debt ? debt.remaining : null;
+      if (!debt || debt.status !== 'active' || !payer || !lender || payer.realmId === lender.realmId ||
+          !installment && !keys(terms,['debtId'])) reason = reason || 'outside_scope';
+      else if (installment && (!Number.isFinite(t.amount) || t.amount < V.minimumInstallment || t.amount >= debt.remaining))
+        reason = reason || 'installment_amount';
+      else {
+        charge = installment ? t.amount : debt.remaining;
+        remainingAfter = debt.remaining - charge;
+        if (!reason && (payer.gold - charge >= payer.gold || lender.gold + charge <= lender.gold ||
+            lender.gold + charge > Number.MAX_SAFE_INTEGER)) reason = 'outside_scope';
+      }
     } else if (operation === 'revoke' || operation === 'renew') {
       right = r.rights.filter(function (q) { return q.id === t.rightId; })[0];
       if (!keys(t,['rightId']) || !right || ['active','suspended'].indexOf(right.status) < 0 || operation === 'renew' && right.status !== 'suspended') reason = reason || 'outside_scope';
@@ -142,9 +157,14 @@
       }
     } else reason = reason || 'unsupported';
     if (!reason && charge && FB.treasuryAvailable(s,rid) < charge + cp.obligations.reserve) reason = 'reserve';
-    return { realmId:rid, operation:operation, terms:t, stamp:V.stamp(s,rid),
+    var quote = { realmId:rid, operation:operation, terms:t, stamp:V.stamp(s,rid),
       decision:decision, counterpart:counterpart, source:source, debt:debt ? copy(debt) : null,
       right:right ? copy(right) : null, charge:charge, allowed:!reason, reason:reason };
+    if (operation === 'repay') {
+      quote.paymentAvailable = paymentAvailable;
+      quote.remainingAfter = remainingAfter;
+    }
+    return quote;
   };
   V.proposalApply = function (s,reviewed) {
     var q = reviewed && V.proposalQuote(s,reviewed.realmId,reviewed.operation,reviewed.terms);
@@ -161,7 +181,9 @@
         remaining:t.amount * (1 + t.interest), interest:t.interest, startTurn:s.turn, dueTurn:s.turn + t.duration, status:'active' });
     } else if (q.operation === 'repay') {
       if (!FB.treasuryTransfer(s,rid,q.debt.lenderRealmId,q.charge)) return false;
-      var debt = r.debts.filter(function (d) { return d.id === t.debtId; })[0]; debt.remaining = 0; debt.status = 'paid';
+      var debt = r.debts.find(function (d) { return d.id === q.debt.id; });
+      debt.remaining = q.remainingAfter;
+      if (debt.remaining === 0) debt.status = 'paid';
     } else if (q.operation === 'revoke' || q.operation === 'renew') r.rights.filter(function (right) { return right.id === t.rightId; })[0].status = q.operation === 'revoke' ? 'revoked' : 'active';
     else if (q.operation === 'grant') {
       // This is a lawful public grant, distinct from military occupation.

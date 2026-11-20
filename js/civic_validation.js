@@ -128,7 +128,8 @@
         if (!keys(d,['id','lenderRealmId','principal','remaining','interest','startTurn','dueTurn','status']) || !s.realms[d.lenderRealmId] || d.lenderRealmId === rid ||
             !Number.isFinite(d.principal) || d.principal <= 0 || d.principal > C.profile(s,rid).obligations.maxDues * 5 ||
             !Number.isFinite(d.interest) || d.interest < 0 || d.interest > 0.25 || !integer(d.startTurn,0,s.turn) || !integer(d.dueTurn,d.startTurn + 90,d.startTurn + 1440) ||
-            ['active','paid'].indexOf(d.status) < 0 || d.remaining !== (d.status === 'paid' ? 0 : d.principal * (1 + d.interest))) fault();
+            ['active','paid'].indexOf(d.status) < 0 || !Number.isFinite(d.remaining) ||
+            (d.status === 'paid' ? d.remaining !== 0 : d.remaining <= 0 || d.remaining > d.principal * (1 + d.interest))) fault();
         claim(d.id,'debt');
       });
       if (r.dues !== null) {

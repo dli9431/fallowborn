@@ -71,7 +71,7 @@ FB.bookmarkSources.stage({"source":"data/civic_profiles.js","bookmarks":[],"cata
   };
   FBDATA.techImpactReviews.features.civic_magistracies = { mode:'none', rationale:'Civic qualification, selection, tenure, resignation and lawful removal depend on living institutions and consent.' };
   FBDATA.techImpactReviews.features.civic_public_dues = { mode:'none', rationale:'Temporary extraordinary receipts require current civic assent and declared fiscal limits.' };
-  FBDATA.techImpactReviews.features.civic_public_debt = { mode:'none', rationale:'Bilateral public borrowing and repayment use actual treasury counterparties and negotiated resources.' };
+  FBDATA.techImpactReviews.features.civic_public_debt = { mode:'none', rationale:'Bilateral public borrowing and repayment, including installments, use actual treasury counterparties, lawful executive assent and protected reserves.' };
   FBDATA.techImpactReviews.features.civic_public_campaigns = { mode:'none', rationale:'Civic war and peace require political assent; ordinary military technology, troops and upkeep retain their own rules.' };
   FBDATA.techImpactReviews.features.civic_public_grants = { mode:'none', rationale:'Public grants depend on current control, institutional consent and the recipient’s acceptance.' };
   FBDATA.techImpactReviews.features.civic_form_adoption = { mode:'none', rationale:'Founding consent, current rule and qualified residents establish a constitution without a discovery requirement.' };
