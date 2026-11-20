@@ -20555,8 +20555,8 @@ window.FB = window.FB || {};
       detailsId + '">' + details + '</div></div>';
   }
 
-  function rememberHouseholdPlanPosition(cid, action) {
-    householdPlanReturnFocus = { cid:String(cid), action:String(action) };
+  function rememberHouseholdPlanPosition(cid, action, controlId) {
+    householdPlanReturnFocus = { cid:String(cid), action:String(action), controlId:controlId };
     const ledger = $('gm-body').querySelector('.household-plan-content');
     if (!ledger) return;
     const rows = ledger.querySelectorAll('tr[data-household-plan-cid]');
@@ -20581,8 +20581,9 @@ window.FB = window.FB || {};
     householdPlanReturnPosition = null;
     householdPlanReturnFocus = null;
     // Back returns keyboard focus to the control that opened the child sheet
-    const opener = focus && $('gm-body').querySelector(
-      '[data-household-plan-action="' + focus.action + '"][data-household-plan-cid="' + focus.cid + '"]');
+    const opener = focus && (focus.controlId ? $(focus.controlId) :
+      $('gm-body').querySelector('[data-household-plan-action="' + focus.action +
+        '"][data-household-plan-cid="' + focus.cid + '"]'));
     if (opener) opener.focus({ preventScroll:true });
     if (!position) return;
     window.requestAnimationFrame(function () {
@@ -20975,6 +20976,9 @@ window.FB = window.FB || {};
             amount:educationPolicy.feeCap
           })
         : FB.T('Instruction chosen manually for each child');
+    const tuitionSummary = FB.tuitionPriority(s)
+      ? FB.T('First consideration set for the next term')
+      : FB.T('Customary order');
     let recommendationCount = 0;
     for (const row of rows) {
       if (FB.matchRecommendationOf(s, row.c)) recommendationCount++;
@@ -21013,6 +21017,10 @@ window.FB = window.FB || {};
         [educationFocusSummary, educationInstructionSummary],
         'household-education-policy-details', 'household-education-policy',
         FB.T('Manage household education policy'), FB.T('Manage policy…')) +
+      householdPolicySummaryHtml(
+        'tuition-priority-summary', FB.T('Tuition order'),
+        [tuitionSummary], 'household-tuition-priority-details',
+        'household-tuition-priority', FB.T('Review tuition order'), FB.T('Review tuition…')) +
       householdPolicySummaryHtml(
         'match-policy-summary', FB.T('Descendant Match Assistant'),
         [matchPolicyState, matchPolicyAges, matchPolicyStation, matchPolicyExpenses],
@@ -21088,6 +21096,10 @@ window.FB = window.FB || {};
     });
     $('household-education-policy').addEventListener('click', function () {
       UI.showEducationPolicy();
+    });
+    $('household-tuition-priority').addEventListener('click', function () {
+      rememberHouseholdPlanPosition(null, null, 'household-tuition-priority');
+      showTuitionPriority();
     });
     $('household-match-policy').addEventListener('click', function () {
       UI.showMatchPolicy();
@@ -21241,6 +21253,62 @@ window.FB = window.FB || {};
   UI.showEducationPolicy = function () {
     showEducationPolicyConfig(FB.ensureEducationPolicy(FB.state));
   };
+
+  function showTuitionPriority(replaceView) {
+    const s = FB.state, terms = FB.tuitionPriorityOptions(s);
+    const first = FB.tuitionPriority(s);
+    const currentId = first ? first.student.id : '';
+    let total = 0, cards = '', options = '<option value="">' +
+      esc(FB.T('Customary order')) + '</option>';
+    for (const term of terms) {
+      const c = term.student, option = term.option;
+      const selected = c.id === currentId;
+      const name = FB.fullName(c);
+      total += option.fee;
+      options += '<option value="' + esc(c.id) + '"' +
+        (selected ? ' selected' : '') + '>' + esc(name) + '</option>';
+      cards += '<article class="education-policy-preview-card"><div class="settcard-head">' +
+        FB.faceTag(c, 40, 46) + '<strong>' + esc(name) + '</strong></div>' +
+        kv('Current instruction', (option.tutor ? FB.faceTag(option.tutor, 32, 37) + ' ' : '') +
+          esc(educationOptionName(s, c, option))) +
+        kv('Seasonal fee', esc(FB.money(option.fee))) +
+        (selected ? '<p>' + esc(FB.T('First consideration saved for the next term')) + '</p>' : '') +
+        '</article>';
+    }
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Consider one student’s fee first at the next seasonal payment. Choosing an order costs nothing now and reserves no coin.')) +
+      '</p>' + kv('Household cash now', esc(FB.money(s.player.gold))) +
+      kv('Total seasonal fees for current arrangements', esc(FB.money(total))) +
+      '</div>' + (cards || '<p>' + esc(FB.T('No eligible student currently has a paid term.')) + '</p>') +
+      '<div class="education-policy-form"><label class="education-policy-field" for="tuition-priority-choice"><span>' +
+      esc(FB.T('First consideration for the next term')) +
+      '</span><select id="tuition-priority-choice">' + options + '</select></label></div>' +
+      '<div class="gm-footer"><button type="button" class="btn primary" id="tuition-priority-save" disabled>' +
+      esc(FB.T('Save tuition order')) + '</button><button type="button" class="btn" id="tuition-priority-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    function back() { UI.showHouseholdPlan(); }
+    openModal(FB.T('Tuition order'), h, {
+      historyView:true, replaceView:!!replaceView, historyBackRender:back,
+      modalClass:'fullsheet-modal education-policy-modal',
+      titleDetailsHtml:'<p>' + esc(FB.T(
+        'Other students keep their usual order. If the chosen term is unavailable or its fee cannot be met, the household can still pay for other students. The choice lasts through the next seasonal payment.')) + '</p>'
+    });
+    FB.paintFaces($('gm-body'), s);
+    const select = $('tuition-priority-choice'), save = $('tuition-priority-save');
+    select.addEventListener('change', function () { save.disabled = select.value === currentId; });
+    save.addEventListener('click', function () {
+      const id = select.value;
+      const term = id ? terms.find(function (entry) { return entry.student.id === id; }) : null;
+      if (!FB.setTuitionPriority(FB.state, term)) {
+        UI.toast(FB.T('The tuition terms have changed. Review the current fees.'));
+        showTuitionPriority(true);
+        return;
+      }
+      FB.save.autosave();
+      modalHistoryBack(back);
+    });
+    $('tuition-priority-back').addEventListener('click', function () { modalHistoryBack(back); });
+  }
 
   function educationPolicyPreviewCard(s, entry) {
     const focus = entry.focus ? FB.skillName(entry.focus) :

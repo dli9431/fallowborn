@@ -281,7 +281,10 @@ window.FB = window.FB || {};
   add('play.tenure', 1120, 'daily', 'play', function (s) { return FB.tenureDay && FB.tenureEnabled(s); }, function (s) { FB.tenureDay(s); });
   add('play.serfStory', 1130, 'daily', 'play', function () { return FB.reconcileSerfStory; }, function (s) { FB.reconcileSerfStory(s); });
   add('play.serfNeighbor', 1140, 'daily', 'play', function () { return FB.reconcileSerfNeighborConsequence; }, function (s) { FB.reconcileSerfNeighborConsequence(s); });
-  add('play.educationStory', 1150, 'daily', 'play', function () { return FB.educationStoryDay; }, function (s) { FB.educationStoryDay(s); });
+  add('play.educationStory', 1150, 'daily', 'play', function () { return FB.educationStoryDay; }, function (s) {
+    if (s.player.tuitionPriority !== undefined) FB.reconcileTuitionPriority(s);
+    FB.educationStoryDay(s);
+  });
   add('play.pickEvents', 1160, 'daily', 'play', null, function (s, p, c) { c.events = FB.pickDailyEvents(s); });
   add('play.refresh', 1170, 'daily', 'play', null, refresh);
   add('play.dispatchEvents', 1180, 'daily', 'play', function (s, p, c) { return c.events.length; }, function (s, p, c) {

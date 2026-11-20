@@ -498,6 +498,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Each educated childâ€™s paced formative household decision is baseline family activity; the existing technology requirements on optional schools and masters remain unchanged.'
       },
+      household_tuition_priority:{
+        mode:'none',
+        rationale:'Choosing whose existing tuition is considered first is ordinary household budgeting. Every school and personal master keeps its own requirements and seasonal fee.'
+      },
       enterprise_hired_labor:{
         mode:'none',
         rationale:'Hiring a qualified local worker for an owned household enterprise is a baseline labor contract with recurring pay, not an advanced capability unlocked by national research. Work & Enterprises therefore remains available at every adult station, while individual enterprise requirements keep their authored technology gates.'

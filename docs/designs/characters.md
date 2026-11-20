@@ -445,6 +445,23 @@ so changing teachers just before winter cannot buy a full year's result
 or erase a dangerous term already attended. Old saves with a generated hired tutor lazily
 identify it as the recurring personal-master arrangement.
 
+**Tuition order.** Household Plan reviews current students, their named school or tutor,
+each training-cost-modified seasonal fee and the household’s current cash. The household
+can give one eligible student with an existing paid arrangement first consideration at the
+next seasonal education settlement, or use customary order. The choice spends and reserves
+no coin. At settlement the chosen fee is attempted first, then every other student is
+considered in the usual order. An unaffordable fee pauses the chosen term and the remaining
+students can still attend when their own fees can be paid. Ordinary instruction, missed-fee
+notices, retries, accumulated credit and apprenticeships keep their existing rules.
+
+The saved choice binds one student and their current paid arrangement to the current
+household head and the next settlement. It expires at that settlement even if everyone
+can pay or the chosen fee is missed. Coming of age, death, leaving the managed household,
+being away on a household journey, or losing or changing the paid arrangement voids the
+choice. Fees at settlement use current terms. Saves without a choice use customary order.
+The technology impact is **none** for deciding the payment order. Schools and paid tutors
+retain their own technology requirements.
+
 **Academy opportunity has a cost beyond coin.** Each completed Noble Academy term adds
 0.5% extra mortality at the next New Year, up to 2% after four terms. This roll happens
 before directed learning and coming-of-age rewards. A dependent student's death uses the

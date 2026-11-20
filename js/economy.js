@@ -2514,6 +2514,9 @@ window.FB = window.FB || {};
     if (dimension === 'instruction') {
       record.instructionChoice = choice || educationChoiceKey(c);
     }
+    if (state.player.tuitionPriority && state.player.tuitionPriority.studentId === c.id) {
+      FB.reconcileTuitionPriority(state);
+    }
     return record;
   };
 
@@ -2759,6 +2762,67 @@ window.FB = window.FB || {};
     return focus && option && option.available ? option.fee : 0;
   };
 
+  function nextTuitionTurn(state) {
+    return state.turn + 91 - state.date.day;
+  }
+
+  function paidTuitionTerm(state, student, turn) {
+    if (!student || !student.edu || !student.edu.focus ||
+        educationChoiceKey(student) === 'home' ||
+        !FB.educationStudentEligible(state, student)) return null;
+    const option = FB.educationCurrentOption(state, student);
+    if (!option || !option.available || !option.schoolId ||
+        !Number.isFinite(option.fee) || option.fee <= 0) return null;
+    return { student:student, option:option, turn:turn, headId:state.player.charId };
+  }
+
+  FB.tuitionPriorityOptions = function (state) {
+    const turn = nextTuitionTurn(state), terms = [];
+    for (const student of FB.educationStudents(state)) {
+      const term = paidTuitionTerm(state, student, turn);
+      if (term) terms.push(term);
+    }
+    return terms;
+  };
+
+  function tuitionPriorityAt(state, turn) {
+    const saved = state.player.tuitionPriority;
+    if (!saved || saved.turn !== turn || saved.headId !== state.player.charId ||
+        typeof saved.studentId !== 'string') return null;
+    const term = paidTuitionTerm(state, state.chars[saved.studentId], turn);
+    return term && term.option.id === saved.instructionId &&
+      term.option.schoolId === saved.schoolId ? term : null;
+  }
+
+  FB.tuitionPriority = function (state) {
+    return tuitionPriorityAt(state, nextTuitionTurn(state));
+  };
+
+  FB.reconcileTuitionPriority = function (state) {
+    if (state.player.tuitionPriority !== undefined && !FB.tuitionPriority(state)) {
+      delete state.player.tuitionPriority;
+    }
+  };
+
+  FB.setTuitionPriority = function (state, reviewed) {
+    if (reviewed === null) {
+      delete state.player.tuitionPriority;
+      return true;
+    }
+    const turn = nextTuitionTurn(state);
+    if (!reviewed || !reviewed.student || !reviewed.option ||
+        reviewed.turn !== turn || reviewed.headId !== state.player.charId) return false;
+    const term = paidTuitionTerm(state, state.chars[reviewed.student.id], turn);
+    if (!term || term.option.id !== reviewed.option.id ||
+        term.option.schoolId !== reviewed.option.schoolId ||
+        term.option.fee !== reviewed.option.fee) return false;
+    state.player.tuitionPriority = {
+      studentId:term.student.id, instructionId:term.option.id,
+      schoolId:term.option.schoolId, headId:term.headId, turn:turn
+    };
+    return true;
+  };
+
   /* Full-year directed-learning chance supplied by the current teacher or
      school, before household "Letters" and before partial-term accounting. */
   FB.educationInstructionChance = function (state, c) {
@@ -2995,6 +3059,9 @@ window.FB = window.FB || {};
     const dimensions = { focus:false, instruction:false };
     dimensions[dimension] = true;
     FB.applyEducationPolicy(state, { ids:ids, dimensions:dimensions });
+    if (state.player.tuitionPriority && state.player.tuitionPriority.studentId === c.id) {
+      FB.reconcileTuitionPriority(state);
+    }
     return true;
   };
 
@@ -3023,7 +3090,14 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     const base = B.educationBaseChance === undefined ? 0.18 : B.educationBaseChance;
     FB.applyEducationPolicy(state);
-    for (const c of FB.educationStudents(state)) {
+    const students = FB.educationStudents(state);
+    const first = tuitionPriorityAt(state, state.turn);
+    delete state.player.tuitionPriority;
+    if (first) {
+      const index = students.indexOf(first.student);
+      if (index > 0) students.unshift(students.splice(index, 1)[0]);
+    }
+    for (const c of students) {
       if (!c.edu || !c.edu.focus) continue;
       const id = FB.schoolingId(state, c);
       if (c.edu.tutorId && !FB.educationTutor(state, c, true)) continue;
