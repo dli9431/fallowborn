@@ -28,10 +28,14 @@
     }).filter(Boolean);
   }
   function held(r) { return ['offered','active','challenged'].indexOf(r.status) >= 0; }
+  function admittedHere(m) { return m.admittedTurn !== null && m.leftTurn === null; }
+  function protectivePlace(m) { return admittedHere(m) && m.releasedTurn === undefined; }
   function reservesPerson(r,m) { return ['requested','offered'].indexOf(r.status) >= 0 ||
-    ['active','challenged'].indexOf(r.status) >= 0 && m.admittedTurn !== null && m.leftTurn === null; }
-  function places(r) { return r.status === 'offered' ? r.members.length :
-    r.members.filter(function(m) { return m.admittedTurn !== null && m.leftTurn === null; }).length; }
+    ['active','challenged'].indexOf(r.status) >= 0 && protectivePlace(m); }
+  function places(r) { return r.status === 'offered' ? r.members.length : r.members.filter(protectivePlace).length; }
+  function careGroup(r,adultId) { return r.members.filter(function(m) {
+    return m.admittedTurn !== null && (m.personId === adultId || m.caregiverId === adultId);
+  }); }
   function seat(s,def) {
     var info=FB.world.sitesByProv && FB.world.sitesByProv[def.locality.provinceId];
     return info && info.list.filter(function(v) { return v.site === def.locality.siteId && v.authored && FB.siteVisible(s,v); })[0] || null;
@@ -120,7 +124,7 @@
   function conflict(s,id,except,institutionId) {
     return providers(s).some(function(v) { return v.t.requests.some(function(r) {
       return r !== except && r.members.some(function(m) { return m.personId === id && (reservesPerson(r,m) ||
-        v.def.provider.institutionId !== institutionId && m.admittedTurn !== null && m.leftTurn === null); });
+        v.def.provider.institutionId !== institutionId && admittedHere(m)); });
     }); });
   }
   function eligibleMembers(s,r,ids) {
@@ -175,6 +179,7 @@
       terms=terms || {};
       var c=current(s,def),b=budget(s,def),p=pressure(s,def),r=terms.requestId && row(t,terms.requestId),allowed=false;
       var ids=terms.personIds,people=null,amount=0,now=copy(s.date);
+      var release=null;
       if (action === 'request' && exact(terms,['partyId','personIds'])) {
         people=roster(s,terms.partyId,ids);
         var pt=party(s,terms.partyId),known=[];
@@ -212,12 +217,29 @@
           allowed=live && free(s,actorId) && (actorId === r.actorId && actorId === s.player.charId ||
             actorId === r.provider.incumbentId || actorId === r.provider.rulerId ||
             r.members.some(function(m) { return actorId === (m.caregiverId || m.personId); }));
+        } else if (action === 'release_group') {
+          // The acting adult supplies their own consent, never a target on behalf of another adult.
+          var group=careGroup(r,actorId),occupants=r.members.filter(protectivePlace);
+          var affected=group.map(function(m) { return m.personId; });
+          var reason='release_care';
+          if (r.status !== 'active' && r.status !== 'challenged' || s.turn >= r.endTurn || !r.payment) reason='release_term';
+          else if (p.length && r.status === 'active') reason='release_attempt';
+          else if (!c.allowed || !same(c.binding,r.provider) || b.used > b.capacity) reason='release_provider';
+          else if (adult(s,actorId) && group.some(function(m) { return m.personId === actorId && m.caregiverId === null; }) &&
+              group.every(function(m) { return protectivePlace(m) && !(FB.characterGuarded && FB.characterGuarded(s,m.personId)); }) &&
+              occupants.every(function(m) { return countyPresent(s,m.personId,def.locality.provinceId); }) &&
+              eligibleMembers(s,r,occupants.map(function(m) { return m.personId; }))) reason=null;
+          allowed=reason === null;
+          release={affected:affected,remaining:occupants.filter(function(m) { return affected.indexOf(m.personId) < 0; })
+            .map(function(m) { return m.personId; }),prepaid:r.payment && r.payment.amount,reason:reason};
         }
       }
-      return {id:def.id,action:action,actorId:actorId,terms:copy(terms),allowed:!!allowed,cost:amount,
+      var quoted={id:def.id,action:action,actorId:actorId,terms:copy(terms),allowed:!!allowed,cost:amount,
         facts:{definition:copy(def),record:copy(t),provider:c,budget:b,pressure:p,people:people,
           characters:copy(s.chars),parties:def.partyIds.map(function(id) { return copy(party(s,id)); }),
           travel:copy(s.player.travel || null),player:copy(s.player),turn:s.turn,date:now}};
+      if (release) { quoted.release=release;quoted.reason=release.reason; }
+      return quoted;
     }
     function commit(s,t,q) {
       if (!q || !same(q,quote(s,t,q.action,q.actorId,q.terms)) || !q.allowed) return false;
@@ -238,17 +260,19 @@
         r.payment={realmId:r.provider.realmId,amount:q.cost,turn:s.turn};
         r.status='offered';
       } else if (q.action === 'enter') {
-        // A fresh confirmed term may supersede an ended promise at this same
-        // site. Release only its old presence witness, never move the person.
+        // A fresh confirmed term may supersede an unprotected witness at this same site.
         providers(s).forEach(function(v) { if (v.def.provider.institutionId !== def.provider.institutionId) return;
-          v.t.requests.forEach(function(prior) { if (prior === r || liveStates.indexOf(prior.status) >= 0) return;
-            prior.members.forEach(function(m) { if (m.admittedTurn !== null && m.leftTurn === null && q.terms.personIds.indexOf(m.personId) >= 0) {
+          v.t.requests.forEach(function(prior) { if (prior === r) return;
+            prior.members.forEach(function(m) { if (admittedHere(m) && !reservesPerson(prior,m) && q.terms.personIds.indexOf(m.personId) >= 0) {
               m.leftTurn=s.turn;v.t.revision++;
             } });
           });
         });
         r.members.forEach(function(m) { if (q.terms.personIds.indexOf(m.personId) >= 0) m.admittedTurn=s.turn; });
         r.status='active';r.endTurn=s.turn+def.termDays;
+      } else if (q.action === 'release_group') {
+        careGroup(r,q.actorId).forEach(function(m) { m.releasedTurn=s.turn; });
+        if (!q.release.remaining.length) { end(s,t,r,'ended','leave');return true; }
       } else { end(s,t,r,q.action === 'decline' ? 'declined' : 'ended',q.action);return true; }
       t.revision++;return true;
     }
@@ -257,7 +281,7 @@
       t.requests.forEach(function(r) {
         var active=liveStates.indexOf(r.status) >= 0,ids=r.members.map(function(m) { return m.personId; });
         r.members.forEach(function(m) {
-          if (m.admittedTurn !== null && m.leftTurn === null && !countyPresent(s,m.personId,def.locality.provinceId)) {
+          if (admittedHere(m) && !countyPresent(s,m.personId,def.locality.provinceId)) {
             m.leftTurn=s.turn;t.revision++;
           }
         });
@@ -269,9 +293,9 @@
           if (p.length) { r.incident=copy(p[p.length-1]);end(s,t,r,'interrupted','attempt');return; }
         } else {
           if (s.turn >= r.endTurn) { end(s,t,r,'expired','term');return; }
-          var occupants=r.members.filter(function(m) { return m.admittedTurn !== null && m.leftTurn === null; });
+          var occupants=r.members.filter(protectivePlace);
           if (!occupants.length) { end(s,t,r,'ended','departure');return; }
-          if (occupants.some(function(m) { return !eligibleMembers(s,r,occupants.map(function(v) { return v.personId; })); })) {
+          if (!eligibleMembers(s,r,occupants.map(function(m) { return m.personId; }))) {
             end(s,t,r,'interrupted','care');return;
           }
           if (p.length && r.status === 'active') { r.status='challenged';r.incident=copy(p[p.length-1]);t.revision++; }
@@ -297,6 +321,7 @@
       need(exact(t,['version','locality','revision','openedTurn','requests']) && t.version === 1 && same(t.locality,def.locality) &&
         whole(t.revision) && t.revision <= 1000000 && t.openedTurn === 0 && Array.isArray(t.requests) && t.requests.length <= 8);
       var known=[];
+      var memberFields=['personId','caregiverId','partyConsentTurn','consentBy','consentTurn','admittedTurn','leftTurn'];
       if (s) need((FB.campaignBookmark(s).stories || []).indexOf(def.id) >= 0 && FB.householdStories.localityValid(t.locality,FB.campaignBookmark(s)));
       t.requests.forEach(function(r,i) {
         need(exact(r,['id','partyId','actorId','provider','members','status','requestedTurn','replyTurn','endTurn','closedTurn','reason','authorization','payment','incident']) &&
@@ -309,7 +334,7 @@
         need(Array.isArray(r.members) && r.members.length > 0 && r.members.length <= def.capacity);
         var seen=[],admitted=[];
         r.members.forEach(function(m) {
-          need(exact(m,['personId','caregiverId','partyConsentTurn','consentBy','consentTurn','admittedTurn','leftTurn']) && ref(m.personId) &&
+          need(exact(m,m.releasedTurn === undefined ? memberFields : memberFields.concat('releasedTurn')) && ref(m.personId) &&
             seen.indexOf(m.personId) < 0 && (m.caregiverId === null || ref(m.caregiverId) && m.caregiverId !== m.personId));
           need(whole(m.partyConsentTurn) && m.partyConsentTurn <= r.requestedTurn);
           seen.push(m.personId);if (known.indexOf(m.personId) < 0) known.push(m.personId);
@@ -318,6 +343,9 @@
           need(m.admittedTurn === null ? m.leftTurn === null : m.consentBy !== null && whole(m.admittedTurn) &&
             m.admittedTurn >= m.consentTurn && m.admittedTurn < r.replyTurn && r.payment && m.admittedTurn >= r.payment.turn &&
             (m.leftTurn === null || whole(m.leftTurn) && m.leftTurn >= m.admittedTurn));
+          if (m.releasedTurn !== undefined) need(whole(m.releasedTurn) && m.admittedTurn !== null &&
+            m.releasedTurn >= m.admittedTurn && m.releasedTurn < r.endTurn &&
+            (m.leftTurn === null || m.releasedTurn <= m.leftTurn) && (r.closedTurn === null || m.releasedTurn <= r.closedTurn));
           if (m.admittedTurn !== null) admitted.push(m.personId);
           if (s) {
             var pt=party(s,r.partyId),pm=pt && pt.members.filter(function(v) { return v.personId === m.personId; })[0];
@@ -327,8 +355,8 @@
               (pm.kind === 'dependent' ? pm.caregiverId : null) === m.caregiverId &&
               (m.caregiverId === null || s.chars[m.personId].motherId === m.caregiverId || s.chars[m.personId].fatherId === m.caregiverId) &&
               (m.consentTurn === null || m.consentTurn <= s.turn) && (m.admittedTurn === null || m.admittedTurn <= s.turn) &&
-              (m.leftTurn === null || m.leftTurn <= s.turn));
-            [r.requestedTurn,m.consentTurn,m.admittedTurn].filter(function(turn) { return turn !== null; }).forEach(function(turn) {
+              (m.leftTurn === null || m.leftTurn <= s.turn) && (m.releasedTurn === undefined || m.releasedTurn <= s.turn));
+            [r.requestedTurn,m.consentTurn,m.admittedTurn,m.releasedTurn].filter(whole).forEach(function(turn) {
               var year=FB.dateAtTurn(s,turn).year,age=FB.ageOf(s.chars[m.personId],year);
               need(m.caregiverId === null ? age >= 16 : age < 16 && FB.ageOf(s.chars[m.caregiverId],year) >= 16);
             });
@@ -336,6 +364,11 @@
         });
         need(known.length <= 16 && r.members.every(function(m) { return !m.caregiverId || seen.indexOf(m.caregiverId) >= 0 &&
           (m.admittedTurn === null || admitted.indexOf(m.caregiverId) >= 0); }));
+        r.members.forEach(function(m) {
+          if (!m.caregiverId || m.admittedTurn === null) return;
+          var care=r.members.filter(function(v) { return v.personId === m.caregiverId; })[0];
+          need(m.releasedTurn === care.releasedTurn);
+        });
         if (r.authorization !== null) need(exact(r.authorization,['actorId','generation','turn']) &&
           r.authorization.actorId === v.rulerId && r.authorization.generation === v.generation &&
           whole(r.authorization.turn) && r.authorization.turn >= r.requestedTurn && r.authorization.turn < r.replyTurn &&
@@ -348,7 +381,8 @@
         }));
         if (r.status === 'requested') need(r.payment === null && !admitted.length);
         if (r.status === 'offered') need(r.payment !== null && !admitted.length);
-        if (r.status === 'active' || r.status === 'challenged') need(r.payment !== null && admitted.length > 0);
+        if (r.status === 'active' || r.status === 'challenged') need(r.payment !== null && admitted.length > 0 &&
+          (!r.members.some(function(m) { return m.releasedTurn !== undefined; }) || r.members.some(protectivePlace)));
         need(liveStates.indexOf(r.status) >= 0 ? r.closedTurn === null && r.reason === null : whole(r.closedTurn) &&
           r.closedTurn >= r.requestedTurn && ['decline','leave','provider','deadline','consent','attempt','term','departure','care'].indexOf(r.reason) >= 0);
         if (r.closedTurn !== null) need((r.authorization === null || r.authorization.turn <= r.closedTurn) &&
@@ -399,6 +433,11 @@
         }
       });
       t.requests.forEach(function(r) {
+        if (['active','challenged'].indexOf(r.status) >= 0 && r.members.some(function(m) {
+          return m.personId === actor && m.caregiverId === null && protectivePlace(m);
+        })) out.push({id:'release_group/'+r.id,action:'release_group',actorId:actor,terms:{requestId:r.id},
+          label:FB.T('Release my care group’s shelter places'),
+          detail:FB.T('End protection for your own care group and free its places without a refund. Everyone stays where they are.')});
         r.members.forEach(function(m) {
           if (r.status === 'requested' && (m.caregiverId || m.personId) === actor && m.consentBy === null)
             out.push({id:'consent/'+r.id+'/'+m.personId,action:'consent',actorId:actor,terms:{requestId:r.id,personId:m.personId},
@@ -434,13 +473,25 @@
         FB.T('Payment is final when offered. Places promise no provisions, guards, safe road, conversion or property transfer.')].concat(t.requests.map(function(r) {
           return FB.T('Request {id}: {status}. Days remaining in this offer or term: {days}. People still present at the shelter: {count}.',
             {id:r.id,status:phaseLabel(r.status),days:liveStates.indexOf(r.status) >= 0 ? Math.max(0,(r.endTurn === null ? r.replyTurn : r.endTurn)-s.turn) : 0,count:r.members.filter(function(m) {
-            return m.admittedTurn !== null && m.leftTurn === null && countyPresent(s,m.personId,def.locality.provinceId);
+            return admittedHere(m) && countyPresent(s,m.personId,def.locality.provinceId);
           }).length});
         }))}; },
       choices:menu,
       quote:function(s,t,id) { var m=menu(s,t).filter(function(v) { return v.id === id; })[0];return m ? quote(s,t,m.action,m.actorId,m.terms) : {allowed:false}; },
       apply:function(s,t,id,q) { var m=menu(s,t).filter(function(v) { return v.id === id; })[0];return !!(m && q && q.action === m.action && q.actorId === m.actorId && same(q.terms,m.terms) && commit(s,t,q)); },
-      review:function(s,t,id,q) { var r=q.terms.requestId && row(t,q.terms.requestId),ids=q.terms.personIds ||
+      reviewPeople:function(s,t,id,q) {
+        if (!q.release) return [];
+        return q.release.affected.map(function(personId) { return {characterId:personId,label:FB.T('Releases a protective place')}; })
+          .concat(q.release.remaining.map(function(personId) { return {characterId:personId,label:FB.T('Keeps a protective place')}; }));
+      },
+      review:function(s,t,id,q) {
+        if (q.release) return [
+          FB.T('Protective places freed: {count}.',{count:q.release.affected.length}),
+          q.release.remaining.length ? FB.T('The remaining places keep the same shelter term.') : FB.T('This ends the shelter agreement.'),
+          FB.T('Original public prepayment: {cost}. There is no refund, new charge or action day.',
+            {cost:FB.money(q.release.prepaid,{state:s,style:'long',exact:true})}),
+          FB.T('Everyone stays at {site}. Residence is unchanged. Use ordinary travel to depart.',{site:seat(s,def).name})];
+        var r=q.terms.requestId && row(t,q.terms.requestId),ids=q.terms.personIds ||
         r && r.members.map(function(m) { return m.personId; }) || [];
         return [FB.T('Exact people: {names}.',{names:ids.map(function(id) { return (s.chars[id] || {}).name || id; }).join(', ')}),
         FB.T('Institutional consent: {protector}. Civil authorization and public payer: {ruler}.',
@@ -450,7 +501,13 @@
           {cost:cost(def,r ? r.members.length : ids.length)}),
         FB.T('Every adult and actual caregiver decides separately. Ending protection does not move the occupants.'),
         FB.T('Use the ordinary named-party journey for departure, return or eligible settlement.')]; },
-      blocker:function() { return FB.T('Current consent, local access, a living authorized provider, free places, unexpired terms and the named public funds are required. A committed local attempt blocks entry.'); },
+      blocker:function(s,t,reason) {
+        if (reason === 'release_term') return FB.T('Only a current shelter term with admitted places can be released.');
+        if (reason === 'release_attempt') return FB.T('A committed attempt has interrupted this review. Wait for the shelter to record the challenge.');
+        if (reason === 'release_provider') return FB.T('The original provider, local permission and protective capacity must still be valid.');
+        if (reason === 'release_care') return FB.T('An admitted adult may release only their own consenting care group. Everyone still using these places must be present with valid consent and care.');
+        return FB.T('Current consent, local access, a living authorized provider, free places, unexpired terms and the named public funds are required. A committed local attempt blocks entry.');
+      },
       people:function(s,t) { var ids=[];t.requests.forEach(function(r) { [r.provider.incumbentId,r.provider.rulerId].concat(r.members.map(function(m) { return m.personId; })).forEach(function(id) {
         if (ids.indexOf(id) < 0) ids.push(id);
       }); });return ids.map(function(id) { return {characterId:id,label:FB.T('Shelter participant'),detail:FB.T('Exact original person; no successor is enrolled automatically.'),reason:''}; }); },
@@ -465,7 +522,7 @@
   R.presence=function(s,id) {
     var found=null;
     providers(s).forEach(function(v) { v.t.requests.forEach(function(r) { if (r.members.some(function(m) {
-      return m.personId === id && m.admittedTurn !== null && m.leftTurn === null && countyPresent(s,id,v.def.locality.provinceId);
+      return m.personId === id && admittedHere(m) && countyPresent(s,id,v.def.locality.provinceId);
     })) found=copy(v.def.locality); }); });return found;
   };
   var eventArgs={type:'object',fields:{
@@ -531,12 +588,11 @@
     });
     providers(s).forEach(function(v) {
       v.t.requests.forEach(function(r) { r.members.forEach(function(m) {
-        var location=m.admittedTurn !== null && m.leftTurn === null;
         if (reservesPerson(r,m)) {
           if (reserved[m.personId]) throw new Error(FB.T('Invalid saved shelter reservation.'));
           reserved[m.personId]=true;
         }
-        if (location) { if (present[m.personId]) throw new Error(FB.T('Invalid saved shelter presence.'));present[m.personId]=true; }
+        if (admittedHere(m)) { if (present[m.personId]) throw new Error(FB.T('Invalid saved shelter presence.'));present[m.personId]=true; }
       }); });
       var b=budget(s,v.def);
       if (b.used > b.capacity) throw new Error(FB.T('Invalid saved shelter capacity.'));
