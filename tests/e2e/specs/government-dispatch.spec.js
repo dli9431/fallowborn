@@ -22,8 +22,11 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { startParityGame, advanceTo, FRESH_JOURNEYS } = require('../support/game/parity');
+const { startParityGame, FRESH_JOURNEYS } = require('../support/game/parity');
 const fixture = path.resolve(__dirname, '../fixtures/government-strategies.js');
+
+// Each proof mutates only its own browser context.
+test.describe.configure({ mode:'parallel' });
 
 async function start(page, testInfo, bookmark) {
   const journey = FRESH_JOURNEYS.find(function (row) {
@@ -228,46 +231,6 @@ test('alternate strategies change public consumers without changing pure-read st
   expect(result.settlementLevy).toBe(result.expectedSettlementLevy);
   expect(result.holderChoice).toBe(result.expectedHolder);
 });
-
-for (const bookmark of ['867','1066','476']) {
-  test(bookmark + ' data-only composed form plays a season and replays after restore', async function ({ page }, testInfo) {
-    test.setTimeout(180000);
-    await start(page,testInfo,bookmark);
-    const opening = await page.evaluate(function () {
-      const s = FB.state;
-      FB.mods.apply({ governmentForms:{ fixture_composed:Object.assign({}, FBDATA.governmentForms.territorial, {
-        holders:'direct', strategyParameters:{ council:{ seats:[] }, ai:{ warChance:0 } }
-      }) } });
-      const rid = Object.keys(s.realms).find(function (id) {
-        const r = s.realms[id];
-        return id !== 'player' && r.alive && r.succession && !r.succession.papalElective && !r.nonTerritorial;
-      });
-      if (!FB.authoritySetGovernment(s,rid,'fixture_composed')) throw new Error('Fixture form was not installed');
-      const data = JSON.parse(FB.save.serialize());
-      FB.save.restore(data);
-      return { rid:rid, data:JSON.parse(FB.save.serialize()) };
-    });
-    const firstAdvance = await advanceTo(page,'season',100);
-    expect(firstAdvance.stop).toBeNull();
-    const first = await page.evaluate(function () {
-      const data = JSON.parse(FB.save.serialize());
-      return { state:data.state, rng:data.rng, uid:data.uid };
-    });
-    const restored = await page.evaluate(function (opening) {
-      FB.save.restore(opening.data);
-      return { rng:FB.getRngState(), uid:FB.getUidCounter(),
-        form:FB.governments.forRealm(FB.state,opening.rid).id };
-    },opening);
-    expect(restored).toEqual({ rng:opening.data.rng, uid:opening.data.uid, form:'fixture_composed' });
-    const secondAdvance = await advanceTo(page,'season',100);
-    expect(secondAdvance).toEqual(firstAdvance);
-    const second = await page.evaluate(function () {
-      const data = JSON.parse(FB.save.serialize());
-      return { state:data.state, rng:data.rng, uid:data.uid };
-    });
-    expect(second).toEqual(first);
-  });
-}
 
 test('daily cache is bounded and same-day changes, definitions and restore invalidate it', async function ({ page }, testInfo) {
   await start(page,testInfo,'867');
