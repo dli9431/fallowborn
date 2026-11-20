@@ -1,0 +1,12 @@
+{
+  "rag_paper": {
+    "name": "Prepare paper and binding stock",
+    "inputs": [{"goodId": "rag_fiber", "quantity": 2}],
+    "outputs": [{"goodId": "paper_lot", "quantity": 1}, {"goodId": "bound_paper", "quantity": 1}],
+    "workDays": 2,
+    "workPrice": 3,
+    "requiresTech": [],
+    "water": 1,
+    "impactReviewId": "conserved_production_batches"
+  }
+}

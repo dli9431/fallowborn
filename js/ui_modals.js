@@ -3585,11 +3585,13 @@ window.FB = window.FB || {};
   }
 
   function returnCargoCashFacts(q) {
-    return kv('Household cash now', esc(FB.money(q.funds))) +
-      kv('Lading fee', esc(FB.money(q.ladingFee))) +
-      kv('Total paid now', esc(FB.money(q.totalCost))) +
+    const exact = {exact:true};
+    const balance = Math.abs(q.cashLeft);
+    return kv('Household cash now', esc(FB.money(q.funds, exact))) +
+      kv('Lading fee', esc(FB.money(q.ladingFee, exact))) +
+      kv('Total paid now', esc(FB.money(q.totalCost, exact))) +
       kv(q.cashLeft >= 0 ? FB.T('Cash left after purchase') : FB.T('Shortfall'),
-        esc(FB.money(Math.abs(q.cashLeft))));
+        esc(FB.money(Math.round(balance * 100) / 100 || balance, exact)));
   }
 
   function returnCargoRoadFacts(q) {
@@ -3625,6 +3627,7 @@ window.FB = window.FB || {};
     const homeQuote = returnCargoHomeQuote(s);
     const eligible = FB.tradeVentureReturnEligible(s);
     const stakes = FB.tradeVentureStakes(s);
+    const smallerGoods = FB.tradeVentureSmallerReturnGoods(s);
     let cards = '';
     for (let i = 0; i < stakes.length; i++) {
       const stake = stakes[i], goods = FB.tradeVentureReturnGoods(s, stake);
@@ -3641,6 +3644,15 @@ window.FB = window.FB || {};
         note:blocker || FB.T('{money:total} with lading · {money:cash} left', {
           total:preview.totalCost, cash:preview.cashLeft
         })
+      });
+    }
+    if (smallerGoods.length) {
+      const available = smallerGoods.some(function (good) { return good.maxStake > 0; });
+      cards += reviewActionCardHtml({
+        id:'return-cargo-smaller', disabled:!available, warn:!available,
+        labelHtml:'⚖ ' + esc(FB.T('Choose a smaller return stake')),
+        note:available ? FB.T('Set a whole stake below the smallest preset.') :
+          FB.T('No cargo is available for a whole stake within your cash and local stock.')
       });
     }
     const h = returnCargoWarning(warning) +
@@ -3667,12 +3679,70 @@ window.FB = window.FB || {};
         UI.showReturnCargoGoods(stake);
       });
     });
+    const smaller = $('return-cargo-smaller');
+    if (smaller) smaller.addEventListener('click', function () {
+      if (!returnCargoViewActive(smaller)) return;
+      if (FB.state !== s || s.player.travel !== t || s.player.charId !== homeQuote.payerId) return UI.closeModal();
+      showSmallerReturnCargo(s, t);
+    });
     bindReturnWithoutCargo(s, t, homeQuote, function (message) {
       refreshReturnCargo(function () { UI.showReturnCargoPrompt(message, true); });
     });
   };
 
   UI.showReturnCargoSetup = UI.showReturnCargoPrompt;
+
+  function showSmallerReturnCargo(s, t) {
+    const goods = FB.tradeVentureSmallerReturnGoods(s);
+    if (!goods.some(function (good) { return good.maxStake > 0; })) {
+      refreshReturnCargo(function () {
+        UI.showReturnCargoPrompt(FB.T('The available stakes have changed. Choose again.'), true);
+      });
+      return;
+    }
+    const payerId = s.player.charId;
+    const options = goods.map(function (good) {
+      const name = FB.dataText(s, payerId, 'marketGood', good.id, good.def, 'name', {});
+      return '<option value="' + esc(good.id) + '"' + (good.maxStake ? '' : ' disabled') + '>' + esc(name) + '</option>';
+    }).join('');
+    const fields = '<label for="return-small-good">' + esc(FB.T('Commodity')) + '</label><br>' +
+      '<select id="return-small-good">' + options + '</select><br>' +
+      '<label for="return-small-stake">' + esc(FB.T('Return stake')) + '</label><br>' +
+      '<input id="return-small-stake" type="number" inputmode="numeric" min="1" step="1"' +
+      ' aria-describedby="return-small-limit">' +
+      '<p id="return-small-limit" role="status"></p><div id="return-small-terms"></div>';
+    openModal(FB.T('Choose a smaller return stake'), reviewFactsCard('', fields) +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'return-small-review', labelHtml:esc(FB.T('Review return cargo'))
+      })), {historyView:true});
+    const select = $('return-small-good'), input = $('return-small-stake');
+    const button = $('return-small-review');
+    function update(reset) {
+      const good = goods[select.selectedIndex];
+      input.max = good.maxStake;
+      if (reset) input.value = good.maxStake;
+      const stake = input.valueAsNumber;
+      const valid = Number.isSafeInteger(stake) && stake >= 1 && stake <= good.maxStake;
+      const quote = valid ? FB.tradeVentureReturnPreview(s, stake, good.id, true) : null;
+      $('return-small-limit').textContent = FB.T('Choose a whole stake from {money:min} to {money:max}.', {
+        min:1, max:good.maxStake
+      });
+      $('return-small-terms').innerHTML = quote ? returnCargoCashFacts(quote) : '';
+      input.setAttribute('aria-invalid', valid ? 'false' : 'true');
+      button.disabled = !quote;
+      return quote;
+    }
+    select.selectedIndex = goods.findIndex(function (good) { return good.maxStake > 0; });
+    select.addEventListener('change', function () { update(true); });
+    input.addEventListener('input', function () { update(false); });
+    button.addEventListener('click', function () {
+      if (!returnCargoViewActive(button)) return;
+      if (FB.state !== s || s.player.travel !== t || s.player.charId !== payerId) return UI.closeModal();
+      const quote = update(false);
+      if (quote) UI.reviewReturnCargoChoice(quote.stake, quote.goodId, null, false, true);
+    });
+    update(true);
+  }
 
   UI.showReturnCargoGoods = function (stake) {
     const s = FB.state, t = s.player.travel;
@@ -3709,12 +3779,12 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.reviewReturnCargoChoice = function (stake, goodId, warning, replaceView) {
+  UI.reviewReturnCargoChoice = function (stake, goodId, warning, replaceView, smaller) {
     const s = FB.state, t = s.player.travel;
     if (!t) return;
     const homeQuote = returnCargoHomeQuote(s);
-    const preview = FB.tradeVentureReturnPreview(s, stake, goodId);
-    const blocker = FB.tradeVentureCanLoadReturn(s, stake, goodId);
+    const preview = FB.tradeVentureReturnPreview(s, stake, goodId, smaller);
+    const blocker = FB.tradeVentureCanLoadReturn(s, stake, goodId, smaller);
     const goodDef = FBDATA.marketGoods[goodId];
     const goodName = goodDef ? (goodDef.icon || '') + ' ' +
       FB.dataText(s, s.player.charId, 'marketGood', goodId, goodDef, 'name', {}) : '';
@@ -3753,13 +3823,13 @@ window.FB = window.FB || {};
         'Loading buys cargo now. Use the return deed when you are ready to depart. Sale proceeds depend on the home market on arrival.')) + '</p>'
     });
     function refresh(message) {
-      refreshReturnCargo(function () { UI.reviewReturnCargoChoice(stake, goodId, message, true); });
+      refreshReturnCargo(function () { UI.reviewReturnCargoChoice(stake, goodId, message, true, smaller); });
     }
     const cautious = $('return-load-cautious');
     function commit(strategy) {
       if (!returnCargoViewActive(cautious)) return;
-      if (FB.state !== s || s.player.travel !== t) return UI.closeModal();
-      if (!FB.loadTradeVentureReturn(s, stake, goodId, strategy, preview)) {
+      if (FB.state !== s || s.player.travel !== t || s.player.charId !== homeQuote.payerId) return UI.closeModal();
+      if (!preview || !FB.loadTradeVentureReturn(s, stake, goodId, strategy, preview)) {
         refresh(FB.T('The return terms changed. Review the current choice.'));
         return;
       }
@@ -10688,10 +10758,41 @@ window.FB = window.FB || {};
     function action(label,request) {
       return reviewedAction(label,request.serviceId ? FB.relayServices.quote(s,request) : P.quote(s,request));
     }
+    function dispositionName(choice) {
+      return choice==='store' ? FB.T('Keep as owned lots') : FB.T('Consume the output, with no bonus');
+    }
     function reviewedAction(label,q,id) {
       const n=actions.length;actions.push(q);
+      const amend=q.request.operation==='amend';
       return reviewActionCardHtml({id:id || 'production-action-'+n,label:label,data:{productionReview:n},disabled:!q.allowed,
-        warn:!q.allowed,note:q.relay?FB.relayServices.reason(q):q.exchange?(q.allowed?'':E.reason(q)):P.reason(q)});
+        warn:!q.allowed,note:amend && q.allowed ? dispositionName(q.disposition) :
+          q.relay?FB.relayServices.reason(q):q.exchange?(q.allowed?'':E.reason(q)):P.reason(q),
+        details:amend ? esc(FB.T('A change applies when the batch finishes. Payment, reserved inputs and completed work stay with this batch.')) : ''});
+    }
+    function productionOutput(q) {
+      return q.output.map(function (x) {
+        const unit=FBDATA.productionGoods[x.goodId].unit;
+        return reviewFactsCard(name('productionGood',x.goodId,FBDATA.productionGoods),
+          kv('Produced at completion',esc(FB.T('{amount} ({unit})',{amount:x.quantity,unit:unit})))+
+          kv('Consumed at completion',esc(FB.T('{amount} ({unit})',{amount:x.consumed,unit:unit})))+
+          kv('Available inventory after completion',esc(FB.T('{amount} ({unit})',{amount:x.available,unit:unit}))));
+      }).join('');
+    }
+    function reviewOutputChoice(q,restore) {
+      const recipe=FBDATA.productionRecipes[q.recipeId];
+      const facts=reviewFactsCard(name('productionRecipe',q.recipeId,FBDATA.productionRecipes),
+        kv('Current output choice',esc(dispositionName(q.priorDisposition)))+
+        kv('Proposed output choice',esc(dispositionName(q.disposition)))+
+        kv('Additional cost',esc(FB.money(0)))+kv('Additional action days','0')+
+        kv('Work completed',esc(FB.T('{done} / {total} days',{done:q.workDone,total:recipe.workDays}))));
+      const confirm=reviewActionsHtml(reviewActionCardHtml({id:'production-confirm',label:FB.T('Confirm output change')}));
+      const footer='<div class="gm-footer"><button class="btn" id="gm-cancel">'+esc(FB.T('Cancel'))+'</button></div>';
+      openModal(FB.T('Review batch output'),facts+productionOutput(q)+confirm+footer,
+        {historyView:true,historyBack:true,historyBackRender:restore});
+      $('production-confirm').onclick=function () {
+        if (!P.perform(FB.state,q)) UI.toast(FB.T('Terms changed. Review the current batch.'));
+        UI.refresh();modalHistoryBack(restore);
+      };
     }
     function worksName(works) {
       const local=works && FB.settlementsOf(FB.state,works.countyId)[works.slot];
@@ -10802,12 +10903,19 @@ window.FB = window.FB || {};
       });
       row.batches.forEach(function (b) {
         const recipe=FBDATA.productionRecipes[b.recipeId];
-        h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(name('productionRecipe',b.recipeId,FBDATA.productionRecipes))+'</div>'+
+        h+='<div class="governance-card review-fact-card" id="production-batch-'+b.id+'" tabindex="-1"><div class="panelh">'+esc(name('productionRecipe',b.recipeId,FBDATA.productionRecipes))+'</div>'+
           kv('Paid processing cost',String(b.paid))+kv('Work completed',esc(FB.T('{done} / {total} days',{done:b.workTurns.length,total:recipe.workDays})))+
           '<p class="hint">'+esc(b.status==='committed'?FB.T('Completed once'):b.status==='cancelled'?FB.T('Cancelled; materials released'):FB.T('Materials reserved'))+'</p>';
-        if (b.status==='reserved') ['work','finish','cancel'].forEach(function (op) {
-          h+=reviewActionsHtml(action(op==='work'?FB.T('Work one day'):op==='finish'?FB.T('Finish batch'):FB.T('Cancel batch'),{operation:op,siteId:row.site.id,actor:actor,batchId:b.id}));
-        });
+        if (b.status==='reserved') {
+          const batchActor=P.eventControls(s,b.actor) ? b.actor : actor;
+          const request={siteId:row.site.id,actor:batchActor,batchId:b.id};
+          const q=P.quote(s,Object.assign({},request,{operation:'amend',disposition:b.disposition==='store'?'use':'store'}));
+          h+=kv('Current output choice',esc(dispositionName(b.disposition)))+
+            reviewActionsHtml(reviewedAction(FB.T('Review output choice'),q,'production-amend-'+b.id));
+          ['work','finish','cancel'].forEach(function (op) {
+            h+=reviewActionsHtml(action(op==='work'?FB.T('Work one day'):op==='finish'?FB.T('Finish batch'):FB.T('Cancel batch'),Object.assign({},request,{operation:op})));
+          });
+        }
         h+='</div>';
       });h+='</div>';
     });
@@ -10851,13 +10959,16 @@ window.FB = window.FB || {};
     $('gm-body').querySelectorAll('[data-production-review]').forEach(function (button) {
       button.onclick=function () {
         remember();const q=actions[Number(button.dataset.productionReview)],origin=button.id;
+        const amend=q.request.operation==='amend';
         function restore() {
           list();
-          const control=$(origin), focus=control && control.disabled && q.exchange ? $(origin+'-route') : control;
+          const control=$(origin), focus=amend && (!control || control.disabled) ? $('production-batch-'+q.request.batchId) :
+            control && control.disabled && q.exchange ? $(origin+'-route') : control;
           if(focus)focus.focus({preventScroll:true});
           $('gm-body').scrollTop=view.scroll;
         }
         if(q.exchange) { reviewExchange(q,restore);return; }
+        if(amend) { reviewOutputChoice(q,restore);return; }
         const reserve=q.request.operation==='reserve',relay=q.relay;
         let info='<div class="governance-card review-fact-card">'+kv('Processing cost',esc(reserve?FB.T('{gold} gold, non-refundable',{gold:q.cost}):FB.T('Already paid')))+
           kv('Payer',esc(q.payer && q.payer.kind==='realm'?FB.T('Public treasury'):FB.T('Original private account')))+
@@ -10866,6 +10977,7 @@ window.FB = window.FB || {};
           const recipe=FBDATA.productionRecipes[q.request.recipeId];
           info+='<p>'+esc(FB.T('Reserve {inputs}; after {days} paid workdays, produce {outputs}.',{inputs:goods(recipe.inputs),days:recipe.workDays,outputs:goods(recipe.outputs)}))+'</p>';
         }
+        if (q.output) info+=reviewFactsCard(null,kv('Output choice',esc(dispositionName(q.disposition))))+productionOutput(q);
         if(relay)info='<div class="governance-card review-fact-card">'+
           kv('Supplier',esc(accountName(q.provider)))+kv('Recipient',esc(accountName(q.beneficiary)))+
           kv('Current price',esc(FB.money(q.cost || 0)))+

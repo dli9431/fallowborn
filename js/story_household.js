@@ -20,6 +20,10 @@
     return op.kind === 'start_job' || op.kind === 'work_job' || op.kind === 'spend_day' ||
       op.kind === 'settle_job' && op.resolution === 'hearing';
   }
+  function resignationId(jobId) { return 'resign_job:' + jobId; }
+  function resignationChoice(jobId) {
+    return { id:resignationId(jobId), operation:{ kind:'resign_job', jobId:jobId } };
+  }
   function freeDay(s) {
     var p = s.player, c = s.chars[p.charId], f = p.flags || {};
     return living(s) && FB.ageOf(c, s.date.year) >= 16 && !p.travel && !p.war && !f.in_prison &&
@@ -406,18 +410,29 @@
       payWorker(s, row, payment); row.status = status; row.resolution = resolution;
       row.closedTurn = s.turn; refund(s, row);
     }
+    function interruptionPay(j, row) {
+      // Completed work keeps the whole reserve. Partial work earns the
+      // completed fraction of the undisputed fee, rounded down to gold.
+      return row.status === 'disputed' ? row.escrow : Math.floor(j.completionGold * row.daysWorked / j.days) - row.paid;
+    }
     function reconcileJobs(s, t) {
       Object.keys(t.jobs || {}).forEach(function (id) {
         var row = t.jobs[id], j = def.jobs[id];
         if (row.status !== 'working' && row.status !== 'disputed') { refund(s, row); return; }
         if (!liveJob(s, t, id)) {
           var expired = s.turn >= row.expiresTurn || s.date.year > j.yearMax;
-          // Completed work earns its guaranteed fee; an interrupted shift contract
-          // earns only its completed fraction of the undisputed component.
-          var due = row.status === 'disputed' ? row.escrow : Math.floor(j.completionGold * row.daysWorked / j.days) - row.paid;
-          finishJob(s, row, expired ? 'expired' : 'cancelled', 'interrupted', due); t.revision++;
+          finishJob(s, row, expired ? 'expired' : 'cancelled', 'interrupted', interruptionPay(j, row)); t.revision++;
         }
       });
+    }
+    function workingJobs(t) {
+      return Object.keys(t.jobs || {}).filter(function (id) { return t.jobs[id].status === 'working'; });
+    }
+    function choiceFor(t, id) {
+      var authored = def.stages[t.phase].choices.filter(function (c) { return c.id === id; })[0];
+      if (authored) return authored;
+      var jobId = workingJobs(t).filter(function (jid) { return resignationId(jid) === id; })[0];
+      return jobId ? resignationChoice(jobId) : null;
     }
     function test(s, p, t) {
       if (!p) return true;
@@ -492,6 +507,16 @@
       if (key && !receipt(s, key)) t.householdReceipts[key] = { owner:def.id, status:reason, turn:s.turn };
     }
     function move(s, t, next) { t.phase = next; t.revision++; t.stageTurn = s.turn; }
+    function advanceStage(s, t) {
+      // One automatic edge per boundary; malformed cyclic content cannot spin a tick.
+      var stage = def.stages[t.phase];
+      var key = incident(s, t, stage);
+      if (key && receipt(s, key)) { move(s, t, stage.afterIncident); return true; }
+      for (var i = 0; i < stage.transitions.length; i++) {
+        if (test(s, stage.transitions[i].when, t)) { close(s, t, stage, 'expired'); move(s, t, stage.transitions[i].next); return true; }
+      }
+      return false;
+    }
     function update(s, t) {
       reconcileJobs(s, t);
       Object.keys(controls).forEach(function (id) {
@@ -504,13 +529,7 @@
       }
       if (!living(s)) return;
       if (t.actorId !== s.player.charId) { t.actorId = s.player.charId; t.revision++; }
-      // One automatic edge per boundary; malformed cyclic content cannot spin a tick.
-      var stage = def.stages[t.phase];
-      var key = incident(s, t, stage);
-      if (key && receipt(s, key)) { move(s, t, stage.afterIncident); return; }
-      for (var i = 0; i < stage.transitions.length; i++) {
-        if (test(s, stage.transitions[i].when, t)) { close(s, t, stage, 'expired'); move(s, t, stage.transitions[i].next); return; }
-      }
+      advanceStage(s, t);
     }
     function serviceId(s,t,op) {
       var result = null;
@@ -552,6 +571,15 @@
       if (op.kind === 'household_expense') return { allowed:s.player.gold >= op.amount,
         reason:FB.T('The household needs the full expense in its private purse.'), terms:{ amount:op.amount } };
       if (op.kind === 'spend_day') return { allowed:freeDay(s), terms:null, reason:FB.T('A free action day at home is required.') };
+      if (op.kind === 'resign_job') {
+        var job = def.jobs[op.jobId], active = t.jobs[op.jobId];
+        var payment = interruptionPay(job, active);
+        var allowed = liveJob(s, t, op.jobId) && FB.treasuryCounterparty(s, active.payerId) === active.payerId;
+        return { allowed:allowed, reason:allowed ? '' :
+          FB.T('Only the original worker can resign from a live local contract with its original paying court.'),
+          terms:{ jobId:op.jobId, row:Object.assign({}, active), patronId:boundPatron(t, op.jobId), date:Object.assign({}, s.date),
+            days:job.days, payment:payment, refund:active.escrow - payment } };
+      }
       if (op.kind === 'start_job' || op.kind === 'work_job' || op.kind === 'settle_job') {
         var j = def.jobs[op.jobId], row = t.jobs && t.jobs[op.jobId], rid = payer(s, j);
         var funds = FB.treasuryAvailable(s, rid), originalPatron = patron(s, t, op.jobId);
@@ -582,7 +610,7 @@
       return { allowed:true, reason:'', terms:null };
     }
     function quote(s, t, id) {
-      var stage = def.stages[t.phase], choice = stage.choices.filter(function (c) { return c.id === id; })[0];
+      var stage = def.stages[t.phase], choice = choiceFor(t, id);
       var op = choice ? operation(s, choice.operation, t) : { allowed:false, terms:null };
       var key = incident(s, t, stage), closed = key && receipt(s, key);
       var facts = { turn:s.turn, actor:s.player.charId, alive:living(s) && (def.continuity !== 'protagonist' || t.actorId === s.player.charId), phase:t.phase, revision:t.revision,
@@ -617,8 +645,13 @@
     function apply(s, t, id, reviewed, committingDay) {
       var q = quote(s, t, id);
       if (!q.allowed || !reviewed || reviewed.id !== id || reviewed.stamp !== q.stamp) return false;
-      var stage = def.stages[t.phase], choice = stage.choices.filter(function (c) { return c.id === id; })[0], op = choice.operation;
+      var stage = def.stages[t.phase], choice = choiceFor(t, id), op = choice.operation;
       if (committingDay && !dayOperation(op)) return false;
+      if (op.kind === 'resign_job') {
+        finishJob(s, t.jobs[op.jobId], 'cancelled', 'interrupted', q.facts.terms.payment);
+        if (!advanceStage(s, t)) t.revision++;
+        return true;
+      }
       if (dayOperation(op) && !committingDay) {
         if (FB.state !== s || !FB.game || FB.game.observe || !FB.game.passDay) return false;
         var revision = t.revision;
@@ -728,10 +761,34 @@
         });
         return { phase:t.phase, name:FB.T(stage.name), lines:lines };
       },
-      choices:function (s, t) { return def.stages[t.phase].choices.map(function (c) { return { id:c.id, label:FB.T(c.label), detail:FB.T(c.detail) }; }); },
+      choices:function (s, t) {
+        var choices = def.stages[t.phase].choices.map(function (c) { return { id:c.id, label:FB.T(c.label), detail:FB.T(c.detail) }; });
+        return choices.concat(workingJobs(t).map(function (jobId) {
+          var choice = resignationChoice(jobId), terms = operation(s, choice.operation, t).terms;
+          return { id:choice.id, label:FB.T('Resign from the job'), showBlocker:true,
+            detail:FB.T('Keep {money:payment} for {worked} of {days} action days. Return {money:refund} to the original payer. Resigning takes no additional day.',
+              { payment:terms.payment, worked:terms.row.daysWorked, days:terms.days, refund:terms.refund }) };
+        }));
+      },
       quote:quote, apply:apply, blocker:function (s, t, reason) { return reason; },
+      reviewPeople:function (s, t, id, q) {
+        var terms = q.facts.terms;
+        return terms && id === resignationId(terms.jobId) ? [{ characterId:terms.patronId, label:FB.T('Original payer') }] : [];
+      },
+      reviewFacts:function (s, t, id, q) {
+        var terms = q.facts.terms;
+        if (!terms || id !== resignationId(terms.jobId)) return null;
+        return [
+          [FB.T('Work credited'), FB.T('{worked} of {days} action days', { worked:terms.row.daysWorked, days:terms.days })],
+          [FB.T('Paid to your household now'), FB.T('{money:amount}', { amount:terms.payment })],
+          [FB.T('Refund to the original payer'), FB.T('{money:amount}', { amount:terms.refund })],
+          [FB.T('Time already spent'), FB.T('Completed shifts cannot be recovered.')],
+          [FB.T('Time to resign'), FB.T('No additional action day')]
+        ];
+      },
       review:function (s, t, id, q) {
-        var choice = def.stages[t.phase].choices.filter(function (c) { return c.id === id; })[0], op = choice.operation, terms = q.facts.terms;
+        var choice = choiceFor(t, id), op = choice.operation, terms = q.facts.terms;
+        if (op.kind === 'resign_job') return [];
         if (op.kind === 'mandate_service') return FB.officeMandates.storyDetails(s,op.service,terms);
         var location = def.stages[t.phase].localEvent || def.stages[t.phase].incident;
         if (location && own(location, 'siteId') && op.kind === 'record_decision') return [

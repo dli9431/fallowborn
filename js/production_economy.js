@@ -102,7 +102,7 @@
   function room(s) {
     var r=s.production,live=r && r.economy && P.liveCounts(s);
     return !!live && live.trades<LIMIT && r.nextId<999990 && r.revision<1000000 &&
-      live.lots+r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0)<LIMIT;
+      P.outputRoom(s,1,live);
   }
   function tradeCost(profile,price,quantity) {
     return profile.mode==='market'?Math.ceil(quantity*profile.basePrice*price):0;
@@ -148,6 +148,10 @@
     q.remainingDemand=profile.quantityLimit-prior.reduce(function(n,x){return n+x.quantity;},0);
     q.remainingBudget=profile.budget-prior.reduce(function(n,x){return n+x.paid;},0);
     var priced=num(price,0.01,10000),hasRoom=room(s),funds=account.funds;
+    // Before manufacture, a lawful outlet must meet every current sale term except stock.
+    var terms=!priced?'price':!hasRoom?'storage':request.quantity>q.remainingDemand?'demand':
+      q.cost>q.remainingBudget?'budget':!(funds.available>=q.cost+funds.reserve)?'funds':null;
+    q.outletReady=request.operation==='sell' && terms===null;
     if(priced && hasRoom) {
       // A trade adds one destination lot. Search the unit bound with the same
       // aggregate rounding and reserve comparison used for the requested trade.
@@ -159,8 +163,7 @@
       }
       q.maxQuantity=low;
     }
-    q.reason=left?'stock':!priced?'price':!hasRoom?'storage':request.quantity>q.remainingDemand?'demand':
-      q.cost>q.remainingBudget?'budget':!(funds.available>=q.cost+funds.reserve)?'funds':null;
+    q.reason=left?'stock':terms;
     q.allowed=q.reason===null;
     q.signature=JSON.stringify([s.turn,s.production,request,route,profile,source,target,seller,buyer,account,recipient,
       q.inputs,q.cost,q.unitPrice,q.sourceAvailable,q.maxQuantity,q.allowed,s.realms,s.settlementLordships,s.chars,s.buildings,s.player]);

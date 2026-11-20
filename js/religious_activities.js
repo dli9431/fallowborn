@@ -187,19 +187,26 @@
         funds:p, travel:s.player.travel || null, history:s.player.travelHistory || [],
         cooldowns:s.player.cooldowns, owner:s.owner, holder:s.holder, health:c.health } });
   };
+  function localCommitment(s, q) {
+    var d = q.facts.definition;
+    return { activityId:q.activityId, startTurn:s.turn, dueTurn:s.turn + d.duration,
+      location:q.facts.location, institutionId:d.institutionId, paid:q.cost, definition:d };
+  }
+  function startLocalActivity(s, cid, commitment) {
+    s.chars[cid].religiousActivity = commitment;
+    activeIds(s).push(cid);
+  }
   FB.religiousActivityApply = function (s, reviewed) {
     var q = reviewed && FB.religiousActivityQuote(s, reviewed.activityId, reviewed.cid);
     if (!q || !q.allowed || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
-    var d = FBDATA.religiousActivities[q.activityId], c = s.chars[q.cid];
+    var d = q.facts.definition;
     if (d.mode === 'journey') {
       if (!FB.travelStart(s, d.purpose, q.travel.destinationId, null)) return false;
       s.player.travel.religiousActivity = { activityId:q.activityId, cid:q.cid, milestone:d.milestone, definition:copy(d) };
       return true;
     }
     if (!pay(s, q.payer, q.cost)) return false;
-    c.religiousActivity = { activityId:q.activityId, startTurn:s.turn, dueTurn:s.turn + d.duration,
-      location:at(s, q.cid), institutionId:d.institutionId, paid:q.cost, definition:copy(d) };
-    activeIds(s).push(q.cid);
+    startLocalActivity(s, q.cid, localCommitment(s, q));
     return true;
   };
   FB.religiousActivityFinish = function (s, cid, cancel) {
@@ -342,6 +349,10 @@
         house:h, houses:s.abbeys || null, land:s.player.landPlots || [], manor:s.player.manor || null,
         finance:s.economy || null, owner:s.owner, holder:s.holder, payer:p } });
   };
+  function depositRestrictedGift(h, q) {
+    var fund = q.terms.fund;
+    h.restrictedFunds[fund] = q.funding ? q.funding.targetBalance : (h.restrictedFunds[fund] || 0) + q.cost;
+  }
   FB.religiousPatronageApply = function (s, reviewed) {
     var q = reviewed && FB.religiousPatronageQuote(s, reviewed.profileId, reviewed.cid, reviewed.action, reviewed.terms);
     if (!q || !q.allowed || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
@@ -360,9 +371,7 @@
       s.player.landPlots = s.player.landPlots.filter(function (v) { return v.provinceId !== q.land.provinceId || v.settlement !== q.land.settlement; });
       var old = h.plots.filter(function (v) { return v.provinceId === q.land.provinceId && v.settlement === q.land.settlement; })[0];
       if (old) old.count += q.land.count; else h.plots.push(copy(q.land));
-    } else if (q.action === 'donation') {
-      h.restrictedFunds[t.fund] = q.funding ? q.funding.targetBalance : (h.restrictedFunds[t.fund] || 0) + q.cost;
-    }
+    } else if (q.action === 'donation') depositRestrictedGift(h, q);
     if (q.action === 'outreach') {
       /* A prepaid service is consumed once. Population owns its one support record. */
       h.activitySpent = (h.activitySpent || 0) + q.cost;
@@ -370,6 +379,32 @@
         institutionId:d.institutionId, amount:q.cost, untilTurn:s.turn + 360
       });
     }
+    return true;
+  };
+  FB.religiousActivitySponsorshipQuote = function (s, activityId, cid) {
+    var activity = FB.religiousActivityQuote(s, activityId, cid);
+    // Service funding is the last enrollment check. Every other check must pass.
+    if (!activity || activity.reason !== 'service') return null;
+    var d = activity.facts.definition, h = activity.facts.house;
+    if (d.mode !== 'local' || d.payer !== 'household' || !h || !h.activityProfileId) return null;
+    var donation = FB.religiousPatronageQuote(s, h.activityProfileId, cid, 'donation', { fund:d.service.fund, targetUses:1 });
+    if (!donation || !donation.allowed || donation.recipient !== activity.recipient ||
+        donation.funding.unitCost !== d.service.cost || donation.payer.id !== activity.payer.id) return null;
+    var total = activity.cost + donation.cost;
+    var reserve = Math.max(d.reserve, donation.facts.definition.reserve);
+    var householdLeft = activity.payer.funds - total;
+    if (householdLeft < reserve) return null;
+    return { activity:activity, donation:donation, total:total, reserve:reserve, householdLeft:householdLeft };
+  };
+  FB.religiousActivitySponsorshipApply = function (s, reviewed) {
+    var activity = reviewed && reviewed.activity;
+    var q = activity && FB.religiousActivitySponsorshipQuote(s, activity.activityId, activity.cid);
+    if (!q || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
+    var h = house(s, q.donation.recipient), commitment = localCommitment(s, q.activity);
+    // Both canonical effects are ready before the single household debit.
+    if (!pay(s, q.activity.payer, q.total)) return false;
+    depositRestrictedGift(h, q.donation);
+    startLocalActivity(s, q.activity.cid, commitment);
     return true;
   };
   FB.religiousActivityCancel = function (s, cid, reviewed) {
