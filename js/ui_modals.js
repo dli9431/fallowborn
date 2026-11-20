@@ -25587,6 +25587,137 @@ window.FB = window.FB || {};
     return { hires:hires, cost:cost, gain:gain - cost, idle:idle };
   }
 
+  function enterpriseExchangeName(s, e) {
+    const level = FB.enterpriseUpgradeLevel(e);
+    return FB.T('{enterprise} in {settlement}', {
+      enterprise:level ? enterpriseUpgradeName(s, e, level) :
+        dt(s, 'enterprise', e.type, FBDATA.enterprises[e.type], 'name'),
+      settlement:enterprisePlace(s, e)
+    });
+  }
+
+  function enterpriseExchangeReview(s, quote, returnToPicker) {
+    const unavailable = FB.T('Staffing changed. Neither assignment was exchanged.');
+    const status = '<p class="hint" id="enterprise-exchange-status" role="status">' +
+      (quote ? '' : esc(unavailable)) + '</p>';
+    let h = '';
+    if (quote) {
+      for (const row of quote.rows) {
+        const wages = row.payroll.reduce(function (total, contract) { return total + contract.pay; }, 0);
+        h += reviewFactsCard(enterpriseExchangeName(s, row),
+          kv('Current labor', esc(FB.T('{filled} of {required} positions filled', {
+            filled:row.current.staff, required:row.required
+          }))) + kv('Proposed labor', esc(FB.T('{filled} of {required} positions filled', {
+            filled:row.proposed.staff, required:row.required
+          }))) + kv('Seasonal yield', esc(FB.T('{money:before} to {money:after}', {
+            before:row.current.yield, after:row.proposed.yield
+          }))) + kv('Existing wages per season', esc(FB.T('{money:amount} stays the same', { amount:wages }))));
+      }
+      for (const row of quote.linked) {
+        h += reviewFactsCard(enterpriseExchangeName(s, row),
+          kv('Linked seasonal yield', esc(FB.T('{money:before} to {money:after}', {
+            before:row.current, after:row.proposed
+          }))));
+      }
+      h = reviewFactsCard(FB.T('Assignments'), reviewPeopleHtml(quote.rows.map(function (row, i) {
+        return reviewPersonHtml(s.chars[row.outgoing], FB.T('Current: {current} · Proposed: {proposed}', {
+          current:enterpriseExchangeName(s, row), proposed:enterpriseExchangeName(s, quote.rows[1 - i])
+        }));
+      }).join(''))) + h;
+      h += status + reviewActionsHtml(reviewActionCardHtml({ id:'enterprise-exchange-apply',
+        label:FB.T('Exchange both assignments'),
+        note:FB.T('No payment or time cost. Existing wages continue.') }));
+    }
+    openModal(FB.T('Review staffing exchange'), h || status, {
+      historyView:true, historyBackRender:returnToPicker, noFocus:true,
+      titleDetailsHtml:'<p>' + esc(FB.T('Seasonal yield reflects the current workers, conditions and production chains before wages and any diversion to material production.')) + '</p>'
+    });
+    const back = $('gm-body').querySelector('[data-modal-nav="back"]');
+    function labelBack(label) {
+      back.textContent = label;
+      back.setAttribute('aria-label', label);
+      back.removeAttribute('data-i18n');
+    }
+    if (!quote) return;
+    labelBack(FB.T('Leave assignments in place'));
+    const apply = $('enterprise-exchange-apply');
+    apply.onclick = function () {
+      const applied = FB.state === s && FB.applyEnterpriseExchange(s, quote);
+      if (applied) UI.refresh();
+      $('enterprise-exchange-status').textContent = applied ? FB.T('Both assignments were exchanged.') : unavailable;
+      apply.disabled = true;
+      apply.closest('.review-action-card').classList.add('hidden');
+      labelBack(FB.T('Back'));
+      back.focus({ preventScroll:true });
+    };
+  }
+
+  function openEnterpriseExchangePicker(returnContext) {
+    const s = FB.state, body = $('gm-body'), planTop = body.scrollTop;
+    const expanded = Array.prototype.map.call($('genmodal').querySelectorAll('[aria-expanded="true"][aria-controls]'),
+      function (button) { return button.getAttribute('aria-controls'); });
+    let first = null, firstTop = 0;
+    function restorePosition(top, focusId) {
+      if ($(focusId)) $(focusId).focus({ preventScroll:true });
+      body.scrollTop = top;
+    }
+    function returnToPlan() {
+      UI.showEnterpriseStaffingPreview(returnContext);
+      for (const id of expanded) {
+        const details = $(id);
+        const toggle = details && $('genmodal').querySelector('[aria-controls="' + id + '"]');
+        if (!toggle) continue;
+        details.classList.remove('hidden');
+        toggle.setAttribute('aria-expanded', 'true');
+        toggle.setAttribute('aria-label', FB.T('Hide details'));
+        toggle.title = FB.T('Hide details');
+      }
+      restorePosition(planTop, 'enterprise-exchange-open');
+    }
+    function showPicker(replaceView, focusId, scrollTop) {
+      const choices = FB.enterpriseExchangeChoices(s);
+      const selected = first && choices.find(function (choice) { return choice.cid === first.cid && choice.uid === first.uid; });
+      const list = selected ? selected.partners : choices;
+      function person(choice, buttonId) {
+        const enterprise = s.player.enterprises.find(function (e) { return e.uid === choice.uid; });
+        return reviewPersonHtml(s.chars[choice.cid], enterpriseExchangeName(s, enterprise), buttonId);
+      }
+      let h = '';
+      if (selected) {
+        h += reviewFactsCard(FB.T('First worker'), reviewPeopleHtml(person(selected)) +
+          '<button type="button" id="enterprise-exchange-change" class="btn">' + esc(FB.T('Change first worker')) + '</button>');
+      }
+      h += list.length ? reviewPeopleHtml(list.map(function (choice) {
+        return person(choice, 'enterprise-exchange-pick-' + choice.cid);
+      }).join('')) : '<p class="hint">' + esc(FB.T(
+        'No two assigned family workers can exchange places. Check staffing locks, reserved workers, residence, qualifications and room in each crew.')) + '</p>';
+      openModal(selected ? FB.T('Choose the second worker') : FB.T('Choose the first worker'), h, {
+        historyView:true, replaceView:!!replaceView, historyBackRender:returnToPlan
+      });
+      if (focusId) restorePosition(scrollTop, focusId);
+      if (selected) $('enterprise-exchange-change').onclick = function () {
+        first = null;
+        showPicker(true, 'enterprise-exchange-pick-' + selected.cid, firstTop);
+      };
+      for (const choice of list) {
+        const buttonId = 'enterprise-exchange-pick-' + choice.cid;
+        $(buttonId).onclick = function () {
+          const top = body.scrollTop;
+          if (selected) {
+            enterpriseExchangeReview(s, FB.enterpriseExchangeQuote(s, selected, choice), function () {
+              showPicker(false, buttonId, top);
+            });
+          } else {
+            first = choice;
+            firstTop = top;
+            showPicker(true);
+          }
+        };
+      }
+    }
+    showPicker(false);
+  }
+
   UI.showEnterpriseStaffingPreview = function (returnContext, notice) {
     const s = FB.state;
     const plan = FB.enterpriseStaffingPlan(s);
@@ -25641,6 +25772,7 @@ window.FB = window.FB || {};
         '{count} hires. Income estimate includes new wages.', { count:local.hires.length })) + '</p>' +
       '<button type="button" class="btn" id="enterprise-staffing-local" aria-describedby="enterprise-staffing-local-terms"' +
       (!localAvailable ? ' disabled' : '') + '>' + esc(FB.T('Staff local')) + '</button></div>' +
+      reviewActionsHtml(reviewActionCardHtml({ id:'enterprise-exchange-open', label:FB.T('Exchange family assignments') })) +
       enterpriseUpgradePlanCard(s) +
       '</div><div class="gm-footer"><button type="button" class="btn" id="enterprise-staffing-back">' +
       esc(FB.T('Back')) + '</button></div>';
@@ -25649,6 +25781,7 @@ window.FB = window.FB || {};
     options.replaceView = !!notice;
     options.titleDetailsHtml = '<p>' + esc(intro) + '</p><p>' + esc(FB.T('Idle includes partially staffed enterprises. Both options compare against current assignments. Local income uses typical worker skills and current production chains; actual hires may earn more or less.')) + '</p>';
     openModal(FB.T('⚙ Enterprise Plan'), h, options);
+    $('enterprise-exchange-open').onclick = function () { openEnterpriseExchangePicker(returnContext); };
     for (const scope of ['settlement', 'type']) {
       const id = 'enterprise-upgrade-' + scope;
       let quote;
