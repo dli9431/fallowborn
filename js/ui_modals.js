@@ -972,6 +972,7 @@ window.FB = window.FB || {};
         kv('Petition', FB.esc(localInstitutionStage(pending && pending.stage))) +
         kv('Demands', FB.esc(record.demands.map(localDemandName).join(' · '))) +
         kv('Consent', FB.esc(FB.localInstitutionConsent(s, id, subject) ? FB.T('Current agreement') : FB.T('Not recorded')));
+      if (kind === 'church') h += UI.localOfficePetitionCard(s,id);
       if (action === 'bargain') {
         h += '<label>' + FB.esc(FB.T('Proposed terms')) + '<select data-local-terms="' + FB.esc(id) + '">' +
           '<option value="charter">' + FB.esc(FB.T('Provision, protect courts and worship')) + '</option>' +
@@ -1013,8 +1014,9 @@ window.FB = window.FB || {};
       });
       list.scrollTop = view.scrollTop;
       $('gm-body').scrollTop = view.bodyScroll;
-      const focus = list.querySelector('[data-local-review="' + view.id + '"][data-local-action="' + view.action + '"]') ||
+      let focus = list.querySelector('[data-local-review="' + view.id + '"][data-local-action="' + view.action + '"]') ||
         list.querySelector('[data-local-review="' + view.id + '"]');
+      if (focus && focus.disabled && view.action === 'office-candidacy') focus = focus.closest('.review-action-card');
       if (focus) focus.focus({ preventScroll:true });
     }
     list.querySelectorAll('[data-local-review]').forEach(function (button) {
@@ -1024,6 +1026,8 @@ window.FB = window.FB || {};
         const pos = { scrollTop:list.scrollTop, bodyScroll:$('gm-body').scrollTop, id:id, action:action, terms:{}, details:[] };
         list.querySelectorAll('[data-local-terms]').forEach(function (select) { pos.terms[select.dataset.localTerms] = select.value; });
         list.querySelectorAll('.settcard-info[aria-expanded="true"]').forEach(function (info) { pos.details.push(info.getAttribute('aria-controls')); });
+        function back() { UI.showLocalInstitutions(kind, pos); }
+        if (action === 'office-candidacy') { UI.showLocalOfficePetition(s,id,back); return; }
         let terms;
         if (action === 'bargain') {
           const charter = pos.terms[id] !== 'force';
@@ -1032,7 +1036,6 @@ window.FB = window.FB || {};
         }
         const q = action === 'mediate' ? FB.localInstitutionMediationQuote(s, id, subject, s.player.provinceId) :
           FB.localInstitutionQuote(s, id, subject, action, terms);
-        function back() { UI.showLocalInstitutions(kind, pos); }
         let body = '<section class="governance-card review-fact-card">' +
           kv('Institution', FB.esc(FB.localInstitutionName(id))) + kv('Cost on acceptance', FB.esc(FB.T('{money:cost}', { cost:q.cost }))) +
           kv('Decision', FB.esc(action === 'mediate' ? FB.T('Episcopal mediation') : action === 'refuse' ? FB.T('Refuse the petition') : localInstitutionStage(action)));

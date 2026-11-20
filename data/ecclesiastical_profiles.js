@@ -34,6 +34,7 @@ FB.bookmarkSources.stage({"source":"data/ecclesiastical_profiles.js","bookmarks"
   FBDATA.techImpactReviews.features.ecclesiastical_office_binding = { mode:'none', rationale:'Temporal office binding follows a canonical religious result and current lawful recognition, without a discovery requirement.' };
   FBDATA.techImpactReviews.features.ecclesiastical_vacancy = { mode:'none', rationale:'Declared interim administration preserves existing institutional property and ordinary obligations.' };
   FBDATA.techImpactReviews.features.ecclesiastical_local_appointment = { mode:'none', rationale:'Local clerical appointment depends on office qualification and community assent, not technology or purchased Standing.' };
+  FBDATA.techImpactReviews.features.local_office_candidacy = { mode:'none', rationale:'A resident’s candidacy depends on an existing vacancy, office qualification, chapter assent and a competent appointer.' };
   FBDATA.techImpactReviews.features.ecclesiastical_conversion = { mode:'none', rationale:'Explicit institutional adoption validates existing office, jurisdiction and property without creating a religious election.' };
   FBDATA.techImpactReviews.features.ecclesiastical_household_careers = { mode:'none', rationale:'Clerical, administrative, household and lay service develop personal Standing independently of spiritual appointment.' };
 })();

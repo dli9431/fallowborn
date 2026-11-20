@@ -24,6 +24,17 @@ A local see declares a distinct chapterId pointing to a congregation in the same
 
 localOfficeQuote/localOfficeApply appoint an existing, qualified resident to an empty office, accept an incumbent's resignation, or remove a recorded holder who fails canonical qualification with chapter consent. There is no random candidate generation or second election. The canonical appointment owner enforces the bound institution's public fee and reserve, including direct calls; the government review composes that transaction without charging twice. A stale review, live office, absent chapter, wrong faith or unaffordable fee changes nothing. Spending does not buy eligibility or consent. Chapter agreements tied to an earlier ruler generation require the normal renewed bargain and retry period.
 
+At a local see with a separately declared chapter, a qualified resident
+protagonist files their own candidacy in Bishoprics. The local-office appointment
+owner directs this candidate to the petition procedure, including from a bound
+ecclesiastical government review. Other candidates, resignation and lawful
+removal retain their ordinary procedures. The appointment owner charges the
+declared public fee, where applicable, only on a successful hearing. Established
+office bindings then update their incumbent projection. Lay recognition, its
+superior, the reserved-powers consent rules and the limits of vacancy
+administration still apply independently. A see without a temporal binding
+conveys only its canonical spiritual office.
+
 Lay temporal recognition is separate. A profile that requires it references the existing superior and one canonical imperial_commission recognition, scoped to this realm and naming the current spiritual incumbent. The binding retains only its recognition id. Later recognition updates that same record, bounding turnover. A revoked recognition prevents AI auto-renewal. Current superior consent, chapter assent, incumbent, treasury and territory are checked again by the apply. Revoking temporal recognition does not depose a bishop or move property.
 
 Vacancy and ordinary obligations
@@ -51,6 +62,9 @@ The Ecclesiastical government deed uses shared fact cards, portrait rows, cost d
 Technology and acceptance
 
 ecclesiastical_office_binding, ecclesiastical_vacancy, ecclesiastical_local_appointment, ecclesiastical_conversion and ecclesiastical_household_careers each have technology impact none. Qualification, local consent, existing institutions, control and actual funds determine eligibility. Ordinary military and economic technology rules remain in force.
+
+local_office_candidacy also has technology impact none. A petition depends on a
+vacancy, residence and qualification, chapter assent and a competent appointer.
 
 tests/e2e/specs/ecclesiastical-principality.spec.js covers dated papal law and canonical election reuse, a researched episcopal profile and fictional faith, pure reads, stale/duplicate reviews, vacancy, removal, temporal refusal, occupation, separate property inheritance, player papal accession, public budgets, legacy conversion, malformed detached saves, exact identity restore and retained mobile review. Existing papacy and religious-head strategy coverage remains applicable. Historical acceptance, appearance, mobile interaction and execution belong to the owner.
 

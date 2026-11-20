@@ -1,0 +1,74 @@
+{
+  "name": "Lantern see candidature",
+  "geographies": {
+    "lantern_petition_land": {
+      "bounds": { "lonMin": 0, "lonMax": 6, "latMin": 0, "latMax": 4 },
+      "land": [[0.2, 0.2, 5.8, 0.2, 5.8, 3.8, 0.2, 3.8]],
+      "seas": [], "rivers": [], "gridWidth": 160, "defaultLayout": null,
+      "provinces": [
+        { "id": "lantern_see_county", "x": 1.5, "y": 2, "terrain": "farmland" },
+        { "id": "lantern_upper_county", "x": 4.5, "y": 2, "terrain": "hills" }
+      ]
+    }
+  },
+  "settlementSites": {
+    "lantern_chapter_hall": { "x": 1.5, "y": 2 },
+    "lantern_upper_hall": { "x": 4.5, "y": 2 }
+  },
+  "settlementLayouts": {
+    "lantern_petition_layout": {
+      "lantern_see_county": [{ "site": "lantern_chapter_hall", "name": "Lantern Haven", "kind": "town" }],
+      "lantern_upper_county": [{ "site": "lantern_upper_hall", "name": "Upper Lantern", "kind": "town" }]
+    }
+  },
+  "ecclesiasticalProfiles": {
+    "lantern_petition_temporal": {
+      "name": "Lantern public jurisdiction", "source": "local_office", "chapter": true, "layRecognition": true,
+      "appointmentCost": 3, "recognitionCost": 0, "reserve": 5, "revenueRate": 0.8, "levyRate": 0.6,
+      "interim": ["revenue", "peace", "defence"], "reserved": ["war", "treaty", "grant"], "powers": ["ban", "peace", "revenue"]
+    }
+  },
+  "startScenarios": [{
+    "id": "lantern_petitioner", "name": "Lantern monastic household",
+    "desc": "A household in a fictional local chapter’s jurisdiction.",
+    "intro": "Your household serves in the town.", "tier": 1, "profession": "monk",
+    "gold": 23, "prestige": 0, "piety": 15, "startAge": 34,
+    "startCulture": "roman", "startReligion": "nicene", "bookmarkIds": ["lantern_petition_world"],
+    "eras": ["late_antique"], "alwaysUnlocked": true,
+    "familyPresets": { "standard": { "name": "Local household", "diff": "Age 34" } }
+  }],
+  "bookmarks": {
+    "lantern_petition_world": {
+      "id": "lantern_petition_world", "name": "Lantern Haven", "desc": "A fictional see and its separate public jurisdiction.",
+      "date": { "year": 600, "season": 0, "day": 1 }, "era": "late_antique", "geography": "lantern_petition_land",
+      "settlementLayout": "lantern_petition_layout", "greatHolyWars": false, "religiousHeads": {},
+      "starts": ["lantern_petitioner"], "stories": [], "startLocations": { "lantern_petitioner": ["lantern_see_county"] },
+      "provinces": [
+        { "id": "lantern_see_county", "name": "Lantern Haven", "realm": "lantern_see_realm", "culture": "roman", "religion": "nicene", "dev": 4 },
+        { "id": "lantern_upper_county", "name": "Upper Lantern", "realm": "lantern_upper_realm", "culture": "roman", "religion": "nicene", "dev": 3 }
+      ],
+      "realms": [
+        { "id": "lantern_see_realm", "name": "Lantern Jurisdiction", "capital": "lantern_see_county", "color": "#447755",
+          "rank": 1, "liege": "lantern_upper_realm", "religion": "nicene", "government": "ecclesiastical_principality",
+          "ecclesiastical": { "profileId": "lantern_petition_temporal", "officeId": "lantern_see_office", "institutionId": "lantern_see" }
+        },
+        { "id": "lantern_upper_realm", "name": "Upper Lantern Court", "capital": "lantern_upper_county",
+          "color": "#775544", "rank": 3, "religion": "nicene", "government": "regnum",
+          "ruler": { "name": "Lucius", "sex": "m", "culture": "roman", "born": 550, "mar": 8, "trait": "patient" }
+        }
+      ],
+      "localInstitutions": {
+        "lantern_see": { "city": "Lantern Haven", "kind": "see", "provinceId": "lantern_see_county",
+          "site": "lantern_chapter_hall", "culture": "roman", "religion": "nicene",
+          "officeId": "lantern_see_office", "chapterId": "lantern_chapter", "vacant": true,
+          "officeProfile": { "holderSex": "f", "holderRole": "monk", "minAge": 30 }
+        },
+        "lantern_chapter": { "city": "Lantern Haven", "kind": "congregation", "provinceId": "lantern_see_county",
+          "site": "lantern_chapter_hall", "culture": "roman", "religion": "nicene",
+          "representative": { "name": "Marina", "born": 559, "sex": "f", "role": "monk" }
+        }
+      },
+      "duchies": {}, "kingdoms": {}, "empires": {}, "straits": [], "scripted": []
+    }
+  }
+}
