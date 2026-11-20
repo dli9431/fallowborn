@@ -3585,11 +3585,13 @@ window.FB = window.FB || {};
   }
 
   function returnCargoCashFacts(q) {
-    return kv('Household cash now', esc(FB.money(q.funds))) +
-      kv('Lading fee', esc(FB.money(q.ladingFee))) +
-      kv('Total paid now', esc(FB.money(q.totalCost))) +
+    const exact = {exact:true};
+    const balance = Math.abs(q.cashLeft);
+    return kv('Household cash now', esc(FB.money(q.funds, exact))) +
+      kv('Lading fee', esc(FB.money(q.ladingFee, exact))) +
+      kv('Total paid now', esc(FB.money(q.totalCost, exact))) +
       kv(q.cashLeft >= 0 ? FB.T('Cash left after purchase') : FB.T('Shortfall'),
-        esc(FB.money(Math.abs(q.cashLeft))));
+        esc(FB.money(Math.round(balance * 100) / 100 || balance, exact)));
   }
 
   function returnCargoRoadFacts(q) {
@@ -3625,6 +3627,7 @@ window.FB = window.FB || {};
     const homeQuote = returnCargoHomeQuote(s);
     const eligible = FB.tradeVentureReturnEligible(s);
     const stakes = FB.tradeVentureStakes(s);
+    const smallerGoods = FB.tradeVentureSmallerReturnGoods(s);
     let cards = '';
     for (let i = 0; i < stakes.length; i++) {
       const stake = stakes[i], goods = FB.tradeVentureReturnGoods(s, stake);
@@ -3641,6 +3644,15 @@ window.FB = window.FB || {};
         note:blocker || FB.T('{money:total} with lading · {money:cash} left', {
           total:preview.totalCost, cash:preview.cashLeft
         })
+      });
+    }
+    if (smallerGoods.length) {
+      const available = smallerGoods.some(function (good) { return good.maxStake > 0; });
+      cards += reviewActionCardHtml({
+        id:'return-cargo-smaller', disabled:!available, warn:!available,
+        labelHtml:'⚖ ' + esc(FB.T('Choose a smaller return stake')),
+        note:available ? FB.T('Set a whole stake below the smallest preset.') :
+          FB.T('No cargo is available for a whole stake within your cash and local stock.')
       });
     }
     const h = returnCargoWarning(warning) +
@@ -3667,12 +3679,70 @@ window.FB = window.FB || {};
         UI.showReturnCargoGoods(stake);
       });
     });
+    const smaller = $('return-cargo-smaller');
+    if (smaller) smaller.addEventListener('click', function () {
+      if (!returnCargoViewActive(smaller)) return;
+      if (FB.state !== s || s.player.travel !== t || s.player.charId !== homeQuote.payerId) return UI.closeModal();
+      showSmallerReturnCargo(s, t);
+    });
     bindReturnWithoutCargo(s, t, homeQuote, function (message) {
       refreshReturnCargo(function () { UI.showReturnCargoPrompt(message, true); });
     });
   };
 
   UI.showReturnCargoSetup = UI.showReturnCargoPrompt;
+
+  function showSmallerReturnCargo(s, t) {
+    const goods = FB.tradeVentureSmallerReturnGoods(s);
+    if (!goods.some(function (good) { return good.maxStake > 0; })) {
+      refreshReturnCargo(function () {
+        UI.showReturnCargoPrompt(FB.T('The available stakes have changed. Choose again.'), true);
+      });
+      return;
+    }
+    const payerId = s.player.charId;
+    const options = goods.map(function (good) {
+      const name = FB.dataText(s, payerId, 'marketGood', good.id, good.def, 'name', {});
+      return '<option value="' + esc(good.id) + '"' + (good.maxStake ? '' : ' disabled') + '>' + esc(name) + '</option>';
+    }).join('');
+    const fields = '<label for="return-small-good">' + esc(FB.T('Commodity')) + '</label><br>' +
+      '<select id="return-small-good">' + options + '</select><br>' +
+      '<label for="return-small-stake">' + esc(FB.T('Return stake')) + '</label><br>' +
+      '<input id="return-small-stake" type="number" inputmode="numeric" min="1" step="1"' +
+      ' aria-describedby="return-small-limit">' +
+      '<p id="return-small-limit" role="status"></p><div id="return-small-terms"></div>';
+    openModal(FB.T('Choose a smaller return stake'), reviewFactsCard('', fields) +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'return-small-review', labelHtml:esc(FB.T('Review return cargo'))
+      })), {historyView:true});
+    const select = $('return-small-good'), input = $('return-small-stake');
+    const button = $('return-small-review');
+    function update(reset) {
+      const good = goods[select.selectedIndex];
+      input.max = good.maxStake;
+      if (reset) input.value = good.maxStake;
+      const stake = input.valueAsNumber;
+      const valid = Number.isSafeInteger(stake) && stake >= 1 && stake <= good.maxStake;
+      const quote = valid ? FB.tradeVentureReturnPreview(s, stake, good.id, true) : null;
+      $('return-small-limit').textContent = FB.T('Choose a whole stake from {money:min} to {money:max}.', {
+        min:1, max:good.maxStake
+      });
+      $('return-small-terms').innerHTML = quote ? returnCargoCashFacts(quote) : '';
+      input.setAttribute('aria-invalid', valid ? 'false' : 'true');
+      button.disabled = !quote;
+      return quote;
+    }
+    select.selectedIndex = goods.findIndex(function (good) { return good.maxStake > 0; });
+    select.addEventListener('change', function () { update(true); });
+    input.addEventListener('input', function () { update(false); });
+    button.addEventListener('click', function () {
+      if (!returnCargoViewActive(button)) return;
+      if (FB.state !== s || s.player.travel !== t || s.player.charId !== payerId) return UI.closeModal();
+      const quote = update(false);
+      if (quote) UI.reviewReturnCargoChoice(quote.stake, quote.goodId, null, false, true);
+    });
+    update(true);
+  }
 
   UI.showReturnCargoGoods = function (stake) {
     const s = FB.state, t = s.player.travel;
@@ -3709,12 +3779,12 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.reviewReturnCargoChoice = function (stake, goodId, warning, replaceView) {
+  UI.reviewReturnCargoChoice = function (stake, goodId, warning, replaceView, smaller) {
     const s = FB.state, t = s.player.travel;
     if (!t) return;
     const homeQuote = returnCargoHomeQuote(s);
-    const preview = FB.tradeVentureReturnPreview(s, stake, goodId);
-    const blocker = FB.tradeVentureCanLoadReturn(s, stake, goodId);
+    const preview = FB.tradeVentureReturnPreview(s, stake, goodId, smaller);
+    const blocker = FB.tradeVentureCanLoadReturn(s, stake, goodId, smaller);
     const goodDef = FBDATA.marketGoods[goodId];
     const goodName = goodDef ? (goodDef.icon || '') + ' ' +
       FB.dataText(s, s.player.charId, 'marketGood', goodId, goodDef, 'name', {}) : '';
@@ -3753,13 +3823,13 @@ window.FB = window.FB || {};
         'Loading buys cargo now. Use the return deed when you are ready to depart. Sale proceeds depend on the home market on arrival.')) + '</p>'
     });
     function refresh(message) {
-      refreshReturnCargo(function () { UI.reviewReturnCargoChoice(stake, goodId, message, true); });
+      refreshReturnCargo(function () { UI.reviewReturnCargoChoice(stake, goodId, message, true, smaller); });
     }
     const cautious = $('return-load-cautious');
     function commit(strategy) {
       if (!returnCargoViewActive(cautious)) return;
-      if (FB.state !== s || s.player.travel !== t) return UI.closeModal();
-      if (!FB.loadTradeVentureReturn(s, stake, goodId, strategy, preview)) {
+      if (FB.state !== s || s.player.travel !== t || s.player.charId !== homeQuote.payerId) return UI.closeModal();
+      if (!preview || !FB.loadTradeVentureReturn(s, stake, goodId, strategy, preview)) {
         refresh(FB.T('The return terms changed. Review the current choice.'));
         return;
       }

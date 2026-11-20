@@ -7925,6 +7925,8 @@ window.FB = window.FB || {};
   FB.tradeVentureReturnEligible = function (state) {
     if (!state || !state.player || state.player.dead) return FB.T('No traveler is ready to trade.');
     const p = state.player;
+    const traveler = state.chars && state.chars[p.charId];
+    if (!traveler || traveler.dead) return FB.T('No traveler is ready to trade.');
     const t = p.travel;
     if (!t || t.phase !== 'arrived' || FB.travelPurposeKind(t.purpose) !== 'trade') {
       return FB.T('You must reach a trade venture market first.');
@@ -7973,10 +7975,47 @@ window.FB = window.FB || {};
     return out;
   };
 
-  FB.tradeVentureReturnPreview = function (state, stake, goodId) {
+  function returnCargoLadingFee(stake, terms) {
+    const rate = Math.max(0, tradeVentureNumber(terms.ladingFeeRate, 0.10));
+    return Math.round(stake * rate * 100) / 100;
+  }
+
+  function smallerReturnStakeLimit(stakes) {
+    return Number.isSafeInteger(stakes[0]) ? stakes[0] - 1 : 0;
+  }
+
+  FB.tradeVentureSmallerReturnGoods = function (state) {
     const def = tradeVentureDef();
-    stake = Math.floor(Number(stake) || 0);
-    if (!def || FB.tradeVentureStakes(state).indexOf(stake) < 0) return null;
+    if (!def || FB.tradeVentureReturnEligible(state) !== true) return [];
+    const limit = smallerReturnStakeLimit(FB.tradeVentureStakes(state));
+    if (!limit) return [];
+    const terms = def.returnCargo || {};
+    const funds = state.player.gold;
+    return FB.tradeVentureReturnGoods(state, 0).map(function (good) {
+      let low = 0, high = limit;
+      // Use the same rounded fee and market stock tolerance as the purchase.
+      while (low < high) {
+        const stake = low + Math.ceil((high - low) / 2);
+        if (isFinite(funds) && stake + returnCargoLadingFee(stake, terms) <= funds &&
+            good.stock > 0 && stake / good.destPrice <= good.stock + 0.0001) low = stake;
+        else high = stake - 1;
+      }
+      good.maxStake = low;
+      return good;
+    });
+  };
+
+  FB.tradeVentureReturnPreview = function (state, stake, goodId, smaller) {
+    const def = tradeVentureDef();
+    if (!def) return null;
+    const stakes = FB.tradeVentureStakes(state);
+    const smallerStakeLimit = smaller ? smallerReturnStakeLimit(stakes) : 0;
+    if (smaller) {
+      if (!Number.isSafeInteger(stake) || stake < 1 || stake > smallerStakeLimit) return null;
+    } else {
+      stake = Math.floor(Number(stake) || 0);
+      if (stakes.indexOf(stake) < 0) return null;
+    }
     const t = state && state.player && state.player.travel;
     if (!t || t.phase !== 'arrived' || FB.travelPurposeKind(t.purpose) !== 'trade') return null;
     const road = FB.travelTradeReturnRoad(t);
@@ -7991,8 +8030,7 @@ window.FB = window.FB || {};
     const destPrice = local.price, homePrice = home.price;
     const quantity = stake / destPrice;
     const retDef = def.returnCargo || {};
-    const ladingRate = Math.max(0, tradeVentureNumber(retDef.ladingFeeRate, 0.10));
-    const ladingFee = Math.round(stake * ladingRate * 100) / 100;
+    const ladingFee = returnCargoLadingFee(stake, retDef);
     const totalCost = stake + ladingFee;
     const cautiousMult = tradeVentureNumber(retDef.cautiousMultiplier, 1.20);
     const boldSuccessMult = tradeVentureNumber(retDef.boldSuccessMultiplier, 2.25);
@@ -8007,6 +8045,7 @@ window.FB = window.FB || {};
     return {
       payerId:state.player.charId,
       journeyTurn:t.startTurn,
+      smallerStakeLimit:smallerStakeLimit,
       stake:stake,
       goodId:goodId,
       destId:destId,
@@ -8017,7 +8056,7 @@ window.FB = window.FB || {};
       priceRatio:destPrice > 0 ? homePrice / destPrice : 1,
       quantity:quantity,
       destStock:local.stock,
-      stockAvailable:local.stock + 0.0001 >= quantity,
+      stockAvailable:(!smaller || local.stock > 0) && local.stock + 0.0001 >= quantity,
       ladingFee:ladingFee,
       totalCost:totalCost,
       funds:state.player.gold,
@@ -8051,13 +8090,14 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.tradeVentureCanLoadReturn = function (state, stake, goodId) {
-    return returnCargoBlocker(state, FB.tradeVentureReturnPreview(state, stake, goodId));
+  FB.tradeVentureCanLoadReturn = function (state, stake, goodId, smaller) {
+    return returnCargoBlocker(state, FB.tradeVentureReturnPreview(state, stake, goodId, smaller));
   };
 
   FB.loadTradeVentureReturn = function (state, stake, goodId, strategy, reviewed) {
     if (strategy !== 'cautious' && strategy !== 'bold') return null;
-    const preview = FB.tradeVentureReturnPreview(state, stake, goodId);
+    const preview = FB.tradeVentureReturnPreview(state, stake, goodId,
+      reviewed && reviewed.smallerStakeLimit > 0);
     if (returnCargoBlocker(state, preview) !== true ||
         (reviewed && JSON.stringify(preview) !== JSON.stringify(reviewed))) return null;
     const t = state.player.travel;

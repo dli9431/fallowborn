@@ -1,0 +1,15 @@
+{
+  "name": "Small cargo and fractional lading",
+  "finance": {
+    "tradeVenture": {
+      "stakes": [6, 16, 32],
+      "treasuryStakeShare": 0.2,
+      "returnCargo": {
+        "ladingFeeRate": 0.1057,
+        "cautiousMultiplier": 1.5,
+        "boldSuccessMultiplier": 3,
+        "boldFailureMultiplier": 0.5
+      }
+    }
+  }
+}
