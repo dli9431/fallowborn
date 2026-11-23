@@ -327,7 +327,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   `data/music_catalog.js`, then the event packs (including `events_lifepaths.js`
   after `events_paths.js`, and
   `events_intrigue.js` after tournament events and before ruler-agency events).
-- Engine second, all writing to `window.FB`: `util → messages → i18n →
+- Engine second, all writing to `window.FB`: `data_check (names any data file that did not run) → util → messages → i18n →
   model → music → portrait → siteart → world → settlement → fortifications → holywar → population → modifiers →
   economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue → justice →
   technology → council → agency → politics → parliament → institutions →

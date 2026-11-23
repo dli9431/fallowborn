@@ -10,16 +10,31 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.18';
+FB.VERSION = '1.189.20';
 FB.CHANGELOG = [
+  { v: '1.189.20', date: '2026-11-23', changes: [
+    'If part of the game data fails to load, the game now names the missing file and offers a reload instead of showing a long list of unit errors when starting a new game.'
+  ] },
+  { v: '1.189.19', date: '2026-11-11', changes: [
+    'Saves stay visible after a slow start on phones and are protected from being cleared when the device runs low on space in the main game.'
+  ] },
   { v: '1.189.18', date: '2026-11-11', changes: [
     'Saves no longer appear missing after a slow start on phones, and the game asks the browser to keep saves when the device runs low on space.'
+  ] },
+  { v: '1.189.17', date: '2026-10-31', changes: [
+    'Research for larger family estates and more settlement capacity is now available in the main game.'
   ] },
   { v: '1.189.16', date: '2026-10-31', changes: [
     'Agricultural and civic research can expand family plots, settlement founding sites and directly governed settlements.'
   ] },
+  { v: '1.189.15', date: '2026-10-30', changes: [
+    'Personally held baronies under other counts can now be granted in the main game.'
+  ] },
   { v: '1.189.14', date: '2026-10-30', changes: [
     'Personally held baronies under other counts can be granted from Grant Land, settlement sheets and character sheets.'
+  ] },
+  { v: '1.189.13', date: '2026-10-30', changes: [
+    'Intrigue accomplices, council Deeds, childhood death histories, and consolidated plot income now follow their updated rules.'
   ] },
   { v: '1.189.12', date: '2026-10-30', changes: [
     'Family land plots earn more seasonal gold, with larger holdings benefiting from consolidation.'
