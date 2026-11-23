@@ -86,6 +86,12 @@ function assetResponse(request) {
 
       return fetch(request).then(function (response) {
         if (!response || !response.ok) return response;
+        /* A script answered with an HTML error or login page must not be kept
+           as the immutable copy of that script. */
+        if (/\.js$/i.test(new URL(request.url).pathname) &&
+            !/javascript|ecmascript/i.test(response.headers.get('content-type') || '')) {
+          return response;
+        }
 
         return cache.put(request, response.clone()).then(function () {
           return response;

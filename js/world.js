@@ -1913,6 +1913,11 @@ window.FB = window.FB || {};
     var label = definition && definition.id ? definition.id : '?';
     function fault(text) { errors.push('Bookmark ' + label + ': ' + text); }
     if (!definition || typeof definition !== 'object') return ['Bookmark definition is missing.'];
+    if (window.FB_DATA_FAULTS && window.FB_DATA_FAULTS.length) {
+      /* js/data_check.js: a data file that never ran explains the rest */
+      errors.push('Game data failed to load: ' + window.FB_DATA_FAULTS.join(', ') +
+        '. Reload the page or clear this site\'s data.');
+    }
     // Activation validates one resolved world. Give it the same sibling start
     // scope as catalogue validation, without replacing its own declarations.
     // A candidate catalogue below always supplies its own sibling scope.
