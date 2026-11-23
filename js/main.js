@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.19';
+FB.VERSION = '1.189.20';
 FB.CHANGELOG = [
+  { v: '1.189.20', date: '2026-11-23', changes: [
+    'If part of the game data fails to load, the game now names the missing file and offers a reload instead of showing a long list of unit errors when starting a new game.'
+  ] },
   { v: '1.189.19', date: '2026-11-11', changes: [
     'Saves stay visible after a slow start on phones and are protected from being cleared when the device runs low on space in the main game.'
   ] },
