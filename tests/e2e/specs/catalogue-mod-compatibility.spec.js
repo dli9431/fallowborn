@@ -116,3 +116,34 @@ for (const kind of ['missing','invalid','malformed']) test('a ' + kind + ' mod c
       return rejected && state === FB.state && world === FB.world && rng === FB.getRngState() && uid === FB.getUidCounter();
     },kind)).toBe(true);
   });
+
+test('a mod that authors no religious profile keeps the signature of the inherited fee options',async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  const result = await page.evaluate(function () {
+    function clone(value) { return JSON.parse(JSON.stringify(value)); }
+    function resign() {
+      FB.mods.apply({religions:{catholic:clone(FBDATA.religions.catholic)}});
+      return FB.mods.sig();
+    }
+    const roman = FBDATA.religiousCases.roman_clerical_violence;
+    const review = FBDATA.techImpactReviews.features.synodal_settlement_fee;
+    if (!roman || !roman.synodalFee || !review) throw new Error('The native fee option and its review must exist');
+    const faith = clone(FBDATA.religions.catholic);
+    faith.name = 'Modded Latin tradition';
+    FB.mods.apply({name:'Unchanged catalogue',religions:{catholic:faith}});
+    const out = {base:FB.mods.sig()};
+    out.control = resign();
+    FBDATA.religiousCases.roman_clerical_violence.synodalFee.ceiling = 0;
+    out.profile = resign();
+    FBDATA.techImpactReviews.features.synodal_settlement_fee.rationale = 'Reworded native review.';
+    out.review = resign();
+    FBDATA.religions.catholic.name = 'Changed modded tradition';
+    out.changed = resign();
+    return out;
+  });
+  expect(result.base).toMatch(/^effective-1-[a-f0-9]{64}$/);
+  expect(result.control).toBe(result.base);
+  expect(result.profile).toBe(result.base);
+  expect(result.review).toBe(result.base);
+  expect(result.changed).not.toBe(result.base);
+});

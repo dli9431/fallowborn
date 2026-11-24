@@ -135,9 +135,11 @@
     return agenda && (a.operation === 'repeal') === own(agenda,'ruleId') ? agenda : null;
   }
   // The gathering event is whichever event the convene_synod deed routine queues.
-  function synodalEventId(id) {
+  // A queue-only event stays valid when a mod routes the Deed elsewhere; without
+  // that routine's paid agenda its fee options cannot open.
+  function synodalHost(ev) {
     var routine = FBDATA.deedRoutines && FBDATA.deedRoutines.convene_synod;
-    return !!routine && routine.queueEvent === id;
+    return !!routine && routine.queueEvent === ev.id || !!ev.trigger && ev.trigger.never === true;
   }
   function synodalEventQuote(s,a,ctx) {
     var agenda = matchingAgenda(a,ctx);
@@ -157,7 +159,7 @@
   FB.eventReviews.register('synodal_fee',{
     owner:'religious_cases',quote:synodalEventQuote,
     args:{type:'object',fields:synodalEventFields,test:function (a,c) {
-      return c.runtime || !!(c.event && synodalEventId(c.event.id) && c.event.options.every(function (o) {
+      return c.runtime || !!(c.event && synodalHost(c.event) && c.event.options.every(function (o) {
         return !o || !o.review || o.review.type !== 'synodal_fee' || o.manualOnly === true;
       }));
     }},

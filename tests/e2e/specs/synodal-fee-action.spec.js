@@ -4,7 +4,7 @@ const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { useReviewStartRules } = require('../support/game/released-starts');
-const { openGame } = require('../support/game/navigation');
+const { openGame, prepareGameContent } = require('../support/game/navigation');
 const { beginBookmarkFromTitle, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { waitForUiRefresh } = require('../support/game/ui');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
@@ -239,4 +239,88 @@ test('an ordinary JSON profile offers its own local waiver through the same Deed
     return { gold:s.player.gold,rules:s.authority.synodalFees.map(function (r) { return r.jurisdiction.provinceId; }),
       fees:['roman_clerical_violence','spoleto_synodal_discipline'].map(function (id) { return R.effectiveSettlementFee(s,id); }) };
   })).toEqual({ gold:90,rules:['spoleto'],fees:[2,0] });
+});
+
+test('the gathering is the event the Deed queues and carries the fee review, whatever its id',async function ({page},info) {
+  await startRome(page,info);
+  await prepareBishop(page,'roma',false);
+  // Rename the synod and route the Deed to it. Nothing may depend on the
+  // shipped id: the review on the queued event identifies the gathering.
+  const routed = await page.evaluate(function () {
+    const original = FB.eventById('bishop_synod');
+    if (!original || !original.options.some(function (o) { return o.review && o.review.type === 'synodal_fee'; })) {
+      throw new Error('The shipped synod no longer hosts the fee review');
+    }
+    original.id = 'synod_of_the_lamps';
+    FBDATA.deedRoutines.convene_synod.queueEvent = original.id;
+    FB.invalidateEventIndex();
+    window.queuedSynods = [];
+    const queue = FB.queueEvent;
+    FB.queueEvent = function (s,id,ctx) {
+      window.queuedSynods.push({ id:id,agenda:!!(ctx && ctx.synodalFeeAgenda) });
+      return queue.apply(this,arguments);
+    };
+    return { found:!!FB.eventById('synod_of_the_lamps'),shipped:FB.eventById('bishop_synod'),
+      routine:FBDATA.deedRoutines.convene_synod.queueEvent };
+  });
+  expect(routed).toEqual({ found:true,shipped:null,routine:'synod_of_the_lamps' });
+  await convene(page);
+  await expect(feeOption(page)).toBeEnabled();
+  expect(await page.evaluate(function () { return window.queuedSynods; })).toEqual([{ id:'synod_of_the_lamps',agenda:true }]);
+  await feeOption(page).click();
+  await expect(page.locator('#event-review-confirm')).toBeEnabled();
+  await ready(page);
+  await page.locator('#event-review-confirm').click();
+  await expect(page.locator('#outcome-continue')).toBeVisible();
+  await expect(page.locator('#ev-text')).toContainText('The synod set the institutional fee');
+  expect(await page.evaluate(function () {
+    const s = FB.state;
+    return { gold:s.player.gold,rules:s.authority.synodalFees.map(function (r) { return r.profileId; }),
+      fee:FB.religiousCases.effectiveSettlementFee(s,'roman_clerical_violence') };
+  })).toEqual({ gold:90,rules:['roman_clerical_violence'],fee:1 });
+});
+
+test('a Deed routed to an event without the fee review gathers no synodal agenda',async function ({page},info) {
+  await startRome(page,info);
+  await prepareBishop(page,'roma',false);
+  const result = await page.evaluate(function () {
+    const s = FB.state, ev = FB.eventById('bishop_extraordinary_tithe');
+    if (!ev || ev.options.some(function (o) { return o.review && o.review.type === 'synodal_fee'; })) {
+      throw new Error('The comparison event must not host the fee review');
+    }
+    FBDATA.deedRoutines.convene_synod.queueEvent = ev.id;
+    const queued = [], queue = FB.queueEvent;
+    FB.queueEvent = function (state,id,ctx) {
+      queued.push({ id:id,agenda:!!(ctx && ctx.synodalFeeAgenda) });
+      return queue.apply(this,arguments);
+    };
+    try { FB.runInstant(s,'convene_synod'); } finally { FB.queueEvent = queue; }
+    return { queued:queued,rules:s.authority.synodalFees || [] };
+  });
+  expect(result).toEqual({ queued:[{ id:'bishop_extraordinary_tithe',agenda:false }],rules:[] });
+});
+
+test('an ordinary JSON mod can route the Deed away from the shipped synod without widening the fee review',async function ({page},info) {
+  await useReviewStartRules(page);
+  await openGame(page,info);
+  await prepareGameContent(page);
+  const faults = await page.evaluate(function () {
+    function hosted(trigger) {
+      return { events:[{ id:'e2e_fee_review_host',title:'A fee review',text:'The court considers its fee.',trigger:trigger,
+        options:[
+          { label:'Keep current terms.',effects:{} },
+          { label:'Review the lower fee.',require:{ state:[{ reader:'synodal_fee_agenda',args:{} }] },manualOnly:true,
+            review:{ type:'synodal_fee',args:{},refusalOption:0 } }
+        ] }] };
+    }
+    return {
+      rerouted:FB.mods.validate({ deedRoutines:{ convene_synod:{ costs:{ gold:10 },queueEvent:'bishop_extraordinary_tithe' } } }),
+      queueOnly:FB.mods.validate(hosted({ never:true })),
+      random:FB.mods.validate(hosted({ flags:['bishop'],chance:0.1 })).join(' ')
+    };
+  });
+  expect(faults.rerouted).toEqual([]);
+  expect(faults.queueOnly).toEqual([]);
+  // A randomly selected event that the Deed does not queue cannot host the review.
+  expect(faults.random).toContain('events.e2e_fee_review_host.options[1].review.args');
 });
