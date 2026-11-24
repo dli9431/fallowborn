@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { startHistoricalGame } = require('../support/game/historical-start');
@@ -22,16 +23,26 @@ dependsOnRuntime(__filename,[
 const roman = { id:'roman_clerical_violence',county:'roma',custom:2,ceiling:1,compensation:15 };
 const spoleto = { id:'spoleto_synodal_discipline',county:'spoleto',custom:4,ceiling:0,compensation:25 };
 
-async function start(page,info,profile) {
+async function start(page,info,profile,options) {
   const journey = { bookmark:'1204',code:'SYNOD-1204-baron-roma-m-Court' };
   if (profile === roman) {
     await startHistoricalGame(page,info,journey);
   } else {
     await useReviewStartRules(page);
-    await openGame(page,info);
-    await page.evaluate(function () { FB.ui.showMods(); });
-    await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/synodal-fee-spoleto.json'));
-    await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }),page.locator('#mod-apply').click()]);
+    const fixture = path.resolve(__dirname,'../fixtures/authoring/synodal-fee-spoleto.json');
+    if (options && options.storedMod) {
+      // Store the same JSON text before the first boot, so a journey that
+      // reloads again prepares only the modded catalogue.
+      await page.addInitScript(function (text) {
+        localStorage.setItem('fb_mods',JSON.stringify([text]));
+      },fs.readFileSync(fixture,'utf8'));
+      await openGame(page,info);
+    } else {
+      await openGame(page,info);
+      await page.evaluate(function () { FB.ui.showMods(); });
+      await page.locator('#modfile').setInputFiles(fixture);
+      await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }),page.locator('#mod-apply').click()]);
+    }
     await prepareGameContent(page);
     await startPreparedParityGame(page,Object.assign({unhide:true},journey));
   }
@@ -361,7 +372,7 @@ for (const profile of [roman,spoleto]) {
 }
 
 test('cold restore keeps the imported Spoleto repeal, pending waiver and exact paid receipts',async function ({page},info) {
-  await start(page,info,spoleto);
+  await start(page,info,spoleto,{ storedMod:true });
   const original = await page.evaluate(function (id) { return synodMatter(id,false,true); },spoleto.id);
   const originalOffer = await readCase(page,spoleto,original);
   await electSuccessor(page,spoleto);
@@ -395,4 +406,33 @@ test('cold restore keeps the imported Spoleto repeal, pending waiver and exact p
   const paid = await readCase(page,spoleto,cases.pending);
   expect(paid.record.paid).toMatchObject({ fee:0,amount:25,feeRuleId:pending.record.offer.feeRuleId });
   expect(receiptAmounts(paid)).toEqual([[25,cases.pending.victim,cases.pending.defendant]]);
+});
+
+test('a save made before the fee option restores unchanged and only the original declaration matches its fingerprint',async function ({page},info) {
+  await start(page,info,roman);
+  const saved = await page.evaluate(function (id) {
+    const predecessor = '36bd30dba65ea73580e96dd3aca510d8ad9ce7a1ccff561b8c349ccf0ad025b2';
+    const s = FB.state, R = FB.religiousCases, matter = synodMatter(id,true,true);
+    if (!R.apply(s,R.quote(s,id,matter.oid,s.player.charId,'accept'))) throw new Error('Could not settle the predecessor case');
+    const record = R.recordForOffense(s,matter.oid);
+    delete record.paid.offerTurn;
+    record.definitionFingerprint = predecessor;
+    return { text:FB.save.serialize(),cases:JSON.stringify(s.authority.religiousCases),
+      receipts:JSON.stringify(s.authority.receipts),signature:FB.mods.sig(),predecessor:predecessor };
+  },roman.id);
+  await restoreBookmark(page,saved.text);
+  expect(await page.evaluate(function () {
+    const s = FB.state;
+    return { cases:JSON.stringify(s.authority.religiousCases),receipts:JSON.stringify(s.authority.receipts),
+      rules:s.authority.synodalFees || [],signature:FB.mods.sig() };
+  })).toEqual({ cases:saved.cases,receipts:saved.receipts,rules:[],signature:saved.signature });
+  expect(JSON.parse(saved.cases).map(function (r) { return r.definitionFingerprint; })).toEqual([saved.predecessor]);
+  // The same saved fingerprint no longer matches once the rest of the
+  // declaration differs from the original, even under the same profile id.
+  expect(await page.evaluate(function (text) {
+    FBDATA.religiousCases.roman_clerical_violence.settlementMax += 1;
+    const live = FB.state, world = FB.world, rng = FB.getRngState(), uid = FB.getUidCounter();
+    return FB.game.loadData(JSON.parse(text)) === false && live === FB.state && world === FB.world &&
+      rng === FB.getRngState() && uid === FB.getUidCounter();
+  },saved.text)).toBe(true);
 });

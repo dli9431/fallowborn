@@ -223,3 +223,45 @@ test('ordinary JSON imports a different ceiling and waives only the Spoleto inst
     return [FB.mods.sig(),FB.religiousCases.synodalFeeRule(FB.state,'spoleto_synodal_discipline').terms.ceiling];
   })).toEqual([result.signature,0]);
 });
+
+test('an authored profile keeps its fee option in the effective signature while an inherited native profile loses it',async function ({page},info) {
+  await useReviewStartRules(page);
+  await openGame(page,info);
+  await prepareGameContent(page);
+  const result = await page.evaluate(function (mod) {
+    const roman = 'roman_clerical_violence', local = 'spoleto_synodal_discipline';
+    function clone(value) { return JSON.parse(JSON.stringify(value)); }
+    // Re-apply an identical faith so the effective catalogue is recomputed
+    // from the live tables without changing any authored definition.
+    function resign() {
+      FB.mods.apply({ religions:{ catholic:clone(FBDATA.religions.catholic) } });
+      return FB.mods.sig();
+    }
+    if (!FBDATA.religiousCases[roman].synodalFee) throw new Error('The native profile lost its fee option');
+    FB.mods.apply(mod);
+    const base = FB.mods.sig(), out = { base:base };
+    out.control = resign();
+    // Inherited native profile: its fee option is outside the signature.
+    FBDATA.religiousCases[roman].synodalFee.ceiling = 0;
+    out.inherited = resign();
+    // Authored profile: the fee option is part of the signature.
+    FBDATA.religiousCases[local].synodalFee.ceiling = 1;
+    out.authored = resign();
+    FBDATA.religiousCases[local].synodalFee.ceiling = 0;
+    out.restored = resign();
+    // Authoring the native profile makes its fee option count as well.
+    FB.mods.apply({ religiousCases:{ [roman]:clone(FBDATA.religiousCases[roman]) } });
+    const native = FB.mods.sig();
+    FBDATA.religiousCases[roman].synodalFee.ceiling = 1;
+    out.nativeEdited = resign();
+    out.native = native;
+    return out;
+  },spoleto);
+  expect(result.base).toMatch(/^effective-1-[a-f0-9]{64}$/);
+  expect(result.control).toBe(result.base);
+  expect(result.inherited).toBe(result.base);
+  expect(result.authored).not.toBe(result.base);
+  expect(result.restored).toBe(result.base);
+  expect(result.native).not.toBe(result.base);
+  expect(result.nativeEdited).not.toBe(result.native);
+});
