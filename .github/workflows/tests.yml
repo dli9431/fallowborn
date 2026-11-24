@@ -4,7 +4,8 @@
 # branch or commit (target), choose the full suite, a base commit, projects
 # and shard count, or run an exact list of specs. request_id names the run so
 # a caller can find it, and keeps concurrent manual runs from cancelling each
-# other.
+# other. mode=rolling-all runs every discovered case of the dispatch commit in
+# timing-balanced batches after the regression gate.
 name: Tests
 run-name: ${{ inputs.request_id && format('Tests {0}', inputs.request_id) || github.event.head_commit.message || github.event.pull_request.title || 'Tests' }}
 
@@ -19,9 +20,9 @@ on:
         type: string
         default: ''
       mode:
-        description: Changed tests, all tests, selected specs, or explicit shard groups
+        description: Changed tests, all tests, selected specs, explicit shard groups, or the complete rolling suite (rolling-all)
         type: choice
-        options: [changed, all, specs, groups, regression-gate, rolling, rolling-plan]
+        options: [changed, all, specs, groups, regression-gate, rolling, rolling-plan, rolling-all]
         default: changed
       specs:
         description: Spec paths relative to tests/e2e, or a JSON array of file lists for groups mode
@@ -81,6 +82,7 @@ jobs:
       specs: ${{ inputs.specs || '' }}
       projects: ${{ inputs.projects || 'all' }}
       workers: 1
+      bounded: ${{ inputs.mode != 'rolling-all' }}
   tests:
     if: ${{ inputs.mode != 'regression-gate' && !startsWith(inputs.mode, 'rolling') && !(github.event_name == 'push' && github.ref_name == '476') }}
     uses: ./.github/workflows/e2e.yml

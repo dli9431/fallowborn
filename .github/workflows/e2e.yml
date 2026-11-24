@@ -2,6 +2,14 @@
 # suite and one merged report. Called by tests.yml (pushes, pull requests,
 # manual runs) and nightly.yml (full suite per branch). The game is checked
 # out at inputs.ref; the report tooling comes from the calling commit.
+#
+# rolling-all is the complete rolling suite: every discovered case, with no
+# changed-file selection, packed into timing-balanced batches from the
+# durations measured by earlier full runs of the same label (or, without
+# them, the newest other label) and run under the 600 second batch cap by
+# the calling commit's tests/e2e/support/ci-rolling.js, so any ref can be
+# run. Each batch job's report is fetched on its own with retries, and the
+# measured durations are saved as case-timings-<label> after every run.
 name: E2E
 
 on:
@@ -16,7 +24,7 @@ on:
         type: string
         default: tests
       mode:
-        description: changed (Playwright --only-changed against base), all, or specs (only the listed specs)
+        description: changed (Playwright --only-changed against base), all, specs (only the listed specs), groups, rolling, rolling-plan, or rolling-all (every discovered case in timing-balanced batches)
         type: string
         default: changed
       specs:
@@ -93,6 +101,9 @@ jobs:
           SPECS: ${{ inputs.specs }}
         run: |
           args=""
+          if [ "$MODE" = rolling-all ] && [ -n "$SPECS" ]; then
+            echo "rolling-all runs every discovered case and takes no specs" >&2; exit 2
+          fi
           if [ "$MODE" = groups ]; then
             SPECS=$(jq -er 'if type == "array" and length > 0 and all(.[]; type == "array" and length > 0 and all(.[]; type == "string" and test("^specs/([a-zA-Z0-9_-]+/)*[a-zA-Z0-9_.-]+\\.spec\\.js$"))) then flatten | join(" ") else error("Invalid shard groups") end' <<< "$SPECS")
           fi
@@ -105,7 +116,7 @@ jobs:
             done
             if [ -z "$args" ]; then echo "specs mode needs specs" >&2; exit 2; fi
           fi
-          if [[ "$MODE" = changed || "$MODE" = rolling* ]]; then
+          if [[ "$MODE" = changed || ( "$MODE" = rolling* && "$MODE" != rolling-all ) ]]; then
             base="$BASE"
             if [[ "$MODE" = rolling* && -n "$base" && "$base" != 0000000000000000000000000000000000000000 ]]; then
               git cat-file -e "$base^{commit}" || { echo "Cannot resolve pushed base"; exit 1; }
@@ -128,7 +139,7 @@ jobs:
           echo "args=$args" >> "$GITHUB_OUTPUT"
       - name: Load recent 476 case durations
         continue-on-error: true
-        if: startsWith(inputs.mode, 'rolling')
+        if: startsWith(inputs.mode, 'rolling') && inputs.mode != 'rolling-all'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -147,6 +158,38 @@ jobs:
               fi
             fi
           fi
+      - name: Load recent case durations for this label
+        continue-on-error: true
+        if: inputs.mode == 'rolling-all'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWN: case-timings-${{ inputs.label }}
+        run: |
+          # The newest unexpired durations for this label, else the newest from
+          # another label the workflows write. Case ids are stable across
+          # branches, so shared cases keep their measured time and only cases
+          # the donor never ran use the cold estimate. A full run uploads
+          # hundreds of batch artifacts, so an unfiltered listing never reaches
+          # older timing artifacts; ask for each label by name.
+          newest() {
+            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=$1&per_page=100" \
+              --jq '[.artifacts[] | select(.expired == false and .workflow_run.id != null)] | max_by(.created_at) | select(. != null) | "\(.created_at) \(.workflow_run.id) \(.name)"'
+          }
+          pick=$(newest "$OWN" || true)
+          if [[ -z "$pick" ]]; then
+            pick=$(for donor in case-timings-tests case-timings-476 case-timings-suite-476 case-timings-suite-dev; do
+              if [[ "$donor" != "$OWN" ]]; then newest "$donor" || true; fi
+            done | sort -r | head -n 1)
+          fi
+          if [[ -z "$pick" ]]; then
+            echo "No measured case durations found; every case uses the cold estimate."
+            exit 0
+          fi
+          read -r created run name <<< "$pick"
+          echo "Planning with $name from run $run ($created)."
+          gh run download "$run" -R "$GITHUB_REPOSITORY" -n "$name" -D "$RUNNER_TEMP/prior"
+          jq -e 'type == "object" and all(.[]; type == "number" and . > 0)' "$RUNNER_TEMP/prior/case-timings.json" >/dev/null
+          cp "$RUNNER_TEMP/prior/case-timings.json" "$RUNNER_TEMP/"
       - id: plan
         working-directory: game/tests/e2e
         env:
@@ -174,7 +217,9 @@ jobs:
   check:
     # Arbitrary game refs must not populate shared dependency or browser caches.
     # A spec-only run (the task runner's targeted checks) is judged by its specs alone.
-    if: ${{ inputs.report_source_run == '' && inputs.mode != 'specs' && inputs.mode != 'groups' && !startsWith(inputs.mode, 'rolling') }}
+    # The changed rolling modes leave these checks to their regression gate; the
+    # complete rolling suite runs them on its own game ref.
+    if: ${{ inputs.report_source_run == '' && inputs.mode != 'specs' && inputs.mode != 'groups' && (!startsWith(inputs.mode, 'rolling') || inputs.mode == 'rolling-all') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -208,9 +253,9 @@ jobs:
     defaults:
       run:
         shell: bash
-    timeout-minutes: ${{ inputs.mode == 'rolling' && 120 || 20 }}
+    timeout-minutes: ${{ (inputs.mode == 'rolling' || inputs.mode == 'rolling-all') && 120 || 20 }}
     strategy:
-      max-parallel: ${{ inputs.mode == 'rolling' && 16 || 256 }}
+      max-parallel: ${{ (inputs.mode == 'rolling' || inputs.mode == 'rolling-all') && 16 || 256 }}
       fail-fast: false
       matrix:
         shard: ${{ fromJSON(needs.plan.outputs.shards) }}
@@ -228,10 +273,22 @@ jobs:
       - run: npm ci
         working-directory: tests/e2e
       - uses: actions/download-artifact@v8
-        if: inputs.mode == 'rolling'
+        if: inputs.mode == 'rolling' || inputs.mode == 'rolling-all'
         with:
           name: blob-${{ inputs.label }}-plan
           path: ${{ runner.temp }}/rolling-plan
+      # The complete suite can run a ref without the current batch runner, so
+      # batches use the calling commit's runner and compact reporter.
+      - uses: actions/checkout@v7
+        if: inputs.mode == 'rolling-all'
+        with:
+          ref: ${{ github.sha }}
+          path: tooling
+          persist-credentials: false
+          sparse-checkout: |
+            tests/e2e/support/ci-rolling.js
+            tests/e2e/support/ci-report.js
+          sparse-checkout-cone-mode: false
       - name: Run Playwright
         working-directory: tests/e2e
         env:
@@ -243,6 +300,10 @@ jobs:
         run: |
           if [[ "${{ inputs.mode == 'rolling' }}" = true ]]; then
             node support/ci-rolling.js "$RUNNER_TEMP/rolling-plan/rolling.json" "$SHARD"
+            exit
+          fi
+          if [[ "${{ inputs.mode == 'rolling-all' }}" = true ]]; then
+            node "$GITHUB_WORKSPACE/tooling/tests/e2e/support/ci-rolling.js" "$RUNNER_TEMP/rolling-plan/rolling.json" "$SHARD"
             exit
           fi
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -293,12 +354,42 @@ jobs:
       - run: npm ci
         working-directory: tooling/tests/e2e
       - uses: actions/download-artifact@v8
+        if: inputs.mode != 'rolling-all'
         with:
           pattern: blob-${{ inputs.label }}-*
           path: blobs
           merge-multiple: true
           run-id: ${{ inputs.report_source_run || github.run_id }}
           github-token: ${{ github.token }}
+      # The complete suite uploads one artifact per batch job, well over a
+      # hundred. Fetching them in one step fails the whole report when a single
+      # download does, so each is fetched on its own with retries. A batch that
+      # still cannot be fetched is reported as missing coverage below.
+      - name: Download batch reports
+        if: inputs.mode == 'rolling-all'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.report_source_run || github.run_id }}
+          LABEL: ${{ inputs.label }}
+        run: |
+          mkdir -p blobs downloads
+          gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" \
+            --jq ".artifacts[] | select(.expired == false) | select(.name | startswith(\"blob-${LABEL}-\")) | .name" > names.txt
+          echo "$(wc -l < names.txt) report artifacts for blob-${LABEL}-*."
+          fetch() {
+            for attempt in 1 2 3 4 5; do
+              rm -rf "downloads/$1"
+              if gh run download "$RUN_ID" -R "$GITHUB_REPOSITORY" -n "$1" -D "downloads/$1"; then return 0; fi
+              sleep $((attempt * 5))
+            done
+            echo "::warning::Could not download artifact $1"
+            return 1
+          }
+          export -f fetch
+          export RUN_ID GITHUB_REPOSITORY
+          xargs -a names.txt -P 8 -I{} bash -c 'fetch "$1"' _ {} || echo "::warning::Some batch artifacts could not be downloaded."
+          shopt -s nullglob
+          for dir in downloads/*/; do cp -r "$dir". blobs/; done
       - name: Check report coverage and size
         id: reports
         env:
@@ -385,5 +476,17 @@ jobs:
         if: ${{ !cancelled() && inputs.mode == 'rolling' && github.event_name == 'push' && github.ref_name == '476' && hashFiles('merged/results.json') != '' }}
         with:
           name: case-timings-476
+          path: ${{ runner.temp }}/case-timings.json
+          retention-days: 30
+
+      - name: Update measured case durations for this label
+        if: ${{ !cancelled() && inputs.mode == 'rolling-all' && hashFiles('merged/results.json') != '' }}
+        run: |
+          if [[ -f blobs/case-timings.json ]]; then cp blobs/case-timings.json "$RUNNER_TEMP/"; fi
+          node tooling/tests/e2e/support/ci-rolling.js learn merged/results.json
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && inputs.mode == 'rolling-all' && hashFiles('merged/results.json') != '' }}
+        with:
+          name: case-timings-${{ inputs.label }}
           path: ${{ runner.temp }}/case-timings.json
           retention-days: 30
