@@ -1,6 +1,6 @@
 {
   "sourceCommit": "bcc5b4a5513d5e1eb5e50f4c7840de5356f6c6f0",
-  "catalogueCommit": "dbf803c74ac4bf1599c81ccfca9fc62af8e3c27f",
+  "catalogueCommit": "51aa09cab00d925cfe6e76e950984b77071dd5f8",
   "files": [
     {
       "path": "js/bookmark_sources.js",
@@ -15,19 +15,19 @@
   ],
   "facts": {
     "unmodded": {
-      "data": "2fdc50680fcbd48dd9735abe06c4002b68b16d26a597e7888384461a01ad27e0",
-      "revisions": "95d2cdf235184afc9b075571d3e3243a1d560be21d9ed7a67b2e28e6d3060119",
+      "data": "a61dbbab9550b570575f6893ad54990238f4ecfadbd06e04bb9aea4369104484",
+      "revisions": "450f8219e3776690ae2aac07ef6891f9f11122ec4f6407b1e588c786f186f559",
       "signature": "",
-      "fingerprint": "9b1a48eaedc23c7a02a8ce314d1fbe3a3958cc4e80ae5bbf91ce6afc3a1c859b",
+      "fingerprint": "14e8ce259a86f6f117d8919298b23bb169c1ac210fa754ef2c1734eb1d0e3da2",
       "save": null,
       "rng": 634,
       "uid": 0
     },
     "household-overlay": {
-      "data": "fd2784d03c24100281b42e121808b721af85ad860e640f18f646bea64e5eb817",
-      "revisions": "95d2cdf235184afc9b075571d3e3243a1d560be21d9ed7a67b2e28e6d3060119",
-      "signature": "effective-1-04538fd5f036f1236c6c094fb52c1f0e4c8c59b8f4a67bd63c900f14da8230ff",
-      "fingerprint": "9b1a48eaedc23c7a02a8ce314d1fbe3a3958cc4e80ae5bbf91ce6afc3a1c859b",
+      "data": "3ee304c23c2b56d8a3d97cae7aced0ff0cde8e054c1f422bd5f4edbe8d55f754",
+      "revisions": "450f8219e3776690ae2aac07ef6891f9f11122ec4f6407b1e588c786f186f559",
+      "signature": "effective-1-eab33c5e6d6ff8af5bcf1f92b2f898e231d5cb915f60c34fd1149b655b17d1df",
+      "fingerprint": "14e8ce259a86f6f117d8919298b23bb169c1ac210fa754ef2c1734eb1d0e3da2",
       "save": null,
       "rng": 634,
       "uid": 0
@@ -35,12 +35,12 @@
   },
   "copies": {
     "Copy source values": {
-      "calls": 12448,
-      "objects": 1034722
+      "calls": 12449,
+      "objects": 1035004
     },
     "Copy composition values": {
       "calls": 6663,
-      "objects": 417059
+      "objects": 417230
     }
   }
 }

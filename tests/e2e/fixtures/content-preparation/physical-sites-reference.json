@@ -3,6 +3,10 @@
   "sourceSha256": "2811d3d7778cbdba11759fbafdda79a59615f11d21fde9cebc5531afffd73006",
   "patches": [
     {
+      "current": "    if (window.FB_DATA_FAULTS && window.FB_DATA_FAULTS.length) {\n      /* js/data_check.js: a data file that never ran explains the rest */\n      errors.push('Game data failed to load: ' + window.FB_DATA_FAULTS.join(', ') +\n        '. Reload the page or clear this site\\'s data.');\n    }\n",
+      "reference": ""
+    },
+    {
       "current": "          const fiscal = FB.settlementFiscalProjection(state, pid, slot, fiscalContext);\n          if (fiscal) localDues += fiscal.amounts.levyDues + fiscal.amounts.specialistDues;",
       "reference": "          const a = FB.settlementFiscalProjection(state, pid, slot, fiscalContext).amounts;\n          localDues += a.levyDues + a.specialistDues;"
     },

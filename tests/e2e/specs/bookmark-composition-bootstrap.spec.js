@@ -25,6 +25,8 @@ dependsOnRuntime(__filename,['index.html','data/bookmark_manifest.js','js/bookma
   'data/story_ruler_agendas_568_east.js','data/story_households_568_ravenna.js'].concat(
     manifestFiles(manifestRuns(fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_manifest.js'),'utf8')))));
 
+// Predecessor sources receive every later implemented native contribution from
+// fixtures/bookmark-composition/native-later-contributions.json, so only unreviewed drift differs.
 async function catalogue(page) {
   return page.evaluate(function () {
     // The ordinary installer fingerprints every effective authorable root,

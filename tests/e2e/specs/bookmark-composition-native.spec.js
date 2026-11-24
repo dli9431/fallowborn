@@ -30,6 +30,8 @@ dependsOnRuntime(__filename,['index.html','data/bookmark_manifest.js','js/bookma
   'data/bookmark_sources.js','data/bookmarks.js','data/starts.js','data/geographies.js',
   'data/settlements.js','data/settlements_real.js','data/cultures.js','data/eras.js','data/technology.js','data/religious_institutions.js','data/ai_decisions.js'].concat(nativeSourceFiles,lazyFiles));
 
+// Predecessor sources receive every later implemented native contribution from
+// fixtures/bookmark-composition/native-later-contributions.json, so only unreviewed drift differs.
 async function catalogue(page) {
   return page.evaluate(function (input) {
     const projected = {};

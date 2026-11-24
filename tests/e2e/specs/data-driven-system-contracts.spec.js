@@ -237,6 +237,11 @@ test('unused authoring roots retain the legacy effective-catalogue fingerprint',
     FB.mods.apply({name:'Legacy metadata only'});
     const effective = {};
     legacyKeys.forEach(function (key) { if (Object.prototype.hasOwnProperty.call(FBDATA,key)) effective[key] = FBDATA[key]; });
+    // The synodal settlement fee review is native metadata that unchanged mods
+    // never restamp. Only a mod that authors that review binds it to a signature.
+    const features = Object.assign({},effective.techImpactReviews.features);
+    delete features.synodal_settlement_fee;
+    effective.techImpactReviews = Object.assign({},effective.techImpactReviews,{features:features});
     const expected = 'effective-1-' + FB.mods.fingerprint({stored:[],bundled:[],catalogue:FB.mods.fingerprint(effective)});
     const actual = FB.mods.sig();
     FB.mods.apply({name:'Authored policy',actionPolicies:{toil:{injuryChance:.2,injuryHealth:1}}});
