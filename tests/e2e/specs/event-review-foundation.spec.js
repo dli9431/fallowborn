@@ -2,10 +2,13 @@
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
-const {openGame,prepareGameContent} = require('../support/game/navigation');
+const {openTitle} = require('../support/game/navigation');
+const {useReviewStartRules} = require('../support/game/released-starts');
+const {installStoredMod} = require('../support/game/stored-mod');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+test.describe.configure({mode:'parallel'});
 const example = require('../fixtures/authoring/event-review-foundation.json');
 const examplePath = path.resolve(__dirname,'../fixtures/authoring/event-review-foundation.json');
 dependsOnRuntime(__filename,['js/schema.js','js/events.js','js/ui_modals.js','js/ui_misc.js',
@@ -72,24 +75,25 @@ async function ownerFixture(page) {
     return route.fulfill({contentType:'application/javascript',body:source + '\n(' + registerOwnerFixture.toString() + ')();\n'});
   });
 }
-async function start(page,info,imported) {
+async function start(page,info) {
+  // The review start rules must be in place for the one modded boot that is used.
+  await useReviewStartRules(page);
   await ownerFixture(page);
-  await openGame(page,info);
-  if (imported) {
-    expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},example)).toEqual([]);
-    await page.evaluate(function () {FB.ui.showMods();});
-    await page.locator('#modfile').setInputFiles(examplePath);
-    await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
-    await prepareGameContent(page);
-  }
-  await startHistoricalGame(page,info,{bookmark:'1204',code:'REVIEW-1204-baron-london-m-Reader'});
+  // No journey here asserts the Mods screen, which prepares the complete unmodded
+  // catalogue before it opens. Boot the title only, store the same ordinary JSON
+  // the screen would store and reload into it. The exact candidate is checked for
+  // admission against the installed catalogue, and the start reuses this boot.
+  await openTitle(page,info);
+  await installStoredMod(page,fs.readFileSync(examplePath,'utf8'));
+  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},example)).toEqual([]);
+  await startHistoricalGame(page,info,{bookmark:'1204',code:'REVIEW-1204-baron-london-m-Reader',prepared:true});
 }
 async function ready(page) {
   await expect.poll(function () {return page.evaluate(function () {return !FB.ui.eventInputGuarded();});}).toBe(true);
 }
 
 test('trusted metadata and event-aware schemas reject malformed native and JSON candidates without side effects',async function ({page},info) {
-  await start(page,info,true);
+  await start(page,info);
   const result = await page.evaluate(function (mod) {
     const before = JSON.stringify(FB.state), data = JSON.stringify(FBDATA), input = JSON.stringify(mod);
     const rng = FB.getRngState(), uid = FB.getUidCounter(), sig = FB.mods.sig(), rejected = [];
@@ -131,7 +135,7 @@ test('trusted metadata and event-aware schemas reject malformed native and JSON 
 });
 
 test('exact party binding, direct and legacy gates, stale rejection and automated refusal remain pure',async function ({page},info) {
-  await start(page,info,true);
+  await start(page,info);
   const result = await page.evaluate(function () {
     const s = FB.state, ev = FB.eventById('harbor_party_review'), opt = ev.options[0];
     FB.stories.start(s,{tracks:['harbor_routine']});
@@ -194,7 +198,7 @@ test('exact party binding, direct and legacy gates, stale rejection and automate
 });
 
 for (const native of [true,false]) test((native ? 'native' : 'ordinary JSON') + ' canonical payment and queued parties survive two exact current-content restores',async function ({page},info) {
-  await start(page,info,true);
+  await start(page,info);
   const result = await page.evaluate(function (native) {
     const s = FB.state, p = s.player, me = s.chars[p.charId];
     FB.stories.start(s,{tracks:['harbor_routine']});
@@ -252,7 +256,7 @@ for (const native of [true,false]) test((native ? 'native' : 'ordinary JSON') + 
 });
 
 test('bookmark-scoped event routes and caches use saved campaign identity while legacy periods remain unscoped',async function ({page},info) {
-  await start(page,info,true);
+  await start(page,info);
   const result = await page.evaluate(function () {
     const s = FB.state, ev = FB.eventById('harbor_party_review'), before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
     const current = FB.eventYearPool(s).indexOf(ev) >= 0, ctx = FB.eventContextFor(s,ev,{}), fork = JSON.parse(before);
@@ -289,7 +293,7 @@ const reviewJourneys = [
 for (const journey of reviewJourneys) test(journey.title,async function ({page},info) {
   const mobile = journey.mobile;
   await page.setViewportSize(mobile ? {width:390,height:700} : {width:1280,height:720});
-  await start(page,info,true);
+  await start(page,info);
   await page.evaluate(function () {
     const s = FB.state;FB.stories.start(s,{tracks:['harbor_routine']});
     Object.assign(FB.game.auto,{all:false,major:false,minor:false});

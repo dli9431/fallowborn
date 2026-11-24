@@ -3,8 +3,10 @@ const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame,prepareGameContent} = require('../support/game/navigation');
+const {openGame,openTitle,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {installStoredMod} = require('../support/game/stored-mod');
+const {installPageGuards} = require('../support/page-contract');
 const {eagerDocument,manifestRuns} = require('../fixtures/bookmark-manifest/eager-document');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
@@ -60,7 +62,7 @@ const starts = [
 ];
 
 async function load(page,info) {
-  await openGame(page,info); await prepareGameContent(page);
+  await openGame(page,info);
   expect(await page.evaluate(function () {
     const b = FB.bookmark('634','core_courts_v4');
     return b ? FB.validateBookmark(b) : FB.bookmarkRuntimeDiagnostics();
@@ -388,8 +390,14 @@ for (const front of ['syrian','iraqi']) test(front+' frontier remains independen
   await roundTrip(page);
 });
 
-// Saved-content rejection journeys need only a started court, so they skip the household expense steps.
-async function beginImportedCourt(page,info,options) {
+async function installedSignature(page) {
+  expect(await page.evaluate(function () { return FB.mods.sig(); })).toMatch(/^effective-1-[a-f0-9]{64}$/);
+}
+
+// Derive the ordinary JSON candidate from the prepared catalogue and save one
+// started court under it. The configuration is applied in place and stored for
+// later boots, so this setup does not reload the catalogue a second time.
+async function prepareImportedCourt(page,info) {
   await load(page,info);
   const mod = await page.evaluate(function () {
     const b = JSON.parse(JSON.stringify(FBDATA.bookmarks['634']));
@@ -398,57 +406,89 @@ async function beginImportedCourt(page,info,options) {
     return {name:'Autumn court configuration',bookmarks:{'634':b}};
   });
   expect(await page.evaluate(function (m) { return FB.mods.validate(m); },mod)).toEqual([]);
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles({name:'autumn-courts.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod),'utf8')});
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page); await begin(page,starts[4]);
-  if (!options || options.expenses !== false) await page.evaluate(function () {
-    const s = FB.state, id = 'medina_household_track_634';
-    ['consider_home','decline_work','buy_provisions'].forEach(function (choice) {
-      if (!FB.stories.apply(s,id,choice,FB.stories.quote(s,id,choice))) throw new Error('Missing household expense choice');
-    });
-  });
-  expect(await page.evaluate(function () { return FB.mods.sig(); })).toMatch(/^effective-1-[a-f0-9]{64}$/);
-  return mod;
+  await page.evaluate(function (m) {
+    FB.mods.apply(m);
+    localStorage.setItem(FB.storageKey('fb_mods'),JSON.stringify([JSON.stringify(m)]));
+  },mod);
+  await begin(page,starts[4]);
+  await installedSignature(page);
+  return {mod:mod,saved:await page.evaluate(function () { return FB.save.serialize(); })};
 }
 
-test('ordinary JSON full-world content restores twice with matching campaign facts',async function ({page},info) {
-  await beginImportedCourt(page,info);
-  await roundTrip(page);
-});
+// A fresh context that boots the stored configuration through the ordinary path.
+async function bootImportedCourt(page,info,mod) {
+  await openTitle(page,info);
+  await installStoredMod(page,JSON.stringify(mod));
+  await installedSignature(page);
+}
 
-test('reloaded ordinary JSON full-world content rejects malformed saves before mutation',async function ({page},info) {
-  await beginImportedCourt(page,info,{expenses:false});
-  const saved = await page.evaluate(function () { return FB.save.serialize(); });
-  await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page); await restoreBookmark(page,saved);
-  expect(await page.evaluate(function (text) {
-    const before = JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]), cases = [];
-    function reject(edit) {
-      const e = JSON.parse(text); e.state = FB.save.expandedSnapshot(e.state); edit(e);
-      let rejected = false; try { FB.save.restore(e); } catch (error) { rejected = true; }
-      cases.push(rejected && before === JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]));
-    }
-    reject(function (e) { e.mods = 'effective-1-'+Array(65).join('0'); });
-    reject(function (e) { e.mods = 'crazygames-content-foreign'; });
-    reject(function (e) { e.state.start.storyAttachments.tracks.push('absent_track'); });
-    reject(function (e) { e.state.stories.syrian_front_634.warId = 'absent_war'; });
-    return cases;
-  },saved)).toEqual([true,true,true,true]);
-});
+// These journeys share only the derived candidate and its saved court. They run
+// in order on one worker so that derivation happens once; each journey still
+// boots its own fresh context.
+test.describe('ordinary JSON full-world court',function () {
+  test.describe.configure({mode:'default'});
+  let court;
 
-test('changed ordinary JSON full-world definitions reject saved content before mutation',async function ({page},info) {
-  const mod = await beginImportedCourt(page,info,{expenses:false});
-  const saved = await page.evaluate(function () { return FB.save.serialize(); });
-  mod.bookmarks['634'].revisions.core_courts_v4.localInstitutions.rome_see.representative.skills.dip = 8;
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles({name:'autumn-courts.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod),'utf8')});
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
-  expect(await page.evaluate(function (text) {
-    const before = JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]);
-    let rejected = false; try { FB.save.restore(JSON.parse(text)); } catch (error) { rejected = /mod set|incompatible content/.test(error.message); }
-    return {rejected:rejected,pure:before === JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage])};
-  },saved)).toEqual({rejected:true,pure:true});
+  test.beforeAll(async function ({browser},info) {
+    const context = await browser.newContext(), page = await context.newPage();
+    const guard = installPageGuards(page);
+    try { court = await prepareImportedCourt(page,info); }
+    finally { await context.close(); }
+    expect(guard.faults,'browser contract faults').toEqual([]);
+  });
+
+  test('ordinary JSON full-world content restores twice with matching campaign facts',async function ({page},info) {
+    await bootImportedCourt(page,info,court.mod);
+    await begin(page,starts[4]);
+    await page.evaluate(function () {
+      const s = FB.state, id = 'medina_household_track_634';
+      ['consider_home','decline_work','buy_provisions'].forEach(function (choice) {
+        if (!FB.stories.apply(s,id,choice,FB.stories.quote(s,id,choice))) throw new Error('Missing household expense choice');
+      });
+    });
+    await installedSignature(page);
+    await roundTrip(page);
+  });
+
+  test('reloaded ordinary JSON full-world content rejects malformed saves before mutation',async function ({page},info) {
+    await bootImportedCourt(page,info,court.mod);
+    await restoreBookmark(page,court.saved);
+    expect(await page.evaluate(function (text) {
+      const before = JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]), cases = [];
+      function reject(edit) {
+        const e = JSON.parse(text); e.state = FB.save.expandedSnapshot(e.state); edit(e);
+        let rejected = false; try { FB.save.restore(e); } catch (error) { rejected = true; }
+        cases.push(rejected && before === JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]));
+      }
+      reject(function (e) { e.mods = 'effective-1-'+Array(65).join('0'); });
+      reject(function (e) { e.mods = 'crazygames-content-foreign'; });
+      reject(function (e) { e.state.start.storyAttachments.tracks.push('absent_track'); });
+      reject(function (e) { e.state.stories.syrian_front_634.warId = 'absent_war'; });
+      return cases;
+    },court.saved)).toEqual([true,true,true,true]);
+  });
+
+  // This journey imports its changed candidate through the real Mods screen,
+  // replacing the stored configuration of the same name.
+  test('changed ordinary JSON full-world definitions reject saved content before mutation',async function ({page},info) {
+    const mod = JSON.parse(JSON.stringify(court.mod));
+    mod.bookmarks['634'].revisions.core_courts_v4.localInstitutions.rome_see.representative.skills.dip = 8;
+    await openGame(page,info);
+    await page.evaluate(function (m) {
+      localStorage.setItem(FB.storageKey('fb_mods'),JSON.stringify([JSON.stringify(m)]));
+      FB.ui.showMods();
+    },court.mod);
+    await page.locator('#modfile').setInputFiles({name:'autumn-courts.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod),'utf8')});
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+    await installedSignature(page);
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+    expect(await page.evaluate(function (text) {
+      const before = JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]);
+      let rejected = false; try { FB.save.restore(JSON.parse(text)); } catch (error) { rejected = /mod set|incompatible content/.test(error.message); }
+      return {rejected:rejected,pure:before === JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage])};
+    },court.saved)).toEqual({rejected:true,pure:true});
+  });
 });
 
 test('unrelated ordinary date keeps its own attachments and current-content persistence',async function ({page},info) {

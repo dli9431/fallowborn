@@ -1,10 +1,13 @@
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
-const {openGame, prepareGameContent} = require('../support/game/navigation');
+const {openGame, openTitle} = require('../support/game/navigation');
 const {beginBookmarkFromTitle, restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+test.describe.configure({mode:'parallel'});
 const {expectModAdmission} = require('../support/game/mod-admission');
+const {installStoredMod} = require('../support/game/stored-mod');
 const southern = require('../fixtures/political-religious-head/southern.json');
 const estuary = require('../fixtures/political-religious-head/estuary.json');
 
@@ -45,14 +48,12 @@ function revisionedOffices(mod, world, revision) {
 }
 
 async function start(page, info, kind, vacancy, revision) {
-  await openGame(page, info);
-  await prepareGameContent(page);
   const mod = JSON.parse(JSON.stringify(kind === 'native' ? southern : estuary));
   const world = kind === 'native' ? 'southern_office_world' : 'paired_office_world';
   if (vacancy) mod.bookmarks[world].religiousHeads.southern_office_demo = null;
   if (revision) revisionedOffices(mod, world, revision);
   if (kind === 'native') {
-    await prepareGameContent(page);
+    await openGame(page, info);
     await page.evaluate(function (mod) {
       ['religions','governmentForms','geographies','bookmarks'].forEach(function (key) {
         Object.assign(FBDATA[key],mod[key]);
@@ -61,13 +62,13 @@ async function start(page, info, kind, vacancy, revision) {
       FB.invalidateReligionData(); FB.governments.invalidate();
     },mod);
   } else {
+    // No journey here asserts the Mods screen, which prepares the complete
+    // unmodded catalogue before it opens. Boot the title only, store the same
+    // ordinary JSON the screen would store and reload into it.
+    await openTitle(page, info);
+    await installStoredMod(page, vacancy || revision ? JSON.stringify(mod) :
+      fs.readFileSync(path.resolve(__dirname,'../fixtures/political-religious-head/estuary.json'),'utf8'));
     await expectModAdmission(page,mod);
-    await page.evaluate(function () { FB.ui.showMods(); });
-    await page.locator('#modfile').setInputFiles(vacancy || revision ?
-      {name:'vacant-offices.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))} :
-      path.resolve(__dirname,'../fixtures/political-religious-head/estuary.json'));
-    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
-    await prepareGameContent(page);
   }
   await beginBookmarkFromTitle(page,world,kind === 'native' ? 'southern_household_demo' : 'estuary_household_demo');
   await page.evaluate(function () {
@@ -458,8 +459,8 @@ test('a nominated player gains the office only on recognized accession and keeps
   for (let i=0;i<2;i++) expect(await page.evaluate(function () { return officeTest.roundTrip(); })).toEqual({ledger:true,rng:true,uid:true,signature:true});
 });
 
-// The eighteen detached cases are independent; two fresh contexts keep each under the case limit.
-for (const part of [{name:'head property rules',from:0,to:9},{name:'sources, references and eligibility',from:9,to:18}])
+// The eighteen detached cases are independent; three fresh contexts keep each well under the case limit.
+for (const part of [{name:'head property rules and references (edits 1 to 6)',from:0,to:6},{name:'head property rules and references (edits 7 to 12)',from:6,to:12},{name:'sources, references and eligibility (edits 13 to 18)',from:12,to:18}])
 test('detached JSON validation rejects unsupported '+part.name+' without publication', async function ({page},info) {
   await start(page,info,'import');
   const result=await page.evaluate(function (arg) {
@@ -519,10 +520,7 @@ test('matching signatures and repeated restore retain null, missing and suspende
   const saved=await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
   const changed=JSON.parse(JSON.stringify(estuary));
   changed.religions.estuary_tradition_demo.properties.head.minAge=22;
-  await page.evaluate(function () { FB.ui.closeModal();FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles({name:'estuary.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(changed))});
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+  await installStoredMod(page,JSON.stringify(changed));
   expect(await page.evaluate(function (saved) {
     const before=JSON.stringify([FB.state,FB.getRngState(),FB.getUidCounter(),localStorage,FB.mods.sig()]);
     const mismatch=FB.save.otherWorld(saved),loaded=FB.game.loadData(saved);
