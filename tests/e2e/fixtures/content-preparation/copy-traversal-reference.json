@@ -1,6 +1,5 @@
 {
   "sourceCommit": "bcc5b4a5513d5e1eb5e50f4c7840de5356f6c6f0",
-  "catalogueCommit": "51aa09cab00d925cfe6e76e950984b77071dd5f8",
   "files": [
     {
       "path": "js/bookmark_sources.js",
@@ -12,35 +11,5 @@
       "parameter": "value",
       "reference": "  function copy(value) {\n    var memo = new WeakMap();\n    function clone(row) {\n      if (!row || typeof row !== 'object') return row;\n      if (memo.has(row)) return memo.get(row);\n      var result = Array.isArray(row) ? [] : {};\n      memo.set(row,result);\n      Object.keys(row).forEach(function (key) { result[key] = clone(row[key]); });\n      copied(row,result);\n      return result;\n    }\n    return clone(value);\n  }"
     }
-  ],
-  "facts": {
-    "unmodded": {
-      "data": "a61dbbab9550b570575f6893ad54990238f4ecfadbd06e04bb9aea4369104484",
-      "revisions": "450f8219e3776690ae2aac07ef6891f9f11122ec4f6407b1e588c786f186f559",
-      "signature": "",
-      "fingerprint": "14e8ce259a86f6f117d8919298b23bb169c1ac210fa754ef2c1734eb1d0e3da2",
-      "save": null,
-      "rng": 634,
-      "uid": 0
-    },
-    "household-overlay": {
-      "data": "3ee304c23c2b56d8a3d97cae7aced0ff0cde8e054c1f422bd5f4edbe8d55f754",
-      "revisions": "450f8219e3776690ae2aac07ef6891f9f11122ec4f6407b1e588c786f186f559",
-      "signature": "effective-1-eab33c5e6d6ff8af5bcf1f92b2f898e231d5cb915f60c34fd1149b655b17d1df",
-      "fingerprint": "14e8ce259a86f6f117d8919298b23bb169c1ac210fa754ef2c1734eb1d0e3da2",
-      "save": null,
-      "rng": 634,
-      "uid": 0
-    }
-  },
-  "copies": {
-    "Copy source values": {
-      "calls": 12449,
-      "objects": 1035004
-    },
-    "Copy composition values": {
-      "calls": 6663,
-      "objects": 417230
-    }
-  }
+  ]
 }

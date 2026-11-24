@@ -69,7 +69,10 @@ async function physicalSiteProbe(page,baseline) {
   });
 }
 
-async function contentCopyProbe(page) {
+// The reference run swaps the preceding source and composition copy traversals
+// in before counting, so both runs count the same catalogue in the same browser
+// session and any content commit moves both counts together.
+async function contentCopyProbe(page,baseline) {
   await page.addInitScript(function () {
     window.FB_LOAD_TIMING = true;
     window.__contentCopies = {};
@@ -81,6 +84,15 @@ async function contentCopyProbe(page) {
       allocation = '      var result = Array.isArray(row) ? [] : {};', label = JSON.stringify(row[2]);
     expect(source.split(begin).length, 'copy entry: ' + row[0]).toBe(2);
     expect(source.split(end).length, 'copy exit: ' + row[0]).toBe(2);
+    if (baseline) {
+      const prior = copyReference.files.find(function (file) { return file.path === row[0]; });
+      expect(prior, 'copy reference: ' + row[0]).toBeTruthy();
+      expect(prior.parameter).toBe(row[1]);
+      const start = source.indexOf(begin);
+      source = source.slice(0,start) + prior.reference + source.slice(source.indexOf(end,start) + end.length);
+      expect(source.split(begin).length, 'reference copy entry: ' + row[0]).toBe(2);
+      expect(source.split(end).length, 'reference copy exit: ' + row[0]).toBe(2);
+    }
     const body = source.slice(source.indexOf(begin),source.indexOf(end,source.indexOf(begin)) + end.length);
     expect(body.split(allocation).length, 'copy allocation: ' + row[0]).toBe(2);
     source = source.replace(body,body.replace(begin,begin + '\n' +
@@ -103,7 +115,7 @@ for (const pair of [1,2,3]) for (const modded of [false,true]) {
       const context = await browser.newContext(), page = await context.newPage(), guard = installPageGuards(page);
       try {
         await physicalSiteProbe(page,baseline);
-        await contentCopyProbe(page);
+        await contentCopyProbe(page,baseline);
         await openTitle(page,info);
         await page.waitForFunction(function () { return FB.game.loadTiming.reports().length > 0; });
         const title = await page.evaluate(function (text) {
@@ -167,9 +179,23 @@ for (const pair of [1,2,3]) for (const modded of [false,true]) {
         await info.attach(baseline ? 'reference-catalogue' : 'current-catalogue',{contentType:'application/json',
           body:Buffer.from(JSON.stringify({facts:facts,copies:report.copies,bookmarkIds:report.bookmarkIds,
             startIds:report.startIds,storyIds:report.storyIds}))});
-        // One comparison reports the pinned catalogue facts and traversal counts together.
-        expect({facts:facts,copies:report.copies})
-          .toEqual({facts:copyReference.facts[modded ? 'household-overlay' : 'unmodded'],copies:copyReference.copies});
+        // Whole-catalogue digests, the bookmark fingerprint, the retained
+        // revisions hash, the effective-catalogue hash and the copy call and
+        // object counts follow the shipped content, so no pin holds them.
+        // Each run is compared with the reference run of the same pair below.
+        // Only their shapes are fixed here. A change to a digest algorithm or
+        // to the effective-catalogue signature version may move these shapes.
+        for (const name of ['data','revisions','fingerprint']) expect(facts[name],name).toMatch(/^[0-9a-f]{64}$/);
+        // Preparation must leave saves, the seeded RNG and the uid counter
+        // untouched. Only a change to that contract, such as preparation
+        // deliberately drawing randomness, may move these.
+        expect({save:facts.save,rng:facts.rng,uid:facts.uid}).toEqual({save:null,rng:634,uid:0});
+        if (modded) expect(facts.signature).toMatch(/^effective-1-[0-9a-f]{64}$/);
+        else expect(facts.signature).toBe('');
+        for (const label of ['Copy source values','Copy composition values']) {
+          expect(report.copies[label].calls,label).toBeGreaterThan(0);
+          expect(report.copies[label].objects,label).toBeGreaterThan(0);
+        }
         const result = {baseline:baseline,mode:modded ? 'household-overlay' : 'unmodded',browser:browser.version(),
           titleTiming:titleTiming,elapsedMs:elapsedMs,report:report,facts:facts};
         samples.push(result);
@@ -178,6 +204,9 @@ for (const pair of [1,2,3]) for (const modded of [false,true]) {
     }
     const before = samples.find(function (row) { return row.baseline; }), after = samples.find(function (row) { return !row.baseline; });
     expect(after.facts).toEqual(before.facts);
+    // The reference run counted the preceding traversals over the same catalogue.
+    expect(Object.keys(after.report.copies).sort()).toEqual(Object.keys(before.report.copies).sort());
+    expect(after.report.copies).toEqual(before.report.copies);
     expect(after.report.bookmarkIds).toEqual(before.report.bookmarkIds);
     expect(after.report.startIds).toEqual(before.report.startIds);
     expect(after.report.sourceIds).toEqual(before.report.sourceIds);
