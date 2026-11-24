@@ -1171,8 +1171,15 @@ stage attribution, not unprofiled speed comparisons. Ordered source, story,
 bookmark and start ids and exact catalogue facts must still agree with the
 preceding physical-site implementation.
 
-The preparation cases also pin complete catalogue digests and copied-container
-counts to the source/composition traversal reference. Direct served probes
+The paired preparation cases do not pin whole-catalogue digests, the bookmark
+fingerprint, the retained revisions hash, the effective-catalogue signature or
+copied-container counts, because shipped content commits legitimately move them.
+The reference run of each pair installs the preceding source and composition
+copy traversals and counts the same catalogue in the same session, and the
+current run must equal it on every fact and on the copy call and object counts.
+Only shapes and preparation purity stay fixed: 64-digit digests, an empty
+unmodded signature, an effective-1 overlay signature, no save, seeded RNG 634 and
+uid 0. Direct served probes
 compare both private copy owners with their preceding traversal for aliases,
 cycles, detached graphs, sparse arrays, snapshot metadata, live getter edits,
 recursive calls and exception recovery. Reader replacements before owner loading
