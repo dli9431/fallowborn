@@ -276,7 +276,18 @@ test('bookmark-scoped event routes and caches use saved campaign identity while 
   expect(result).toEqual({current:true,other:true,again:true,unscoped:true,missing:true,unavailable:true,badPacks:true,pure:true});
 });
 
-for (const mobile of [false,true]) test((mobile ? 'mobile' : 'desktop') + ' confirmation and outcome retain the original portrait cards, disclosures, scroll and focus',async function ({page},info) {
+// The mobile journey is split into two fresh contexts so each stays under the case limit;
+// every exit path and the outcome review keep their original assertions.
+const reviewJourneys = [
+  {mobile:false,title:'desktop confirmation and outcome retain the original portrait cards, disclosures, scroll and focus',
+    exits:['cancel','escape','back'],outcome:true},
+  {mobile:true,title:'mobile confirmation exits retain the original portrait cards, disclosures, scroll and focus (cancel and escape)',
+    exits:['cancel','escape'],outcome:false},
+  {mobile:true,title:'mobile confirmation and outcome retain the original portrait cards, disclosures, scroll and focus',
+    exits:['back','mobile-back'],outcome:true}
+];
+for (const journey of reviewJourneys) test(journey.title,async function ({page},info) {
+  const mobile = journey.mobile;
   await page.setViewportSize(mobile ? {width:390,height:700} : {width:1280,height:720});
   await start(page,info,true);
   await page.evaluate(function () {
@@ -297,7 +308,7 @@ for (const mobile of [false,true]) test((mobile ? 'mobile' : 'desktop') + ' conf
     window.retainedIdentity = retainedParty.querySelector('[data-event-character]').dataset.eventCharacter;
     window.retainedState = JSON.stringify(FB.state);window.retainedRng = FB.getRngState();window.retainedUid = FB.getUidCounter();
   });
-  for (const via of mobile ? ['cancel','escape','back','mobile-back'] : ['cancel','escape','back']) {
+  for (const via of journey.exits) {
     await ready(page);
     await option.evaluate(function (button) {
       button.focus({preventScroll:true});
@@ -332,6 +343,7 @@ for (const mobile of [false,true]) test((mobile ? 'mobile' : 'desktop') + ' conf
       retainedRng === FB.getRngState() && retainedUid === FB.getUidCounter() && originalScroll > 0 &&
       document.querySelector('#eventmodal .modalcard').scrollTop === originalScroll;})).toBe(true);
   }
+  if (!journey.outcome) return;
   await ready(page);await option.click();await ready(page);
   await page.evaluate(function () {FB.state.turn++;window.changedState = JSON.stringify(FB.state);});
   await page.locator('#event-review-confirm').click();
