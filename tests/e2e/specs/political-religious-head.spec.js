@@ -458,14 +458,18 @@ test('a nominated player gains the office only on recognized accession and keeps
   for (let i=0;i<2;i++) expect(await page.evaluate(function () { return officeTest.roundTrip(); })).toEqual({ledger:true,rng:true,uid:true,signature:true});
 });
 
-test('detached JSON validation rejects unsupported sources, references and eligibility without publication', async function ({page},info) {
+// The eighteen detached cases are independent; two fresh contexts keep each under the case limit.
+for (const part of [{name:'head property rules',from:0,to:9},{name:'sources, references and eligibility',from:9,to:18}])
+test('detached JSON validation rejects unsupported '+part.name+' without publication', async function ({page},info) {
   await start(page,info,'import');
-  const result=await page.evaluate(function (fixture) {
+  const result=await page.evaluate(function (arg) {
+    const fixture=arg.fixture;
     const s=FB.state,data=FBDATA,world=FB.world,active=FB.activeBookmark;
     function all() { return JSON.stringify([s,FBDATA,FB.stories.list(),FB.englishMessages(),FB.mods.sig(),localStorage,
       FB.getRngState() >>> 0,FB.getUidCounter(),FB.world.provs]); }
-    const baseline=all(),cases=[];
-    function check(edit) { const mod=JSON.parse(JSON.stringify(fixture));edit(mod);cases.push(FB.mods.validate(mod).length > 0 &&
+    const baseline=all(),cases=[],edits=[];
+    function check(edit) { edits.push(edit); }
+    function run(edit) { const mod=JSON.parse(JSON.stringify(fixture));edit(mod);cases.push(FB.mods.validate(mod).length > 0 &&
       baseline === all() && FB.state === s && FBDATA === data && FB.world === world && FB.activeBookmark === active); }
     function head(m) { return m.religions.estuary_tradition_demo.properties.head; }
     check(function (m) { head(m).succession='unreviewed'; });
@@ -486,9 +490,10 @@ test('detached JSON validation rejects unsupported sources, references and eligi
     check(function (m) { m.governmentForms.estuary_election_demo.succession='kin_acclamation'; });
     check(function (m) { m.bookmarks.paired_office_world.religiousHeads.estuary_office_demo='southern_court_demo'; });
     check(function (m) { m.bookmarks.paired_office_world.realms[0].religion='catholic'; });
-    return {cases:cases,valid:FB.mods.validate(fixture),pure:baseline === all()};
-  },estuary);
-  expect(result).toEqual({cases:Array(18).fill(true),valid:[],pure:true});
+    edits.slice(arg.from,arg.to).forEach(run);
+    return {total:edits.length,cases:cases,valid:FB.mods.validate(fixture),pure:baseline === all()};
+  },{fixture:estuary,from:part.from,to:part.to});
+  expect(result).toEqual({total:18,cases:Array(part.to-part.from).fill(true),valid:[],pure:true});
 });
 
 test('matching signatures and repeated restore retain null, missing and suspended political pointers', async function ({page},info) {

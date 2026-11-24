@@ -388,7 +388,8 @@ for (const front of ['syrian','iraqi']) test(front+' frontier remains independen
   await roundTrip(page);
 });
 
-async function beginImportedCourt(page,info) {
+// Saved-content rejection journeys need only a started court, so they skip the household expense steps.
+async function beginImportedCourt(page,info,options) {
   await load(page,info);
   const mod = await page.evaluate(function () {
     const b = JSON.parse(JSON.stringify(FBDATA.bookmarks['634']));
@@ -401,7 +402,7 @@ async function beginImportedCourt(page,info) {
   await page.locator('#modfile').setInputFiles({name:'autumn-courts.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod),'utf8')});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page); await begin(page,starts[4]);
-  await page.evaluate(function () {
+  if (!options || options.expenses !== false) await page.evaluate(function () {
     const s = FB.state, id = 'medina_household_track_634';
     ['consider_home','decline_work','buy_provisions'].forEach(function (choice) {
       if (!FB.stories.apply(s,id,choice,FB.stories.quote(s,id,choice))) throw new Error('Missing household expense choice');
@@ -417,7 +418,7 @@ test('ordinary JSON full-world content restores twice with matching campaign fac
 });
 
 test('reloaded ordinary JSON full-world content rejects malformed saves before mutation',async function ({page},info) {
-  await beginImportedCourt(page,info);
+  await beginImportedCourt(page,info,{expenses:false});
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
   await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page); await restoreBookmark(page,saved);
   expect(await page.evaluate(function (text) {
@@ -436,7 +437,7 @@ test('reloaded ordinary JSON full-world content rejects malformed saves before m
 });
 
 test('changed ordinary JSON full-world definitions reject saved content before mutation',async function ({page},info) {
-  const mod = await beginImportedCourt(page,info);
+  const mod = await beginImportedCourt(page,info,{expenses:false});
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
   mod.bookmarks['634'].revisions.core_courts_v4.localInstitutions.rome_see.representative.skills.dip = 8;
   await page.evaluate(function () { FB.ui.showMods(); });

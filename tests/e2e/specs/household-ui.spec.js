@@ -166,6 +166,9 @@ test('adjusts living standards and work outfits inline with tooltip terms',
       'Reduces yearly household mortality by 0.1 percentage points.');
     await expect(board.locator('.household-entry-cost'))
       .toContainText(setup.nextBoardCost);
+    // The upkeep shortfall choice now sits above the living standards, so the
+    // last row starts below the desktop fold; it must still scroll into view.
+    await livingRows.last().scrollIntoViewIfNeeded();
     await expect(livingRows.last()).toBeInViewport();
 
     const rowHeights = await livingRows.evaluateAll(function (rows) {
