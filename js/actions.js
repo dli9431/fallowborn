@@ -3899,7 +3899,7 @@ window.FB = window.FB || {};
       return ready !== null && s.turn < ready ? FB.T('Ready in {days} days.',{days:ready - s.turn}) : true;
     },
     routineEventContext: function (s, routine) {
-      return routine.queueEvent === 'bishop_synod' ? FB.religiousCases.synodalGathering(s, routine.costs) : {};
+      return synodalRoutine(routine) ? FB.religiousCases.synodalGathering(s, routine.costs) : {};
     } },
   { id: 'extraordinary_tithe',
     show: function (s) {
@@ -13022,9 +13022,15 @@ window.FB = window.FB || {};
     return action.cooldownDays ? action.cooldownDays(state) : action.cd;
   }
 
+  // A routine is a synodal gathering when its queued event hosts the fee review.
+  function synodalRoutine(routine) {
+    const ev = routine && routine.queueEvent ? FB.eventById(routine.queueEvent) : null;
+    return !!ev && (ev.options || []).some(function (o) { return !!o && !!o.review && o.review.type === 'synodal_fee'; });
+  }
+
   function synodalDeedReadyTurn(state) {
     const routine = FBDATA.deedRoutines.convene_synod, action = deedById.convene_synod;
-    if (!routine || routine.queueEvent !== 'bishop_synod' || !action) return null;
+    if (!routine || !synodalRoutine(routine) || !action) return null;
     const days = actionCooldownDays(state,action);
     if (!(days > 0)) return null;
     const last = FB.religiousCases.synodalFeeLastGathering(state);

@@ -1,18 +1,18 @@
 {
-  "total": 5374,
+  "total": 5398,
   "categories": {
-    "builtin_content_binding": 149,
+    "builtin_content_binding": 150,
     "builtin_event": 224,
-    "builtin_handler": 742,
+    "builtin_handler": 746,
     "builtin_strategy": 2,
     "effect_ledger": 95,
-    "legacy_default": 52,
-    "presentation_token": 69,
-    "protocol_enum": 2018,
+    "legacy_default": 53,
+    "presentation_token": 70,
+    "protocol_enum": 2032,
     "saved_identity": 54,
-    "schema_token_collision": 1453,
-    "system_capability": 280,
+    "schema_token_collision": 1454,
+    "system_capability": 281,
     "technology_capability": 20,
-    "trait_mechanic": 216
+    "trait_mechanic": 217
   }
 }

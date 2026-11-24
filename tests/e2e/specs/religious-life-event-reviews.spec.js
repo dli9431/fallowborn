@@ -302,6 +302,7 @@ test('phone review Cancel and Escape retain the exact event, parties, scroll and
 });
 
 
+// Reviewed counts and category totals live in fixtures/engine-ids/content-id-allowlist.json and content-id-metric.json; change them with the source.
 test('religious adapters retain closed content identity reviews and exact owner protocol counts',async function ({page},info) {
   await openGame(page,info);
   const tables=await page.evaluate(function () {

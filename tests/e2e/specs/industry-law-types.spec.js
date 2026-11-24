@@ -356,6 +356,7 @@ test('compact reviews disclose guild and office terms, suspension deadlines and 
   await expect(page.locator('#industry-operation-resume')).toBeDisabled();
 });
 
+// Reviewed counts and category totals live in fixtures/engine-ids/content-id-allowlist.json and content-id-metric.json; change them with the source.
 test('changed engine files retain exact reviewed content spelling counts', function () {
   const root = path.resolve(__dirname,'../../..');
   const changed = ['js/industry_laws.js','js/justice.js','js/ui_modals.js'];

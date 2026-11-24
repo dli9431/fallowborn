@@ -271,12 +271,18 @@ window.FBMODS = window.FBMODS || [];
       if (roots && (key === 'episcopalClaims' || key === 'religiousCases') && !roots[key]) return;
       if (own(data, key)) effective[key] = data[key];
     });
-    if (roots && effective.religiousCases && !roots.romanClericalViolence) {
-      // Keep the pre-extension signature for mods that inherit this native
-      // profile. Enacted terms pin the full declaration in the court ledger.
-      var roman = Object.assign({},effective.religiousCases.roman_clerical_violence);
-      delete roman.synodalFee;
-      effective.religiousCases = Object.assign({},effective.religiousCases,{roman_clerical_violence:roman});
+    if (roots && effective.religiousCases) {
+      // Keep the pre-extension signature for mods that inherit a native
+      // profile with a prospective fee option. Enacted terms pin the full
+      // declaration in the court ledger.
+      var cases = Object.assign({},effective.religiousCases), authored = roots.religiousProfiles || {};
+      Object.keys(cases).forEach(function (id) {
+        if (!own(cases[id] || {},'synodalFee') || own(authored,id)) return;
+        var inherited = Object.assign({},cases[id]);
+        delete inherited.synodalFee;
+        cases[id] = inherited;
+      });
+      effective.religiousCases = cases;
     }
     if (roots && effective.techImpactReviews && !roots.synodalFeeImpact) {
       // This native review is metadata. Authored replacements remain exact.
@@ -3627,7 +3633,10 @@ window.FBMODS = window.FBMODS || [];
     authoringRoots.forEach(function (key) { if (own(mod, key)) authoredRoots[key] = true; });
     if (own(mod,'episcopalClaims')) authoredRoots.episcopalClaims = true;
     if (own(mod,'religiousCases')) authoredRoots.religiousCases = true;
-    if (own(mod.religiousCases || {},'roman_clerical_violence')) authoredRoots.romanClericalViolence = true;
+    if (own(mod,'religiousCases')) {
+      authoredRoots.religiousProfiles = authoredRoots.religiousProfiles || Object.create(null);
+      Object.keys(mod.religiousCases || {}).forEach(function (id) { authoredRoots.religiousProfiles[id] = true; });
+    }
     if (own(mod.techImpactReviews && mod.techImpactReviews.features || {},'synodal_settlement_fee')) authoredRoots.synodalFeeImpact = true;
     // Newly exposed roots join the fingerprint only when authored. Otherwise
     // exposing an existing engine table would invalidate unchanged older mods.
