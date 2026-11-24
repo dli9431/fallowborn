@@ -3,7 +3,6 @@
   'use strict';
   var R = FB.religiousCases = {}, C = FB.episcopalClaims, MAX = 64;
   var MAX_PROFILES = 32;
-  var ROMAN_PROFILE = 'roman_clerical_violence';
   var PRE_SYNOD_ROMAN = '36bd30dba65ea73580e96dd3aca510d8ad9ce7a1ccff561b8c349ccf0ad025b2';
   var ACTIVE = ['charged','offered','referred','accepted'];
   FB.eventStateReaders.register({id:'open_religious_case',system:'religious_cases',
@@ -37,8 +36,9 @@
   function profile(id) { return own(FBDATA.religiousCases,id) ? FBDATA.religiousCases[id] : null; }
   function matchesDefinition(r,p) {
     if (r.definitionFingerprint === FB.mods.fingerprint(p)) return true;
-    // The original Roman declaration had no prospective fee option.
-    if (r.profileId !== ROMAN_PROFILE || r.definitionFingerprint !== PRE_SYNOD_ROMAN || !p.synodalFee) return false;
+    // The original Roman declaration had no prospective fee option; its exact
+    // predecessor fingerprint identifies it without naming the profile.
+    if (r.definitionFingerprint !== PRE_SYNOD_ROMAN || !p.synodalFee) return false;
     var predecessor = Object.assign({},p);
     delete predecessor.synodalFee;
     return FB.mods.fingerprint(predecessor) === PRE_SYNOD_ROMAN;
@@ -134,6 +134,11 @@
     var agenda = ctx && ctx.synodalFeeAgenda;
     return agenda && (a.operation === 'repeal') === own(agenda,'ruleId') ? agenda : null;
   }
+  // The gathering event is whichever event the convene_synod deed routine queues.
+  function synodalEventId(id) {
+    var routine = FBDATA.deedRoutines && FBDATA.deedRoutines.convene_synod;
+    return !!routine && routine.queueEvent === id;
+  }
   function synodalEventQuote(s,a,ctx) {
     var agenda = matchingAgenda(a,ctx);
     if (!agenda || !Number.isSafeInteger(agenda.turn) || !agenda.costs || !s.player.cooldowns ||
@@ -152,7 +157,7 @@
   FB.eventReviews.register('synodal_fee',{
     owner:'religious_cases',quote:synodalEventQuote,
     args:{type:'object',fields:synodalEventFields,test:function (a,c) {
-      return c.runtime || !!(c.event && c.event.id === 'bishop_synod' && c.event.options.every(function (o) {
+      return c.runtime || !!(c.event && synodalEventId(c.event.id) && c.event.options.every(function (o) {
         return !o || !o.review || o.review.type !== 'synodal_fee' || o.manualOnly === true;
       }));
     }},

@@ -47,6 +47,7 @@ function expectReaders(rows) {
     positive:[row.id],negative:[],rejectionPure:true});
 }
 
+// Reviewed counts and category totals live in fixtures/engine-ids/content-id-allowlist.json and content-id-metric.json; change them with the source.
 test('trusted reader registrations preserve the closed content-id metric',async function ({page},info) {
   await openGame(page,info);
   const tables=await page.evaluate(function () {

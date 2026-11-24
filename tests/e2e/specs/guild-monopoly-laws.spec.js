@@ -13,6 +13,7 @@ dependsOnRuntime(__filename, ['data/industry_laws.js','data/economy.js','data/te
   'js/industry_laws.js','js/schema.js','js/economy.js','js/actions.js','js/justice.js','js/treasury.js',
   'js/government_continuity.js','js/institutions.js','js/market.js','js/world.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_panels.js']);
 
+// Reviewed counts and category totals live in fixtures/engine-ids/content-id-allowlist.json and content-id-metric.json; change them with the source.
 test('changed law, account and presentation owners retain exact reviewed content spellings', function () {
   const root = path.resolve(__dirname,'../../..');
   const files = ['js/actions.js','js/economy.js','js/industry_laws.js','js/institutions.js','js/treasury.js','js/ui_modals.js','js/ui_panels.js','js/world.js'];

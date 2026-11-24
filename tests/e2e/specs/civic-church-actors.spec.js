@@ -77,7 +77,7 @@ test('researched civic seats and head offices are distinct, pure and period scop
     'alexandria_council_476','antioch_council','candia_council_476','ctesiphon_council_476',
     'edessa_council_476','fayyum_council_476','fustat_council_476','nicosia_council_476',
     'trebizond_council_476','uppakra_assembly_476','viroconium_assembly_476','weser_assembly_476'].sort());
-  expect(result.sees).toBe(108);
+  expect(result.sees).toBe(109);
   expect(result.periodRoute).toBe('standing');
   expect(result.pure).toBe(true);
   expect(result.quote).toBe(true);

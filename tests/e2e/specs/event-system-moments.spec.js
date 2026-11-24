@@ -62,6 +62,7 @@ async function lawSetup(page,native) {
   },!!native);
 }
 
+// Reviewed counts and category totals live in fixtures/engine-ids/content-id-allowlist.json and content-id-metric.json; change them with the source.
 test('moment and review adapters preserve the closed content-id metric',async function ({page},info) {
   await openGame(page,info);
   const tables=await page.evaluate(function () {

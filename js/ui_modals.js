@@ -2263,7 +2263,7 @@ window.FB = window.FB || {};
         '</p></div></div>';
     }
     bodyHtml += freedomOfferTermsHtml(s, ev);
-    if (ev.id === 'bishop_synod' && ctx.synodalFeeAgenda) {
+    if (ctx.synodalFeeAgenda) {
       let reviewed = null;
       ev.options.some(function (option) {
         if (option.review && option.review.type === 'synodal_fee') reviewed = FB.eventReviews.quote(s,option,ctx);

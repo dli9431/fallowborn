@@ -285,3 +285,15 @@ test('an added quoted content id in a real engine source fails the file review a
   expect(metricProblems(contentIdMetric(changed, owners, allowlist.hooks), recorded))
     .toContain('Quoted content-id total rose: ' + recorded.total + ' -> ' + (recorded.total + 1));
 });
+
+test('ecclesiastical fee and synod ids stay data-routed in engine source', function () {
+  const counts = quotedCounts(engineSources());
+  const quoted = {};
+  counts.forEach(function (count, key) {
+    const id = key.split('\n')[1];
+    quoted[id] = (quoted[id] || 0) + count;
+  });
+  expect(quoted.bishop_synod || 0, 'The synod event is found through the convene_synod routine').toBe(0);
+  expect(quoted.roman_clerical_violence || 0, 'Fee-option compatibility follows data, not one profile id').toBe(0);
+  expect(quoted.synodal_settlement_fee || 0, 'The reviewed legacy signature pin').toBe(1);
+});
