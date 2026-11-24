@@ -877,7 +877,8 @@ FB.bookmarkSources.eventPack('data/events_451.js',function (FBDATA) {
         "letters"
       ],
       "seasonKinds": [
-        "winter"
+        "winter",
+        "mild_winter"
       ]
     },
     "weight": 3,
@@ -926,7 +927,8 @@ FB.bookmarkSources.eventPack('data/events_451.js',function (FBDATA) {
         }
       ],
       "seasonKinds": [
-        "winter"
+        "winter",
+        "mild_winter"
       ]
     },
     "weight": 3,
@@ -993,7 +995,8 @@ FB.bookmarkSources.eventPack('data/events_451.js',function (FBDATA) {
         }
       ],
       "seasonKinds": [
-        "winter"
+        "winter",
+        "mild_winter"
       ]
     },
     "weight": 3,
@@ -1056,7 +1059,8 @@ FB.bookmarkSources.eventPack('data/events_451.js',function (FBDATA) {
         }
       ],
       "seasonKinds": [
-        "winter"
+        "winter",
+        "mild_winter"
       ]
     },
     "weight": 3,
@@ -1102,7 +1106,8 @@ FB.bookmarkSources.eventPack('data/events_451.js',function (FBDATA) {
         }
       ],
       "seasonKinds": [
-        "winter"
+        "winter",
+        "mild_winter"
       ]
     },
     "weight": 3,

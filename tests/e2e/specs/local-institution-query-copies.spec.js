@@ -29,6 +29,16 @@ async function routeProbe(page) {
   });
 }
 async function inject(page) { await page.addScriptTag({path:path.join(fixture, 'probe.js')}); }
+// The seasonal pass builds the roster list once and reuses it for settlement,
+// while the unchanged reference lists the same roster a second time after the
+// period stamp. A pass that settles therefore does exactly one list of the first
+// list's length (two copies per item) fewer; a pass that returns early is equal.
+function expectedCounts(reference) {
+  if (reference.lists < 2) return reference;
+  const items = reference.items.slice(), repeated = items.splice(1, 1)[0];
+  expect(repeated).toBe(reference.items[0]);
+  return Object.assign({}, reference, {lists:reference.lists - 1, copies:reference.copies - 2 * repeated, items:items});
+}
 
 for (const bookmark of ['476','1096','1204']) {
   test('season guards preserve complete state and actual boundary copies in ' + bookmark, async function ({page}, info) {
@@ -51,9 +61,9 @@ for (const bookmark of ['476','1096','1204']) {
         expect(r.reference.lists).toBe(1);
         expect(r.reference.copies).toBe(2 * r.reference.items[0]);
       } else {
-        expect(r.candidate).toEqual(r.reference);
+        expect(r.candidate).toEqual(expectedCounts(r.reference));
         expect(r.period).toBe(Math.floor(row.turn / 90));
-        expect(r.candidate.lists).toBeGreaterThanOrEqual(2);
+        expect(r.reference.lists).toBeGreaterThanOrEqual(2); expect(r.candidate.lists).toBeGreaterThanOrEqual(1);
       }
     }
     if (bookmark === '476') expect(rows.find(function (r) { return r.turn === 90; }).result.settlements).toBeGreaterThan(0);
@@ -77,7 +87,7 @@ test('empty and absent rosters retain callback order and do not stamp an unsettl
     return results;
   });
   for (const row of results) {
-    expect(row.result.candidate).toEqual(row.result.reference);
+    expect(row.result.candidate).toEqual(expectedCounts(row.result.reference));
     if (row.kind === 'absent' || row.kind === 'remove') expect(row.result.candidate.lists).toBe(0);
     if (row.kind === 'empty') expect(row.result.candidate.lists).toBe(1);
     expect(row.result.period).toBe(row.kind === 'create' ? 1 : undefined);
@@ -122,9 +132,9 @@ test('same-period additions, definition replacement, detached lists and restore 
   });
   expect(result).toMatchObject({detached:true,absent:true,visible:true,replaced:'Replacement'});
   for (const key of ['catalogueOnly','added','skipped','restored']) expect(result[key].candidate.lists).toBe(0);
-  expect(result.boundary.candidate).toEqual(result.boundary.reference);
+  expect(result.boundary.candidate).toEqual(expectedCounts(result.boundary.reference));
   expect(result.newStanding).toBeGreaterThan(0);
-  expect(result.next.candidate).toEqual(result.next.reference);
+  expect(result.next.candidate).toEqual(expectedCounts(result.next.reference));
 });
 
 const officeMod = require('../fixtures/political-religious-head/estuary.json');
@@ -158,10 +168,10 @@ async function modFacts(page) {
 }
 function expectModFacts(facts, city) {
   expect(facts).toMatchObject({city:city,count:1,matching:true});
-  expect(facts.boundary.candidate).toEqual(facts.boundary.reference);
+  expect(facts.boundary.candidate).toEqual(expectedCounts(facts.boundary.reference));
   expect(facts.boundary.period).toBe(1);
   expect(facts.skipped.candidate.lists).toBe(0); expect(facts.skipped.candidate.copies).toBe(0);
-  expect(facts.next.candidate).toEqual(facts.next.reference);
+  expect(facts.next.candidate).toEqual(expectedCounts(facts.next.reference));
   expect(facts.next.period).toBe(2);
 }
 
@@ -197,5 +207,5 @@ preparedInstitutionCase('ordinary JSON institution removal restores live unmodde
       absent:!FB.localInstitutionDefinitions(s).river_council_demo,pair:INSTITUTION_COPIES.pair(s)};
   });
   expect(result).toMatchObject({count:0,signature:'',absent:true});
-  expect(result.pair.candidate).toEqual(result.pair.reference);
+  expect(result.pair.candidate).toEqual(expectedCounts(result.pair.reference));
 });
