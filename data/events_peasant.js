@@ -182,7 +182,7 @@ FBDATA.events.push(
     { label:'Sow little, hire out your back instead.', desc:'Coin today, and let another man fret at the sky.', effects:{ gold:3 } }
   ]},
 { id:'summer_storm', title:'Black Clouds Over the Fields',
-  trigger:{ tierMax:1, careerRoles:['labor'], seasonKinds:['summer'], chance:0.3 }, weight:8, cooldown:3,
+  trigger:{ tierMax:1, careerRoles:['labor'], seasonKinds:['summer','dry_summer','hot_dry'], chance:0.3 }, weight:8, cooldown:3,
   text:'Hail-heavy clouds pile up beyond the hills. A summer storm could flatten every stalk you own.',
   options:[
     { label:'Rush the early cutting.', desc:'Take what the field offers before the sky takes it back.', effects:{ gold:2, clearFlag:'crop_risky', setFlag:'crop_safe', health:-1 } },
@@ -203,7 +203,7 @@ FBDATA.events.push(
             flow:-0.12, severe:true, seasons:8 } } } }
   ]},
 { id:'lean_winter', title:'The Hungry Months',
-  trigger:{ tierMax:1, seasonKinds:['winter'], flags:['lean_winter'] }, weight:25,
+  trigger:{ tierMax:1, seasonKinds:['winter','mild_winter','cool_season'], flags:['lean_winter'] }, weight:25,
   text:'The grain jar echoes. Your household chews bark-bread and watches the snow.',
   options:[
     { label:'Buy grain at winter prices.', require:{ goldMin:6 }, desc:'Silver staves off hunger — at the season’s bitter price.', effects:{ gold:-6, clearFlag:'lean_winter' } },
@@ -816,7 +816,7 @@ FBDATA.events.push(
 
 /* ---------- village life ---------- */
 { id:'village_festival', title:'Festival Day',
-  trigger:{ tierMax:2, seasonKinds:['summer'], chance:0.35 }, weight:8, cooldown:4,
+  trigger:{ tierMax:2, seasonKinds:['summer','dry_summer','hot_dry'], chance:0.35 }, weight:8, cooldown:4,
   text:'Garlands on the well, a lamb on the spit, and the musicians already flushed with cheer. {province} forgets its burdens for a day.',
   options:[
     { label:'Dance, eat, laugh.', desc:'A day of joy costs little and pays in strength.', effects:{ health:1, opinion:{role:'friend', amt:5} } },

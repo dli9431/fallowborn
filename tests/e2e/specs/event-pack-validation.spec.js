@@ -237,4 +237,84 @@ test('451 county-local season triggers stay reachable under each county climate'
   expect(result.checked.length).toBe(5);
   expect(result.unreachable).toEqual([]);
 });
+/* Events whose trigger plainly means the calendar season: the kind they were
+   written for and its calendar index (3 is winter, 1 is summer). A zone that
+   has no such kind lists its own kind for that calendar season. */
+const calendarSeasonEvents = {
+  winter_fever:['winter',3], harsh_winter:['winter',3], child_winter_tales:['winter',3],
+  famine_relief:['winter',3], lean_winter:['winter',3],
+  child_festival:['summer',1], summer_storm:['summer',1], village_festival:['summer',1]
+};
+/* A deliberately northern event keeps its kinds in the named zones. */
+const northernOnlyEvents = {
+  wolves:{zones:['mediterranean','arid'],reason:'Tracks in lying snow and a flock penned until spring describe a cold-country upland hazard, not a mild winter or an arid cool season.'}
+};
+
+test('every event season trigger is reachable in each climate zone of the counties that can host it',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function () {
+    // Counties of every bookmark by climate zone, with the terrain the event gate reads.
+    // A dated pack only runs in the bookmarks it names.
+    const hosts={};
+    FB.bookmarks(true).forEach(function (definition) {
+      const geography=FB.geography(FB.bookmarkGeography(definition)),seen={};
+      (definition.provinces||[]).concat(geography && geography.provinces || []).forEach(function (county) {
+        if (!county || !county.id || seen[county.id]) return;
+        seen[county.id]=true;
+        const zone=FB.climateZoneOf(county.id,definition);
+        if (!zone) return;
+        (hosts[zone]=hosts[zone]||[]).push({id:county.id,terrain:county.terrain||'farmland',bookmark:definition.id});
+      });
+    });
+    const checked=[],unreachable=[];
+    FBDATA.events.forEach(function (ev) {
+      const trigger=ev.trigger;
+      if (!trigger || !trigger.seasonKinds) return;
+      checked.push(ev.id);
+      Object.keys(hosts).forEach(function (zone) {
+        const pack=FBDATA.eventPacks && FBDATA.eventPacks[ev.pack],only=pack && pack.bookmarkIds;
+        const eligible=hosts[zone].filter(function (county) {
+          return (!only || only.indexOf(county.bookmark)>=0) &&
+            (!trigger.countyIds || trigger.countyIds.indexOf(county.id)>=0) &&
+            (!trigger.terrains || trigger.terrains.indexOf(county.terrain)>=0);
+        });
+        if (!eligible.length) return;
+        const kinds=FB.climateZone(zone).seasons;
+        if (!kinds.some(function (kind) {return trigger.seasonKinds.indexOf(kind)>=0;}))
+          unreachable.push(ev.id+': '+zone);
+      });
+    });
+    return {checked:checked,unreachable:unreachable,zones:Object.keys(hosts).sort(),
+      kinds:FBDATA.events.reduce(function (out,ev) {
+        if (ev.trigger && ev.trigger.seasonKinds) out[ev.id]=ev.trigger.seasonKinds.slice();
+        return out;
+      },{}),
+      zoneSeasons:Object.keys(FBDATA.climateZones).reduce(function (out,zone) {
+        out[zone]=FBDATA.climateZones[zone].seasons.slice();
+        return out;
+      },{})};
+  });
+  expect(result.checked.length).toBeGreaterThanOrEqual(26);
+  expect(result.zones).toEqual(expect.arrayContaining(['arid','mediterranean','northern_temperate']));
+  const excluded={},reasons=[];
+  Object.keys(northernOnlyEvents).forEach(function (id) {
+    reasons.push(northernOnlyEvents[id].reason);
+    northernOnlyEvents[id].zones.forEach(function (zone) {excluded[id+': '+zone]=true;});
+  });
+  expect(reasons.every(function (reason) {return reason.length>20;})).toBe(true);
+  // An exclusion that no longer hides an unreachable event is stale.
+  expect(Object.keys(excluded).filter(function (key) {return result.unreachable.indexOf(key)<0;})).toEqual([]);
+  expect(result.unreachable.filter(function (key) {return !excluded[key];})).toEqual([]);
+  // Calendar-season events list each zone's own kind for that season.
+  const lacking=[];
+  Object.keys(calendarSeasonEvents).forEach(function (id) {
+    Object.keys(result.zoneSeasons).forEach(function (zone) {
+      const seasons=result.zoneSeasons[zone],kind=seasons[calendarSeasonEvents[id][1]];
+      if (seasons.indexOf(calendarSeasonEvents[id][0])>=0) return;
+      if (!result.kinds[id] || result.kinds[id].indexOf(kind)<0) lacking.push(id+': '+zone+' '+kind);
+    });
+  });
+  expect(lacking).toEqual([]);
+});
 dependsOnRuntime(__filename,['js/climate.js','data/climate.js']);
+dependsOnRuntime(__filename,['js/world.js','data/bookmarks.js','data/geographies.js','data/events_common.js','data/events_noble.js','data/events_paths.js','data/events_peasant.js']);

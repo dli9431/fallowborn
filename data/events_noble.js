@@ -111,7 +111,7 @@ FBDATA.events.push(
     { label:'Turn him away.', desc:'Books find other roofs.', effects:{ } }
   ]},
 { id:'famine_relief', title:'Empty Granaries', tags:['famine'],
-  trigger:{ tierMin:3, seasonKinds:['winter'], chance:0.12 }, weight:8, cooldown:12,
+  trigger:{ tierMin:3, seasonKinds:['winter','mild_winter','cool_season'], chance:0.12 }, weight:8, cooldown:12,
   text:'The harvest failed across {province}, and now the roads fill with hollow-eyed families drifting toward your keep.',
   options:[
     { label:'Open the granary reserves.', desc:'Full barns were built for days like this.', require:{ buildingRoles:['food_store'] },

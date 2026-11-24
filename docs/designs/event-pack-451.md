@@ -51,6 +51,8 @@ arguments, letters and proposals. They impose no historical council outcome,
 deposition, religious conversion or communal change. Rome receives reports in
 the same winter window; no exact courier travel date is claimed.
 
+Winter here is the county's calendar winter. Mediterranean counties use mild_winter for calendar winter, so each church scene lists both winter and mild_winter in its season kinds; a scene that listed only winter could never fire there. Shared event packs follow the same rule: an event whose trigger means the calendar season lists the kind each climate zone gives that season, and event-pack-validation.spec.js checks every event with season kinds against the zones of the counties that can host it.
+
 These are fictional local incidents informed by Priscus’s account of the
 Danubian court and village provisioning, Salvian’s account of fiscal pressure
 and displacement, Jordanes’s later account of the 451 Gallic campaign, and the

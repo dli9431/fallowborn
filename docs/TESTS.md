@@ -28,7 +28,10 @@ disabled observation tags, option requirements, selection-local caching and
 matching restore. event-pack-validation.spec.js validates every registered pack
 and discovers declarative semantic fixture files under fixtures/event-packs/;
 extend only its fixture filename registrations for another pack. Each row stages
-literal patches on a detached state and checks eligibility and read purity.
+literal patches on a detached state and checks eligibility and read purity. Its climate case checks every event with
+seasonKinds against the zone of every county that can host it and names an
+event that no zone season can satisfy; a deliberately northern event is
+recorded there as an exclusion with its reason.
 period-event-parity.spec.js compares fixed-seed selection against the catalogue
 without the new observation content in fresh 867 and 1066, including exact
 contexts, RNG, UID and zero reader work. This bounded selection check does not
