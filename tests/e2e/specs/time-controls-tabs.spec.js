@@ -1,0 +1,665 @@
+'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'data/events_tutorial.js',
+  'js/main.js',
+  'js/wars.js',
+  'js/ui_wars.js',
+  'data/actions.js',
+  'js/actions.js',
+  'js/armies.js',
+  'js/economy.js',
+  'js/world.js',
+  'js/papacy.js',
+  'js/holywar.js',
+  'js/modifiers.js',
+  'js/politics.js',
+  'js/institutions.js',
+  'js/market.js',
+  'js/treasury.js',
+  'js/logistics.js',
+  'js/events.js',
+  'js/ui_misc.js',
+  'js/ui_panels.js',
+  'js/portrait.js',
+  'js/keys.js',
+  'js/ui_topbar.js',
+  'js/ui_modals.js',
+  'js/mapview.js',
+  'js/save.js',
+  'css/style.css'
+]);
+
+const { test, expect } = require('../support/fixture');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
+
+test.beforeEach(async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+});
+
+test('fast-forward records news immediately but renders only its final five toasts afterward',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const box = document.getElementById('toasts');
+      box.innerHTML = '';
+      const before = FB.state.log.length;
+      FB.game.fastForwarding = true;
+      for (let i = 1; i <= 7; i++) {
+        FB.news(FB.state, 'Fast-forward notice ' + i);
+      }
+      const during = box.children.length;
+      const recorded = FB.state.log.length - before;
+      FB.game.fastForwarding = false;
+      FB.ui.fastForwardFinished();
+      return {
+        during:during,
+        recorded:recorded,
+        after:Array.prototype.map.call(box.children, function (toast) {
+          return toast.textContent;
+        })
+      };
+    });
+    expect(result).toEqual({
+      during:0,
+      recorded:7,
+      after:[
+        'Fast-forward notice 3',
+        'Fast-forward notice 4',
+        'Fast-forward notice 5',
+        'Fast-forward notice 6',
+        'Fast-forward notice 7'
+      ]
+    });
+  });
+
+test('fast-forward matches individual days and avoids invariant repair loops',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-file',
+      'The bounded maintenance comparison belongs to the direct-file canary.');
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      delete FB.state.player.flags.tutorial;
+      FB.state.player.flags.tutorial_done = 1;
+      /* Clicking Skip records that this life has started time. Establish the
+         same durable tutorial metadata before both comparison routes so this
+         control-level receipt is not mistaken for a simulation difference. */
+      FB.state.player.flags.tut_unpause = 1;
+      FB.state.slotDays = [];
+      FB.state.eventQueue = [];
+      /* Put both journeys on the ordinary restored-save boundary so additive
+         load repairs cannot masquerade as a fast-forward difference. */
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      const initial = JSON.parse(FB.save.serialize());
+      const picker = FB.pickDailyEvents;
+      FB.pickDailyEvents = function () { return []; };
+
+      function advanceOneDayAtATime() {
+        const startSeason = FB.state.date.season;
+        const startYear = FB.state.date.year;
+        do {
+          FB.game.passDay();
+        } while (FB.state.date.season === startSeason &&
+          FB.state.date.year === startYear);
+        return FB.save.serialize();
+      }
+
+      const individual = advanceOneDayAtATime();
+      FB.save.restore(initial);
+
+      const counts = {
+        localGovernment:0,
+        politicalCourt:0,
+        institutionPolicies:0,
+        papacy:0,
+        religiousHeads:0,
+        headRecoveryTicks:0,
+        headRecoveryRepairs:0,
+        modifiers:0,
+        economy:0,
+        rulerSync:0,
+        promotions:0
+      };
+      const wrapped = [
+        ['ensureLocalGovernment', 'localGovernment'],
+        ['politicalCourt', 'politicalCourt'],
+        ['realmPolicySync', 'institutionPolicies'],
+        ['ensurePapacy', 'papacy'],
+        ['ensureReligiousHeads', 'religiousHeads'],
+        ['religiousHeadRecoveryTick', 'headRecoveryTicks'],
+        ['ensureModifiers', 'modifiers'],
+        ['ensureEconomy', 'economy'],
+        ['syncMaterializedRealmRulers', 'rulerSync'],
+        ['checkTierPromotions', 'promotions']
+      ];
+      const originals = {};
+      let inHeadRecovery = false;
+      for (let i = 0; i < wrapped.length; i++) {
+        const name = wrapped[i][0], count = wrapped[i][1];
+        originals[name] = FB[name];
+        FB[name] = function () {
+          counts[count]++;
+          if (count === 'religiousHeads' && inHeadRecovery) counts.headRecoveryRepairs++;
+          const previous = inHeadRecovery;
+          if (count === 'headRecoveryTicks') inHeadRecovery = true;
+          try { return originals[name].apply(this, arguments); }
+          finally { inHeadRecovery = previous; }
+        };
+      }
+
+      window.__fastForwardSpec = {
+        individual:individual,
+        startTurn:FB.state.turn,
+        counts:counts,
+        wrapped:wrapped,
+        originals:originals,
+        picker:picker
+      };
+    });
+
+    const yieldedMidSkip = await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        document.getElementById('btn-skip').click();
+        requestAnimationFrame(function () {
+          const stored = window.__fastForwardSpec;
+          const progressed = FB.state.turn - stored.startTurn;
+          resolve(FB.game.fastForwarding && progressed > 0 && progressed < 90);
+        });
+      });
+    });
+    expect(yieldedMidSkip).toBe(true);
+    await expect.poll(function () {
+      return page.evaluate(function () { return !FB.game.fastForwarding; });
+    }).toBe(true);
+
+    const result = await page.evaluate(function () {
+      const stored = window.__fastForwardSpec;
+      const skipped = FB.save.serialize();
+      const days = FB.state.turn - stored.startTurn;
+
+      for (let i = 0; i < stored.wrapped.length; i++) {
+        FB[stored.wrapped[i][0]] = stored.originals[stored.wrapped[i][0]];
+      }
+      /* A full repair after the optimized burst must be a no-op. This catches
+         a due invariant that any retained snapshot failed to notice. */
+      FB.ensureLocalGovernment(FB.state, true);
+      FB.repairPolitics(FB.state);
+      FB.ensureInstitutions(FB.state, { silent:true });
+      FB.ensurePapacy(FB.state);
+      FB.ensureReligiousHeads(FB.state);
+      const repaired = FB.save.serialize();
+      FB.pickDailyEvents = stored.picker;
+      const result = {
+        same:stored.individual === skipped,
+        repairStable:skipped === repaired,
+        days:days,
+        paused:FB.game.paused,
+        counts:stored.counts
+      };
+      delete window.__fastForwardSpec;
+      return result;
+    });
+
+    expect(result.same).toBe(true);
+    expect(result.repairStable).toBe(true);
+    expect(result.days).toBe(90);
+    expect(result.paused).toBe(true);
+    expect(result.counts.localGovernment).toBe(0);
+    expect(result.counts.politicalCourt).toBe(0);
+    expect(result.counts.institutionPolicies).toBeLessThanOrEqual(2);
+    expect(result.counts.papacy).toBeLessThanOrEqual(5);
+    // A fresh game's vacancies are not due in this first season. Daily recovery
+    // must skip repair, while occasional UI/seasonal readers may normalize heads.
+    expect(result.counts.headRecoveryTicks).toBe(result.days);
+    expect(result.counts.headRecoveryRepairs).toBe(0);
+    expect(result.counts.religiousHeads).toBeLessThan(result.days);
+    expect(result.counts.modifiers).toBeLessThanOrEqual(2);
+    /* Seasonal settlement, an adjacent annual price tick, and post-skip Coin
+       & Credit eligibility each reuse their normalized record. */
+    expect(result.counts.economy).toBeLessThanOrEqual(6);
+    expect(result.counts.rulerSync).toBeLessThanOrEqual(2);
+    expect(result.counts.promotions).toBeLessThanOrEqual(2);
+  });
+
+test('realm county indexes persist across quiet days while strength stays current',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function () {
+      const state = FB.state;
+      let realmId = null;
+      let otherRealm = null;
+      for (const pid in state.owner) {
+        const rid = state.owner[pid];
+        /* A Catholic sovereign's default investiture policy scales its
+           realmStrength by 5%, which would blur the exact dev→strength step
+           this spec asserts; use a realm beyond the papal reach instead. */
+        if (!realmId && FB.papacyRealmStrengthMultiplier(state, rid) === 1) realmId = rid;
+        else if (realmId && rid !== realmId) {
+          otherRealm = rid;
+          break;
+        }
+      }
+      let scans = 0;
+      state.owner = new Proxy(state.owner, {
+        ownKeys:function (target) {
+          scans++;
+          return Reflect.ownKeys(target);
+        }
+      });
+      FB.invalidateRealmCache();
+
+      const provinces = FB.realmProvinces(state, realmId).slice();
+      const strength = FB.realmStrength(state, realmId);
+      const afterInitial = scans;
+
+      state.dev[provinces[0]]++;
+      state.turn++;
+      const sameList = FB.realmProvinces(state, realmId).join('|') ===
+        provinces.join('|');
+      const afterQuietDay = scans;
+      const currentStrength = FB.realmStrength(state, realmId);
+      const afterStrengthRefresh = scans;
+
+      state.owner[provinces[0]] = otherRealm;
+      FB.invalidateRealmCache();
+      const rebuilt = FB.realmProvinces(state, realmId);
+
+      return {
+        initialScans:afterInitial,
+        sameList:sameList,
+        quietDayScans:afterQuietDay,
+        currentStrength:currentStrength === strength + 1,
+        strengthScans:afterStrengthRefresh,
+        invalidationScans:scans,
+        transferred:rebuilt.indexOf(provinces[0]) < 0
+      };
+    })).toEqual({
+      initialScans:2,
+      sameList:true,
+      quietDayScans:2,
+      currentStrength:true,
+      strengthScans:3,
+      invalidationScans:4,
+      transferred:true
+    });
+  });
+
+test('quiet army ticks retain the sovereign realm index', async function ({ page }) {
+  await startDeterministicGame(page);
+
+  expect(await page.evaluate(function () {
+    const state = FB.state;
+    state.player.war = null;
+    state.greatHolyWar = null;
+    state.armies = [];
+    for (const id in state.realms) state.realms[id].war = null;
+    let scans = 0;
+    state.realms = new Proxy(state.realms, {
+      ownKeys:function (target) {
+        scans++;
+        return Reflect.ownKeys(target);
+      }
+    });
+    // Both campaign bindings and muster order rebuild for this revision.
+    FB.invalidateRealmCache();
+
+    FB.armyTick(state);
+    const initialScans = scans;
+    state.turn++;
+    FB.armyTick(state);
+    const quietDayScans = scans;
+    FB.invalidateRealmCache();
+    FB.armyTick(state);
+
+    return {
+      initialScans:initialScans,
+      quietDayScans:quietDayScans,
+      invalidationScans:scans
+    };
+  })).toEqual({
+    initialScans:2,
+    quietDayScans:2,
+    invalidationScans:4
+  });
+});
+
+test('direct-vassal reads retain the hierarchy index across quiet days',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function () {
+      const state = FB.state;
+      let candidateId = null;
+      for (const id in state.realms) {
+        if (id !== 'player' && state.realms[id] && state.realms[id].alive) {
+          candidateId = id;
+          break;
+        }
+      }
+      let scans = 0;
+      state.realms = new Proxy(state.realms, {
+        ownKeys:function (target) {
+          scans++;
+          return Reflect.ownKeys(target);
+        }
+      });
+      FB.invalidateRealmCache();
+
+      FB.playerVassals(state);
+      const initialScans = scans;
+      state.turn++;
+      FB.playerVassals(state);
+      const quietDayScans = scans;
+
+      state.realms[candidateId].liege = 'player';
+      FB.invalidateRealmCache();
+      const rebuilt = FB.playerVassals(state);
+      return {
+        initialScans:initialScans,
+        quietDayScans:quietDayScans,
+        invalidationScans:scans,
+        includesMutation:rebuilt.indexOf(candidateId) >= 0
+      };
+    })).toEqual({
+      initialScans:1,
+      quietDayScans:1,
+      invalidationScans:2,
+      includesMutation:true
+    });
+  });
+
+test('clicking a panel tab leaves Space as the pause hotkey', async function ({ page }) {
+  await startDeterministicGame(page);
+  await page.evaluate(function () {
+    delete FB.state.player.flags.tutorial;
+    FB.state.player.flags.tutorial_done = 1;
+    FB.state.eventQueue = [];
+    FB.state.slotDays = [];
+    FB.game.uiPrefs.hideTips = true;
+    FB.game.uiPrefs.hideBeginnerHints = true;
+    FB.game.setPaused(true);
+  });
+
+  const landTab = page.locator('#sidetabs .tab[data-tab="prov"]');
+  await landTab.click();
+  await expect(landTab).toHaveClass(/active/);
+  /* A pointer click must not leave the tab focused: a focused button swallows
+     Space as native activation, stealing the pause hotkey until another tab
+     is clicked. Keyboard activation (event detail 0) still keeps focus. */
+  await expect(landTab).not.toBeFocused();
+  await expect.poll(function () {
+    return page.evaluate(function () { return FB.game.paused; });
+  }).toBe(true);
+
+  await page.keyboard.press('Space');
+  await expect.poll(function () {
+    return page.evaluate(function () { return FB.game.paused; });
+  }).toBe(false);
+  await page.keyboard.press('Space');
+  await expect.poll(function () {
+    return page.evaluate(function () { return FB.game.paused; });
+  }).toBe(true);
+
+  const kinTab = page.locator('#lefttabs .tab[data-tab="family"]');
+  await kinTab.click();
+  await expect(kinTab).toHaveClass(/active/);
+  await expect(kinTab).not.toBeFocused();
+  await page.keyboard.press('Space');
+  await expect.poll(function () {
+    return page.evaluate(function () { return FB.game.paused; });
+  }).toBe(false);
+});
+
+test('closing pointer-opened Automation leaves Space as the pause hotkey',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      delete FB.state.player.flags.tutorial;
+      FB.state.player.flags.tutorial_done = 1;
+      FB.state.eventQueue = [];
+      FB.state.slotDays = [];
+      FB.game.uiPrefs.hideTips = true;
+      FB.game.uiPrefs.hideBeginnerHints = true;
+      FB.game.setPaused(true);
+    });
+
+    await page.locator('#btn-auto').click();
+    await expect(page.getByRole('heading', { name:'⚙ Automation' })).toBeVisible();
+    await page.locator('#ar-close').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect(page.locator('#btn-endturn')).toBeFocused();
+
+    await page.keyboard.press('Space');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.game.paused; });
+    }).toBe(false);
+    await page.keyboard.press('Space');
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.game.paused; });
+    }).toBe(true);
+  });
+
+test('tab switches render only the selected desktop panel column',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.setViewportSize({ width:1280, height:800 });
+    const result = await page.evaluate(function () {
+      delete FB.state.player.flags.tutorial;
+      FB.state.player.flags.tutorial_done = 1;
+      FB.state.eventQueue = [];
+      FB.state.slotDays = [];
+      FB.game.uiPrefs.hideTips = true;
+      FB.game.uiPrefs.hideBeginnerHints = true;
+      FB.game.setPaused(true);
+
+      FB.ui.showTab('char', { history:false });
+      FB.ui.showTab('actions', { history:false });
+
+      const originalPaintFaces = FB.paintFaces;
+      const painted = [];
+      FB.paintFaces = function (root) {
+        painted.push(root && root.id);
+        return originalPaintFaces.apply(this, arguments);
+      };
+
+      FB.ui.showTab('prov', { history:false });
+      const rightSwitchPainted = painted.slice();
+
+      painted.length = 0;
+      FB.ui.showTab('actions', { history:false });
+      const sentinel = document.createElement('i');
+      sentinel.id = 'right-panel-switch-sentinel';
+      document.getElementById('tab-actions').appendChild(sentinel);
+      painted.length = 0;
+      FB.ui.showTab('family', { history:false });
+
+      const leftSwitchPainted = painted.slice();
+      const rightPanelPreserved = !!document.getElementById(
+        'right-panel-switch-sentinel');
+      FB.paintFaces = originalPaintFaces;
+      return {
+        rightSwitchPainted:rightSwitchPainted,
+        leftSwitchPainted:leftSwitchPainted,
+        rightPanelPreserved:rightPanelPreserved
+      };
+    });
+
+    expect(result.rightSwitchPainted).toEqual(['tab-prov']);
+    expect(result.leftSwitchPainted).toEqual(['tab-family']);
+    expect(result.rightPanelPreserved).toBe(true);
+  });
+
+test('returning to clean Deeds reuses its mounted tree until a refresh request',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.setViewportSize({ width:1280, height:800 });
+    await page.evaluate(function () {
+      FB.game.setPaused(true);
+    });
+    await waitForUiRefresh(page);
+    await page.evaluate(function () {
+      FB.ui.showTab('actions', { history:false });
+      window.__originalListInstants = FB.listInstants;
+      window.__deedsListCalls = 0;
+      FB.listInstants = function () {
+        window.__deedsListCalls++;
+        return window.__originalListInstants.apply(this, arguments);
+      };
+      const sentinel = document.createElement('i');
+      sentinel.id = 'clean-deeds-tree-sentinel';
+      document.getElementById('tab-actions').appendChild(sentinel);
+    });
+
+    await page.locator('#sidetabs .tab[data-tab="prov"]').click();
+    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
+    await expect(page.locator('#clean-deeds-tree-sentinel')).toHaveCount(1);
+    expect(await page.evaluate(function () {
+      return window.__deedsListCalls;
+    })).toBe(0);
+
+    await page.locator('#sidetabs .tab[data-tab="prov"]').click();
+    await page.evaluate(function () {
+      FB.state.player.gold++;
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
+    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
+    await expect(page.locator('#clean-deeds-tree-sentinel')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      return window.__deedsListCalls;
+    })).toBe(1);
+    await page.evaluate(function () {
+      FB.listInstants = window.__originalListInstants;
+      delete window.__originalListInstants;
+      delete window.__deedsListCalls;
+    });
+  });
+
+test('collapsed Deeds groups defer eligibility work until opened',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const beforeOpen = await page.evaluate(function () {
+      FB.ui.showTab('actions', { history:false });
+      const realmToggle = document.querySelector(
+        '#tab-actions [data-action-group="realm"]');
+      if (realmToggle && realmToggle.getAttribute('aria-expanded') === 'true') {
+        realmToggle.click();
+      }
+      const action = FB.instants.filter(function (candidate) {
+        return candidate.id === 'buy_land';
+      })[0];
+      window.__originalBuyLandCan = action.can;
+      window.__buyLandCanCalls = 0;
+      action.can = function () {
+        window.__buyLandCanCalls++;
+        return window.__originalBuyLandCan.apply(this, arguments);
+      };
+      FB.ui.showTab('actions', { history:false });
+      return window.__buyLandCanCalls;
+    });
+    expect(beforeOpen).toBe(0);
+
+    await page.locator('#tab-actions [data-action-group="realm"]').click();
+    expect(await page.evaluate(function () {
+      return window.__buyLandCanCalls;
+    })).toBe(1);
+    await expect(page.locator('#tab-actions [data-action-id="buy_land"]'))
+      .toBeVisible();
+    await page.evaluate(function () {
+      const action = FB.instants.filter(function (candidate) {
+        return candidate.id === 'buy_land';
+      })[0];
+      action.can = window.__originalBuyLandCan;
+      delete window.__originalBuyLandCan;
+      delete window.__buyLandCanCalls;
+    });
+  });
+
+test('desktop panel tabs keep full titles with trailing reserved key badges',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      delete FB.state.player.flags.tutorial;
+      FB.state.player.flags.tutorial_done = 1;
+      FB.state.eventQueue = [];
+      FB.state.slotDays = [];
+      FB.game.uiPrefs.hideTips = true;
+      FB.game.uiPrefs.hideBeginnerHints = true;
+      FB.game.uiPrefs.actionBindings = {
+        b:'action:livelihoods',
+        g:'action:livelihoods',
+        t:'action:livelihoods',
+        u:'action:livelihoods',
+        y:'action:livelihoods'
+      };
+      FB.ui.refresh();
+    });
+
+    const tabs = [
+      ['char', 'Self', 'T'],
+      ['family', 'Kin', 'G'],
+      ['actions', 'Deeds', 'B'],
+      ['prov', 'Land', 'Y'],
+      ['network', 'Network', 'N'],
+      ['log', 'Chronicle', 'U']
+    ];
+    for (const item of tabs) {
+      const tab = page.locator('.tab[data-tab="' + item[0] + '"]');
+      await expect(tab.locator('.tablabel')).toHaveText(item[1]);
+      await expect(tab.locator('.keyhint')).toHaveText(item[2]);
+      await expect(tab).toHaveAttribute(
+        'aria-label', item[1] + ' (' + item[2] + ')');
+    }
+
+    await page.keyboard.press('KeyG');
+    await expect(page.locator('.tab[data-tab="family"]')).toHaveClass(/active/);
+    await page.keyboard.press('KeyT');
+    await expect(page.locator('.tab[data-tab="char"]')).toHaveClass(/active/);
+    await page.keyboard.press('KeyY');
+    await expect(page.locator('.tab[data-tab="prov"]')).toHaveClass(/active/);
+    await page.keyboard.press('KeyB');
+    await expect(page.locator('.tab[data-tab="actions"]')).toHaveClass(/active/);
+    await page.keyboard.press('KeyN');
+    await expect(page.locator('.tab[data-tab="network"]')).toHaveClass(/active/);
+    await page.keyboard.press('KeyU');
+    await expect(page.locator('.tab[data-tab="log"]')).toHaveClass(/active/);
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+  });
+
+test('desktop play button fits its full label and keyhint without truncation',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    const endTurnBtn = page.locator('#btn-endturn');
+    await expect(endTurnBtn).toBeVisible();
+    await expect(endTurnBtn.locator('.keyhint')).toHaveText('Space');
+    await expect(endTurnBtn.locator('.pp')).toHaveText(/▶ Play|❚❚ Pause/);
+
+    const fits = await page.evaluate(function () {
+      const btn = document.getElementById('btn-endturn');
+      const pp = btn.querySelector('.pp');
+      const skip = document.getElementById('btn-skip');
+      const auto = document.getElementById('btn-auto');
+      return {
+        btnScrollW: btn.scrollWidth,
+        btnClientW: btn.clientWidth,
+        ppScrollW: pp.scrollWidth,
+        ppClientW: pp.clientWidth,
+        skipW: skip.offsetWidth,
+        autoW: auto.offsetWidth,
+        btnFits: btn.scrollWidth <= btn.clientWidth + 1,
+        ppFits: pp.scrollWidth <= pp.clientWidth + 1
+      };
+    });
+
+    expect(fits.btnFits).toBe(true);
+    expect(fits.ppFits).toBe(true);
+    expect(fits.skipW).toBeGreaterThan(0);
+    expect(fits.autoW).toBeGreaterThan(0);
+  });
+
+
