@@ -25,7 +25,10 @@ const fileProjectTests = [
   '**/settlement-engine.spec.js',
   '**/settlement-real-data.spec.js',
   '**/simulation.spec.js',
-  '**/time-controls.spec.js'
+  '**/time-controls-settings.spec.js',
+  '**/time-controls-ticks.spec.js',
+  '**/time-controls-tabs.spec.js',
+  '**/time-controls-diagnostics.spec.js'
 ];
 const compatibilityProjectTests = [
   '**/ai-decision-integration.spec.js',
