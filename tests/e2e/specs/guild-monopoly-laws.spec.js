@@ -13,7 +13,8 @@ dependsOnRuntime(__filename, ['data/industry_laws.js','data/economy.js','data/te
   'js/industry_laws.js','js/schema.js','js/economy.js','js/actions.js','js/justice.js','js/treasury.js',
   'js/government_continuity.js','js/institutions.js','js/market.js','js/world.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_panels.js']);
 
-// Reviewed counts and category totals live in fixtures/engine-ids/content-id-allowlist.json and content-id-metric.json; change them with the source.
+// Reviewed counts live in fixtures/engine-ids/content-id-allowlist.json; change them with the source.
+// content-id-ratchet.spec.js alone compares the whole catalogue with content-id-metric.json.
 test('changed law, account and presentation owners retain exact reviewed content spellings', function () {
   const root = path.resolve(__dirname,'../../..');
   const files = ['js/actions.js','js/economy.js','js/industry_laws.js','js/institutions.js','js/treasury.js','js/ui_modals.js','js/ui_panels.js','js/world.js'];
@@ -25,13 +26,6 @@ test('changed law, account and presentation owners retain exact reviewed content
     if (actual !== expected) differences.push({file:file,id:entry.id,actual:actual,expected:expected});
   }); });
   expect(differences, 'Exact law/account/presentation source reviews: ' + JSON.stringify(differences)).toEqual([]);
-  const metric = require('../fixtures/engine-ids/content-id-metric.json');
-  const categories = {};
-  hooks.forEach(function (entry) {
-    categories[entry.category] = (categories[entry.category] || 0) + Object.values(entry.uses).reduce(function (n,x) { return n + x; },0);
-  });
-  expect(metric.categories).toEqual(categories);
-  expect(metric.total).toBe(Object.values(categories).reduce(function (n,x) { return n + x; },0));
 });
 
 async function start(page, info, options) {

@@ -11,7 +11,6 @@ const {mockCrazyGames} = require('../support/crazygames');
 const {openCrazyGame} = require('../support/game/crazygames-title');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {engineSources} = require('../support/source-literals');
-const {contentIdMetric,metricProblems} = require('../support/content-id-reviews');
 const {quotedCounts} = require('../support/content-id-reviews');
 const imported = require('../fixtures/authoring/event-system-moments-fictional.json');
 const fixturePath = path.resolve(__dirname,'../fixtures/authoring/event-system-moments-fictional.json');
@@ -62,36 +61,17 @@ async function lawSetup(page,native) {
   },!!native);
 }
 
-// Reviewed counts and category totals live in fixtures/engine-ids/content-id-allowlist.json and content-id-metric.json; change them with the source.
-test('moment and review adapters preserve the closed content-id metric',async function ({page},info) {
-  await openGame(page,info);
-  const tables=await page.evaluate(function () {
-    const out={};
-    function plain(v) {return !!v&&Object.prototype.toString.call(v)==='[object Object]';}
-    function walk(name,value,depth) {
-      if (Array.isArray(value)) {
-        const ids=value.filter(function (v) {return plain(v)&&typeof v.id==='string';}).map(function (v) {return v.id;});
-        if (ids.length) out[name]=ids;return;
-      }
-      if (!plain(value)) return;
-      const keys=Object.keys(value);if (!keys.length) return;
-      if (keys.every(function (k) {return plain(value[k]);})) {out[name]=keys;return;}
-      if (depth<2) keys.forEach(function (k) {walk(name+'.'+k,value[k],depth+1);});
-    }
-    Object.keys(FBDATA).forEach(function (k) {walk(k,FBDATA[k],0);});return out;
-  });
-  const reviews=require('../fixtures/engine-ids/content-id-allowlist.json'),owners=new Map();
-  Object.keys(tables).forEach(function (table) {
-    if (reviews.ignoredTables.some(function (row) {return table===row.table||table.indexOf(row.table+'.')===0;})) return;
-    tables[table].forEach(function (id) {if (id.length>=3) owners.set(id,[table]);});
-  });
-  expect(metricProblems(contentIdMetric(engineSources(),owners,reviews.hooks),
-    require('../fixtures/engine-ids/content-id-metric.json'))).toEqual([]);
-  const counts=quotedCounts(engineSources());
-  for (const hook of reviews.hooks) for (const file of ['js/mobile_confederations.js','js/ui_mobile.js']) {
-    if (Object.prototype.hasOwnProperty.call(hook.uses || {},file))
-      expect(counts.get(file+'\n'+hook.id) || 0,file+': '+hook.id).toBe(hook.uses[file]);
-  }
+// Reviewed counts live in fixtures/engine-ids/content-id-allowlist.json; change them with the source.
+// content-id-ratchet.spec.js alone compares the whole catalogue with content-id-metric.json.
+test('moment and review adapters retain exact reviewed content spellings',function () {
+  const files=['js/mobile_confederations.js','js/ui_mobile.js'],hooks=require('../fixtures/engine-ids/content-id-allowlist.json').hooks;
+  const counts=quotedCounts(engineSources().filter(function (source) {return files.indexOf(source.file)>=0;}));
+  const differences=[];
+  hooks.forEach(function (entry) {files.forEach(function (file) {
+    const actual=counts.get(file+'\n'+entry.id) || 0,expected=(entry.uses || {})[file] || 0;
+    if (actual!==expected) differences.push({file:file,id:entry.id,actual:actual,expected:expected});
+  });});
+  expect(differences,'Exact mobile moment adapter source reviews: '+JSON.stringify(differences)).toEqual([]);
 });
 
 test('ordinary imported moments validate atomically and every dispatch is typed, ordered and free of effects or RNG',async function ({page},info) {
