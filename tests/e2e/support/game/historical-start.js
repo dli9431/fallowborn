@@ -2,7 +2,7 @@
 
 const { expect } = require('../fixture');
 const { mockCrazyGames } = require('../crazygames');
-const { startParityGame, prepareJourneyBookmark } = require('./parity');
+const { startParityGame, startPreparedParityGame, prepareJourneyBookmark } = require('./parity');
 const { openCrazyGame } = require('./crazygames-title');
 const { useReviewStartRules } = require('./released-starts');
 
@@ -14,7 +14,10 @@ async function startHistoricalGame(page, testInfo, journey, crazygames) {
   // Historical reviews expose hidden dates by default; callers can retain the
   // ordinary visibility gate explicitly. Parity journeys keep their defaults.
   journey = Object.assign({ unhide:true }, journey);
-  if (!crazygames) return startParityGame(page, testInfo, journey);
+  // A caller that already booted and prepared its own title (for example after an
+  // ordinary Mods reload) sets prepared to reuse it instead of booting again.
+  if (!crazygames) return journey.prepared ? startPreparedParityGame(page, journey)
+    : startParityGame(page, testInfo, journey);
   await mockCrazyGames(page);
   await page.addInitScript(function () {
     window.FB_DISTRIBUTION = 'crazygames';

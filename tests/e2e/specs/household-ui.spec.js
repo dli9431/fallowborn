@@ -22,6 +22,7 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
+test.describe.configure({mode:'parallel'});
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
