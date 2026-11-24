@@ -219,3 +219,22 @@ for (const row of [
   }
 });
 });
+
+test('451 county-local season triggers stay reachable under each county climate',async function ({page},info) {
+  await startHistoricalGame(page,info,{bookmark:'451',code:'PACK-451-farmer_451-ravenna-m-Reader'});
+  const result = await page.evaluate(function () {
+    const unreachable=[],checked=[];
+    FBDATA.events.filter(function (ev) {return ev.pack==='dated_451' && ev.trigger && ev.trigger.seasonKinds;}).forEach(function (ev) {
+      checked.push(ev.id);
+      (ev.trigger.countyIds || []).forEach(function (county) {
+        // The calendar's winter is a county's own kind: mild winter in a Mediterranean county.
+        if (ev.trigger.seasonKinds.indexOf(FB.seasonKindAt(county,3,FB.campaignBookmark(FB.state)))<0)
+          unreachable.push(ev.id + ': ' + county + ' ' + FB.seasonKindAt(county,3,FB.campaignBookmark(FB.state)));
+      });
+    });
+    return {checked:checked,unreachable:unreachable};
+  });
+  expect(result.checked.length).toBe(5);
+  expect(result.unreachable).toEqual([]);
+});
+dependsOnRuntime(__filename,['js/climate.js','data/climate.js']);
