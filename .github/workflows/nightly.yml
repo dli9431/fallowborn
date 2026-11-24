@@ -1,6 +1,8 @@
 # Nightly: the full Playwright suite on each listed branch, and season timing
 # for every start on the timing branch. Runs from main on a schedule or by
-# hand; each job checks out the branch it measures.
+# hand; each job checks out the branch it measures. The suite uses the
+# complete rolling mode (rolling-all): timing-balanced batches from each
+# branch's case-timings-suite-<branch> durations.
 name: Nightly
 
 on:
@@ -79,9 +81,9 @@ jobs:
     with:
       ref: ${{ matrix.ref }}
       label: suite-${{ matrix.ref }}
-      mode: all
+      mode: rolling-all
       projects: all
-      shards: 32
+      workers: 1
       bounded: false
 
   timing:
