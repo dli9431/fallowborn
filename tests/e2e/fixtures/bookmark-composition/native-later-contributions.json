@@ -1,10 +1,14 @@
 {
-  "description": "Explicit later mobile policies, layered over the immutable predecessor source. Minority authority review text remains owned by the existing merged-corrections fixture.",
+  "description": "Explicit later native contributions, layered over the immutable predecessor source. Minority authority review text remains owned by the existing merged-corrections fixture.",
   "commits": [
     "2b9f2702",
     "8759f761",
     "4b5c2cc0",
-    "4d0e35c3"
+    "4d0e35c3",
+    "c2fa8ed8",
+    "86bbf9bf",
+    "49dab9c1",
+    "6970c8d9"
   ],
   "changes": [
     {
@@ -26,6 +30,31 @@
       "file": "data/mobile_confederations.js",
       "before": "    rationale:'Explicit public operation permissions depend on a valid commission and canonical resources, local rights and outside consent. The commission provides no county revenue or technological exception.'};\n  FBDATA.techImpactReviews.features.mobile_independent_sponsorship = {mode:'none',\n    rationale:'An explicit independent following has no patron entitlement. Actual access, resources and separately consenting counterparts remain necessary, with ordinary unit and travel technology retained.'};\n  FBDATA.techImpactReviews.features.mobile_external_commission = {mode:'none',\n    rationale:'A finite generation-bound external warrant records political authority without creating a local person, income, land or passage rights. Expiry and ordinary command eligibility govern its scope, not an invented discovery.'};\n",
       "after": "    rationale:'Explicit public operation permissions depend on a valid commission and canonical resources, local rights and outside consent. The commission provides no county revenue or technological exception.'};\n  FBDATA.techImpactReviews.features.mobile_independent_sponsorship = {mode:'none',\n    rationale:'An explicit independent command or elected coalition has no patron entitlement. Actual access, resources and separately consenting counterparts remain necessary, with ordinary unit and travel technology retained.'};\n  FBDATA.techImpactReviews.features.mobile_external_commission = {mode:'none',\n    rationale:'A finite generation-bound external warrant records political authority without creating a local person, income, land or passage rights. Expiry and ordinary command eligibility govern its scope, not an invented discovery.'};\n"
+    },
+    {
+      "file": "data/bookmark_476_africa.js",
+      "before": "    carthage_see:{ city:'Carthage', kind:'see', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', officeId:'carthage_bishop', vacant:true },\n",
+      "after": "    carthage_see:{ city:'Carthage', kind:'see', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', officeId:'carthage_bishop', chapterId:'carthage_nicene_chapter', vacant:true },\n    carthage_nicene_chapter:{ city:'Carthage', kind:'congregation', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', freshOnly:true },\n"
+    },
+    {
+      "file": "data/ecclesiastical_profiles.js",
+      "before": "  FBDATA.techImpactReviews.features.ecclesiastical_local_appointment = { mode:'none', rationale:'Local clerical appointment depends on office qualification and community assent, not technology or purchased Standing.' };\n",
+      "after": "  FBDATA.techImpactReviews.features.ecclesiastical_local_appointment = { mode:'none', rationale:'Local clerical appointment depends on office qualification and community assent, not technology or purchased Standing.' };\n  FBDATA.techImpactReviews.features.local_office_candidacy = { mode:'none', rationale:'A resident’s candidacy depends on an existing vacancy, office qualification, chapter assent and a competent appointer.' };\n"
+    },
+    {
+      "file": "data/political_institutions.js",
+      "before": "FBDATA.bookmarks['476'].localInstitutions = Object.assign({},\n  FBDATA.localInstitutions, FBDATA.bookmarkRegions476.outer.institutions);\n",
+      "after": "FBDATA.bookmarks['476'].localInstitutions = Object.assign({},\n  FBDATA.localInstitutions, FBDATA.bookmarkRegions476.outer.institutions);\n\n/* The fallback table is what worlds without their own table (867 and 1066)\n   resolve, and those released worlds stay exactly as released. The 476 table\n   alone carries the Carthage chapter and the see's chapter binding that\n   resident petitions use, so the fallback drops them after 476 has copied it. */\n(function () {\n  var legacy = FBDATA.localInstitutions, see = legacy.carthage_see;\n  delete legacy.carthage_nicene_chapter;\n  if (see && see.chapterId !== undefined) {\n    legacy.carthage_see = Object.assign({}, see);\n    delete legacy.carthage_see.chapterId;\n  }\n})();\n"
+    },
+    {
+      "file": "data/religious_activities.js",
+      "before": "FBDATA.techImpactReviews.features.religious_activity_outreach = {\n",
+      "after": "FBDATA.techImpactReviews.features.religious_service_shortfall_funding = {\n  mode:'none', rationale:'Households can meet the shortfall for existing local services using their own purse and the institution’s declared fund capacity.'\n};\nFBDATA.techImpactReviews.features.religious_service_sponsored_enrollment = {\n  mode:'none', rationale:'Combining a voluntary restricted gift and local attendance uses existing household money, admission and service capacity.'\n};\nFBDATA.techImpactReviews.features.religious_activity_outreach = {\n"
+    },
+    {
+      "file": "data/civic_profiles.js",
+      "before": "  FBDATA.techImpactReviews.features.civic_public_debt = { mode:'none', rationale:'Bilateral public borrowing and repayment use actual treasury counterparties and negotiated resources.' };\n",
+      "after": "  FBDATA.techImpactReviews.features.civic_public_debt = { mode:'none', rationale:'Bilateral public borrowing and repayment, including installments, use actual treasury counterparties, lawful executive assent and protected reserves.' };\n"
     }
   ]
 }

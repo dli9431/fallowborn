@@ -26,6 +26,8 @@ dependsOnRuntime(__filename,['index.html','data/bookmark_manifest.js','js/bookma
   'data/political_institutions.js','data/aristocratic_courts.js','data/eras.js'].concat(
     manifestFiles(manifestRuns(fs.readFileSync(path.resolve(__dirname,'../../../data/bookmark_manifest.js'),'utf8')))));
 
+// Predecessor sources receive every later implemented native contribution from
+// fixtures/bookmark-composition/native-later-contributions.json, so only unreviewed drift differs.
 async function catalogue(page) {
   return page.evaluate(function () {
     FB.mods.apply({name:'568 composition compatibility'});

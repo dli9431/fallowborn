@@ -167,8 +167,9 @@ for (const pair of [1,2,3]) for (const modded of [false,true]) {
         await info.attach(baseline ? 'reference-catalogue' : 'current-catalogue',{contentType:'application/json',
           body:Buffer.from(JSON.stringify({facts:facts,copies:report.copies,bookmarkIds:report.bookmarkIds,
             startIds:report.startIds,storyIds:report.storyIds}))});
-        expect(facts).toEqual(copyReference.facts[modded ? 'household-overlay' : 'unmodded']);
-        expect(report.copies).toEqual(copyReference.copies);
+        // One comparison reports the pinned catalogue facts and traversal counts together.
+        expect({facts:facts,copies:report.copies})
+          .toEqual({facts:copyReference.facts[modded ? 'household-overlay' : 'unmodded'],copies:copyReference.copies});
         const result = {baseline:baseline,mode:modded ? 'household-overlay' : 'unmodded',browser:browser.version(),
           titleTiming:titleTiming,elapsedMs:elapsedMs,report:report,facts:facts};
         samples.push(result);
@@ -262,37 +263,43 @@ test('physical site faults preserve world labels, candidate isolation and fresh 
   expect(outcomes[1]).toEqual(outcomes[0]);
 });
 
+// The reference and current implementations are independent proofs. Each runs in its
+// own fresh context at the same time, so the pair finishes inside the case limit.
+async function preparedOutcome(browser,info,old,modded) {
+  const context = await browser.newContext(), page = await context.newPage(), guard = installPageGuards(page);
+  try {
+    if (old) await referenceSources(page);
+    await openTitle(page,info);
+    await page.evaluate(function (text) {
+      localStorage.removeItem(FB.storageKey('fb_mods'));
+      if (text) localStorage.setItem(FB.storageKey('fb_mods'),JSON.stringify([text]));
+      FB.seedRng(634); FB.setUidCounter(0);
+    },modded ? overlay : null);
+    await prepareGameContent(page);
+    expect(await page.evaluate(function () { FB.mods.assertReady(); return FB.mods.count(); })).toBe(modded ? 1 : 0);
+    const prepared = await snapshot(page);
+    if (modded) expect(prepared.signature).toMatch(/^effective-1-[a-f0-9]{64}$/);
+    else expect(prepared.signature).toBe('');
+    const rejected = await page.evaluate(function (text) {
+      const mod = JSON.parse(text);
+      mod.startScenarios[0].fixedProvinceId = 'missing_content_preparation_county';
+      const data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const faults = FB.mods.validate(mod);
+      return {faults:faults,pure:data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    },malformed);
+    expect(rejected.faults.length).toBeGreaterThan(0);
+    expect(rejected.pure).toBe(true);
+    await beginBookmarkFromTitle(page,'634','ctesiphon_household_634');
+    const campaign = await snapshot(page);
+    expect(guard.faults).toEqual([]);
+    return {prepared:prepared,rejected:rejected,campaign:campaign};
+  } finally { await context.close(); }
+}
+
 for (const modded of [false,true]) {
-  test('complete preparation matches the prior implementation ' + (modded ? 'with household JSON' : 'without mods'),async function ({page},info) {
+  test('complete preparation matches the prior implementation ' + (modded ? 'with household JSON' : 'without mods'),async function ({browser},info) {
     test.skip(!info.project.name.endsWith('-served'),'Reference source interception uses the served project.');
-    const outcomes = [];
-    for (const old of [false,true]) {
-      if (old) await referenceSources(page);
-      await openTitle(page,info);
-      await page.evaluate(function (text) {
-        localStorage.removeItem(FB.storageKey('fb_mods'));
-        if (text) localStorage.setItem(FB.storageKey('fb_mods'),JSON.stringify([text]));
-        FB.seedRng(634); FB.setUidCounter(0);
-      },modded ? overlay : null);
-      await prepareGameContent(page);
-      expect(await page.evaluate(function () { FB.mods.assertReady(); return FB.mods.count(); })).toBe(modded ? 1 : 0);
-      const prepared = await snapshot(page);
-      if (modded) expect(prepared.signature).toMatch(/^effective-1-[a-f0-9]{64}$/);
-      else expect(prepared.signature).toBe('');
-      const rejected = await page.evaluate(function (text) {
-        const mod = JSON.parse(text);
-        mod.startScenarios[0].fixedProvinceId = 'missing_content_preparation_county';
-        const data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
-        const faults = FB.mods.validate(mod);
-        return {faults:faults,pure:data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-      },malformed);
-      expect(rejected.faults.length).toBeGreaterThan(0);
-      expect(rejected.pure).toBe(true);
-      await beginBookmarkFromTitle(page,'634','ctesiphon_household_634');
-      const campaign = await snapshot(page);
-      outcomes.push({prepared:prepared,rejected:rejected,campaign:campaign});
-      await page.evaluate(function () { localStorage.clear(); });
-    }
+    const outcomes = await Promise.all([false,true].map(function (old) { return preparedOutcome(browser,info,old,modded); }));
     expect(outcomes[0]).toEqual(outcomes[1]);
   });
 }
