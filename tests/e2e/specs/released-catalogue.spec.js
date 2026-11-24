@@ -56,3 +56,20 @@ test('ratchet detects inherited and baseline edits but permits additive catalogu
     expect(changed[key], key).not.toBe(fixture.hashes[key]);
   }
 });
+
+test('worlds without their own institution table keep the legacy fallback while 476 owns the Carthage chapter',
+  async function ({page}, testInfo) {
+    await openGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const legacy = FBDATA.localInstitutions, own = FB.bookmark('476', 'baseline').localInstitutions;
+      return {
+        fallbackSee:legacy.carthage_see.chapterId === undefined,
+        fallbackChapter:!!legacy.carthage_nicene_chapter,
+        inherited:['867', '1066'].map(function (id) { return FB.bookmark(id, 'baseline').localInstitutions === undefined; }),
+        ownSee:own.carthage_see && own.carthage_see.chapterId,
+        ownChapter:own.carthage_nicene_chapter && own.carthage_nicene_chapter.kind
+      };
+    });
+    expect(result).toEqual({fallbackSee:true, fallbackChapter:false, inherited:[true, true],
+      ownSee:'carthage_nicene_chapter', ownChapter:'congregation'});
+  });
