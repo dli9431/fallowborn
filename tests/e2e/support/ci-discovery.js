@@ -124,25 +124,49 @@ async function plan() {
   console.log(summary);
 }
 
+// A finished result is passed, failed or timedOut and a skipped result is settled. A
+// discovered case with only interrupted results, or none, is unfinished.
+const settledStatuses = new Set(['passed', 'failed', 'timedOut', 'skipped']);
+const namedLimit = 50;
+
 function verify(selectionFile, reportFile) {
   const expected = JSON.parse(fs.readFileSync(selectionFile, 'utf8'));
   const report = JSON.parse(fs.readFileSync(reportFile, 'utf8'));
   const actual = [];
-  function visit(suite) {
+  const settled = new Set();
+  const names = new Map();
+  function visit(suite, titles) {
+    const here = suite.title ? titles.concat(suite.title) : titles;
     for (const spec of suite.specs) {
       for (const test of spec.tests) {
         if (test.results.length) actual.push(test.id);
+        if (test.results.some(r => settledStatuses.has(r.status))) settled.add(test.id);
+        const where = spec.file ? spec.file + (spec.line ? ':' + spec.line : '') : '';
+        const title = here.slice(1).concat(spec.title || []).join(' > ');
+        names.set(test.id, [test.projectName ? '[' + test.projectName + ']' : '', where, title]
+          .filter(Boolean).concat('(' + test.id + ')').join(' '));
       }
     }
-    suite.suites.forEach(visit);
+    (suite.suites || []).forEach(child => visit(child, here));
   }
-  report.suites.forEach(visit);
+  report.suites.forEach(suite => visit(suite, []));
+  const unfinished = expected.filter(id => !settled.has(id));
+  if (unfinished.length) {
+    console.log('::error::' + unfinished.length + ' discovered case' + (unfinished.length === 1 ? ' is' : 's are') +
+      ' unfinished: no passed, failed, timed out or skipped result.');
+    for (const id of unfinished.slice(0, namedLimit)) console.log('  ' + (names.get(id) || '(' + id + ') has no report entry'));
+    if (unfinished.length > namedLimit) console.log('  and ' + (unfinished.length - namedLimit) + ' more.');
+  }
   try {
     assert.deepEqual(actual.sort(), expected, 'Merged test/project identities differ from discovery');
   } catch (error) {
     report.coverage.complete = false;
     fs.writeFileSync(reportFile, JSON.stringify(report) + '\n');
     throw error;
+  }
+  if (unfinished.length) {
+    process.exitCode = 1;
+    return;
   }
   console.log('Verified ' + actual.length + ' test/project identities against discovery.');
 }

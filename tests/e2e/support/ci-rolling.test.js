@@ -264,6 +264,80 @@ test('the job reruns each failure once and the merged report shows failed then p
   })(report.suites);
   assert.deepEqual(tests, {p:['flaky', ['failed', 'passed']], q:['unexpected', ['timedOut', 'timedOut']], r:['expected', ['passed']]});
   assert.deepEqual([report.stats.expected, report.stats.unexpected, report.stats.flaky], [1, 1, 1]);
+  // Every case finished, so none is marked unfinished; without shard metadata there is no coverage.
+  assert.equal(report.stats.unfinished, 0);
+  assert.ok(!JSON.stringify(report.suites).includes('"unfinished"'));
+  assert.equal(report.coverage, undefined);
+});
+
+test('the merged report marks unfinished cases, lists them and over budget groups, and coverage fails on them', t => {
+  const group = ['y1', 'y2', 'y3', 'y4'];
+  const sim = simulate(workspace(t), {ms:{z:100000, y1:290000, y2:290000, y3:290000, y4:290000},
+    scopes:Object.fromEntries(group.map(id => [id, 'long world'])), outcomes:{k:['skipped'], u:['skipped']}});
+  // k declares its skip with a reason, as test.skip(condition, description) does; u is skipped without one.
+  const run = sim.exec;
+  sim.exec = (ids, name) => {
+    const result = run(ids, name);
+    if (!ids.includes('k')) return result;
+    const blob = readBlob(result.blob);
+    const notes = [{type:'skip', description:'Chromium only'}];
+    for (const {method, params} of blob.events) {
+      if (method !== 'onTestEnd' || params.test.testId !== 'k') continue;
+      Object.assign(params.test, {expectedStatus:'skipped', annotations:notes});
+      params.result.annotations = notes;
+    }
+    const jsonl = Buffer.from(blob.events.map(event => JSON.stringify(event) + '\n').join(''));
+    writeZip(result.blob, [zipEntry('report.jsonl', jsonl), ...[...blob.entries.values()].filter(e => e.name !== 'report.jsonl')]);
+    return result;
+  };
+  const {summary} = job(sim, [{name:'batch-1', groups:[['z'], group]}, {name:'batch-2', groups:[['k'], ['u']]}]);
+  assert.deepEqual([summary.unfinished, summary.overBudget.map(entry => entry.name)],
+    [['y4'], ['[chromium-served] > sample.spec.js > long world']]);
+
+  // Merge as the report job does, with its shard coverage metadata.
+  const e2e = path.join(__dirname, '..');
+  const out = path.join(sim.root, 'blob-report');
+  const results = path.join(sim.root, 'merged', 'results.json');
+  const env = {...process.env, FB_CI_REPORT_FILE:results, FB_CI_REPORT_EXPECTED_SHARDS:'2',
+    FB_CI_REPORT_RECEIVED_SHARDS:'2', FB_CI_REPORT_SOURCE_RUN:'123'};
+  const merge = spawnSync(process.execPath, [path.join(e2e, 'node_modules', '@playwright', 'test', 'cli.js'),
+    'merge-reports', '--reporter=' + path.join(__dirname, 'ci-report.js'), out], {cwd:e2e, env, encoding:'utf8'});
+  assert.equal(merge.status, 0, merge.stderr || merge.stdout);
+  const report = JSON.parse(fs.readFileSync(results, 'utf8'));
+  const rows = {};
+  (function visit(suites) {
+    for (const suite of suites) {
+      for (const spec of suite.specs) for (const row of spec.tests) rows[row.id] = row;
+      visit(suite.suites);
+    }
+  })(report.suites);
+  // Existing fields keep their meaning: the interrupted-only case is still skipped and counted as skipped.
+  assert.deepEqual([rows.y4.status, rows.y4.results.map(r => r.status), rows.y4.unfinished], ['skipped', ['interrupted'], true]);
+  assert.deepEqual(Object.keys(rows).filter(id => 'unfinished' in rows[id]), ['y4']);
+  assert.deepEqual(['expected', 'unexpected', 'flaky', 'skipped', 'unfinished'].map(key => report.stats[key]), [4, 0, 0, 3, 1]);
+  assert.deepEqual([rows.k.status, rows.k.skipReason, rows.u.status, 'skipReason' in rows.u], ['skipped', 'Chromium only', 'skipped', false]);
+  assert.deepEqual(report.coverage, {expectedShards:2, receivedShards:2, complete:true, sourceRun:'123', unfinished:['y4'],
+    overBudget:[{job:1, batch:'batch-1', name:'[chromium-served] > sample.spec.js > long world', ids:group, unfinished:['y4']}]});
+
+  // Every discovered case has a report entry, so only the unfinished check fails, naming y4.
+  const selection = path.join(sim.root, 'selection.json');
+  fs.writeFileSync(selection, JSON.stringify(['k', 'u', 'y1', 'y2', 'y3', 'y4', 'z']));
+  const verify = spawnSync(process.execPath, [path.join(__dirname, 'ci-discovery.js'), 'verify', selection, results],
+    {encoding:'utf8'});
+  assert.equal(verify.status, 1, verify.stderr);
+  assert.ok(verify.stdout.startsWith('::error::1 discovered case is unfinished'), verify.stdout);
+  assert.match(verify.stdout, /\n {2}\[chromium-served\] \S*sample\.spec\.js:5 long world > y4 \(y4\)\n/);
+  assert.equal(JSON.parse(fs.readFileSync(results, 'utf8')).coverage.complete, true);
+
+  const text = spawnSync(process.execPath, [path.join(__dirname, 'ci-summary.js'), results], {encoding:'utf8'});
+  assert.equal(text.status, 0, text.stderr);
+  const lines = text.stdout.split('\n');
+  assert.equal(lines[0], '## Playwright: unfinished');
+  assert.ok(lines.includes('| [chromium-served] &gt; sample.spec.js &gt; long world | batch-1 | 4 | 1 |'), text.stdout);
+  const unfinished = lines.indexOf('### Unfinished (1)');
+  assert.match(lines[unfinished + 4], /^\| chromium-served \| \S*sample\.spec\.js:5 long world &gt; y4 \| interrupted after 20 s \|$/);
+  const skips = lines.indexOf('### Skipped by declared reason');
+  assert.deepEqual(lines.slice(skips + 4, skips + 6), ['| Chromium only | 1 |', '| (no declared reason) | 1 |']);
 });
 
 test('an interrupted failure rerun is dropped and its case keeps the first failure', t => {
