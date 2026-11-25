@@ -47,16 +47,15 @@ FBDATA.bookmarks['476'].localInstitutions = Object.assign({},
   FBDATA.localInstitutions, FBDATA.bookmarkRegions476.outer.institutions);
 
 /* The fallback table is what worlds without their own table (867 and 1066)
-   resolve, and those released worlds stay exactly as released. The 476 table
-   alone carries the Carthage chapter and the see's chapter binding that
-   resident petitions use, so the fallback drops them after 476 has copied it. */
+   resolve, and those released worlds stay exactly as released. The regional
+   declaration keeps the released see, so every table that shares it agrees.
+   Only the 476 table binds its own copy of the Carthage see to the chapter
+   that resident petitions use, and the fallback drops the chapter after 476
+   has copied it. */
 (function () {
-  var legacy = FBDATA.localInstitutions, see = legacy.carthage_see;
-  delete legacy.carthage_nicene_chapter;
-  if (see && see.chapterId !== undefined) {
-    legacy.carthage_see = Object.assign({}, see);
-    delete legacy.carthage_see.chapterId;
-  }
+  var table = FBDATA.bookmarks['476'].localInstitutions;
+  table.carthage_see = Object.assign({}, table.carthage_see, { chapterId:'carthage_nicene_chapter' });
+  delete FBDATA.localInstitutions.carthage_nicene_chapter;
 })();
 
 /* Phase 2 authority records name legal capacities rather than landed titles.

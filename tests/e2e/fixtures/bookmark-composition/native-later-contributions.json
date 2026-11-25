@@ -34,7 +34,7 @@
     {
       "file": "data/bookmark_476_africa.js",
       "before": "    carthage_see:{ city:'Carthage', kind:'see', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', officeId:'carthage_bishop', vacant:true },\n",
-      "after": "    carthage_see:{ city:'Carthage', kind:'see', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', officeId:'carthage_bishop', chapterId:'carthage_nicene_chapter', vacant:true },\n    carthage_nicene_chapter:{ city:'Carthage', kind:'congregation', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', freshOnly:true },\n"
+      "after": "    carthage_see:{ city:'Carthage', kind:'see', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', officeId:'carthage_bishop', vacant:true },\n    carthage_nicene_chapter:{ city:'Carthage', kind:'congregation', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', freshOnly:true },\n"
     },
     {
       "file": "data/ecclesiastical_profiles.js",
@@ -44,7 +44,7 @@
     {
       "file": "data/political_institutions.js",
       "before": "FBDATA.bookmarks['476'].localInstitutions = Object.assign({},\n  FBDATA.localInstitutions, FBDATA.bookmarkRegions476.outer.institutions);\n",
-      "after": "FBDATA.bookmarks['476'].localInstitutions = Object.assign({},\n  FBDATA.localInstitutions, FBDATA.bookmarkRegions476.outer.institutions);\n\n/* The fallback table is what worlds without their own table (867 and 1066)\n   resolve, and those released worlds stay exactly as released. The 476 table\n   alone carries the Carthage chapter and the see's chapter binding that\n   resident petitions use, so the fallback drops them after 476 has copied it. */\n(function () {\n  var legacy = FBDATA.localInstitutions, see = legacy.carthage_see;\n  delete legacy.carthage_nicene_chapter;\n  if (see && see.chapterId !== undefined) {\n    legacy.carthage_see = Object.assign({}, see);\n    delete legacy.carthage_see.chapterId;\n  }\n})();\n"
+      "after": "FBDATA.bookmarks['476'].localInstitutions = Object.assign({},\n  FBDATA.localInstitutions, FBDATA.bookmarkRegions476.outer.institutions);\n\n/* The fallback table is what worlds without their own table (867 and 1066)\n   resolve, and those released worlds stay exactly as released. The regional\n   declaration keeps the released see, so every table that shares it agrees.\n   Only the 476 table binds its own copy of the Carthage see to the chapter\n   that resident petitions use, and the fallback drops the chapter after 476\n   has copied it. */\n(function () {\n  var table = FBDATA.bookmarks['476'].localInstitutions;\n  table.carthage_see = Object.assign({}, table.carthage_see, { chapterId:'carthage_nicene_chapter' });\n  delete FBDATA.localInstitutions.carthage_nicene_chapter;\n})();\n"
     },
     {
       "file": "data/religious_activities.js",
