@@ -20,11 +20,18 @@ const ids = ['western_britons_634','powys_634','south_wales_634','northumbria_63
 const source = fs.readFileSync(sourcePath,'utf8');
 const declaration = JSON.parse(source.slice(source.indexOf(' = ') + 3).trim().replace(/;$/, ''));
 
-function active() {
-  const data = Object.assign({},FBDATA);
-  delete data.bookmarkRevisionContent_634_courts_e;
-  return JSON.stringify({data:data,state:FB.state,rng:FB.getRngState(),uid:FB.getUidCounter()});
+/* Records the active catalogue and state inside the page. Comparisons stay in
+   the page too: returning the whole serialized FBDATA to Node is the slow part. */
+function recordActive() {
+  window.courtsActive = function () {
+    const data = Object.assign({},FBDATA);
+    delete data.bookmarkRevisionContent_634_courts_e;
+    return JSON.stringify({data:data,state:FB.state,rng:FB.getRngState(),uid:FB.getUidCounter()});
+  };
+  window.courtsBefore = window.courtsActive();
 }
+
+function unchanged() { return window.courtsActive() === window.courtsBefore; }
 
 test('six literal court replacements load inertly and preserve every accepted scaffold field',async function ({page},info) {
   expect(declaration.bookmarkId).toBe('634');
@@ -32,10 +39,10 @@ test('six literal court replacements load inertly and preserve every accepted sc
   expect(declaration.realms.map(function (r) { return r.id; })).toEqual(ids);
   expect(fs.readFileSync(path.resolve(__dirname,'../../../index.html'),'utf8')).not.toContain('bookmark_634_courts_e.js');
   await openGame(page,info);
-  const before = await page.evaluate(active);
+  await page.evaluate(recordActive);
   for (let repeat = 0; repeat < 2; repeat++) {
     await page.addScriptTag({path:sourcePath});
-    expect(await page.evaluate(active)).toBe(before);
+    expect(await page.evaluate(unchanged)).toBe(true);
     expect(await page.evaluate(function () { return FBDATA.bookmarkRevisionContent_634_courts_e; })).toEqual(declaration);
   }
   const rows = await page.evaluate(function (ids) {
@@ -70,9 +77,9 @@ test('complete court replacement composes through JSON import and restores witho
     complete.revisions[declaration.revision].realms = world.realms;
     return {name:'Court replacement review',bookmarks:{'634':complete}};
   },declaration);
-  const before = await page.evaluate(active);
+  await page.evaluate(recordActive);
   expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },mod)).toEqual([]);
-  expect(await page.evaluate(active)).toBe(before);
+  expect(await page.evaluate(unchanged)).toBe(true);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({name:'court-replacements.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(mod),'utf8')});

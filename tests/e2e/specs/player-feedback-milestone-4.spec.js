@@ -935,8 +935,10 @@ test.describe('starting-family presets', function () {
     });
   }
 
-  test('seven-part codes preselect their preset; bad presets are rejected',
-    async function ({ page }, testInfo) {
+  /* Each code is entered on its own fresh title screen, so every case pays
+     for one complete content preparation rather than four. */
+  test('a seven-part code with an unknown preset is rejected',
+    async function ({ page }) {
       // an unknown preset id must be refused, not silently become another world
       await page.getByRole('button', { name:'New Game', exact:true }).click();
       await expect(page.getByRole('heading', {
@@ -948,10 +950,12 @@ test.describe('starting-family presets', function () {
       await page.locator('#ng-seed').press('Enter');
       await expect(page.locator('#ng-seed-err'))
         .toContainText('doesn’t parse');
+    });
 
-      // a seven-part code per non-standard preset reaches a pre-filled chargen
-      for (const preset of ['established', 'elder']) {
-        await openGame(page, testInfo); // back to a fresh title screen
+  // a seven-part code per non-standard preset reaches a pre-filled chargen
+  for (const preset of ['established', 'elder']) {
+    test('a seven-part ' + preset + ' code preselects its preset',
+      async function ({ page }) {
         await page.getByRole('button', { name:'New Game', exact:true }).click();
         await page.locator('#btn-bm-seed').click();
         await page.locator('#ng-seed')
@@ -960,10 +964,11 @@ test.describe('starting-family presets', function () {
         await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
         await expect(page.locator(
           'input[name=cg-family][value="' + preset + '"]')).toBeChecked();
-      }
+      });
+  }
 
-      // a six-part code still parses and implies the standard preset
-      await openGame(page, testInfo);
+  test('a six-part code still parses and implies the standard preset',
+    async function ({ page }) {
       await page.getByRole('button', { name:'New Game', exact:true }).click();
       await page.locator('#btn-bm-seed').click();
       await page.locator('#ng-seed').fill(START_CODE);
