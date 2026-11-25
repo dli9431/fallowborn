@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame, prepareGameContent } = require('../support/game/navigation');
@@ -20,9 +21,21 @@ async function importMod(page, input) {
   await prepareGameContent(page);
 }
 
-test('the Mods file picker admits independent terms and rejects a matching-name change on restore', async function ({ page }, info) {
+/* Stores the example JSON text before the first boot, so the first page
+   prepares only the modded catalogue. The session flag keeps later reloads
+   from overwriting what the Mods dialog stores. */
+async function storeExampleBeforeBoot(page) {
+  await page.addInitScript(function (text) {
+    if (sessionStorage.getItem('baghdadExampleStored')) return;
+    sessionStorage.setItem('baghdadExampleStored', '1');
+    localStorage.setItem('fb_mods', JSON.stringify([text]));
+  }, fs.readFileSync(FIXTURE, 'utf8'));
+}
+
+test('independent JSON copying terms play, settle and restore exactly', async function ({ page }, info) {
+  await storeExampleBeforeBoot(page);
   await openGame(page,info);
-  await importMod(page,FIXTURE);
+  expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
   await beginBookmarkFromTitle(page,'867','paris_copy_terms_start');
   const played = await page.evaluate(function (id) {
     FB.pickDailyEvents = function () { return []; };
@@ -44,10 +57,21 @@ test('the Mods file picker admits independent terms and rejects a matching-name 
   expect(played).toMatchObject({ short:true, shortGold:4, shortDays:1, shortRepeat:false, started:true, delivered:true,
     held:4, settled:true, repeated:false, ledger:[2,6,3,0], gain:6, patrons:['short_copy'], restored:true });
   expect(JSON.parse(played.saved).mods).toMatch(/^effective-1-[a-f0-9]{64}$/);
+});
+
+test('the Mods file picker admits changed terms and rejects a matching-name save on restore', async function ({ page }, info) {
+  await storeExampleBeforeBoot(page);
+  await openGame(page,info);
+  await beginBookmarkFromTitle(page,'867','paris_copy_terms_start');
+  const saved = await page.evaluate(function () { return FB.save.serialize(); });
+  expect(JSON.parse(saved).mods).toMatch(/^effective-1-[a-f0-9]{64}$/);
 
   const changed = JSON.parse(JSON.stringify(example));
   changed.storyInstances[TRACK].jobs.long_copy.settlementGold = 2;
   await importMod(page,{ name:'baghdad-copyist-commissions.json', mimeType:'application/json', buffer:Buffer.from(JSON.stringify(changed)) });
+  expect(await page.evaluate(function (id) {
+    return { count:FB.mods.count(), settlementGold:FBDATA.storyInstances[id].jobs.long_copy.settlementGold };
+  },TRACK)).toEqual({ count:1, settlementGold:2 });
   expect(await page.evaluate(function (saved) {
     const e = JSON.parse(saved), original = FB.state;
     const before = JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter()]);
@@ -55,7 +79,7 @@ test('the Mods file picker admits independent terms and rejects a matching-name 
     try { FB.save.restore(e); } catch (error) { rejected = /mod set|incompatible content/.test(error.message); }
     return { rejected, changed:e.mods !== FB.mods.sig(), same:original === FB.state &&
       before === JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter()]) };
-  },played.saved)).toEqual({ rejected:true, changed:true, same:true });
+  },saved)).toEqual({ rejected:true, changed:true, same:true });
 });
 
 test('candidate validation rejects invalid patron links while preserving the effective catalogue', async function ({ page }, info) {

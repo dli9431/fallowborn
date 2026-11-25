@@ -70,9 +70,18 @@ test('complete court replacement composes through JSON import and restores witho
     complete.revisions[declaration.revision].realms = world.realms;
     return {name:'Court replacement review',bookmarks:{'634':complete}};
   },declaration);
-  const before = await page.evaluate(active);
-  expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },mod)).toEqual([]);
-  expect(await page.evaluate(active)).toBe(before);
+  // Compare the active catalogue inside the page: returning the whole
+  // serialized FBDATA to Node twice costs more than the validation itself.
+  expect(await page.evaluate(function (mod) {
+    function snapshot() {
+      const data = Object.assign({},FBDATA);
+      delete data.bookmarkRevisionContent_634_courts_e;
+      return JSON.stringify({data:data,state:FB.state,rng:FB.getRngState(),uid:FB.getUidCounter()});
+    }
+    const before = snapshot();
+    const errors = FB.mods.validate(mod);
+    return {errors:errors,pure:snapshot() === before};
+  },mod)).toEqual({errors:[],pure:true});
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({name:'court-replacements.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(mod),'utf8')});
