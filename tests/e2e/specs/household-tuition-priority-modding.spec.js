@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame, openTitle, prepareGameContent } = require('../support/game/navigation');
@@ -12,7 +13,9 @@ dependsOnRuntime(__filename, [
   'js/save.js', 'js/technology.js', 'js/ui_misc.js', 'js/ui_modals.js'
 ]);
 
-test('ordinary JSON tuition keeps its exact fees and priority through a cold matching load', async function ({ page }, info) {
+const fixturePath = path.resolve(__dirname, '../fixtures/authoring/household-tuition-priority-river.json');
+
+test('ordinary JSON tuition validates purely and imports through the Mods dialog', async function ({ page }, info) {
   await openGame(page, info);
   const validation = await page.evaluate(function (fixture) {
     const before = JSON.stringify([FBDATA.schooling, FB.state, FB.mods.sig()]);
@@ -25,13 +28,31 @@ test('ordinary JSON tuition keeps its exact fees and priority through a cold mat
   }, schools);
   expect(validation).toEqual({ errors:[], pure:true });
   await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(
-    path.resolve(__dirname, '../fixtures/authoring/household-tuition-priority-river.json'));
+  await page.locator('#modfile').setInputFiles(fixturePath);
   await Promise.all([
     page.waitForNavigation({ waitUntil:'domcontentloaded', timeout:15000 }),
     page.locator('#mod-apply').click()
   ]);
   await prepareGameContent(page);
+  const imported = await page.evaluate(function () {
+    const schooling = FBDATA.schooling;
+    return {
+      count:FB.mods.count(), sig:FB.mods.sig(),
+      fees:[schooling.riverside_letters.cost, schooling.bridge_reckoning.cost]
+    };
+  });
+  expect(imported.count).toBe(1);
+  expect(imported.sig).toMatch(/^effective-1-[a-f0-9]{64}$/);
+  expect(imported.fees).toEqual([2.5, 4.75]);
+});
+
+test('ordinary JSON tuition keeps its exact fees and priority through a cold matching load', async function ({ page }, info) {
+  // The same JSON text is stored before the first boot, so each page prepares
+  // only the modded catalogue. The dialog import is covered by the case above.
+  await page.addInitScript(function (text) {
+    localStorage.setItem('fb_mods', JSON.stringify([text]));
+  }, fs.readFileSync(fixturePath, 'utf8'));
+  await openGame(page, info);
   await startDeterministicGame(page);
 
   const setup = await page.evaluate(function () {
@@ -86,6 +107,10 @@ test('ordinary JSON tuition keeps its exact fees and priority through a cold mat
 
   await openTitle(page, info);
   expect(await page.evaluate(function () { return FB.world; })).toBeNull();
+  // Prepare the modded catalogue first, so the wait below covers only the
+  // restore of the saved life, not a whole-catalogue preparation.
+  await prepareGameContent(page);
+  expect(await page.evaluate(function () { return FB.state; })).toBeNull();
   await page.evaluate(function (saved) {
     FB.game.loadData(JSON.parse(saved), function () {
       FB.game.setPaused(true);
