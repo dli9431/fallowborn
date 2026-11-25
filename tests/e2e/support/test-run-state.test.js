@@ -458,7 +458,8 @@ test('browser projects keep the full affected suite on primary served Chromium',
   assert.equal(new Set(configuredFileSpecs).size, configuredFileSpecs.length,
     'The file project must not repeat a specification.');
   const sharedFileSpecs = ['1204-history.spec.js', 'journeys.spec.js', 'save-v4-integration.spec.js',
-    'ai-decision-integration.spec.js', 'ai-live-decisions.spec.js', 'ai-decision-policies.spec.js'];
+    'ai-decision-integration.spec.js', 'ai-live-decisions.spec.js', 'ai-decision-policies.spec.js',
+    'time-controls-settings.spec.js', 'time-controls-ticks.spec.js', 'time-controls-diagnostics.spec.js'];
   assert.deepEqual(configuredFileSpecs.slice().sort(),
     Array.from(new Set(explicitFileSpecs.concat(sharedFileSpecs))).sort(),
     'The file project covers explicit file-origin cases, AI, historical and save integration, and shared journeys; other specs use served Chromium.');
