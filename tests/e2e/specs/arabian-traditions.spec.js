@@ -33,7 +33,11 @@ test('the Arabian early profile has independent defaults and retains the release
   async function ({page},testInfo) {
     await openGame(page,testInfo);
     const catalogue = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-    expect((await page.evaluate(releasedCatalogue,catalogue.selection)).hashes).toEqual(catalogue.hashes);
+    // released-catalogue.spec.js owns the whole fixture; the early profile owns its sunni compatibility identity.
+    const ownFaiths = ['sunni'];
+    const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[],geographies:[],eras:[],governments:[],
+      faiths:ownFaiths})).hashes;
+    for (const id of ownFaiths) expect(ownHashes['faith/' + id],id).toBe(catalogue.hashes['faith/' + id]);
     expect(await page.evaluate(function () {
       const id = 'arabian_traditional_476', before = JSON.stringify(FBDATA);
       const rng = FB.getRngState(), uid = FB.getUidCounter();

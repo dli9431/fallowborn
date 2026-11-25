@@ -1079,6 +1079,10 @@ Automated browser tests do not replace release testing by a person. Continue man
 The owner chooses when to run the fast Chromium suite and when to run the Firefox and WebKit
 matrix.
 
+Released catalogue fixture ownership
+
+released-catalogue.spec.js owns the complete comparison with tests/e2e/fixtures/released-catalogue.json, including legacy faith metadata. catalogue-mod-compatibility.spec.js also compares every hash, because shipped definitions surviving imported overrides is its feature. Other specs pass releasedCatalogue a selection limited to the items their own feature owns and compare only those hashes. A faith rollout checks its own released faith family, or the shared faithDefaults its undeclared rules fall back to; religion-coverage-rollout.spec.js checks all 16 released faiths because its availability declarations cover each of them. 867-inhabited-terrain.spec.js checks its 867 baseline and geography, and the two technology start checks compare the baseline and geography of the world each case starts. Specs for the 568, 1096 and 1241 worlds and for technology catalogue composition keep their own substantive assertions without a released hash comparison. A change to one released item therefore fails released-catalogue.spec.js and only the specs that own that item.
+
 Parity baselines and engine-id checks
 
 These six specifications let a refactor prove that behavior did not change and keep new hardcoded ids out of engine code. bookmark-id-lint.spec.js and content-id-ratchet.spec.js run in the ordinary Chromium-served suite. parity-fresh.spec.js, parity-corpus.spec.js, parity-raster.spec.js and parity-portraits.spec.js hold owner-run journeys that skip unless FB_PARITY is set; only the start-scenario coverage check in parity-fresh.spec.js runs every time. None of them imports or executes a game script in Node.
@@ -1388,7 +1392,7 @@ The current-save header is platformSchema 2. Tests that model earlier saves star
 
 867 inhabited district coverage
 
-tests/e2e/specs/867-inhabited-terrain.spec.js and fixtures/867-inhabited-terrain.json account for all 29 shared additions and the 21 original scenery anchors. Coverage includes the released hashes, both retained revisions, unchanged ordinary county/layout declarations, bounded district rasters and weighted routes, communities, climate, standard opening flags, true retained frontier and serf households, public delegation, royal succession, mod catalogue pinning, detached rejection, owner corpus imports and bounded natural household/observer save replay.
+tests/e2e/specs/867-inhabited-terrain.spec.js and fixtures/867-inhabited-terrain.json account for all 29 shared additions and the 21 original scenery anchors. Coverage includes the released 867 baseline and geography hashes, both retained revisions, unchanged ordinary county/layout declarations, bounded district rasters and weighted routes, communities, climate, standard opening flags, true retained frontier and serf households, public delegation, royal succession, mod catalogue pinning, detached rejection, owner corpus imports and bounded natural household/observer save replay.
 
 The eight district journeys author a separate opening/midpoint/season parity baseline named fresh-867-inhabited-v2-<district> when FB_PARITY is capture or compare. These candidate reports remain separate from retained medieval fixtures. parity-fresh.spec.js and parity-raster.spec.js explicitly select the retained baseline for the existing 867/1066 comparisons. Owner capture and review are required before expanded comparison; no tracked retained fixture or hash is replaced to accommodate fresh expansion. Corpus imports use the original exports named by the existing manifest and FB_PARITY_CORPUS, verify SHA-256 and skip missing files with their expected path. Checkpoint-report JSON is never treated as a save payload.
 
@@ -1752,8 +1756,8 @@ The mobile pledge button selector includes its explanatory accessible note while
 Building and technology catalogue restore regressions compare complete detached expanded facts rather than insertion-order-sensitive JSON text. Calculated cash differences allow only floating-point subtraction residue at eight decimal places; quoted prices, unchanged balances and rejection purity stay exact. Construction setup funds the actual private account, grants the declared technology and stages the actual sovereign, local patron and directly held county before testing player and AI parity. The windmill source-position oracle compares every original ID plus the exact six technology and ten building additions from later supplements, retaining complete catalogue equality.
 
 early-technology-refinements.spec.js and technology-prerequisite-corrections.spec.js
-check released world hashes after ordinary visible 867 and 1066 starts without
-adding a visibility override to the declarations. Restore comparisons use detached
+check the started world's released baseline and geography hashes after ordinary
+visible 867 and 1066 starts without adding a visibility override to the declarations. Restore comparisons use detached
 expanded facts with canonical object keys and technology membership sets; research
 queues, property order, numeric values, RNG bits and UID counters stay exact.
 The refinement source-order check names every intervening shared catalogue script.

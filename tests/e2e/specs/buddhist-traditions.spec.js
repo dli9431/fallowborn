@@ -32,7 +32,10 @@ test('Buddhist household corrections preserve the released effective catalogue',
   async function ({page},testInfo) {
     await openGame(page,testInfo);
     const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-    expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
+    // released-catalogue.spec.js owns the whole fixture; local household rules keep the shared faith defaults.
+    const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[],geographies:[],eras:[],governments:[],
+      faiths:[]})).hashes;
+    expect(ownHashes.faithDefaults,'faithDefaults').toBe(fixture.hashes.faithDefaults);
   });
 
 test('household profiles resolve independent study rules without an ordained ladder or central office',

@@ -5,9 +5,7 @@ const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { restoreBookmark } = require('../support/game/bookmark-acceptance');
-const { releasedCatalogue } = require('../support/released-catalogue');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-const released = require('../fixtures/released-catalogue.json');
 const example = require('../fixtures/authoring/technology-buildings-composition.json');
 
 dependsOnRuntime(__filename, [
@@ -170,7 +168,6 @@ test('all supplements compose once with stable effects, grants, budgets and rele
   expect(r.sources.slice(r.sources.indexOf('data/economy.js'),r.sources.indexOf('data/economy_maritime.js')+1))
     .toEqual(['data/economy.js','data/industry_laws.js','data/holy_war_causes.js','data/economy_maritime.js']);
   expect(r.sources.filter(function (s) { return s === 'data/economy_maritime.js'; })).toHaveLength(1);
-  expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
 });
 
 for (const bookmark of ['867','1066']) for (const revision of ['baseline',null]) {

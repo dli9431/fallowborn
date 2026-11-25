@@ -82,7 +82,11 @@ test('early profiles use neutral war vocabulary and retain canonical offices and
   async function ({page},testInfo) {
     await openGame(page,testInfo);
     const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-    expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
+    // released-catalogue.spec.js owns the whole fixture; early profiles own the released Christian doctrine.
+    const ownFaiths = ['christian','catholic','orthodox','eastern'];
+    const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[],geographies:[],eras:[],governments:[],
+      faiths:ownFaiths})).hashes;
+    for (const id of ownFaiths) expect(ownHashes['faith/' + id],id).toBe(fixture.hashes['faith/' + id]);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const early = ['nicene','homoian','chalcedonian','miaphysite','east_syriac'];

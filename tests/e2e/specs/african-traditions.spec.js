@@ -42,7 +42,12 @@ test('African profile revisions preserve all released faith and default contract
     await openGame(page,info);
     const fixture = JSON.parse(fs.readFileSync(
       path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-    expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
+    // released-catalogue.spec.js owns the whole fixture; these profiles own the pagan family and default contracts.
+    const ownFaiths = ['pagan'];
+    const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[],geographies:[],eras:[],governments:[],
+      faiths:ownFaiths})).hashes;
+    for (const id of ownFaiths) expect(ownHashes['faith/' + id],id).toBe(fixture.hashes['faith/' + id]);
+    expect(ownHashes.faithDefaults,'faithDefaults').toBe(fixture.hashes.faithDefaults);
     expect(await page.evaluate(function () {
       return {errors:FB.validateReligionData(null),
         removed:!FB.faithExists('wagadu_traditional_1066',null),
