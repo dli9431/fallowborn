@@ -5,7 +5,8 @@
 # and shard count, or run an exact list of specs. request_id names the run so
 # a caller can find it, and keeps concurrent manual runs from cancelling each
 # other. mode=rolling-all runs every discovered case of the dispatch commit in
-# timing-balanced batches after the regression gate.
+# timing-balanced batches after the regression gate, on one browser worker per
+# batch unless workers is 2.
 name: Tests
 run-name: ${{ inputs.request_id && format('Tests {0}', inputs.request_id) || github.event.head_commit.message || github.event.pull_request.title || 'Tests' }}
 
@@ -40,9 +41,9 @@ on:
         type: number
         default: 4
       workers:
-        description: Playwright workers per shard
+        description: Playwright workers per shard; 0 uses the mode default (2, or 1 for rolling-all, which accepts 1 or 2)
         type: number
-        default: 2
+        default: 0
       request_id:
         description: Caller's id, shown in the run name
         type: string
@@ -81,7 +82,8 @@ jobs:
       base: ${{ inputs.base || github.event.before || '' }}
       specs: ${{ inputs.specs || '' }}
       projects: ${{ inputs.projects || 'all' }}
-      workers: 1
+      # Only rolling-all takes the dispatch workers input; the rest stay on one.
+      workers: ${{ fromJSON(format('{0}', inputs.mode == 'rolling-all' && inputs.workers || 1)) }}
       bounded: ${{ inputs.mode != 'rolling-all' }}
   tests:
     if: ${{ inputs.mode != 'regression-gate' && !startsWith(inputs.mode, 'rolling') && !(github.event_name == 'push' && github.ref_name == '476') }}
