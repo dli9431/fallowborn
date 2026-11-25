@@ -1,11 +1,14 @@
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame,openTitle,prepareGameContent} = require('../support/game/navigation');
 const {startDeterministicGame} = require('../support/game/start');
 const {beginBookmark,beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {installStoredMod} = require('../support/game/stored-mod');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const lantern = require('../fixtures/authoring/holywar-protector-lantern.json');
+const lanternPath = path.resolve(__dirname,'../fixtures/authoring/holywar-protector-lantern.json');
 
 dependsOnRuntime(__filename,['index.html','data/holy_war_causes.js','data/technology.js',
   'data/bookmark_1204.js','data/bookmark_1204_campaigns.js','data/bookmark_1204_terrain.js',
@@ -89,18 +92,25 @@ async function native(page,info) {
   await beginBookmark(page,info,'1204');
   await helpers(page);
 }
-async function imported(page,info,ruler,options) {
+async function importThroughMods(page,info,options) {
   await openGame(page,info);
-  await prepareGameContent(page);
   const data = JSON.parse(JSON.stringify(lantern));
   if (options && options.publicWard) data.bookmarks.harbor_world.realms[1].publicTreasury = {schema:1};
   if (options && options.vacant) data.bookmarks.harbor_world.religiousHeads.harbor_head = null;
   expect(await page.evaluate(function (data) {return FB.mods.validate(data);},data)).toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(options ? {name:'lantern-demands.json',mimeType:'application/json',
-    buffer:Buffer.from(JSON.stringify(data))} : path.resolve(__dirname,'../fixtures/authoring/holywar-protector-lantern.json'));
+    buffer:Buffer.from(JSON.stringify(data))} : lanternPath);
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+}
+async function imported(page,info,ruler,options) {
+  if (options && options.stored) {
+    // The default example's validation and Mods screen import are covered by
+    // every other imported case. Store the same file text and boot it once.
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(lanternPath,'utf8'));
+  } else await importThroughMods(page,info,options);
   if (!ruler) await beginBookmarkFromTitle(page,'harbor_world','harbor_household');
   else {
     const county = ruler === 'ward' ? 'harbor_ridge' : 'harbor_quay';
@@ -467,7 +477,8 @@ test('cause terms enter the exact imported-content fingerprint',async function (
 });
 
 async function importedCampaignSave(page,info) {
-  await imported(page,info);
+  // These cases prove the fresh-page restore; they boot the stored example once.
+  await imported(page,info,null,{stored:true});
   return page.evaluate(function () {
     const s = FB.state,q = FB.holyWarCauseReview(s,'lantern_protection','harbor_upland');
     FB.respondHolyWarCause(s,q,false);

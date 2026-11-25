@@ -4,7 +4,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {
   harbor:require('../fixtures/authoring/adopted-public-treasury-harbor.json'),
@@ -152,7 +152,8 @@ for(const prefix of ['harbor','dune']) {
 
   test(prefix+' the unadopted original realm remains an ordinary NPC public account',async function({page},info){
     await importWorld(page,info,prefix);
-    await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+    // The import reload left a prepared modded title; begin there without reopening.
+    await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
     const result=await page.evaluate(function(prefix){
       const s=FB.state,original=prefix==='harbor'?'harbor_upland':'dune_gate',
         publicBefore=JSON.stringify(s.realms[original].treasury),privateBefore=s.player.gold,save=FB.save.serialize();

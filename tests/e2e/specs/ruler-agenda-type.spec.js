@@ -1,9 +1,9 @@
 'use strict';
-const {prepareGameContent} = require('../support/game/navigation');
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
-const { startParityGame } = require('../support/game/parity');
+const { openGame, openTitle } = require('../support/game/navigation');
+const { startPreparedParityGame } = require('../support/game/parity');
 const { expectModAdmission } = require('../support/game/mod-admission');
+const { installStoredMod } = require('../support/game/stored-mod');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const proof = require('../fixtures/authoring/ruler-agendas.json');
 test.describe.configure({ mode:'parallel' });
@@ -15,19 +15,29 @@ dependsOnRuntime(__filename, ['index.html','js/story_ruler_agenda.js','js/story_
   'js/main.js','data/starts.js','data/aristocratic_courts.js','data/bookmark_1204_terrain.js','data/technology.js',
   'data/story_ruler_agendas.js']);
 
-async function importedStart(page, info, scenario, withoutAgenda) {
-  await openGame(page, info);
+function agendaCandidate(scenario, withoutAgenda) {
   const candidate = JSON.parse(JSON.stringify(proof));
   if (withoutAgenda) candidate.startScenarios.find(function (sc) { return sc.id === scenario; }).tracks = [];
-  await expectModAdmission(page, candidate);
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles({ name:'ruler-agendas.json', mimeType:'application/json',
-    buffer:Buffer.from(JSON.stringify(candidate)) });
-  await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
-  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('proof_royal_agenda'); });
-  await startParityGame(page, info, { bookmark:scenario === 'peroz_476' ? '476' : '1204', scenario:scenario, declaredOpening:true });
+  return candidate;
 }
+
+/* No case here asserts the Mods screen, which prepares the complete unmodded
+   catalogue before it opens. Boot the title only, store the same ordinary JSON
+   the screen would store and reload into it, then start on that one modded
+   preparation instead of reopening the game. Admission against the unmodded
+   catalogue has its own case below. */
+async function importedStart(page, info, scenario, withoutAgenda) {
+  await openTitle(page, info);
+  await installStoredMod(page, JSON.stringify(agendaCandidate(scenario, withoutAgenda)));
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('proof_royal_agenda'); });
+  await startPreparedParityGame(page, { bookmark:scenario === 'peroz_476' ? '476' : '1204', scenario:scenario, declaredOpening:true });
+}
+
+test('every imported agenda candidate is admitted against the unmodded catalogue', async function ({ page }, info) {
+  await openGame(page, info);
+  await expectModAdmission(page, agendaCandidate('peroz_476'));
+  await expectModAdmission(page, agendaCandidate('peroz_476', true), 'ruler agendas without the peroz_476 agenda');
+});
 
 test('ordinary JSON royal agenda funds one canonical bargain, preserves review purity and restores without replay', async function ({ page }, info) {
   await importedStart(page, info, 'peroz_476');

@@ -77,15 +77,18 @@ test('the complete 1096 table has separate local groups and an evidenced vacant 
 
 test('reloading the source stages data without publishing or initializing a campaign',async function ({page},info) {
   await begin(page,info);
-  const before = await page.evaluate(function () {
-    return {data:JSON.stringify(FBDATA),state:JSON.stringify(FB.state),
+  // The snapshot stays in the page: returning the whole serialized FBDATA to
+  // Node and back costs far more than the comparison itself.
+  await page.evaluate(function () {
+    window.institutionsBefore = {data:JSON.stringify(FBDATA),state:JSON.stringify(FB.state),
       rng:FB.getRngState(),uid:FB.getUidCounter()};
   });
   await page.addScriptTag({path:path.resolve(__dirname,'../../../data/institutions_1096.js')});
-  expect(await page.evaluate(function (before) {
+  expect(await page.evaluate(function () {
+    const before = window.institutionsBefore;
     return before.data === JSON.stringify(FBDATA) && before.state === JSON.stringify(FB.state) &&
       before.rng === FB.getRngState() && before.uid === FB.getUidCounter();
-  },before)).toBe(true);
+  })).toBe(true);
 });
 
 test('fresh installation allocates no people, private money, property or institutional members',async function ({page},info) {

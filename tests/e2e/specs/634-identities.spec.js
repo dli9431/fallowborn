@@ -3,7 +3,8 @@ const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
-const {openGame} = require('../support/game/navigation');
+const {openGame,openTitle} = require('../support/game/navigation');
+const {installStoredMod} = require('../support/game/stored-mod');
 const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
 const {manifestRuns,manifestFiles} = require('../fixtures/bookmark-manifest/eager-document');
@@ -237,11 +238,10 @@ for (const entry of [
   test.describe('634 current imported ' + entry[0],function () {
     let previous;
     test.beforeEach(async function ({page},info) {
-      await openGame(page,info);
-      await page.evaluate(function () { FB.ui.showMods(); });
-      await page.locator('#modfile').setInputFiles(path.join(coreFixture,'household-overlay.json'));
-      await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-      await prepareGameContent(page);
+      // The file picker publication has its own case above. Store the same file
+      // text and boot it once, so the reload below is the only second preparation.
+      await openTitle(page,info);
+      await installStoredMod(page,fs.readFileSync(path.join(coreFixture,'household-overlay.json'),'utf8'));
       await coreStart(page,entry[1],entry[0]);
       previous = await page.evaluate(function () {
         FB.state.player.gold -= 3;

@@ -472,14 +472,26 @@ async function scalarModFacts(page) {
   },opening.rid);
 }
 
+/* Each configuration is admitted and published through the Mods file picker in
+   its own case. The parity cases boot the same stored JSON once, so the heavy
+   comparisons do not also pay for the unmodded catalogue and the reload. */
+for (const enabled of [true,false]) {
+  test('ordinary JSON government rules with the council '+(enabled ? 'enabled' : 'disabled')+' publish through the Mods file picker', async function ({page},info) {
+    await openGame(page,info); await importProfile(page,scalarMod(enabled));
+    expect(await page.evaluate(function () {
+      return {count:FB.mods.count(),enabled:FBDATA.governmentForms.scalar_court.systems.royal_council};
+    })).toEqual({count:1,enabled:enabled});
+  });
+}
+
 test('ordinary JSON government import preserves scalar parity, detached restore and pure rejection', async function ({page},info) {
-  await openGame(page,info); await importProfile(page,scalarMod(true));
+  await openStoredScalarMod(page,info,true);
   expect(await scalarModFacts(page)).toMatchObject({enabled:true,restored:true,form:'scalar_court',
     matching:true,count:1,rejected:[true,true],pure:true});
 });
 
 test('independent ordinary JSON government import preserves disabled rules, restore and pure rejection', async function ({page},info) {
-  await openGame(page,info); await importProfile(page,scalarMod(false));
+  await openStoredScalarMod(page,info,false);
   expect(await scalarModFacts(page)).toMatchObject({enabled:false,restored:true,form:'scalar_court',
     matching:true,count:1,rejected:[true,true],pure:true});
 });

@@ -28,8 +28,12 @@ async function loadCourts(page) {
 function activeSnapshot() {
   const data = Object.assign({},FBDATA);
   delete data.bookmarkRevisionContent_634_courts_h;
-  return JSON.stringify({data:data,state:FB.state,
+  // The first call in a page records the snapshot there; later calls report
+  // whether it still matches, so the whole catalogue never travels to Node.
+  const text = JSON.stringify({data:data,state:FB.state,
     rng:FB.getRngState(),uid:FB.getUidCounter()});
+  if (window.courtsBefore === undefined) { window.courtsBefore = text; return true; }
+  return text === window.courtsBefore;
 }
 
 for (const crazy of [false,true]) {

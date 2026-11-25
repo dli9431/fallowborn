@@ -15,12 +15,15 @@ const ids = ['ghana_local_practice_1096','niger_traditional_1096'];
 
 test('published local faiths are detached, dated and preserve released worlds',async function ({page},info) {
   await openGame(page,info);
-  const before = await page.evaluate(function () {
-    return {data:JSON.stringify(FBDATA),state:JSON.stringify(FB.state),
+  // The snapshot stays in the page: returning the whole serialized FBDATA to
+  // Node and back costs far more than the comparison itself.
+  await page.evaluate(function () {
+    window.identityBefore = {data:JSON.stringify(FBDATA),state:JSON.stringify(FB.state),
       rng:FB.getRngState(),uid:FB.getUidCounter()};
   });
   await page.addScriptTag({path:path.resolve(__dirname,'../../../data/identities_1096.js')});
   expect(await page.evaluate(function (input) {
+    const before = window.identityBefore;
     const staged = FBDATA.bookmarkReligions1096;
     return {ids:Object.keys(staged).sort(),
       independent:input.ids.every(function (id) {
@@ -37,10 +40,10 @@ test('published local faiths are detached, dated and preserve released worlds',a
           FB.faithHistoricalAvailable(id,FB.bookmark('1096'),'community') &&
           !FB.faithHistoricalAvailable(id,FB.bookmark('1066'),'community');
       }),
-      pure:input.before.data === JSON.stringify(FBDATA) && input.before.state === JSON.stringify(FB.state) &&
-        input.before.rng === FB.getRngState() && input.before.uid === FB.getUidCounter(),
+      pure:before.data === JSON.stringify(FBDATA) && before.state === JSON.stringify(FB.state) &&
+        before.rng === FB.getRngState() && before.uid === FB.getUidCounter(),
       faults:FB.validateReligionData(null)};
-  },{ids:ids,before:before})).toEqual({ids:ids.slice().sort(),independent:true,published:true,pure:true,faults:[]});
+  },{ids:ids})).toEqual({ids:ids.slice().sort(),independent:true,published:true,pure:true,faults:[]});
 });
 
 test('the staged profiles validate and import through ordinary JSON with bookmark-only eligibility',async function ({page},info) {

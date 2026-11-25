@@ -60,10 +60,12 @@ test('detached hosted imports reject malformed terms and unresolved counterpart 
       function (d,a) {a.capacity=100000001;},function (d,a) {a.allowRecruit='yes';},
       function (d,a) {a.duration=0;},function (d,a) {a.duration=1441;},
       function (d,a) {a.price=5;},function (d) {delete d.mobile.command;},function (d) {delete d.mobile.opening;}];
+    // Serialize the whole catalogue once; every rejection must leave it exactly so.
+    const data=JSON.stringify(FBDATA);
     return changes.map(function (change) {
       const input=JSON.parse(JSON.stringify(source)),d=input.bookmarks.harbor_world.realms.find(function (r) {return r.mobile;});
       change(d,d.mobile.hostedAccess);
-      const bytes=JSON.stringify(input),state=JSON.stringify(FB.state),data=JSON.stringify(FBDATA),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const bytes=JSON.stringify(input),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
       return FB.mods.validate(input).length>0 && bytes===JSON.stringify(input) && state===JSON.stringify(FB.state) &&
         data===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
