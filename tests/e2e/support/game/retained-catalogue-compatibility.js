@@ -399,14 +399,19 @@ test('rejects foreign save ' + selection.join(', '),async function ({page},info)
     });
   },{save:old.save,selection:selection});
   for (const result of results) expect(result,result.kind).toMatchObject({rejected:true,loaded:false,pure:true});
-  if (verifyMatchingPredecessor && selection[0] === 'signature') {
-    expect(await page.evaluate(function (data) { return FB.mods.saveCompatibility(data); },old.save))
-      .toEqual({compatible:true,path:null,transition:fixture.bookmark.id + '_transition'});
-    await load(page,old.save);
-    expect(await retention(page,old,fixture)).toMatchObject({same:true,rng:true,uid:true,converted:true,retained:fixture.retainedRevision});
-  }
 });
 }
+// The matching load runs in its own fresh page: the proof and the restore each
+// recompute the transition fingerprints, which with the rejections above
+// would not fit one case.
+if (verifyMatchingPredecessor) test('admits and restores the matching predecessor save',async function ({page},info) {
+  const old = getOld();
+  await currentPage(page,fixture,null,info,old);
+  expect(await page.evaluate(function (data) { return FB.mods.saveCompatibility(data); },old.save))
+    .toEqual({compatible:true,path:null,transition:fixture.bookmark.id + '_transition'});
+  await load(page,old.save);
+  expect(await retention(page,old,fixture)).toMatchObject({same:true,rng:true,uid:true,converted:true,retained:fixture.retainedRevision});
+});
 test('ordinary JSON rejects every compatibility forgery without publication',async function ({page},info) {
   const old = getOld();
   await currentPage(page,fixture,null,info,old);
