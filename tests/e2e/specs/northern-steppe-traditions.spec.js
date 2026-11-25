@@ -32,7 +32,12 @@ test('released faiths and their inherited defaults keep their catalogue fingerpr
   async function ({page},testInfo) {
     await openGame(page,testInfo);
     const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-    expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
+    // released-catalogue.spec.js owns the whole fixture; these rules own the pagan family and its inherited defaults.
+    const ownFaiths = ['pagan','norse_pagan','slavic_pagan','baltic_pagan','tengri'];
+    const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[],geographies:[],eras:[],governments:[],
+      faiths:ownFaiths})).hashes;
+    for (const id of ownFaiths) expect(ownHashes['faith/' + id],id).toBe(fixture.hashes['faith/' + id]);
+    expect(ownHashes.faithDefaults,'faithDefaults').toBe(fixture.hashes.faithDefaults);
   });
 
 test('Germanic household queries override pagan doctrine without creating a religious office or ladder',

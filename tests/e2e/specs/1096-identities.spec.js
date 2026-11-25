@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -16,8 +15,6 @@ const ids = ['ghana_local_practice_1096','niger_traditional_1096'];
 
 test('published local faiths are detached, dated and preserve released worlds',async function ({page},info) {
   await openGame(page,info);
-  const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-  expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
   const before = await page.evaluate(function () {
     return {data:JSON.stringify(FBDATA),state:JSON.stringify(FB.state),
       rng:FB.getRngState(),uid:FB.getUidCounter()};

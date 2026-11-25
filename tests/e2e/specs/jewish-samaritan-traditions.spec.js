@@ -58,7 +58,11 @@ test('additive profiles preserve the released catalogue and validate through JSO
     await openGame(page, testInfo);
     const fixture = JSON.parse(fs.readFileSync(
       path.join(__dirname, '../fixtures/released-catalogue.json'), 'utf8'));
-    expect((await page.evaluate(releasedCatalogue, fixture.selection)).hashes).toEqual(fixture.hashes);
+    // released-catalogue.spec.js owns the whole fixture; these profiles own their Jewish family root.
+    const ownFaiths = ['jewish'];
+    const ownHashes = (await page.evaluate(releasedCatalogue, {bookmarks: [], geographies: [], eras: [], governments: [],
+      faiths: ownFaiths})).hashes;
+    for (const id of ownFaiths) expect(ownHashes['faith/' + id], id).toBe(fixture.hashes['faith/' + id]);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const definitions = {}, paths = {};

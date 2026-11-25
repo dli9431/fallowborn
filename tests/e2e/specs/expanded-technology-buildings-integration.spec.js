@@ -5,9 +5,7 @@ test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { installRestoreFacts } = require('../support/game/restore-facts');
-const { releasedCatalogue } = require('../support/released-catalogue');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-const released = require('../fixtures/released-catalogue.json');
 const examples = {
   river:require('../fixtures/authoring/expanded-catalogue-river.json'),
   upland:require('../fixtures/authoring/expanded-catalogue-upland.json')
@@ -179,7 +177,6 @@ test('the full catalogue has one source per correction and an unchanged retained
     ['js/building_profiles.js','js/fort_profiles.js'],['js/fort_profiles.js','js/building_seasons.js']]) {
     expect(r.sources.indexOf(pair[1]),pair.join(' before ')).toBeGreaterThan(r.sources.indexOf(pair[0]));
   }
-  expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
 });
 
 for (const year of [476,493,568,711,800,867,1066]) {

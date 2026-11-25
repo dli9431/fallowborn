@@ -1,12 +1,9 @@
 'use strict';
-const fs = require('fs');
-const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 const {useReleasedStartRules} = require('../support/game/released-starts');
 const {beginBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
-const {releasedCatalogue} = require('../support/released-catalogue');
 
 dependsOnRuntime(__filename,[
   'data/bookmark_1241_core_starts.js','data/story_koten_1241.js',
@@ -141,8 +138,6 @@ test('1241 composes all physical counties in ledger order with unique courts and
 
 test('1241 preserves released worlds and rejects malformed detached definitions without mutation',async function ({page},info) {
   await openGame(page,info);
-  const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-  expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
   const result = await page.evaluate(function () {
     const data = JSON.stringify(FBDATA), state = JSON.stringify(FB.state);
     const rng = FB.getRngState(), uid = FB.getUidCounter();

@@ -1,11 +1,8 @@
 'use strict';
-const fs = require('fs');
-const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 const {beginBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
-const {releasedCatalogue} = require('../support/released-catalogue');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1096.js','data/identities_1096.js','data/institutions_1096.js','js/bookmark_setup.js',
@@ -97,8 +94,6 @@ test('1096 composes every physical county and court once with valid detached ref
 
 test('1096 preserves released definitions and rejects malformed worlds without mutation',async function ({page},info) {
   await openGame(page,info);
-  const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-  expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
   const result = await page.evaluate(function () {
     const before = JSON.stringify(FBDATA), state = JSON.stringify(FB.state);
     const rng = FB.getRngState(), uid = FB.getUidCounter();

@@ -46,7 +46,11 @@ const selectedRevisions = {
 test('released communities, school descendants and baseline worlds retain their effective rules',
   async function ({page},info) {
     await openGame(page,info);
-    expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
+    // released-catalogue.spec.js owns the whole fixture; these profiles own the released Muslim family.
+    const ownFaiths = ['muslim','sunni','ashari','maturidi','shia'];
+    const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[],geographies:[],eras:[],governments:[],
+      faiths:ownFaiths})).hashes;
+    for (const id of ownFaiths) expect(ownHashes['faith/' + id],id).toBe(released.hashes['faith/' + id]);
     expect(await page.evaluate(function () {
       return {schoolParents:[FBDATA.religions.ashari.group,FBDATA.religions.maturidi.group],
         addedLawSchools:['hanafi','shafii','maliki','hanbali'].some(function (id) {

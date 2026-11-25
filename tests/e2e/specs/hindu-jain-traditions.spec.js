@@ -32,7 +32,10 @@ test('the Jain institution identity is independent and leaves released faith rul
   async function ({page},testInfo) {
     await openGame(page,testInfo);
     const catalogue = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-    expect((await page.evaluate(releasedCatalogue,catalogue.selection)).hashes).toEqual(catalogue.hashes);
+    // released-catalogue.spec.js owns the whole fixture; undeclared Jain rules keep the shared faith defaults.
+    const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[],geographies:[],eras:[],governments:[],
+      faiths:[]})).hashes;
+    expect(ownHashes.faithDefaults,'faithDefaults').toBe(catalogue.hashes.faithDefaults);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const profile = FB.religionOf('jain',null), metadata = FB.faithAvailability('jain',null);

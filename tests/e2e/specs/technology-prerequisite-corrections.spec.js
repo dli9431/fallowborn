@@ -207,9 +207,11 @@ for (const bookmark of ['867','1066']) {
       await startParityGame(page,info,{bookmark:bookmark,scenario:'farmer',
         code:'BOOKMARKSMOKE-' + bookmark + '-farmer-london-m-Review-established'});
       const fixture = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-      const released = await page.evaluate(releasedCatalogue, fixture.selection);
-      for (const key of ['bookmark/867/baseline','bookmark/1066/baseline','geography/europe_regional']) {
-        expect(released.hashes[key]).toBe(fixture.hashes[key]);
+      // released-catalogue.spec.js owns the whole fixture; each case checks the world it started.
+      const released = await page.evaluate(releasedCatalogue, {bookmarks:[bookmark], geographies:['europe_regional'],
+        eras:[], governments:[], faiths:[]});
+      for (const key of ['bookmark/' + bookmark + '/baseline','geography/europe_regional']) {
+        expect(released.hashes[key], key).toBe(fixture.hashes[key]);
       }
       const r = await page.evaluate(function () {
         function snapshot() {

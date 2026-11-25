@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -15,8 +14,6 @@ dependsOnRuntime(__filename,[
 
 test('reloading staged local practice leaves its published faith and existing worlds unchanged',async function ({page},info) {
   await openGame(page,info);
-  const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-  expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
   const before = await page.evaluate(function () {
     return {data:JSON.stringify(FBDATA),state:JSON.stringify(FB.state),
       rng:FB.getRngState(),uid:FB.getUidCounter()};
@@ -68,7 +65,8 @@ test('ordinary JSON import publishes the local profile only for its dated assign
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({name:'1241-local-practice.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(mod),'utf8')});
-  await page.locator('#mod-apply').click();
+  // Storing the file reloads the page; prepare the reloaded catalogue, not the discarded one.
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks['1241'];

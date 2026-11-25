@@ -1,9 +1,6 @@
 'use strict';
-const fs = require('fs');
-const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
-const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, ['index.html','js/bookmark_composition.js','js/main.js','js/mods.js','js/stories.js',
@@ -59,8 +56,6 @@ for (const crazygames of [false]) {
       })).toEqual({distribution:crazygames,loaded:true,cultures:CULTURES,published:true,
         selectableWorld:true,faiths:FAITHS,additions:true,priorPermissions:true,
         culturesValid:[],religionsValid:[],worldsValid:[[],[],[],[],[],[],[]]});
-      const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-      expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
     });
 }
 

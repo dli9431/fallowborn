@@ -6,9 +6,7 @@ const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
-const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
-const released = require('../fixtures/released-catalogue.json');
 
 dependsOnRuntime(__filename,[
   'data/bookmark_1096_mainz.js','data/bookmark_1096_western_expeditions.js','data/bookmark_1096_pilgrim.js',
@@ -107,7 +105,6 @@ test('the corrected world has complete date-owned hierarchy, layouts, identities
   expect(result.opening).toEqual({actors:{},appointments:{},estates:[],claims:[],migrations:[]});
   expect(result.stories).toEqual(['eastern_undertaking_1096','eastern_undertaking_households_1096']);
   expect(result.scripted).toEqual([]);
-  expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
 });
 
 test('composition rejects incomplete or conflicting parts before changing any publication',async function ({page},info) {
@@ -325,6 +322,5 @@ for (const crazygames of [false]) {
         return {active:FB.activeBookmarkId,available:FB.bookmarkAvailable('1096'),
           identity:FB.state.chars[FB.state.player.charId].name};
       })).toEqual({active:'1096',available:false,identity:'Leah Saved'});
-      expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
     });
 }

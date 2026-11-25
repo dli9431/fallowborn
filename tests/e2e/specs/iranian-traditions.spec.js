@@ -29,7 +29,11 @@ test('a fresh Sasanian court context preserves the released catalogue and separa
   async function ({page},testInfo) {
     await openGame(page,testInfo);
     const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
-    expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
+    // released-catalogue.spec.js owns the whole fixture; Sasanian contexts own their Zoroastrian root.
+    const ownFaiths = ['zoroastrian'];
+    const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[],geographies:[],eras:[],governments:[],
+      faiths:ownFaiths})).hashes;
+    for (const id of ownFaiths) expect(ownHashes['faith/' + id],id).toBe(fixture.hashes['faith/' + id]);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const id = 'zoroastrian_sasanian_476', root = FB.religionOf('zoroastrian',null);

@@ -204,7 +204,12 @@ for (const year of [867,1066]) {
       expect(rec.exposed.includes('bookhand_standardization')).toBe(year === 1066 ||
         !['default','nordic','steppe','baltic_finnic'].includes(row.tradition));
     }
-    expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
+    // released-catalogue.spec.js owns the whole fixture; each case checks the world it started.
+    const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[String(year)],geographies:['europe_regional'],
+      eras:[],governments:[],faiths:[]})).hashes;
+    for (const key of ['bookmark/' + year + '/baseline','geography/europe_regional']) {
+      expect(ownHashes[key],key).toBe(released.hashes[key]);
+    }
   });
 }
 

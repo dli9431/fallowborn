@@ -108,7 +108,12 @@ async function activateExpanded(page) {
 
 test('867 revisions account for all scenery and retain the released catalogue',async function ({page},info) {
   await openGame(page,info);
-  expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
+  // released-catalogue.spec.js owns the whole fixture; this world owns its 867 baseline and geography.
+  const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:['867'],geographies:['europe_regional'],
+    eras:[],governments:[],faiths:[]})).hashes;
+  for (const key of ['bookmark/867/baseline','geography/europe_regional']) {
+    expect(ownHashes[key],key).toBe(released.hashes[key]);
+  }
   const result = await page.evaluate(function (input) {
     const b = FB.bookmark('867',input.coverage.revision), old = FB.bookmark('867','baseline'), raw = FBDATA.bookmarks['867'];
     const ids = input.coverage.districts.map(function (p) { return p.id; });

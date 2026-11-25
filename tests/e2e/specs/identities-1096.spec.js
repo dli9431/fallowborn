@@ -5,9 +5,7 @@ const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
-const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
-const released = require('../fixtures/released-catalogue.json');
 
 async function startImportedHousehold(page) {
   const code='IMPORTIDENTITY-1096-farmer-mainz-f-Leah-established-0-ashkenazi.jewish';
@@ -115,7 +113,6 @@ for (const crazygames of [false]) {
         fatimid:'shia',egypt:true,institutionIds:['cologne_jewish_congregation_1096',
           'mainz_jewish_congregation_1096','worms_jewish_congregation_1096',
           'speyer_jewish_congregation_1096','durham_see_1096'],noInventedStaff:true,faults:[],world:[]});
-      expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
     });
 }
 
