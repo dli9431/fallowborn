@@ -10,6 +10,9 @@
 # the calling commit's tests/e2e/support/ci-rolling.js, so any ref can be
 # run. Each batch job's report is fetched on its own with retries, and the
 # measured durations are saved as case-timings-<label> after every run.
+# Batches run one browser worker, or two when workers is 2: a batch then
+# holds two worker shares of measured work, and that run saves no
+# durations, so one-worker planning keeps its own measurements.
 name: E2E
 
 on:
@@ -43,7 +46,7 @@ on:
         type: number
         default: 4
       workers:
-        description: Playwright workers per shard
+        description: Playwright workers per shard; rolling-all accepts 1 or 2 per batch, and its callers pass 1 unless a run asks for 2
         type: number
         default: 2
       bounded:
@@ -99,10 +102,14 @@ jobs:
           BASE: ${{ inputs.base }}
           PROJECTS: ${{ inputs.projects }}
           SPECS: ${{ inputs.specs }}
+          WORKERS: ${{ inputs.workers }}
         run: |
           args=""
           if [ "$MODE" = rolling-all ] && [ -n "$SPECS" ]; then
             echo "rolling-all runs every discovered case and takes no specs" >&2; exit 2
+          fi
+          if [ "$MODE" = rolling-all ] && [ "$WORKERS" != 1 ] && [ "$WORKERS" != 2 ]; then
+            echo "rolling-all runs 1 or 2 browser workers per batch, not $WORKERS" >&2; exit 2
           fi
           if [ "$MODE" = groups ]; then
             SPECS=$(jq -er 'if type == "array" and length > 0 and all(.[]; type == "array" and length > 0 and all(.[]; type == "string" and test("^specs/([a-zA-Z0-9_-]+/)*[a-zA-Z0-9_.-]+\\.spec\\.js$"))) then flatten | join(" ") else error("Invalid shard groups") end' <<< "$SPECS")
@@ -196,6 +203,8 @@ jobs:
           PLAYWRIGHT_ARGS: ${{ steps.select.outputs.args }}
           SHARD_GROUPS: ${{ inputs.mode == 'groups' && inputs.specs || '' }}
           CI_ROLLING: ${{ startsWith(inputs.mode, 'rolling') && '1' || '' }}
+          # Planner and batch jobs read the same count; other rolling modes use one.
+          FB_ROLLING_WORKERS: ${{ inputs.mode == 'rolling-all' && inputs.workers || '' }}
           WORKERS: ${{ inputs.workers }}
           FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES: ${{ inputs.bounded && '1' || '0' }}
           SHARDS: ${{ inputs.shards }}
@@ -297,6 +306,7 @@ jobs:
           PLAYWRIGHT_BLOB_OUTPUT_NAME: report-${{ matrix.shard }}.zip
           PLAYWRIGHT_ARGS: ${{ needs.plan.outputs.args }}
           FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES: ${{ inputs.bounded && '1' || '0' }}
+          FB_ROLLING_WORKERS: ${{ inputs.mode == 'rolling-all' && inputs.workers || '' }}
         run: |
           if [[ "${{ inputs.mode == 'rolling' }}" = true ]]; then
             node support/ci-rolling.js "$RUNNER_TEMP/rolling-plan/rolling.json" "$SHARD"
@@ -479,14 +489,23 @@ jobs:
           path: ${{ runner.temp }}/case-timings.json
           retention-days: 30
 
+      # Cases run slower beside a second browser worker, so only one-worker
+      # runs update the durations that planning reads.
       - name: Update measured case durations for this label
-        if: ${{ !cancelled() && inputs.mode == 'rolling-all' && hashFiles('merged/results.json') != '' }}
+        if: ${{ !cancelled() && inputs.mode == 'rolling-all' && inputs.workers == 1 && hashFiles('merged/results.json') != '' }}
         run: |
           if [[ -f blobs/case-timings.json ]]; then cp blobs/case-timings.json "$RUNNER_TEMP/"; fi
           node tooling/tests/e2e/support/ci-rolling.js learn merged/results.json
       - uses: actions/upload-artifact@v7
-        if: ${{ !cancelled() && inputs.mode == 'rolling-all' && hashFiles('merged/results.json') != '' }}
+        if: ${{ !cancelled() && inputs.mode == 'rolling-all' && inputs.workers == 1 && hashFiles('merged/results.json') != '' }}
         with:
           name: case-timings-${{ inputs.label }}
           path: ${{ runner.temp }}/case-timings.json
           retention-days: 30
+      - name: Note unsaved two-worker durations
+        if: ${{ !cancelled() && inputs.mode == 'rolling-all' && inputs.workers != 1 }}
+        env:
+          LABEL: ${{ inputs.label }}
+          WORKERS: ${{ inputs.workers }}
+        run: |
+          echo "Batches ran $WORKERS browser workers each, so this run's durations were not saved as case-timings-$LABEL; one-worker planning keeps its measurements. Per-case durations remain in report-$LABEL." >> "$GITHUB_STEP_SUMMARY"

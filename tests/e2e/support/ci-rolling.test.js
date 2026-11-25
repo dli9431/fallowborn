@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const {Readable} = require('node:stream');
 const {spawnSync} = require('node:child_process');
-const {makePlan, learn, runJob, readBlob, readZip, writeZip, zipEntry} = require('./ci-rolling');
+const {makePlan, learn, runJob, readBlob, readZip, writeZip, zipEntry, attemptArgs, planWorkers} = require('./ci-rolling');
 
 function cases(n) {
   return Array.from({length:n}, (_,i) => ({id:'case-' + i, file:'specs/sample.spec.js', project:'chromium-served'}));
@@ -41,6 +41,131 @@ test('only passing measurements update the next plan', () => {
   const timings = learn(report, {old:45000});
   assert.equal(timings.old,45000);
   assert.equal(makePlan(rows,timings).batches.length,1);
+});
+
+// Rows from [file, id, seconds, scope]; a case without seconds has no measurement.
+function measured(specs) {
+  const rows = [];
+  const timings = {};
+  for (const [file, id, seconds, scope] of specs) {
+    rows.push({id, file:'specs/' + file + '.spec.js', project:'chromium-served', scope});
+    if (seconds) timings[id] = seconds * 1000;
+  }
+  return {rows, timings};
+}
+
+/* Split a two-worker batch at its first share (whose groups come first), check that the
+   shares add up to the batch, each worker keeps 375 seconds when two share the batch, and
+   no file is on both workers. Returns each share's time and files. */
+function workerShares(batch, rows, timings) {
+  const fileOf = new Map(rows.map(t => [t.id, t.project + ' ' + t.file]));
+  const ms = group => group.reduce((sum, id) => sum + (timings[id] || 45000), 0);
+  let at = 0;
+  let first = 0;
+  while (at < batch.groups.length && first < batch.shares[0]) first += ms(batch.groups[at++]);
+  const parts = [batch.groups.slice(0, at), batch.groups.slice(at)].filter(part => part.length);
+  assert.ok(batch.shares.length === 1 || batch.shares.length === 2);
+  assert.equal(parts.length, batch.shares.length);
+  assert.equal(batch.ms, batch.shares.reduce((sum, share) => sum + share, 0));
+  assert.ok(batch.ms <= 750000);
+  const shares = parts.map((groups, index) => {
+    assert.equal(groups.reduce((sum, group) => sum + ms(group), 0), batch.shares[index]);
+    return {ms:batch.shares[index], files:new Set(groups.flat().map(id => fileOf.get(id)))};
+  });
+  if (shares.length === 2) {
+    assert.ok(shares.every(share => share.ms <= 375000), 'Each worker share stays within 375 seconds');
+    assert.ok([...shares[0].files].every(file => !shares[1].files.has(file)), 'A file stays on one worker');
+  }
+  return shares;
+}
+
+test('one-worker plans are unchanged and two workers pair them into batches of two worker shares', () => {
+  const {rows, timings} = measured([['a', 'a0', 100], ['a', 'a1', 100], ['b', 'b0', 300], ['c', 'c0', 50],
+    ['d', 'd0'], ['d', 'd1'], ['e', 'e0', 200], ['e', 'e1', 200]]);
+  const ids = ['a0', 'a1', 'b0', 'c0', 'd0', 'd1', 'e0', 'e1'];
+  const one = {batches:[{ms:350000, groups:[['b0'], ['c0']]}, {ms:200000, groups:[['e0']]},
+    {ms:200000, groups:[['e1']]}, {ms:200000, groups:[['a0'], ['a1']]}, {ms:90000, groups:[['d0'], ['d1']]}],
+    jobs:[[0], [1], [2], [3], [4]], ids};
+  assert.deepEqual(makePlan(rows, timings, 1), one);
+  assert.deepEqual(makePlan(rows, timings), one);
+  // Measured shares pair largest first; the cold file d keeps a batch of its own.
+  const two = makePlan(rows, timings, 2);
+  assert.deepEqual(two, {batches:[{ms:550000, shares:[350000, 200000], groups:[['b0'], ['c0'], ['e0']]},
+    {ms:400000, shares:[200000, 200000], groups:[['e1'], ['a0'], ['a1']]},
+    {ms:90000, shares:[90000], groups:[['d0'], ['d1']]}], jobs:[[0], [1], [2]], ids, workers:2});
+  two.batches.forEach(batch => workerShares(batch, rows, timings));
+});
+
+test('two-worker batches hold up to twice the budget with each worker share within 375 seconds', () => {
+  const specs = [];
+  for (let file = 0; file < 60; file++)
+    for (let n = 0; n <= file % 4; n++) specs.push(['file-' + file, 'f' + file + '-' + n, 20 + (file * 37 + n * 11) % 70]);
+  const {rows, timings} = measured(specs);
+  const one = makePlan(rows, timings, 1);
+  const two = makePlan(rows, timings, 2);
+  assert.ok(one.batches.length > 4 && one.batches.every(batch => batch.ms <= 375000 && !batch.shares));
+  assert.equal(two.batches.length, Math.ceil(one.batches.length / 2));
+  assert.ok(two.batches.some(batch => batch.ms > 375000));
+  for (const batch of two.batches) workerShares(batch, rows, timings);
+  assert.deepEqual(two.jobs.flat().sort((a,b) => a-b), two.batches.map((_,i) => i));
+  assert.deepEqual(two.batches.flatMap(batch => batch.groups.flat()).sort(), one.ids);
+  assert.deepEqual(two.ids, one.ids);
+});
+
+test('an oversized file never shares a batch with itself and an oversized scope group runs alone', () => {
+  const {rows, timings} = measured([['big', 'big-0', 300], ['big', 'big-1', 300], ['big', 'big-2', 300],
+    ['small', 'small-0', 100], ['huge', 'huge-0', 250, 'shared'], ['huge', 'huge-1', 250, 'shared'],
+    ['tiny', 'tiny-0', 20]]);
+  const one = makePlan(rows, timings, 1);
+  assert.deepEqual(one.batches.map(batch => batch.groups),
+    [[['huge-0', 'huge-1']], [['big-0']], [['big-1']], [['big-2']], [['small-0'], ['tiny-0']]]);
+  // Pairing big-0 with big-1 would put 600 seconds of one file on one worker.
+  const two = makePlan(rows, timings, 2);
+  assert.deepEqual(two.batches, [{ms:500000, shares:[500000], groups:[['huge-0', 'huge-1']]},
+    {ms:420000, shares:[300000, 120000], groups:[['big-0'], ['small-0'], ['tiny-0']]},
+    {ms:300000, shares:[300000], groups:[['big-1']]}, {ms:300000, shares:[300000], groups:[['big-2']]}]);
+  for (const batch of two.batches) {
+    workerShares(batch, rows, timings);
+    assert.ok(batch.groups.flat().filter(id => id.startsWith('big-')).length <= 1);
+  }
+});
+
+test('cold estimates keep their one-worker batches when two workers run', () => {
+  const rows = cases(5848);
+  const one = makePlan(rows, {}, 1);
+  const two = makePlan(rows, {}, 2);
+  assert.ok(two.batches.every(batch => batch.shares.length === 1 && batch.ms <= 375000));
+  assert.deepEqual(two.batches.map(batch => batch.groups), one.batches.map(batch => batch.groups));
+  assert.deepEqual(two.jobs, one.jobs);
+});
+
+test('the worker count comes from the rolling-all input, accepts one or two and must match the plan', () => {
+  const {rows, timings} = measured([['a', 'a0', 100], ['b', 'b0', 300], ['c', 'c0', 200]]);
+  const saved = process.env.FB_ROLLING_WORKERS;
+  try {
+    delete process.env.FB_ROLLING_WORKERS;
+    assert.equal(makePlan(rows, timings).workers, undefined);
+    assert.equal(planWorkers({}), 1);
+    assert.throws(() => planWorkers({workers:2}), /made with workers=2, but this batch job has workers=1/);
+    process.env.FB_ROLLING_WORKERS = '';
+    assert.equal(planWorkers({}), 1);
+    process.env.FB_ROLLING_WORKERS = '2';
+    const plan = makePlan(rows, timings);
+    assert.deepEqual(plan, makePlan(rows, timings, 2));
+    assert.equal(planWorkers(plan), 2);
+    assert.throws(() => planWorkers({}), /made with workers=1, but this batch job has workers=2/);
+    process.env.FB_ROLLING_WORKERS = '3';
+    assert.throws(() => makePlan(rows, timings), /1 or 2 browser workers, not 3/);
+    assert.throws(() => planWorkers({}), /1 or 2 browser workers, not 3/);
+  } finally {
+    if (saved === undefined) delete process.env.FB_ROLLING_WORKERS;
+    else process.env.FB_ROLLING_WORKERS = saved;
+  }
+  assert.throws(() => makePlan(rows, timings, 0), /1 or 2 browser workers, not 0/);
+  assert.deepEqual(attemptArgs('cli.js', 'batch-4-a', 1), ['--signal=INT', '--kill-after=30s', '600s',
+    process.execPath, 'cli.js', 'test', '--last-failed', '--workers=1', '--output=test-results/batch-4-a',
+    '--reporter=blob,line']);
+  assert.deepEqual(attemptArgs('cli.js', 'rerun', 2).filter(arg => arg.startsWith('--workers')), ['--workers=2']);
 });
 
 /* Attempt simulator. Each attempt runs its cases in order on one worker. A case that would

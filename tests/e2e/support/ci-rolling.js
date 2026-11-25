@@ -20,16 +20,62 @@ const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const write = (file, value) => fs.writeFileSync(file, JSON.stringify(value));
 const historyFile = () => path.join(process.env.RUNNER_TEMP, 'case-timings.json');
 
-function makePlan(cases, timings) {
+// Browser workers per batch. Only a rolling-all run that asks for two sets
+// FB_ROLLING_WORKERS, for both its plan and its batch jobs; every other run uses one.
+function rollingWorkers() {
+  const value = process.env.FB_ROLLING_WORKERS || '1';
+  assert(value === '1' || value === '2', 'Rolling batches run 1 or 2 browser workers, not ' + value);
+  return Number(value);
+}
+
+// The worker count of this batch job, which must be the count its plan was made for.
+function planWorkers(plan) {
+  const workers = rollingWorkers();
+  assert.equal(plan.workers || 1, workers,
+    'The rolling plan was made with workers=' + (plan.workers || 1) + ', but this batch job has workers=' + workers);
+  return workers;
+}
+
+/* With two workers, pair the one-worker shares into batches of up to twice the planning
+   budget, one share per worker. fullyParallel is false, so a file stays on one worker: two
+   shares of the same file never pair. Shares planned from cold estimates and a lone scope
+   group over the budget keep a batch of their own. Groups list the first share first. */
+function pairShares(shares, owners, cold) {
+  const batches = [];
+  const open = [];
+  for (const share of shares) {
+    if (cold.has(share) || share.ms > targetMs) batches.push({ms:share.ms, shares:[share.ms], groups:share.groups});
+    else open.push(share);
+  }
+  open.sort((a,b) => b.ms - a.ms);
+  while (open.length) {
+    const first = open.shift();
+    const files = new Set(owners.get(first));
+    const index = open.findIndex(share => !owners.get(share).some(key => files.has(key)));
+    if (index < 0) {
+      batches.push({ms:first.ms, shares:[first.ms], groups:first.groups});
+      continue;
+    }
+    const [second] = open.splice(index, 1);
+    batches.push({ms:first.ms + second.ms, shares:[first.ms, second.ms], groups:[...first.groups, ...second.groups]});
+  }
+  return batches;
+}
+
+function makePlan(cases, timings, workers = rollingWorkers()) {
+  assert(workers === 1 || workers === 2, 'Rolling batches run 1 or 2 browser workers, not ' + workers);
   const files = new Map();
   for (const test of cases) {
     const key = JSON.stringify([test.project, test.file]);
     if (!files.has(key)) files.set(key, []);
     files.get(key).push(test);
   }
-  const batches = [];
+  let batches = [];
   const measured = [];
-  for (const tests of files.values()) {
+  // The [project, file] keys of each share, and the shares planned from cold estimates.
+  const owners = new Map();
+  const cold = new Set();
+  for (const [key, tests] of files) {
     // Keep explicitly serial or shared lifecycle scopes together. Ordinary independent
     // cases (including parameterized tests on the same line) can be selected by ID.
     const groups = new Map();
@@ -46,32 +92,39 @@ function makePlan(cases, timings) {
       if (!bucket || bucket.ms + ms > targetMs) {
         bucket = {ms:0, groups:[]};
         buckets.push(bucket);
+        owners.set(bucket, [key]);
       }
       bucket.groups.push(group.map(t => t.id));
       bucket.ms += ms;
     }
+    if (sparse) buckets.forEach(bucket => cold.add(bucket));
     if (sparse || buckets.length > 1) batches.push(...buckets);
     else measured.push(...buckets);
   }
   const packed = [];
   for (const file of measured.sort((a,b) => b.ms - a.ms)) {
     const batch = packed.find(b => b.ms + file.ms <= targetMs);
-    if (batch) { batch.ms += file.ms; batch.groups.push(...file.groups); }
+    if (batch) { batch.ms += file.ms; batch.groups.push(...file.groups); owners.get(batch).push(...owners.get(file)); }
     else packed.push(file);
   }
   batches.push(...packed);
-  batches.sort((a,b) => b.ms - a.ms);
+  if (workers === 2) batches = pairShares(batches, owners, cold);
+  // A batch's expected wall time: its work on one worker, or its larger share on two.
+  const load = batch => batch.shares ? Math.max(...batch.shares) : batch.ms;
+  batches.sort((a,b) => load(b) - load(a));
   const count = Math.min(batches.length, 256, Math.max(16, Math.ceil(batches.length / 3)));
   const jobs = Array.from({length:count}, () => ({ms:0, batches:[]}));
   for (const [index, batch] of batches.entries()) {
     const job = jobs.reduce((a,b) => a.ms <= b.ms ? a : b);
     job.batches.push(index);
-    job.ms += batch.ms;
+    job.ms += load(batch);
   }
   const ids = batches.flatMap(b => b.groups.flat()).sort();
   assert.deepEqual(ids, cases.map(c => c.id).sort());
   assert.equal(new Set(ids).size, ids.length);
-  return {batches, jobs:jobs.map(j => j.batches), ids};
+  const plan = {batches, jobs:jobs.map(j => j.batches), ids};
+  if (workers > 1) plan.workers = workers;
+  return plan;
 }
 
 function reportTests(report) {
@@ -360,16 +413,20 @@ function removeContexts(blob, drop, output) {
   pruneFolders(output);
 }
 
-// One Playwright attempt on a single browser worker under the 600 second cap.
-function attempt(ids, name) {
+// The timeout and Playwright arguments of one attempt under the 600 second cap.
+function attemptArgs(cli, name, workers) {
+  return ['--signal=INT', '--kill-after=30s', '600s', process.execPath, cli, 'test', '--last-failed',
+    '--workers=' + workers, '--output=test-results/' + name, '--reporter=blob,line'];
+}
+
+// One Playwright attempt on the plan's browser workers under the 600 second cap.
+function attempt(ids, name, workers) {
   const dir = fs.mkdtempSync(path.join(process.env.RUNNER_TEMP, 'batch-'));
   const filter = path.join(dir, 'cases.json');
   write(filter, {status:'failed', failedTests:ids});
   const cli = path.resolve('node_modules/@playwright/test/cli.js');
   const blob = path.join(dir, 'blob', 'report.zip');
-  const result = spawnSync('timeout', ['--signal=INT', '--kill-after=30s', '600s',
-    process.execPath, cli, 'test', '--last-failed', '--workers=1', '--output=test-results/' + name,
-    '--reporter=blob,line'], {
+  const result = spawnSync('timeout', attemptArgs(cli, name, workers), {
     stdio:'inherit', env:{...process.env, PLAYWRIGHT_LAST_RUN_OUTPUT_FILE:filter, PLAYWRIGHT_BLOB_OUTPUT_FILE:blob}
   });
   if (result.error) throw result.error;
@@ -531,9 +588,11 @@ function runJob(batches, exec, options) {
 
 function run(planFile, number) {
   const plan = read(planFile);
+  const workers = planWorkers(plan);
   const batches = plan.jobs[number - 1].map(index => ({name:'batch-' + (index + 1), groups:plan.batches[index].groups}));
   const options = {out:path.resolve('blob-report'), job:number, deadline:Date.now() + jobDeadlineMs};
-  if (!runJob(batches, attempt, options).passed) process.exitCode = 1;
+  if (workers > 1) console.log('Rolling job ' + number + ' runs ' + workers + ' browser workers per attempt.');
+  if (!runJob(batches, (ids, name) => attempt(ids, name, workers), options).passed) process.exitCode = 1;
 }
 
 if (require.main === module) {
@@ -543,4 +602,4 @@ if (require.main === module) {
   } else run(process.argv[2], Number(process.argv[3]));
 }
 
-module.exports = {makePlan, learn, historyFile, runJob, readBlob, readZip, writeZip, zipEntry};
+module.exports = {makePlan, learn, historyFile, runJob, readBlob, readZip, writeZip, zipEntry, attemptArgs, planWorkers};
