@@ -83,7 +83,7 @@ jobs:
       specs: ${{ inputs.specs || '' }}
       projects: ${{ inputs.projects || 'all' }}
       # Only rolling-all takes the dispatch workers input; the rest stay on one.
-      workers: ${{ fromJSON(format('{0}', inputs.mode == 'rolling-all' && inputs.workers || 1)) }}
+      workers: ${{ fromJSON(format('{0}', inputs.mode == 'rolling-all' && inputs.workers > 0 && inputs.workers || 1)) }}
       bounded: ${{ inputs.mode != 'rolling-all' }}
   tests:
     if: ${{ inputs.mode != 'regression-gate' && !startsWith(inputs.mode, 'rolling') && !(github.event_name == 'push' && github.ref_name == '476') }}
@@ -96,6 +96,6 @@ jobs:
       base: ${{ inputs.base || github.event.before || github.event.pull_request.base.sha || '' }}
       projects: ${{ inputs.projects || 'all' }}
       shards: ${{ fromJSON(format('{0}', inputs.shards || 4)) }}
-      workers: ${{ fromJSON(format('{0}', inputs.workers || 2)) }}
+      workers: ${{ fromJSON(format('{0}', inputs.workers > 0 && inputs.workers || 2)) }}
       bounded: ${{ (inputs.mode || 'changed') == 'changed' }}
       report_source_run: ${{ inputs.report_source_run || '' }}
