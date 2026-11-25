@@ -722,8 +722,9 @@ Workflows live in `.github/workflows/`:
 - `nightly.yml`: daily from `main` and by hand. The full suite on `476` and `dev` in rolling-all
   mode (see Complete rolling suite), then season timing on `476`.
 - `e2e.yml`: the reusable check, sharded Playwright run (blob reporter), and merge job. The merge
-  job writes a job summary with totals, failures and their first error line, flaky tests, and the
-  slowest spec files, and uploads complete compact JSON with bounded HTML rendering as `report-<label>`.
+  job writes a job summary with totals, failed cases grouped by cause, timed out, flaky, over budget
+  and unfinished cases, skip counts by declared reason and the slowest spec files (see Merged report
+  fields), and uploads complete compact JSON with bounded HTML rendering as `report-<label>`.
 - `season-timing.yml`: runs `tests/e2e/measure/season-timing.js` from the calling commit against
   the game at the requested branch, sharded across starts, then compares the merged measurement
   with the previous nightly one and uploads `season-timing-<branch>`.
@@ -733,7 +734,7 @@ Read results with `gh run list`, `gh run view <id>`, `gh run view <id> --log-fai
 
 Jobs that check out an arbitrary game ref do not retain Git credentials or save npm or Playwright browser caches. Report-only tooling jobs may cache their trusted dependency installation. CI summary table cells encode literal backslashes, pipes and HTML and flatten line breaks before rendering report data. The check job also runs the bounded static HTML extraction regressions without regenerating language catalogs.
 
-Security helper coverage in tests/e2e/specs/security-helpers.spec.js checks text and both quoted attribute boundaries, crest seed markup and recursive faith-property prototype protection on the file and served targets and compatibility browsers. tests/e2e/support/ci-summary.test.js covers report table boundaries. tools/test_i18n_catalog.py covers non-display closing tags and source-position preservation.
+Security helper coverage in tests/e2e/specs/security-helpers.spec.js checks text and both quoted attribute boundaries, crest seed markup and recursive faith-property prototype protection on the file and served targets and compatibility browsers. tests/e2e/support/ci-summary.test.js covers report table boundaries, the summary sections and unfinished coverage verification. tools/test_i18n_catalog.py covers non-display closing tags and source-position preservation.
 
 ### Rolling batches
 
@@ -744,6 +745,14 @@ When an attempt reaches the cap, its finished results stay, including failures, 
 After its batches, each job reruns once, in one extra attempt, every case whose only finished result is failed or timedOut. Both results stay in the case's own batch report, the rerun as retry 1, so the merged report shows a failure that then passed as flaky and one that failed twice as unexpected. Either still fails the job. An interrupted rerun result is dropped, leaving the first failure. The runner writes one blob per batch from the events it keeps, because the merge gives a test that appears in two blobs a separate ID. No attempt starts after 95 minutes of a job, so a broken run reports its remaining cases as unfinished before the job timeout instead of losing its artifacts.
 
 Each job also writes `rolling-job-<job>.json` beside its batch blobs in `blob-report/`, so the report job finds it in its downloaded blob folder next to `selection.json`. It holds `job`, `batches`, `passed`, `attempts` (`name`, `cases`, `status`, `capped`, `unfinished`, or `skipped` after the deadline), `overBudget` (`batch`, `name`, `ids` of the whole scope group, `unfinished` ids), `rerun` ids, `rerunUnfinished` ids whose rerun did not finish, and `unfinished` ids. `tests/e2e/support/ci-rolling.test.js` covers a capped batch with a failure, a capped single group, repeated splits, an over budget group, the failure rerun and its merge, an interrupted rerun, the job deadline, global errors, non-zero exits, missing reports, an unexpected browser selection and the blob archive format.
+
+Merged report fields
+
+The report job merges the batch blobs through tests/e2e/support/ci-report.js into the compact results.json of report-LABEL. Every existing field keeps its meaning: stats.expected, unexpected, flaky and skipped count each case's Playwright outcome, and a case whose results are all interrupted, or which has none, still has status skipped and counts as skipped. The report adds only new fields. A case with no passed, failed, timedOut or skipped result carries unfinished: true, and stats.unfinished counts those cases. A declared skip (test.skip or test.fixme, whose expected status is skipped) carries skipReason, its description or else its annotation type; a case skipped without a declaration, such as the rest of a serial group after a failure, has none. With shard coverage metadata, coverage also holds unfinished, the sorted ids of the unfinished cases, and overBudget, one entry per over budget scope group from the rolling-job-JOB.json files in the merged blob folder, with job, batch, name, ids and unfinished as the runner recorded them. Runs without rolling job summaries have an empty overBudget list. A case that failed or timed out and then passed in the failure rerun has status flaky.
+
+tests/e2e/support/ci-discovery.js verify still compares the merged identities with discovery, and now also fails when any discovered case is unfinished, including a case that was only ever cut off by the 600 second cap. It prints an ::error:: line with the count and names up to fifty of them by project, file, line, title and id. An identity mismatch still sets coverage.complete to false. Unfinished cases fail the step without changing coverage.complete, which still means that every shard report arrived and the identities match.
+
+tests/e2e/support/ci-summary.js keeps the totals line and then prints, each only when it has entries, separate sections for failed, timed out, flaky, over budget and unfinished cases, skip counts by declared reason, and the slowest spec files. A failing case is timed out when its last failing result timed out. Failed cases are grouped by cause across spec files, one row per cause with its case count, spec file count and first case. A cause is the first error line. When that line is only a bare expect matcher header such as expect(received).toEqual(expected), the first changed diff line or Expected line is added with its spacing collapsed, so unrelated assertions with the same matcher stay apart and one changed fixture key across many specs reads as one cause. Declared skips are counted by reason, with one row for skips without a declared reason; unfinished cases are listed only in their own section. The heading reads incomplete, failed, unfinished, flaky or passed, in that order. tests/e2e/support/ci-summary.test.js covers the sections, grouping, headings and verification. tests/e2e/support/ci-rolling.test.js merges a runner job with an over budget group and declared and undeclared skips through ci-report.js, then checks verification and the summary.
 
 ### Season timing
 
