@@ -14,12 +14,15 @@ dependsOnRuntime(__filename,[
 
 test('reloading staged local practice leaves its published faith and existing worlds unchanged',async function ({page},info) {
   await openGame(page,info);
-  const before = await page.evaluate(function () {
-    return {data:JSON.stringify(FBDATA),state:JSON.stringify(FB.state),
+  // The snapshot stays in the page: returning the whole serialized FBDATA to
+  // Node and back costs far more than the comparison itself.
+  await page.evaluate(function () {
+    window.identityBefore = {data:JSON.stringify(FBDATA),state:JSON.stringify(FB.state),
       rng:FB.getRngState(),uid:FB.getUidCounter()};
   });
   await page.addScriptTag({path:path.resolve(__dirname,'../../../data/identities_1241.js')});
-  const result = await page.evaluate(function (before) {
+  const result = await page.evaluate(function () {
+    const before = window.identityBefore;
     const staged = FBDATA.bookmarkReligions1241, source = FBDATA.bookmarkReligions476Wider.sahel_traditional_476;
     const expected = JSON.parse(JSON.stringify(source));
     expected.availability = {bookmarkIds:['1241']};
@@ -34,7 +37,7 @@ test('reloading staged local practice leaves its published faith and existing wo
       pure:before.data === JSON.stringify(FBDATA) && before.state === JSON.stringify(FB.state) &&
         before.rng === FB.getRngState() && before.uid === FB.getUidCounter(),
       faults:FB.validateReligionData(null)};
-  },before);
+  });
   expect(result.definition).toEqual(result.expected);
   expect({ids:result.ids,independent:result.independent,published:result.published,pure:result.pure,faults:result.faults})
     .toEqual({ids:['sahel_local_practice_1241'],independent:true,published:true,pure:true,faults:[]});

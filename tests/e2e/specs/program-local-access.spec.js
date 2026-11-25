@@ -1,10 +1,11 @@
 'use strict';
-const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/program-local-access-harbor.json'),
   dune:require('../fixtures/authoring/program-local-access-dune.json')};
@@ -16,16 +17,16 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
   'js/starts.js','js/main.js','js/stories.js','js/armies.js','js/federates.js','js/population.js',
   'js/market.js','js/treasury.js','js/logistics.js','js/save.js','js/save_v4.js','js/mods.js']);
 
+function fixturePath(prefix,legacy) {
+  return path.resolve(__dirname,'../fixtures/authoring/'+(legacy ? 'expedition-dispatch-' : 'program-local-access-')+prefix+'.json');
+}
+
+/* Each case stores the exact fixture JSON the Mods dialog would store and boots
+   it once, so it prepares only the modded catalogue a single time. The ordinary
+   validation of every fixture against the unmodded catalogue has its own case. */
 async function start(page,info,prefix,outside,legacy) {
-  await openGame(page,info);
-  const source=legacy ? require('../fixtures/authoring/expedition-dispatch-'+prefix+'.json') : examples[prefix];
-  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},source),
-    prefix+' ordinary import validation').toEqual([]);
-  await page.evaluate(function () {FB.ui.showMods();});
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+
-    (legacy ? 'expedition-dispatch-' : 'program-local-access-')+prefix+'.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+  await openTitle(page,info);
+  await installStoredMod(page,fs.readFileSync(fixturePath(prefix,legacy),'utf8'));
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   if (outside) {
     await page.evaluate(function () {FB.startProgression.noteTier(7);});
@@ -39,7 +40,7 @@ async function start(page,info,prefix,outside,legacy) {
     await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
     await page.getByRole('button',{name:'Begin',exact:true}).click();
     await page.evaluate(function () {FB.game.setPaused(true);});
-  } else await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+  } else await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await page.evaluate(function () {
     const s=FB.state,d=FB.campaignBookmark(s).realms.find(function (d) {return d.mobile;});
     window.localAccessCase={rid:d.id,definition:d,
@@ -136,6 +137,15 @@ for (const prefix of ['harbor','dune']) {
     expect(r).toEqual({pending:true,offered:true,accepted:true,complete:true,issued:true,flight:true,cancelled:true,terminal:true});
   });
 }
+
+test('every ordinary access and legacy dispatch fixture validates against the unmodded catalogue',async function ({page},info) {
+  await openGame(page,info);
+  const sources={harbor:examples.harbor,dune:examples.dune,
+    legacyHarbor:require('../fixtures/authoring/expedition-dispatch-harbor.json')};
+  expect(await page.evaluate(function (sources) {
+    return Object.keys(sources).reduce(function (out,key) {out[key]=FB.mods.validate(sources[key]);return out;},{});
+  },sources),'ordinary import validation').toEqual({harbor:[],dune:[],legacyHarbor:[]});
+});
 
 test('invalid typed declarations reject purely, including attempts to require a positive optional purchase',async function ({page},info) {
   await openGame(page,info);

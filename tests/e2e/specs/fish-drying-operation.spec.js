@@ -4,7 +4,7 @@ const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={cool:require('../fixtures/authoring/fish-drying-cool.json'),wet:require('../fixtures/authoring/fish-drying-wet.json')};
 dependsOnRuntime(__filename,['index.html','data/buildings_fish_drying.js','data/production_fish_drying.js','data/climate.js','data/technology.js',
@@ -20,7 +20,8 @@ async function boot(page,info,kind,options) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
-  if (options.npc) await beginBookmark(page,info,'fish_'+kind,'fish_'+kind+'_household');
+  // The import reload left a prepared modded title; begin there without reopening.
+  if (options.npc) await beginBookmarkFromTitle(page,'fish_'+kind,'fish_'+kind+'_household');
   else {
     const full=page.locator('#btn-choose-beginning');
     if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();

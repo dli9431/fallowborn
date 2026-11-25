@@ -4,7 +4,7 @@ const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
-const {beginBookmark}=require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/dated-home-authority-harbor.json'),
   dune:require('../fixtures/authoring/dated-home-authority-dune.json')};
@@ -152,7 +152,8 @@ for(const prefix of ['harbor','dune']) {
 
   test(prefix+' NPC preparation uses the same original policy without automating funds or replacing officeholders',async function({page},info) {
     await importWorld(page,info,prefix);
-    await beginBookmark(page,info,prefix+'_world',prefix+'_household');
+    // The import reload left a prepared modded title; begin there without reopening.
+    await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
     const result=await page.evaluate(function(prefix) {
       const s=FB.state,id=prefix+'_preparation',story=FB.stories.get(id),t=s.stories[id],rid=t.provider.realmId,
         before=JSON.stringify([s.realms,s.player.gold,s.armies,s.chars,s.authority.appointments]);

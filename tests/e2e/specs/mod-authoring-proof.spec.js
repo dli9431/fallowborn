@@ -1,9 +1,11 @@
 'use strict';
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openGame, openTitle } = require('../support/game/navigation');
+const { installStoredMod } = require('../support/game/stored-mod');
 const { startDeterministicGame } = require('../support/game/start');
 const { startGames, bookGames } = require('../support/game/tournaments');
 const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
@@ -20,20 +22,36 @@ dependsOnRuntime(__filename, ['data/markets.js','js/population.js','js/politics.
   'js/mobile_confederations.js','js/government_support.js','js/government_selection.js','js/treasury.js',
   'js/world.js','js/main.js','js/save.js','js/save_v4.js']);
 
+function proofPath(prefix) {
+  return path.resolve(__dirname, '../fixtures/authoring/' + prefix + '-contracts.json');
+}
+
+/* Admission against the unmodded catalogue and the Mods screen import have
+   their own case per proof below. Every mechanic case stores the same file
+   text and boots it once instead of preparing the unmodded catalogue first. */
 async function importProof(page, info, prefix, begin) {
-  await openGame(page, info);
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await expectModAdmission(page,require('../fixtures/authoring/'+prefix+'-contracts.json'));
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/' + prefix + '-contracts.json'));
-  // File reading and mod validation precede the reload. Wait for that document
-  // before polling its deferred boot, rather than spending the boot wait on both.
-  await Promise.all([
-    page.waitForEvent('domcontentloaded'),
-    page.locator('#mod-apply').click()
-  ]);
-  await prepareGameContent(page);
+  await openTitle(page, info);
+  await installStoredMod(page, fs.readFileSync(proofPath(prefix), 'utf8'));
   await page.waitForFunction(function (prefix) { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(prefix + '_court'); }, prefix);
   if (begin !== false) await beginBookmarkFromTitle(page,prefix + '_courts_900', prefix + '_court_household');
+}
+
+for (const prefix of ['harbor','dune']) {
+  test(prefix + ' proof is admitted against the unmodded catalogue and imports through the Mods file picker', async function ({ page }, info) {
+    await openGame(page, info);
+    await page.evaluate(function () { FB.ui.showMods(); });
+    await expectModAdmission(page,require('../fixtures/authoring/'+prefix+'-contracts.json'));
+    await page.locator('#modfile').setInputFiles(proofPath(prefix));
+    // File reading and mod validation precede the reload. Wait for that document
+    // before polling its deferred boot, rather than spending the boot wait on both.
+    await Promise.all([
+      page.waitForEvent('domcontentloaded'),
+      page.locator('#mod-apply').click()
+    ]);
+    await prepareGameContent(page);
+    await page.waitForFunction(function (prefix) { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(prefix + '_court'); }, prefix);
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+  });
 }
 
 for (const prefix of ['harbor','dune']) {

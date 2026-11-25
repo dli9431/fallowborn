@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = require('../fixtures/authoring/household-work.json');
 
@@ -20,9 +20,15 @@ async function importExamples(page, info) {
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('bench_work_example'); });
 }
 
+// The import reload leaves a prepared modded title; begin there instead of
+// reopening the game and preparing the whole catalogue a third time.
+async function beginImported(page, scenario) {
+  await beginBookmarkFromTitle(page, '867', scenario);
+}
+
 test('JSON work graphs charge once and observe actual focus income without replay', async function ({ page }, info) {
   await importExamples(page, info);
-  await beginBookmark(page, info, '867', 'bench_work_example_start');
+  await beginImported(page, 'bench_work_example_start');
   expect(await page.evaluate(function () {
     let s = FB.state;
     const id = 'bench_work_example';
@@ -60,7 +66,7 @@ test('JSON work graphs charge once and observe actual focus income without repla
 
 test('the independent field graph uses field income and household continuity', async function ({ page }, info) {
   await importExamples(page, info);
-  await beginBookmark(page, info, '867', 'field_work_example_start');
+  await beginImported(page, 'field_work_example_start');
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'field_work_example';
     const selected = FB.stories.apply(s, id, 'work', FB.stories.quote(s, id, 'work'));
@@ -72,7 +78,7 @@ test('the independent field graph uses field income and household continuity', a
 
 test('personal work interrupts on death and rejects a successor before lifecycle dispatch', async function ({ page }, info) {
   await importExamples(page, info);
-  await beginBookmark(page, info, '867', 'bench_work_example_start');
+  await beginImported(page, 'bench_work_example_start');
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'bench_work_example', t = s.stories[id], actor = s.player.charId;
     const q = FB.stories.quote(s, id, 'buy'), before = s.player.gold;

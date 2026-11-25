@@ -3,7 +3,7 @@ const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const river = require('../fixtures/authoring/household-locality-river.json');
 dependsOnRuntime(__filename, ['index.html','js/story_household.js','js/story_household_observer.js',
@@ -18,7 +18,9 @@ async function imported(page, info, which, scenario) {
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
-  await beginBookmark(page, info, which === 'river' ? 'harbor_world' : 'dune_world',
+  // The import reload left a prepared modded title; begin there instead of
+  // reopening the game and preparing the whole catalogue a third time.
+  await beginBookmarkFromTitle(page, which === 'river' ? 'harbor_world' : 'dune_world',
     scenario || (which === 'river' ? 'harbor_household' : 'dune_household'));
   await page.evaluate(function () { FB.state.player.homeSettlement = 0; });
 }

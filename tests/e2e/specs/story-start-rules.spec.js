@@ -2,8 +2,9 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
 const { expectModAdmission } = require('../support/game/mod-admission');
+const { installStoredMod } = require('../support/game/stored-mod');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = require('../fixtures/authoring/household-graphs.json');
 
@@ -167,9 +168,9 @@ for (const fault of ['missing', 'profile']) test('the picker, start codes and di
   await expect(page.locator('#chargen')).toHaveClass(/hidden/);
 });
 
-test('located opening goals leave an open role outside the Story group and still attach', async function ({ page }, info) {
-  await openGame(page, info);
-  const mod = await page.evaluate(function () {
+/* Builds the open-role companion mod from the prepared unmodded catalogue. */
+function openRoleMod(page) {
+  return page.evaluate(function () {
     const sc = JSON.parse(JSON.stringify(FBDATA.startScenarios.find(function (row) { return row.id === 'farmer_476'; })));
     sc.tracks = ['profile_only_open_role'];
     sc.trackLocations = { profile_only_open_role:['pavia'] };
@@ -179,6 +180,14 @@ test('located opening goals leave an open role outside the Story group and still
         scenarioIds:[sc.id], provinceIds:['pavia'], contacts:[],
         goals:[{ id:'reserve', name:'Keep a reserve', text:'Keep twenty gold.', criterion:{ kind:'reserve', amount:20 } }] } } };
   });
+}
+
+/* The picker cases import through the Mods screen. Each start case instead stores
+   the same JSON and begins on that modded title, so no case prepares the
+   catalogue a third time by reopening the game after its import. */
+test('located opening goals leave an open role outside the Story group', async function ({ page }, info) {
+  await openGame(page, info);
+  const mod = await openRoleMod(page);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({ name:'open-role-companion.json', mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(mod)) });
@@ -197,7 +206,14 @@ test('located opening goals leave an open role outside the Story group and still
   await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
   expect(await page.evaluate(function () { return FB.game.pending.provinceId; })).toBeNull();
   await expect(page.locator('#pickinfo .pick-story')).toHaveCount(0);
-  await beginBookmark(page, info, '476', 'farmer_476');
+});
+
+test('located opening goals outside the Story group still attach at their place', async function ({ page }, info) {
+  await openGame(page, info);
+  const mod = await openRoleMod(page);
+  await installStoredMod(page, JSON.stringify(mod));
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('profile_only_open_role'); });
+  await beginBookmarkFromTitle(page, '476', 'farmer_476');
   expect(await page.evaluate(function () {
     const sc = FBDATA.startScenarios.find(function (row) { return row.id === 'farmer_476'; });
     const s = FB.state, record = JSON.stringify(s.stories.profile_only_open_role);
@@ -262,23 +278,28 @@ test('historical rulers and map-chosen open roles remain valid without player tr
   await expect(page.locator('#cg-name-field')).toBeHidden();
 });
 
+/* Builds the fixed household story rules from the prepared unmodded catalogue. */
+function householdRulesMod(page) {
+  return page.evaluate(function (examples) {
+    const mod = { name:'Fixed household story rules', storyInstances:examples.storyInstances, startScenarios:examples.startScenarios };
+    const bm = FB.bookmark('867');
+    mod.startScenarios.forEach(function (sc, i) {
+      const county = bm.provinces.find(function (p) { return p.id === sc.fixedProvinceId; });
+      sc.startCulture = county.culture;
+      sc.startReligion = county.religion;
+      if (i === 1) delete sc.trackLocations;
+    });
+    return mod;
+  }, examples);
+}
+
 for (const profile of [
   { start:'quay_household_example_start', track:'quay_household_example', place:'Paris', choice:'keep_private', phase:'private_life' },
   { start:'hill_household_example_start', track:'hill_household_example', place:'Aachen', choice:'remain', phase:'remained' }
 ]) {
-  test('ordinary JSON imports a working Story start at ' + profile.place + ' with its track location rule', async function ({ page }, info) {
+  test('ordinary JSON imports a Story start offered at ' + profile.place + ' with its track location rule', async function ({ page }, info) {
     await openGame(page, info);
-    const mod = await page.evaluate(function (examples) {
-      const mod = { name:'Fixed household story rules', storyInstances:examples.storyInstances, startScenarios:examples.startScenarios };
-      const bm = FB.bookmark('867');
-      mod.startScenarios.forEach(function (sc, i) {
-        const county = bm.provinces.find(function (p) { return p.id === sc.fixedProvinceId; });
-        sc.startCulture = county.culture;
-        sc.startReligion = county.religion;
-        if (i === 1) delete sc.trackLocations;
-      });
-      return mod;
-    }, examples);
+    const mod = await householdRulesMod(page);
     await expectModAdmission(page, mod);
     await page.evaluate(function () { FB.ui.showMods(); });
     await page.locator('#modfile').setInputFiles({ name:'fixed-household-story-rules.json', mimeType:'application/json',
@@ -294,7 +315,13 @@ for (const profile of [
     await expect(page.locator('#pickinfo .pick-location-title')).toHaveText(profile.place);
     await page.locator('#btn-pick-back').click();
     await expect(card).toBeFocused();
-    await beginBookmark(page, info, '867', profile.start);
+  });
+
+  test('ordinary JSON Story start at ' + profile.place + ' begins and works through its track', async function ({ page }, info) {
+    await openGame(page, info);
+    await installStoredMod(page, JSON.stringify(await householdRulesMod(page)));
+    await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('hill_household_example'); });
+    await beginBookmarkFromTitle(page, '867', profile.start);
     const result = await page.evaluate(function (profile) {
       const s = FB.state, t = s.stories[profile.track], opening = t.phase;
       if (profile.track === 'hill_household_example') {

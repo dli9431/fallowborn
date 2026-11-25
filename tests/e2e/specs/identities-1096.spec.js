@@ -118,20 +118,23 @@ for (const crazygames of [false]) {
 
 test('reloading the staged identity source does not publish or initialize anything',async function ({page},info) {
   await openGame(page,info);
-  const before = await page.evaluate(function () {
+  // The snapshot stays in the page: returning the whole serialized FBDATA to
+  // Node and back costs far more than the comparison itself.
+  await page.evaluate(function () {
     const faith = JSON.parse(JSON.stringify(FBDATA.religions.rabbanite));
     faith.availability.bookmarkIds = faith.availability.bookmarkIds.filter(function (id) { return id !== '1096'; });
     FBDATA.religions.rabbanite = faith;
     FB.invalidateReligionData();
-    return {data:JSON.stringify(FBDATA),state:JSON.stringify(FB.state),
+    window.identityBefore = {data:JSON.stringify(FBDATA),state:JSON.stringify(FB.state),
       rng:FB.getRngState(),uid:FB.getUidCounter()};
   });
   await page.addScriptTag({path:path.resolve(__dirname,'../../../data/identities_1096.js')});
-  expect(await page.evaluate(function (before) {
+  expect(await page.evaluate(function () {
+    const before = window.identityBefore;
     return {unpublished:!FB.faithHistoricalAvailable('rabbanite',FB.bookmark('1096'),'institution'),
       unchanged:before.data === JSON.stringify(FBDATA) && before.state === JSON.stringify(FB.state) &&
         before.rng === FB.getRngState() && before.uid === FB.getUidCounter()};
-  },before)).toEqual({unpublished:true,unchanged:true});
+  })).toEqual({unpublished:true,unchanged:true});
 });
 
 test('publication retains narrower years, eras and consumers and adds no duplicate selector',async function ({page},info) {
