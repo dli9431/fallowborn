@@ -1,10 +1,13 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/dispersed-camps-harbor.json'),
   dune:require('../fixtures/authoring/dispersed-camps-dune.json')};
@@ -14,12 +17,26 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
   'js/population.js','js/market.js','js/treasury.js','js/federates.js','js/armies.js','js/authority.js',
   'js/world.js','js/mods.js','js/save.js','js/save_v4.js','js/main.js','js/ui_mobile.js']);
 
+/* Each example's import case and the cases that restore saves keep a fresh
+   page and the Mods file import. Runs of the others share one page per
+   example that stores its exact file text and boots it once with its world
+   active, reset before each case; each case begins its own start. */
+function sharedExample(prefix) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/dispersed-camps-'+prefix+'.json'),'utf8'));
+    await activateBookmark(page,prefix+'_world');
+  }};
+}
 async function imported(page,info,prefix,stem) {
+  if (isSharedPage(page) && stem) throw new Error('Another example file needs a fresh page');
+  if (!isSharedPage(page)) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+(stem || 'dispersed-camps')+'-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
 }
@@ -44,9 +61,11 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
+// Detached validation shares one unmodded page.
+describeSharedPage('detached partition validation',{boot:openGame},function () {
 for(const offset of [0,6,12]) {
 test('detached imports reject malformed, duplicate, remote and overallocated partitions purely, group '+(offset/6+1),async function ({page},info) {
-  await openGame(page,info);
+  if (!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function (input) {
     const source=input.source;
     const changes=[function (t) {t.civilianCamps=null;},function (t,c) {c.schema=2;},function (t,c) {c.extra=true;},
@@ -68,7 +87,9 @@ test('detached imports reject malformed, duplicate, remote and overallocated par
   expect(result).toEqual(Array(Math.min(6,17-offset)).fill(true));
 });
 }
+});
 
+describeSharedPage('harbor camps',sharedExample('harbor'),function () {
 test('the whole opening preflight rejects exhausted remote hosting capacity before creating anything',async function ({page},info) {
   await imported(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -202,6 +223,57 @@ test('field loss at a remote camp returns only real survivors and food at that a
   expect(result.returned).toBe(result.men);expect(result.food).toBe(result.expectedFood);
 });
 
+test('camp selector and review Back preserve the selected locality and input',async function ({page},info) {
+  await imported(page,info,'harbor');
+  await page.evaluate(function () {FB.ui.showMobileConfederation('harbor_following');});
+  await page.locator('#mobile-camp').selectOption('harbor_far');
+  await page.locator('#mobile-count').fill('1');
+  await page.locator('#mobile-count').dispatchEvent('change');
+  await page.getByRole('button',{name:/^Work at selected camp\b/}).waitFor();
+  // The local household may review work at its own camp; changing input remains retained.
+  await page.locator('#mobile-camp').selectOption('harbor_near');
+  await page.getByRole('button',{name:/^Work at selected camp\b/}).click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#mobile-camp')).toHaveValue('harbor_near');
+  await expect(page.locator('#mobile-count')).toHaveValue('1');
+});
+
+test('AI purchases at each actual camp market through the same once-per-day reviews',async function ({page},info) {
+  await imported(page,info,'harbor');
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='harbor_following',r=M.row(s,rid),gold=FB.treasuryAvailable(s,rid);
+    r.camps.entries.forEach(function (c) {c.food=0;c.harvestPeriod=0;});
+    const market=r.camps.entries.map(function (c) {return FB.marketProvisionSnapshot(s,c.countyId).stock;}),host=JSON.stringify(M.host(s,rid));
+    s.turn=1;s.date=FB.dateAtTurn(s,1);M.day(s);const once=JSON.stringify(s);M.day(s);
+    return {local:r.camps.entries.every(function (c,i) {return c.food>0 && FB.marketProvisionSnapshot(s,c.countyId).stock<market[i];}),
+      paid:FB.treasuryAvailable(s,rid)<gold,privateGold:s.player.gold,fieldSame:host===JSON.stringify(M.host(s,rid)),
+      bounded:once===JSON.stringify(s),valid:M.validate(s)};
+  });
+  expect(result).toMatchObject({local:true,paid:true,fieldSame:true,bounded:true,valid:true});
+});
+});
+
+describeSharedPage('dune separate columns',sharedExample('dune'),function () {
+test('separate columns cannot load, unload, recruit or carry the dispersed civilian camps',async function ({page},info) {
+  await imported(page,info,'dune');
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='dune_coalition',r=M.row(s,rid),column=r.columns.entries[0];
+    const before=JSON.stringify(s),actor={kind:'character',id:M.leader(s,rid).id};
+    const reasons=['move','recruit','demuster','load','unload','trade'].map(function (action) {
+      const fields=action==='move' ? {columnId:column.id,countyId:'dune_flats'} :
+        action==='demuster' ? {columnId:column.id} : action==='recruit' ? {columnId:column.id,count:1,unitId:'arch'} :
+        {columnId:column.id,count:1,provisioning:true};
+      const q=M.reviewColumns(s,{realmId:rid,action:action,terms:fields,actor:actor});
+      return q.review.reason==='camp_operation' && !M.commit(s,q);
+    });
+    const pure=before===JSON.stringify(s),camps=JSON.stringify(r.camps),a=M.host(s,rid),food=a.mobileFood;
+    FB.provisionArmy(s,a);
+    return {reasons:reasons,pure:pure,campsSame:camps===JSON.stringify(r.camps),fieldConsumes:a.mobileFood<food,valid:M.validate(s)};
+  });
+  expect(result).toEqual({reasons:Array(6).fill(true),pure:true,campsSame:true,fieldConsumes:true,valid:true});
+});
+});
+
 test('matching restore preserves divergent camps and rejects missing or forged provenance purely',async function ({page},info) {
   await imported(page,info,'dune');
   const result=await page.evaluate(function () {
@@ -221,54 +293,6 @@ test('matching restore preserves divergent camps and rejects missing or forged p
     return {restored:restored,rejected:rejected};
   });
   expect(result).toEqual({restored:true,rejected:Array(11).fill(true)});
-});
-
-test('camp selector and review Back preserve the selected locality and input',async function ({page},info) {
-  await imported(page,info,'harbor');
-  await page.evaluate(function () {FB.ui.showMobileConfederation('harbor_following');});
-  await page.locator('#mobile-camp').selectOption('harbor_far');
-  await page.locator('#mobile-count').fill('1');
-  await page.locator('#mobile-count').dispatchEvent('change');
-  await page.getByRole('button',{name:/^Work at selected camp\b/}).waitFor();
-  // The local household may review work at its own camp; changing input remains retained.
-  await page.locator('#mobile-camp').selectOption('harbor_near');
-  await page.getByRole('button',{name:/^Work at selected camp\b/}).click();
-  await page.keyboard.press('Escape');
-  await expect(page.locator('#mobile-camp')).toHaveValue('harbor_near');
-  await expect(page.locator('#mobile-count')).toHaveValue('1');
-});
-
-test('separate columns cannot load, unload, recruit or carry the dispersed civilian camps',async function ({page},info) {
-  await imported(page,info,'dune');
-  const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='dune_coalition',r=M.row(s,rid),column=r.columns.entries[0];
-    const before=JSON.stringify(s),actor={kind:'character',id:M.leader(s,rid).id};
-    const reasons=['move','recruit','demuster','load','unload','trade'].map(function (action) {
-      const fields=action==='move' ? {columnId:column.id,countyId:'dune_flats'} :
-        action==='demuster' ? {columnId:column.id} : action==='recruit' ? {columnId:column.id,count:1,unitId:'arch'} :
-        {columnId:column.id,count:1,provisioning:true};
-      const q=M.reviewColumns(s,{realmId:rid,action:action,terms:fields,actor:actor});
-      return q.review.reason==='camp_operation' && !M.commit(s,q);
-    });
-    const pure=before===JSON.stringify(s),camps=JSON.stringify(r.camps),a=M.host(s,rid),food=a.mobileFood;
-    FB.provisionArmy(s,a);
-    return {reasons:reasons,pure:pure,campsSame:camps===JSON.stringify(r.camps),fieldConsumes:a.mobileFood<food,valid:M.validate(s)};
-  });
-  expect(result).toEqual({reasons:Array(6).fill(true),pure:true,campsSame:true,fieldConsumes:true,valid:true});
-});
-
-test('AI purchases at each actual camp market through the same once-per-day reviews',async function ({page},info) {
-  await imported(page,info,'harbor');
-  const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='harbor_following',r=M.row(s,rid),gold=FB.treasuryAvailable(s,rid);
-    r.camps.entries.forEach(function (c) {c.food=0;c.harvestPeriod=0;});
-    const market=r.camps.entries.map(function (c) {return FB.marketProvisionSnapshot(s,c.countyId).stock;}),host=JSON.stringify(M.host(s,rid));
-    s.turn=1;s.date=FB.dateAtTurn(s,1);M.day(s);const once=JSON.stringify(s);M.day(s);
-    return {local:r.camps.entries.every(function (c,i) {return c.food>0 && FB.marketProvisionSnapshot(s,c.countyId).stock<market[i];}),
-      paid:FB.treasuryAvailable(s,rid)<gold,privateGold:s.player.gold,fieldSame:host===JSON.stringify(M.host(s,rid)),
-      bounded:once===JSON.stringify(s),valid:M.validate(s)};
-  });
-  expect(result).toMatchObject({local:true,paid:true,fieldSame:true,bounded:true,valid:true});
 });
 
 test('expired hosting retains actual camps through restore and cannot regenerate their access',async function ({page},info) {

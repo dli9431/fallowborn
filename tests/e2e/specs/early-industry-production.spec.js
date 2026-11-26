@@ -1,10 +1,13 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={paper:require('../fixtures/authoring/early-industry-paper.json'),metal:require('../fixtures/authoring/early-industry-metal.json')};
 dependsOnRuntime(__filename,['index.html','data/buildings_early_industry.js','data/production_early_industry.js',
@@ -12,13 +15,29 @@ dependsOnRuntime(__filename,['index.html','data/buildings_early_industry.js','da
   'js/production.js','js/production_economy.js','js/site_resources.js','js/actions.js','js/world.js','js/fortifications.js',
   'js/building_profiles.js','js/building_operations.js','js/building_seasons.js','js/market.js','js/economy.js','js/lordships.js','js/treasury.js',
   'js/technology.js','js/mods.js','js/save.js','js/save_v4.js','js/wars.js','js/util.js','js/ui_modals.js','js/ui_misc.js','js/main.js','js/model.js']);
+/* The real Mods file import keeps its own case per kind, as do cases that
+   restore saves, boot a modified copy or size the page before boot. Runs of
+   the others share one page per kind that stores the exact example text and
+   boots it once with that world active, reset before each case; each case
+   still begins its own campaign. */
+function sharedKind(kind) {
+  return {boot:async function(page,info){
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/early-industry-'+kind+'.json'),'utf8'));
+    await activateBookmark(page,'early_industry_'+kind);
+  }};
+}
 async function boot(page,info,kind,options) {
-  options=options || {};await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
+  options=options || {};
+  if(isSharedPage(page)&&options.revision)throw new Error('A modified example needs a fresh page');
+  if(!isSharedPage(page)){
+  await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
   if(options.revision){const m=JSON.parse(JSON.stringify(examples[kind]));m.bookmarks['early_industry_'+kind].revision=options.revision;
     await page.locator('#modfile').setInputFiles({name:'early-industry-'+kind+'.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(m))});
   }else await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/early-industry-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
   // The import reload left a prepared modded title; begin there without reopening.
   if(options.ruler===false){await beginBookmarkFromTitle(page,'early_industry_'+kind,'early_industry_'+kind+'_household');}
@@ -49,6 +68,7 @@ for(const kind of ['paper','metal']){
     },kind);expect(r).toMatchObject({cost:kind==='paper'?65:35,upkeep:1,dev:kind==='paper'?4:1,ai:kind==='paper'?30:31,
       role:'industry',draw:false,passive:Array(10).fill(0),empty:true,pure:true,receipts:0,errors:[]});
   });
+  describeSharedPage(kind+' supplied work and idle plants',sharedKind(kind),function(){
   test(kind+' supplied input and paid real work produce one funded sale with exact source and buyer depletion',async function({page},info){
     await boot(page,info,kind);const r=await page.evaluate(function(kind){const s=FB.state,P=FB.production,E=FB.productionEconomy;s.player.gold=10000;
       function move(route,quantity,operation){const q=E.aiQuote(s,route,quantity,operation);if(!q.allowed)throw new Error('Missing finite input '+route+': '+q.reason);return E.commit(s,q);}
@@ -82,6 +102,7 @@ for(const kind of ['paper','metal']){
       const after=JSON.stringify(s),noDemand=P.aiQuote(s,site,'reserve',{recipeId:recipeId,disposition:'store'}),commit=P.commit(s,noDemand);
       return {noSupply:noSupply.allowed,pure:pure,noDemand:noDemand.allowed,reason:noDemand.reason,commit:commit,unchanged:after===JSON.stringify(s)};
     },kind);expect(r).toEqual({noSupply:false,pure:true,noDemand:false,reason:'outlet',commit:false,unchanged:true});
+  });
   });
   test(kind+' construction uses empty declared sites and idles before charging without a viable supplier',async function({page},info){
     await boot(page,info,kind,{revision:'new_works'});const r=await page.evaluate(function(kind){const s=FB.state,P=FB.production;s.player.gold=10000;
@@ -119,19 +140,7 @@ for(const kind of ['paper','metal']){
     },kind);expect(r).toEqual({retained:true,blocked:false,pure:true,cancel:true,noRefund:true,outputs:0});
   });
 }
-test('separate forging consumes imported iron and fuel without claiming local ore or minting units',async function({page},info){
-  await boot(page,info,'metal');const r=await page.evaluate(function(){const s=FB.state,P=FB.production,E=FB.productionEconomy;s.player.gold=10000;
-    E.commit(s,E.aiQuote(s,'iron_purchase',1,'buy'));E.commit(s,E.aiQuote(s,'fuel_purchase',1,'buy'));
-    const ore=P.snapshot(s).find(function(r){return r.site.id==='metal_supplier';}).lots[0].remaining;
-    const stable=JSON.stringify([s.player.levy,s.player.retinue,s.player.archers,s.armies,s.realmTech,s.population]);
-    const batch=P.commit(s,P.aiQuote(s,'metal_plant','reserve',{recipeId:'smithy_forging',disposition:'store'}));
-    P.perform(s,P.aiQuote(s,'metal_plant','work',{batchId:batch}));P.perform(s,P.aiQuote(s,'metal_plant','work',{batchId:batch}));
-    const finish=P.commit(s,P.aiQuote(s,'metal_plant','finish',{batchId:batch}));const sold=E.commit(s,E.aiQuote(s,'tool_sale',1,'sell'));P.validate(s);
-    return {batch:!!batch,finish:finish,sold:!!sold,ore:ore,oreAfter:P.snapshot(s).find(function(r){return r.site.id==='metal_supplier';}).lots[0].remaining,
-      unchanged:stable===JSON.stringify([s.player.levy,s.player.retinue,s.player.archers,s.armies,s.realmTech,s.population]),
-      consumed:s.production.lots.filter(function(l){return l.origin.kind==='exchange'&&l.assetId===s.production.assets[0].id;}).map(function(l){return l.remaining;})};});
-  expect(r).toMatchObject({batch:true,finish:true,sold:true,ore:4,oreAfter:4,unchanged:true});expect(r.consumed.every(function(n){return n===0;})).toBe(true);
-});
+describeSharedPage('paper diversion and construction scope',sharedKind('paper'),function(){
 test('actual staffed fiber diversion suppresses both ordinary proceeds and market quantity exactly once',async function({page},info){
   await boot(page,info,'paper');const r=await page.evaluate(function(){const s=FB.state,E=FB.productionEconomy;s.player.gold=10000;
     s.player.enterpriseMigration=1;s.player.enterprises=[];s.player.enterpriseLabor=[];
@@ -144,8 +153,18 @@ test('actual staffed fiber diversion suppresses both ordinary proceeds and marke
   expect(r).toMatchObject({first:true,again:false,workers:1});expect(r.quantity).toBeGreaterThan(0);expect(r.market).toBeCloseTo(r.expectedMarket,8);
   expect(r.income).toBeCloseTo(r.expectedIncome,8);expect(r.income).toBeLessThanOrEqual(r.raw);
 });
+test('inclusive construction boundaries leave inherited plants and research independent',async function({page},info){
+  await boot(page,info,'paper');const r=await page.evaluate(function(){const s=FB.state,before=JSON.stringify(s);function scope(year,pid,id){const t=JSON.parse(before);t.date.year=year;return FB.buildingApplicabilityStatus(t,pid,id).ready;}
+    const scopes=[scope(799,'baghdad','paper_workshop'),scope(800,'baghdad','paper_workshop'),scope(1066,'resource_bank','paper_workshop'),
+      scope(649,'baghdad','bloomery_smithy'),scope(650,'baghdad','bloomery_smithy'),scope(1300,'baghdad','bloomery_smithy'),scope(1301,'baghdad','bloomery_smithy')];
+    return {scopes:scopes,plant:FB.production.snapshot(s).find(function(r){return r.site.id==='paper_plant';}).asset!==null,unchanged:before===JSON.stringify(s)};});
+  expect(r).toEqual({scopes:[false,true,false,false,true,true,false],plant:true,unchanged:true});
+});
+});
+// Detached validation of both examples shares one unmodded page.
+describeSharedPage('malformed declarations',{boot:openGame},function(){
 for(const kind of ['paper','metal'])test(kind+' malformed ordinary JSON declarations fail without publishing or side effects',async function({page},info){
-  await openGame(page,info);const r=await page.evaluate(function(example){const original=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState(),uid=FB.getUidCounter();
+  if(!isSharedPage(page))await openGame(page,info);const r=await page.evaluate(function(example){const original=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState(),uid=FB.getUidCounter();
     const bad=[function(m){m.productionGoods={bad_units:{name:'Bad units',unit:'kilograms per season',mass:1}};},
       function(m){m.productionRecipes={bad_recipe:{name:'Impossible',inputs:[],outputs:[],workDays:0,workPrice:0,requiresTech:[],impactReviewId:'conserved_production_batches'}};},
       function(m){m.buildings.industry_depot.productionRecipeIds=['missing_recipe'];},
@@ -155,12 +174,20 @@ for(const kind of ['paper','metal'])test(kind+' malformed ordinary JSON declarat
     return {valid:FB.mods.validate(example),rejected:rejected,pure:original===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
   },examples[kind]);expect(r).toEqual({valid:[],rejected:Array(5).fill(true),pure:true});
 });
-test('inclusive construction boundaries leave inherited plants and research independent',async function({page},info){
-  await boot(page,info,'paper');const r=await page.evaluate(function(){const s=FB.state,before=JSON.stringify(s);function scope(year,pid,id){const t=JSON.parse(before);t.date.year=year;return FB.buildingApplicabilityStatus(t,pid,id).ready;}
-    const scopes=[scope(799,'baghdad','paper_workshop'),scope(800,'baghdad','paper_workshop'),scope(1066,'resource_bank','paper_workshop'),
-      scope(649,'baghdad','bloomery_smithy'),scope(650,'baghdad','bloomery_smithy'),scope(1300,'baghdad','bloomery_smithy'),scope(1301,'baghdad','bloomery_smithy')];
-    return {scopes:scopes,plant:FB.production.snapshot(s).find(function(r){return r.site.id==='paper_plant';}).asset!==null,unchanged:before===JSON.stringify(s)};});
-  expect(r).toEqual({scopes:[false,true,false,false,true,true,false],plant:true,unchanged:true});
+});
+describeSharedPage('metal forging, strict saves and reserves',sharedKind('metal'),function(){
+test('separate forging consumes imported iron and fuel without claiming local ore or minting units',async function({page},info){
+  await boot(page,info,'metal');const r=await page.evaluate(function(){const s=FB.state,P=FB.production,E=FB.productionEconomy;s.player.gold=10000;
+    E.commit(s,E.aiQuote(s,'iron_purchase',1,'buy'));E.commit(s,E.aiQuote(s,'fuel_purchase',1,'buy'));
+    const ore=P.snapshot(s).find(function(r){return r.site.id==='metal_supplier';}).lots[0].remaining;
+    const stable=JSON.stringify([s.player.levy,s.player.retinue,s.player.archers,s.armies,s.realmTech,s.population]);
+    const batch=P.commit(s,P.aiQuote(s,'metal_plant','reserve',{recipeId:'smithy_forging',disposition:'store'}));
+    P.perform(s,P.aiQuote(s,'metal_plant','work',{batchId:batch}));P.perform(s,P.aiQuote(s,'metal_plant','work',{batchId:batch}));
+    const finish=P.commit(s,P.aiQuote(s,'metal_plant','finish',{batchId:batch}));const sold=E.commit(s,E.aiQuote(s,'tool_sale',1,'sell'));P.validate(s);
+    return {batch:!!batch,finish:finish,sold:!!sold,ore:ore,oreAfter:P.snapshot(s).find(function(r){return r.site.id==='metal_supplier';}).lots[0].remaining,
+      unchanged:stable===JSON.stringify([s.player.levy,s.player.retinue,s.player.archers,s.armies,s.realmTech,s.population]),
+      consumed:s.production.lots.filter(function(l){return l.origin.kind==='exchange'&&l.assetId===s.production.assets[0].id;}).map(function(l){return l.remaining;})};});
+  expect(r).toMatchObject({batch:true,finish:true,sold:true,ore:4,oreAfter:4,unchanged:true});expect(r.consumed.every(function(n){return n===0;})).toBe(true);
 });
 test('strict matching saves reject changed units, duplicated receipts and erased input provenance before adoption',async function({page},info){
   await boot(page,info,'metal');const r=await page.evaluate(function(){const s=FB.state,E=FB.productionEconomy;s.player.gold=10000;E.commit(s,E.aiQuote(s,'ore_purchase',2,'buy'));
@@ -181,6 +208,20 @@ test('public batch quotes protect the real treasury and AI uses identical live r
     return {ready:q.allowed,public:q.funds.public,short:short.allowed,stale:stale,pure:pure,batch:!!batch,work:work,privateSame:gold===s.player.gold,
       noExtraWorkFee:publicBefore===s.realms[rid].treasury.gold};});
   expect(r).toEqual({ready:true,public:true,short:false,stale:false,pure:true,batch:true,work:true,privateSame:true,noExtraWorkFee:true});
+});
+test('funded metal work survives an expired construction window and a lost research gate',async function({page},info){
+  await boot(page,info,'metal');const r=await page.evaluate(function(){const s=FB.state,P=FB.production,E=FB.productionEconomy;s.player.gold=10000;
+    E.commit(s,E.aiQuote(s,'ore_purchase',2,'buy'));E.commit(s,E.aiQuote(s,'fuel_purchase',1,'buy'));
+    const id=P.commit(s,P.aiQuote(s,'metal_plant','reserve',{recipeId:'bloomery_smelting',disposition:'store'}));
+    const later=JSON.parse(JSON.stringify(s));later.date.year=1301;
+    const laterWork=P.aiQuote(later,'metal_plant','work',{batchId:id}).allowed;
+    const rt=FB.realmTechRecord(s);rt.completed=rt.completed.filter(function(k){return k!=='bloomery_iron';});
+    const work=P.perform(s,P.aiQuote(s,'metal_plant','work',{batchId:id})),finish=P.commit(s,P.aiQuote(s,'metal_plant','finish',{batchId:id}));P.validate(s);
+    const missing=P.aiQuote(s,'metal_plant','reserve',{recipeId:'smithy_forging',disposition:'store'});
+    return {work:work,finish:finish,construction:FB.buildingApplicabilityStatus(later,'resource_hill','bloomery_smithy').ready,laterWork:laterWork,
+      missing:missing.missingTech,review:FBDATA.techImpactReviews.features.bloomery_batch_smelting.mode};});
+  expect(r).toEqual({work:true,finish:true,construction:false,laterWork:true,missing:['bloomery_iron'],review:'hard'});
+});
 });
 for(const width of [390,1280])test(width+'px shared production and technology reviews discover the real plants and retain focus',async function({page},info){
   await page.setViewportSize({width:width,height:844});await boot(page,info,'paper');
@@ -209,19 +250,6 @@ test('completed paper sale and depleted sources restore exactly without cash or 
     P.initialize(FB.state);E.initialize(FB.state);P.validate(FB.state);
     return {before:before,after:facts(FB.state),repeat:E.commit(FB.state,q)};});
   expect(r.after).toEqual(r.before);expect(r.repeat).toBe(false);
-});
-test('funded metal work survives an expired construction window and a lost research gate',async function({page},info){
-  await boot(page,info,'metal');const r=await page.evaluate(function(){const s=FB.state,P=FB.production,E=FB.productionEconomy;s.player.gold=10000;
-    E.commit(s,E.aiQuote(s,'ore_purchase',2,'buy'));E.commit(s,E.aiQuote(s,'fuel_purchase',1,'buy'));
-    const id=P.commit(s,P.aiQuote(s,'metal_plant','reserve',{recipeId:'bloomery_smelting',disposition:'store'}));
-    const later=JSON.parse(JSON.stringify(s));later.date.year=1301;
-    const laterWork=P.aiQuote(later,'metal_plant','work',{batchId:id}).allowed;
-    const rt=FB.realmTechRecord(s);rt.completed=rt.completed.filter(function(k){return k!=='bloomery_iron';});
-    const work=P.perform(s,P.aiQuote(s,'metal_plant','work',{batchId:id})),finish=P.commit(s,P.aiQuote(s,'metal_plant','finish',{batchId:id}));P.validate(s);
-    const missing=P.aiQuote(s,'metal_plant','reserve',{recipeId:'smithy_forging',disposition:'store'});
-    return {work:work,finish:finish,construction:FB.buildingApplicabilityStatus(later,'resource_hill','bloomery_smithy').ready,laterWork:laterWork,
-      missing:missing.missingTech,review:FBDATA.techImpactReviews.features.bloomery_batch_smelting.mode};});
-  expect(r).toEqual({work:true,finish:true,construction:false,laterWork:true,missing:['bloomery_iron'],review:'hard'});
 });
 test('AI public construction preserves private cash and current build and processing reserves',async function({page},info){
   await boot(page,info,'metal',{revision:'new_works',ruler:false});const r=await page.evaluate(function(){const s=FB.state,P=FB.production,rid='resource_hill_court';

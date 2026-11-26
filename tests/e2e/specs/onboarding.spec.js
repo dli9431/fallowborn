@@ -39,10 +39,22 @@ function startDeterministicGame(page, options) {
   return startBaseGame(page, guided);
 }
 
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
+
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await unlockStartTier(page, 1);
 });
+
+/* First-life onboarding, guide hints, coachmarks, tutorial chapters, saves,
+   reloads and locale loading keep fresh pages: their state lives partly in
+   interface closures the shared-page reset does not compare. The rank-detail
+   views below share one page booted with the 867 world active, reset before
+   each case; each case still starts its own campaign. */
+const sharedRankDetails = { boot:async function (page, testInfo) {
+  await openGame(page, testInfo);
+  await activateBookmark(page, '867');
+} };
 
 test('a new life gets a short intro, a focused orientation, and First steps',
   async function ({ page }) {
@@ -1079,6 +1091,7 @@ test('a mid-checklist save from the single-track version keeps its progress',
     expect(status.done).toBe(1);
   });
 
+describeSharedPage('station and home rank details', sharedRankDetails, function () {
 test('unlanded rank details keeps station, home, lord, and freedom concise at 390px with keyboard dismissal',
   async function ({ page }) {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -1266,6 +1279,7 @@ test('Station & home keeps freeholder and gentry views to home and local ruler',
       await page.locator('#rank-details-close').click();
     }
   });
+});
 
 test('Station & home modal renders English and an injected test locale without untranslated tokens or raw IDs',
   async function ({ page }) {

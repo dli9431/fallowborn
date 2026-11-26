@@ -1,10 +1,13 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame} = require('../support/game/navigation');
+const {openGame,openTitle} = require('../support/game/navigation');
+const {installStoredMod} = require('../support/game/stored-mod');
 const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {installRestoreFacts} = require('../support/game/restore-facts');
 const examples = {timber:require('../fixtures/authoring/fort-profiles-timber.json'),
@@ -14,14 +17,28 @@ dependsOnRuntime(__filename,['index.html','data/map_data.js','data/technology.js
   'js/actions.js','js/world.js','js/bookmark_composition.js','js/technology.js','js/mods.js','js/home_authority.js',
   'js/lordships.js','js/settlement.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);
 
+function worldOf(kind) { return kind === 'timber' ? 'inventory_estuary' : 'inventory_uplands'; }
+/* Each kind's real Mods import case and the cases that restore saves keep a
+   fresh page and the Mods file import. Runs of the others share one page per
+   kind that stores its exact file text and boots it once with its world
+   active, reset before each case; each case begins its own start. */
+function sharedKind(kind) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/fort-profiles-' + kind + '.json'),'utf8'));
+    await activateBookmark(page,worldOf(kind));
+  }};
+}
 async function start(page,info,kind) {
+  if (!isSharedPage(page)) {
   await openGame(page,info);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/fort-profiles-' + kind + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
-  const world = kind === 'timber' ? 'inventory_estuary' : 'inventory_uplands';
+  const world = worldOf(kind);
   await beginBookmarkFromTitle(page,world,world + '_household');
 }
 async function hold(page,kind,county) {
@@ -55,6 +72,7 @@ for (const kind of ['timber','masonry']) {
     expect(await page.evaluate(function(){const s=FB.state;return {valid:FB.fortProfiles.validate(s),buildings:s.buildings,gold:s.player.gold,prestige:s.player.prestige};}))
       .toEqual({valid:true,buildings:saved.buildings,gold:saved.gold,prestige:saved.prestige});
   });
+  describeSharedPage(kind + ' detached invalid imports',sharedKind(kind),function(){
   test(kind + ' detached invalid imports reject unsupported stats, levels, roles and requirements without publication',async function({page},info){
     await start(page,info,kind);
     const r=await page.evaluate(function(example){
@@ -71,8 +89,10 @@ for (const kind of ['timber','masonry']) {
     },examples[kind]);
     expect(r).toEqual({bad:[true,true,true,true,true,true],pure:true});
   });
+  });
 }
 
+describeSharedPage('timber projects, reviews and saved records',sharedKind('timber'),function(){
 test('timber alternative funds canonical level one without ringworks and completes once at the dated boundary',async function({page},info){
   await start(page,info,'timber');await hold(page,'timber');
   const r=await page.evaluate(function(){
@@ -93,20 +113,6 @@ test('timber alternative funds canonical level one without ringworks and complet
     first:1,second:0,dev:0,level:1,noProject:true,count:1});
   expect(r.spent).toBe(r.cost);expect(r.reward).toBe(r.expected);expect(r.defense).toBe(r.canonical);expect(r.upkeep).toBe(r.expectedUpkeep);
   expect(r.project).toMatchObject({v:1,profileId:'sample_timber_fort',fromLevel:0,targetLevel:1,repair:false,work:0});
-});
-
-test('masonry knowledge, inclusive years and county scope remain visible with the same canonical price',async function({page},info){
-  await start(page,info,'masonry');await hold(page,'masonry');
-  const r=await page.evaluate(function(){
-    const s=FB.state,pid=s.player.provinceId,request={countyId:pid,settlement:0,profileId:'sample_masonry_fort',targetLevel:1,realmId:'player',repair:false};
-    const missing=FB.fortProfiles.quote(s,request);FB.realmTechRecord(s).completed.push('lime_mortar');FB.invalidateTechBonuses();
-    const values=[999,1000,1100,1101].map(function(year){s.date.year=year;return FB.fortProfiles.quote(s,request).allowed;});
-    s.date.year=1050;
-    const wrong=FB.fortProfiles.status(s,'inventory_quay',0,request.profileId,1,'player',false);
-    return {missing:missing.allowed,reason:missing.reason,requirements:missing.requirements,cost:missing.cost,values,wrong:wrong.ready};
-  });
-  expect(r.missing).toBe(false);expect(r.reason).toContain('Lime Mortar');expect(r.requirements).toEqual(['lime_mortar']);expect(r.cost).toBeGreaterThan(0);
-  expect(r.values).toEqual([false,true,true,false]);expect(r.wrong).toBe(false);
 });
 
 test('era restrictions and inherited level mappings fail closed without changing property or catalogues',async function({page},info){
@@ -142,33 +148,6 @@ test('changed control, treasury, time or a new fort invalidates a reviewed proje
   expect(r).toEqual({results:[true,true,true,true],gold:10000,projects:0});
 });
 
-test('material ruins block a second fort across the county while a keep supplies no strategic identity',async function({page},info){
-  await start(page,info,'masonry');await hold(page,'masonry','inventory_well');
-  const r=await page.evaluate(function(){
-    const s=FB.state,pid=s.player.provinceId,gold=s.player.gold,before=JSON.stringify(s);
-    const q=FB.fortProjectStatus(s,pid,1,1),paid=FB.startFortProject(s,pid,1,1);
-    const wrong=Object.assign({},FBDATA,{fortProfiles:{bad:{material:'masonry',levels:{'1':[]}}},
-      buildingProfiles:{bad:{buildingId:'keep',replace:{},requiresTech:[]}}});
-    return {allowed:q.ok,paid:!!paid,pure:before===JSON.stringify(s)&&gold===s.player.gold,role:FB.fortProfiles.catalogFaults(wrong).length>0};
-  });
-  expect(r).toEqual({allowed:false,paid:false,pure:true,role:true});
-});
-
-test('inherited ruined masonry repairs outside era and knowledge, retains identity and grants no prestige',async function({page},info){
-  await start(page,info,'masonry');await hold(page,'masonry','inventory_well');
-  const r=await page.evaluate(function(){
-    const s=FB.state,pid=s.player.provinceId,b=FB.fortAt(s,pid,true),identity=JSON.stringify(b.buildingProfile),gold=s.player.gold,prestige=s.player.prestige;
-    s.date.year=1301;
-    const q=FB.repairBuildingStatus(s,pid,b.s,b.id),paid=FB.repairBuilding(s,pid,b.s,b.id,q.cost),again=FB.repairBuilding(s,pid,b.s,b.id,q.cost);
-    const valid=FB.fortProfiles.validate(s);s.turn=b.completeTurn;
-    const completed=FB.fortificationDay(s),repeat=FB.fortificationDay(s);
-    return {ready:q.ready,paid,again,valid,completed,repeat,cost:q.cost,spent:gold-s.player.gold,
-      prestige:s.player.prestige-prestige,level:b.level,identity:identity===JSON.stringify(b.buildingProfile),noProject:!b.fortProfileProject};
-  });
-  expect(r).toMatchObject({ready:true,paid:true,again:false,valid:true,completed:1,repeat:0,prestige:0,level:2,identity:true,noProject:true});
-  expect(r.spent).toBe(r.cost);
-});
-
 test('annual fort AI buys one material project from the existing work budget and shares the live quote',async function({page},info){
   await start(page,info,'timber');
   const r=await page.evaluate(function(){
@@ -182,27 +161,6 @@ test('annual fort AI buys one material project from the existing work budget and
       selected:b.buildingProfile.id,project:b.fortProfileProject.work,valid:FB.fortProfiles.validate(s)};
   });
   expect(r).toMatchObject({allowed:true,again:true,selected:'sample_timber_fort',valid:true});expect(r.spent).toBe(r.cost);expect(r.project).toBe(r.cost);
-});
-
-test('matching pending restore and conquest retain paid work without replay or reconstruction',async function({page},info){
-  await start(page,info,'timber');await hold(page,'timber');
-  await installRestoreFacts(page);
-  const pending=await page.evaluate(function(){
-    const s=FB.state,pid=s.player.provinceId;
-    FB.startFortProject(s,pid,0,1,{profileId:'sample_timber_fort'});
-    return {save:FB.save.serialize(),gold:s.player.gold,
-      fort:restoreFacts(s,function(x){return FB.fortAt(x,pid);})};
-  });
-  await restoreBookmark(page,pending.save);
-  const r=await page.evaluate(function(expected){
-    const s=FB.state,pid=s.player.provinceId,b=FB.fortAt(s,pid),
-      same=assertRestoreFacts(restoreFacts(s,function(x){return FB.fortAt(x,pid);}),expected.fort),gold=s.player.gold;
-    s.owner[pid]=s.holder[pid]='inventory_ridge_court';s.date.year=1200;
-    const valid=FB.fortProfiles.validate(s);s.turn=b.completeTurn;
-    const prestige=s.player.prestige,completed=FB.fortificationDay(s),again=FB.fortificationDay(s);
-    return {same,gold,valid,completed,again,unchanged:gold===s.player.gold,prestige:s.player.prestige-prestige,level:b.level};
-  },pending);
-  expect(r).toEqual({same:true,gold:pending.gold,valid:true,completed:1,again:0,unchanged:true,prestige:0,level:1});
 });
 
 test('strict optional project saves reject forged fields, missing projects and duplicate forts without mutation',async function({page},info){
@@ -238,6 +196,61 @@ test('profile review Cancel and Escape retain the selected site and never fund w
   expect(await page.evaluate(function(){return {gold:FB.state.player.gold,fort:FB.fortAt(FB.state,FB.state.player.provinceId)};})).toEqual({gold:10000,fort:null});
 });
 
+test('ordinary unprofiled levels and old records keep their numeric definitions and gain no identity',async function({page},info){
+  await start(page,info,'timber');await hold(page,'timber');
+  const r=await page.evaluate(function(){
+    const s=FB.state,pid=s.player.provinceId,old={id:'walls',s:0,level:1};s.buildings[pid]=[old];FB.invalidateFortIndex();
+    const before=JSON.stringify(old),levels=JSON.stringify(FBDATA.forts.levels);FB.fortProfiles.validate(s);
+    const status=FB.fortProjectStatus(s,pid,0,2),selected=FB.fortProjectStatus(s,pid,0,2,{profileId:'sample_timber_fort'});
+    return {untouched:before===JSON.stringify(old),levels:levels===JSON.stringify(FBDATA.forts.levels),missing:status.missingTech,
+      selected:selected.ok,identity:old.buildingProfile===undefined,keep:FB.isFortificationBuilding('keep')};
+  });
+  expect(r).toEqual({untouched:true,levels:true,missing:['castle_towers'],selected:false,identity:true,keep:false});
+});
+});
+
+describeSharedPage('masonry projects, repairs and confirmation',sharedKind('masonry'),function(){
+test('masonry knowledge, inclusive years and county scope remain visible with the same canonical price',async function({page},info){
+  await start(page,info,'masonry');await hold(page,'masonry');
+  const r=await page.evaluate(function(){
+    const s=FB.state,pid=s.player.provinceId,request={countyId:pid,settlement:0,profileId:'sample_masonry_fort',targetLevel:1,realmId:'player',repair:false};
+    const missing=FB.fortProfiles.quote(s,request);FB.realmTechRecord(s).completed.push('lime_mortar');FB.invalidateTechBonuses();
+    const values=[999,1000,1100,1101].map(function(year){s.date.year=year;return FB.fortProfiles.quote(s,request).allowed;});
+    s.date.year=1050;
+    const wrong=FB.fortProfiles.status(s,'inventory_quay',0,request.profileId,1,'player',false);
+    return {missing:missing.allowed,reason:missing.reason,requirements:missing.requirements,cost:missing.cost,values,wrong:wrong.ready};
+  });
+  expect(r.missing).toBe(false);expect(r.reason).toContain('Lime Mortar');expect(r.requirements).toEqual(['lime_mortar']);expect(r.cost).toBeGreaterThan(0);
+  expect(r.values).toEqual([false,true,true,false]);expect(r.wrong).toBe(false);
+});
+
+test('material ruins block a second fort across the county while a keep supplies no strategic identity',async function({page},info){
+  await start(page,info,'masonry');await hold(page,'masonry','inventory_well');
+  const r=await page.evaluate(function(){
+    const s=FB.state,pid=s.player.provinceId,gold=s.player.gold,before=JSON.stringify(s);
+    const q=FB.fortProjectStatus(s,pid,1,1),paid=FB.startFortProject(s,pid,1,1);
+    const wrong=Object.assign({},FBDATA,{fortProfiles:{bad:{material:'masonry',levels:{'1':[]}}},
+      buildingProfiles:{bad:{buildingId:'keep',replace:{},requiresTech:[]}}});
+    return {allowed:q.ok,paid:!!paid,pure:before===JSON.stringify(s)&&gold===s.player.gold,role:FB.fortProfiles.catalogFaults(wrong).length>0};
+  });
+  expect(r).toEqual({allowed:false,paid:false,pure:true,role:true});
+});
+
+test('inherited ruined masonry repairs outside era and knowledge, retains identity and grants no prestige',async function({page},info){
+  await start(page,info,'masonry');await hold(page,'masonry','inventory_well');
+  const r=await page.evaluate(function(){
+    const s=FB.state,pid=s.player.provinceId,b=FB.fortAt(s,pid,true),identity=JSON.stringify(b.buildingProfile),gold=s.player.gold,prestige=s.player.prestige;
+    s.date.year=1301;
+    const q=FB.repairBuildingStatus(s,pid,b.s,b.id),paid=FB.repairBuilding(s,pid,b.s,b.id,q.cost),again=FB.repairBuilding(s,pid,b.s,b.id,q.cost);
+    const valid=FB.fortProfiles.validate(s);s.turn=b.completeTurn;
+    const completed=FB.fortificationDay(s),repeat=FB.fortificationDay(s);
+    return {ready:q.ready,paid,again,valid,completed,repeat,cost:q.cost,spent:gold-s.player.gold,
+      prestige:s.player.prestige-prestige,level:b.level,identity:identity===JSON.stringify(b.buildingProfile),noProject:!b.fortProfileProject};
+  });
+  expect(r).toMatchObject({ready:true,paid:true,again:false,valid:true,completed:1,repeat:0,prestige:0,level:2,identity:true,noProject:true});
+  expect(r.spent).toBe(r.cost);
+});
+
 test('masonry profile confirmation uses the shared selected quote and discloses its real technology consumer',async function({page},info){
   await start(page,info,'masonry');await hold(page,'masonry');
   await page.evaluate(function(){
@@ -257,6 +270,28 @@ test('masonry profile confirmation uses the shared selected quote and discloses 
   await page.evaluate(function(){FB.ui.showTechDetail('castle_towers');});
   await expect(page.locator('#gm-body')).toContainText('Masonry strongpoint');
 });
+});
+
+test('matching pending restore and conquest retain paid work without replay or reconstruction',async function({page},info){
+  await start(page,info,'timber');await hold(page,'timber');
+  await installRestoreFacts(page);
+  const pending=await page.evaluate(function(){
+    const s=FB.state,pid=s.player.provinceId;
+    FB.startFortProject(s,pid,0,1,{profileId:'sample_timber_fort'});
+    return {save:FB.save.serialize(),gold:s.player.gold,
+      fort:restoreFacts(s,function(x){return FB.fortAt(x,pid);})};
+  });
+  await restoreBookmark(page,pending.save);
+  const r=await page.evaluate(function(expected){
+    const s=FB.state,pid=s.player.provinceId,b=FB.fortAt(s,pid),
+      same=assertRestoreFacts(restoreFacts(s,function(x){return FB.fortAt(x,pid);}),expected.fort),gold=s.player.gold;
+    s.owner[pid]=s.holder[pid]='inventory_ridge_court';s.date.year=1200;
+    const valid=FB.fortProfiles.validate(s);s.turn=b.completeTurn;
+    const prestige=s.player.prestige,completed=FB.fortificationDay(s),again=FB.fortificationDay(s);
+    return {same,gold,valid,completed,again,unchanged:gold===s.player.gold,prestige:s.player.prestige-prestige,level:b.level};
+  },pending);
+  expect(r).toEqual({same:true,gold:pending.gold,valid:true,completed:1,again:0,unchanged:true,prestige:0,level:1});
+});
 
 test('full detached restore rejects altered material/project provenance before adopting any state',async function({page},info){
   await start(page,info,'timber');await hold(page,'timber');
@@ -272,16 +307,4 @@ test('full detached restore rejects altered material/project provenance before a
     return {failures,pure:before===JSON.stringify(FB.state)&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
   });
   expect(r).toEqual({failures:[true,true,true,true,true],pure:true});
-});
-
-test('ordinary unprofiled levels and old records keep their numeric definitions and gain no identity',async function({page},info){
-  await start(page,info,'timber');await hold(page,'timber');
-  const r=await page.evaluate(function(){
-    const s=FB.state,pid=s.player.provinceId,old={id:'walls',s:0,level:1};s.buildings[pid]=[old];FB.invalidateFortIndex();
-    const before=JSON.stringify(old),levels=JSON.stringify(FBDATA.forts.levels);FB.fortProfiles.validate(s);
-    const status=FB.fortProjectStatus(s,pid,0,2),selected=FB.fortProjectStatus(s,pid,0,2,{profileId:'sample_timber_fort'});
-    return {untouched:before===JSON.stringify(old),levels:levels===JSON.stringify(FBDATA.forts.levels),missing:status.missingTech,
-      selected:selected.ok,identity:old.buildingProfile===undefined,keep:FB.isFortificationBuilding('keep')};
-  });
-  expect(r).toEqual({untouched:true,levels:true,missing:['castle_towers'],selected:false,identity:true,keep:false});
 });

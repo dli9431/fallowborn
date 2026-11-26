@@ -1,10 +1,13 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-supply-harbor.json'),
   upland:require('../fixtures/authoring/expedition-supply-upland.json')};
@@ -15,12 +18,26 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
   'js/world.js','js/bookmark_setup.js','js/starts.js','js/mods.js','js/save.js','js/save_v4.js',
   'js/ui_mobile.js','js/ui_misc.js','js/main.js','js/technology.js','js/model.js','js/federates.js']);
 
+/* Each example's import case and the cases that restore saves or apply mods
+   keep a fresh page and the Mods file import. Runs of the others share one
+   page per example (and viewport) that stores its exact file text and boots
+   it once with its world active, reset before each case; each case begins its
+   own start. */
+function sharedExample(prefix,context) {
+  return {context:context,boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/expedition-supply-'+prefix+'.json'),'utf8'));
+    await activateBookmark(page,prefix+'_world');
+  }};
+}
 async function start(page,info,prefix) {
+  if (!isSharedPage(page)) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/expedition-supply-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
 }
@@ -45,6 +62,7 @@ for (const prefix of ['harbor','upland']) {
       candidate:true,sane:true,pure:true,technology:'none',valid:true});
   });
 
+  describeSharedPage(prefix+' partial purchase',sharedExample(prefix),function () {
   test(prefix+' buys a partial local stock with the real public purse and retains its cash reserve',async function ({page},info) {
     await start(page,info,prefix);
     const result=await page.evaluate(function () {
@@ -63,6 +81,7 @@ for (const prefix of ['harbor','upland']) {
     });
     expect(result).toMatchObject({applied:true,again:true,count:2,food:2,field:0,stock:2,reserve:true,privateUnchanged:true,people:true,valid:true});
     expect(result.debit).toBeCloseTo(result.cost,8);expect(result.credit).toBeCloseTo(result.cost,8);
+  });
   });
 
   test(prefix+' daily AI uses current food demand once and preserves matching checkpoints and replay',async function ({page},info) {
@@ -93,11 +112,12 @@ for (const prefix of ['harbor','upland']) {
   });
 }
 
-// Each case reviews part of the malformed list from its own fresh page, so no
-// case validates the whole list after preparing the catalogue.
+// Each case reviews part of the malformed list, so no case validates the whole
+// list. Both share one prepared unmodded page.
+describeSharedPage('malformed supply policies',{boot:openGame},function () {
 for (const range of [[0,10],[10,19]]) {
 test('malformed supply policies reject detached, including unknown classes and same-import references '+range[0],async function ({page},info) {
-  await openGame(page,info);
+  if (!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function (input) {
     const source=input.source;
     const changes=[function (p) {p.schema=2;},function (p) {delete p.schema;},function (p) {p.extra=true;},
@@ -125,7 +145,9 @@ test('malformed supply policies reject detached, including unknown classes and s
   expect(result).toEqual({total:19,rejected:Array(range[1]-range[0]).fill(true),sameImport:[],omitted:[]});
 });
 }
+});
 
+describeSharedPage('harbor supply rejections, losses and fallbacks',sharedExample('harbor'),function () {
 test('empty markets, reserved cash, refused access and obsolete quotes transfer nothing',async function ({page},info) {
   await start(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -165,28 +187,6 @@ test('a remote field host cannot draw camp food and each real loss removes its s
   expect(result).toEqual({pure:true,remote:true,local:false,noFieldTarget:true,noRecruit:true,used:true,proportional:true,repeat:true,lost:true,valid:true});
 });
 
-test('replacement reviews conserve pledged people, public money and ordinary class eligibility',async function ({page},info) {
-  await start(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='upland_coalition',r=M.row(s,rid),host=M.host(s,rid),p=M.profile(s,rid);
-    r.food=100;const people=M.total(s,rid),men=host.men,gold=FB.treasuryAvailable(s,rid),privateGold=s.player.gold;
-    const review=M.supplyReview(s,rid,'recruit',{kind:'character',id:r.leaderId}),ai=M.supplyReview(s,rid,'recruit');
-    const same=review.review.allowed && ai.review.allowed && review.review.cost===ai.review.cost;
-    const applied=M.commit(s,review),repeat=!M.commit(s,review),actual=host.men-men;
-    const locked=JSON.parse(JSON.stringify(s));M.row(locked,rid).members.forEach(function (m) {m.allegiance=false;});
-    const noPledge=!M.supplyReview(locked,rid,'recruit').review.allowed;
-    const hungry=JSON.parse(JSON.stringify(s));M.row(hungry,rid).food=0;M.host(hungry,rid).mobileFood=0;
-    const noFood=!M.supplyReview(hungry,rid,'recruit').review.allowed;
-    const broke=JSON.parse(JSON.stringify(s));FB.treasurySpend(broke,rid,FB.treasuryAvailable(broke,rid)-p.supplyPolicy.cashReserve);
-    const noCash=!M.supplyReview(broke,rid,'recruit').review.allowed;
-    return {same:same,applied:applied,repeat:repeat,actual:actual,cost:gold-FB.treasuryAvailable(s,rid),
-      expected:review.review.cost,conserved:M.total(s,rid)===people,privateUnchanged:s.player.gold===privateGold,
-      noPledge:noPledge,noFood:noFood,noCash:noCash,valid:M.validate(s)};
-  });
-  expect(result).toMatchObject({same:true,applied:true,repeat:true,actual:5,conserved:true,privateUnchanged:true,
-    noPledge:true,noFood:true,noCash:true,valid:true});expect(result.cost).toBeCloseTo(result.expected,8);
-});
-
 test('used pasture capacity and inaccessible pasture cannot become new policy food',async function ({page},info) {
   await start(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -218,6 +218,30 @@ test('a locked preferred class falls back to the next ordinarily eligible replac
   });
   expect(result).toEqual({preferred:'crossbow',chosen:'arch',allowed:true,locked:true,pure:true});
 });
+});
+
+describeSharedPage('upland replacement and carrying limits',sharedExample('upland'),function () {
+test('replacement reviews conserve pledged people, public money and ordinary class eligibility',async function ({page},info) {
+  await start(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='upland_coalition',r=M.row(s,rid),host=M.host(s,rid),p=M.profile(s,rid);
+    r.food=100;const people=M.total(s,rid),men=host.men,gold=FB.treasuryAvailable(s,rid),privateGold=s.player.gold;
+    const review=M.supplyReview(s,rid,'recruit',{kind:'character',id:r.leaderId}),ai=M.supplyReview(s,rid,'recruit');
+    const same=review.review.allowed && ai.review.allowed && review.review.cost===ai.review.cost;
+    const applied=M.commit(s,review),repeat=!M.commit(s,review),actual=host.men-men;
+    const locked=JSON.parse(JSON.stringify(s));M.row(locked,rid).members.forEach(function (m) {m.allegiance=false;});
+    const noPledge=!M.supplyReview(locked,rid,'recruit').review.allowed;
+    const hungry=JSON.parse(JSON.stringify(s));M.row(hungry,rid).food=0;M.host(hungry,rid).mobileFood=0;
+    const noFood=!M.supplyReview(hungry,rid,'recruit').review.allowed;
+    const broke=JSON.parse(JSON.stringify(s));FB.treasurySpend(broke,rid,FB.treasuryAvailable(broke,rid)-p.supplyPolicy.cashReserve);
+    const noCash=!M.supplyReview(broke,rid,'recruit').review.allowed;
+    return {same:same,applied:applied,repeat:repeat,actual:actual,cost:gold-FB.treasuryAvailable(s,rid),
+      expected:review.review.cost,conserved:M.total(s,rid)===people,privateUnchanged:s.player.gold===privateGold,
+      noPledge:noPledge,noFood:noFood,noCash:noCash,valid:M.validate(s)};
+  });
+  expect(result).toMatchObject({same:true,applied:true,repeat:true,actual:5,conserved:true,privateUnchanged:true,
+    noPledge:true,noFood:true,noCash:true,valid:true});expect(result.cost).toBeCloseTo(result.expected,8);
+});
 
 test('lower host carrying limits preserve excess stock and use food once without grants',async function ({page},info) {
   await start(page,info,'upland');
@@ -236,6 +260,7 @@ test('lower host carrying limits preserve excess stock and use food once without
   });
   expect(result).toEqual({bounded:true,conserved:true,fullness:true,retained:true,noRefill:true,repeated:true,valid:true});
 });
+});
 
 test('changed policy fingerprints and forged saved policy cursors reject without restore effects',async function ({page},info) {
   await start(page,info,'harbor');
@@ -253,6 +278,8 @@ test('changed policy fingerprints and forged saved policy cursors reject without
   expect(result).toEqual({malformed:true,detached:true,mismatch:true,pure:true});
 });
 
+// This page boots at the phone size its case sets.
+describeSharedPage('harbor phone supply review',sharedExample('harbor',{viewport:{width:390,height:844}}),function () {
 test('supply review retains mobile inputs, disclosure and focus through Escape and stale confirmation',async function ({page},info) {
   await page.setViewportSize({width:390,height:844});await start(page,info,'harbor');
   await page.evaluate(function () {
@@ -274,4 +301,5 @@ test('supply review retains mobile inputs, disclosure and focus through Escape a
   await expect(page.locator('.review-action-card').filter({has:button})).toBeFocused();
   await expect(page.locator('[aria-controls="'+id+'-details"]')).toHaveAttribute('aria-expanded','true');
   await expect(page.locator('#mobile-count')).toHaveValue('37');
+});
 });

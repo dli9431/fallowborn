@@ -17,11 +17,35 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await startDeterministicGame(page);
 });
+
+/* The save restore case keeps a fresh page. The others share one page per
+   group, booted with the 867 world active and reset before each case; each
+   case still starts its own campaign. The reset also returns the field strip
+   yield, wage and upgrade costs that cases tune in the catalogue. */
+const sharedBoot = {
+  boot:async function (page, testInfo) {
+    await openGame(page, testInfo);
+    await activateBookmark(page, '867');
+    await page.evaluate(function () {
+      const row = FBDATA.enterprises.field_strip;
+      window.livelihoodBoot = { yield:row.yield, laborPay:row.laborPay,
+        upgradeCosts:(row.upgrades || []).map(function (upgrade) { return upgrade.cost; }) };
+    });
+  },
+  reset:async function (page) {
+    await page.evaluate(function () {
+      const row = FBDATA.enterprises.field_strip, saved = window.livelihoodBoot;
+      row.yield = saved.yield; row.laborPay = saved.laborPay;
+      (row.upgrades || []).forEach(function (upgrade, index) { upgrade.cost = saved.upgradeCosts[index]; });
+    });
+  }
+};
 
 async function setupEnterpriseUpgradePlan(page) {
   return page.evaluate(function () {
@@ -47,6 +71,7 @@ async function setupEnterpriseUpgradePlan(page) {
   });
 }
 
+describeSharedPage('enterprise plans and work lists', sharedBoot, function () {
 for (const width of [390, 1280]) {
   test('Enterprise Plan upgrades one level by settlement and type at width ' + width, async function ({ page }) {
     await page.setViewportSize({ width:width, height:844 });
@@ -246,6 +271,7 @@ test('staffing preview summarizes enterprises in a full-screen mobile sheet', as
       expect(state.turn).toBe(fixture.turn);
     });
 });
+});
 
 test('archives and restores complete career progress without another fee',
   async function ({ page }) {
@@ -325,6 +351,7 @@ test('archives and restores complete career progress without another fee',
     });
   });
 
+describeSharedPage('careers, enterprise sheets and staffing', sharedBoot, function () {
 test('levy service and professional Soldiering offer distinct arms work',
   async function ({ page }) {
     const result = await page.evaluate(function () {
@@ -1476,4 +1503,5 @@ test('empty staffing summary disables both batch actions', async function ({ pag
   await expect(page.locator('.enterprise-staffing-summary')).toContainText('No whole vacancies to fill');
   await expect(page.locator('#enterprise-staffing-apply')).toBeDisabled();
   await expect(page.locator('#enterprise-staffing-local')).toBeDisabled();
+});
 });

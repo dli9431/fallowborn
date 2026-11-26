@@ -3,7 +3,9 @@ const {prepareGameContent} = require('../support/game/navigation');
 const { test, expect } = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
+const { installStoredMod } = require('../support/game/stored-mod');
 const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 const { installRestoreFacts } = require('../support/game/restore-facts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = {
@@ -64,10 +66,14 @@ const additions = {
 const newIds = Object.keys(additions).sort();
 const profiles = ['congregational_mosque','episcopal_complex','horizontal_mill','hypocaust_bath','urban_circuit'];
 
+// A shared page installed this before its one boot.
 test.beforeEach(async function ({ page }) {
+  if (!isSharedPage(page)) await observeBase(page);
+});
+function observeBase(page) {
   // Observe the shipped index, before the first addition. This is a retained
   // catalogue projection, never a Node execution of the game data sources.
-  await page.addInitScript(function () {
+  return page.addInitScript(function () {
     window.FBDATA = window.FBDATA || {};
     Object.defineProperty(FBDATA,'tech_early_refinements',{
       configurable:true,set:function (value) {
@@ -78,10 +84,18 @@ test.beforeEach(async function ({ page }) {
       }
     });
   });
-});
+}
 
-test('the full catalogue has one source per correction and an unchanged retained graph outside the approved corrections', async function ({ page }, info) {
+/* Catalogue and seeding reviews that start no campaign share one unmodded
+   page, booted once with the base observer installed. Year cases that restore
+   a save, the Mods import cases and cases that restore or apply mods keep a
+   fresh page. */
+describeSharedPage('unmodded catalogue and seeding',{boot:async function (page,info) {
+  await observeBase(page);
   await openGame(page,info);
+}},function () {
+test('the full catalogue has one source per correction and an unchanged retained graph outside the approved corrections', async function ({ page }, info) {
+  if (!isSharedPage(page)) await openGame(page,info);
   const r = await page.evaluate(function () {
     // Activation installs legacy defaults after admission; compare detached
     // normalized definitions on both sides without changing the live catalogue.
@@ -181,7 +195,7 @@ test('the full catalogue has one source per correction and an unchanged retained
 
 for (const year of [476,493,568,711,800,867,1066]) {
   test(year + ' seeds the exact expanded sets for each tradition, including earlier prerequisite closure', async function ({ page }, info) {
-    await openGame(page,info);
+    if (!isSharedPage(page)) await openGame(page,info);
     const result = await page.evaluate(function (args) {
       return args.traditions.map(function (tradition) {
         const s = {start:{era:args.year < 650 ? 'late_antique' : 'early_medieval'},
@@ -237,6 +251,27 @@ for (const year of [476,493,568,711,800,867,1066]) {
   });
 }
 
+test('mixed traditions select one pair, break an emergence tie by widespread, and authoritative omissions remove descendants', async function ({ page }, info) {
+  if (!isSharedPage(page)) await openGame(page,info);
+  const r = await page.evaluate(function () {
+    function sample(list,omit) {
+      const s = {start:{era:'early_medieval'},date:{year:1066,season:0,day:1},
+        realms:{sample:{alive:true,liege:null,techTraditions:list,techSeed:{complete:['aqueduct_maintenance'],omit:omit || []}}},realmTech:{}};
+      FB.seedRealmTechnologies(s,true);
+      return {windows:['aqueduct_maintenance','masonry_circuits','paper_scholarship'].map(function (id) {
+        return FB.techHistoricalWindow(s,id,'sample');
+      }),completed:s.realmTech.sample.completed.slice().sort(),exposed:s.realmTech.sample.exposed.slice().sort()};
+    }
+    return {first:sample(['latin','byzantine']),reverse:sample(['byzantine','latin']),omit:sample(['latin','byzantine'],['lime_mortar'])};
+  });
+  expect(r.first.completed).toEqual(r.reverse.completed); expect(r.first.exposed).toEqual(r.reverse.exposed);
+  expect(r.first.windows[0]).toMatchObject({emergence:1,widespread:350,tradition:'byzantine'});
+  expect(r.first.windows[1]).toMatchObject({emergence:200,widespread:400,tradition:'byzantine'});
+  for (const id of ['lime_mortar','aqueduct_maintenance','cistern_engineering','hypocaust_heating','masonry_circuits','diversion_dams'])
+    expect(r.omit.completed).not.toContain(id);
+});
+});
+
 for (const year of ['476','493','568','711','800','867','1066']) for (const revision of (['867','1066'].includes(year)?['baseline',null]:[null])) {
   test(year + ' ' + (revision || 'current') + ' accounts for real sovereign exceptions and retains dated research and ruined property', async function ({ page }, info) {
     await openGame(page,info);
@@ -285,28 +320,8 @@ for (const year of ['476','493','568','711','800','867','1066']) for (const revi
   });
 }
 
-test('mixed traditions select one pair, break an emergence tie by widespread, and authoritative omissions remove descendants', async function ({ page }, info) {
-  await openGame(page,info);
-  const r = await page.evaluate(function () {
-    function sample(list,omit) {
-      const s = {start:{era:'early_medieval'},date:{year:1066,season:0,day:1},
-        realms:{sample:{alive:true,liege:null,techTraditions:list,techSeed:{complete:['aqueduct_maintenance'],omit:omit || []}}},realmTech:{}};
-      FB.seedRealmTechnologies(s,true);
-      return {windows:['aqueduct_maintenance','masonry_circuits','paper_scholarship'].map(function (id) {
-        return FB.techHistoricalWindow(s,id,'sample');
-      }),completed:s.realmTech.sample.completed.slice().sort(),exposed:s.realmTech.sample.exposed.slice().sort()};
-    }
-    return {first:sample(['latin','byzantine']),reverse:sample(['byzantine','latin']),omit:sample(['latin','byzantine'],['lime_mortar'])};
-  });
-  expect(r.first.completed).toEqual(r.reverse.completed); expect(r.first.exposed).toEqual(r.reverse.exposed);
-  expect(r.first.windows[0]).toMatchObject({emergence:1,widespread:350,tradition:'byzantine'});
-  expect(r.first.windows[1]).toMatchObject({emergence:200,widespread:400,tradition:'byzantine'});
-  for (const id of ['lime_mortar','aqueduct_maintenance','cistern_engineering','hypocaust_heating','masonry_circuits','diversion_dams'])
-    expect(r.omit.completed).not.toContain(id);
-});
-
-async function imported(page, info, kind, sector) {
-  await openGame(page,info); await page.evaluate(function () { FB.ui.showMods(); });
+// The text the Mods screen imports for one example, read on the unmodded page.
+async function modSource(page, kind) {
   const source = JSON.parse(JSON.stringify(examples[kind]));
   if (kind === 'river') {
     // The composed farm has its own enterprise id, so give its typed producer
@@ -318,11 +333,30 @@ async function imported(page, info, kind, sector) {
       return a.id === 'river_pasture_parent_share';
     }).profileId = 'river_pasture_parent_allocation';
   }
+  return source;
+}
+/* Runs of each example's other cases share one page that stores that text and
+   boots it once with the example world active, reset before each case; each
+   case begins its own ruler start. */
+function sharedKind(kind) {
+  return {boot:async function (page, info) {
+    await observeBase(page);
+    await openGame(page,info);
+    await installStoredMod(page,JSON.stringify(await modSource(page,kind)));
+    await activateBookmark(page,'expanded_' + kind);
+  }};
+}
+async function imported(page, info, kind, sector) {
+  let source = examples[kind];
+  if (!isSharedPage(page)) {
+  await openGame(page,info); await page.evaluate(function () { FB.ui.showMods(); });
+  source = await modSource(page,kind);
   expect(await page.evaluate(function (candidate) { return FB.mods.validate(candidate); },source)).toEqual([]);
   await page.locator('#modfile').setInputFiles({name:'expanded-catalogue-'+kind+'.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(source))});
   await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   const world = 'expanded_' + kind;
   const scenario = source.startScenarios.find(function (s) { return s.id.indexOf(kind+'_'+sector+'_') === 0 && !!s.rulerRealmId; });
@@ -380,6 +414,7 @@ for (const kind of ['river','upland']) {
     expect(r.paid).toBeCloseTo(r.cost,8);
   });
 
+  describeSharedPage(kind + ' mill, worship, siege, relay, pasture and fish',sharedKind(kind),function () {
   test(kind + ' the mill replacement supplies one physical tax/capacity effect and no base bonus', async function ({ page }, info) {
     await imported(page,info,kind,'industry');
     const r = await page.evaluate(function (kind) {
@@ -569,6 +604,7 @@ for (const kind of ['river','upland']) {
     expect(r).toEqual(kind==='river' ? {first:true,again:false,caught:true,idle:0,opened:true,done:true,allocated:true,twice:false,effect:0.03,sold:false,remaining:0}
       : {first:true,again:false,caught:true,idle:0,open:false,denied:true,pure:true});
   });
+  });
 
   test(kind + ' changed complete composition fingerprints reject matching-world saves before adoption', async function ({ page }, info) {
     await imported(page,info,kind,'industry');
@@ -606,6 +642,7 @@ for (const kind of ['river','upland']) {
     for (const field of ['resources','operations','producers','seasons','institutions','production']) expect(r[field],field).toBeGreaterThan(0);
   });
 
+  describeSharedPage(kind + ' composed suppliers and boathouse work',sharedKind(kind),function () {
   test(kind + ' composed finite suppliers, real paid labor and one sale preserve every unrelated owner', async function ({ page }, info) {
     await imported(page,info,kind,'industry');
     const r = await page.evaluate(function (kind) {
@@ -672,6 +709,7 @@ for (const kind of ['river','upland']) {
     },kind);
     expect(r).toMatchObject({batch:true,id:true,before:0,reserved:0,after:1,paid:true,again:false,remaining:0});
     expect(r.spent).toBeCloseTo(r.due,8); expect(r.credit).toBeGreaterThan(0); expect(r.credit).toBeLessThanOrEqual(Math.floor(r.base*0.1));
+  });
   });
 
   test(kind + ' malformed combined declarations reject before publication or resource initialization', async function ({ page }, info) {

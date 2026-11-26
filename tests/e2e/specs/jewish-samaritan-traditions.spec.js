@@ -7,6 +7,8 @@ const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { startHistoricalGame } = require('../support/game/historical-start');
+const { useReviewStartRules } = require('../support/game/released-starts');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 const { releasedCatalogue } = require('../support/released-catalogue');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
@@ -53,9 +55,46 @@ async function household(page) {
   });
 }
 
+const sharedOrdinary = { boot:async function (page, testInfo) {
+  await openGame(page, testInfo);
+  await activateBookmark(page, '867');
+} };
+/* The communal fixture boots the way startHistoricalGame does. Its reset
+   returns the 476 revisions' local institution declarations, which each case
+   replaces with fixture rows. */
+const sharedCommunal = {
+  boot:async function (page, testInfo) {
+    await useReviewStartRules(page);
+    await openGame(page, testInfo);
+    await activateBookmark(page, '476');
+    await page.evaluate(function () {
+      const revisions = FBDATA.bookmarks['476'].revisions || {};
+      window.communalBoot = Object.keys(revisions).map(function (id) {
+        return [id, Object.prototype.hasOwnProperty.call(revisions[id], 'localInstitutions'), revisions[id].localInstitutions];
+      });
+    });
+  },
+  reset:async function (page) {
+    await page.evaluate(function () {
+      const revisions = FBDATA.bookmarks['476'].revisions || {};
+      window.communalBoot.forEach(function (row) {
+        if (row[1]) revisions[row[0]].localInstitutions = row[2];
+        else delete revisions[row[0]].localInstitutions;
+      });
+    });
+  }
+};
+
+/* Cases that restore saves, start dated worlds or validate the communal
+   contracts keep a fresh page. Catalogue checks share one unmodded page;
+   ordinary household cases share one page booted with the 867 world active;
+   the communal fixture cases share one page booted under the review start
+   rules with the 476 world active. Each is reset before every case and each
+   case still starts its own campaign. */
+describeSharedPage('released catalogue and profile scopes', { boot:openGame }, function () {
 test('additive profiles preserve the released catalogue and validate through JSON mods',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    if (!isSharedPage(page)) await openGame(page, testInfo);
     const fixture = JSON.parse(fs.readFileSync(
       path.join(__dirname, '../fixtures/released-catalogue.json'), 'utf8'));
     // released-catalogue.spec.js owns the whole fixture; these profiles own their Jewish family root.
@@ -79,7 +118,7 @@ test('additive profiles preserve the released catalogue and validate through JSO
 
 test('institution-only rabbinic scope and independent dated identity scopes reject unreviewed consumers',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    if (!isSharedPage(page)) await openGame(page, testInfo);
     expect(await page.evaluate(function () {
       const dates = ['476','493','711','800','867','1066','1204'];
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -108,7 +147,7 @@ test('institution-only rabbinic scope and independent dated identity scopes reje
 
 test('Samaritan identity has no rabbinic ancestry or central office and cannot certify specialists',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    if (!isSharedPage(page)) await openGame(page, testInfo);
     expect(await page.evaluate(function () {
       const sam = FB.religionOf('samaritan', null), rab = FB.religionOf('rabbanite', null);
       const kar = FB.religionOf('karaite', null);
@@ -131,10 +170,12 @@ test('Samaritan identity has no rabbinic ancestry or central office and cannot c
       roles:['Community Representative','Community Representative','Community Representative'],
       rabbinicRoles:['Teacher','Rabbi','Communal Judge'], priestLabel:'Priest'});
   });
+});
 
+describeSharedPage('ordinary households', sharedOrdinary, function () {
 test('ordinary participation works for poor households of either sex without profession or office promotion',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    if (!isSharedPage(page)) await openGame(page, testInfo);
     await startDeterministicGame(page);
     await household(page);
     expect(await page.evaluate(function () {
@@ -164,7 +205,7 @@ test('ordinary participation works for poor households of either sex without pro
 
 test('new profiles withhold dissolution without changing legacy get or household property',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    if (!isSharedPage(page)) await openGame(page, testInfo);
     await startDeterministicGame(page);
     await household(page);
     expect(await page.evaluate(function () {
@@ -190,7 +231,7 @@ test('new profiles withhold dissolution without changing legacy get or household
 
 test('a held petition remains blocked after initiation and malformed policy values reject atomically',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    if (!isSharedPage(page)) await openGame(page, testInfo);
     await startDeterministicGame(page);
     await household(page);
     expect(await page.evaluate(function () {
@@ -217,7 +258,7 @@ test('a held petition remains blocked after initiation and malformed policy valu
 
 test('profile registration adds no opening population and new conversion projects reject without mutation',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    if (!isSharedPage(page)) await openGame(page, testInfo);
     expect(await page.evaluate(function () {
       const ids = ['rabbanite','karaite','samaritan'], assigned = [];
       function scan(value) {
@@ -244,6 +285,7 @@ test('profile registration adds no opening population and new conversion project
         pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     })).toEqual({results:[null,null,null], pure:true});
   });
+});
 
 test('legacy Jewish households, generated ancestry and an ongoing project survive restore without reclassification',
   async function ({ page }, testInfo) {
@@ -292,8 +334,10 @@ test('legacy Jewish households, generated ancestry and an ongoing project surviv
 /* These fixture placements isolate the shared contracts from the shipped
    dated communities tested separately below. */
 async function communalHousehold(page, testInfo, crazygames) {
+  // A shared page already booted under the review start rules.
   await startHistoricalGame(page, testInfo, {
-    bookmark:'476', code:'COMMUNAL-476-curialis_476-ravenna-m-Marcus-established' // canonical: Ravenna's own community
+    bookmark:'476', code:'COMMUNAL-476-curialis_476-ravenna-m-Marcus-established', // canonical: Ravenna's own community
+    prepared:isSharedPage(page)
   }, !!crazygames);
   await household(page);
   await page.evaluate(function () {
@@ -385,6 +429,7 @@ test('communal contracts validate independently and register no opening places, 
       noJudicialShortcut:true,noJourney:true,technology:['none','none','none','none'],pure:true});
   });
 
+describeSharedPage('communal fixture households', sharedCommunal, function () {
 test('free household worship and study preserve married ordinary work and cannot stack local study rewards',
   async function ({page}, testInfo) {
     await communalHousehold(page, testInfo);
@@ -673,6 +718,7 @@ test('poor household study uses the shared narrow-screen review and retains Deta
     await expect(review).toBeFocused();
     await expect(card.getByRole('button',{name:'Details',exact:true})).toHaveAttribute('aria-expanded','true');
   });
+});
 
 function communalSavedFacts() {
   const s = FB.state, f = communalFixture;

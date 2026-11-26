@@ -1,10 +1,13 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmark,beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/guarded-following-harbor.json'),
   dune:require('../fixtures/authoring/guarded-following-dune.json')};
@@ -17,13 +20,28 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
   'js/travel.js','js/story_household_party.js','js/household_party_travel.js','js/household_party_camp.js',
   'js/story_household.js','js/stories.js','js/ui_mobile.js','js/ui_misc.js','js/save.js','js/save_v4.js']);
 
+/* Each example's import case, and cases that restore saves, boot another
+   example file or boot a second time, keep a fresh page and the Mods file
+   import. Runs of the others share one page that stores the exact harbor file
+   text and boots it once with its world active, reset before each case; each
+   case begins its own start. */
+function sharedExample(prefix) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/guarded-following-'+prefix+'.json'),'utf8'));
+    await activateBookmark(page,prefix+'_world');
+  }};
+}
 async function imported(page,info,prefix,ordinary) {
+  if (isSharedPage(page) && ordinary) throw new Error('Another example file needs a fresh page');
+  if (!isSharedPage(page)) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+
     (ordinary?'mobile-hosted-':'guarded-following-')+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
 }
@@ -85,9 +103,11 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
+// Detached validation shares one unmodded page.
+describeSharedPage('detached guard validation',{boot:openGame},function () {
 for (const batch of [0,1,2,3]) {
   test('guard declarations reject malformed references, parties, sites and policies without mutation, batch '+(batch+1),async function ({page},info) {
-    await openGame(page,info);
+    if (!isSharedPage(page)) await openGame(page,info);
     const result=await page.evaluate(function (input) {
       const source=input.source;
       const changes=[function (g) {g.schema=2;},function (g) {g.extra=true;},function (g) {g.kind='conviction';},
@@ -111,7 +131,9 @@ for (const batch of [0,1,2,3]) {
     expect(result).toEqual(Array(5).fill(true));
   });
 }
+});
 
+describeSharedPage('harbor guard preflight, release and interruption',sharedExample('harbor'),function () {
 test('fresh guard preflight rejects unavailable people and changed control before any initialization',async function ({page},info) {
   await imported(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -168,23 +190,6 @@ test('only the unchanged present host can release, and release supplies no remot
     remote:true,local:true,travelling:true,notCarried:true,companion:true,valid:true});
 });
 
-test('term expiry keeps the party guarded and allows a fresh unchanged host review',async function ({page},info) {
-  await imported(page,info,'dune');
-  const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='dune_coalition',r=M.row(s,rid),g=r.guardedParty;
-    const request={realmId:rid,action:'release',actor:{kind:'character',id:g.authority.characterId}};
-    const stale=M.reviewGuard(s,request),ids=JSON.stringify(g.characterIds);
-    s.turn=g.endTurn;s.date=FB.dateAtTurn(s,s.turn);r.lastAI=Math.floor(s.turn/90);M.day(s);
-    const expired=g.status==='expired' && !M.commandValid(s,rid) && FB.characterGuarded(s,g.characterIds[0]);
-    const rejected=!M.commit(s,stale),saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
-    const restored=FB.state,kept=M.row(restored,rid).guardedParty.status==='expired';
-    const released=M.commit(restored,M.reviewGuard(restored,request));
-    return {expired:expired,stale:rejected,kept:kept,released:released,
-      same:JSON.stringify(M.row(restored,rid).guardedParty.characterIds)===ids,remote:!M.commandValid(restored,rid),valid:M.validate(restored)};
-  });
-  expect(result).toEqual({expired:true,stale:true,kept:true,released:true,same:true,remote:true,valid:true});
-});
-
 test('guarded people cannot use ordinary personal travel and the suspended host stops before movement',async function ({page},info) {
   await imported(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -221,6 +226,24 @@ test('death, changed authority or possession interrupt release without choosing 
     });
   });
   expect(result).toEqual(Array(5).fill(true));
+});
+});
+
+test('term expiry keeps the party guarded and allows a fresh unchanged host review',async function ({page},info) {
+  await imported(page,info,'dune');
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='dune_coalition',r=M.row(s,rid),g=r.guardedParty;
+    const request={realmId:rid,action:'release',actor:{kind:'character',id:g.authority.characterId}};
+    const stale=M.reviewGuard(s,request),ids=JSON.stringify(g.characterIds);
+    s.turn=g.endTurn;s.date=FB.dateAtTurn(s,s.turn);r.lastAI=Math.floor(s.turn/90);M.day(s);
+    const expired=g.status==='expired' && !M.commandValid(s,rid) && FB.characterGuarded(s,g.characterIds[0]);
+    const rejected=!M.commit(s,stale),saved=JSON.parse(FB.save.serialize());FB.save.restore(saved);
+    const restored=FB.state,kept=M.row(restored,rid).guardedParty.status==='expired';
+    const released=M.commit(restored,M.reviewGuard(restored,request));
+    return {expired:expired,stale:rejected,kept:kept,released:released,
+      same:JSON.stringify(M.row(restored,rid).guardedParty.characterIds)===ids,remote:!M.commandValid(restored,rid),valid:M.validate(restored)};
+  });
+  expect(result).toEqual({expired:true,stale:true,kept:true,released:true,same:true,remote:true,valid:true});
 });
 
 test('matching guarded and released restores preserve exact people and reject forged provenance',async function ({page},info) {

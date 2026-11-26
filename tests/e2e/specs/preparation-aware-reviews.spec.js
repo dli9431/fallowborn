@@ -1,8 +1,10 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect}=require('../support/fixture');
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {installRestoreFacts}=require('../support/game/restore-facts');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
@@ -16,15 +18,30 @@ dependsOnRuntime(__filename,['index.html','data/technology.js','data/mobile_conf
   'js/authority.js','js/world.js','js/starts.js','js/model.js','js/armies.js','js/mods.js',
   'js/save.js','js/save_v4.js','js/bookmark_composition.js','js/main.js','js/ui_misc.js','js/ui_panels.js','js/i18n.js']);
 
+/* Each example's ordinary import case, and cases that restore saves or import a
+   modified copy, keep a fresh page with the unmodded admission and the Mods
+   file import. Runs of the others share one page that stores the text the
+   Mods screen stores for that example and boots it once with its world active,
+   reset before each case; each case begins its own start. */
+function sharedExample(label,context) {
+  return {context:context,boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,JSON.stringify(examples[label]));
+    await activateBookmark(page,(label==='harbor' ? 'harbor' : 'dune')+'_world');
+  }};
+}
 async function begin(page,info,label,modified) {
+  if (isSharedPage(page) && modified) throw new Error('A modified example needs a fresh page');
+  const prefix=label==='harbor' ? 'harbor' : 'dune';
+  if (!isSharedPage(page)) {
   await openGame(page,info);
   await expectModAdmission(page,modified || examples[label]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles({name:'formation-review.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(modified || examples[label]))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  const prefix=label==='harbor' ? 'harbor' : 'dune';
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await installRestoreFacts(page);
@@ -129,6 +146,7 @@ test('detached imports reject malformed, foreign and unordered preparation bindi
   expect(result).toEqual(Array(10).fill(true));
 });
 
+describeSharedPage('harbor terminal, binding and declined reviews',sharedExample('harbor'),function () {
 test('refusal, stopped preparation, preparation expiry, interruption and review expiry stay terminal',async function ({page},info) {
   await begin(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -200,6 +218,7 @@ test('a formed review can be declined through the shared player transaction with
       unchanged:before===JSON.stringify([s.stories[C.preparationId],s.armies,s.realms,s.population])};
   });
   expect(result).toEqual({formed:true,accepted:true,deterministic:true,repeat:true,status:'declined',reason:'decline',unchanged:true});
+});
 });
 
 test('a refusal disposition restores without retrying formation or acknowledgment',async function ({page},info) {
@@ -292,7 +311,9 @@ test('ordinary immediate-command declarations retain version 1 and their exact s
   expect(result).toBe(true);
 });
 
-for (const viewport of [{width:1280,height:800},{width:390,height:844}]) {
+// Each viewport's page boots at the size its case sets.
+for (const viewport of [{width:1280,height:800},{width:390,height:844}]) describeSharedPage('waiting source card at '+viewport.width,
+  sharedExample('harbor',{viewport:viewport}),function () {
   test('waiting source card explains formation and exposes no premature choices at '+viewport.width,async function ({page},info) {
     await page.setViewportSize(viewport);await begin(page,info,'harbor');
     await page.evaluate(function () {FB.ui.showStorySheet(reviewCase.id);});
@@ -302,4 +323,4 @@ for (const viewport of [{width:1280,height:800},{width:390,height:844}]) {
     await page.keyboard.press('Escape');
     expect(await page.evaluate(function () {return FB.state.stories[reviewCase.id].status;})).toBe('waiting');
   });
-}
+});

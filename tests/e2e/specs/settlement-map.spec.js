@@ -26,6 +26,7 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
+const { describeSharedPage, isSharedPage } = require('../support/shared-page');
 
 async function startGame(page, testInfo) {
   await openGame(page, testInfo);
@@ -210,9 +211,14 @@ test('travel selection paints before using the county-only map highlight',
 
 /* ---------- data and validation ---------- */
 
+/* These catalogue checks start no campaign and share one unmodded page, reset
+   before each case. Map cases keep fresh pages: the map camera and render
+   caches persist across campaigns in the map module and the reset does not
+   compare them. */
+describeSharedPage('settlement data and validation', { boot:openGame }, function () {
 test('both core bookmarks validate with independent settlement site lists',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    if (!isSharedPage(page)) await openGame(page, testInfo);
 
     const result = await page.evaluate(function () {
       const b867 = FB.bookmark('867'), b1066 = FB.bookmark('1066');
@@ -248,7 +254,7 @@ test('both core bookmarks validate with independent settlement site lists',
 
 test('settlement data faults each produce an actionable validation error',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    if (!isSharedPage(page)) await openGame(page, testInfo);
 
     const result = await page.evaluate(function () {
       function defWith(patches) {
@@ -336,7 +342,7 @@ test('settlement data faults each produce an actionable validation error',
 
 test('the settlement data script loads in order through the normal asset list',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    if (!isSharedPage(page)) await openGame(page, testInfo);
 
     const result = await page.evaluate(function () {
       const scripts = Array.from(document.scripts).map(function (script) {
@@ -359,6 +365,7 @@ test('the settlement data script loads in order through the normal asset list',
     expect(result.table).toBe(true);
     expect(result.siteCount).toBeGreaterThan(130);
   });
+});
 
 /* ---------- determinism and bookmark switching ---------- */
 
