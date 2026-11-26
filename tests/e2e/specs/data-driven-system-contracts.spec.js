@@ -3,7 +3,12 @@ const { test, expect } = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { describeSharedPage, isSharedPage } = require('../support/shared-page');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
+/* Validation-only rejections share one prepared title per group, reset before
+   each case. Cases that apply mods, even rejected ones, or restore a save keep
+   a fresh page. */
+const titleBoot = { boot:openGame };
 
 dependsOnRuntime(__filename, ['data/site_resources.js','data/building_institutions.js','data/building_operations.js',
   'data/production.js','data/production_economy.js','data/relay_services.js','data/building_seasons.js','data/maritime_work.js',
@@ -85,9 +90,10 @@ test('new chance ids use same-import traits and reject missing event references'
   expect(result.invalid.join(' ')).toContain('missing_chance');
 });
 
+describeSharedPage('typed authoring rejections', titleBoot, function () {
 for (const fault of ['hook','operation','subscriber','resolution','prize','tactic','policy_cycle','trait_channel','abbey_kind','service_cycle','enterprise_output','office_rank','council_role','quick_start','papal_tactic','papal_order','papal_policy','focus_operation','stateful_policy','confirmation_seat','election_support','demand_gate']) {
   test('typed authoring rejects invalid ' + fault + ' without publishing', async function ({ page }, info) {
-    await openGame(page, info);
+    if (!isSharedPage(page)) await openGame(page, info);
     const result = await page.evaluate(function (fault) {
       const mod = {};
       if (fault === 'hook') mod.eventSubscriptions = { child_born_flavor:[{ hook:'execute' }] };
@@ -119,6 +125,7 @@ for (const fault of ['hook','operation','subscriber','resolution','prize','tacti
     expect(result.errors.length).toBeGreaterThan(0); expect(result.pure).toBe(true);
   });
 }
+});
 
 for (const id of ['study','play','rest','pray','militia','work_land','market','keep_house','drill','stand_guard','copy_books','serve_church','manage_manor','serve_lord','train_arms','shepherd_diocese','craft_work','keep_records','practice_physic','scholarly_work','courtly_graces','administer_temporalities','govern','patronize']) {
   test('shared daily routine preserves the ' + id + ' resource and RNG sequence', async function ({ page }, info) {
@@ -188,9 +195,10 @@ for (const id of ['study','play','rest','pray','militia','work_land','market','k
   });
 }
 
+describeSharedPage('policy and catalogue rejections', titleBoot, function () {
 for (const kind of ['agency','agenda','travel','research']) {
   test('invalid ' + kind + ' policy rejects without changing live data', async function ({ page }, info) {
-    await openGame(page,info);
+    if (!isSharedPage(page)) await openGame(page,info);
     const result = await page.evaluate(function (kind) {
       const mod = { name:'Rejected policy' };
       if (kind === 'agency') mod.agencyRules = { rebelYears:10000 };
@@ -207,7 +215,7 @@ for (const kind of ['agency','agenda','travel','research']) {
 
 for (const kind of ['tenure','tenure_date','freedom','foundation','contract','rank_rate','deed_write','faith_targets','service_start','migration']) {
   test('invalid ' + kind + ' catalogue preserves live data and the message registry', async function ({ page },info) {
-    await openGame(page,info);
+    if (!isSharedPage(page)) await openGame(page,info);
     const result = await page.evaluate(function (kind) {
       const mod = {};
       if (kind === 'faith_targets') mod.rulerFaithTargets = ['missing_faith'];
@@ -230,6 +238,7 @@ for (const kind of ['tenure','tenure_date','freedom','foundation','contract','ra
     expect(result).toEqual({rejected:true,pure:true});
   });
 }
+});
 
 test('unused authoring roots retain the legacy effective-catalogue fingerprint', async function ({ page }, info) {
   await openGame(page,info);

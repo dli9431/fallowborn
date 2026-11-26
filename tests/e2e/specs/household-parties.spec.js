@@ -7,6 +7,7 @@ const {installPageGuards}=require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark,beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/household-party-harbor.json'),upland:require('../fixtures/authoring/household-party-upland.json')};
 const journeys={harbor:require('../fixtures/authoring/household-journey-harbor.json'),upland:require('../fixtures/authoring/household-journey-upland.json')};
@@ -53,8 +54,24 @@ function importedPartyTest(title,body,stored) {
    import through the Mods screen (picker). An open title imports through the
    Mods screen, replacing a same-name mod. Installed begins on a page whose
    stored boot already applied the JSON. */
+/* Cases that restore a save, import through the Mods screen, boot a modified
+   copy or replay a second boot keep a fresh page. The others share one page per
+   stored text (sharedParty below), booted with its world active and reset
+   before each case; each case still begins its own start. */
+function sharedParty(label,modified) {
+  return {boot:async function (page,info) {
+    await storeBeforeBoot(page,partyText(label,modified));
+    await openGame(page,info);
+    await activateBookmark(page,(label==='upland'?'dune':'harbor')+'_world');
+  }};
+}
+
 async function start(page,info,label,modified,install) {
   const prefix=label==='upland'?'dune':'harbor';
+  if(isSharedPage(page) && install!=='installed') {
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+    install='installed';
+  }
   if(install!=='installed' && page.url()==='about:blank' && install!=='picker') {
     await storeBeforeBoot(page,partyText(label,modified));
     await openGame(page,info);
@@ -140,51 +157,6 @@ test('journey candidates reject bad kinds, unknown references and extra fields w
   expect(result).toEqual(Array(6).fill(true));
 });
 
-test('stale funds, custody, remote residence and independent commitments prevent atomic group departure',async function({page},info) {
-  await prepareJourney(page,info,'harbor');
-  const result=await page.evaluate(function(){
-    const base=FB.state,P=FB.householdParties,id='harbor_party',actor=base.player.charId,spouse=FB.spousesOf(base,base.chars[actor])[0].id;
-    return [function(s){s.player.gold=0;},function(s){s.chars[spouse].captive=true;},
-      function(s){s.chars[spouse].homeProvinceId='harbor_gardens';},function(s){s.chars[spouse].travel={currentId:'harbor_gardens'};}].map(function(change){
-      const s=JSON.parse(JSON.stringify(base)),q=P.review(s,id,'depart_journey',actor);change(s);
-      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
-      return !P.commit(s,q)&&!P.review(s,id,'depart_journey',actor).allowed&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
-    });
-  });
-  expect(result).toEqual(Array(4).fill(true));
-});
-
-test('cancellation retains the reached county and recovery pays once for actual survivors',async function({page},info) {
-  await prepareJourney(page,info,'upland');
-  const result=await page.evaluate(function(){
-    const s=FB.state,P=FB.householdParties,id='upland_party',actor=s.player.charId;
-    P.commit(s,P.review(s,id,'depart_journey',actor));s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);
-    const reached=s.player.travel.currentId,home=s.player.provinceId,people=JSON.stringify([s.population,s.armies,s.owner,s.holder]);
-    FB.travelCancel(s,null,true);
-    const truthful=reached!==home&&FB.travelLocation(s).id===reached&&s.stories[id].journey.members.every(function(m){return P.journeys.location(s,m.personId)===reached;});
-    const noSettlement=FB.travelSettlementEligible(s)!==true;
-    const q=P.review(s,id,'party_return',actor),gold=s.player.gold,first=P.commit(s,q),paid=gold-s.player.gold===q.cost&&q.cost>0,again=!P.commit(s,q);
-    for(let i=0;i<16 && s.player.travel;i++){s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);}
-    return {truthful:truthful,noSettlement:noSettlement,first:first,paid:paid,again:again,home:!s.player.travel&&s.stories[id].journey.members.every(function(m){return m.status==='returned'&&FB.characterLocation(s,s.chars[m.personId])===home;}),
-      conserved:people===JSON.stringify([s.population,s.armies,s.owner,s.holder])};
-  });
-  expect(result).toEqual({truthful:true,noSettlement:true,first:true,paid:true,again:true,home:true,conserved:true});
-});
-
-test('ordinary funded return retains its stay gate and original travel speed without paying a second fare',async function({page},info) {
-  await prepareJourney(page,info,'harbor');
-  await page.evaluate(function(){const s=FB.state,P=FB.householdParties;P.commit(s,P.review(s,'harbor_party','depart_journey',s.player.charId));});
-  await arriveJourney(page);
-  const result=await page.evaluate(function(){
-    const s=FB.state,P=FB.householdParties,actor=s.player.charId;
-    const early=!P.review(s,'harbor_party','party_return',actor).allowed,days=s.player.travel.legDays;
-    s.turn+=FBDATA.balance.travelMinStayDays;s.player.householdStandards={};
-    const q=P.review(s,'harbor_party','party_return',actor),gold=s.player.gold;
-    return {early:early,prepaid:q.road.prepaid,cost:q.cost,speed:q.road.legDays===days,applied:P.commit(s,q),unpaid:s.player.gold===gold};
-  });
-  expect(result).toEqual({early:true,prepaid:true,cost:0,speed:true,applied:true,unpaid:true});
-});
-
 test('an interrupted checkpoint restores without arrival, payment or relocation and requires its exact carrier',async function({page},info) {
   await prepareJourney(page,info,'upland');
   const result=await page.evaluate(function(){
@@ -199,40 +171,6 @@ test('an interrupted checkpoint restores without arrival, payment or relocation 
       noWork:FB.state.player.travel.partyInterrupted===true&&FB.travelSettlementEligible(FB.state)!==true};
   });
   expect(result).toEqual({restored:true,blocked:true,noWork:true});
-});
-
-test('adult withdrawal preserves location and cannot be overridden by a household return decision',async function({page},info) {
-  await prepareJourney(page,info,'harbor');
-  const result=await page.evaluate(function(){
-    const s=FB.state,P=FB.householdParties,id='harbor_party',actor=s.player.charId,spouse=FB.spousesOf(s,s.chars[actor])[0].id;
-    P.commit(s,P.review(s,id,'depart_journey',actor));s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);
-    const reached=s.player.travel.currentId,split=P.commit(s,P.review(s,id,'separate_person',spouse,spouse));
-    FB.travelCancel(s,null,true);
-    const q=P.review(s,id,'party_return',actor),excluded=!q.people.includes(spouse)&&q.excluded.includes(spouse);
-    const noImpersonation=!P.commit(s,P.review(s,id,'rejoin_person',actor,spouse));
-    const returned=P.commit(s,q);
-    for(let i=0;i<16&&s.player.travel;i++){s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);}
-    return {split:split,excluded:excluded,noImpersonation:noImpersonation,returned:returned,remains:P.journeys.location(s,spouse)===reached,
-      home:FB.travelLocation(s).id===s.player.provinceId};
-  });
-  expect(result).toEqual({split:true,excluded:true,noImpersonation:true,returned:true,remains:true,home:true});
-});
-
-test('parent withdrawal includes the dependent and dependent custody interrupts that care group once',async function({page},info) {
-  await prepareJourney(page,info,'upland');
-  const result=await page.evaluate(function(){
-    const base=FB.state,P=FB.householdParties,id='upland_party',actor=base.player.charId;
-    P.commit(base,P.review(base,id,'depart_journey',actor));
-    const child=base.stories[id].journey.members.filter(function(m){return m.caregiverId;})[0].personId;
-    const split=JSON.parse(JSON.stringify(base)),q=P.review(split,id,'separate_person',actor,actor);
-    const childReview=P.review(split,id,'separate_person',actor,child);
-    const together=q.people.includes(child)&&childReview.people.includes(actor)&&P.commit(split,q)&&split.stories[id].journey.members.every(function(m){return m.status==='withdrawn';});
-    const held=JSON.parse(JSON.stringify(base));held.chars[child].captive=true;
-    FB.stories.get(id).day(held,held.stories[id]);const once=JSON.stringify(held.stories[id]);FB.stories.get(id).day(held,held.stories[id]);
-    return {together:together,interrupted:held.stories[id].journey.status==='interrupted',separated:held.stories[id].journey.members.every(function(m){return m.status==='separated';}),
-      once:once===JSON.stringify(held.stories[id]),noMove:held.player.travel.currentId===held.player.provinceId};
-  });
-  expect(result).toEqual({together:true,interrupted:true,separated:true,once:true,noMove:true});
 });
 
 test('eligible settlement moves the present parent and child and preserves excluded spouse residence and all property',async function({page},info) {
@@ -283,6 +221,103 @@ test('matching saves preserve journey facts and forged or erased carriers fail b
   expect(result).toEqual({restored:true,rejected:Array(13).fill(true)});
 });
 
+describeSharedPage('harbor journeys',sharedParty('harbor',journeys.harbor),function () {
+test('stale funds, custody, remote residence and independent commitments prevent atomic group departure',async function({page},info) {
+  await prepareJourney(page,info,'harbor');
+  const result=await page.evaluate(function(){
+    const base=FB.state,P=FB.householdParties,id='harbor_party',actor=base.player.charId,spouse=FB.spousesOf(base,base.chars[actor])[0].id;
+    return [function(s){s.player.gold=0;},function(s){s.chars[spouse].captive=true;},
+      function(s){s.chars[spouse].homeProvinceId='harbor_gardens';},function(s){s.chars[spouse].travel={currentId:'harbor_gardens'};}].map(function(change){
+      const s=JSON.parse(JSON.stringify(base)),q=P.review(s,id,'depart_journey',actor);change(s);
+      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+      return !P.commit(s,q)&&!P.review(s,id,'depart_journey',actor).allowed&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+    });
+  });
+  expect(result).toEqual(Array(4).fill(true));
+});
+
+test('ordinary funded return retains its stay gate and original travel speed without paying a second fare',async function({page},info) {
+  await prepareJourney(page,info,'harbor');
+  await page.evaluate(function(){const s=FB.state,P=FB.householdParties;P.commit(s,P.review(s,'harbor_party','depart_journey',s.player.charId));});
+  await arriveJourney(page);
+  const result=await page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,actor=s.player.charId;
+    const early=!P.review(s,'harbor_party','party_return',actor).allowed,days=s.player.travel.legDays;
+    s.turn+=FBDATA.balance.travelMinStayDays;s.player.householdStandards={};
+    const q=P.review(s,'harbor_party','party_return',actor),gold=s.player.gold;
+    return {early:early,prepaid:q.road.prepaid,cost:q.cost,speed:q.road.legDays===days,applied:P.commit(s,q),unpaid:s.player.gold===gold};
+  });
+  expect(result).toEqual({early:true,prepaid:true,cost:0,speed:true,applied:true,unpaid:true});
+});
+
+test('adult withdrawal preserves location and cannot be overridden by a household return decision',async function({page},info) {
+  await prepareJourney(page,info,'harbor');
+  const result=await page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,id='harbor_party',actor=s.player.charId,spouse=FB.spousesOf(s,s.chars[actor])[0].id;
+    P.commit(s,P.review(s,id,'depart_journey',actor));s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);
+    const reached=s.player.travel.currentId,split=P.commit(s,P.review(s,id,'separate_person',spouse,spouse));
+    FB.travelCancel(s,null,true);
+    const q=P.review(s,id,'party_return',actor),excluded=!q.people.includes(spouse)&&q.excluded.includes(spouse);
+    const noImpersonation=!P.commit(s,P.review(s,id,'rejoin_person',actor,spouse));
+    const returned=P.commit(s,q);
+    for(let i=0;i<16&&s.player.travel;i++){s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);}
+    return {split:split,excluded:excluded,noImpersonation:noImpersonation,returned:returned,remains:P.journeys.location(s,spouse)===reached,
+      home:FB.travelLocation(s).id===s.player.provinceId};
+  });
+  expect(result).toEqual({split:true,excluded:true,noImpersonation:true,returned:true,remains:true,home:true});
+});
+
+test('journey departure reviews show names and price and Escape restores the same uncommitted choice',async function({page},info) {
+  await prepareJourney(page,info,'harbor');
+  await page.evaluate(function(){FB.ui.showStorySheet('harbor_party');});
+  const depart=page.locator('[data-story-choice]').filter({hasText:'Travel with consenting relatives'});
+  const key=await depart.getAttribute('data-story-choice');
+  const gold=await page.evaluate(function(){return FB.state.player.gold;});
+  await depart.click();
+  await expect(page.locator('#gm-body')).toContainText('Private cost:');
+  await expect(page.locator('#gm-body')).toContainText('Excluded from this decision:');
+  await page.keyboard.press('Escape');
+  await expect(depart).toBeVisible();
+  expect(await page.evaluate(function(){return {gold:FB.state.player.gold,travel:FB.state.player.travel,focus:document.activeElement.getAttribute('data-story-choice')};}))
+    .toEqual({gold:gold,travel:null,focus:key});
+});
+});
+
+describeSharedPage('upland journeys',sharedParty('upland',journeys.upland),function () {
+test('cancellation retains the reached county and recovery pays once for actual survivors',async function({page},info) {
+  await prepareJourney(page,info,'upland');
+  const result=await page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,id='upland_party',actor=s.player.charId;
+    P.commit(s,P.review(s,id,'depart_journey',actor));s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);
+    const reached=s.player.travel.currentId,home=s.player.provinceId,people=JSON.stringify([s.population,s.armies,s.owner,s.holder]);
+    FB.travelCancel(s,null,true);
+    const truthful=reached!==home&&FB.travelLocation(s).id===reached&&s.stories[id].journey.members.every(function(m){return P.journeys.location(s,m.personId)===reached;});
+    const noSettlement=FB.travelSettlementEligible(s)!==true;
+    const q=P.review(s,id,'party_return',actor),gold=s.player.gold,first=P.commit(s,q),paid=gold-s.player.gold===q.cost&&q.cost>0,again=!P.commit(s,q);
+    for(let i=0;i<16 && s.player.travel;i++){s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);}
+    return {truthful:truthful,noSettlement:noSettlement,first:first,paid:paid,again:again,home:!s.player.travel&&s.stories[id].journey.members.every(function(m){return m.status==='returned'&&FB.characterLocation(s,s.chars[m.personId])===home;}),
+      conserved:people===JSON.stringify([s.population,s.armies,s.owner,s.holder])};
+  });
+  expect(result).toEqual({truthful:true,noSettlement:true,first:true,paid:true,again:true,home:true,conserved:true});
+});
+
+test('parent withdrawal includes the dependent and dependent custody interrupts that care group once',async function({page},info) {
+  await prepareJourney(page,info,'upland');
+  const result=await page.evaluate(function(){
+    const base=FB.state,P=FB.householdParties,id='upland_party',actor=base.player.charId;
+    P.commit(base,P.review(base,id,'depart_journey',actor));
+    const child=base.stories[id].journey.members.filter(function(m){return m.caregiverId;})[0].personId;
+    const split=JSON.parse(JSON.stringify(base)),q=P.review(split,id,'separate_person',actor,actor);
+    const childReview=P.review(split,id,'separate_person',actor,child);
+    const together=q.people.includes(child)&&childReview.people.includes(actor)&&P.commit(split,q)&&split.stories[id].journey.members.every(function(m){return m.status==='withdrawn';});
+    const held=JSON.parse(JSON.stringify(base));held.chars[child].captive=true;
+    FB.stories.get(id).day(held,held.stories[id]);const once=JSON.stringify(held.stories[id]);FB.stories.get(id).day(held,held.stories[id]);
+    return {together:together,interrupted:held.stories[id].journey.status==='interrupted',separated:held.stories[id].journey.members.every(function(m){return m.status==='separated';}),
+      once:once===JSON.stringify(held.stories[id]),noMove:held.player.travel.currentId===held.player.provinceId};
+  });
+  expect(result).toEqual({together:true,interrupted:true,separated:true,once:true,noMove:true});
+});
+
 test('death, custody, adulthood and succession preserve the actual surviving subset without adopting an heir carrier',async function({page},info) {
   await prepareJourney(page,info,'upland');
   const result=await page.evaluate(function(){
@@ -304,20 +339,6 @@ test('death, custody, adulthood and succession preserve the actual surviving sub
   });
   expect(result).toEqual(Array(4).fill({subset:true,home:true,conserved:true,original:true}));
 });
-
-test('journey departure reviews show names and price and Escape restores the same uncommitted choice',async function({page},info) {
-  await prepareJourney(page,info,'harbor');
-  await page.evaluate(function(){FB.ui.showStorySheet('harbor_party');});
-  const depart=page.locator('[data-story-choice]').filter({hasText:'Travel with consenting relatives'});
-  const key=await depart.getAttribute('data-story-choice');
-  const gold=await page.evaluate(function(){return FB.state.player.gold;});
-  await depart.click();
-  await expect(page.locator('#gm-body')).toContainText('Private cost:');
-  await expect(page.locator('#gm-body')).toContainText('Excluded from this decision:');
-  await page.keyboard.press('Escape');
-  await expect(depart).toBeVisible();
-  expect(await page.evaluate(function(){return {gold:FB.state.player.gold,travel:FB.state.player.travel,focus:document.activeElement.getAttribute('data-story-choice')};}))
-    .toEqual({gold:gold,travel:null,focus:key});
 });
 
 importedPartyTest('the same ordinary imported journey seed preserves consent, fare, carrier identity and RNG',async function({page},info) {
@@ -378,44 +399,6 @@ test('malformed detached declarations reject without publishing state, data, ide
   expect(result).toEqual(Array(10).fill(true));
 });
 
-test('dead, captive, remote, independently travelling and camp-bound relatives cannot be invited',async function ({page},info) {
-  await start(page,info,'harbor');
-  const result=await page.evaluate(function () {
-    const base=FB.state,id='harbor_party',spouse=FB.spousesOf(base,base.chars[base.player.charId])[0].id;
-    const changes=[function(s){FB.killChar(s,s.chars[spouse]);},function(s){s.chars[spouse].captive=true;},
-      function(s){s.chars[spouse].homeProvinceId='harbor_gardens';},function(s){s.chars[spouse].travel={currentId:'harbor_gardens'};},
-      function(s){s.chars[spouse].prisonerOf='harbor_commune';},function(s){s.player.travel={currentId:'harbor_gardens'};},
-      function(s){s.player.flags.in_prison=true;},function(s){s.chars[spouse].health=0;},
-      function(s){const rid=Object.keys(s.realms).filter(function(rid){return !!FB.mobile.row(s,rid);})[0];
-        FB.mobile.row(s,rid).members[0].principal.id=spouse;}];
-    return changes.map(function(change) {
-      const s=JSON.parse(JSON.stringify(base));change(s);
-      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),q=FB.householdParties.review(s,id,'invite',s.player.charId,spouse);
-      return !q.allowed&&!FB.householdParties.commit(s,q)&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
-    });
-  });
-  expect(result).toEqual(Array(9).fill(true));
-});
-
-test('dependent consent requires the actual accepted parent and removal explicitly releases dependent reservations',async function ({page},info) {
-  await start(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const s=FB.state,P=FB.householdParties,id='upland_party',actor=s.player.charId,t=s.stories[id];
-    const child=FB.householdMembers(s).filter(function(c){return FB.ageOf(c,s.date.year)<16;})[0],spouse=FB.spousesOf(s,s.chars[actor])[0];
-    function act(action,who,person,care){return P.commit(s,P.review(s,id,action,who,person,care));}
-    const absentParent=!P.review(s,id,'invite',actor,child.id,actor).allowed;
-    act('invite',actor,actor);act('accept',actor,actor);
-    const invited=act('invite',actor,child.id,actor),wrongParent=!act('accept',spouse.id,child.id,spouse.id);
-    const accepted=act('accept',actor,child.id,actor),q=P.review(s,id,'withdraw',actor,actor),names=q.affected.slice();
-    const released=P.commit(s,q)&&P.reservedBy(s,child.id)===null&&P.reservedBy(s,actor)===null;
-    const statuses=t.members.map(function(m){return m.status;}),unchanged=s.player.travel===null&&FB.characterResidence(s,child)===s.player.provinceId;
-    return {absentParent:absentParent,invited:invited,wrongParent:wrongParent,accepted:accepted,explicit:names.length===2&&names.indexOf(child.id)>=0,
-      released:released,statuses:statuses,unchanged:unchanged};
-  });
-  expect(result).toEqual({absentParent:true,invited:true,wrongParent:true,accepted:true,explicit:true,released:true,
-    statuses:['withdrawn','withdrawn'],unchanged:true});
-});
-
 test('reservations are disjoint and bounded, while adult withdrawal releases a place without reopening its invitation',async function ({page},info) {
   const input=JSON.parse(JSON.stringify(examples.harbor));
   input.storyInstances.second_party=Object.assign({},input.storyInstances.harbor_party,{id:'second_party'});
@@ -455,30 +438,6 @@ test('capacity limits the whole lifetime roster and forged cross-party reservati
     return {first:first,full:full,other:other,pure:pure,removed:removed,stillFull:stillFull};
   });
   expect(result).toEqual({first:true,full:true,other:true,pure:true,removed:true,stillFull:true});
-});
-
-test('expired invitations, lost caregivers, adulthood and succession reconcile once without moving anyone',async function ({page},info) {
-  await start(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const base=FB.state,P=FB.householdParties,id='upland_party',actor=base.player.charId,module=FB.stories.get(id);
-    const child=FB.householdMembers(base).filter(function(c){return FB.ageOf(c,base.date.year)<16;})[0];
-    function act(action,person,care){return P.commit(base,P.review(base,id,action,actor,person,care));}
-    act('invite',actor);act('accept',actor);act('invite',child.id,actor);
-    return ['expiry','parent_death','child_adult','succession','custody'].map(function(kind) {
-      const s=JSON.parse(JSON.stringify(base)),t=s.stories[id];
-      if(kind==='expiry')s.turn=t.members[1].endTurn;
-      if(kind==='parent_death')s.chars[actor].dead=true;
-      if(kind==='child_adult')s.chars[child.id].born=s.date.year-16;
-      if(kind==='succession')s.player.charId=child.id;
-      if(kind==='custody')s.chars[child.id].captive=true;
-      const old=JSON.stringify([s.chars,s.population,s.owner,s.holder,s.player.provinceId,s.player.travel]);
-      module.day(s,t);const once=JSON.stringify(t);module.day(s,t);
-      return {status:t.status,member:t.members[1].status,once:once===JSON.stringify(t),unmoved:old===JSON.stringify([s.chars,s.population,s.owner,s.holder,s.player.provinceId,s.player.travel])};
-    });
-  });
-  expect(result).toEqual([{status:'forming',member:'expired',once:true,unmoved:true},
-    {status:'closed',member:'invited',once:true,unmoved:true},{status:'forming',member:'withdrawn',once:true,unmoved:true},
-    {status:'closed',member:'invited',once:true,unmoved:true},{status:'forming',member:'withdrawn',once:true,unmoved:true}]);
 });
 
 test('stale and repeated confirmations cannot grant consent and restore does not dispatch pending AI',async function ({page},info) {
@@ -551,6 +510,26 @@ importedPartyTest('the same imported world and start seed produce the same named
   expect(await decide()).toBe(first);
 },partyText('harbor'));
 
+describeSharedPage('harbor named associations',sharedParty('harbor'),function () {
+test('dead, captive, remote, independently travelling and camp-bound relatives cannot be invited',async function ({page},info) {
+  await start(page,info,'harbor');
+  const result=await page.evaluate(function () {
+    const base=FB.state,id='harbor_party',spouse=FB.spousesOf(base,base.chars[base.player.charId])[0].id;
+    const changes=[function(s){FB.killChar(s,s.chars[spouse]);},function(s){s.chars[spouse].captive=true;},
+      function(s){s.chars[spouse].homeProvinceId='harbor_gardens';},function(s){s.chars[spouse].travel={currentId:'harbor_gardens'};},
+      function(s){s.chars[spouse].prisonerOf='harbor_commune';},function(s){s.player.travel={currentId:'harbor_gardens'};},
+      function(s){s.player.flags.in_prison=true;},function(s){s.chars[spouse].health=0;},
+      function(s){const rid=Object.keys(s.realms).filter(function(rid){return !!FB.mobile.row(s,rid);})[0];
+        FB.mobile.row(s,rid).members[0].principal.id=spouse;}];
+    return changes.map(function(change) {
+      const s=JSON.parse(JSON.stringify(base));change(s);
+      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),q=FB.householdParties.review(s,id,'invite',s.player.charId,spouse);
+      return !q.allowed&&!FB.householdParties.commit(s,q)&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+    });
+  });
+  expect(result).toEqual(Array(9).fill(true));
+});
+
 test('named consent reviews use the shared sheet and Escape leaves the invitation uncommitted',async function ({page},info) {
   await start(page,info,'harbor');
   await page.evaluate(function(){FB.ui.showStorySheet('harbor_party');});
@@ -562,6 +541,52 @@ test('named consent reviews use the shared sheet and Escape leaves the invitatio
   await expect(page.locator('[data-story-choice]').filter({hasText:'Invite'}).first()).toBeVisible();
   expect(await page.evaluate(function(){return FB.state.stories.harbor_party.members.length;})).toBe(0);
   expect(await page.evaluate(function(){return document.activeElement.getAttribute('data-story-choice');})).toBe(key);
+});
+});
+
+describeSharedPage('upland named associations',sharedParty('upland'),function () {
+test('dependent consent requires the actual accepted parent and removal explicitly releases dependent reservations',async function ({page},info) {
+  await start(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const s=FB.state,P=FB.householdParties,id='upland_party',actor=s.player.charId,t=s.stories[id];
+    const child=FB.householdMembers(s).filter(function(c){return FB.ageOf(c,s.date.year)<16;})[0],spouse=FB.spousesOf(s,s.chars[actor])[0];
+    function act(action,who,person,care){return P.commit(s,P.review(s,id,action,who,person,care));}
+    const absentParent=!P.review(s,id,'invite',actor,child.id,actor).allowed;
+    act('invite',actor,actor);act('accept',actor,actor);
+    const invited=act('invite',actor,child.id,actor),wrongParent=!act('accept',spouse.id,child.id,spouse.id);
+    const accepted=act('accept',actor,child.id,actor),q=P.review(s,id,'withdraw',actor,actor),names=q.affected.slice();
+    const released=P.commit(s,q)&&P.reservedBy(s,child.id)===null&&P.reservedBy(s,actor)===null;
+    const statuses=t.members.map(function(m){return m.status;}),unchanged=s.player.travel===null&&FB.characterResidence(s,child)===s.player.provinceId;
+    return {absentParent:absentParent,invited:invited,wrongParent:wrongParent,accepted:accepted,explicit:names.length===2&&names.indexOf(child.id)>=0,
+      released:released,statuses:statuses,unchanged:unchanged};
+  });
+  expect(result).toEqual({absentParent:true,invited:true,wrongParent:true,accepted:true,explicit:true,released:true,
+    statuses:['withdrawn','withdrawn'],unchanged:true});
+});
+
+test('expired invitations, lost caregivers, adulthood and succession reconcile once without moving anyone',async function ({page},info) {
+  await start(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const base=FB.state,P=FB.householdParties,id='upland_party',actor=base.player.charId,module=FB.stories.get(id);
+    const child=FB.householdMembers(base).filter(function(c){return FB.ageOf(c,base.date.year)<16;})[0];
+    function act(action,person,care){return P.commit(base,P.review(base,id,action,actor,person,care));}
+    act('invite',actor);act('accept',actor);act('invite',child.id,actor);
+    return ['expiry','parent_death','child_adult','succession','custody'].map(function(kind) {
+      const s=JSON.parse(JSON.stringify(base)),t=s.stories[id];
+      if(kind==='expiry')s.turn=t.members[1].endTurn;
+      if(kind==='parent_death')s.chars[actor].dead=true;
+      if(kind==='child_adult')s.chars[child.id].born=s.date.year-16;
+      if(kind==='succession')s.player.charId=child.id;
+      if(kind==='custody')s.chars[child.id].captive=true;
+      const old=JSON.stringify([s.chars,s.population,s.owner,s.holder,s.player.provinceId,s.player.travel]);
+      module.day(s,t);const once=JSON.stringify(t);module.day(s,t);
+      return {status:t.status,member:t.members[1].status,once:once===JSON.stringify(t),unmoved:old===JSON.stringify([s.chars,s.population,s.owner,s.holder,s.player.provinceId,s.player.travel])};
+    });
+  });
+  expect(result).toEqual([{status:'forming',member:'expired',once:true,unmoved:true},
+    {status:'closed',member:'invited',once:true,unmoved:true},{status:'forming',member:'withdrawn',once:true,unmoved:true},
+    {status:'closed',member:'invited',once:true,unmoved:true},{status:'forming',member:'withdrawn',once:true,unmoved:true}]);
+});
 });
 
 
@@ -714,38 +739,6 @@ test('closed family acceptance refuses a requested roster without revoking famil
   expect(result).toEqual({requested:true,refused:true,consent:true,once:true,unchanged:true,personalPreserved:true});
 });
 
-test('camp and field checkpoints stay separate; field destruction does not erase living companions or the camp',async function({page},info) {
-  await prepareCamp(page,info,'harbor');
-  const result=await page.evaluate(function(){
-    const s=FB.state,P=FB.householdParties,t=s.stories.harbor_party,b=t.journey.carrier,m=FB.mobile.migration(s,b.realmId),h=FB.mobile.host(s,b.realmId);
-    h.at='harbor_ridge';h.mobileCourt=false;
-    const separate=t.journey.members.every(function(v){return P.journeys.location(s,v.personId)===m.at;});
-    s.armies=s.armies.filter(function(a){return a.id!==h.id;});
-    // Stage only a committed canonical migration checkpoint, independently of the destroyed field host.
-    m.at='harbor_gardens';FB.stories.get('harbor_party').day(s,t);
-    return {separate:separate,active:t.journey.status==='active',reached:t.journey.members.every(function(v){return v.lastPlace===m.at&&FB.characterLocation(s,s.chars[v.personId])===m.at;}),
-      home:t.journey.members.every(function(v){return FB.characterResidence(s,s.chars[v.personId])==='harbor_quay';}),
-      privateHome:s.player.provinceId==='harbor_quay'};
-  });
-  expect(result).toEqual({separate:true,active:true,reached:true,home:true,privateHome:true});
-});
-
-test('stale host acceptance, custody, remote relatives and another carrier reject without spending or moving',async function({page},info) {
-  await prepareCamp(page,info,'harbor',null,false);
-  const result=await page.evaluate(function(){
-    const base=FB.state,P=FB.householdParties,id='harbor_party',actor=base.player.charId,spouse=FB.spousesOf(base,base.chars[actor])[0].id;
-    const requestFailures=[function(s){s.chars[spouse].captive=true;},function(s){s.chars[spouse].householdResidenceId='harbor_ridge';},
-      function(s){s.chars[spouse].travel={currentId:'harbor_quay'};},function(s){s.stories.harbor_participation.status='suspended';}].map(function(change){
-      const s=JSON.parse(JSON.stringify(base)),old=P.review(s,id,'request_camp',actor);change(s);const before=JSON.stringify(s);
-      return !P.commit(s,old)&&!P.review(s,id,'request_camp',actor).allowed&&before===JSON.stringify(s);});
-    P.commit(base,P.review(base,id,'request_camp',actor));
-    const b=base.stories[id].journey.carrier,q=P.review(base,id,'accept_camp',b.leaderId);
-    base.chars[spouse].captive=true;const before=JSON.stringify(base);
-    return requestFailures.concat(!P.commit(base,q)&&!P.review(base,id,'accept_camp',b.leaderId).allowed&&before===JSON.stringify(base));
-  });
-  expect(result).toEqual(Array(5).fill(true));
-});
-
 test('companion capacity is counted across requested bindings and released when that request closes',async function({page},info) {
   const input=JSON.parse(JSON.stringify(camps.harbor));input.storyInstances.harbor_party.journey.capacity=1;
   const extra=JSON.parse(JSON.stringify(input.storyInstances.harbor_party));extra.id='second_party';
@@ -766,31 +759,6 @@ test('companion capacity is counted across requested bindings and released when 
       released:s.stories.harbor_party.journey.status==='interrupted'};
   });
   expect(result).toEqual({first:true,rejected:true,closed:true,released:true});
-});
-
-test('changed command generation, expiry, missing migration and death interrupt once at the real checkpoint',async function({page},info) {
-  await prepareCamp(page,info,'upland');
-  const result=await page.evaluate(function(){
-    const base=FB.state,P=FB.householdParties,id='upland_party',b=base.stories[id].journey.carrier;
-    FB.mobile.migration(base,b.realmId).at='dune_pass';FB.stories.get(id).day(base,base.stories[id]);
-    return ['command','expiry','migration','death','custody'].map(function(kind){
-      const s=JSON.parse(JSON.stringify(base)),t=s.stories[id],binding=JSON.stringify(t.journey.carrier);
-      if(kind==='command'){
-        const issuer=FB.bookmarkActor(s,'dune_authorizer'),deputy=FB.bookmarkActor(s,'dune_deputy');
-        if(!FB.mobile.commit(s,FB.mobile.reviewCommand(s,{realmId:b.realmId,commandId:FB.mobile.row(s,b.realmId).command.id,
-          action:'appoint',candidateId:deputy.id,actor:{kind:'character',id:issuer.id}})))throw new Error('Command replacement failed');
-      }
-      if(kind==='expiry')s.turn=t.journey.carrier.endTurn;
-      if(kind==='migration')s.authority.migrations=s.authority.migrations.filter(function(m){return m.id!==b.migrationId;});
-      if(kind==='death')s.chars[t.actorId].dead=true;
-      if(kind==='custody')s.chars[t.actorId].captive=true;
-      FB.stories.get(id).day(s,t);const once=JSON.stringify(t);FB.stories.get(id).day(s,t);
-      return {interrupted:t.journey.status==='interrupted',once:once===JSON.stringify(t),binding:binding===JSON.stringify(t.journey.carrier),
-        checkpoint:t.journey.members.every(function(m){return m.lastPlace==='dune_pass'&&m.status!=='following';}),
-        noRelocation:s.player.provinceId==='dune_well'};
-    });
-  });
-  expect(result).toEqual(Array(5).fill({interrupted:true,once:true,binding:true,checkpoint:true,noRelocation:true}));
 });
 
 test('care-preserving partial separation leaves excluded relatives at the camp checkpoint and return pays once',async function({page},info) {
@@ -882,6 +850,39 @@ test('camp recovery cancellation preserves real partial arrival and rechecks fun
   expect(result).toEqual({first:true,partial:true,poor:true,custody:true,again:true,rejected:true,noSettle:true});
 });
 
+describeSharedPage('harbor camp parties',sharedParty('harbor',camps.harbor),function () {
+test('camp and field checkpoints stay separate; field destruction does not erase living companions or the camp',async function({page},info) {
+  await prepareCamp(page,info,'harbor');
+  const result=await page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,t=s.stories.harbor_party,b=t.journey.carrier,m=FB.mobile.migration(s,b.realmId),h=FB.mobile.host(s,b.realmId);
+    h.at='harbor_ridge';h.mobileCourt=false;
+    const separate=t.journey.members.every(function(v){return P.journeys.location(s,v.personId)===m.at;});
+    s.armies=s.armies.filter(function(a){return a.id!==h.id;});
+    // Stage only a committed canonical migration checkpoint, independently of the destroyed field host.
+    m.at='harbor_gardens';FB.stories.get('harbor_party').day(s,t);
+    return {separate:separate,active:t.journey.status==='active',reached:t.journey.members.every(function(v){return v.lastPlace===m.at&&FB.characterLocation(s,s.chars[v.personId])===m.at;}),
+      home:t.journey.members.every(function(v){return FB.characterResidence(s,s.chars[v.personId])==='harbor_quay';}),
+      privateHome:s.player.provinceId==='harbor_quay'};
+  });
+  expect(result).toEqual({separate:true,active:true,reached:true,home:true,privateHome:true});
+});
+
+test('stale host acceptance, custody, remote relatives and another carrier reject without spending or moving',async function({page},info) {
+  await prepareCamp(page,info,'harbor',null,false);
+  const result=await page.evaluate(function(){
+    const base=FB.state,P=FB.householdParties,id='harbor_party',actor=base.player.charId,spouse=FB.spousesOf(base,base.chars[actor])[0].id;
+    const requestFailures=[function(s){s.chars[spouse].captive=true;},function(s){s.chars[spouse].householdResidenceId='harbor_ridge';},
+      function(s){s.chars[spouse].travel={currentId:'harbor_quay'};},function(s){s.stories.harbor_participation.status='suspended';}].map(function(change){
+      const s=JSON.parse(JSON.stringify(base)),old=P.review(s,id,'request_camp',actor);change(s);const before=JSON.stringify(s);
+      return !P.commit(s,old)&&!P.review(s,id,'request_camp',actor).allowed&&before===JSON.stringify(s);});
+    P.commit(base,P.review(base,id,'request_camp',actor));
+    const b=base.stories[id].journey.carrier,q=P.review(base,id,'accept_camp',b.leaderId);
+    base.chars[spouse].captive=true;const before=JSON.stringify(base);
+    return requestFailures.concat(!P.commit(base,q)&&!P.review(base,id,'accept_camp',b.leaderId).allowed&&before===JSON.stringify(base));
+  });
+  expect(result).toEqual(Array(5).fill(true));
+});
+
 test('camp review Escape retains focus and leaves named request uncommitted',async function({page},info) {
   await prepareCamp(page,info,'harbor',null,false);
   await page.evaluate(function(){FB.ui.showStorySheet('harbor_party');});
@@ -891,23 +892,6 @@ test('camp review Escape retains focus and leaves named request uncommitted',asy
   await expect(page.locator('#gm-body')).toContainText('separate personal admission');
   await page.keyboard.press('Escape');await expect(button).toBeVisible();
   expect(await page.evaluate(function(){return {version:FB.state.stories.harbor_party.version,key:document.activeElement.getAttribute('data-story-choice')};})).toEqual({version:1,key:key});
-});
-
-
-test('a changed current commander invalidates a pending family acceptance without renewing original terms',async function({page},info) {
-  await prepareCamp(page,info,'upland',null,false);
-  const result=await page.evaluate(function(){
-    const s=FB.state,P=FB.householdParties,id='upland_party',actor=s.player.charId;
-    P.commit(s,P.review(s,id,'request_camp',actor));const t=s.stories[id],b=t.journey.carrier,old=JSON.stringify(b);
-    const quote=P.review(s,id,'accept_camp',b.leaderId),issuer=FB.bookmarkActor(s,'dune_authorizer'),deputy=FB.bookmarkActor(s,'dune_deputy');
-    const changed=FB.mobile.commit(s,FB.mobile.reviewCommand(s,{realmId:b.realmId,commandId:FB.mobile.row(s,b.realmId).command.id,
-      action:'appoint',candidateId:deputy.id,actor:{kind:'character',id:issuer.id}}));
-    const before=JSON.stringify(s),stale=!P.commit(s,quote)&&before===JSON.stringify(s);
-    FB.stories.get(id).day(s,t);
-    return {changed:changed,stale:stale,interrupted:t.journey.status==='interrupted',noAcceptance:b.acceptedTurn===null,
-      original:old===JSON.stringify(b),noNewCommander:!P.review(s,id,'accept_camp',deputy.id).allowed};
-  });
-  expect(result).toEqual({changed:true,stale:true,interrupted:true,noAcceptance:true,original:true,noNewCommander:true});
 });
 
 test('an adult can withdraw and personally rejoin; another person cannot renew that consent or retrieve a remote relative',async function({page},info) {
@@ -927,6 +911,49 @@ test('an adult can withdraw and personally rejoin; another person cannot renew t
   });
   expect(result).toEqual({split:true,impersonation:true,rejoined:true,remote:true,excluded:true,actual:true});
 });
+});
+
+describeSharedPage('upland camp parties',sharedParty('upland',camps.upland),function () {
+test('changed command generation, expiry, missing migration and death interrupt once at the real checkpoint',async function({page},info) {
+  await prepareCamp(page,info,'upland');
+  const result=await page.evaluate(function(){
+    const base=FB.state,P=FB.householdParties,id='upland_party',b=base.stories[id].journey.carrier;
+    FB.mobile.migration(base,b.realmId).at='dune_pass';FB.stories.get(id).day(base,base.stories[id]);
+    return ['command','expiry','migration','death','custody'].map(function(kind){
+      const s=JSON.parse(JSON.stringify(base)),t=s.stories[id],binding=JSON.stringify(t.journey.carrier);
+      if(kind==='command'){
+        const issuer=FB.bookmarkActor(s,'dune_authorizer'),deputy=FB.bookmarkActor(s,'dune_deputy');
+        if(!FB.mobile.commit(s,FB.mobile.reviewCommand(s,{realmId:b.realmId,commandId:FB.mobile.row(s,b.realmId).command.id,
+          action:'appoint',candidateId:deputy.id,actor:{kind:'character',id:issuer.id}})))throw new Error('Command replacement failed');
+      }
+      if(kind==='expiry')s.turn=t.journey.carrier.endTurn;
+      if(kind==='migration')s.authority.migrations=s.authority.migrations.filter(function(m){return m.id!==b.migrationId;});
+      if(kind==='death')s.chars[t.actorId].dead=true;
+      if(kind==='custody')s.chars[t.actorId].captive=true;
+      FB.stories.get(id).day(s,t);const once=JSON.stringify(t);FB.stories.get(id).day(s,t);
+      return {interrupted:t.journey.status==='interrupted',once:once===JSON.stringify(t),binding:binding===JSON.stringify(t.journey.carrier),
+        checkpoint:t.journey.members.every(function(m){return m.lastPlace==='dune_pass'&&m.status!=='following';}),
+        noRelocation:s.player.provinceId==='dune_well'};
+    });
+  });
+  expect(result).toEqual(Array(5).fill({interrupted:true,once:true,binding:true,checkpoint:true,noRelocation:true}));
+});
+
+test('a changed current commander invalidates a pending family acceptance without renewing original terms',async function({page},info) {
+  await prepareCamp(page,info,'upland',null,false);
+  const result=await page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,id='upland_party',actor=s.player.charId;
+    P.commit(s,P.review(s,id,'request_camp',actor));const t=s.stories[id],b=t.journey.carrier,old=JSON.stringify(b);
+    const quote=P.review(s,id,'accept_camp',b.leaderId),issuer=FB.bookmarkActor(s,'dune_authorizer'),deputy=FB.bookmarkActor(s,'dune_deputy');
+    const changed=FB.mobile.commit(s,FB.mobile.reviewCommand(s,{realmId:b.realmId,commandId:FB.mobile.row(s,b.realmId).command.id,
+      action:'appoint',candidateId:deputy.id,actor:{kind:'character',id:issuer.id}}));
+    const before=JSON.stringify(s),stale=!P.commit(s,quote)&&before===JSON.stringify(s);
+    FB.stories.get(id).day(s,t);
+    return {changed:changed,stale:stale,interrupted:t.journey.status==='interrupted',noAcceptance:b.acceptedTurn===null,
+      original:old===JSON.stringify(b),noNewCommander:!P.review(s,id,'accept_camp',deputy.id).allowed};
+  });
+  expect(result).toEqual({changed:true,stale:true,interrupted:true,noAcceptance:true,original:true,noNewCommander:true});
+});
 
 test('separating a dependent reviews the whole actual caregiver group and custody prevents their carriage',async function({page},info) {
   await prepareCamp(page,info,'upland');
@@ -942,6 +969,7 @@ test('separating a dependent reviews the whole actual caregiver group and custod
       noPaidRoad:!P.review(s,id,'camp_return',actor).allowed};
   });
   expect(result).toEqual({care:true,interrupted:true,noInventedMotion:true,noPaidRoad:true});
+});
 });
 
 importedPartyTest('changed same-name family terms reject old saves',async function({page},info) {

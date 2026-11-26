@@ -4,6 +4,8 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
+const {useReviewStartRules} = require('../support/game/released-starts');
+const {describeSharedPage,activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const runtimeInputs=['js/events.js','js/schema.js','js/mods.js','js/systems.js',
   'js/governments.js','js/authority.js','js/federates.js','js/mobile_confederations.js',
@@ -102,15 +104,35 @@ test('every event pack and registered semantic fixture has a valid declaration',
   expect(result.events).toBeGreaterThan(0);
 });
 
-// Each semantic row owns a fresh page and cloned state. Only these independent
-// cases are parallel groups, so sharding can divide a growing fixture catalogue.
+/* Rows of one fixture file and bookmark, in fixture order, split into balanced
+   groups of at most twelve so a shared page stays far below the planning budget. */
+function eligibilityGroups(rows) {
+  const bookmarks = [];
+  rows.forEach(function (row) { if (bookmarks.indexOf(row.bookmark) < 0) bookmarks.push(row.bookmark); });
+  return bookmarks.reduce(function (out,bookmark) {
+    const own = rows.filter(function (row) {return row.bookmark === bookmark;});
+    const parts = Math.ceil(own.length/12), size = Math.ceil(own.length/parts);
+    for (let part = 0; part < parts; part++) out.push({bookmark:bookmark,
+      title:bookmark + (parts > 1 ? ' part ' + (part+1) : ''),rows:own.slice(part*size,(part+1)*size)});
+    return out;
+  },[]);
+}
+
+// Each semantic row begins its own start on a page booted once per group with
+// that bookmark's world active, and checks cloned state. The groups are
+// parallel, so sharding can divide a growing fixture catalogue.
 test.describe('independent event eligibility',function () {
 test.describe.configure({mode:'parallel'});
 for (const entry of fixtureFiles) {
   const file=entry.file;
   const fixture = require(path.join(directory,file));
-  for (const row of fixture.rows) test(file + ': ' + row.eventId + (row.optionIndex === undefined ? '' : ' option ' + row.optionIndex),async function ({page},info) {
-    await startHistoricalGame(page,info,{bookmark:row.bookmark,code:row.code});
+  for (const group of eligibilityGroups(fixture.rows)) describeSharedPage(file + ' ' + group.title,{boot:async function (page,info) {
+    await useReviewStartRules(page);
+    await openGame(page,info);
+    await activateBookmark(page,group.bookmark);
+  }},function () {
+  for (const row of group.rows) test(file + ': ' + row.eventId + (row.optionIndex === undefined ? '' : ' option ' + row.optionIndex),async function ({page},info) {
+    await startHistoricalGame(page,info,{bookmark:row.bookmark,code:row.code,prepared:true});
     const result = await page.evaluate(function (row) {
       const original = JSON.stringify(FB.state), rng = FB.getRngState(), uid = FB.getUidCounter();
       return row.cases.map(function (example) {
@@ -134,6 +156,7 @@ for (const entry of fixtureFiles) {
       });
     },row);
     for (const example of result) {expect(example.actual).toBe(example.expected);expect(example.pure).toBe(true);}
+  });
   });
 }
 });

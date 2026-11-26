@@ -6,6 +6,7 @@ const {test,expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {
   harbor:require('../fixtures/authoring/adopted-public-treasury-harbor.json'),
@@ -26,12 +27,15 @@ dependsOnRuntime(__filename,['js/bookmark_composition.js','js/util.js','index.ht
    session flag keeps a later reload from storing it again. */
 async function importWorld(page,info,prefix,modified,modsScreen) {
   if(!modsScreen) {
+    // A shared page booted this unmodified example once (sharedWorld below).
+    if(!isSharedPage(page)) {
     await page.addInitScript(function(text){
       if(sessionStorage.getItem('publicTreasuryStored'))return;
       sessionStorage.setItem('publicTreasuryStored','1');
       localStorage.setItem('fb_mods',JSON.stringify([text]));
     },modified ? JSON.stringify(modified) : fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/adopted-public-treasury-'+prefix+'.json'),'utf8'));
     await openGame(page,info);
+    }
     expect(await page.evaluate(function(prefix){return [FB.mods.count(),!!FBDATA.bookmarks[prefix+'_world']];},prefix)).toEqual([1,true]);
     return;
   }
@@ -86,6 +90,27 @@ async function begin(page,prefix,entry,revision) {
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.evaluate(function(){FB.game.setPaused(true);FB.game.uiPrefs.hideTips=true;});
+}
+
+/* Cases that restore or migrate saves, import through the Mods screen or boot
+   a modified example keep a fresh page. Runs of the others share one page per
+   example, booted with its world active at the begin revision; the reset also
+   removes the adoption probes begin installs. */
+function sharedWorld(prefix) {
+  return {boot:async function(page,info){
+    await importWorld(page,info,prefix);
+    await page.evaluate(function(prefix){
+      FBDATA.bookmarks[prefix+'_world'].revision='local_policy';
+      window.publicBootOriginals={adopt:FB.adoptStartingRealm,initialize:FB.treasuryInitialize};
+    },prefix);
+    await activateBookmark(page,prefix+'_world','local_policy');
+  },reset:async function(page){
+    await page.evaluate(function(){
+      FB.adoptStartingRealm=publicBootOriginals.adopt;
+      FB.treasuryInitialize=publicBootOriginals.initialize;
+      delete window.publicBoot;
+    });
+  }};
 }
 
 for(const prefix of ['harbor','dune']) {
@@ -183,6 +208,7 @@ for(const prefix of ['harbor','dune']) {
     expect(result).toEqual({public:true,absent:true,unchanged:true,valid:true});
   });
 
+  describeSharedPage(prefix+' public and private purses',sharedWorld(prefix),function(){
   test(prefix+' public grants private gifts and actual formation conserve distinct owners exactly once',async function({page},info){
     await importWorld(page,info,prefix);await begin(page,prefix,'code');
     const result=await page.evaluate(function(prefix){
@@ -275,6 +301,7 @@ for(const prefix of ['harbor','dune']) {
     },prefix);
     expect(result).toEqual({paid:true,again:false,revalued:true,once:true,retired:true,noRestock:true,private:true,valid:true});
   });
+  });
 
   test(prefix+' pending formed terminal and succession saves retain depleted public and private accounts',async function({page},info){
     await importWorld(page,info,prefix);await begin(page,prefix,'code');
@@ -304,6 +331,7 @@ for(const prefix of ['harbor','dune']) {
     expect(result).toEqual({pending:true,paid:true,authorized:true,formed:true,saved:true,terminal:true,succession:true});
   });
 
+  describeSharedPage(prefix+' construction, provisions and markets',sharedWorld(prefix),function(){
   test(prefix+' real public construction and household forecasts use their actual funds',async function({page},info){
     await importWorld(page,info,prefix);await begin(page,prefix,'code');
     const result=await page.evaluate(function(prefix){
@@ -363,6 +391,7 @@ for(const prefix of ['harbor','dune']) {
         unchanged:before===JSON.stringify([s.realms,s.player.gold,s.market,s.population,s.stories,s.authority])};
     },prefix);
     expect(result).toEqual({funded:true,authorized:true,ready:true,removed:true,formed:false,denied:true,unchanged:true});
+  });
   });
 }
 

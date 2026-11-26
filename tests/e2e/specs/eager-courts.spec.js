@@ -26,14 +26,27 @@ const nonCourtWorldFixture =
   require('../fixtures/pre-eager-courts-world.json');
 const { openGame } = require('../support/game/navigation');
 const { START_CODE, startDeterministicGame } = require('../support/game/start');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
+
+/* Cases that restore or load saves keep a fresh page. Runs of the others share
+   one page booted with the baseline 867 world active, reset before each case;
+   every case still starts its own campaign below. */
+function sharedCourts(title, body) {
+  describeSharedPage(title, { boot:async function (page, testInfo) {
+    await openGame(page, testInfo);
+    await page.evaluate(function () { FBDATA.bookmarks['867'].revision = 'baseline'; });
+    await activateBookmark(page, '867', 'baseline');
+  } }, body);
+}
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   // Keep the retained court corpus and territorial breakaway fixtures intact.
   await page.evaluate(function () { FBDATA.bookmarks['867'].revision = 'baseline'; });
   await startDeterministicGame(page);
 });
 
+sharedCourts('opening courts, succession and court identity', function () {
 test('every living realm opens on a full ruler and every eligible court has a consort',
   async function ({ page }) {
     const report = await page.evaluate(function () {
@@ -466,6 +479,7 @@ test('succession skips an heir whose derived character id is occupied',
       livingSuccessor:true
     });
   });
+});
 
 test('realm court member ids and sheets ignore intervening uid activity',
   async function ({ page }) {
@@ -522,6 +536,7 @@ test('realm court member ids and sheets ignore intervening uid activity',
     })).toEqual({ skipped:false, same:true, allDerived:true });
   });
 
+sharedCourts('compaction, retained members and payload', function () {
 test('an untouched court death compacts to its member entry, a tied one does not',
   async function ({ page }) {
     expect(await page.evaluate(function () {
@@ -859,6 +874,7 @@ test('the serialized payload carries no derived court data',
       derivedInSuccession:[]
     });
   });
+});
 
 test('a save without courts loads, grows them, and writes version 4',
   async function ({ page }) {
@@ -953,6 +969,7 @@ test('compaction never runs retroactively over a loaded save',
     });
   });
 
+sharedCourts('annual compaction, determinism and breakaways', function () {
 test('aged courts compact dead records at a single annual boundary',
   async function ({ page }) {
     expect(await page.evaluate(function () {
@@ -1134,6 +1151,7 @@ test(truce ? 'an annual breakaway cannot restart war during a crown truce' :
     }
   });
 }
+});
 
 test('a save-load-forward run matches an uninterrupted one',
   async function ({ page }) {
@@ -1215,6 +1233,7 @@ test('a save-load-forward run matches an uninterrupted one',
     expect(result.same, JSON.stringify(result.diagnostic)).toBe(true);
   });
 
+sharedCourts('court sheets, hierarchy and repair', function () {
 test('a realm link opens the ruler character sheet with its court strip', async function ({ page }) {
   const opened = await page.evaluate(function () {
     let rid = null;
@@ -1877,4 +1896,5 @@ test.describe('with the start code held fixed', function () {
         return { seed:FB.state.seed, name:me.name };
       }, START_CODE)).toEqual({ seed:START_CODE, name:'Ada' });
     });
+});
 });
