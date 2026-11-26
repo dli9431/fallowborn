@@ -245,7 +245,14 @@ for (const revision of ['baseline','governments_v2','inhabited_v2']) test(revisi
     await startRetained(page,info,revision);
     const oldSave = await page.evaluate(function () { return FB.save.serialize(); });
     const oldFacts = await facts(page);
-    await start800(page,info,'gao_district');
+    // The expanded campaign starts from the same prepared title through the
+    // ordinary return to the title, instead of reloading and preparing the
+    // whole catalogue a second time. Its review start rules match a fresh
+    // historical start.
+    await page.evaluate(function () { FB.ui.closeModal(); FB.game.toTitle(); FBDATA.reviewOpenStarts = true; });
+    await expect(page.locator('#title:not(.hidden)')).toBeVisible();
+    await startHistoricalGame(page,info,{bookmark:'800',prepared:true,
+      code:'INHABITED800-800-farmer-gao_district-m-Review-established'});
     const expandedSave = await page.evaluate(function () { return FB.save.serialize(); });
     const expandedFacts = await facts(page);
     // Another date's world is active before either restore, without a third campaign.

@@ -8,7 +8,6 @@ const {startBaseline476,saveBudget} = require('../support/game/476-wider');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {advanceBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {injectBrowserHarness} = require('../support/game/browser-harness');
-const {expectModAdmission} = require('../support/game/mod-admission');
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_476_wider.js','data/bookmark_476_wider_identities.js',
   'data/geography_expansion.js','data/geographies.js','data/bookmark_476.js',
@@ -153,7 +152,9 @@ test('bounded oases keep scenery, dry routes and the original geography',async f
 
 test('an imported fictional geography can expand without replacing its baseline',async function ({page},testInfo) {
   await openGame(page,testInfo);
-  const mod = await page.evaluate(function () {
+  // The derived world stays in the page: admission and the ordinary store read
+  // it there instead of copying it to Node and back twice.
+  await page.evaluate(function () {
     const base = JSON.parse(JSON.stringify(FB.bookmark('867','baseline')));
     base.id = 'e2e_revision'; base.hidden = false; base.name = 'Fictional river survey';
     // This fictional campaign does not inherit bookmark-scoped historical faiths.
@@ -182,10 +183,11 @@ test('an imported fictional geography can expand without replacing its baseline'
       landRoutes:[['tripoli','e2e_oasis',4]]}},bookmarks:{e2e_revision:base},startScenarios:[start],
       storyInstances:{e2e_survey_track:track}};
     base.revisions.survey.provinces = base.provinces.concat([county]);
-    return mod;
+    window.surveyMod = mod;
   });
-  await expectModAdmission(page,mod);
-  expect(await page.evaluate(function (mod) {return FB.mods.store(JSON.stringify(mod));},mod)).not.toBe(false);
+  expect(await page.evaluate(function () { return FB.mods.validate(window.surveyMod); }),
+    'Revision survey fixture').toEqual([]);
+  expect(await page.evaluate(function () {return FB.mods.store(JSON.stringify(window.surveyMod));})).not.toBe(false);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady &&
     !!FBDATA.bookmarks.e2e_revision; });

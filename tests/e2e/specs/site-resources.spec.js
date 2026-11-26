@@ -1,10 +1,12 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+const {installPageGuards} = require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark,beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/site-resources-river.json'),upland:require('../fixtures/authoring/site-resources-upland.json')};
 dependsOnRuntime(__filename,['index.html','data/site_resources.js','data/technology.js','data/political_institutions.js',
@@ -30,6 +32,17 @@ async function importExample(page,info,name,ruler) {
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.evaluate(function () { FB.game.setPaused(true); });
+}
+
+// Boots the exact fixture JSON the Mods dialog stores, so the page prepares only
+// the modded catalogue once. The dialog import keeps its own cases.
+async function bootStored(page,info,name) {
+  await page.addInitScript(function (source) {
+    if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+  },fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/site-resources-' + name + '.json'),'utf8'));
+  await openGame(page,info);
+  expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+  await beginBookmarkFromTitle(page,'resource_' + name,'resource_' + name + '_household');
 }
 
 for (const name of ['river','upland']) {
@@ -207,9 +220,8 @@ test('matching restore retains used capacity, empty stores, unique claims and co
   expect(result).toEqual({rejected:Array(13).fill(true),pure:true,same:true,repeat:false,legacy:true,empty:0});
 });
 
-test('replayed same-seed campaigns retain exact resource, population and identity facts without a new opening grant',async function ({page},info) {
-  await importExample(page,info,'upland');
-  async function facts() {
+test('replayed same-seed campaigns retain exact resource, population and identity facts without a new opening grant',async function ({page,browser},info) {
+  async function facts(page) {
     return page.evaluate(function () {
       const s=FB.state,R=FB.siteResources,request={operation:'reserve',sourceId:'upland_roof',actor:{kind:'realm',id:'resource_hill_court'},amount:2};
       const fresh=s.siteResources===undefined,id=R.commit(s,R.quote(s,request));
@@ -217,9 +229,16 @@ test('replayed same-seed campaigns retain exact resource, population and identit
       return {fresh:fresh,facts:JSON.stringify([s.siteResources,s.population,s.chars,s.buildings,s.owner,s.holder]),rng:FB.getRngState()>>>0,uid:FB.getUidCounter()};
     });
   }
-  const first=await facts();
-  await beginBookmark(page,info,'resource_upland','resource_upland_household');
-  expect(await facts()).toEqual(first);
+  // The replay boots in its own context beside the first campaign, so it
+  // prepares at the same time instead of after another reload.
+  const context=await browser.newContext({viewport:{width:1280,height:800},locale:'en-US',timezoneId:'UTC'});
+  try {
+    const second=await context.newPage(),guard=installPageGuards(second);
+    await Promise.all([bootStored(page,info,'upland'),bootStored(second,info,'upland')]);
+    const first=await facts(page);
+    expect(await facts(second)).toEqual(first);
+    expect(guard.faults,'second context faults').toEqual([]);
+  } finally { await context.close(); }
 });
 
 test('whole revisions retain absent and empty resource declarations and released worlds stay unopted',async function ({page},info) {

@@ -2,6 +2,7 @@
 const {installRestoreFacts}=require('../support/game/restore-facts');
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -19,15 +20,27 @@ dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/mob
   'js/authority.js','js/treasury.js','js/armies.js','js/population.js','js/settlement.js','js/market.js','js/starts.js','js/util.js',
   'js/save.js','js/save_v4.js','js/ui_mobile.js','js/ui_misc.js','js/main.js','js/wars.js','js/model.js','js/station.js','js/technology.js']);
 
-async function start(page,info,prefix,input) {
-  await openGame(page,info);
-  await page.evaluate(function () {FB.ui.showMods();});
-  await expectModAdmission(page,input || examples[prefix]);
-  await page.locator('#modfile').setInputFiles(input ? {
-    name:'expedition-example.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))
-  } : path.resolve(__dirname,'../fixtures/authoring/mobile-expedition-'+prefix+'.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+// Stored boots the exact fixture JSON the Mods dialog stores, so the page
+// prepares only the modded catalogue once. The other cases keep the dialog
+// import and its unmodded admission for both examples.
+async function start(page,info,prefix,input,stored) {
+  const fixture=path.resolve(__dirname,'../fixtures/authoring/mobile-expedition-'+prefix+'.json');
+  if (stored) {
+    await page.addInitScript(function (source) {
+      if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+    },fs.readFileSync(fixture,'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function () {return FB.mods.count();})).toBe(1);
+  } else {
+    await openGame(page,info);
+    await page.evaluate(function () {FB.ui.showMods();});
+    await expectModAdmission(page,input || examples[prefix]);
+    await page.locator('#modfile').setInputFiles(input ? {
+      name:'expedition-example.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(input))
+    } : fixture);
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  }
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await installRestoreFacts(page);
@@ -488,7 +501,7 @@ test('sponsorless commands still suspend on the death of their distinct actual s
 });
 
 test('changing only the sponsorship policy rejects the prior exact-content save before adoption',async function ({page},info) {
-  await start(page,info,'dune');
+  await start(page,info,'dune',null,true);
   const result=await page.evaluate(function (input) {
     const saved=FB.save.serialize(),mobile=input.bookmarks.dune_world.realms.find(function (d) {return d.mobile;}).mobile;
     delete mobile.sponsorship;mobile.patronRealmId='dune_oasis';

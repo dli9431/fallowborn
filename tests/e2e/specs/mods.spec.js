@@ -391,20 +391,30 @@ test('save fingerprints stamp and refuse a life from another mod set',
     });
   });
 
-test('bundled mod toggles persist and apply across reloads',
+// Each toggle direction is its own journey from a fresh context, so neither case
+// prepares the catalogue three times. The disabling case boots with the bundled
+// mod already enabled in storage, the state the enabling toggle persists.
+async function bootBundled(page, testInfo, enabled) {
+  await page.addInitScript(function (enabled) {
+    window.FBMODS = [{
+      id:'e2e-bundled',
+      name:'E2E bundled mod',
+      desc:'Synthetic bundled-mod contract.',
+      data:{ balance:{ startAge:27 } }
+    }];
+    if (enabled && localStorage.getItem('fb_mods_bundled') === null) {
+      localStorage.setItem('fb_mods_bundled', JSON.stringify(['e2e-bundled']));
+    }
+  }, enabled);
+  await openGame(page, testInfo);
+}
+
+test('a bundled mod toggle enables, persists and applies across a reload',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
       'Origin-backed localStorage is required for the reload contract.');
 
-    await page.addInitScript(function () {
-      window.FBMODS = [{
-        id:'e2e-bundled',
-        name:'E2E bundled mod',
-        desc:'Synthetic bundled-mod contract.',
-        data:{ balance:{ startAge:27 } }
-      }];
-    });
-    await openGame(page, testInfo);
+    await bootBundled(page, testInfo, false);
     expect(await page.evaluate(function () {
       return {
         enabled:FB.mods.isEnabled('e2e-bundled'),
@@ -420,6 +430,24 @@ test('bundled mod toggles persist and apply across reloads',
     ]);
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
     await prepareGameContent(page);
+    expect(await page.evaluate(function () {
+      return {
+        enabled:FB.mods.isEnabled('e2e-bundled'),
+        marker:FBDATA.balance.startAge,
+        count:FB.mods.count()
+      };
+    })).toEqual({ enabled:true, marker:27, count:1 });
+    expect(await page.evaluate(function () {
+      return localStorage.getItem('fb_mods_bundled');
+    })).toBe(JSON.stringify(['e2e-bundled']));
+  });
+
+test('a persisted bundled mod toggle disables and stops applying across a reload',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'Origin-backed localStorage is required for the reload contract.');
+
+    await bootBundled(page, testInfo, true);
     expect(await page.evaluate(function () {
       return {
         enabled:FB.mods.isEnabled('e2e-bundled'),

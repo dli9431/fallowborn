@@ -1,7 +1,9 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+const {installPageGuards}=require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
@@ -43,6 +45,16 @@ async function beginHome(page) {
 async function start(page,info,modified) {
   await importWorld(page,info,'harbor',modified);
   await beginBookmarkFromTitle(page,'harbor_world','harbor_household');
+}
+// Boots the exact harbor JSON the Mods dialog stores, so the page prepares only
+// the modded catalogue once. The dialog import and its unmodded admission keep
+// their own cases.
+async function bootStoredHarbor(page,info) {
+  await page.addInitScript(function (source) {
+    if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+  },fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/landed-expedition-harbor.json'),'utf8'));
+  await openGame(page,info);
+  await page.waitForFunction(function () {return window.FB && FB.game && FB.game.bootReady && FB.mods.count()===1 && FBDATA.bookmarks.harbor_world;});
 }
 
 test('a landed principal retains one home crown, family, public command and private station',async function ({page},info) {
@@ -283,25 +295,25 @@ test('saved links are required and strictly pinned while restore preserves unrec
   expect(result).toEqual({compact:true,rejected:Array(15).fill(true),exact:true,suspended:true,notReconciled:true,valid:true,rng:true,uid:true});
 });
 
-test('the landed home start replays exactly and presents its finite separate command in the shared sheet',async function ({page},info) {
-  await importWorld(page,info,'harbor');
-  const uiPreferences=await page.evaluate(function () {return localStorage.getItem('fb_ui');});
-  await beginHome(page);
-  async function facts() {return page.evaluate(function () {
+test('the landed home start replays exactly and presents its finite separate command in the shared sheet',async function ({page,browser},info) {
+  async function facts(page) {return page.evaluate(function () {
     const s=FB.state;return JSON.stringify([s.chars,s.player,s.owner,s.holder,s.bookmarkSetup,s.authority,s.armies,s.stories,
       FB.getRngState()>>>0,FB.getUidCounter()]);
   });}
-  const first=await facts();
-  await page.evaluate(function () {FB.ui.showMobileConfederation('harbor_following');});
-  await expect(page.locator('#genmodal')).toContainText('Home office');
-  await expect(page.locator('#genmodal')).toContainText('90 days remaining');
-  await expect(page.locator('#genmodal')).toContainText('Public treasury');
-  await page.evaluate(function (preferences) {
-    FB.ui.closeModal();
-    if (preferences===null) localStorage.removeItem('fb_ui');
-    else localStorage.setItem('fb_ui',preferences);
-  },uiPreferences);
-  await page.reload({waitUntil:'domcontentloaded'});
-  await prepareGameContent(page);
-  await beginHome(page);expect(await facts()).toBe(first);
+  // The replay boots the same stored JSON in its own fresh context beside the
+  // first start, so it prepares at the same time instead of after a reload, and
+  // the shared sheet cannot change what the replay boots with.
+  const context=await browser.newContext({viewport:{width:1280,height:800},locale:'en-US',timezoneId:'UTC'});
+  try {
+    const replay=await context.newPage(),guard=installPageGuards(replay);
+    await Promise.all([bootStoredHarbor(page,info),bootStoredHarbor(replay,info)]);
+    await Promise.all([beginHome(page),beginHome(replay)]);
+    const first=await facts(page);
+    await page.evaluate(function () {FB.ui.showMobileConfederation('harbor_following');});
+    await expect(page.locator('#genmodal')).toContainText('Home office');
+    await expect(page.locator('#genmodal')).toContainText('90 days remaining');
+    await expect(page.locator('#genmodal')).toContainText('Public treasury');
+    expect(await facts(replay)).toBe(first);
+    expect(guard.faults,'replay context faults').toEqual([]);
+  } finally { await context.close(); }
 });

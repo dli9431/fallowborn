@@ -113,7 +113,9 @@ test('complete court batch i replacement imports and retains generated families 
   await openGame(page,info);
   await prepareGameContent(page);
   await loadCourts(page);
-  const payload = await page.evaluate(function () {
+  // The composition stays in the page, which stores it without copying the
+  // whole 634 world to Node and back.
+  await page.evaluate(function () {
     const rows = FBDATA.bookmarkRevisionContent_634_courts_i.realms;
     const raw = JSON.parse(JSON.stringify(FBDATA.bookmarks['634']));
     const current = FB.bookmark('634');
@@ -121,15 +123,16 @@ test('complete court batch i replacement imports and retains generated families 
     raw.revisions[raw.revision].realms = current.realms.map(function (r) {
       return rows.find(function (row) { return row.id === r.id; }) || r;
     });
-    return JSON.stringify({name:'634 court composition review',bookmarks:{'634':raw}});
+    window.courtPayload = JSON.stringify({name:'634 court composition review',bookmarks:{'634':raw}});
   });
   await Promise.all([
     page.waitForNavigation({waitUntil:'domcontentloaded'}),
-    page.evaluate(function (payload) {
+    page.evaluate(function () {
+      const payload = window.courtPayload;
       if (FB.mods.store(payload) === false) throw new Error('Complete court composition rejected');
       if (JSON.parse(localStorage.getItem('fb_mods') || '[]').indexOf(payload) < 0)
         throw new Error('Complete court composition was not stored');
-    },payload)
+    })
   ]);
   await beginBookmarkFromTitle(page,'634','farmer_634');
   function courtFacts(ids) {

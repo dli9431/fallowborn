@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
@@ -19,20 +20,37 @@ dependsOnRuntime(__filename,[
   'js/ui_misc.js','js/ui_modals.js'
 ]);
 
+function fixturePath(kind) {
+  return path.resolve(__dirname,'../fixtures/opening-minority-stewardship/'+(kind==='charter' ? 'young-charter' : 'river-minority')+'.json');
+}
+
+// Boots the exact fixture JSON the Mods dialog stores, so the page prepares only
+// the modded catalogue once. The dialog import and its unmodded admission keep
+// the other cases.
+async function bootStored(page,info,kind) {
+  await page.addInitScript(function (source) {
+    if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+  },fs.readFileSync(fixturePath(kind),'utf8'));
+  await openGame(page,info);
+  expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+}
+
 async function start(page,info,kind,options) {
   options=options || {};
-  await openGame(page,info);
   const mod=JSON.parse(JSON.stringify(kind==='charter' ? charter : river));
   const world=Object.values(mod.bookmarks)[0], realm=world.realms[0], profile=Object.values(mod.aristocraticProfiles)[0];
   if (options.adult) realm.ruler.born=world.date.year-30;
   if (options.omit) delete profile.openingStewardActorId;
-  expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },mod)).toEqual([]);
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(options.adult || options.omit ?
-    {name:'opening-control.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))} :
-    path.resolve(__dirname,'../fixtures/opening-minority-stewardship/'+(kind==='charter' ? 'young-charter' : 'river-minority')+'.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+  if (options.stored) await bootStored(page,info,kind);
+  else {
+    await openGame(page,info);
+    expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },mod)).toEqual([]);
+    await page.evaluate(function () { FB.ui.showMods(); });
+    await page.locator('#modfile').setInputFiles(options.adult || options.omit ?
+      {name:'opening-control.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))} : fixturePath(kind));
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  }
   if (options.player) {
     const sid=realm.id+'_ruler';
     await page.evaluate(function (sid) {
@@ -385,7 +403,7 @@ test('detached regency validation rejects missing or forged bindings and matchin
 });
 
 test('a changed imported stewardship policy keeps exact incompatible-save fingerprints',async function ({page},info) {
-  await start(page,info,'river');
+  await start(page,info,'river',{stored:true});
   const saved=await page.evaluate(function () { return FB.save.serialize(); });
   const mod=JSON.parse(JSON.stringify(river));
   mod.aristocraticProfiles.river_stewardship.openingStewardActorId='cedar_principal';

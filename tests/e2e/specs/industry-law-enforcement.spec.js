@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
 const {openGame, prepareGameContent} = require('../support/game/navigation');
@@ -11,7 +12,16 @@ dependsOnRuntime(__filename, ['data/industry_laws.js','data/technology.js','data
   'js/treasury.js','js/actions.js','js/authority.js','js/world.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js']);
 
 async function start(page, info, mod) {
-  if (mod) {
+  if (mod === 'stored') {
+    // The exact JSON the Mods dialog stores, booted once. The dialog import and
+    // its unmodded admission keep the other imported cases.
+    await page.addInitScript(function (source) {
+      if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods', JSON.stringify([source]));
+    }, fs.readFileSync(path.resolve(__dirname, '../fixtures/authoring/industry-law-enforcement.json'), 'utf8'));
+    await openGame(page, info);
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+    await beginBookmarkFromTitle(page, '1204');
+  } else if (mod) {
     await openGame(page, info); await prepareGameContent(page);
     expect(await page.evaluate(function (data) { return FB.mods.validate(data); }, imported)).toEqual([]);
     await page.evaluate(function () { FB.ui.showMods(); });
@@ -164,7 +174,7 @@ test('grace, resident exemption, payment and paused or unstaffed businesses crea
 });
 
 test('ordinary imported remedies vary exemption, refusal, repeal and fines with pure atomic validation', async function ({page}, info) {
-  await start(page,info,true);
+  await start(page,info,'stored');
   const r = await page.evaluate(function (mod) {
     const s = FB.state, L = FB.industryLaws, e = remedyBusiness(), law = remedyEnact('estuary_stall_due');
     const data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();

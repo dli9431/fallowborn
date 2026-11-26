@@ -1,6 +1,7 @@
 'use strict';
 const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
@@ -17,15 +18,27 @@ dependsOnRuntime(__filename,[
   'js/technology.js','js/population.js','js/lordships.js','js/treasury.js','js/politics.js',
   'js/home_authority.js','js/ui_misc.js','js/ui_modals.js','js/main.js']);
 
-async function start(page,info,label,npc) {
-  await openGame(page,info);
-  // A rejected import neither reloads nor shows its title-screen toast, so
-  // name the requirement failure before waiting for the reload.
-  expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },examples[label])).toEqual([]);
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/building-profiles-' + label + '.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+// Stored boots the exact JSON the Mods dialog stores, so the page prepares only
+// the modded catalogue once. The other cases keep the dialog import and its
+// unmodded admission for both examples.
+async function start(page,info,label,npc,stored) {
+  const fixture = path.resolve(__dirname,'../fixtures/authoring/building-profiles-' + label + '.json');
+  if (stored) {
+    await page.addInitScript(function (source) {
+      if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+    },fs.readFileSync(fixture,'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+  } else {
+    await openGame(page,info);
+    // A rejected import neither reloads nor shows its title-screen toast, so
+    // name the requirement failure before waiting for the reload.
+    expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },examples[label])).toEqual([]);
+    await page.evaluate(function () { FB.ui.showMods(); });
+    await page.locator('#modfile').setInputFiles(fixture);
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  }
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildingProfiles && FBDATA.buildingProfiles[Object.keys(FBDATA.buildingProfiles)[0]]; });
   const world = label === 'river' ? 'inventory_estuary' : 'resource_upland';
   await beginBookmarkFromTitle(page,world,world + '_household');
@@ -56,7 +69,7 @@ async function start(page,info,label,npc) {
 }
 
 for (const label of ['river','hill']) test(label + ' ordinary import resolves all references and pure queries retain defaults',async function ({page},info) {
-  await start(page,info,label);
+  await start(page,info,label,false,true);
   const r = await page.evaluate(function () {
     const s=FB.state,P=FB.buildingProfiles,base=FBDATA.buildings.profile_work,before=JSON.stringify([s,FBDATA]);
     const rng=FB.getRngState(),uid=FB.getUidCounter(),faults=P.catalogFaults(FBDATA);

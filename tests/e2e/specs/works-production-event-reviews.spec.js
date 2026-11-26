@@ -1,4 +1,5 @@
 'use strict';
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
@@ -17,15 +18,26 @@ dependsOnRuntime(__filename,['data/events_works_technology.js','data/production.
   'js/politics.js','js/authority.js','js/home_authority.js','js/settlement.js','js/building_institutions.js','js/logistics.js',
   'js/main.js','js/starts.js','js/model.js','js/util.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js','css/style.css']);
 
+// A stored boot uses the exact fixture JSON the Mods dialog stores, so the page
+// prepares only the modded catalogue once. The other cases keep the dialog.
 async function boot(page,info,kind,options) {
-  await openGame(page,info);
-  await page.evaluate(function () {FB.ui.showMods();});
-  if (options && options.public) {
-    const m=JSON.parse(JSON.stringify(examples[kind]));m.bookmarks['works_reviews_'+kind].realms[0].publicTreasury={schema:1};
-    await page.locator('#modfile').setInputFiles({name:'works-production-event-reviews-public.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(m))});
-  } else await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/works-production-event-reviews-'+kind+'.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+  const fixture=path.resolve(__dirname,'../fixtures/authoring/works-production-event-reviews-'+kind+'.json');
+  if (options && options.stored) {
+    await page.addInitScript(function (source) {
+      if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+    },fs.readFileSync(fixture,'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function () {return FB.mods.count();})).toBe(1);
+  } else {
+    await openGame(page,info);
+    await page.evaluate(function () {FB.ui.showMods();});
+    if (options && options.public) {
+      const m=JSON.parse(JSON.stringify(examples[kind]));m.bookmarks['works_reviews_'+kind].realms[0].publicTreasury={schema:1};
+      await page.locator('#modfile').setInputFiles({name:'works-production-event-reviews-public.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(m))});
+    } else await page.locator('#modfile').setInputFiles(fixture);
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  }
   const full=page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();
@@ -89,7 +101,7 @@ async function paidWork(page,siteId,recipeId,finish) {
 
 for (const kind of ['shore','river']) {
   test(kind+' ordinary JSON rejects malformed typed reviews atomically and retains native declarations',async function ({page},info) {
-    await boot(page,info,kind);
+    await boot(page,info,kind,{stored:true});
     const result=await page.evaluate(function (mod) {
       const s=FB.state,before=JSON.stringify(s),data=JSON.stringify(FBDATA),sig=FB.mods.sig(),rng=FB.getRngState(),uid=FB.getUidCounter();
       const valid=FB.mods.validate(mod).length===0,rejected=[];

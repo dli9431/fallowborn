@@ -322,6 +322,30 @@ test('real JSON policies retain independent authority, duration, exact definitio
     // existing steward; no defender assent or age veto is manufactured.
     const ready=FB.governments.publicAuthorityReadiness(s,'sasanian_634');
     FT.tick(s,id); const r=s.stories[id],w=FB.ordinaryWarById(s,r.warId);
+    return {waiting:waiting,ready:ready.kind,phase:r.phase,days:r.deadline-r.startedTurn,actor:w.attacker,defender:w.defender,
+      other:s.stories.western_counterfront.phase};
+  })).toEqual({waiting:true,ready:'stewardship',phase:'started',days:2,actor:'sasanian_634',defender:'byzantium_634',other:'pending'});
+  await page.evaluate(function () { FB.state.player.gold-=9; });
+  await roundTrip(page);
+  expect(await page.evaluate(function () {
+    const text=FB.save.serialize();
+    const d=JSON.parse(JSON.stringify(FBDATA.storyInstances.eastern_counterfront)); d.durationDays++;
+    FB.mods.apply({storyInstances:{eastern_counterfront:d}});
+    const state=FB.state,facts=JSON.stringify([state,FB.getRngState(),FB.getUidCounter(),localStorage]);
+    let rejected=false; try { FB.save.restore(JSON.parse(text)); } catch (_) { rejected=true; }
+    return rejected && state===FB.state && facts===JSON.stringify([FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]);
+  })).toBe(true);
+});
+
+// The atomic rejections are their own journey from the same import and started
+// frontier, so neither case carries the other's work after two preparations.
+test('real JSON frontier declarations reject malformed admission, commission, dates and references atomically',async function ({page},info) {
+  await start(page,info,'farmer_634',true);
+  expect(await page.evaluate(function () {
+    const s=FB.state,id='eastern_counterfront'; FT.allow(s,id);
+    const steward=FB.aristocracy.state(s,'sasanian_634').regency.stewardId;
+    s.chars[steward].imprisoned=true; FT.tick(s,id);
+    delete s.chars[steward].imprisoned; FT.tick(s,id);
     const rejects=[],original=JSON.stringify([FBDATA,FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]);
     const def=FT.copy(FB.stories.get('western_counterfront').declaration);
     function reject(edit,world) {
@@ -337,19 +361,8 @@ test('real JSON policies retain independent authority, duration, exact definitio
     reject(function (d) { d.firstDate={year:634,season:2,day:1}; d.lastDate={year:636,season:3,day:90}; });
     reject(function (d) { d.actor.realmId='absent_court'; },true);
     reject(function (d) { d.target.provinceId='absent_county'; },true);
-    return {waiting:waiting,ready:ready.kind,phase:r.phase,days:r.deadline-r.startedTurn,actor:w.attacker,defender:w.defender,
-      other:s.stories.western_counterfront.phase,rejects:rejects};
-  })).toEqual({waiting:true,ready:'stewardship',phase:'started',days:2,actor:'sasanian_634',defender:'byzantium_634',other:'pending',rejects:Array(11).fill(true)});
-  await page.evaluate(function () { FB.state.player.gold-=9; });
-  await roundTrip(page);
-  expect(await page.evaluate(function () {
-    const text=FB.save.serialize();
-    const d=JSON.parse(JSON.stringify(FBDATA.storyInstances.eastern_counterfront)); d.durationDays++;
-    FB.mods.apply({storyInstances:{eastern_counterfront:d}});
-    const state=FB.state,facts=JSON.stringify([state,FB.getRngState(),FB.getUidCounter(),localStorage]);
-    let rejected=false; try { FB.save.restore(JSON.parse(text)); } catch (_) { rejected=true; }
-    return rejected && state===FB.state && facts===JSON.stringify([FB.state,FB.getRngState(),FB.getUidCounter(),localStorage]);
-  })).toBe(true);
+    return {phase:s.stories[id].phase,rejects:rejects};
+  })).toEqual({phase:'started',rejects:Array(11).fill(true)});
 });
 
 test('pending and started provenance reject malformed saves before any live mutation',async function ({page},info) {

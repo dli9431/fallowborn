@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
 const {openGame, prepareGameContent} = require('../support/game/navigation');
@@ -9,15 +10,27 @@ dependsOnRuntime(__filename, ['index.html','data/industry_laws.js','data/economy
   'js/industry_laws.js','js/economy.js','js/actions.js','js/treasury.js','js/mods.js',
   'js/save.js','js/save_v4.js','js/ui_modals.js']);
 
+const riverPath = path.resolve(__dirname, '../fixtures/authoring/industry-laws-river.json');
+
+// Admission against the unmodded catalogue and the Mods file picker have their
+// own case; the imported mechanics boot the exact JSON the dialog stores once.
+async function importRiver(page, info) {
+  await openGame(page, info);
+  await prepareGameContent(page);
+  expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); }, river)).toEqual([]);
+  await page.evaluate(function () { FB.ui.showMods(); });
+  await page.locator('#modfile').setInputFiles(riverPath);
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
+  await prepareGameContent(page);
+}
+
 async function start(page, info, imported) {
   if (imported) {
+    await page.addInitScript(function (source) {
+      if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods', JSON.stringify([source]));
+    }, fs.readFileSync(riverPath, 'utf8'));
     await openGame(page, info);
-    await prepareGameContent(page);
-    expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); }, river)).toEqual([]);
-    await page.evaluate(function () { FB.ui.showMods(); });
-    await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/industry-laws-river.json'));
-    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
-    await prepareGameContent(page);
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
     await beginBookmarkFromTitle(page, '1204');
   } else await beginBookmark(page, info, '1204');
   await page.evaluate(function () {
@@ -222,6 +235,15 @@ test('issuer succession, jurisdiction loss, repeal and repeated saves preserve l
     return rejected && before === lawSnapshot();
   });
   expect(invalid).toBe(true);
+});
+
+test('the river laws pass unmodded admission and import through the Mods file picker', async function ({page}, info) {
+  await importRiver(page, info);
+  expect(await page.evaluate(function () {
+    FB.mods.assertReady();
+    return {count:FB.mods.count(), permission:!!FBDATA.industryLaws.river_stall_permission,
+      reserve:!!FBDATA.industryLaws.river_stall_reserve};
+  })).toEqual({count:1, permission:true, reserve:true});
 });
 
 test('ordinary JSON import supplies prohibition, reduced liabilities and pure malformed rejection', async function ({page}, info) {

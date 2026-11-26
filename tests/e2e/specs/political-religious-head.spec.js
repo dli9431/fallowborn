@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
+const {installPageGuards} = require('../support/page-contract');
 const {openGame, openTitle} = require('../support/game/navigation');
 const {beginBookmarkFromTitle, restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
@@ -497,33 +498,40 @@ test('detached JSON validation rejects unsupported '+part.name+' without publica
   expect(result).toEqual({total:18,cases:Array(part.to-part.from).fill(true),valid:[],pure:true});
 });
 
-test('matching signatures and repeated restore retain null, missing and suspended political pointers', async function ({page},info) {
-  await start(page,info,'import');
-  const result=await page.evaluate(function () {
-    const s=FB.state,O=officeTest,id='estuary_office_demo',saved=JSON.parse(FB.save.serialize());
-    O.withdraw('estuary_court_demo');
-    const suspended=O.roundTrip(),inactive=O.head('estuary_tradition_demo') === null;
-    let current=FB.state;current.religiousHeads[id]=null;
-    const vacant=O.roundTrip(),nullKept=FB.state.religiousHeads[id] === null;
-    current=FB.state;delete current.religiousHeads[id];
-    const absent=O.roundTrip(),missing=!Object.prototype.hasOwnProperty.call(FB.state.religiousHeads,id);
-    const bad=JSON.parse(JSON.stringify(saved));bad.state.religiousHeads[id]='missing_person';
-    const before=O.snapshot();let rejected=false;
-    try { FB.save.v4.validatePlatform(bad.state); } catch (_) { rejected=true; }
-    const pure=before === O.snapshot();
-    return {suspended:suspended,inactive:inactive,vacant:vacant,nullKept:nullKept,absent:absent,missing:missing,
-      rejected:rejected,pure:pure,match:!FB.save.otherWorld(saved)};
-  });
-  const round={ledger:true,rng:true,uid:true,signature:true};
-  expect(result).toEqual({suspended:round,inactive:true,vacant:round,nullKept:true,absent:round,missing:true,
-    rejected:true,pure:true,match:true});
-  const saved=await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
+test('matching signatures and repeated restore retain null, missing and suspended political pointers', async function ({page,browser},info) {
+  // The changed configuration boots in its own fresh context while this page
+  // plays, so its preparation no longer waits for the campaign and a reload.
   const changed=JSON.parse(JSON.stringify(estuary));
   changed.religions.estuary_tradition_demo.properties.head.minAge=22;
-  await installStoredMod(page,JSON.stringify(changed));
-  expect(await page.evaluate(function (saved) {
-    const before=JSON.stringify([FB.state,FB.getRngState(),FB.getUidCounter(),localStorage,FB.mods.sig()]);
-    const mismatch=FB.save.otherWorld(saved),loaded=FB.game.loadData(saved);
-    return {mismatch:mismatch,loaded:loaded,pure:before === JSON.stringify([FB.state,FB.getRngState(),FB.getUidCounter(),localStorage,FB.mods.sig()])};
-  },saved)).toEqual({mismatch:true,loaded:false,pure:true});
+  const context=await browser.newContext({viewport:{width:1280,height:800},locale:'en-US',timezoneId:'UTC'});
+  try {
+    const other=await context.newPage(),guard=installPageGuards(other);
+    await Promise.all([start(page,info,'import'),
+      openTitle(other,info).then(function () { return installStoredMod(other,JSON.stringify(changed)); })]);
+    const result=await page.evaluate(function () {
+      const s=FB.state,O=officeTest,id='estuary_office_demo',saved=JSON.parse(FB.save.serialize());
+      O.withdraw('estuary_court_demo');
+      const suspended=O.roundTrip(),inactive=O.head('estuary_tradition_demo') === null;
+      let current=FB.state;current.religiousHeads[id]=null;
+      const vacant=O.roundTrip(),nullKept=FB.state.religiousHeads[id] === null;
+      current=FB.state;delete current.religiousHeads[id];
+      const absent=O.roundTrip(),missing=!Object.prototype.hasOwnProperty.call(FB.state.religiousHeads,id);
+      const bad=JSON.parse(JSON.stringify(saved));bad.state.religiousHeads[id]='missing_person';
+      const before=O.snapshot();let rejected=false;
+      try { FB.save.v4.validatePlatform(bad.state); } catch (_) { rejected=true; }
+      const pure=before === O.snapshot();
+      return {suspended:suspended,inactive:inactive,vacant:vacant,nullKept:nullKept,absent:absent,missing:missing,
+        rejected:rejected,pure:pure,match:!FB.save.otherWorld(saved)};
+    });
+    const round={ledger:true,rng:true,uid:true,signature:true};
+    expect(result).toEqual({suspended:round,inactive:true,vacant:round,nullKept:true,absent:round,missing:true,
+      rejected:true,pure:true,match:true});
+    const saved=await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
+    expect(await other.evaluate(function (saved) {
+      const before=JSON.stringify([FB.state,FB.getRngState(),FB.getUidCounter(),localStorage,FB.mods.sig()]);
+      const mismatch=FB.save.otherWorld(saved),loaded=FB.game.loadData(saved);
+      return {mismatch:mismatch,loaded:loaded,pure:before === JSON.stringify([FB.state,FB.getRngState(),FB.getUidCounter(),localStorage,FB.mods.sig()])};
+    },saved)).toEqual({mismatch:true,loaded:false,pure:true});
+    expect(guard.faults,'changed configuration context faults').toEqual([]);
+  } finally { await context.close(); }
 });
