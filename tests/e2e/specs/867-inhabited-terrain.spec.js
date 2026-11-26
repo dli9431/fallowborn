@@ -1,5 +1,6 @@
 'use strict';
 const {test,expect} = require('../support/fixture');
+const {installPageGuards} = require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
@@ -250,8 +251,9 @@ for (const revision of coverage.retainedRevisions) test(revision + ' retains con
     });
     const before = await establishedFacts(page);
     expect(before.world.snapshot.readsArePure).toBe(true);
-    await openGame(page,info);
-    await page.evaluate(function (revision) { FBDATA.bookmarks['867'].revision = revision; },CURRENT);
+    // Return to the prepared title, as a player would, instead of booting and
+    // preparing the whole catalogue again; the expanded campaign replaces this one.
+    await page.evaluate(function (revision) { FB.game.toTitle(); FBDATA.bookmarks['867'].revision = revision; },CURRENT);
     await startDeterministicGame(page);
     const expanded = await budget(page,info,'867-switch-expanded',4 * 1024 * 1024);
     expect(JSON.parse(expanded).state.start.revision).toBe(CURRENT);
@@ -352,7 +354,9 @@ test('unknown or mismatched expanded revisions fail before adopting saved facts'
   })).toEqual([true,true]);
 });
 
-async function createModded867Save(page,info) {
+// The optional alongside(text) boots an independent context from the stored
+// text while this page prepares the same modded catalogue and saves.
+async function createModded867Save(page,info,alongside) {
   await openGame(page,info);
   const text = await page.evaluate(function (current) {
     const b = JSON.parse(JSON.stringify(FB.bookmark('867',current)));
@@ -369,31 +373,54 @@ async function createModded867Save(page,info) {
     localStorage.setItem('fb_mods',JSON.stringify([text]));
     return text;
   },CURRENT);
-  await openGame(page,info);
-  await startDeterministicGame(page);
-  const source = await page.evaluate(function () { return FB.save.serialize(); });
+  const [source] = await Promise.all([(async function () {
+    await openGame(page,info);
+    await startDeterministicGame(page);
+    return page.evaluate(function () { return FB.save.serialize(); });
+  })(),alongside ? alongside(text) : null]);
   expect(JSON.parse(source).mods).toMatch(/^effective-1-/);
   return {source,text};
 }
 
+/* A fresh context that stores the given mod text before its first boot. Its
+   preparation overlaps the save session's instead of following it. */
+async function storedContext(browser,info,text) {
+  const context = await browser.newContext(), page = await context.newPage();
+  const guard = installPageGuards(page);
+  await page.addInitScript(function (stored) {
+    if (sessionStorage.getItem('stored867Mod')) return;
+    sessionStorage.setItem('stored867Mod','1');
+    localStorage.setItem('fb_mods',JSON.stringify([stored]));
+  },text);
+  return {context:context,page:page,guard:guard,open:function () { return openGame(page,info); }};
+}
+async function closeStoredContext(stored) {
+  if (!stored) return;
+  try { expect(stored.guard.faults).toEqual([]); } finally { await stored.context.close(); }
+}
+
 test('a normal JSON bookmark mod pins the expanded revision on restore',async function ({page},info) {
   const {source} = await createModded867Save(page,info);
-  await openGame(page,info);
+  // Restore in the session that prepared this stored mod; another boot would
+  // only prepare the same complete modded catalogue a third time.
   await restoreBookmark(page,source);
   expect(await page.evaluate(function () {
     return [FB.state.start.revision,FB.campaignProvince(FB.state,'kath_district').dev];
   })).toEqual([CURRENT,4]);
 });
 
-test('a normal JSON bookmark save rejects a changed catalogue',async function ({page},info) {
-  const {source,text} = await createModded867Save(page,info);
-  await page.evaluate(function (text) {
-    const mod = JSON.parse(text), b = mod.bookmarks['867'];
-    b.provinces.find(function (p) { return p.id === 'kath_district'; }).dev = 5;
-    localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(mod)]));
-  },text);
-  await openGame(page,info);
-  expect(await page.evaluate(function (source) { return FB.game.loadData(JSON.parse(source)); },source)).toBe(false);
+test('a normal JSON bookmark save rejects a changed catalogue',async function ({page,browser},info) {
+  // The changed catalogue boots in an independent fresh context.
+  let changed = null;
+  try {
+    const {source} = await createModded867Save(page,info,async function (text) {
+      const mod = JSON.parse(text), b = mod.bookmarks['867'];
+      b.provinces.find(function (p) { return p.id === 'kath_district'; }).dev = 5;
+      changed = await storedContext(browser,info,JSON.stringify(mod));
+      await changed.open();
+    });
+    expect(await changed.page.evaluate(function (source) { return FB.game.loadData(JSON.parse(source)); },source)).toBe(false);
+  } finally { await closeStoredContext(changed); }
 });
 
 test('expanded observer AI saves and replays a season boundary',async function ({page},info) {

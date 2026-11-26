@@ -44,9 +44,11 @@ for (const retained of [false,true]) {
     const oldContext = await browser.newContext(), oldPage = await oldContext.newPage(), guard = installPageGuards(oldPage);
     try {
       await installLegacy568(oldPage);
-      await openGame(oldPage,info); await openGame(page,info);
+      // The two contexts share nothing, so their complete catalogues prepare together.
+      await Promise.all([openGame(oldPage,info),openGame(page,info)]);
       await assertLegacy634(oldPage);
-      expect(await catalogue(page)).toEqual(await catalogue(oldPage));
+      const [current,former] = await Promise.all([catalogue(page),catalogue(oldPage)]);
+      expect(current).toEqual(former);
       if (retained) await oldPage.evaluate(function () { FBDATA.bookmarks['568'].revision = 'migration_v1'; });
       await beginBookmarkFromTitle(oldPage,'568',retained ? 'farmer_568' : 'ravenna_household_568');
       await oldPage.evaluate(function () { FB.state.player.gold -= 3; });
@@ -167,10 +169,12 @@ test('a Ravenna graph assembly error retains its source message and leaves healt
 
 test('568 complete source re-evaluation is idempotent and staged records do not alias published records',async function ({page},info) {
   await openGame(page,info);
-  const before = await page.evaluate(function () { return JSON.stringify(FBDATA); });
+  // Keep the complete catalogue snapshot in the page; it never travels to Node and back.
+  await page.evaluate(function () { window.__568CatalogueBefore = JSON.stringify(FBDATA); });
   for (const file of legacy568Files.concat(['bookmark_568_composition.js']))
     await page.addScriptTag({path:path.resolve(__dirname,'../../../data',file)});
-  expect(await page.evaluate(function (before) {
+  expect(await page.evaluate(function () {
+    const before = window.__568CatalogueBefore;
     const root = FBDATA, rng = FB.getRngState(), uid = FB.getUidCounter(), registry = FB.stories.list();
     const reports = FB.bookmarkCompositions.publishPending();
     const repeated = before === JSON.stringify(FBDATA) && root === FBDATA && registry.every(function (story,i) { return FB.stories.list()[i] === story; });
@@ -180,5 +184,5 @@ test('568 complete source re-evaluation is idempotent and staged records do not 
     return {published:reports.every(function (row) { return row.published; }),repeated:repeated,
       detached:world === JSON.stringify(FBDATA.bookmarks['568']) && graph === JSON.stringify(FBDATA.storyInstances.sigebert_agenda_568),
       pure:rng === FB.getRngState() && uid === FB.getUidCounter()};
-  },before)).toEqual({published:true,repeated:true,detached:true,pure:true});
+  })).toEqual({published:true,repeated:true,detached:true,pure:true});
 });

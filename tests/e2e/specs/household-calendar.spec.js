@@ -1,6 +1,7 @@
 'use strict';
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -13,14 +14,31 @@ dependsOnRuntime(__filename, ['index.html', 'data/bookmarks.js', 'data/technolog
   'js/story_household.js', 'js/stories.js', 'js/mods.js', 'js/world.js', 'js/starts.js',
   'js/main.js', 'js/save.js', 'js/save_v4.js']);
 
-async function imported(page, info, scenario) {
+const exampleFile = path.resolve(__dirname, '../fixtures/authoring/calendar-households.json');
+
+/* The Mods screen admits the file and stores its exact text before reloading.
+   The calendar journeys below boot that same stored text, so neither this case
+   nor they prepare a catalogue they then discard. */
+test('the calendar example passes unmodded admission and imports through the Mods file picker', async function ({ page }, info) {
   await openGame(page, info);
   await page.evaluate(function () { FB.ui.showMods(); });
   await expectModAdmission(page,examples);
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/calendar-households.json'));
+  await page.locator('#modfile').setInputFiles(exampleFile);
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
+  expect(await page.evaluate(function () { return localStorage.getItem(FB.storageKey('fb_mods')); }))
+    .toBe(JSON.stringify([fs.readFileSync(exampleFile, 'utf8')]));
+});
+
+/* The session flag keeps a later reload from storing the text again. */
+async function imported(page, info, scenario) {
+  await page.addInitScript(function (text) {
+    if (sessionStorage.getItem('calendarExampleStored')) return;
+    sessionStorage.setItem('calendarExampleStored', '1');
+    localStorage.setItem('fb_mods', JSON.stringify([text]));
+  }, fs.readFileSync(exampleFile, 'utf8'));
+  await openGame(page, info);
+  expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
   await beginBookmarkFromTitle(page,'867', scenario);
 }
 

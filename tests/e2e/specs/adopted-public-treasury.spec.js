@@ -1,5 +1,6 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
@@ -19,7 +20,21 @@ dependsOnRuntime(__filename,['js/bookmark_composition.js','js/util.js','index.ht
   'js/justice.js','js/religious_institutions.js','js/story_track.js','js/fiscal.js','js/building_operations.js',
   'js/fortifications.js','js/fort_profiles.js','js/ui_modals.js']);
 
-async function importWorld(page,info,prefix,modified) {
+/* The bookmark picker adoption cases import through the Mods screen from a
+   prepared unmodded title. Every other case stores the same text that screen
+   stores before its first boot, so it prepares only the modded catalogue. The
+   session flag keeps a later reload from storing it again. */
+async function importWorld(page,info,prefix,modified,modsScreen) {
+  if(!modsScreen) {
+    await page.addInitScript(function(text){
+      if(sessionStorage.getItem('publicTreasuryStored'))return;
+      sessionStorage.setItem('publicTreasuryStored','1');
+      localStorage.setItem('fb_mods',JSON.stringify([text]));
+    },modified ? JSON.stringify(modified) : fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/adopted-public-treasury-'+prefix+'.json'),'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function(prefix){return [FB.mods.count(),!!FBDATA.bookmarks[prefix+'_world']];},prefix)).toEqual([1,true]);
+    return;
+  }
   await openGame(page,info);
   await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(modified ? {name:'public-treasury.json',mimeType:'application/json',
@@ -105,11 +120,14 @@ for(const prefix of ['harbor','dune']) {
     await importWorld(page,info,prefix);await begin(page,prefix,'code');
     expect(await page.evaluate(function(){
       const source=JSON.parse(FB.save.serialize());
+      // Every rejection must leave the campaign and catalogue exactly as they
+      // were before the first one, so serialize those once, not twice a value.
+      const live=JSON.stringify([FB.state,FBDATA]);
       return [false,null,0,1,'true',{},[]].map(function(value){
         const bad=JSON.parse(JSON.stringify(source));bad.state.realms.player.alive=value;
-        const before=JSON.stringify([FB.state,bad,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter();
+        const before=JSON.stringify(bad),rng=FB.getRngState(),uid=FB.getUidCounter();
         let rejected=false;try{FB.save.v4.migrate(bad);}catch(error){rejected=true;}
-        return rejected && before===JSON.stringify([FB.state,bad,FBDATA]) &&
+        return rejected && before===JSON.stringify(bad) && live===JSON.stringify([FB.state,FBDATA]) &&
           rng===FB.getRngState() && uid===FB.getUidCounter();
       });
     })).toEqual(Array(7).fill(true));
@@ -117,7 +135,7 @@ for(const prefix of ['harbor','dune']) {
 
   for(const entry of ['picker','code']) {
     test(prefix+' '+entry+' conserves the original account through real ordinary adoption',async function({page},info){
-      await importWorld(page,info,prefix);await begin(page,prefix,entry);
+      await importWorld(page,info,prefix,undefined,entry==='picker');await begin(page,prefix,entry);
       const result=await page.evaluate(function(prefix){
         const s=FB.state,sc=FBDATA.startScenarios.find(function(r){return r.id===prefix+'_home_start';}),
           boot=publicBoot.adoptions[0],row=s.realms.player.treasury,before=JSON.stringify(s),
@@ -152,7 +170,7 @@ for(const prefix of ['harbor','dune']) {
 
   test(prefix+' the unadopted original realm remains an ordinary NPC public account',async function({page},info){
     await importWorld(page,info,prefix);
-    // The import reload left a prepared modded title; begin there without reopening.
+    // The stored boot left a prepared modded title; begin there without reopening.
     await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
     const result=await page.evaluate(function(prefix){
       const s=FB.state,original=prefix==='harbor'?'harbor_upland':'dune_gate',

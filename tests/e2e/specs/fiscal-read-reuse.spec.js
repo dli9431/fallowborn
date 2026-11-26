@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {installPageGuards} = require('../support/page-contract');
@@ -438,7 +439,18 @@ for (const start of [journey.starts[0],journey.starts[4],
   {scenario:'harbor command',fixture:'harbor'},{scenario:'dune command',fixture:'dune'}]) {
   preparedReadTest('mobile ruler reuse preserves live eligibility, complete scans and replaced leader readers in '+start.scenario,async function (page,info) {
     await source.route(page,'filter');
-    if(start.fixture)await openGame(page,info);
+    // A command fixture stores the exact text the Mods screen stores before the
+    // first boot, so the shared page prepares only the modded catalogue. The
+    // Mods screen import has its own coverage in mobile-command.spec.js. The
+    // session flag keeps the candidate reload from storing it again.
+    if(start.fixture) {
+      await page.addInitScript(function (text) {
+        if(sessionStorage.getItem('commandFixtureStored'))return;
+        sessionStorage.setItem('commandFixtureStored','1');
+        localStorage.setItem('fb_mods',JSON.stringify([text]));
+      },fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/mobile-command-'+start.fixture+'.json'),'utf8'));
+      await openGame(page,info);
+    }
     else await journey.begin(page,info,start);
   },async function ({page},info) {
     const outputs = [], counts = [];
@@ -446,12 +458,7 @@ for (const start of [journey.starts[0],journey.starts[4],
       if(!reference)await source.route(page,false);
       if (start.fixture) {
         if(!reference)await openGame(page,info);
-        if (reference) {
-          await page.evaluate(function () { FB.ui.showMods(); });
-          await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/mobile-command-'+start.fixture+'.json'));
-          await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-          await prepareGameContent(page);
-        }
+        if (reference) expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
         await beginBookmarkFromTitle(page,start.fixture+'_world',start.fixture+'_household');
       } else if(!reference)await journey.begin(page,info,start);
       const result = await page.evaluate(function () {

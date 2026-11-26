@@ -1,5 +1,6 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
@@ -17,13 +18,27 @@ dependsOnRuntime(__filename, ['index.html','data/starts.js','data/mobile_confede
   'js/mobile_confederations.js','js/mobile_command.js','js/save.js','js/save_v4.js',
   'js/model.js','js/station.js','js/treasury.js','js/authority.js','js/ui_misc.js','js/ui_modals.js']);
 
-async function importExample(page, info, prefix, revision) {
-  await openGame(page, info);
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
-    '../fixtures/authoring/revision-start-tracks-' + prefix + '.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+/* The picker cases import through the Mods screen from a prepared unmodded
+   title. Every other case stores the same text that screen stores before its
+   first boot, so it prepares only the modded catalogue. The session flag keeps
+   a later reload from storing it again. */
+async function importExample(page, info, prefix, revision, modsScreen) {
+  const file = path.resolve(__dirname, '../fixtures/authoring/revision-start-tracks-' + prefix + '.json');
+  if (modsScreen) {
+    await openGame(page, info);
+    await page.evaluate(function () { FB.ui.showMods(); });
+    await page.locator('#modfile').setInputFiles(file);
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  } else {
+    await page.addInitScript(function (text) {
+      if (sessionStorage.getItem('revisionTracksStored')) return;
+      sessionStorage.setItem('revisionTracksStored', '1');
+      localStorage.setItem('fb_mods', JSON.stringify([text]));
+    }, fs.readFileSync(file, 'utf8'));
+    await openGame(page, info);
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+  }
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix + '_world'];
   }, prefix);
@@ -53,7 +68,7 @@ async function copyStartCodeToTitle(page) {
 }
 
 for (const prefix of ['harbor','dune']) {
-  test(prefix + ' accepts the complete detached import and validates both effective worlds without effects', async function ({page}, info) {
+  test(prefix + ' accepts the complete detached import without effects', async function ({page}, info) {
     await openGame(page, info);
     const pure = await page.evaluate(function (input) {
       const data = JSON.stringify(FBDATA), state = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -65,6 +80,9 @@ for (const prefix of ['harbor','dune']) {
         registry.every(function (story, i) { return FB.stories.list()[i] === story; })};
     }, examples[prefix]);
     expect(pure).toEqual({faults:[], pure:true});
+  });
+
+  test(prefix + ' validates both effective worlds of the imported JSON without effects', async function ({page}, info) {
     await importExample(page, info, prefix);
     const result = await page.evaluate(function (prefix) {
       const id = prefix + '_world', sc = FBDATA.startScenarios.find(function (r) { return r.id === prefix + '_household'; });
@@ -89,7 +107,7 @@ for (const prefix of ['harbor','dune']) {
 
   for (const revision of ['baseline','expanded']) {
     test(prefix + ' ' + revision + ' picker offers the same household and attaches its effective set', async function ({page}, info) {
-      await importExample(page, info, prefix, revision);
+      await importExample(page, info, prefix, revision, true);
       const full = page.locator('#btn-choose-beginning');
       if (await full.isVisible()) await full.click();
       else await page.getByRole('button', {name:'New Game', exact:true}).click();

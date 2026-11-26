@@ -15,11 +15,23 @@ dependsOnRuntime(__filename, ['js/model.js', 'js/institutions.js', 'js/politics.
   'js/save_v4.js', 'js/religion.js', 'data/cultures.js', 'data/systems.js',
   'data/ecclesiastical_profiles.js', 'data/religious_institutions.js', 'data/distribution_crazygames.js']);
 
+/* Stores the office JSON exactly as the Mods screen stores it, before the first
+   boot, so these cases prepare only the modded catalogue. The prepared office
+   cases below keep the admission check and the file picker import. */
+async function storeOfficeModBeforeBoot(page) {
+  await page.addInitScript(function (text) {
+    if (sessionStorage.getItem('officeModStored')) return;
+    sessionStorage.setItem('officeModStored','1');
+    localStorage.setItem('fb_mods',JSON.stringify([text]));
+  },JSON.stringify(politicalOfficeMod));
+}
+
 for (const boundary of [false,true]) {
   test('political recognition shares one validation through ' + (boundary ? 'vacancy, accession and restore' : 'live consent and qualification'), async function ({ page }, info) {
     await routeReaders(page,false);
+    await storeOfficeModBeforeBoot(page);
     await openGame(page,info);
-    await importOfficeMod(page,politicalOfficeMod);
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
     await beginBookmarkFromTitle(page,'paired_office_world','estuary_household_demo');
     await page.evaluate(installReadProbe);
     const result = await page.evaluate(function (boundary) {
@@ -120,7 +132,8 @@ for (const boundary of [false,true]) {
         check('accession-reaffirmed',true);
       }
       FB.treasuryInitialize(s);
-      return {checks:checks,scans:scans,save:FB.save.serialize(),data:JSON.stringify(FBDATA),
+      // No assertion reads a catalogue copy, so the whole catalogue never travels to Node.
+      return {checks:checks,scans:scans,save:FB.save.serialize(),
         rng:FB.getRngState() >>> 0,uid:FB.getUidCounter(),signature:FB.mods.sig(),fingerprint:FB.mods.fingerprint(FB.campaignBookmark(s))};
     },boundary);
     for (const reference of [true,false]) {

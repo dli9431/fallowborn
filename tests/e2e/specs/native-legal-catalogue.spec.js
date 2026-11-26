@@ -98,22 +98,35 @@ test('native legal declarations stay private until selected-date review and surv
   expect(await consumer(page,'harbor')).toEqual(before);
 });
 
+test('both ordinary legal JSON catalogues pass unmodded admission',async function ({page},info) {
+  await openGame(page,info);
+  expect(await page.evaluate(function (texts) {
+    return texts.map(function (text) { return FB.mods.validate(JSON.parse(text)); });
+  },['harbor','dune'].map(function (prefix) {
+    return fs.readFileSync(path.join(__dirname,'../fixtures/native-legal-catalogue',prefix + '.json'),'utf8');
+  }))).toEqual([[],[]]);
+});
+
+/* The case above admits each JSON against the unmodded catalogue. Here its exact
+   text is stored before the JSON context's first boot, so that context prepares
+   one modded catalogue, together with the native context that shares nothing. */
 for (const prefix of ['harbor','dune']) {
   test(prefix + ' native and ordinary JSON publication reach the canonical justice consumer',async function ({page,browser},info) {
-    await nativeSources(page,fixtures); await openGame(page,info);
-    expect(await page.evaluate(function (id) { return FB.bookmarkCompositions.sourceReports().filter(function (r) { return r.bookmarkId === id; }); },prefix + '_world')).toEqual(expect.arrayContaining([expect.objectContaining({published:true,worldFaults:[]})]));
-    await observe(page,prefix + '_world');
-    const native = await consumer(page,prefix);
-    expect(native).toMatchObject({law:prefix === 'harbor' ? 'harbor_personal' : 'dune_law',
-      religious:prefix + '_faith_law',source:prefix === 'harbor' ? 'personal' : 'government',valid:true});
+    await nativeSources(page,fixtures);
     const context = await browser.newContext(), imported = await context.newPage(), guard = installPageGuards(imported);
     try {
-      await openGame(imported,info);
-      const text = fs.readFileSync(path.join(__dirname,'../fixtures/native-legal-catalogue',prefix + '.json'),'utf8');
-      expect(await imported.evaluate(function (text) { return FB.mods.validate(JSON.parse(text)); },text)).toEqual([]);
-      await Promise.all([imported.waitForNavigation({waitUntil:'domcontentloaded'}),
-        imported.evaluate(function (text) { FB.mods.store(text); },text)]);
-      await prepareGameContent(imported);
+      await imported.addInitScript(function (text) {
+        if (sessionStorage.getItem('legalCatalogueStored')) return;
+        sessionStorage.setItem('legalCatalogueStored','1');
+        localStorage.setItem('fb_mods',JSON.stringify([text]));
+      },fs.readFileSync(path.join(__dirname,'../fixtures/native-legal-catalogue',prefix + '.json'),'utf8'));
+      await Promise.all([openGame(page,info),openGame(imported,info)]);
+      expect(await page.evaluate(function (id) { return FB.bookmarkCompositions.sourceReports().filter(function (r) { return r.bookmarkId === id; }); },prefix + '_world')).toEqual(expect.arrayContaining([expect.objectContaining({published:true,worldFaults:[]})]));
+      await observe(page,prefix + '_world');
+      const native = await consumer(page,prefix);
+      expect(native).toMatchObject({law:prefix === 'harbor' ? 'harbor_personal' : 'dune_law',
+        religious:prefix + '_faith_law',source:prefix === 'harbor' ? 'personal' : 'government',valid:true});
+      expect(await imported.evaluate(function () { return FB.mods.count(); })).toBe(1);
       expect(await imported.evaluate(function () { return FB.mods.sig(); })).toBeTruthy();
       await observe(imported,prefix + '_world');
       expect(await consumer(imported,prefix)).toEqual(native);

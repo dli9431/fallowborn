@@ -15,6 +15,17 @@ dependsOnRuntime(__filename, ['js/world.js', 'js/systems.js', 'js/mods.js',
 const oracle = path.resolve(__dirname, '../fixtures/resolved-world-cache/uncached-bookmark.js');
 const proofMod = fs.readFileSync(path.resolve(__dirname, '../fixtures/authoring/revision-ruler-government-estuary.json'), 'utf8');
 
+/* Stores the exact JSON text a session journey stores, before the first boot,
+   so a stored-boot and removal journey prepares only the modded catalogue.
+   The session flag keeps the removal reload from storing it again. */
+async function storeBeforeBoot(page, text) {
+  await page.addInitScript(function (text) {
+    if (sessionStorage.getItem('resolvedWorldStored')) return;
+    sessionStorage.setItem('resolvedWorldStored', '1');
+    localStorage.setItem('fb_mods', JSON.stringify([text]));
+  }, text);
+}
+
 test('availability revalidates same-turn world mutations and exact revision failures against the uncached resolver',
   async function ({ page }, info) {
     await openGame(page, info);
@@ -159,7 +170,7 @@ test('availability revalidates same-turn world mutations and exact revision fail
     expect(cases.length).toBeGreaterThan(60);
   });
 
-test('availability follows staged JSON validation, installed replacement and ordinary mod removal',
+test('availability follows staged JSON validation and installed replacement',
   async function ({ page }, info) {
     await openGame(page, info);
     await page.addScriptTag({path:oracle});
@@ -197,12 +208,19 @@ test('availability follows staged JSON validation, installed replacement and ord
     expect(result.pure).toBe(true);
     expect(result.answers.slice(0, 3)).toEqual([result.answers[0], result.answers[0], result.answers[0]]);
     expect(result.answers.slice(3)).toEqual([false, true]);
-    await page.reload();
-    await prepareGameContent(page);
-    expect(await page.evaluate(id => FB.systemAvailable({start:{id:id, revision:'constitution'}}, 'royal_council'), result.id)).toBe(true);
+  });
+
+test('availability follows the stored replacement through boot and ordinary mod removal',
+  async function ({ page }, info) {
+    // The exact JSON text the replacement journey above stores for its reload.
+    const mod = JSON.parse(proofMod), id = Object.keys(mod.bookmarks)[0];
+    mod.bookmarks[id].systems = {royal_council:true};
+    await storeBeforeBoot(page, JSON.stringify(mod));
+    await openGame(page, info);
+    expect(await page.evaluate(id => FB.systemAvailable({start:{id:id, revision:'constitution'}}, 'royal_council'), id)).toBe(true);
     await Promise.all([page.waitForEvent('load'), page.evaluate(function () { FB.mods.removeAt(0); })]);
     await prepareGameContent(page);
-    expect(await page.evaluate(id => FB.bookmark(id), result.id)).toBeNull();
+    expect(await page.evaluate(id => FB.bookmark(id), id)).toBeNull();
     await page.addScriptTag({path:oracle});
     expect(await page.evaluate(function (id) {
       const state = {start:{id:id, revision:'constitution'}}, lookup = FB.bookmark;
@@ -210,7 +228,7 @@ test('availability follows staged JSON validation, installed replacement and ord
       FB.bookmark = uncachedBookmark;
       try { return value === FB.systemAvailable(state, 'royal_council'); }
       finally { FB.bookmark = lookup; }
-    }, result.id)).toBe(true);
+    }, id)).toBe(true);
   });
 
 test('resolved worlds reuse exact inputs and preserve revision errors and detached scopes', async function ({ page }, info) {
@@ -273,7 +291,7 @@ test('resolved worlds reuse exact inputs and preserve revision errors and detach
   expect(result.every(Boolean), JSON.stringify(result)).toBe(true);
 });
 
-test('JSON mod application, detached validation, and removal resolve the installed catalogue', async function ({ page }, info) {
+test('JSON mod application and detached validation resolve the installed catalogue', async function ({ page }, info) {
   await openGame(page, info);
   const before = await page.evaluate(function (text) {
     const candidate = JSON.parse(text), id = Object.keys(candidate.bookmarks)[0];
@@ -302,12 +320,18 @@ test('JSON mod application, detached validation, and removal resolve the install
   expect(before.installed).toBe('Cache import');
   expect(before.updated).toBe('Cache replacement');
   expect(before.replacedAgain).toBe(true);
-  await page.reload();
-  await prepareGameContent(page);
-  expect(await page.evaluate(id => FB.bookmark(id).name, before.id)).toBe('Cache replacement');
+});
+
+test('a stored JSON replacement resolves on boot and its removal restores the installed catalogue', async function ({ page }, info) {
+  // The exact JSON text the application journey above stores for its reload.
+  const candidate = JSON.parse(proofMod), id = Object.keys(candidate.bookmarks)[0];
+  candidate.bookmarks[id].name = 'Cache replacement';
+  await storeBeforeBoot(page, JSON.stringify(candidate));
+  await openGame(page, info);
+  expect(await page.evaluate(id => FB.bookmark(id).name, id)).toBe('Cache replacement');
   await Promise.all([page.waitForEvent('load'), page.evaluate(function () { FB.mods.removeAt(0); })]);
   await prepareGameContent(page);
-  expect(await page.evaluate(id => FB.bookmark(id), before.id)).toBe(null);
+  expect(await page.evaluate(id => FB.bookmark(id), id)).toBe(null);
 });
 
 async function campaign(page, info, cached) {

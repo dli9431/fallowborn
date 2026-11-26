@@ -261,20 +261,24 @@ for (const crazy of [false,true]) {
       keys.forEach(function (key) { delete FBDATA.bookmarkRegions634[key]; });
       FBDATA.bookmarkRegions634.e2e_neighbor = {unchanged:true};
     },Object.keys(packets));
-    function snapshot() {
+    // The first call records the snapshot in the page; later calls report
+    // whether it still matches, so the whole catalogue never travels to Node.
+    function unchanged() {
       const data = {};
       Object.keys(FBDATA).forEach(function (key) { if (key !== 'bookmarkRegions634') data[key] = FBDATA[key]; });
-      return JSON.stringify({data:data,state:FB.state,rng:FB.getRngState(),uid:FB.getUidCounter()});
+      const text = JSON.stringify({data:data,state:FB.state,rng:FB.getRngState(),uid:FB.getUidCounter()});
+      if (window.__westernBefore === undefined) { window.__westernBefore = text; return true; }
+      return text === window.__westernBefore;
     }
-    const before = await page.evaluate(snapshot);
+    expect(await page.evaluate(unchanged)).toBe(true);
     await page.addScriptTag({path:shard});
-    expect(await page.evaluate(snapshot)).toBe(before);
+    expect(await page.evaluate(unchanged)).toBe(true);
     expect(await page.evaluate(function (keys) {
       return {blocks:keys.map(function (key) { return FBDATA.bookmarkRegions634[key]; }),
         neighbor:FBDATA.bookmarkRegions634.e2e_neighbor};
     },Object.keys(packets))).toEqual({blocks:first,neighbor:{unchanged:true}});
     await page.addScriptTag({path:shard});
-    expect(await page.evaluate(snapshot)).toBe(before);
+    expect(await page.evaluate(unchanged)).toBe(true);
     await page.evaluate(function () {
       FB.bookmarkSources.stage = window.__westernSourceStage;
       delete window.__westernSourceStage;

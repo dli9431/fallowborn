@@ -298,16 +298,31 @@ for (const input of [
   {file:'refinements-bookhands.json',id:'bookhand_standardization',cost:62,
     known:['scriptoria','classical_grammar','translation_schools'],missing:['scriptoria','classical_grammar'],amount:0.009,channel:'education'}
 ]) {
-  test(input.file + ' imports independent terms, rejects malformed candidates purely and preserves exact saved content', async function ({ page }, info) {
+  const file = path.resolve(__dirname,'../fixtures/authoring/'+input.file);
+
+  // The Mods screen stores the exact file text before reloading; the case below boots that text.
+  test(input.file + ' imports independent terms through the Mods file picker after unmodded admission', async function ({ page }, info) {
     await openGame(page,info); await page.evaluate(function () { FB.ui.showMods(); });
-    const mod = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/'+input.file),'utf8'));
+    const mod = JSON.parse(fs.readFileSync(file,'utf8'));
     await expectModAdmission(page,mod,input.file);
-    await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/'+input.file));
+    await page.locator('#modfile').setInputFiles(file);
     await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
-    await prepareGameContent(page);
-    await page.waitForFunction(function (p) {
-      return window.FB && FB.game && FB.game.bootReady && FBDATA.tech[p.id].cost === p.cost;
-    },input);
+    await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
+    expect(await page.evaluate(function () { return localStorage.getItem(FB.storageKey('fb_mods')); }))
+      .toBe(JSON.stringify([fs.readFileSync(file,'utf8')]));
+  });
+
+  /* The same text the picker stores is written before the first boot, so this
+     page never prepares the unmodded catalogue. The session flag keeps the
+     changed-terms boot below from storing it again. */
+  test(input.file + ' rejects malformed candidates purely, preserves exact saved content and refuses it under changed terms', async function ({ page }, info) {
+    await page.addInitScript(function (text) {
+      if (sessionStorage.getItem('refinementsStored')) return;
+      sessionStorage.setItem('refinementsStored','1');
+      localStorage.setItem('fb_mods',JSON.stringify([text]));
+    },fs.readFileSync(file,'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function (id) { return [FB.mods.count(),FBDATA.tech[id].cost]; },input.id)).toEqual([1,input.cost]);
     await startDeterministicGame(page); await stageSovereign(page);
     await installRestoreFacts(page);
     const r = await page.evaluate(function (p) {

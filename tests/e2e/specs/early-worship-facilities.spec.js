@@ -1,8 +1,10 @@
 'use strict';
 const {installRestoreFacts} = require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+const {installPageGuards} = require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
 const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
@@ -18,12 +20,27 @@ dependsOnRuntime(__filename,['index.html','data/buildings_early_worship.js','dat
   'js/mods.js','js/bookmark_composition.js','js/save.js','js/save_v4.js','js/main.js','js/model.js','js/population.js',
   'js/ui_modals.js','js/ui_misc.js','data/cultures.js','data/eras.js']);
 
-async function start(page,info,label,npc) {
-  await openGame(page,info);
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/early-worship-' + label + '.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+/* The imported foundation cases go through the Mods screen from a prepared
+   unmodded title. Every other start stores the fixture text exactly as that
+   screen stores it, before the first boot, so it prepares only the modded
+   catalogue. The session flag keeps a later reload from storing it again. */
+async function start(page,info,label,npc,modsScreen) {
+  const file = path.resolve(__dirname,'../fixtures/authoring/early-worship-' + label + '.json');
+  if (!modsScreen) {
+    await page.addInitScript(function (text) {
+      if (sessionStorage.getItem('earlyWorshipStored')) return;
+      sessionStorage.setItem('earlyWorshipStored','1');
+      localStorage.setItem('fb_mods',JSON.stringify([text]));
+    },fs.readFileSync(file,'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+  } else {
+    await openGame(page,info);
+    await page.evaluate(function () { FB.ui.showMods(); });
+    await page.locator('#modfile').setInputFiles(file);
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  }
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.monastic_house; });
   const world = label === 'river' ? 'inventory_estuary' : 'inventory_uplands';
   await beginBookmarkFromTitle(page,world,world + '_household');
@@ -98,7 +115,7 @@ test('catalogue adds one building and two replacement profiles without changing 
 });
 
 for (const label of ['river','upland']) test(label + ' imported foundations pay once and grant only their replacement piety',async function ({page},info) {
-  await start(page,info,label);
+  await start(page,info,label,false,true);
   const r = await page.evaluate(function () {
     const s=FB.state,P=FB.buildingProfiles, before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
     const q=P.quote(s,worshipRequest('see')),pure=before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
@@ -386,19 +403,22 @@ test('ordinary mod removal refuses the imported save without installing a replac
   expect(r).toEqual({loaded:false,pure:true,absent:true,house:true});
 });
 
-test('changed ordinary foundation terms cannot reuse the original imported save fingerprint',async function ({page},info) {
-  await start(page,info,'river');
-  const before=await page.evaluate(function(){return {save:FB.save.serialize(),signature:FB.mods.sig()};});
+test('changed ordinary foundation terms cannot reuse the original imported save fingerprint',async function ({page,browser},info) {
   const changed=JSON.parse(JSON.stringify(examples.river));
   changed.bookmarks.inventory_estuary.localInstitutions.binding_institution.historicalName='Revised keeper';
-  await page.evaluate(function(){FB.ui.showMods();});
-  await page.locator('#modfile').setInputFiles({name:'changed-worship.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(changed))});
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
-  await page.waitForFunction(function(){return window.FB&&FB.game&&FB.game.bootReady;});
-  expect(await page.evaluate(function(before){
-    return FB.mods.sig()!==before.signature&&!FB.game.loadData(JSON.parse(before.save));
-  },before)).toBe(true);
+  // The changed same-name terms boot fresh in an independent context while the
+  // original terms prepare and play here, so the two preparations overlap.
+  const context=await browser.newContext(),other=await context.newPage(),guard=installPageGuards(other);
+  try {
+    await other.addInitScript(function(text){localStorage.setItem('fb_mods',JSON.stringify([text]));},JSON.stringify(changed));
+    await Promise.all([start(page,info,'river'),openGame(other,info)]);
+    const before=await page.evaluate(function(){return {save:FB.save.serialize(),signature:FB.mods.sig()};});
+    expect(await other.evaluate(function(before){
+      return FB.mods.count()===1&&FB.mods.sig()!==before.signature&&!FB.game.loadData(JSON.parse(before.save));
+    },before)).toBe(true);
+  } finally {
+    try { expect(guard.faults).toEqual([]); } finally { await context.close(); }
+  }
 });
 
 test('detached ordinary imports reject mismatched foundations and invalid priority without publication',async function ({page},info) {

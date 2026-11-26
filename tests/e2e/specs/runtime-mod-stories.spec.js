@@ -1,6 +1,7 @@
 'use strict';
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -29,12 +30,30 @@ async function storeAndReload(page, mod, storyId) {
   }, storyId);
 }
 
-test('ordinary file import creates new stories and branching tracks, reloads and removes them', async function ({ page }, info) {
+// The imported stories, and the exact file text the Mods screen stores for them.
+const harborStories = Object.keys(harbor.storyInstances);
+const harborFile = path.resolve(__dirname, '../fixtures/authoring/harbor-contracts.json');
+
+/* The file import case prepares the unmodded registry and imports through the
+   Mods screen. The play and removal journeys store the same text before their
+   first boot, so each prepares one modded catalogue. The session flag keeps a
+   later reload from storing it again. */
+async function storeHarborBeforeBoot(page, info) {
+  await page.addInitScript(function (text) {
+    if (sessionStorage.getItem('harborContractsStored')) return;
+    sessionStorage.setItem('harborContractsStored', '1');
+    localStorage.setItem('fb_mods', JSON.stringify([text]));
+  }, fs.readFileSync(harborFile, 'utf8'));
+  await openGame(page, info);
+  expect(await page.evaluate(function () { return [FB.mods.count(), !!FB.stories.get('harbor_court')]; })).toEqual([1, true]);
+}
+
+test('ordinary file import creates new stories and branching tracks after the unmodded registry', async function ({ page }, info) {
   await openGame(page, info);
   const base = await page.evaluate(function () { return FB.stories.list().map(function (d) { return d.id; }); });
   await page.evaluate(function () { FB.ui.showMods(); });
   await expectModAdmission(page,harbor);
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/harbor-contracts.json'));
+  await page.locator('#modfile').setInputFiles(harborFile);
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('harbor_court'); });
@@ -44,8 +63,15 @@ test('ordinary file import creates new stories and branching tracks, reloads and
     messages:!!FB.englishMessage(FBDATA.storyInstances.harbor_court.news.opening.key)
   }; });
   expect(imported.order.filter(function (id) { return base.includes(id); })).toEqual(base);
+  // The import adds only its own stories, so removing exactly those restores this registry.
+  expect(base.filter(function (id) { return harborStories.includes(id); })).toEqual([]);
+  expect(imported.order.filter(function (id) { return !harborStories.includes(id); })).toEqual(base);
   expect(imported.faults).toEqual([]);
   expect(imported.messages).toBe(true);
+});
+
+test('imported branching tracks play, restore and replay exactly', async function ({ page }, info) {
+  await storeHarborBeforeBoot(page, info);
   await beginBookmarkFromTitle(page,'harbor_courts_900', 'harbor_court_household');
   const journey = await page.evaluate(function () {
     const s = FB.state, id = 'harbor_service';
@@ -65,11 +91,18 @@ test('ordinary file import creates new stories and branching tracks, reloads and
       result:FB.state.stories[id].result, same:JSON.stringify(FB.state.stories) === JSON.stringify(finished.state.stories) };
   });
   expect(journey).toEqual({ pure:true, applied:true, repeated:false, resumed:true, replay:true, result:'declined', same:true });
+});
+
+test('Mods screen removal reloads the registry without exactly the imported stories', async function ({ page }, info) {
+  await storeHarborBeforeBoot(page, info);
+  const modded = await page.evaluate(function () { return FB.stories.list().map(function (d) { return d.id; }); });
+  expect(modded).toEqual(expect.arrayContaining(harborStories));
   await page.evaluate(function () { FB.ui.showMods(); });
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-clear').click()]);
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !FB.stories.get('harbor_court'); });
-  expect(await page.evaluate(function () { return FB.stories.list().map(function (d) { return d.id; }); })).toEqual(base);
+  expect(await page.evaluate(function () { return FB.stories.list().map(function (d) { return d.id; }); }))
+    .toEqual(modded.filter(function (id) { return !harborStories.includes(id); }));
 });
 
 for (const fault of ['type','anchor','cycle','operation','reference','message','duplicate']) {
@@ -117,18 +150,30 @@ test('candidate compilation is detached and same-id overrides rebuild dependents
   expect(result).toEqual({ faults:[], isolated:true, replaced:true, sealed:true, unique:1 });
 });
 
-test('prospective stored stacks honor import order and reject a dangling same-name replacement', async function ({ page },info) {
-  // Boot the existing first mod through ordinary persisted-stack admission.
-  // The file-import case above already covers its initial interactive import.
-  await page.addInitScript(function (first) {
+// Boot an existing stack through ordinary persisted-stack admission.
+// The file-import case above already covers its initial interactive import.
+async function bootStoredStack(page, info, mods) {
+  await page.addInitScript(function (stack) {
     if (!sessionStorage.getItem('stored_stack_seeded')) {
-      localStorage.setItem('fb_mods',JSON.stringify([first]));
+      localStorage.setItem('fb_mods',JSON.stringify(stack));
       sessionStorage.setItem('stored_stack_seeded','1');
     }
-  },JSON.stringify(harbor));
+  },mods.map(function (mod) { return JSON.stringify(mod); }));
   await openGame(page,info);
   expect(await page.evaluate(function () { return !!FB.stories.get('harbor_court'); })).toBe(true);
+}
+
+test('prospective stored stacks honor import order', async function ({ page },info) {
+  await bootStoredStack(page,info,[harbor]);
   await storeAndReload(page,dune,'dune_court');
+  expect(await page.evaluate(function () { return FB.mods.list().map(function (row) { return row.name; }); })).toEqual([harbor.name,dune.name]);
+  expect(await page.evaluate(function () { return [!!FB.stories.get('harbor_court'),FBDATA.agencyRules.familyProgressChance]; })).toEqual([true,.2]);
+});
+
+// The stack the case above stores, booted directly for its rejected replacement.
+test('a prospective stored stack rejects a dangling same-name replacement', async function ({ page },info) {
+  await bootStoredStack(page,info,[harbor,dune]);
+  expect(await page.evaluate(function () { return !!FB.stories.get('dune_court'); })).toBe(true);
   const result = await page.evaluate(function (mods) {
     const before = JSON.stringify(FBDATA), stories = FB.stories.list(), rng = FB.getRngState(), uid = FB.getUidCounter();
     const stored = localStorage.getItem('fb_mods');

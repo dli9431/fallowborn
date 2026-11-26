@@ -22,7 +22,9 @@ dependsOnRuntime(__filename, [
   'js/mods.js', 'js/bookmark_composition.js','js/save_v4.js','js/save.js', 'js/main.js', 'js/ui_modals.js', 'js/ui_misc.js'
 ]);
 
-test.beforeEach(async function ({ page }, info) { await openGame(page, info); });
+// A case that stores its JSON before the first boot opens its own page instead.
+const storedBoot = new Set();
+test.beforeEach(async function ({ page }, info) { if (!storedBoot.has(info.title)) await openGame(page, info); });
 
 async function prepareLord(page, imported) {
   if (imported) {
@@ -362,37 +364,58 @@ test('annual AI pays from public treasury and cannot stack a hospital onto its g
   expect(r.spent).toBeCloseTo(r.cost, 8);
 });
 
+// The imported facility journey in a prepared lord's campaign; both cases below run it.
+function buildImportedFacilities() {
+  const s = FB.state, pid = s.player.provinceId;
+  const rec = FB.realmTechRecord(s); rec.completed = ['manuscript_codex']; FB.invalidateTechBonuses();
+  const gold = s.player.gold, before = FB.techResearchRate(s);
+  const cost = FB.buildCost(s,pid,'review_manuscript_room');
+  const manuscript = FB.build(s,pid,0,'review_manuscript_room');
+  const manuscriptSpent = gold-s.player.gold;
+  const manuscriptResearch = FB.techResearchRate(s)-before;
+  const paperWithoutKnowledge = FB.build(s,pid,1,'review_paper_collection');
+  rec.completed.push('paper_scholarship'); FB.invalidateTechBonuses();
+  const beforePaper = FB.techResearchRate(s);
+  const paperGold = s.player.gold, paperCost = FB.buildCost(s,pid,'review_paper_collection');
+  const paper = FB.build(s,pid,1,'review_paper_collection'), paperSpent = paperGold-s.player.gold;
+  const research = manuscriptResearch + FB.techResearchRate(s)-beforePaper;
+  const one = FB.build(s,pid,0,'review_two_place_guesthouse');
+  const two = FB.build(s,pid,1,'review_two_place_guesthouse');
+  const third = FB.build(s,pid,2,'review_two_place_guesthouse');
+  const separate = FB.build(s,pid,0,'hospice');
+  return {manuscript:manuscript,manuscriptSpent:manuscriptSpent,cost:cost,paperWithoutKnowledge:paperWithoutKnowledge,
+    paper:paper,paperSpent:paperSpent,paperCost:paperCost,research:research,
+    factor:1+FB.realmPolicyResearchFactor(s,FB.techRealmId(s)),
+    one:one,two:two,third:third,separate:separate,save:FB.save.serialize(),sig:FB.mods.sig()};
+}
+
 test('ordinary imported facilities differ in knowledge, payment, research and care capacity', async function ({ page }) {
   await prepareLord(page,true);
-  const r = await page.evaluate(function () {
-    const s = FB.state, pid = s.player.provinceId;
-    const rec = FB.realmTechRecord(s); rec.completed = ['manuscript_codex']; FB.invalidateTechBonuses();
-    const gold = s.player.gold, before = FB.techResearchRate(s);
-    const cost = FB.buildCost(s,pid,'review_manuscript_room');
-    const manuscript = FB.build(s,pid,0,'review_manuscript_room');
-    const manuscriptSpent = gold-s.player.gold;
-    const manuscriptResearch = FB.techResearchRate(s)-before;
-    const paperWithoutKnowledge = FB.build(s,pid,1,'review_paper_collection');
-    rec.completed.push('paper_scholarship'); FB.invalidateTechBonuses();
-    const beforePaper = FB.techResearchRate(s);
-    const paperGold = s.player.gold, paperCost = FB.buildCost(s,pid,'review_paper_collection');
-    const paper = FB.build(s,pid,1,'review_paper_collection'), paperSpent = paperGold-s.player.gold;
-    const research = manuscriptResearch + FB.techResearchRate(s)-beforePaper;
-    const one = FB.build(s,pid,0,'review_two_place_guesthouse');
-    const two = FB.build(s,pid,1,'review_two_place_guesthouse');
-    const third = FB.build(s,pid,2,'review_two_place_guesthouse');
-    const separate = FB.build(s,pid,0,'hospice');
-    return {manuscript:manuscript,manuscriptSpent:manuscriptSpent,cost:cost,paperWithoutKnowledge:paperWithoutKnowledge,
-      paper:paper,paperSpent:paperSpent,paperCost:paperCost,research:research,
-      factor:1+FB.realmPolicyResearchFactor(s,FB.techRealmId(s)),
-      one:one,two:two,third:third,separate:separate,save:FB.save.serialize(),sig:FB.mods.sig()};
-  });
+  const r = await page.evaluate(buildImportedFacilities);
   expect(r).toMatchObject({manuscript:true,paperWithoutKnowledge:false,paper:true,one:true,two:true,third:false,separate:true});
   expect(r.manuscriptSpent).toBeCloseTo(r.cost, 8); expect(r.paperSpent).toBeCloseTo(r.paperCost, 8);
   expect(r.research).toBeCloseTo(2*r.factor,10);
   const records = await page.evaluate(function () { return restoreFacts(FB.state, function (v) { return v.buildings[v.player.provinceId]; }); });
   await restoreBookmark(page,r.save);
   expect(await page.evaluate(function () { return restoreFacts(FB.state, function (v) { return v.buildings[v.player.provinceId]; }); })).toBe(records);
+});
+
+/* The case above covers the interactive file import. This one stores the same
+   text before its first boot, so it prepares only modded catalogues, then pastes
+   changed same-name terms through the Mods screen. The session flag keeps the
+   paste reload from storing the original again. */
+const changedTermsTitle = 'changed same-name imported facility terms reject the matching save';
+storedBoot.add(changedTermsTitle);
+test(changedTermsTitle, async function ({ page }, info) {
+  await page.addInitScript(function (text) {
+    if (sessionStorage.getItem('learningCareStored')) return;
+    sessionStorage.setItem('learningCareStored','1');
+    localStorage.setItem('fb_mods',JSON.stringify([text]));
+  },fs.readFileSync(importPath,'utf8'));
+  await openGame(page, info);
+  expect(await page.evaluate(function () { return [FB.mods.count(),!!FBDATA.buildings.review_manuscript_room]; })).toEqual([1,true]);
+  await prepareLord(page);
+  const r = await page.evaluate(buildImportedFacilities);
   const changed = JSON.parse(fs.readFileSync(importPath,'utf8'));
   changed.buildings.review_manuscript_room.research = 0.75;
   await page.evaluate(function () { FB.ui.showMods(); });

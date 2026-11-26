@@ -56,9 +56,13 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
-test('detached command imports reject malformed scope, superior and composition atomically',async function ({page},info) {
+// Fourteen detached candidates run as two fresh-page halves of seven. Every
+// rejection must leave the title and catalogue exactly as they were before the
+// first one, so each half serializes those once and compares after every value.
+for (const part of [0,1]) test('detached command imports reject malformed scope, superior and composition atomically, part '+(part+1)+' of 2',async function ({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function (source) {
+  const result=await page.evaluate(function (args) {
+    const source=args.source;
     const changes=[
       function (d,c) {delete d.mobile.command;},function (d,c) {c.operations.push('conquer_all');},
       function (d,c) {c.operations.push(c.operations[0]);},function (d,c) {c.operations=[];},
@@ -68,15 +72,16 @@ test('detached command imports reject malformed scope, superior and composition 
       function (d,c) {d.government='mobile_confederation';},function (d,c) {delete d.mobile.opening;},
       function (d,c) {c.superior.actorId='constructor';},function (d,c) {c.superior={kind:'realm_ruler',realmId:'constructor'};}
     ];
-    return changes.map(function (change) {
+    const state=JSON.stringify(FB.state),data=JSON.stringify(FBDATA);
+    return changes.slice(args.part*7,args.part*7+7).map(function (change) {
       const input=JSON.parse(JSON.stringify(source)),d=input.bookmarks.dune_world.realms.find(function (r) {return r.mobile;});
       change(d,d.mobile.command);
-      const bytes=JSON.stringify(input),state=JSON.stringify(FB.state),data=JSON.stringify(FBDATA),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const bytes=JSON.stringify(input),rng=FB.getRngState(),uid=FB.getUidCounter();
       return FB.mods.validate(input).length>0 && bytes===JSON.stringify(input) && state===JSON.stringify(FB.state) &&
         data===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
-  },examples.dune);
-  expect(result).toEqual(Array(14).fill(true));
+  },{source:examples.dune,part:part});
+  expect(result).toEqual(Array(7).fill(true));
 });
 
 test('a retained member can change its own pledge while public command is suspended',async function ({page},info) {

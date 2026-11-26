@@ -1,5 +1,6 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
@@ -15,7 +16,21 @@ dependsOnRuntime(__filename,['js/bookmark_composition.js','js/util.js','index.ht
   'js/starts.js','js/main.js','js/model.js','js/treasury.js','js/market.js','js/population.js',
   'js/federates.js','js/armies.js','js/travel.js','js/stories.js','js/mods.js','js/save.js','js/save_v4.js']);
 
-async function importWorld(page,info,prefix,modified) {
+/* The bookmark picker cases import through the Mods screen from a prepared
+   unmodded title. Every other case stores the same text that screen stores
+   before its first boot, so it prepares only the modded catalogue. The session
+   flag keeps a later reload from storing it again. */
+async function importWorld(page,info,prefix,modified,modsScreen) {
+  if(!modsScreen) {
+    await page.addInitScript(function (text) {
+      if(sessionStorage.getItem('datedHomeStored'))return;
+      sessionStorage.setItem('datedHomeStored','1');
+      localStorage.setItem('fb_mods',JSON.stringify([text]));
+    },modified ? JSON.stringify(modified) : fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/dated-home-authority-'+prefix+'.json'),'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function (prefix) {return [FB.mods.count(),!!FBDATA.bookmarks[prefix+'_world']];},prefix)).toEqual([1,true]);
+    return;
+  }
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(modified ? {name:'dated-home-policy.json',mimeType:'application/json',
@@ -51,7 +66,7 @@ async function beginHome(page,prefix,revision,entry) {
 for(const prefix of ['harbor','dune']) {
   for(const entry of ['picker','code']) {
     test(prefix+' '+entry+' adopts the original form and person with a scoped policy',async function({page},info) {
-      await importWorld(page,info,prefix);
+      await importWorld(page,info,prefix,undefined,entry==='picker');
       await beginHome(page,prefix,'local_policy',entry);
       const result=await page.evaluate(function(prefix) {
         const s=FB.state,H=FB.homeAuthority,id=prefix+'_preparation',t=s.stories[id],actor=FB.bookmarkActor(s,prefix+'_home_ruler'),
@@ -74,7 +89,7 @@ for(const prefix of ['harbor','dune']) {
     });
 
     test(prefix+' retained '+entry+' keeps the same scenario without policy commands or inferred deputies',async function({page},info) {
-      await importWorld(page,info,prefix);
+      await importWorld(page,info,prefix,undefined,entry==='picker');
       await beginHome(page,prefix,'baseline',entry);
       const result=await page.evaluate(function(prefix) {
         function facts(s){const t=FB.save.expandedSnapshot(s);
@@ -152,7 +167,7 @@ for(const prefix of ['harbor','dune']) {
 
   test(prefix+' NPC preparation uses the same original policy without automating funds or replacing officeholders',async function({page},info) {
     await importWorld(page,info,prefix);
-    // The import reload left a prepared modded title; begin there without reopening.
+    // The stored boot left a prepared modded title; begin there without reopening.
     await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
     const result=await page.evaluate(function(prefix) {
       const s=FB.state,id=prefix+'_preparation',story=FB.stories.get(id),t=s.stories[id],rid=t.provider.realmId,
@@ -197,21 +212,26 @@ for(const prefix of ['harbor','dune']) {
   });
 }
 
-test('malformed compositions reject through detached ordinary JSON without publishing identities or policies',async function({page},info) {
+// Twelve detached candidates run as two fresh-page halves of six. Every
+// rejection must leave the title and catalogue exactly as they were before the
+// first one, so each half serializes those once and compares after every value.
+for(const part of [0,1]) test('malformed compositions reject through detached ordinary JSON without publishing identities or policies, part '+(part+1)+' of 2',async function({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function(source) {
+  const result=await page.evaluate(function(input) {
+    const source=input.source;
     const changes=[function(p,b){b.homeAuthorityPolicies=null;},function(p,b){b.homeAuthorityPolicies=[];},
       function(p,b){b.homeAuthorityPolicies={};},function(p,b){b.homeAuthorityPolicies.unknown_form=p;delete b.homeAuthorityPolicies.territorial;},
       function(p){p.schema=2;},function(p){p.presence='everywhere';},function(p){p.delegation='yes';},
       function(p){p.extra=true;},function(p){delete p.presence;},function(p,b){b.homeAuthorityPolicies.territorial=null;},
       function(p,b){delete b.homeAuthorityPolicies;},function(p,b){b.homeAuthorityPolicies.territorial=false;}];
-    return changes.map(function(change){const d=JSON.parse(JSON.stringify(source)),b=d.bookmarks.harbor_world.revisions.local_policy;
+    const before=JSON.stringify([FB.state,FBDATA]);
+    return changes.slice(input.part*6,input.part*6+6).map(function(change){const d=JSON.parse(JSON.stringify(source)),b=d.bookmarks.harbor_world.revisions.local_policy;
       change(b.homeAuthorityPolicies.territorial,b);
-      const before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const rng=FB.getRngState(),uid=FB.getUidCounter();
       const errors=FB.mods.validate(d);
       return errors.length>0 && before===JSON.stringify([FB.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter();});
-  },examples.harbor);
-  expect(result).toEqual(Array(12).fill(true));
+  },{source:examples.harbor,part:part});
+  expect(result).toEqual(Array(6).fill(true));
 });
 
 test('forged or deleted opted-in policy provenance fails detached adoption without policy or deputy repair',async function({page},info) {
@@ -224,10 +244,14 @@ test('forged or deleted opted-in policy provenance fails detached adoption witho
       function(s){s.homeAuthorityPolicies.policies.territorial.delegation=false;},
       function(s){s.homeAuthorityPolicies.policies.territorial.extra=true;},
       function(s){s.homeAuthorityPolicies.policies.unknown_form={schema:1,presence:'capital',delegation:true};}];
+    // The campaign and catalogue must match their state before the first
+    // rejection after every one; serialize that reference once.
+    const live=JSON.stringify([FB.state,FBDATA]);
     return changes.map(function(change){const data=JSON.parse(JSON.stringify(source));change(data.state);
-      const before=JSON.stringify([FB.state,data.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const before=JSON.stringify(data.state),rng=FB.getRngState(),uid=FB.getUidCounter();
       let rejected=false;try{FB.save.v4.migrate(data);}catch(error){rejected=true;}
-      return rejected && before===JSON.stringify([FB.state,data.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter();});
+      return rejected && before===JSON.stringify(data.state) && live===JSON.stringify([FB.state,FBDATA]) &&
+        rng===FB.getRngState() && uid===FB.getUidCounter();});
   });
   expect(result).toEqual(Array(10).fill(true));
 });
