@@ -251,9 +251,13 @@ function replacement(source) {
   return source;
 }
 async function storedTitle(page,info,mod) {
+  // Install the fixture once per context. The marker is also kept in
+  // localStorage because a file:// reload can lose the sessionStorage marker,
+  // and reinstalling here would overwrite the configuration the case stored.
   await page.addInitScript(function (source) {
-    if(sessionStorage.getItem('policy-fixture-installed'))return;
+    if(sessionStorage.getItem('policy-fixture-installed')||localStorage.getItem('policy-fixture-installed'))return;
     localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(source)]));
+    localStorage.setItem('policy-fixture-installed','1');
     sessionStorage.setItem('policy-fixture-installed','1');
   },mod);
   await openGame(page,info);

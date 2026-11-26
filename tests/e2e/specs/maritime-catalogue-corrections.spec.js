@@ -4,7 +4,8 @@ const {prepareGameContent} = require('../support/game/navigation');
 const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openGame, openTitle } = require('../support/game/navigation');
+const { installStoredMod } = require('../support/game/stored-mod');
 const { startParityGame } = require('../support/game/parity');
 const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
@@ -313,6 +314,15 @@ async function importCoastalExample(page, info, sample) {
   await prepareCoast(page,info,true,true);
 }
 
+// Boot the same file text the Mods screen stores. The import case above keeps
+// the file picker for each sample; this skips the unmodded catalogue its reload discards.
+async function storedCoastalExample(page, info, sample) {
+  await openTitle(page,info);
+  await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/'+sample.file),'utf8'));
+  await page.waitForFunction(function (input) { return FB.game.bootReady && !!FBDATA.enterprises[input.business]; },sample);
+  await prepareCoast(page,info,true,true);
+}
+
 async function paidCoastalExample(page, sample) {
   const before = await page.evaluate(function (input) {
     const s = FB.state, pid = s.player.provinceId, rec = FB.realmTechRecord(s);
@@ -369,7 +379,7 @@ for (const sample of [
     })).toBe(before.records);
   });
   test(sample.file + ' rejects a changed stored upgrade price without adopting the paid checkpoint', async function ({ page }, info) {
-    await importCoastalExample(page,info,sample);
+    await storedCoastalExample(page,info,sample);
     const before = await paidCoastalExample(page,sample);
     const changed = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/'+sample.file),'utf8'));
     changed.enterprises[sample.business].upgrades[0].cost++;
