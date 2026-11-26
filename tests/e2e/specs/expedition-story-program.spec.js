@@ -5,6 +5,7 @@ const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-story-harbor.json'),
   upland:require('../fixtures/authoring/expedition-story-upland.json')};
@@ -17,6 +18,24 @@ dependsOnRuntime(__filename,['js/bookmark_sources.js','index.html','data/mobile_
   'js/save.js','js/save_v4.js','js/events.js','data/events_war.js','data/bookmark_476_italy.js',
   'js/ui_misc.js','js/ui_panels.js','js/ui_mobile.js','js/main.js']);
 
+// Transaction cases load the same JSON through the ordinary persisted-mod
+// boot. The import cases below cover the file picker for both declarations.
+async function storedBoot(page,info,label) {
+  await page.addInitScript(function (source) {
+    if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+  },JSON.stringify(examples[label]));
+  await openGame(page,info);
+}
+/* Transaction cases without a restore share one stored boot per declaration
+   with its world active; each begins its own start. Imported, modified,
+   restoring and viewport cases keep fresh pages. */
+function sharedProgram(label) {
+  return {boot:async function (page,info) {
+    await storedBoot(page,info,label);
+    await activateBookmark(page,(label==='harbor' ? 'harbor' : 'dune')+'_world');
+  }};
+}
+
 async function begin(page,info,label,modified,importFile) {
   if (modified || importFile) {
     if(page.url()==='about:blank')await openGame(page,info);
@@ -26,13 +45,8 @@ async function begin(page,info,label,modified,importFile) {
     await page.locator('#modfile').setInputFiles(modified ? {name:'expedition-story-'+label+'.json',mimeType:'application/json',
       buffer:Buffer.from(JSON.stringify(modified))} : path.resolve(__dirname,'../fixtures/authoring/expedition-story-'+label+'.json'));
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  } else {
-    // Transaction cases load the same JSON through the ordinary persisted-mod
-    // boot. The import cases below cover the file picker for both declarations.
-    await page.addInitScript(function (source) {
-      if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods',JSON.stringify([source]));
-    },JSON.stringify(examples[label]));
-    await openGame(page,info);
+  } else if (!isSharedPage(page)) {
+    await storedBoot(page,info,label);
   }
   const prefix=label==='harbor' ? 'harbor' : 'dune';
   await prepareGameContent(page);
@@ -174,30 +188,6 @@ for (const label of ['harbor','upland']) {
     expect(result).toEqual({status:'preparing',definition:0,noHost:true,noDuplicate:true,actor:true,denied:true,pure:true,tech:'none'});
   });
 
-  test(label+' preparation and direct owner APIs share one attempted daily action and form only once',async function ({page},info) {
-    await begin(page,info,label);
-    const result=await page.evaluate(function () {
-      const C=programCase,s=FB.state,W=FB.expeditionStoryPrograms,P=FB.expeditionPreparation,
-        source=s.population.counties[C.origin].count,provider=C.prep(s).provider.characterId;
-      const q=W.review(s,C.id,'authorize',provider),first=W.commit(s,q),before=JSON.stringify(s),
-        repeated=W.commit(s,q),direct=P.commit(s,P.review(s,C.preparationId,'grant',provider)),same=before===JSON.stringify(s);
-      C.next(s);const grant=C.run(s,'grant',provider);C.next(s);
-      const oldPeople=Object.keys(s.chars).sort(),privateGold=s.player.gold,land=JSON.stringify([s.owner,s.holder]),formed=C.run(s,'form'),t=C.record(s);
-      if (!formed) return {first:first,grant:grant,formed:formed};
-      const owner=FB.mobile.row(s,C.rid),f=C.prep(s).formed,a=FB.mobile.host(s,C.rid),snapshot=C.owners(s);
-      C.next(s);const again=C.run(s,'form');
-      return {first:first,repeated:repeated,direct:direct,same:same,grant:grant,formed:formed,again:again,
-        active:t.status==='active',reference:t.formation.hostId===f.hostId && t.formation.migrationId===f.migrationId &&
-          t.formation.leaderGeneration===f.generation,one:s.armies.filter(function (a) {return a.realm===C.rid;}).length===1,
-        actual:owner.accounting.initial===0 && owner.accounting.arrivals===FB.mobile.total(s,C.rid) &&
-          Math.abs(a.mobileFood+owner.food-f.food)<1e-8,withdrawn:source-s.population.counties[C.origin].count,
-        noGrant:land===JSON.stringify([s.owner,s.holder]) && privateGold===s.player.gold &&
-          JSON.stringify(oldPeople)===JSON.stringify(Object.keys(s.chars).sort()),unchanged:snapshot===C.owners(s)};
-    });
-    expect(result).toEqual({first:true,repeated:false,direct:false,same:true,grant:true,formed:true,again:false,active:true,
-      reference:true,one:true,actual:true,withdrawn:label==='harbor' ? 0 : 1600,noGrant:true,unchanged:true});
-  });
-
   test(label+' pending and formed matching restore retain real owner state without replay',async function ({page},info) {
     await begin(page,info,label);
     const result=await page.evaluate(function () {
@@ -227,6 +217,31 @@ for (const label of ['harbor','upland']) {
     expect(result).toEqual({formed:true,pending:true,active:true,compact:true,rng:true,uid:true});
   });
 
+  describeSharedPage(label+' shared preparation',sharedProgram(label),function () {
+  test(label+' preparation and direct owner APIs share one attempted daily action and form only once',async function ({page},info) {
+    await begin(page,info,label);
+    const result=await page.evaluate(function () {
+      const C=programCase,s=FB.state,W=FB.expeditionStoryPrograms,P=FB.expeditionPreparation,
+        source=s.population.counties[C.origin].count,provider=C.prep(s).provider.characterId;
+      const q=W.review(s,C.id,'authorize',provider),first=W.commit(s,q),before=JSON.stringify(s),
+        repeated=W.commit(s,q),direct=P.commit(s,P.review(s,C.preparationId,'grant',provider)),same=before===JSON.stringify(s);
+      C.next(s);const grant=C.run(s,'grant',provider);C.next(s);
+      const oldPeople=Object.keys(s.chars).sort(),privateGold=s.player.gold,land=JSON.stringify([s.owner,s.holder]),formed=C.run(s,'form'),t=C.record(s);
+      if (!formed) return {first:first,grant:grant,formed:formed};
+      const owner=FB.mobile.row(s,C.rid),f=C.prep(s).formed,a=FB.mobile.host(s,C.rid),snapshot=C.owners(s);
+      C.next(s);const again=C.run(s,'form');
+      return {first:first,repeated:repeated,direct:direct,same:same,grant:grant,formed:formed,again:again,
+        active:t.status==='active',reference:t.formation.hostId===f.hostId && t.formation.migrationId===f.migrationId &&
+          t.formation.leaderGeneration===f.generation,one:s.armies.filter(function (a) {return a.realm===C.rid;}).length===1,
+        actual:owner.accounting.initial===0 && owner.accounting.arrivals===FB.mobile.total(s,C.rid) &&
+          Math.abs(a.mobileFood+owner.food-f.food)<1e-8,withdrawn:source-s.population.counties[C.origin].count,
+        noGrant:land===JSON.stringify([s.owner,s.holder]) && privateGold===s.player.gold &&
+          JSON.stringify(oldPeople)===JSON.stringify(Object.keys(s.chars).sort()),unchanged:snapshot===C.owners(s)};
+    });
+    expect(result).toEqual({first:true,repeated:false,direct:false,same:true,grant:true,formed:true,again:false,active:true,
+      reference:true,one:true,actual:true,withdrawn:label==='harbor' ? 0 : 1600,noGrant:true,unchanged:true});
+  });
+
   test(label+' refusal or expiry before formation closes quietly without a host or withdrawal',async function ({page},info) {
     await begin(page,info,label);
     const result=await page.evaluate(function () {
@@ -242,10 +257,13 @@ for (const label of ['harbor','upland']) {
     });
     expect(result).toEqual([true,true,true]);
   });
+  });
 }
 
+// Validation-only rejections share one prepared unmodded title.
+describeSharedPage('unmodded validation',{boot:openGame},function () {
 test('same-file bookmark faith targets normalize and reject unknown titles before storage without mutation',async function ({page},info) {
-  await openGame(page,info);
+  if (!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function (examples) {
     const before=JSON.stringify([FB.state,FBDATA,examples]),rng=FB.getRngState(),uid=FB.getUidCounter();
     const cases=Object.keys(examples).map(function (label) {
@@ -262,7 +280,7 @@ test('same-file bookmark faith targets normalize and reject unknown titles befor
 });
 
 test('detached JSON rejects unsupported composition, foreign references and excessive waypoint totals without mutation',async function ({page},info) {
-  await openGame(page,info);
+  if (!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function (source) {
     const changes=[function(m,d,p){p.programId='missing';},function(m,d,p){p.commandId='missing';},
       function(m,d,p){p.preparationId='missing';},function(m,d,p){p.requires=[];},function(m,d,p){p.realmId='harbor_commune';},
@@ -281,7 +299,9 @@ test('detached JSON rejects unsupported composition, foreign references and exce
   },examples.harbor);
   expect(result).toEqual({rejected:Array(12).fill(true),unattached:[],optional:[],pure:true});
 });
+});
 
+describeSharedPage('harbor shared program',sharedProgram('harbor'),function () {
 test('exact stale formation quotes reject changed original people, authority, consent, stock and money',async function ({page},info) {
   await begin(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -312,27 +332,6 @@ test('the canonical cursor observes actual waypoints once per day and never enro
   expect(result).toEqual({formed:true,pure:true,first:true,cursor:1,second:false,last:true,finished:true,noVow:true,absent:true,at:true,camp:true,noShadow:true});
 });
 
-test('a separately vowed live objective orders the original host, restores in flight and expires without ending its vow',async function ({page},info) {
-  await begin(page,info,'harbor');
-  const result=await page.evaluate(function () {
-    const C=programCase,s=FB.state,W=FB.expeditionStoryPrograms,M=FB.mobile;
-    const formed=C.ready(s),assembled=C.assembled(s),launched=C.launch(s);
-    if (!formed || !assembled || !launched) return {formed:formed,assembled:assembled,launched:launched};
-    const before=C.owners(s),q=W.review(s,C.id,'step',C.actor(s),'objective'),pure=before===C.owners(s),issued=W.commit(s,q),
-      r=M.row(s,C.rid),host=M.host(s,C.rid),camp=M.migration(s,C.rid).at,ticket=r.expeditionProgram.execution.orders[0];
-    const snapshot=C.checkpoint(s),save=FB.save.serialize();FB.save.restore(JSON.parse(save));
-    const restored=C.diff(snapshot,C.checkpoint(FB.state)),x=FB.state,
-      vow=JSON.stringify(x.greatHolyWar),resources=JSON.stringify([x.population,x.market,x.realms,x.owner,x.holder,M.row(x,C.rid).members]);
-    x.turn=C.record(x).endTurn;x.date.day=x.turn+1;FB.stories.get(C.id).day(x,C.record(x));
-    return {formed:formed,assembled:assembled,launched:launched,pure:pure,issued:issued,
-      ticket:!!ticket && ticket.hostId===host.id && ticket.campaignId===s.greatHolyWar.id,
-      camp:M.migration(x,C.rid).at===camp,restored:restored,expired:C.record(x).status==='closed' && C.record(x).reason==='expired',
-      stopped:!(M.host(x,C.rid).path || []).length,vow:vow===JSON.stringify(x.greatHolyWar),
-      resources:resources===JSON.stringify([x.population,x.market,x.realms,x.owner,x.holder,M.row(x,C.rid).members])};
-  });
-  expect(result).toEqual({formed:true,assembled:true,launched:true,pure:true,issued:true,ticket:true,camp:true,restored:true,expired:true,stopped:true,vow:true,resources:true});
-});
-
 test('current movement is real, bounded and distinct from the civilian camp',async function ({page},info) {
   await begin(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -361,22 +360,6 @@ test('manual replacement pauses shared intent and terminal closure retains that 
   expect(result).toEqual({manual:true,paused:true,denied:true,stopped:true,closed:true,route:true,vow:true});
 });
 
-test('changed leader, issuer, host or member consent rejects the original step without transferring intent',async function ({page},info) {
-  await begin(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const C=programCase,s=FB.state,E=FB.expeditionPrograms;C.ready(s);C.next(s);
-    return [function(s,r){r.leaderId=C.prep(s).bindings[1].characterId;},function(s,r){r.command.leaderGeneration++;},
-      function(s,r){s.chars[FB.bookmarkActor(s,'dune_authorizer').id].dead=true;},
-      function(s,r){FB.mobile.migration(s,C.rid).hostId='foreign_host';},
-      function(s,r){r.members[1].allegiance=false;}].map(function (change) {
-        const x=JSON.parse(JSON.stringify(s)),r=FB.mobile.row(x,C.rid),q=E.review(x,C.rid,'assembly',{kind:'character',id:C.actor(x)});
-        change(x,r);const before=JSON.stringify(x),rejected=!E.commit(x,q) && before===JSON.stringify(x);
-        return q.allowed && rejected && C.record(x).actorId===C.actor(s);
-      });
-  });
-  expect(result).toEqual(Array(5).fill(true));
-});
-
 test('player and NPC reviews share the bound while refuse policy takes a quiet no-departure path',async function ({page},info) {
   await begin(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -387,16 +370,6 @@ test('player and NPC reviews share the bound while refuse policy takes a quiet n
     E.day(s);return {player:player,cursor:cursor,once:stamp===JSON.stringify([C.record(s),C.owners(s)]),turn:C.record(s).lastActionTurn===s.turn};
   });
   expect(result).toEqual({player:true,cursor:1,once:true,turn:true});
-});
-
-test('inland refusal policy leaves original residents, money and independent institutions unchanged',async function ({page},info) {
-  await begin(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const C=programCase,s=FB.state,before=C.owners(s);FB.stories.day(s);
-    return {closed:C.record(s).status==='closed',refused:C.record(s).reason==='refused',parent:C.prep(s).reason==='refused',
-      unchanged:before===C.owners(s),noHost:!FB.mobile.host(s,C.rid)};
-  });
-  expect(result).toEqual({closed:true,refused:true,parent:true,unchanged:true,noHost:true});
 });
 
 test('pause, direct control-source resume and waiting share the same daily budget',async function ({page},info) {
@@ -437,6 +410,28 @@ test('a direct live composition boundary expires unformed preparation through it
   });
   expect(result).toEqual({expired:true,pure:true,closed:true,parent:true,unchanged:true});
 });
+});
+
+test('a separately vowed live objective orders the original host, restores in flight and expires without ending its vow',async function ({page},info) {
+  await begin(page,info,'harbor');
+  const result=await page.evaluate(function () {
+    const C=programCase,s=FB.state,W=FB.expeditionStoryPrograms,M=FB.mobile;
+    const formed=C.ready(s),assembled=C.assembled(s),launched=C.launch(s);
+    if (!formed || !assembled || !launched) return {formed:formed,assembled:assembled,launched:launched};
+    const before=C.owners(s),q=W.review(s,C.id,'step',C.actor(s),'objective'),pure=before===C.owners(s),issued=W.commit(s,q),
+      r=M.row(s,C.rid),host=M.host(s,C.rid),camp=M.migration(s,C.rid).at,ticket=r.expeditionProgram.execution.orders[0];
+    const snapshot=C.checkpoint(s),save=FB.save.serialize();FB.save.restore(JSON.parse(save));
+    const restored=C.diff(snapshot,C.checkpoint(FB.state)),x=FB.state,
+      vow=JSON.stringify(x.greatHolyWar),resources=JSON.stringify([x.population,x.market,x.realms,x.owner,x.holder,M.row(x,C.rid).members]);
+    x.turn=C.record(x).endTurn;x.date.day=x.turn+1;FB.stories.get(C.id).day(x,C.record(x));
+    return {formed:formed,assembled:assembled,launched:launched,pure:pure,issued:issued,
+      ticket:!!ticket && ticket.hostId===host.id && ticket.campaignId===s.greatHolyWar.id,
+      camp:M.migration(x,C.rid).at===camp,restored:restored,expired:C.record(x).status==='closed' && C.record(x).reason==='expired',
+      stopped:!(M.host(x,C.rid).path || []).length,vow:vow===JSON.stringify(x.greatHolyWar),
+      resources:resources===JSON.stringify([x.population,x.market,x.realms,x.owner,x.holder,M.row(x,C.rid).members])};
+  });
+  expect(result).toEqual({formed:true,assembled:true,launched:true,pure:true,issued:true,ticket:true,camp:true,restored:true,expired:true,stopped:true,vow:true,resources:true});
+});
 
 test('strict optional records reject erased, retargeted and downgraded saves without adopting or repairing',async function ({page},info) {
   await begin(page,info,'harbor');
@@ -471,6 +466,33 @@ test('truthful stale command saves restore exactly and reconcile only at a live 
   expect(result).toEqual({restored:true,paused:true,actor:true,unchanged:true});
 });
 
+describeSharedPage('upland shared program',sharedProgram('upland'),function () {
+test('changed leader, issuer, host or member consent rejects the original step without transferring intent',async function ({page},info) {
+  await begin(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const C=programCase,s=FB.state,E=FB.expeditionPrograms;C.ready(s);C.next(s);
+    return [function(s,r){r.leaderId=C.prep(s).bindings[1].characterId;},function(s,r){r.command.leaderGeneration++;},
+      function(s,r){s.chars[FB.bookmarkActor(s,'dune_authorizer').id].dead=true;},
+      function(s,r){FB.mobile.migration(s,C.rid).hostId='foreign_host';},
+      function(s,r){r.members[1].allegiance=false;}].map(function (change) {
+        const x=JSON.parse(JSON.stringify(s)),r=FB.mobile.row(x,C.rid),q=E.review(x,C.rid,'assembly',{kind:'character',id:C.actor(x)});
+        change(x,r);const before=JSON.stringify(x),rejected=!E.commit(x,q) && before===JSON.stringify(x);
+        return q.allowed && rejected && C.record(x).actorId===C.actor(s);
+      });
+  });
+  expect(result).toEqual(Array(5).fill(true));
+});
+
+test('inland refusal policy leaves original residents, money and independent institutions unchanged',async function ({page},info) {
+  await begin(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const C=programCase,s=FB.state,before=C.owners(s);FB.stories.day(s);
+    return {closed:C.record(s).status==='closed',refused:C.record(s).reason==='refused',parent:C.prep(s).reason==='refused',
+      unchanged:before===C.owners(s),noHost:!FB.mobile.host(s,C.rid)};
+  });
+  expect(result).toEqual({closed:true,refused:true,parent:true,unchanged:true,noHost:true});
+});
+
 test('the upland objective needs actual passage through its intermediate county',async function ({page},info) {
   await begin(page,info,'upland');
   const result=await page.evaluate(function () {
@@ -489,6 +511,7 @@ test('the upland objective needs actual passage through its intermediate county'
       ticket:M.row(s,C.rid).expeditionProgram.execution.orders.length===1};
   });
   expect(result).toEqual({formed:true,assembled:true,launched:true,refused:true,pure:true,hostile:true,issued:true,pending:true,ticket:true});
+});
 });
 
 for (const label of ['harbor','upland']) {

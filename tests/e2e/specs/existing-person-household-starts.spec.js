@@ -1,9 +1,12 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame} = require('../support/game/navigation');
+const {openGame, openTitle} = require('../support/game/navigation');
+const {installStoredMod} = require('../support/game/stored-mod');
+const {describeSharedPage, isSharedPage, activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {installRestoreFacts} = require('../support/game/restore-facts');
 const examples = {harbor:require('../fixtures/authoring/existing-person-harbor.json'),
@@ -16,16 +19,30 @@ dependsOnRuntime(__filename, ['index.html', 'data/starts.js', 'data/technology.j
   'js/treasury.js', 'js/authority.js', 'js/population.js', 'js/travel.js', 'js/household_party_travel.js',
   'js/save.js', 'js/save_v4.js', 'js/ui_misc.js', 'js/ui_modals.js']);
 
+/* Cases that open the start picker, assert the ordinary import, or restore a
+   save import through the Mods dialog on a fresh page. The others share one page
+   per example that stores the same file text the dialog stores and boots it once
+   with the example world active (sharedExample); each case begins its own start. */
 async function importExample(page, info, prefix) {
+  if (!isSharedPage(page)) {
   await openGame(page, info);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
     '../fixtures/authoring/existing-person-' + prefix + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix + '_world'];
   }, prefix);
+}
+function sharedExample(prefix) {
+  return {boot:async function (page, info) {
+    await openTitle(page, info);
+    await installStoredMod(page, fs.readFileSync(path.resolve(__dirname,
+      '../fixtures/authoring/existing-person-' + prefix + '.json'), 'utf8'));
+    await activateBookmark(page, prefix + '_world');
+  }};
 }
 function code(prefix, index) {
   const sc = examples[prefix].startScenarios[index || 0];
@@ -125,45 +142,6 @@ for (const prefix of ['harbor', 'dune']) {
     expect(result.personalStation).toBeGreaterThanOrEqual(3);
   });
 
-  test(prefix + ' rejects malformed selectors and mismatched revisions without changing a registry or campaign', async function ({page}, info) {
-    await importExample(page, info, prefix);
-    const result = await page.evaluate(function (input) {
-      const clone = function (value) { return JSON.parse(JSON.stringify(value)); };
-      const prefix = input.prefix, mod = input.mod, sc = mod.startScenarios[0], bm = mod.bookmarks[prefix + '_world'];
-      const baseline = JSON.stringify([FBDATA.startScenarios, FBDATA.bookmarks, FB.state, FB.getRngState(), FB.getUidCounter()]);
-      const changes = [
-        function (m) { m.startScenarios[0].existingPerson = null; },
-        function (m) { m.startScenarios[0].existingPerson.extra = true; },
-        function (m) { m.startScenarios[0].existingPerson.memberId = 'missing'; },
-        function (m) { m.startScenarios[0].existingPerson.realmId = 'missing'; },
-        function (m) { m.startScenarios[0].rulerRealmId = prefix + '_house'; },
-        function (m) { m.startScenarios[0].governmentForm = 'regnum'; },
-        function (m) { m.startScenarios[0].startAge++; },
-        function (m) { m.startScenarios[0].sex = sc.sex === 'm' ? 'f' : 'm'; },
-        function (m) { m.startScenarios[0].startReligion = 'catholic'; },
-        function (m) { m.startScenarios[0].startCulture = 'frankish'; },
-        function (m) { m.startScenarios[0].existingPerson.householdMemberIds.push('chosen'); },
-        function (m) { m.startScenarios[0].existingPerson.householdMemberIds.push('other'); },
-        function (m) { m.startScenarios[0].existingPerson.householdMemberIds = ['chosen']; },
-        function (m) { m.startScenarios[0].tracks = []; },
-        function (m) { m.bookmarks[prefix + '_world'].realms[0].royalCourt.members.find(function (p) { return p.id === 'chosen'; }).alive = false; },
-        function (m) { m.bookmarks[prefix + '_world'].realms[0].royalCourt.members.find(function (p) { return p.id === 'chosen'; }).born = 890; },
-        function (m) { m.bookmarks[prefix + '_world'].realms[0].royalCourt.members.find(function (p) { return p.id === 'chosen'; }).homeProvinceId = prefix === 'harbor' ? 'harbor_ridge' : 'dune_pass'; }
-      ];
-      const rejected = changes.map(function (change) {
-        const candidate = clone(mod); change(candidate);
-        return FB.mods.validate(candidate).length > 0;
-      });
-      const wrong = clone(bm); wrong.revision = 'different'; delete wrong.realms[0].royalCourt;
-      const absent = FB.existingPersonStartProfile(sc, wrong) === null;
-      const valid = !!FB.existingPersonStartProfile(sc, FB.bookmark(prefix + '_world'));
-      return {rejected:rejected, absent:absent, valid:valid,
-        pure:baseline === JSON.stringify([FBDATA.startScenarios, FBDATA.bookmarks, FB.state, FB.getRngState(), FB.getUidCounter()])};
-    }, {prefix:prefix, mod:examples[prefix]});
-    expect(result.rejected).toEqual(Array(17).fill(true));
-    expect(result).toMatchObject({absent:true, valid:true, pure:true});
-  });
-
   test(prefix + ' matching saves preserve selection and actual later homes while forged provenance fails detached adoption', async function ({page}, info) {
     await importExample(page, info, prefix); await begin(page, prefix);
     await installRestoreFacts(page);
@@ -203,40 +181,6 @@ for (const prefix of ['harbor', 'dune']) {
     }, prefix);
     expect(result).toEqual({matching:true, rejected:Array(8).fill(true), noRepair:true, absent:true, noReplay:true,
       remote:prefix === 'harbor' ? 'harbor_ridge' : 'dune_pass'});
-  });
-
-  test(prefix + ' code replay and ordinary direct creation preserve deterministic world and family identity', async function ({page}, info) {
-    await importExample(page, info, prefix);
-    // Onboarding is once per browser profile, independently of the start code.
-    await page.evaluate(function () { FB.game.uiPrefs.onboardingStarted = true; FB.game.saveUiPrefs(); });
-    await begin(page, prefix);
-    const snapshot = async function () {
-      return page.evaluate(function () {
-        const s = FB.state; return JSON.stringify([s.seed, s.chars, s.player, s.owner, s.holder, s.start, s.stories, FB.getRngState() >>> 0, FB.getUidCounter()]);
-      });
-    };
-    const first = await snapshot();
-    await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showScreen('title'); });
-    await seedScreen(page);
-    await page.locator('#ng-seed').fill(code(prefix)); await page.locator('#ng-seed').press('Enter');
-    // Direct creation uses the same pending choices and canonical constructor.
-    await page.evaluate(function () { FB.game.start(); FB.game.setPaused(true); });
-    expect(await snapshot()).toBe(first);
-  });
-
-  test(prefix + ' selected and ordinary households have identical source government, public funds, land and armies', async function ({page}, info) {
-    await importExample(page, info, prefix); await begin(page, prefix);
-    const publicFacts = async function () {
-      return page.evaluate(function (prefix) {
-        const s = FB.state, rid = prefix + '_house';
-        return JSON.stringify([s.owner, s.holder, s.realms[rid].ruler, s.realms[rid].treasury,
-          s.authority.governments[rid], s.armies]);
-      }, prefix);
-    };
-    const first = await publicFacts();
-    await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showScreen('title'); });
-    await begin(page, prefix, 1);
-    expect(await publicFacts()).toBe(first);
   });
 
   test(prefix + ' source succession keeps private property separate and can crown the same existing person', async function ({page}, info) {
@@ -279,6 +223,80 @@ for (const prefix of ['harbor', 'dune']) {
         noNewParents:FB.state.chars[child.charId].fatherId === (me.sex === 'm' ? me.id : partnerId)};
     }, prefix);
     expect(result).toEqual({dead:true, successor:true, original:true, ruler:true, retained:true, noNewParents:true});
+  });
+
+  describeSharedPage(prefix + ' shared existing-person starts', sharedExample(prefix), function () {
+  test(prefix + ' rejects malformed selectors and mismatched revisions without changing a registry or campaign', async function ({page}, info) {
+    await importExample(page, info, prefix);
+    const result = await page.evaluate(function (input) {
+      const clone = function (value) { return JSON.parse(JSON.stringify(value)); };
+      const prefix = input.prefix, mod = input.mod, sc = mod.startScenarios[0], bm = mod.bookmarks[prefix + '_world'];
+      const baseline = JSON.stringify([FBDATA.startScenarios, FBDATA.bookmarks, FB.state, FB.getRngState(), FB.getUidCounter()]);
+      const changes = [
+        function (m) { m.startScenarios[0].existingPerson = null; },
+        function (m) { m.startScenarios[0].existingPerson.extra = true; },
+        function (m) { m.startScenarios[0].existingPerson.memberId = 'missing'; },
+        function (m) { m.startScenarios[0].existingPerson.realmId = 'missing'; },
+        function (m) { m.startScenarios[0].rulerRealmId = prefix + '_house'; },
+        function (m) { m.startScenarios[0].governmentForm = 'regnum'; },
+        function (m) { m.startScenarios[0].startAge++; },
+        function (m) { m.startScenarios[0].sex = sc.sex === 'm' ? 'f' : 'm'; },
+        function (m) { m.startScenarios[0].startReligion = 'catholic'; },
+        function (m) { m.startScenarios[0].startCulture = 'frankish'; },
+        function (m) { m.startScenarios[0].existingPerson.householdMemberIds.push('chosen'); },
+        function (m) { m.startScenarios[0].existingPerson.householdMemberIds.push('other'); },
+        function (m) { m.startScenarios[0].existingPerson.householdMemberIds = ['chosen']; },
+        function (m) { m.startScenarios[0].tracks = []; },
+        function (m) { m.bookmarks[prefix + '_world'].realms[0].royalCourt.members.find(function (p) { return p.id === 'chosen'; }).alive = false; },
+        function (m) { m.bookmarks[prefix + '_world'].realms[0].royalCourt.members.find(function (p) { return p.id === 'chosen'; }).born = 890; },
+        function (m) { m.bookmarks[prefix + '_world'].realms[0].royalCourt.members.find(function (p) { return p.id === 'chosen'; }).homeProvinceId = prefix === 'harbor' ? 'harbor_ridge' : 'dune_pass'; }
+      ];
+      const rejected = changes.map(function (change) {
+        const candidate = clone(mod); change(candidate);
+        return FB.mods.validate(candidate).length > 0;
+      });
+      const wrong = clone(bm); wrong.revision = 'different'; delete wrong.realms[0].royalCourt;
+      const absent = FB.existingPersonStartProfile(sc, wrong) === null;
+      const valid = !!FB.existingPersonStartProfile(sc, FB.bookmark(prefix + '_world'));
+      return {rejected:rejected, absent:absent, valid:valid,
+        pure:baseline === JSON.stringify([FBDATA.startScenarios, FBDATA.bookmarks, FB.state, FB.getRngState(), FB.getUidCounter()])};
+    }, {prefix:prefix, mod:examples[prefix]});
+    expect(result.rejected).toEqual(Array(17).fill(true));
+    expect(result).toMatchObject({absent:true, valid:true, pure:true});
+  });
+
+  test(prefix + ' code replay and ordinary direct creation preserve deterministic world and family identity', async function ({page}, info) {
+    await importExample(page, info, prefix);
+    // Onboarding is once per browser profile, independently of the start code.
+    await page.evaluate(function () { FB.game.uiPrefs.onboardingStarted = true; FB.game.saveUiPrefs(); });
+    await begin(page, prefix);
+    const snapshot = async function () {
+      return page.evaluate(function () {
+        const s = FB.state; return JSON.stringify([s.seed, s.chars, s.player, s.owner, s.holder, s.start, s.stories, FB.getRngState() >>> 0, FB.getUidCounter()]);
+      });
+    };
+    const first = await snapshot();
+    await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showScreen('title'); });
+    await seedScreen(page);
+    await page.locator('#ng-seed').fill(code(prefix)); await page.locator('#ng-seed').press('Enter');
+    // Direct creation uses the same pending choices and canonical constructor.
+    await page.evaluate(function () { FB.game.start(); FB.game.setPaused(true); });
+    expect(await snapshot()).toBe(first);
+  });
+
+  test(prefix + ' selected and ordinary households have identical source government, public funds, land and armies', async function ({page}, info) {
+    await importExample(page, info, prefix); await begin(page, prefix);
+    const publicFacts = async function () {
+      return page.evaluate(function (prefix) {
+        const s = FB.state, rid = prefix + '_house';
+        return JSON.stringify([s.owner, s.holder, s.realms[rid].ruler, s.realms[rid].treasury,
+          s.authority.governments[rid], s.armies]);
+      }, prefix);
+    };
+    const first = await publicFacts();
+    await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showScreen('title'); });
+    await begin(page, prefix, 1);
+    expect(await publicFacts()).toBe(first);
   });
 
   test(prefix + ' one annual boundary leaves protagonist mortality with the player and unrelated compaction with the court', async function ({page}, info) {
@@ -339,4 +357,5 @@ for (const prefix of ['harbor', 'dune']) {
       expect(result).toEqual({absent:true, parents:true, royal:true});
     });
   }
+  });
 }

@@ -23,6 +23,7 @@ const { test, expect } = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { openStoryAffairs } = require('../support/game/story-placement');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 const RAILS = ['zeno_return_476','clovis_syagrius_476','theoderic_italy_476',
   'eastern_africa_476','eastern_italy_476','rugian_frontier_476','sicilian_tribute_476',
   'norican_evacuation_476','thracian_pressure_476','amal_epirus_476',
@@ -30,8 +31,11 @@ const RAILS = ['zeno_return_476','clovis_syagrius_476','theoderic_italy_476',
   'vasconian_campaign_476','gallaecian_campaign_476',
   'western_office_476'];
 
+/* Cases that restore, migrate or reject a save, and the 867 case that edits the
+   story registry's declaration copy, keep a fresh page. The two 476 cases
+   without a restore share one page booted with the 476 world active. */
 async function start(page, testInfo, bookmark, scenario) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill(bookmark === '867'
@@ -71,6 +75,10 @@ for (const crazygames of [false]) {
     });
 }
 
+describeSharedPage('476 starts without a restore', { boot:async function (page, testInfo) {
+  await openGame(page, testInfo);
+  await activateBookmark(page, '476');
+} }, function () {
 test('independent court bargaining waits for an undecided civic household',
   async function ({ page }, testInfo) {
     await start(page, testInfo, '476', 'curialis_476');
@@ -111,6 +119,7 @@ test('world status sheets retain their originating card and registration remains
     });
     expect(result).toEqual([true,true]);
   });
+});
 
 test('Zeno’s commanders restore the office and replace a stale commission exactly once',
   async function ({ page }, testInfo) {

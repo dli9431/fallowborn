@@ -6,6 +6,7 @@ const {test, expect} = require('../support/fixture');
 const {installPageGuards} = require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
+const {describeSharedPage, isSharedPage, activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {harbor:require('../fixtures/authoring/guarded-principal-harbor.json'),
   dune:require('../fixtures/authoring/guarded-principal-dune.json')};
@@ -52,15 +53,26 @@ async function imported(page, info, prefix, modsScreen) {
    first boot, so a case that asserts nothing about that screen prepares only
    the modded catalogue. The session flag keeps a later reload from storing it again. */
 async function stored(page, info, prefix) {
+  // A shared page stored this text and booted it once (sharedGuarded below).
+  if (!isSharedPage(page)) {
   await page.addInitScript(function (text) {
     if (sessionStorage.getItem('guardedPrincipalStored')) return;
     sessionStorage.setItem('guardedPrincipalStored', '1');
     localStorage.setItem('fb_mods', JSON.stringify([text]));
   }, fs.readFileSync(path.resolve(__dirname, '../fixtures/authoring/guarded-principal-' + prefix + '.json'), 'utf8'));
   await openGame(page, info);
+  }
   expect(await page.evaluate(function (p) {
     return [FB.mods.count(), !!FBDATA.bookmarks[p + '_world']];
   }, prefix)).toEqual([1, true]);
+}
+/* Stored-text cases without a restore, a second boot or a picker import share
+   one page per example, booted with its world active; each begins its own start. */
+function sharedGuarded(prefix) {
+  return {boot:async function (page, info) {
+    await stored(page, info, prefix);
+    await activateBookmark(page, prefix + '_world');
+  }};
 }
 async function choose(page) {
   await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showScreen('title'); });
@@ -131,18 +143,6 @@ for (const prefix of ['harbor', 'dune']) {
       total:prefix === 'harbor' ? 1400 : 1600, camps:prefix === 'harbor' ? 1 : 2});
   });
 
-  test(prefix + ' code rejects changed identity and home', async function ({page}, info) {
-    await imported(page, info, prefix); await choose(page); await page.locator('#btn-bm-seed').click();
-    const sc = examples[prefix].startScenarios[0];
-    for (const invalid of [code(prefix).replace(sc.characterName.replace(/ /g, '_'), 'Other_Person'),
-      code(prefix).replace('-' + sc.sex + '-', '-m-'), code(prefix).replace('-standard', '-established'),
-      code(prefix).replace(sc.fixedProvinceId, prefix === 'harbor' ? 'harbor_quay' : 'dune_pass'),
-      code(prefix) + (prefix === 'harbor' ? '-1' : '-0')]) {
-      await page.locator('#ng-seed').fill(invalid); await page.locator('#ng-seed').press('Enter');
-      await expect(page.locator('#ng-seed-err')).not.toBeEmpty();
-    }
-  });
-
   test(prefix + ' direct entry replays the same guarded world from a fresh boot', async function ({page, browser}, info) {
     // The replay is a second, independent context booted from the same stored
     // JSON and browser profile; neither prepares the unmodded catalogue, and the
@@ -161,6 +161,19 @@ for (const prefix of ['harbor', 'dune']) {
       await begin(fresh, prefix, true); expect(await snapshot(fresh)).toEqual(first);
     } finally {
       try { expect(guard.faults).toEqual([]); } finally { await context.close(); }
+    }
+  });
+
+  describeSharedPage(prefix + ' shared guarded starts', sharedGuarded(prefix), function () {
+  test(prefix + ' code rejects changed identity and home', async function ({page}, info) {
+    await imported(page, info, prefix); await choose(page); await page.locator('#btn-bm-seed').click();
+    const sc = examples[prefix].startScenarios[0];
+    for (const invalid of [code(prefix).replace(sc.characterName.replace(/ /g, '_'), 'Other_Person'),
+      code(prefix).replace('-' + sc.sex + '-', '-m-'), code(prefix).replace('-standard', '-established'),
+      code(prefix).replace(sc.fixedProvinceId, prefix === 'harbor' ? 'harbor_quay' : 'dune_pass'),
+      code(prefix) + (prefix === 'harbor' ? '-1' : '-0')]) {
+      await page.locator('#ng-seed').fill(invalid); await page.locator('#ng-seed').press('Enter');
+      await expect(page.locator('#ng-seed-err')).not.toBeEmpty();
     }
   });
 
@@ -243,6 +256,7 @@ for (const prefix of ['harbor', 'dune']) {
     }, prefix);
     expect(result).toEqual({allowed:true, stale:true, released:true, repeated:false, noGrant:true,
       paid:true, arrived:true, travelling:true, local:true, party:true});
+  });
   });
 
   test(prefix + ' matching guarded and released saves retain depleted pools and strict original provenance', async function ({page}, info) {

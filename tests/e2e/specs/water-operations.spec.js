@@ -9,6 +9,7 @@ const {installPageGuards} = require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {describeSharedPage, isSharedPage, activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/water-operations-river.json'),
   catchment:require('../fixtures/authoring/water-operations-catchment.json')};
@@ -18,13 +19,18 @@ dependsOnRuntime(__filename,[
   'js/population.js','js/technology.js','js/lordships.js','js/treasury.js','js/home_authority.js',
   'js/building_institutions.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);
 
+/* On a shared page the group stored the river example once and booted it with
+   its world active (sharedRiver below), so the case skips the dialog import its
+   fresh cases keep; each case begins its own start. */
 async function importExample(page,info,name,custom,ruler) {
+  if (!isSharedPage(page)) {
   await openGame(page,info);
   await expectModAdmission(page,custom || examples[name]);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(custom ? {name:'water-example.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(custom))} :
     path.resolve(__dirname,'../fixtures/authoring/water-operations-' + name + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  }
   const origin = name === 'river' ? 'river' : 'upland';
   await prepareGameContent(page);
   await page.waitForFunction(function (id) { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[id]; },'resource_' + origin);
@@ -45,15 +51,23 @@ async function importExample(page,info,name,custom,ruler) {
 // Boots the exact fixture JSON the Mods dialog stores, so the page prepares only
 // the modded catalogue once. The dialog import and its unmodded admission keep
 // their own cases.
-async function bootStored(page,info,name) {
+async function storeExample(page,info,name) {
   await page.addInitScript(function (source) {
     if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods',JSON.stringify([source]));
   },fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/water-operations-' + name + '.json'),'utf8'));
   await openGame(page,info);
   expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+}
+async function bootStored(page,info,name) {
+  await storeExample(page,info,name);
   const origin = name === 'river' ? 'river' : 'upland';
   await beginBookmarkFromTitle(page,'resource_' + origin,'resource_' + origin + '_household');
 }
+// River cases without a restore, a modified example or a second boot share this page.
+const sharedRiver = {boot:async function (page,info) {
+  await storeExample(page,info,'river');
+  await activateBookmark(page,'resource_river');
+}};
 
 // Setup purchases through the same realm transaction used by the annual AI.
 async function prepare(page,fill) {
@@ -131,6 +145,7 @@ test('dry storage cannot construct or operate a usable service, while paid filli
   expect(result).toEqual({pure:true,fill:true,used:2,stock:2,effect:0,again:false});
 });
 
+describeSharedPage('river shared operations',sharedRiver,function () {
 test('stale source, cash, custody, ruin, authority and period reviews are atomic and leave RNG and UID unchanged',async function ({page},info) {
   await importExample(page,info,'river');await prepare(page,false);
   const result=await page.evaluate(function () {
@@ -166,39 +181,6 @@ test('operating sources and asset authority remain live without removing propert
   expect(result).toEqual(Array(5).fill(true));
 });
 
-for (const effect of ['tax','piety','research','populationCapacity','populationFamineProtection','populationCrisisProtection','migrationAttraction']) {
-  test(effect + ' readers use the same paid receipt and legacy unbound records retain their defaults',async function ({page},info) {
-    const m=JSON.parse(JSON.stringify(examples.river)),d=m.buildings.water_service_plant;
-    delete d.populationCapacity;d[effect]=effect==='tax'||effect==='piety'||effect==='research'?1:0.03;
-    m.buildingOperationProfiles.water_service.effect=effect;
-    delete m.buildings.water_rival_plant.populationCapacity;
-    m.buildings.water_rival_plant[effect]=d[effect];m.buildingOperationProfiles.water_rival.effect=effect;
-    await importExample(page,info,'river',m);await prepare(page,false);
-    const result=await page.evaluate(function (effect) {
-      const s=FB.state,O=FB.buildingOperations,a=O.compile(FB.campaignBookmark(s)).assignments[1],who=FB.settlementHolder(s,a.countyId,a.slot);
-      const value=FBDATA.buildings[a.buildingId][effect],r=s.buildings[a.countyId].find(function(r){return r.id===a.buildingId;});
-      const idle=FB.buildingBonusAt(s,a.countyId,a.slot,effect),rate=FB.techResearchRate(s,who.id);
-      const worked=O.commit(s,O.quote(s,{countyId:a.countyId,settlement:a.slot,buildingId:a.buildingId,actor:who}));
-      const active=FB.buildingBonusAt(s,a.countyId,a.slot,effect),researchDelta=FB.techResearchRate(s,who.id)-rate;
-      const projection=FB.settlementFiscalProjection(s,a.countyId,a.slot);
-      const saved=JSON.parse(JSON.stringify(s));delete saved.buildings[a.countyId].find(function(r){return r.id===a.buildingId;}).waterOperation;
-      delete saved.buildingOperations;delete saved.siteResources;
-      O.validate(saved);
-      return {idle:idle,worked:worked,active:active,value:value,researchDelta:researchDelta,
-        fiscal:projection.amounts.upkeep,legacy:FB.buildingBonusAt(saved,a.countyId,a.slot,effect),
-        legacyUpkeep:FB.buildingBonusAt(saved,a.countyId,a.slot,'upkeep'),
-        capacity:FB.countyBuildingCapacityBonus(s,a.countyId),attraction:FB.countyBuildingAttraction(s,a.countyId),
-        famine:FB.countyBuildingFamineProtection(s,a.countyId),crisis:FB.countyBuildingCrisisProtection(s,a.countyId)};
-    },effect);
-    expect(result).toMatchObject({idle:0,worked:true,active:d[effect],value:d[effect],legacy:d[effect],legacyUpkeep:2,fiscal:0});
-    if (effect==='research') expect(result.researchDelta).toBeCloseTo(1,8);
-    if (effect==='populationCapacity') expect(result.capacity).toBe(0.03);
-    if (effect==='migrationAttraction') expect(result.attraction).toBe(0.03);
-    if (effect==='populationFamineProtection') expect(result.famine).toBe(0.03);
-    if (effect==='populationCrisisProtection') expect(result.crisis).toBe(0.03);
-  });
-}
-
 test('AI uses the same receipt, demand budget and existing public reserves without private purse funding',async function ({page},info) {
   await importExample(page,info,'river');await prepare(page,false);
   const result=await page.evaluate(function () {
@@ -223,45 +205,6 @@ test('public reserves, work funding and competing source draw fail without parti
       return !q.allowed&&!committed&&before===JSON.stringify(t)&&FB.buildingBonusIn(t,a.countyId,'populationCapacity')===0;});
   });
   expect(result).toEqual(Array(3).fill(true));
-});
-
-test('same-seed fresh campaigns reproduce exact paid receipts, resource balances, people and identities',async function ({page,browser},info) {
-  async function facts(page) {
-    await prepare(page,true);
-    return page.evaluate(function () {
-      const s=FB.state,O=FB.buildingOperations,a=O.compile(FB.campaignBookmark(s)).assignments[1],who=FB.settlementHolder(s,a.countyId,a.slot);
-      const q=O.quote(s,{countyId:a.countyId,settlement:a.slot,buildingId:a.buildingId,actor:who});
-      if (!O.commit(s,q)) throw new Error('Expected funded deterministic use.');
-      return {facts:JSON.stringify([s.buildingOperations,s.siteResources,s.population,s.buildings,s.chars,s.realms,s.owner,s.holder]),rng:FB.getRngState()>>>0,uid:FB.getUidCounter()};
-    });
-  }
-  // The second fresh campaign boots in its own context beside the first, so it
-  // prepares at the same time instead of after another reload.
-  const context=await browser.newContext({viewport:{width:1280,height:800},locale:'en-US',timezoneId:'UTC'});
-  try {
-    const second=await context.newPage(),guard=installPageGuards(second);
-    await Promise.all([bootStored(page,info,'river'),bootStored(second,info,'river')]);
-    const first=await facts(page);
-    expect(await facts(second)).toEqual(first);
-    expect(guard.faults,'second context faults').toEqual([]);
-  } finally { await context.close(); }
-});
-
-test('detached validation rejects bad types, unsupported bonuses, routes, cycles and foreign demand without publication',async function ({page},info) {
-  await openGame(page,info);
-  const result=await page.evaluate(function (example) {
-    const before=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState(),uid=FB.getUidCounter(),sig=FB.mods.sig();
-    const changes=[function(m){m.buildingOperationProfiles.water_service.amount=0;},function(m){m.buildingOperationProfiles.water_service.periodDays=91;},
-      function(m){m.buildingOperationProfiles.water_service.workCost=-1;},function(m){m.buildingOperationProfiles.water_service.effect='levy';},
-      function(m){m.buildings.water_service_plant.piety=1;},function(m){m.buildings.water_service_plant.dev=1;},
-      function(m){m.buildings.water_service_plant.operationProfile='missing';},function(m,a){a[1].stores=['river_cistern','river_cistern'];},
-      function(m,a){a[1].sourceId='missing';},function(m,a){a[1].siteId='resource_intake';},function(m,a){a.push(a[1]);},
-      function(m,a){a[1].extra=true;},function(m,a){a[1].stores=['river_intake'];},function(m,a){a[1].sourceId='river_slip';},
-      function(m,a){a[1].profileId='water_fill';},function(m){m.buildingOperationProfiles=[];}];
-    const rejected=changes.map(function(change){const m=JSON.parse(JSON.stringify(example));change(m,m.bookmarks.resource_river.revisions.supplied.buildingOperationAssignments);return FB.mods.validate(m).length>0;});
-    return {rejected:rejected,valid:FB.mods.validate(example),pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===FB.getRngState()&&uid===FB.getUidCounter()&&sig===FB.mods.sig()};
-  },examples.river);
-  expect(result).toEqual({rejected:Array(16).fill(true),valid:[],pure:true});
 });
 
 test('strict optional saved receipts reject altered commitments and missing resource owners without replay or repair',async function ({page},info) {
@@ -307,4 +250,77 @@ test('settlement review preserves focus and disclosures, rejects stale cash, and
   await page.locator('#gm-cancel').click();
   await expect(page.locator('#settlement-water')).toBeFocused();
   expect(await page.evaluate(function(){return FB.buildingBonusIn(FB.state,'resource_bank','populationCapacity');})).toBe(0.03);
+});
+});
+
+for (const effect of ['tax','piety','research','populationCapacity','populationFamineProtection','populationCrisisProtection','migrationAttraction']) {
+  test(effect + ' readers use the same paid receipt and legacy unbound records retain their defaults',async function ({page},info) {
+    const m=JSON.parse(JSON.stringify(examples.river)),d=m.buildings.water_service_plant;
+    delete d.populationCapacity;d[effect]=effect==='tax'||effect==='piety'||effect==='research'?1:0.03;
+    m.buildingOperationProfiles.water_service.effect=effect;
+    delete m.buildings.water_rival_plant.populationCapacity;
+    m.buildings.water_rival_plant[effect]=d[effect];m.buildingOperationProfiles.water_rival.effect=effect;
+    await importExample(page,info,'river',m);await prepare(page,false);
+    const result=await page.evaluate(function (effect) {
+      const s=FB.state,O=FB.buildingOperations,a=O.compile(FB.campaignBookmark(s)).assignments[1],who=FB.settlementHolder(s,a.countyId,a.slot);
+      const value=FBDATA.buildings[a.buildingId][effect],r=s.buildings[a.countyId].find(function(r){return r.id===a.buildingId;});
+      const idle=FB.buildingBonusAt(s,a.countyId,a.slot,effect),rate=FB.techResearchRate(s,who.id);
+      const worked=O.commit(s,O.quote(s,{countyId:a.countyId,settlement:a.slot,buildingId:a.buildingId,actor:who}));
+      const active=FB.buildingBonusAt(s,a.countyId,a.slot,effect),researchDelta=FB.techResearchRate(s,who.id)-rate;
+      const projection=FB.settlementFiscalProjection(s,a.countyId,a.slot);
+      const saved=JSON.parse(JSON.stringify(s));delete saved.buildings[a.countyId].find(function(r){return r.id===a.buildingId;}).waterOperation;
+      delete saved.buildingOperations;delete saved.siteResources;
+      O.validate(saved);
+      return {idle:idle,worked:worked,active:active,value:value,researchDelta:researchDelta,
+        fiscal:projection.amounts.upkeep,legacy:FB.buildingBonusAt(saved,a.countyId,a.slot,effect),
+        legacyUpkeep:FB.buildingBonusAt(saved,a.countyId,a.slot,'upkeep'),
+        capacity:FB.countyBuildingCapacityBonus(s,a.countyId),attraction:FB.countyBuildingAttraction(s,a.countyId),
+        famine:FB.countyBuildingFamineProtection(s,a.countyId),crisis:FB.countyBuildingCrisisProtection(s,a.countyId)};
+    },effect);
+    expect(result).toMatchObject({idle:0,worked:true,active:d[effect],value:d[effect],legacy:d[effect],legacyUpkeep:2,fiscal:0});
+    if (effect==='research') expect(result.researchDelta).toBeCloseTo(1,8);
+    if (effect==='populationCapacity') expect(result.capacity).toBe(0.03);
+    if (effect==='migrationAttraction') expect(result.attraction).toBe(0.03);
+    if (effect==='populationFamineProtection') expect(result.famine).toBe(0.03);
+    if (effect==='populationCrisisProtection') expect(result.crisis).toBe(0.03);
+  });
+}
+
+test('same-seed fresh campaigns reproduce exact paid receipts, resource balances, people and identities',async function ({page,browser},info) {
+  async function facts(page) {
+    await prepare(page,true);
+    return page.evaluate(function () {
+      const s=FB.state,O=FB.buildingOperations,a=O.compile(FB.campaignBookmark(s)).assignments[1],who=FB.settlementHolder(s,a.countyId,a.slot);
+      const q=O.quote(s,{countyId:a.countyId,settlement:a.slot,buildingId:a.buildingId,actor:who});
+      if (!O.commit(s,q)) throw new Error('Expected funded deterministic use.');
+      return {facts:JSON.stringify([s.buildingOperations,s.siteResources,s.population,s.buildings,s.chars,s.realms,s.owner,s.holder]),rng:FB.getRngState()>>>0,uid:FB.getUidCounter()};
+    });
+  }
+  // The second fresh campaign boots in its own context beside the first, so it
+  // prepares at the same time instead of after another reload.
+  const context=await browser.newContext({viewport:{width:1280,height:800},locale:'en-US',timezoneId:'UTC'});
+  try {
+    const second=await context.newPage(),guard=installPageGuards(second);
+    await Promise.all([bootStored(page,info,'river'),bootStored(second,info,'river')]);
+    const first=await facts(page);
+    expect(await facts(second)).toEqual(first);
+    expect(guard.faults,'second context faults').toEqual([]);
+  } finally { await context.close(); }
+});
+
+test('detached validation rejects bad types, unsupported bonuses, routes, cycles and foreign demand without publication',async function ({page},info) {
+  await openGame(page,info);
+  const result=await page.evaluate(function (example) {
+    const before=JSON.stringify([FBDATA,FB.state,localStorage]),rng=FB.getRngState(),uid=FB.getUidCounter(),sig=FB.mods.sig();
+    const changes=[function(m){m.buildingOperationProfiles.water_service.amount=0;},function(m){m.buildingOperationProfiles.water_service.periodDays=91;},
+      function(m){m.buildingOperationProfiles.water_service.workCost=-1;},function(m){m.buildingOperationProfiles.water_service.effect='levy';},
+      function(m){m.buildings.water_service_plant.piety=1;},function(m){m.buildings.water_service_plant.dev=1;},
+      function(m){m.buildings.water_service_plant.operationProfile='missing';},function(m,a){a[1].stores=['river_cistern','river_cistern'];},
+      function(m,a){a[1].sourceId='missing';},function(m,a){a[1].siteId='resource_intake';},function(m,a){a.push(a[1]);},
+      function(m,a){a[1].extra=true;},function(m,a){a[1].stores=['river_intake'];},function(m,a){a[1].sourceId='river_slip';},
+      function(m,a){a[1].profileId='water_fill';},function(m){m.buildingOperationProfiles=[];}];
+    const rejected=changes.map(function(change){const m=JSON.parse(JSON.stringify(example));change(m,m.bookmarks.resource_river.revisions.supplied.buildingOperationAssignments);return FB.mods.validate(m).length>0;});
+    return {rejected:rejected,valid:FB.mods.validate(example),pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===FB.getRngState()&&uid===FB.getUidCounter()&&sig===FB.mods.sig()};
+  },examples.river);
+  expect(result).toEqual({rejected:Array(16).fill(true),valid:[],pure:true});
 });

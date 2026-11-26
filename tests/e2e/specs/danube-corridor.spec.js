@@ -4,6 +4,7 @@ const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const {buildCorridorMod,installCorridorCase}=require('../support/game/danube-corridor');
 const cases=require('../fixtures/authoring/danube-corridor-cases.json');
@@ -53,7 +54,7 @@ async function importAndBegin(page,info,configuration,countyIds) {
   return mod;
 }
 
-async function start(page,info,configuration,countyIds) {
+async function storeCorridor(page,info,configuration,countyIds) {
   // Build persisted JSON only after the deferred catalogue is ready, then
   // reload through ordinary stored-mod boot in this test's browser context.
   // Dedicated import coverage still uses the ordinary Mods file picker.
@@ -65,6 +66,19 @@ async function start(page,info,configuration,countyIds) {
   await page.reload({waitUntil:'domcontentloaded'});
   await prepareGameContent(page);
   await page.evaluate(function () {FB.mods.assertReady();});
+}
+/* Cases without a restore that store the same declaration share one page per
+   declaration, booted once with the 1096 world active and reset before each
+   case; each begins its own start. The arguments must equal the start below. */
+function sharedCorridor(configuration,countyIds) {
+  return {boot:async function (page,info) {
+    await storeCorridor(page,info,configuration,countyIds);
+    await activateBookmark(page,'1096');
+  }};
+}
+
+async function start(page,info,configuration,countyIds) {
+  if (!isSharedPage(page)) await storeCorridor(page,info,configuration,countyIds);
   await beginBookmarkFromTitle(page,'1096','pilgrim_household_1096');
   await page.evaluate(installCorridorCase,configuration);
   const inventory=await page.evaluate(function () {return corridorCase.inventory(FB.state);});
@@ -108,8 +122,18 @@ for (const configuration of cases) {
     expect(await page.evaluate(function () {return corridorCase.inventory(FB.state).countyIds;})).toEqual(counties.route);
   });
 
-  // The batch rejections and the stale generation quotes each have their own
-  // fresh page; both walk the complete imported corridor.
+  test(configuration.id+' corridor rejects a declaration missing a required route county before offering',async function ({page},info) {
+    const missing=counties.route.filter(function (pid) {return pid!=='frankfurt';});
+    await start(page,info,Object.assign({},configuration,{composition:true}),missing);
+    expect(await page.evaluate(function () {
+      const s=FB.state,C=corridorCase,E=FB.expeditionPrograms,before=JSON.stringify(s),q=E.review(s,C.rid,'permission_0');
+      return !q.allowed && !E.commit(s,q) && before===JSON.stringify(s) && !C.row(s).agreements.length;
+    })).toBe(true);
+  });
+
+  // The batch rejections, the stale generation quotes and the refused history
+  // each begin their own start on one page of the complete imported corridor.
+  describeSharedPage(configuration.id+' complete corridor',sharedCorridor(Object.assign({},configuration,{composition:true}),counties.route),function () {
   test(configuration.id+' corridor rejects the entire unaffordable, stale or over-capacity batch before its first offer',async function ({page},info) {
     const inventory=await completeImport(page,info,configuration);
     const result=await page.evaluate(function (inventory) {
@@ -157,15 +181,6 @@ for (const configuration of cases) {
     expect(result).toEqual({generation:true});
   });
 
-  test(configuration.id+' corridor rejects a declaration missing a required route county before offering',async function ({page},info) {
-    const missing=counties.route.filter(function (pid) {return pid!=='frankfurt';});
-    await start(page,info,Object.assign({},configuration,{composition:true}),missing);
-    expect(await page.evaluate(function () {
-      const s=FB.state,C=corridorCase,E=FB.expeditionPrograms,before=JSON.stringify(s),q=E.review(s,C.rid,'permission_0');
-      return !q.allowed && !E.commit(s,q) && before===JSON.stringify(s) && !C.row(s).agreements.length;
-    })).toBe(true);
-  });
-
   test(configuration.id+' corridor retains fixed child slots and strict partial refused history',async function ({page},info) {
     const inventory=await completeImport(page,info,configuration);
     const result=await page.evaluate(function (inventory) {
@@ -192,8 +207,12 @@ for (const configuration of cases) {
     },inventory);
     expect(result).toEqual({offer:true,fixed:true,malformed:Array(8).fill(true),declined:true,noRefill:true,pure:true});
   });
+  });
 
-  // The oversized and the mixed declaration each have their own fresh page.
+  // The oversized and the mixed declaration each begin their own start on one
+  // page of the same stored 33-county declaration.
+  describeSharedPage(configuration.id+' oversized and mixed declarations',sharedCorridor(Object.assign({},configuration,{composition:true,treasury:1000}),
+    counties.route.concat(counties.additional).slice(0,33)),function () {
   for (const kind of ['oversized','mixed'])
   test(configuration.id+' corridor rejects '+kind+' declarations without changing live state',async function ({page},info) {
     const ids=counties.route.concat(counties.additional);
@@ -210,6 +229,7 @@ for (const configuration of cases) {
       const before=JSON.stringify([mod,FBDATA,FB.state]),errors=FB.mods.validate(mod);
       return errors.length>0 && before===JSON.stringify([mod,FBDATA,FB.state]);
     },kind==='oversized' ? oversized : mixed)).toBe(true);
+  });
   });
 
   test(configuration.id+' corridor allocates all envelopes once and retains partial cancellation',async function ({page},info) {
@@ -410,6 +430,7 @@ for (const configuration of cases) {
       inFlight:true,manual:true,stopped:true,arrived:true,completed:true,cursor:true,restored:true};}));
   });
 
+  describeSharedPage(configuration.id+' actual world',sharedCorridor(configuration),function () {
   test(configuration.id+' actual-world negative boundaries retain complete evidence without granting corridor permission',async function ({page},info) {
     const inventory=await start(page,info,configuration);
     const result=await page.evaluate(function () {
@@ -461,8 +482,8 @@ for (const configuration of cases) {
     expect(inventory.legs).toHaveLength(configuration.waypoints.length*2);
   });
 
-  // The over-bound declaration and the hostile fortified ring use their own
-  // fresh page of the same actual world; they read no state the case above writes.
+  // The over-bound declaration and the hostile fortified ring begin their own
+  // start on the same actual world; they read no state the case above writes.
   test(configuration.id+' actual-world over-bound declarations and a hostile fortified ring never grant corridor permission',async function ({page},info) {
     const inventory=await start(page,info,configuration);
     const invalid=await page.evaluate(function (input) {
@@ -492,5 +513,6 @@ for (const configuration of cases) {
     });
     expect(fort).toEqual({ok:true,truncated:true,refusedComplete:true,blocker:true});
     expect(inventory.legs).toHaveLength(configuration.waypoints.length*2);
+  });
   });
 }
