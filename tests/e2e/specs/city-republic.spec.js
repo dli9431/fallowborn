@@ -1,8 +1,10 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-const { startParityGame, advanceTo } = require('../support/game/parity');
+const { startParityGame, startPreparedParityGame, advanceTo } = require('../support/game/parity');
 const { startHistoricalGame } = require('../support/game/historical-start');
+const { openGame } = require('../support/game/navigation');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 
 dependsOnRuntime(__filename, [
   'index.html', 'data/civic_profiles.js', 'data/bookmark_1204.js', 'data/actions.js',
@@ -21,6 +23,8 @@ dependsOnRuntime(__filename, [
 async function start(page, testInfo, profile, crazygames) {
   const journey = { bookmark:'1204',code:'CIVIC-1204-farmer-venezia-m-Leo' };
   if (crazygames) await startHistoricalGame(page,testInfo,journey,true);
+  // A shared page already booted and prepared this title (sharedCivic below).
+  else if (isSharedPage(page)) await startPreparedParityGame(page,journey);
   else await startParityGame(page,testInfo,journey);
   return page.evaluate(function (profile) {
     const s = FB.state, V = FB.civicGovernment;
@@ -60,6 +64,28 @@ async function qualify(page,rid,officeIndex) {
   }, { rid:rid,officeIndex:officeIndex });
 }
 
+async function electPlayer(page,rid,officeIndex) {
+  await qualify(page,rid,officeIndex);
+  await page.evaluate(function (input) {
+    const s = FB.state, V = FB.civicGovernment, o = V.row(s,input.rid).offices[input.officeIndex || 0];
+    const prior = o.incumbentId;
+    if (!V.officeApply(s,V.officeQuote(s,input.rid,o.id,'resign',{ characterId:prior }))) throw new Error('Resignation failed');
+    if (!V.officeApply(s,V.officeQuote(s,input.rid,o.id,'nominate',{ candidateId:s.player.charId }))) throw new Error('Nomination failed');
+    if (!V.officeApply(s,V.officeQuote(s,input.rid,o.id,'recognize',{}))) throw new Error('Selection failed');
+  }, { rid:rid,officeIndex:officeIndex });
+}
+
+/* Standard civic cases start their own campaign on one page per group, booted
+   with the 1204 world active and reset before each case. CrazyGames starts,
+   restores, mod applications and phone boots keep a fresh page. */
+function sharedCivic(title, body) {
+  describeSharedPage(title, { boot:async function (page, testInfo) {
+    await openGame(page, testInfo);
+    await activateBookmark(page, '1204');
+  } }, body);
+}
+
+sharedCivic('civic ownership and pure reads', function () {
 test('shared institutional property keeps a magistrate private estate outside the city estate', async function ({ page },testInfo) {
   const rid = await start(page,testInfo);
   const result = await page.evaluate(function (rid) {
@@ -73,17 +99,6 @@ test('shared institutional property keeps a magistrate private estate outside th
   },rid);
   expect(result).toEqual({ personal:true,excluded:true,retained:true,institution:true });
 });
-
-async function electPlayer(page,rid,officeIndex) {
-  await qualify(page,rid,officeIndex);
-  await page.evaluate(function (input) {
-    const s = FB.state, V = FB.civicGovernment, o = V.row(s,input.rid).offices[input.officeIndex || 0];
-    const prior = o.incumbentId;
-    if (!V.officeApply(s,V.officeQuote(s,input.rid,o.id,'resign',{ characterId:prior }))) throw new Error('Resignation failed');
-    if (!V.officeApply(s,V.officeQuote(s,input.rid,o.id,'nominate',{ candidateId:s.player.charId }))) throw new Error('Nomination failed');
-    if (!V.officeApply(s,V.officeQuote(s,input.rid,o.id,'recognize',{}))) throw new Error('Selection failed');
-  }, { rid:rid,officeIndex:officeIndex });
-}
 
 for (const profile of [null,'genoese_consular','civic_service_city']) {
   test('civic profile ' + (profile || 'Venice 1204') + ' has canonical ownership and pure reads', async function ({ page },testInfo) {
@@ -123,6 +138,7 @@ for (const profile of [null,'genoese_consular','civic_service_city']) {
       tenures:profile === 'genoese_consular' ? [360,360] : profile ? [180,360,720] : [null] });
   });
 }
+});
 
 for (const crazygames of [false,true]) {
   test((crazygames ? 'CrazyGames' : 'standard') + ' civic military projections preserve ruler metadata and missing papal allegiance', async function ({ page },testInfo) {
@@ -158,6 +174,7 @@ for (const crazygames of [false,true]) {
   });
 }
 
+sharedCivic('civic membership, tenure and territorial bypasses', function () {
 test('a compatible settled electorate retains its members and only one current executive', async function ({ page },testInfo) {
   await start(page,testInfo);
   const result = await page.evaluate(function () {
@@ -289,6 +306,7 @@ test('reviewed campaigns, peace and county grants reject territorial bypasses', 
   expect(result).toEqual({ raw:true,pure:true,declared:true,duplicate:true,bypass:true,peace:true,noFormBypass:true,
     grant:true,holder:true,removedScope:true,private:true,valid:true });
 });
+});
 
 test('explicit conversion reviews existing people and preserves old family, public rights and private debts', async function ({ page },testInfo) {
   const rid = await start(page,testInfo); await qualify(page,rid);
@@ -345,6 +363,7 @@ test('explicit conversion reviews existing people and preserves old family, publ
     publicFunds:91,wallet:true,privateDebt:true,publicRights:true,privateProperty:true,rights:0,restored:true,valid:true });
 });
 
+sharedCivic('civic consuls, jurisdiction and public accounts', function () {
 test('life tenure, separate consul vacancies, recall and term expiry preserve institution and rights', async function ({ page },testInfo) {
   const rid = await start(page,testInfo,'genoese_consular');
   const result = await page.evaluate(function (rid) {
@@ -433,6 +452,7 @@ test('public loans, salaries, refusal and AI use actual accounts', async functio
       refused:!denied.allowed,uncharged:cash === s.realms[rid].treasury.gold,unchanged:old === JSON.stringify(r) };
   },rid);
   expect(result).toEqual({ lent:true,conserved:true,due:22,repaid:true,replay:true,salary:2,single:true,refused:true,uncharged:true,unchanged:true });
+});
 });
 
 test('detached civic saves reject malformed offices, terms, source shares and duplicate owners', async function ({ page },testInfo) {

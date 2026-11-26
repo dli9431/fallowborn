@@ -8,6 +8,7 @@ const {openGame,openTitle}=require('../support/game/navigation');
 const {installStoredMod}=require('../support/game/stored-mod');
 const {installRestoreFacts}=require('../support/game/restore-facts');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/opening-column-locations-harbor.json'),
   dune:require('../fixtures/authoring/opening-column-locations-dune.json')};
@@ -75,9 +76,15 @@ for (const prefix of ['harbor','dune']) {
 // Each half of the fourteen detached rejections has its own fresh page. The
 // catalogue, campaign and identity snapshot is recorded once in the page and
 // every rejection is compared with it.
+/* The two detached validation halves import nothing and start no campaign, so
+   they share one prepared title, reset before each case. Every other case
+   imports, restores or boots its own example and keeps a fresh page. */
+describeSharedPage('detached opening location validation',{boot:async function (page,info) {
+  await openGame(page,info);
+}},function () {
 for (const group of [{name:'county',from:0,to:7},{name:'exact-site',from:7,to:14}])
 test('detached '+group.name+' rejection preserves input, registries, campaign and identity streams',async function ({page},info) {
-  await openGame(page,info);
+  if (!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function (args) {
     const source=args.source;
     const changes=[function (b,c) {c.openingLocation=null;},function (b,c) {c.openingLocation=[];},
@@ -99,6 +106,7 @@ test('detached '+group.name+' rejection preserves input, registries, campaign an
     });
   },{source:examples.harbor,from:group.from,to:group.to});
   expect(result).toEqual(Array(group.to-group.from).fill(true));
+});
 });
 
 test('fresh position preflight rejects disconnected, inaccessible, stale and missing live locations before any allocation',async function ({page},info) {

@@ -2,9 +2,10 @@
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
-const {openGame} = require('../support/game/navigation');
+const {openGame:bootGame} = require('../support/game/navigation');
 const {startDeterministicGame} = require('../support/game/start');
-const {beginBookmarkFromTitle,beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle,beginBookmark:beginFreshBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {injectHolyWarHarness} = require('../support/game/holywar-harness');
 const {releasedCatalogue} = require('../support/released-catalogue');
@@ -28,6 +29,31 @@ dependsOnRuntime(__filename, ['data/cultures.js','data/technology.js','data/econ
   'js/armies.js','js/federates.js','js/logistics.js','js/market.js','js/holywar.js',
   'js/wars.js','js/travel.js','js/crazygames.js','js/util.js']);
 
+/* Cases that restore saves, add catalogue fixtures, boot at a phone width or use
+   the review start rules keep a fresh page. Runs of the others share one page
+   per group, reset before each case: catalogue reads on the prepared title with
+   no world active, and campaign starts with the 493 world active. On a shared
+   page the title is already booted, so these two start from it. */
+async function openGame(page,testInfo) {
+  if (!isSharedPage(page)) await bootGame(page,testInfo);
+}
+async function beginBookmark(page,testInfo,id,scenarioId) {
+  if (isSharedPage(page)) await beginBookmarkFromTitle(page,id,scenarioId);
+  else await beginFreshBookmark(page,testInfo,id,scenarioId);
+}
+function sharedTitle(title,body) {
+  describeSharedPage(title,{boot:async function (page,testInfo) {
+    await bootGame(page,testInfo);
+  }},body);
+}
+function sharedWorld(title,body) {
+  describeSharedPage(title,{boot:async function (page,testInfo) {
+    await bootGame(page,testInfo);
+    await activateBookmark(page,'493');
+  }},body);
+}
+
+sharedTitle('released pagan catalogue reads',function () {
 test('released faiths and their inherited defaults keep their catalogue fingerprints',
   async function ({page},testInfo) {
     await openGame(page,testInfo);
@@ -118,6 +144,7 @@ test('early consumers preserve their independent Caucasian, Volga and mixed Iris
         irish:[['insular_traditional_476',7500],['nicene',2500]],court:'caucasian_traditional_476'}
     ],pure:true});
   });
+});
 
 test('a religious student can marry under Germanic household rules while released Norse vows and capacity persist',
   async function ({page},testInfo) {
@@ -212,6 +239,7 @@ test('early district activities validate without new shrines, offices, seasonal 
     ],pure:true});
   });
 
+sharedWorld('early district observance',function () {
 for (const opening of ['476','493']) {
   test(opening + ' permits two independent household consumers and a free remembrance fallback',
     async function ({page},testInfo) {
@@ -303,6 +331,7 @@ test('material support rejects stale payment and movement cancels before a rewar
         noReward:s.player.piety === piety && !c.religiousActivityHistory};
     })).toEqual({stale:true,fresh:true,gold:0,interrupted:true,noReward:true});
   });
+});
 
 test('public local participation obeys the same district and its own public budget',
   async function ({page},testInfo) {
@@ -448,6 +477,7 @@ async function startNorthernRevision(page,testInfo,revision) {
   expect(await page.evaluate(function () { return FB.state.start.revision; })).toBe(revision);
 }
 
+sharedWorld('1066 gatherings',function () {
 for (const revision of ['baseline','inhabited_v2']) {
   test(revision + ' 1066 gathering consumes household supplies once without granting ranks or property',
     async function ({page},testInfo) {
@@ -525,6 +555,7 @@ test('a Christian local authority preserves northern households and one existing
     })).toEqual({started:true,faith:'norse_pagan',communities:true,sameProject:true,progress:0.375,
       projects:['faith'],blocked:'eligibility'});
   });
+});
 
 test('unaccepted Sami and later steppe candidates create no institutions or new pilgrimage destinations',
   async function ({page},testInfo) {
