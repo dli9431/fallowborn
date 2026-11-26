@@ -1,5 +1,4 @@
 'use strict';
-const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,[
@@ -13,9 +12,11 @@ dependsOnRuntime(__filename,[
   'js/government_civic.js','js/government_ecclesiastical.js',
   'docs/examples/ai-decisions-conservative.json','docs/examples/ai-decisions-expansion.json'
 ]);
+const fs = require('fs');
 const { test,expect } = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const { openGame } = require('../support/game/navigation');
+const { openGame, openTitle } = require('../support/game/navigation');
+const { installStoredMod } = require('../support/game/stored-mod');
 const { startDeterministicGame } = require('../support/game/start');
 
 async function importPolicy(page,source) {
@@ -24,14 +25,35 @@ async function importPolicy(page,source) {
     path.resolve(__dirname,'../../../docs/examples',source) :
     {name:'ai-live.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(source))});
   await Promise.all([page.waitForEvent('load'),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
   await expect.poll(function () { return page.evaluate(function () { return FB.game.bootReady; }); }).toBe(true);
+}
+
+/* Each published example is admitted against the unmodded catalogue and
+   imports through the Mods file picker in its own case, which proves the
+   reload stores exactly that file. The policy cases store the same JSON text
+   on the title and boot it once, proving it publishes, instead of preparing
+   the unmodded catalogue that the picker reload discards. */
+async function storePolicy(page,source) {
+  await installStoredMod(page,typeof source === 'string' ?
+    fs.readFileSync(path.resolve(__dirname,'../../../docs/examples',source),'utf8') : JSON.stringify(source));
+}
+
+for (const file of ['ai-decisions-conservative.json','ai-decisions-expansion.json']) {
+  test(file + ' is admitted against the unmodded catalogue and imports through the Mods file picker',async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    const source = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../docs/examples',file),'utf8'));
+    expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },source)).toEqual([]);
+    await importPolicy(page,file);
+    expect(await page.evaluate(function () {
+      return {count:FB.mods.count(),stored:JSON.parse(localStorage.getItem(FB.storageKey('fb_mods')) || '[]').map(function (text) { return JSON.parse(text); })};
+    })).toEqual({count:1,stored:[source]});
+  });
 }
 
 for (const config of [{file:'ai-decisions-conservative.json',chance:0.01},{file:'ai-decisions-expansion.json',chance:0.04}]) {
   test(config.file + ' reaches actual realm goals and preserves declaration gates',async function ({page},testInfo) {
-    await openGame(page,testInfo);
-    await importPolicy(page,config.file);
+    await openTitle(page,testInfo);
+    await storePolicy(page,config.file);
     await startDeterministicGame(page);
     const out = await page.evaluate(function () {
       const s = FB.state, rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive && !s.realms[id].liege; });
@@ -68,13 +90,13 @@ test('ordinary raid zero and malformed tuning retain paid and eligibility owners
 
 for (const margin of [0.5,4]) {
   test('imported tactical margin ' + margin + ' controls voluntary AI pursuit only',async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    await openTitle(page,testInfo);
     const mod = await page.evaluate(function (margin) {
       const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_tactics));
       d.parameters.engagementMargin = margin;
       return {name:'Tactical margin '+margin,aiDecisionPolicies:{tactical_review:d},balance:{aiTacticsPolicy:'tactical_review'}};
     },margin);
-    await importPolicy(page,mod);
+    await storePolicy(page,mod);
     await startDeterministicGame(page);
     const out = await page.evaluate(function () {
       const s = FB.state, ids = Object.keys(s.realms).filter(function (id) { return id !== 'player' && s.realms[id].alive && s.realms[id].ruler; });
@@ -95,13 +117,13 @@ for (const margin of [0.5,4]) {
 
 for (const role of ['scholarship','worship']) {
   test('imported investment role ' + role + ' changes the annual builder ranking without granting assets',async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    await openTitle(page,testInfo);
     const mod = await page.evaluate(function (role) {
       const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_investment));
       d.buildingRoleWeights = {}; d.buildingRoleWeights[role] = 100;
       return {name:'Investment '+role,aiDecisionPolicies:{investment_review:d},balance:{aiInvestmentPolicy:'investment_review'}};
     },role);
-    await importPolicy(page,mod);
+    await storePolicy(page,mod);
     await startDeterministicGame(page);
     const out = await page.evaluate(function () {
       const s = FB.state, pid = s.player.provinceId, rid = s.owner[pid];
@@ -119,14 +141,14 @@ for (const role of ['scholarship','worship']) {
 
 for (const weight of [0,2]) {
   test('imported research domain weight ' + weight + ' reaches the real score and seasonal slot selection',async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    await openTitle(page,testInfo);
     const mod = await page.evaluate(function (weight) {
       const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_research));
       d.domainWeights = {};
       Object.keys(FBDATA.techDomains).forEach(function (domain) { d.domainWeights[domain] = weight; });
       return {name:'Research '+weight,aiDecisionPolicies:{research_review:d},balance:{aiResearchPolicy:'research_review'}};
     },weight);
-    await importPolicy(page,mod);
+    await storePolicy(page,mod);
     await startDeterministicGame(page);
     const out = await page.evaluate(function () {
       const s = FB.state, rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive && !s.realms[id].liege; });
@@ -146,7 +168,7 @@ for (const weight of [0,2]) {
 
 for (const rate of [0,1]) {
   test('imported intrigue and diplomacy rates ' + rate + ' reach existing yearly/goals consumers',async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    await openTitle(page,testInfo);
     const mod = await page.evaluate(function (rate) {
       const intrigue = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_intrigue));
       const diplomacy = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_diplomacy));
@@ -155,7 +177,7 @@ for (const rate of [0,1]) {
       return {name:'Political rate '+rate,aiDecisionPolicies:{intrigue_review:intrigue,diplomacy_review:diplomacy},
         balance:{aiIntriguePolicy:'intrigue_review',aiDiplomacyPolicy:'diplomacy_review'}};
     },rate);
-    await importPolicy(page,mod);
+    await storePolicy(page,mod);
     await startDeterministicGame(page);
     const out = await page.evaluate(function () {
       const s = FB.state, ids = Object.keys(s.realms).filter(function (id) { return id !== 'player' && s.realms[id].alive && !s.realms[id].liege; });
@@ -173,13 +195,13 @@ for (const rate of [0,1]) {
 
 for (const minimum of [0.5,10]) {
   test('imported religious target margin ' + minimum + ' controls the actual yearly caller',async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    await openTitle(page,testInfo);
     const mod = await page.evaluate(function (minimum) {
       const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_religion));
       d.parameters.minimumTargetRatio = minimum;
       return {name:'Religious target '+minimum,aiDecisionPolicies:{religious_review:d},balance:{aiReligionPolicy:'religious_review'}};
     },minimum);
-    await importPolicy(page,mod);
+    await storePolicy(page,mod);
     await startDeterministicGame(page);
     const picked = await page.evaluate(function () {
       const s = FB.state, saved = {}, realms = s.realms;
@@ -213,13 +235,13 @@ for (const minimum of [0.5,10]) {
 
 for (const willingness of [0,1]) {
   test('imported government agreement willingness ' + willingness + ' retains the canonical consent writer',async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    await openTitle(page,testInfo);
     const mod = await page.evaluate(function (value) {
       const d = JSON.parse(JSON.stringify(FBDATA.aiDecisionPolicies.ordinary_government));
       d.parameters.agreementWillingness = value;
       return {name:'Government agreements '+value,aiDecisionPolicies:{government_review:d},balance:{aiGovernmentPolicy:'government_review'}};
     },willingness);
-    await importPolicy(page,mod);
+    await storePolicy(page,mod);
     await startDeterministicGame(page);
     const out = await page.evaluate(function () {
       const s = FB.state, rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && id !== FB.playerRealmId(s) && s.realms[id].alive && !s.realms[id].liege; });

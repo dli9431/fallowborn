@@ -2,8 +2,9 @@
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame,prepareGameContent} = require('../support/game/navigation');
+const {openGame,openTitle,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {installStoredMod} = require('../support/game/stored-mod');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -366,18 +367,66 @@ async function importedFacts(page) {
   });
 }
 
+/* The profile cases read the Sasanian court profile from the ordinary
+   unmodded 476 setup that choosing the date prepares, instead of preparing
+   every date's catalogue only to read one profile. The admission case checks
+   that this profile is the complete catalogue's and that both configurations
+   are admitted against it; the replacement imports through the Mods file picker. */
+async function setupProfile(page,info) {
+  await openTitle(page,info);
+  const full=page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+  await page.locator('#bookmarklist [data-bookmark="476"]').click();
+  await expect(page.locator('#scenariolist .scencard').first()).toBeVisible();
+  expect(await page.evaluate(function () {
+    return {setup:FB.bookmarkSources.setupId(),complete:FB.game.contentReady,mods:FB.mods.count()};
+  })).toEqual({setup:'476',complete:false,mods:0});
+  return importedProfile(page);
+}
+// Begin a saved start code from the title through the ordinary seed dialog,
+// with the same review settings as the shared bookmark start.
+async function beginCode(page,code) {
+  await page.evaluate(function () { FB.startProgression.noteTier(3); });
+  const full=page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill(code);
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+  await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+  expect(await page.evaluate(function () {
+    FB.game.setPaused(true); FB.game.auto.all=true; FB.game.auto.style='first';
+    FB.game.uiPrefs.hideTips=true; FB.game.uiPrefs.hideBeginnerHints=true;
+    delete FB.state.player.flags.tutorial;
+    return FB.state.seed;
+  })).toBe(code);
+}
+
+test('the 476 setup profile is the complete unmodded catalogue profile and both JSON configurations are admitted against it', async function ({page},info) {
+  const profile=await setupProfile(page,info);
+  await prepareGameContent(page);
+  expect(await importedProfile(page)).toEqual(profile);
+  for (const weight of [4,8]) expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },profileMod(profile,weight)),
+    'profile weight '+weight).toEqual([]);
+});
+
 test('ordinary JSON profile import exposes detached current results and matching restore', async function ({page},info) {
-  await openGame(page,info);
-  const profile=await importedProfile(page);
-  await importProfile(page,profileMod(profile,4));
+  const profile=await setupProfile(page,info);
+  await installStoredMod(page,JSON.stringify(profileMod(profile,4)));
   const result=await importedFacts(page);
   expect(result).toMatchObject({weight:4,original:profile.interests[0].weight,restored:true,matching:true,count:1});
 });
 
+/* The replacement and removal cases store the first configuration and reload
+   into it, then use the ordinary Mods screen and removal paths for the change
+   under test. */
 test('ordinary JSON profile replacement keeps one stored mod and exposes its independent configuration', async function ({page},info) {
-  await openGame(page,info);
-  const profile=await importedProfile(page);
-  await importProfile(page,profileMod(profile,4));
+  const profile=await setupProfile(page,info);
+  await installStoredMod(page,JSON.stringify(profileMod(profile,4)));
   const first=await page.evaluate(function () {
     return {signature:FB.mods.sig(),weight:FBDATA.aristocraticProfiles.query_court.interests[0].weight,count:FB.mods.count()};
   });
@@ -389,12 +438,15 @@ test('ordinary JSON profile replacement keeps one stored mod and exposes its ind
 });
 
 test('ordinary JSON profile removal discards warmed constituency reads and restores the unmodded catalogue', async function ({page},info) {
-  await openGame(page,info);
-  const profile=await importedProfile(page);
-  await importProfile(page,profileMod(profile,4));
+  const profile=await setupProfile(page,info);
+  await installStoredMod(page,JSON.stringify(profileMod(profile,4)));
   expect(await importedFacts(page)).toMatchObject({weight:4,restored:true,matching:true,count:1});
+  const code=await page.evaluate(function () { return FB.state.seed; });
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.evaluate(function () { FB.mods.removeAt(0); })]);
-  await prepareGameContent(page); await beginBookmarkFromTitle(page,'476'); await inject(page);
+  // With no mod left, the same start begins through the ordinary unmodded
+  // setup of its date, as a player's next new game does after removal.
+  await page.waitForFunction(function () { return !!(window.FB && FB.game && FB.game.bootReady); });
+  await beginCode(page,code); await inject(page);
   const removed=await page.evaluate(function () {
     const voices=GOV_QUERY.pair(FB.state,'sasanian_476',GOV_QUERY.voices).value;
     return {absent:!FBDATA.aristocraticProfiles.query_court,count:FB.mods.count(),signature:FB.mods.sig(),

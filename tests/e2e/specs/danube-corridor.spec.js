@@ -108,19 +108,23 @@ for (const configuration of cases) {
     expect(await page.evaluate(function () {return corridorCase.inventory(FB.state).countyIds;})).toEqual(counties.route);
   });
 
+  // The batch rejections and the stale generation quotes each have their own
+  // fresh page; both walk the complete imported corridor.
   test(configuration.id+' corridor rejects the entire unaffordable, stale or over-capacity batch before its first offer',async function ({page},info) {
     const inventory=await completeImport(page,info,configuration);
     const result=await page.evaluate(function (inventory) {
       const C=corridorCase,M=FB.mobile,E=FB.expeditionPrograms,base=C.copy(FB.state);
       const last=inventory.countyIds[inventory.countyIds.length-1];
+      // The catalogue is recorded once in the page and compared after every rejection.
+      const data=JSON.stringify(FBDATA);
       const rejected=[function (s) {s.population.counties[last].count=1;},
         function (s) {s.chars[C.chain(s,last)[0].personId].dead=true;},
         function (s) {FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid)-inventory.totalPrice+1);},
         function (s) {M.host(s,C.rid).manual=true;}].map(function (change) {
         const s=C.copy(base),old=E.review(s,C.rid,'permission_0');change(s);
-        const before=JSON.stringify([s,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),q=E.review(s,C.rid,'permission_0');
+        const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),q=E.review(s,C.rid,'permission_0');
         return old.allowed && !q.allowed && !E.commit(s,old) && !E.commit(s,q) &&
-          before===JSON.stringify([s,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter() && !C.row(s).agreements.length;
+          before===JSON.stringify(s) && data===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter() && !C.row(s).agreements.length;
       });
       const occupied=C.copy(base),row=C.row(occupied),actor={kind:'character',id:row.leaderId};
       let ordinary=true;
@@ -129,6 +133,17 @@ for (const configuration of cases) {
           terms:{kind:'access',partnerId:occupied.holder.cologne,countyIds:['cologne'],capacity:1,allowRecruit:false,price:1,duration:1440,levy:0}}));
       }
       const before=JSON.stringify(occupied),batch=E.corridorReview(occupied,C.rid);
+      return {rejected:rejected,ordinary:ordinary,slots:row.agreements.length===12 && !batch.allowed &&
+        before===JSON.stringify(occupied) && row.expeditionProgram.schema===5 && row.expeditionProgram.corridor===null};
+    },inventory);
+    expect(result).toEqual({rejected:Array(4).fill(true),ordinary:true,slots:true});
+  });
+
+  test(configuration.id+' corridor never commits a stale generation quote or retargets an allocated original',async function ({page},info) {
+    const inventory=await completeImport(page,info,configuration);
+    const result=await page.evaluate(function (inventory) {
+      const C=corridorCase,E=FB.expeditionPrograms,base=C.copy(FB.state);
+      const last=inventory.countyIds[inventory.countyIds.length-1];
       // A fresh quote may bind the current generation before allocation,
       // but no stale quote may commit and allocated originals never retarget.
       const changed=C.copy(base),old=E.review(changed,C.rid,'permission_0'),holder=changed.holder[last];
@@ -137,11 +152,9 @@ for (const configuration of cases) {
       const bound=C.copy(base),offered=E.commit(bound,E.review(bound,C.rid,'permission_0'));C.next(bound);
       bound.realms[holder].ruler.generation=FB.realmRulerGeneration(bound,holder)+1;
       const boundBytes=JSON.stringify(bound),q=E.review(bound,C.rid,'permission_0');
-      return {rejected:rejected,ordinary:ordinary,slots:row.agreements.length===12 && !batch.allowed &&
-        before===JSON.stringify(occupied) && row.expeditionProgram.schema===5 && row.expeditionProgram.corridor===null,
-        generation:stale && offered && !q.allowed && !E.commit(bound,q) && boundBytes===JSON.stringify(bound)};
+      return {generation:stale && offered && !q.allowed && !E.commit(bound,q) && boundBytes===JSON.stringify(bound)};
     },inventory);
-    expect(result).toEqual({rejected:Array(4).fill(true),ordinary:true,slots:true,generation:true});
+    expect(result).toEqual({generation:true});
   });
 
   test(configuration.id+' corridor rejects a declaration missing a required route county before offering',async function ({page},info) {
@@ -180,7 +193,9 @@ for (const configuration of cases) {
     expect(result).toEqual({offer:true,fixed:true,malformed:Array(8).fill(true),declined:true,noRefill:true,pure:true});
   });
 
-  test(configuration.id+' corridor rejects mixed or oversized declarations without changing live state',async function ({page},info) {
+  // The oversized and the mixed declaration each have their own fresh page.
+  for (const kind of ['oversized','mixed'])
+  test(configuration.id+' corridor rejects '+kind+' declarations without changing live state',async function ({page},info) {
     const ids=counties.route.concat(counties.additional);
     const composition=Object.assign({},configuration,{composition:true,treasury:1000});
     await start(page,info,composition,ids.slice(0,33));
@@ -191,10 +206,10 @@ for (const configuration of cases) {
     program.steps=program.steps.filter(function (step) {return step.id!=='permission_4';});
     program.steps.forEach(function (step) {step.after=step.after.filter(function (id) {return id!=='permission_4';});});
     program.steps[0].adapter='local_access';
-    for (const candidate of [oversized,mixed]) expect(await page.evaluate(function (mod) {
+    expect(await page.evaluate(function (mod) {
       const before=JSON.stringify([mod,FBDATA,FB.state]),errors=FB.mods.validate(mod);
       return errors.length>0 && before===JSON.stringify([mod,FBDATA,FB.state]);
-    },candidate)).toBe(true);
+    },kind==='oversized' ? oversized : mixed)).toBe(true);
   });
 
   test(configuration.id+' corridor allocates all envelopes once and retains partial cancellation',async function ({page},info) {
@@ -443,6 +458,13 @@ for (const configuration of cases) {
           separate.countyIds.indexOf('cologne')>=0 && separate.pure};
     });
     expect(result).toEqual({offered:true,playerControl:true,stale:Array(9).fill(true),refused:true,noRenewal:true,filled:true,denied:true,allSlots:true,separate:true});
+    expect(inventory.legs).toHaveLength(configuration.waypoints.length*2);
+  });
+
+  // The over-bound declaration and the hostile fortified ring use their own
+  // fresh page of the same actual world; they read no state the case above writes.
+  test(configuration.id+' actual-world over-bound declarations and a hostile fortified ring never grant corridor permission',async function ({page},info) {
+    const inventory=await start(page,info,configuration);
     const invalid=await page.evaluate(function (input) {
       const c=input.configuration,ids=FB.campaignBookmark(FB.state).provinces.filter(function (p) {return !p.wasteland;}).slice(0,17).map(function (p) {return p.id;});
       return ids;

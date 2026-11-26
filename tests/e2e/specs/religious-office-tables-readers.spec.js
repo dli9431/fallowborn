@@ -1,9 +1,11 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const { beginBookmark } = require('../support/game/bookmark-acceptance');
-const { startHistoricalGame } = require('../support/game/historical-start');
-const { snapshot, routeReaders, installReadProbe } = require('../support/game/religious-office-tables');
+const { openTitle } = require('../support/game/navigation');
+const { injectBrowserHarness } = require('../support/game/browser-harness');
+const { startPreparedParityGame } = require('../support/game/parity');
+const { useReviewStartRules } = require('../support/game/released-starts');
+const { routeReaders, installReadProbe } = require('../support/game/religious-office-tables');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, ['js/model.js', 'js/institutions.js', 'js/politics.js',
@@ -13,12 +15,99 @@ dependsOnRuntime(__filename, ['js/model.js', 'js/institutions.js', 'js/politics.
   'js/save_v4.js', 'js/religion.js', 'data/cultures.js', 'data/systems.js',
   'data/ecclesiastical_profiles.js', 'data/religious_institutions.js', 'data/distribution_crazygames.js']);
 
+/* Both builds of a case begin the shared bookmark start's farmer code through
+   the ordinary unmodded setup of its date (choosing the date on the title,
+   then entering the code), instead of preparing every date's catalogue first.
+   The code is chosen exactly as the shared bookmark start chooses it. */
+async function beginSetupDate(page, info, id) {
+  await openTitle(page, info);
+  const fullStart = page.locator('#btn-choose-beginning');
+  if (await fullStart.isVisible()) await fullStart.click();
+  else await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#bookmarklist [data-bookmark="' + id + '"]').click();
+  await expect(page.locator('#scenariolist .scencard').first()).toBeVisible();
+  const code = await page.evaluate(function (id) {
+    if (FB.bookmarkSources.setupId() !== id || FB.game.contentReady || FB.mods.count()) throw new Error('Expected the unmodded ' + id + ' setup');
+    const bm = FB.bookmark(id);
+    if (!bm) throw new Error('Bookmark ' + id + ' was not set up.');
+    const errors = FB.validateBookmark(bm);
+    if (errors.length) throw new Error(errors.join('\n'));
+    FB.startProgression.noteTier(3);
+    const offered = FBDATA.startScenarios.filter(function (s) {
+      return !s.hidden && !s.rulerRealmId &&
+        (!s.bookmarkIds || s.bookmarkIds.indexOf(id) >= 0) &&
+        (!s.eras || s.eras.indexOf(bm.era) >= 0) && (!bm.starts || bm.starts.indexOf(s.id) >= 0);
+    });
+    const scenario = offered.filter(function (s) { return s.profession === 'farmer'; })[0] || offered[0];
+    if (!scenario) throw new Error('No ordinary start for bookmark ' + id);
+    const allowed = bm.provinces.filter(function (p) { return FB.startProvinceAllowed(scenario, bm, p.id); });
+    const storyPlaces = Object.keys(scenario.trackLocations || {}).reduce(function (ids, track) {
+      return ids.concat(scenario.trackLocations[track]);
+    }, []);
+    const county = allowed.filter(function (p) { return storyPlaces.indexOf(p.id) >= 0; })[0] || allowed[0];
+    if (!county) throw new Error('No available birthplace for ' + scenario.id + ' in bookmark ' + id);
+    const declared = FB.provinceCommunities(county).filter(function (c) {
+      return c.culture === scenario.startCulture && c.religion === scenario.startReligion;
+    })[0];
+    const culture = declared ? declared.culture : county.culture, faith = declared ? declared.religion : county.religion;
+    const family = scenario.familyPresets ? Object.keys(scenario.familyPresets)[0] : 'established';
+    const code = 'BOOKMARKSMOKE-' + id + '-' + scenario.id + '-' + county.id + '-m-Review-' + family;
+    const nonPrincipal = culture !== county.culture || faith !== county.religion;
+    return code + (nonPrincipal ? '-0-' + culture + '.' + faith : '');
+  }, id);
+  await page.locator('#btn-ng-back').click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill(code);
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+  await page.getByRole('button', { name:'Begin', exact:true }).click();
+  await injectBrowserHarness(page);
+  await page.evaluate(function () {
+    FB.game.setPaused(true); FB.game.auto.all = true; FB.game.auto.style = 'first';
+    FB.game.uiPrefs.hideTips = true; FB.game.uiPrefs.hideBeginnerHints = true;
+    delete FB.state.player.flags.tutorial;
+  });
+  expect(await page.evaluate(function () { return [FB.state.start.id, FB.state.seed]; })).toEqual([id, code]);
+}
+
+// The reference and candidate outputs are compared by SHA-256 digests made in
+// the page. Returning the serialized state, catalogue and save to Node for
+// each run costs more than the comparison itself.
+function installOutputDigests() {
+  window.outputDigests = function (texts) {
+    return Promise.all(texts.map(function (text) {
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(function (hash) {
+        return Array.from(new Uint8Array(hash)).map(function (n) { return n.toString(16).padStart(2, '0'); }).join('');
+      });
+    }));
+  };
+}
+
+// The shared office snapshot with the saved game reduced to its digest, in
+// the same order; the reference and candidate saves are compared by digest.
+async function outputSnapshot(page) {
+  await page.evaluate(installOutputDigests);
+  return page.evaluate(function () {
+    const s = FB.state, offices = FB.religiousOffices(s), holders = {};
+    Object.keys(offices).forEach(function (id) {
+      const holder = FB.religiousOfficeSnapshot(s, id);
+      holders[id] = holder && holder.id || null;
+    });
+    return outputDigests([FB.save.serialize(),JSON.stringify(FBDATA),JSON.stringify(FB.bookmarkRevisions(s.start.id))])
+      .then(function (digests) {
+        return { offices:offices, holders:holders, save:digests[0], data:digests[1], revisions:digests[2],
+          signature:FB.mods.sig(), fingerprint:FB.mods.fingerprint(FB.campaignBookmark(s)), rng:FB.getRngState(), uid:FB.getUidCounter() };
+      });
+  });
+}
+
 for (const bookmark of ['476', '1096', '1204']) {
   test('unchanged incumbent and recognition readers preserve complete daily outputs in ' + bookmark, async function ({ page }, info) {
     const results = [];
     for (const reference of [true, false]) {
       await routeReaders(page, reference);
-      await beginBookmark(page, info, bookmark);
+      await beginSetupDate(page, info, bookmark);
       const reads = await page.evaluate(function () {
         const s = FB.state, before = JSON.stringify(s), out = [];
         Object.keys(s.authority.governments).forEach(function (rid) {
@@ -31,9 +120,9 @@ for (const bookmark of ['476', '1096', '1204']) {
         return { values:out,pure:before === JSON.stringify(s) };
       });
       expect(reads.pure).toBe(true);
-      const before = await snapshot(page);
+      const before = await outputSnapshot(page);
       await page.evaluate(function () { FB.game.passDay({deferUi:true}); });
-      results.push({ reads:reads,before:before,after:await snapshot(page) });
+      results.push({ reads:reads,before:before,after:await outputSnapshot(page) });
     }
     expect(results[1]).toEqual(results[0]);
   });
@@ -44,9 +133,14 @@ for (const crazygames of [false]) {
     const results = [];
     for (const reference of [true, false]) {
       await routeReaders(page,reference);
-      await startHistoricalGame(page,info,{bookmark:'1204',code:'OFFICEREAD-1204-farmer-roma-m-Leo'},crazygames);
+      // Both builds enter the same start code on the title, which prepares
+      // only the public 1204 date as an ordinary unmodded start does.
+      await useReviewStartRules(page);
+      await openTitle(page,info);
+      await startPreparedParityGame(page,{bookmark:'1204',code:'OFFICEREAD-1204-farmer-roma-m-Leo'});
       await page.evaluate(function () { delete FB.state.player.flags.tutorial; });
       await page.evaluate(installReadProbe);
+      await page.evaluate(installOutputDigests);
       const result = await page.evaluate(function () {
         const s = FB.state, E = FB.ecclesiasticalGovernment, rid = 'papacy_1204', row = E.row(s,rid);
         const officeId = row.officeId, pope = E.incumbent(s,rid), checks = [], scans = {};
@@ -109,8 +203,10 @@ for (const crazygames of [false]) {
         delete s.faiths.read_conclave; FB.invalidateFaithState(s);
         delete s.religiousOfficeStates.read_papal_office;
         if (!Object.keys(s.religiousOfficeStates).length) delete s.religiousOfficeStates;
-        return { checks:checks,scans:scans,identity:rng === FB.getRngState() && uid === FB.getUidCounter(),
-          state:JSON.stringify(s),data:JSON.stringify(FBDATA),save:FB.save.serialize() };
+        const identity = rng === FB.getRngState() && uid === FB.getUidCounter();
+        return outputDigests([JSON.stringify(s),JSON.stringify(FBDATA),FB.save.serialize()]).then(function (digests) {
+          return { checks:checks,scans:scans,identity:identity,state:digests[0],data:digests[1],save:digests[2] };
+        });
       });
       expect(result.identity).toBe(true);
       for (const name of ['canonical','dead-claimant','vacant','collapsed','missing-claimant','canonical-switch','missing-obedience','after-exception'])
@@ -131,8 +227,9 @@ test('ordinary recognition keeps life-only validity while local incumbent qualif
   const results = [];
   for (const reference of [true, false]) {
     await routeReaders(page,reference);
-    await beginBookmark(page,info,'1204');
+    await beginSetupDate(page,info,'1204');
     await page.evaluate(installReadProbe);
+    await page.evaluate(installOutputDigests);
     const result = await page.evaluate(function () {
       const s = FB.state, E = FB.ecclesiasticalGovernment, rid = 'papacy_1204', checks = [], scans = {};
       const pid = s.realms[rid].capital, site = FB.world.sitesByProv[pid].list[0].site;
@@ -232,8 +329,10 @@ test('ordinary recognition keeps life-only validity while local incumbent qualif
       if (!FB.officeReadTest.active(detached,row) || !FB.officeReadTest.active(s,row)) throw new Error('Foreign state reuse');
       s.authority.governments[rid].ecclesiastical = originalBinding;
       FB.governments.invalidate();
-      return {checks:checks,scans:scans,save:FB.save.serialize(),data:JSON.stringify(FBDATA),
-        rng:FB.getRngState(),uid:FB.getUidCounter()};
+      const texts = [FB.save.serialize(),JSON.stringify(FBDATA)], rng = FB.getRngState(), uid = FB.getUidCounter();
+      return outputDigests(texts).then(function (digests) {
+        return {checks:checks,scans:scans,save:digests[0],data:digests[1],rng:rng,uid:uid};
+      });
     });
     for (const name of ['qualified','captive','exiled','age','faith','sex','profession','skill','affiliation','withdrawn',
       'suspended','fresh-present','profile-edit','recovered','after-error','after-definition-error','catalogue-replaced','catalogue-restored','late-1'])

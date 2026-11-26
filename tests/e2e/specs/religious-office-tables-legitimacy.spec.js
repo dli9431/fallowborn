@@ -1,8 +1,10 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
+const { installStoredMod } = require('../support/game/stored-mod');
+const { injectBrowserHarness } = require('../support/game/browser-harness');
 const { beginBookmark, beginBookmarkFromTitle, restoreBookmark } = require('../support/game/bookmark-acceptance');
-const { routeListReader, installReadProbe, listStateSnapshot, politicalOfficeMod, importOfficeMod } =
+const { routeListReader, installReadProbe, listStateSnapshot, politicalOfficeMod } =
   require('../support/game/religious-office-tables');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
@@ -13,12 +15,68 @@ dependsOnRuntime(__filename, ['js/model.js', 'js/institutions.js', 'js/politics.
   'js/save_v4.js', 'js/religion.js', 'data/cultures.js', 'data/systems.js',
   'data/ecclesiastical_profiles.js', 'data/religious_institutions.js', 'data/distribution_crazygames.js']);
 
+/* Both builds of the boundary cases begin the shared bookmark start's farmer
+   code through the ordinary unmodded setup of its date (choosing the date on
+   the title, then entering the code), instead of preparing every date's
+   catalogue first. The code is chosen exactly as the shared bookmark start chooses it. */
+async function beginSetupDate(page, info, id) {
+  await openTitle(page, info);
+  const fullStart = page.locator('#btn-choose-beginning');
+  if (await fullStart.isVisible()) await fullStart.click();
+  else await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#bookmarklist [data-bookmark="' + id + '"]').click();
+  await expect(page.locator('#scenariolist .scencard').first()).toBeVisible();
+  const code = await page.evaluate(function (id) {
+    if (FB.bookmarkSources.setupId() !== id || FB.game.contentReady || FB.mods.count()) throw new Error('Expected the unmodded ' + id + ' setup');
+    const bm = FB.bookmark(id);
+    if (!bm) throw new Error('Bookmark ' + id + ' was not set up.');
+    const errors = FB.validateBookmark(bm);
+    if (errors.length) throw new Error(errors.join('\n'));
+    FB.startProgression.noteTier(3);
+    const offered = FBDATA.startScenarios.filter(function (s) {
+      return !s.hidden && !s.rulerRealmId &&
+        (!s.bookmarkIds || s.bookmarkIds.indexOf(id) >= 0) &&
+        (!s.eras || s.eras.indexOf(bm.era) >= 0) && (!bm.starts || bm.starts.indexOf(s.id) >= 0);
+    });
+    const scenario = offered.filter(function (s) { return s.profession === 'farmer'; })[0] || offered[0];
+    if (!scenario) throw new Error('No ordinary start for bookmark ' + id);
+    const allowed = bm.provinces.filter(function (p) { return FB.startProvinceAllowed(scenario, bm, p.id); });
+    const storyPlaces = Object.keys(scenario.trackLocations || {}).reduce(function (ids, track) {
+      return ids.concat(scenario.trackLocations[track]);
+    }, []);
+    const county = allowed.filter(function (p) { return storyPlaces.indexOf(p.id) >= 0; })[0] || allowed[0];
+    if (!county) throw new Error('No available birthplace for ' + scenario.id + ' in bookmark ' + id);
+    const declared = FB.provinceCommunities(county).filter(function (c) {
+      return c.culture === scenario.startCulture && c.religion === scenario.startReligion;
+    })[0];
+    const culture = declared ? declared.culture : county.culture, faith = declared ? declared.religion : county.religion;
+    const family = scenario.familyPresets ? Object.keys(scenario.familyPresets)[0] : 'established';
+    const code = 'BOOKMARKSMOKE-' + id + '-' + scenario.id + '-' + county.id + '-m-Review-' + family;
+    const nonPrincipal = culture !== county.culture || faith !== county.religion;
+    return code + (nonPrincipal ? '-0-' + culture + '.' + faith : '');
+  }, id);
+  await page.locator('#btn-ng-back').click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill(code);
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+  await page.getByRole('button', { name:'Begin', exact:true }).click();
+  await injectBrowserHarness(page);
+  await page.evaluate(function () {
+    FB.game.setPaused(true); FB.game.auto.all = true; FB.game.auto.style = 'first';
+    FB.game.uiPrefs.hideTips = true; FB.game.uiPrefs.hideBeginnerHints = true;
+    delete FB.state.player.flags.tutorial;
+  });
+  expect(await page.evaluate(function () { return [FB.state.start.id, FB.state.seed]; })).toEqual([id, code]);
+}
+
 for (const bookmark of ['476', '1096', '1204']) {
   test('legitimacy lists preserve complete ordinary and boundary outputs in ' + bookmark, async function ({page}, info) {
     const outputs = [], evidence = [];
     for (const reference of [true, false]) {
       await routeListReader(page, reference);
-      await beginBookmark(page, info, bookmark);
+      await beginSetupDate(page, info, bookmark);
       await page.evaluate(installReadProbe);
       const phases = [], scans = [];
       for (const phase of ['ordinary', 'season', 'year']) {
@@ -78,8 +136,10 @@ test('legitimacy lists preserve mixed filters, ordinary holder rules and indepen
       row('list_b', {scope:{kind:'county', id:pid}}), row('list_c', {scope:{kind:'county', id:other}}),
       row('list_expired', {endTurn:s.turn}), row('list_revoked', {status:'revoked'}),
       row('list_unknown', {source:'missing_source'}), row('list_foreign', {subject:{kind:'character', id:'missing_subject'}})];
+    // The catalogue never changes here: record it once and compare every read with it.
+    const data = JSON.stringify(FBDATA);
     function check(name, who, at, source) {
-      const before = JSON.stringify(s), data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
       const prior = measureOfficeRead(function () { return FB.listPriorLegitimacy(s, who || subject, at, source); });
       const current = measureOfficeRead(function () { return Q.legitimacy(s, who || subject, at, source); });
       if (prior.error !== current.error || JSON.stringify(prior.value) !== JSON.stringify(current.value)) throw new Error('List parity ' + name);
@@ -145,10 +205,12 @@ test('legitimacy lists preserve mixed filters, ordinary holder rules and indepen
 for (const minAge of [18, 22]) {
   test('JSON political lists keep live row checks, nesting and restore at minimum age ' + minAge, async function ({page}, info) {
     await routeListReader(page, false);
-    await openGame(page, info);
+    // The office fixture's admission and Mods file picker import are covered
+    // by the recognition cases; this configuration is stored and booted once.
+    await openTitle(page, info);
     const mod = JSON.parse(JSON.stringify(politicalOfficeMod));
     mod.religions.estuary_tradition_demo.properties.head.minAge = minAge;
-    await importOfficeMod(page, mod);
+    await installStoredMod(page, JSON.stringify(mod));
     await beginBookmarkFromTitle(page, 'paired_office_world', 'estuary_household_demo');
     await page.evaluate(installReadProbe);
     const result = await page.evaluate(function () {
@@ -159,8 +221,10 @@ for (const minAge of [18, 22]) {
       const original = s.authority.recognitions, row = original.find(function (r) { return r.id === proof.id; });
       const rows = [Object.assign({}, row, {id:'political_list_a'}), Object.assign({}, row, {id:'political_list_b'})];
       const t = s.realms[rid].succession, c = s.chars[t.members[t.rulerMemberId].charId];
+      // The catalogue never changes here: record it once and compare every read with it.
+      const data = JSON.stringify(FBDATA);
       function check(name, reset) {
-        const before = JSON.stringify(s), data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
         if (reset) reset();
         const prior = measureOfficeRead(function () { return FB.listPriorLegitimacy(s, subject); });
         if (reset) reset();

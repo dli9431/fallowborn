@@ -1,8 +1,8 @@
 'use strict';
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
-const {restoreBookmark,facts,beginBookmark} = require('../support/game/bookmark-acceptance');
-const {startParityGame} = require('../support/game/parity');
+const {restoreBookmark,facts,beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {startParityGame,startPreparedParityGame} = require('../support/game/parity');
 const {saveBudget} = require('../support/game/476-wider');
 
 dependsOnRuntime(__filename,[
@@ -14,9 +14,19 @@ dependsOnRuntime(__filename,[
 
 test.describe.configure({mode:'parallel'});
 
-async function start493(page,testInfo,county,revision) {
-  await startParityGame(page,testInfo,{bookmark:'493',revision:revision,unhide:true,
-    code:'WORLD493-493-farmer_493-' + county + '-m-Review-established'});
+// The second life of each case leaves the first through the ordinary return
+// to the title. The complete catalogue is already prepared, so beginning
+// another date there needs no reopened page and no second preparation.
+async function returnToTitle(page) {
+  await page.evaluate(function () { FB.game.toTitle(); });
+  await page.locator('#title:not(.hidden)').waitFor();
+}
+
+async function start493(page,testInfo,county,revision,fromTitle) {
+  const journey = {bookmark:'493',revision:revision,unhide:true,
+    code:'WORLD493-493-farmer_493-' + county + '-m-Review-established'};
+  if (fromTitle) await startPreparedParityGame(page,journey);
+  else await startParityGame(page,testInfo,journey);
   await page.evaluate(function () {
     FBDATA.bookmarks['493'].revision = 'world_v2';
     FBDATA.bookmarks['493'].hidden = true;
@@ -48,7 +58,8 @@ async function expectLegacyFrontier(page,prior) {
 for (const {date,start} of [{date:'476',start:'farmer_476'},{date:'867',start:'farmer'}]) {
   test('493 baseline frontier, institutions and story commitments restore after ' + date,async function ({page},testInfo) {
     const prior = await legacyFrontier(page,testInfo);
-    await beginBookmark(page,testInfo,date,start);
+    await returnToTitle(page);
+    await beginBookmarkFromTitle(page,date,start);
     const other = await page.evaluate(function () { return FB.save.serialize(); });
     await restoreBookmark(page,other);
     await restoreBookmark(page,prior.text);
@@ -58,7 +69,8 @@ for (const {date,start} of [{date:'476',start:'farmer_476'},{date:'867',start:'f
 
 test('493 baseline and expanded saves switch in both directions and reject mismatched revisions',async function ({page},testInfo) {
   const prior = await legacyFrontier(page,testInfo);
-  await start493(page,testInfo,'baghdad','world_v2');
+  await returnToTitle(page);
+  await start493(page,testInfo,'baghdad','world_v2',true);
   const expanded = await saveBudget(page,testInfo,'expanded-switch',4*1024*1024), expandedFacts = await facts(page);
   await restoreBookmark(page,expanded);
   await restoreBookmark(page,prior.text);

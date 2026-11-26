@@ -1,7 +1,8 @@
 'use strict';
 const path=require('path');
 const {test,expect}=require('../support/fixture');
-const {openGame,prepareGameContent}=require('../support/game/navigation');
+const {openGame,openTitle,prepareGameContent}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmark,beginBookmarkFromTitle,restoreBookmark}=require('../support/game/bookmark-acceptance');
 const {loadParitySave}=require('../support/game/parity');
 const {corpusEntries,readCorpusExport}=require('../support/parity-fixtures');
@@ -23,7 +24,7 @@ async function probes(page) {
     await page.addScriptTag({path:path.join(__dirname,'../fixtures/snapshot-copying',file)});
 }
 
-async function start(page,info,prefix) {
+function snapshotMod(prefix) {
   const mod=JSON.parse(JSON.stringify(examples[prefix])),b=mod.bookmarks[prefix+'_world'];
   // The fixture's rank-two territorial court uses the current ducal band.
   mod.startScenarios.find(function (s) {return s.id===prefix+'_home_start';}).tier=5;
@@ -40,13 +41,29 @@ async function start(page,info,prefix) {
   mod.buildingProfiles=mod.buildingProfiles || {};
   mod.buildingProfiles[prefix+'_snapshot_store']={buildingId:prefix+'_public_store',name:'Stored building identity',
     desc:'A fictional physical asset used to check wire defaults.',replace:{},requiresTech:[]};
+  return mod;
+}
+
+async function importSnapshotMod(page,info,prefix) {
+  const mod=snapshotMod(prefix);
   await openGame(page,info);
   expect(await page.evaluate(function (m) {return FB.mods.validate(m);},mod)).toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles({name:prefix+'-snapshot.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(mod))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+  await page.waitForFunction(function () {return !!(window.FB && FB.game && FB.game.bootReady);});
+  return mod;
+}
+
+/* Admission against the unmodded catalogue and the Mods file picker import
+   have their own case per example, which proves the reload stores exactly that
+   JSON. Every other case stores the same JSON and boots it once, proving it
+   publishes, instead of preparing the unmodded catalogue the reload discards. */
+async function start(page,info,prefix) {
+  const mod=snapshotMod(prefix);
+  await openTitle(page,info);
+  await installStoredMod(page,JSON.stringify(mod));
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await probes(page);
   await page.evaluate(function (prefix) {
@@ -100,6 +117,13 @@ function expectReuse(row,requests) {
 }
 
 for (const prefix of ['harbor','dune']) {
+  test(prefix+' snapshot world is admitted against the unmodded catalogue and imports through the Mods file picker',async function ({page},info) {
+    const mod=await importSnapshotMod(page,info,prefix);
+    expect(await page.evaluate(function () {
+      return {count:FB.mods.count(),stored:JSON.parse(localStorage.getItem(FB.storageKey('fb_mods')) || '[]').map(function (text) {return JSON.parse(text);})};
+    })).toEqual({count:1,stored:[mod]});
+  });
+
   test(prefix+' frozen semantic view preserves raw visits and exact output across compact aliases and formation',async function ({page},info) {
     await start(page,info,prefix);
     for (const formed of [false,true]) {
@@ -154,16 +178,21 @@ for (const prefix of ['harbor','dune']) {
     }
   });
 
-  test(prefix+' malformed identities and optional fields preserve exact uncached errors and publication purity',async function ({page},info) {
+  // The thirty malformed inputs form three independent groups, each in its
+  // own fresh page; the multiple-error input stays with its identity cases.
+  for (const group of [
+    {name:'identities',kinds:['nullId','wrongId','missingPerson','nullLink','wrongLink','wrongLineage','wrongMember','nullAlive','deadRealm',
+      'multipleErrors']},
+    {name:'preparation and terms records',kinds:['extraPreparation','missingPreparationField','extraTerms','missingTermsField','provider',
+      'party','duplicateParty','generation','appointment','duplicateBinding']},
+    {name:'attachments, buildings and envelope fields',kinds:['missingAttachment','missingStories','nullBuilding','stringBuilding',
+      'fractionBuilding','negativeBuilding','rng','uid','mods','revision']}])
+  test(prefix+' malformed '+group.name+' preserve exact uncached errors and publication purity',async function ({page},info) {
     await start(page,info,prefix);
-    const rows=await page.evaluate(function () {
+    const rows=await page.evaluate(function (kinds) {
       const C=snapshotCase,Q=snapshotProbe,S=FB.save,source=JSON.parse(S.serialize()),
         live=JSON.stringify([FB.state,FBDATA]),storage=JSON.stringify(Object.assign({},localStorage)),
         rng=FB.getRngState(),uid=FB.getUidCounter();
-      const kinds=['nullId','wrongId','missingPerson','nullLink','wrongLink','wrongLineage','wrongMember','nullAlive','deadRealm',
-        'extraPreparation','missingPreparationField','extraTerms','missingTermsField','provider','party','duplicateParty','generation','appointment',
-        'duplicateBinding','missingAttachment','missingStories','nullBuilding','stringBuilding','fractionBuilding','negativeBuilding',
-        'rng','uid','mods','revision','multipleErrors'];
       return kinds.map(function (kind) {
         const input=Q.copy(source),s=input.state,p=C.provider(s),t=s.stories[C.terms];
         if (kind==='nullId' || kind==='multipleErrors') p.character.id=null;
@@ -202,14 +231,15 @@ for (const prefix of ['harbor','dune']) {
           pure:bytes===JSON.stringify(input) && live===JSON.stringify([FB.state,FBDATA]) &&
             storage===JSON.stringify(Object.assign({},localStorage)) && rng===FB.getRngState() && uid===FB.getUidCounter()};
       });
-    });
+    },group.kinds);
+    expect(rows.map(function (r) {return r.kind;})).toEqual(group.kinds);
     for (const row of rows) {
       expect(row.error,row.kind).toBeTruthy();
       expect(row.error,row.kind).toBe(row.reference);
       expect(row.restoreError,row.kind).toBeTruthy();
       expect(row.sameVisits && row.pure,row.kind).toBe(true);
     }
-    expect(rows.find(function (r) {return r.kind==='multipleErrors';}).error)
+    if (group.kinds.indexOf('multipleErrors')>=0) expect(rows.find(function (r) {return r.kind==='multipleErrors';}).error)
       .toBe(rows.find(function (r) {return r.kind==='nullId';}).error);
   });
 

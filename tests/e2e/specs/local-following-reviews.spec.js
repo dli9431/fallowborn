@@ -1,9 +1,10 @@
 'use strict';
 const {expectModAdmission}=require('../support/game/mod-admission');
-const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
@@ -34,13 +35,24 @@ async function deed(page) {
   await expect(page.locator('[data-action-id="mobile_coalition"]')).toBeVisible();
   await page.locator('[data-action-id="mobile_coalition"]').click();
 }
-async function start(page,info,prefix,home) {
+function exampleFile(prefix) {
+  return path.resolve(__dirname,'../fixtures/authoring/local-following-reviews-'+prefix+'.json');
+}
+/* Admission against the unmodded catalogue and the Mods file picker import
+   have their own case per example, which proves the reload stores exactly the
+   example. Every review case stores that file text and boots it once, proving
+   it publishes, instead of preparing the unmodded catalogue first. */
+async function pickerImport(page,info,prefix) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   await expectModAdmission(page,require('../fixtures/authoring/local-following-reviews-'+prefix+'.json'));
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/local-following-reviews-'+prefix+'.json'));
+  await page.locator('#modfile').setInputFiles(exampleFile(prefix));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+  await page.waitForFunction(function () {return !!(window.FB && FB.game && FB.game.bootReady);});
+}
+async function start(page,info,prefix,home) {
+  await openTitle(page,info);
+  await installStoredMod(page,fs.readFileSync(exampleFile(prefix),'utf8'));
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   if (!home) {await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');return;}
   const code=await page.evaluate(function (prefix) {
@@ -86,6 +98,13 @@ async function localAtHome(page,prefix) {
 }
 
 for (const prefix of ['harbor','dune']) {
+  test(prefix+' example is admitted against the unmodded catalogue and imports through the Mods file picker',async function ({page},info) {
+    await pickerImport(page,info,prefix);
+    expect(await page.evaluate(function () {
+      return {count:FB.mods.count(),stored:JSON.parse(localStorage.getItem(FB.storageKey('fb_mods')) || '[]').map(function (text) {return JSON.parse(text);})};
+    })).toEqual({count:1,stored:[require('../fixtures/authoring/local-following-reviews-'+prefix+'.json')]});
+  });
+
   test(prefix+' actual deed selects both imported commands without authority or side effects',async function ({page},info) {
     await start(page,info,prefix);
     const before=await page.evaluate(function () {return [JSON.stringify(FB.state),FB.getRngState(),FB.getUidCounter()];});

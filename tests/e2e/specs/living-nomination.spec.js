@@ -1,6 +1,11 @@
 'use strict';
+const fs = require('fs');
+const path = require('path');
 const {test, expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+const {openTitle} = require('../support/game/navigation');
+const {installStoredMod} = require('../support/game/stored-mod');
+const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {start} = require('../support/game/living-nomination');
 dependsOnRuntime(__filename, ['data/political_institutions.js','data/technology.js',
   'js/government_selection.js','js/government_lineage.js','js/government_elective.js',
@@ -9,9 +14,73 @@ dependsOnRuntime(__filename, ['data/political_institutions.js','data/technology.
   'js/station.js','js/justice.js','js/authority.js','js/treasury.js',
   'js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);
 
+/* The shared start admits each fixture against the unmodded catalogue and
+   imports it through the Mods file picker; the designation, incumbent and
+   ordinary JSON control cases keep it. The admission, AI and option cases
+   store the same fixture text and boot it once, then install the livingTest
+   harness exactly as the shared start defines it. */
+async function storedStart(page, info, kind) {
+  await openTitle(page, info);
+  await installStoredMod(page, fs.readFileSync(path.resolve(__dirname,'../fixtures/living-nomination/' +
+    (kind === 'consultation' ? 'consultation.json' : 'river-consultation.json')),'utf8'));
+  await beginBookmarkFromTitle(page, kind === 'consultation' ? 'consultation_world' : 'river_consultation_world',
+    kind === 'consultation' ? 'consultation_farmer' : 'river_farmer_demo');
+  await page.evaluate(function (kind) {
+    const s = FB.state, S = FB.governmentSelection;
+    const rid = kind === 'consultation' ? 'consultation_court' : 'river_court_demo';
+    const home = s.realms[rid].capital;
+    FB.realmHeldCounties(s,rid).forEach(function (pid) { FB.setCountySupport(s,pid,40); });
+    let c;
+    if (kind === 'river') c = s.chars[s.localInstitutions.river_council_demo.representativeId];
+    else {
+      c = FB.makeCharacter(s,{name:'Nadir',dyn:'Independent House',sex:'m',born:s.date.year-30,
+        culture:'arabic',religion:'consultation_faith_demo',station:2,role:'notable',quality:1,traitsN:0});
+      c.homeProvinceId = home; c.gold = 29;
+    }
+    window.livingTest = {
+      rid:rid, cid:c.id,
+      request:function (cid, memberId) {
+        const m = S.constituency(FB.state,rid).find(function (row) { return !memberId || row.id === memberId; });
+        return {action:'nominate',memberId:m.id,characterId:cid || this.cid,
+          actor:m.currentPrincipal && m.currentPrincipal.kind === 'character' ?
+            {kind:'character',id:m.currentPrincipal.id} : {kind:'constituency',realmId:rid,id:m.id}};
+      },
+      snapshot:function () {
+        return {state:FB.state,data:FBDATA,world:FB.world,active:FB.activeBookmark,
+          bytes:JSON.stringify([FB.state,FBDATA,FB.englishMessages(),FB.stories.list(),
+            FB.world && [FB.world.provs,FB.world.sites,FB.world.sitesByProv,FB.world.sitesRender],
+            FB.mods.sig(),localStorage,FB.getRngState() >>> 0,FB.getUidCounter()])};
+      },
+      same:function (before) {
+        const after = this.snapshot();
+        return before.state === after.state && before.data === after.data && before.world === after.world &&
+          before.active === after.active && before.bytes === after.bytes;
+      },
+      protectedFacts:function () {
+        const s = FB.state;
+        return JSON.stringify([s.owner,s.holder,s.player.gold,s.player.holdings,s.settlementLordships,
+          s.realms[rid].treasury,s.religiousHeads,s.authority.appointments,s.authority.rights,s.authority.contracts]);
+      },
+      admit:function () { return S.apply(FB.state,S.quote(FB.state,rid,this.request())); },
+      id:function () { return FB.state.chars[this.cid].royalLine.memberId; },
+      roundTrip:function () {
+        const before = JSON.parse(FB.save.serialize()), live = FB.state;
+        const selection = JSON.stringify(S.state(live,rid));
+        FB.save.restore(before);
+        const after = JSON.parse(FB.save.serialize());
+        return {selection:selection === JSON.stringify(S.state(FB.state,rid)),
+          tree:JSON.stringify(before.state.realms[rid].succession) === JSON.stringify(after.state.realms[rid].succession),
+          person:JSON.stringify(before.state.chars[this.cid]) === JSON.stringify(after.state.chars[this.cid]),
+          uid:before.uid === after.uid,rng:(before.rng >>> 0) === (after.rng >>> 0),
+          signature:before.mods === after.mods && !FB.save.otherWorld(before)};
+      }
+    };
+  },kind);
+}
+
 for (const kind of ['consultation','river']) {
   test(kind + ' admits an existing person before a vacancy without authority, payment or kinship', async function ({page},info) {
-    await start(page,info,kind);
+    await storedStart(page,info,kind);
     const result = await page.evaluate(function () {
       const L = livingTest, s = FB.state, S = FB.governmentSelection, rid = L.rid, t = s.realms[rid].succession;
       const c = s.chars[L.cid], person = JSON.stringify(c), property = L.protectedFacts();
@@ -41,7 +110,7 @@ for (const kind of ['consultation','river']) {
   });
 
   test(kind + ' AI admits at the seasonal owner once and retains one qualified alternative', async function ({page},info) {
-    await start(page,info,kind);
+    await storedStart(page,info,kind);
     const result = await page.evaluate(function () {
       const L = livingTest, s = FB.state, S = FB.governmentSelection, rid = L.rid, t = s.realms[rid].succession;
       // Establish the incumbent's independent mandate before isolating admission.
@@ -126,7 +195,7 @@ test('the consultation incumbent separately designates but cannot accede without
 });
 
 test('omitted and false options retain vacancy-only nomination, including dead-incumbent admission', async function ({page},info) {
-  await start(page,info,'consultation');
+  await storedStart(page,info,'consultation');
   const result = await page.evaluate(function () {
     const L = livingTest, s = FB.state, S = FB.governmentSelection, rid = L.rid, p = S.profile(s,rid);
     const out = [];
