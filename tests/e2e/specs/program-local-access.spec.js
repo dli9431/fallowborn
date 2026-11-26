@@ -6,6 +6,7 @@ test.describe.configure({mode:'parallel'});
 const {openGame,openTitle}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {installStoredMod}=require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/program-local-access-harbor.json'),
   dune:require('../fixtures/authoring/program-local-access-dune.json')};
@@ -25,8 +26,11 @@ function fixturePath(prefix,legacy) {
    it once, so it prepares only the modded catalogue a single time. The ordinary
    validation of every fixture against the unmodded catalogue has its own case. */
 async function start(page,info,prefix,outside,legacy) {
+  // A shared page booted the same stored fixture once (sharedAccess below).
+  if (!isSharedPage(page)) {
   await openTitle(page,info);
   await installStoredMod(page,fs.readFileSync(fixturePath(prefix,legacy),'utf8'));
+  }
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   if (outside) {
     await page.evaluate(function () {FB.startProgression.noteTier(7);});
@@ -56,7 +60,19 @@ async function start(page,info,prefix,outside,legacy) {
   });
 }
 
-for (const prefix of ['harbor','dune']) {
+/* Cases that restore saves keep a fresh page, as does the legacy fixture. The
+   others share one page per fixture, booted once with its stored text and world
+   active; each still begins its own campaign, including the outside ruler
+   starts on the dune fixture. The unmodded validation cases share one page. */
+function sharedAccess(prefix) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(fixturePath(prefix),'utf8'));
+    await activateBookmark(page,prefix+'_world');
+  }};
+}
+
+function localCases(prefix) {
   test(prefix+' complete ordinary import validates raw and effective worlds and selects actual holders purely',async function ({page},info) {
     await start(page,info,prefix);
     const r=await page.evaluate(function (prefix) {
@@ -110,36 +126,11 @@ for (const prefix of ['harbor','dune']) {
     },prefix);
     expect(r).toEqual({complete:true,issued:true,actualPath:true,arrived:true,camp:true,valid:true});
   });
-
-  test(prefix+' pending offered accepted in-flight and terminal saves restore repeatedly without replay',async function ({page},info) {
-    await start(page,info,prefix);
-    const r=await page.evaluate(function () {
-      const C=localAccessCase,M=FB.mobile,E=FB.expeditionPrograms;
-      function roundtrip() {
-        function checkpoint(state) {
-          const s=FB.save.expandedSnapshot(state);
-          return JSON.stringify([M.row(s,C.rid),s.armies,s.owner,s.holder,s.treasury,s.market,s.population],function (key,value) {
-            if (!value || typeof value!=='object' || Array.isArray(value)) return value;
-            return Object.keys(value).sort().reduce(function (out,k) {out[k]=value[k];return out;},{});
-          });
-        }
-        const before=checkpoint(FB.state),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
-        for (let i=0;i<2;i++) FB.save.restore(JSON.parse(FB.save.serialize()));
-        const now=FB.state;
-        return before===checkpoint(now) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter() && M.validate(now);
-      }
-      const pending=roundtrip();E.day(FB.state);const offered=roundtrip();FB.state.turn++;
-      E.day(FB.state);const accepted=roundtrip();FB.state.turn++;
-      const complete=C.negotiate(FB.state);const q=E.review(FB.state,C.rid,'approach'),issued=E.commit(FB.state,q),flight=roundtrip();
-      const cancelled=M.commit(FB.state,C.control(FB.state,'cancel')),terminal=roundtrip();
-      return {pending:pending,offered:offered,accepted:accepted,complete:complete,issued:issued,flight:flight,cancelled:cancelled,terminal:terminal};
-    });
-    expect(r).toEqual({pending:true,offered:true,accepted:true,complete:true,issued:true,flight:true,cancelled:true,terminal:true});
-  });
 }
 
+describeSharedPage('fixture validation on one unmodded page',{boot:openGame},function () {
 test('every ordinary access and legacy dispatch fixture validates against the unmodded catalogue',async function ({page},info) {
-  await openGame(page,info);
+  if (!isSharedPage(page)) await openGame(page,info);
   const sources={harbor:examples.harbor,dune:examples.dune,
     legacyHarbor:require('../fixtures/authoring/expedition-dispatch-harbor.json')};
   expect(await page.evaluate(function (sources) {
@@ -148,7 +139,7 @@ test('every ordinary access and legacy dispatch fixture validates against the un
 });
 
 test('invalid typed declarations reject purely, including attempts to require a positive optional purchase',async function ({page},info) {
-  await openGame(page,info);
+  if (!isSharedPage(page)) await openGame(page,info);
   const r=await page.evaluate(function (source) {
     const changes=[function (m) {m.expeditionProgram.steps[0].terms.partnerRealmId='dune_gate';},
       function (m) {m.expeditionProgram.steps[0].terms.countyIds=[];},
@@ -173,6 +164,10 @@ test('invalid typed declarations reject purely, including attempts to require a 
   },examples.dune);
   expect(r).toEqual(Array(11).fill(true));
 });
+});
+
+describeSharedPage('dune access on one booted stored world',sharedAccess('dune'),function () {
+localCases('dune');
 
 test('outside NPC policy can refuse without acceptance payment or retargeting',async function ({page},info) {
   await start(page,info,'dune');
@@ -207,6 +202,34 @@ for (const decision of ['accept','decline']) {
       payment:true,access:decision==='accept',valid:true});
   });
 }
+
+test('the actual outside ruler can decline through the ordinary deed and stale confirmation spends nothing',async function ({page},info) {
+  await start(page,info,'dune',true);
+  await page.evaluate(function () {
+    const s=FB.state,C=localAccessCase;FB.expeditionPrograms.day(s);
+    // Stage a local UI review after the ordinary offer, not consent or a trip.
+    const m=FB.mobile.migration(s,C.rid),a=FB.mobile.host(s,C.rid);m.at=s.player.provinceId;a.at=m.at;a.from=m.at;
+    FB.ui._shared.markActionsDirty();FB.ui._shared.renderActions();
+  });
+  const realmSection=page.locator('[data-action-section="realm"]');
+  if (await realmSection.getAttribute('aria-expanded')!=='true') await realmSection.click();
+  await page.locator('[data-action-id="mobile_coalition"]').click();
+  await page.locator('#mobile-list').getByRole('button',{name:/^Decline as the outside court/}).click();
+  await page.evaluate(function () {FB.mobile.row(FB.state,localAccessCase.rid).agreements[0].price++;});
+  const before=await page.evaluate(function () {return JSON.stringify(FB.state);});
+  await page.locator('#mobile-confirm').click();
+  await expect(page.locator('#gm-title')).toHaveText('Terms changed');
+  expect(await page.evaluate(function () {return JSON.stringify(FB.state);})).toBe(before);
+  await page.evaluate(function () {FB.mobile.row(FB.state,localAccessCase.rid).agreements[0].price--;});
+  await page.locator('#mobile-continue').click();
+  await page.locator('#mobile-list').getByRole('button',{name:/^Decline as the outside court/}).click();
+  await page.locator('#mobile-confirm').click();
+  expect(await page.evaluate(function () {return FB.mobile.row(FB.state,localAccessCase.rid).agreements[0].status;})).toBe('ended');
+});
+});
+
+describeSharedPage('harbor access on one booted stored world',sharedAccess('harbor'),function () {
+localCases('harbor');
 
 test('stale control authority capacity funds and original-person facts reject atomically',async function ({page},info) {
   await start(page,info,'harbor');
@@ -337,41 +360,6 @@ test('original commander death invalidates permission and retains the original a
   expect(r).toEqual({noLeader:true,denied:true,original:true,retained:true,noTransfer:true,valid:true});
 });
 
-test('the actual outside ruler can decline through the ordinary deed and stale confirmation spends nothing',async function ({page},info) {
-  await start(page,info,'dune',true);
-  await page.evaluate(function () {
-    const s=FB.state,C=localAccessCase;FB.expeditionPrograms.day(s);
-    // Stage a local UI review after the ordinary offer, not consent or a trip.
-    const m=FB.mobile.migration(s,C.rid),a=FB.mobile.host(s,C.rid);m.at=s.player.provinceId;a.at=m.at;a.from=m.at;
-    FB.ui._shared.markActionsDirty();FB.ui._shared.renderActions();
-  });
-  const realmSection=page.locator('[data-action-section="realm"]');
-  if (await realmSection.getAttribute('aria-expanded')!=='true') await realmSection.click();
-  await page.locator('[data-action-id="mobile_coalition"]').click();
-  await page.locator('#mobile-list').getByRole('button',{name:/^Decline as the outside court/}).click();
-  await page.evaluate(function () {FB.mobile.row(FB.state,localAccessCase.rid).agreements[0].price++;});
-  const before=await page.evaluate(function () {return JSON.stringify(FB.state);});
-  await page.locator('#mobile-confirm').click();
-  await expect(page.locator('#gm-title')).toHaveText('Terms changed');
-  expect(await page.evaluate(function () {return JSON.stringify(FB.state);})).toBe(before);
-  await page.evaluate(function () {FB.mobile.row(FB.state,localAccessCase.rid).agreements[0].price--;});
-  await page.locator('#mobile-continue').click();
-  await page.locator('#mobile-list').getByRole('button',{name:/^Decline as the outside court/}).click();
-  await page.locator('#mobile-confirm').click();
-  expect(await page.evaluate(function () {return FB.mobile.row(FB.state,localAccessCase.rid).agreements[0].status;})).toBe('ended');
-});
-
-test('ordinary unopted program saves keep their original schema and acquire no access provenance',async function ({page},info) {
-  await start(page,info,'harbor',false,true);
-  const r=await page.evaluate(function () {
-    const C=localAccessCase,s=FB.state,M=FB.mobile,row=M.row(s,C.rid),before=JSON.stringify([row.expeditionProgram,row.agreements]);
-    FB.save.restore(JSON.parse(FB.save.serialize()));const now=M.row(FB.state,C.rid);
-    return {schema:now.expeditionProgram.schema,same:before===JSON.stringify([now.expeditionProgram,now.agreements]),
-      absent:now.agreements.every(function (a) {return a.accessOrigin===undefined && a.programStepId===undefined;}),valid:M.validate(FB.state)};
-  });
-  expect(r).toEqual({schema:1,same:true,absent:true,valid:true});
-});
-
 test('local dispatch replay preserves seeded state and a canonical marker cannot be recorded outside program commit',async function ({page},info) {
   await start(page,info,'harbor');
   const r=await page.evaluate(function () {
@@ -382,4 +370,44 @@ test('local dispatch replay preserves seeded state and a canonical marker cannot
     return {direct:direct,pure:pure,same:replay()===replay(),rng:rng===FB.getRngState(),uid:uid===FB.getUidCounter()};
   });
   expect(r).toEqual({direct:true,pure:true,same:true,rng:true,uid:true});
+});
+});
+
+for (const prefix of ['harbor','dune']) {
+  test(prefix+' pending offered accepted in-flight and terminal saves restore repeatedly without replay',async function ({page},info) {
+    await start(page,info,prefix);
+    const r=await page.evaluate(function () {
+      const C=localAccessCase,M=FB.mobile,E=FB.expeditionPrograms;
+      function roundtrip() {
+        function checkpoint(state) {
+          const s=FB.save.expandedSnapshot(state);
+          return JSON.stringify([M.row(s,C.rid),s.armies,s.owner,s.holder,s.treasury,s.market,s.population],function (key,value) {
+            if (!value || typeof value!=='object' || Array.isArray(value)) return value;
+            return Object.keys(value).sort().reduce(function (out,k) {out[k]=value[k];return out;},{});
+          });
+        }
+        const before=checkpoint(FB.state),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
+        for (let i=0;i<2;i++) FB.save.restore(JSON.parse(FB.save.serialize()));
+        const now=FB.state;
+        return before===checkpoint(now) && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter() && M.validate(now);
+      }
+      const pending=roundtrip();E.day(FB.state);const offered=roundtrip();FB.state.turn++;
+      E.day(FB.state);const accepted=roundtrip();FB.state.turn++;
+      const complete=C.negotiate(FB.state);const q=E.review(FB.state,C.rid,'approach'),issued=E.commit(FB.state,q),flight=roundtrip();
+      const cancelled=M.commit(FB.state,C.control(FB.state,'cancel')),terminal=roundtrip();
+      return {pending:pending,offered:offered,accepted:accepted,complete:complete,issued:issued,flight:flight,cancelled:cancelled,terminal:terminal};
+    });
+    expect(r).toEqual({pending:true,offered:true,accepted:true,complete:true,issued:true,flight:true,cancelled:true,terminal:true});
+  });
+}
+
+test('ordinary unopted program saves keep their original schema and acquire no access provenance',async function ({page},info) {
+  await start(page,info,'harbor',false,true);
+  const r=await page.evaluate(function () {
+    const C=localAccessCase,s=FB.state,M=FB.mobile,row=M.row(s,C.rid),before=JSON.stringify([row.expeditionProgram,row.agreements]);
+    FB.save.restore(JSON.parse(FB.save.serialize()));const now=M.row(FB.state,C.rid);
+    return {schema:now.expeditionProgram.schema,same:before===JSON.stringify([now.expeditionProgram,now.agreements]),
+      absent:now.agreements.every(function (a) {return a.accessOrigin===undefined && a.programStepId===undefined;}),valid:M.validate(FB.state)};
+  });
+  expect(r).toEqual({schema:1,same:true,absent:true,valid:true});
 });

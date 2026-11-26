@@ -27,6 +27,17 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
+
+/* The first case boots twice and the restore cases keep a fresh page. Runs of
+   the others share one page booted with the 867 world active, reset before
+   each case; the beforeEach below still begins every case's own campaign. */
+function sharedFreedom(title, body) {
+  describeSharedPage(title, { boot:async function (page, testInfo) {
+    await openGame(page, testInfo);
+    await activateBookmark(page, '867');
+  } }, body);
+}
 
 test('a county ruler can authorize a bound relative freedom without a separate local lord', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -58,7 +69,7 @@ test('a county ruler can authorize a bound relative freedom without a separate l
 });
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () {
     const s = FB.state;
@@ -84,6 +95,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
+sharedFreedom('freedom terms, family pricing, offers and story routes', function () {
 test('freedom terms validate and Standing deterministically freezes exact offers',
   async function ({ page }) {
     const result = await page.evaluate(function () {
@@ -452,31 +464,6 @@ test('freedom is personal and an unmanumitted collateral heir returns to serfdom
     expect(result.tenureStatus).toBe('active');
     expect(result.inheritedOx).toBe(true);
     expect(result.lastKeys).toContain('news.life.unfree_successor');
-  });
-
-test('legacy restore derives only the current protagonist personal station',
-  async function ({ page }) {
-    const result = await page.evaluate(function () {
-      const s = FB.state;
-      const me = s.chars[s.player.charId];
-      const parent = FB.parentsOf(s, me)[0];
-      const sibling = FB.siblingsOf(s, me)[0];
-      FB.setPlayerTier(s, 1, { freedomResolution:true });
-      const payload = JSON.parse(FB.save.serialize());
-      delete payload.state.chars[me.id].station;
-      delete payload.state.chars[me.id].unfree;
-      delete payload.state.chars[parent.id].unfree;
-      delete payload.state.chars[sibling.id].unfree;
-      delete payload.state.player.familyFreedom;
-      FB.save.restore(payload);
-      return {
-        current:FB.stationOf(FB.state.chars[me.id]),
-        parent:FB.stationOf(FB.state.chars[parent.id]),
-        sibling:FB.stationOf(FB.state.chars[sibling.id])
-      };
-    });
-
-    expect(result).toEqual({ current:1, parent:0, sibling:0 });
   });
 
 test('purchase selection and a character sheet can manumit exact relatives',
@@ -974,6 +961,32 @@ test('story routes preflight atomically, record flight origin, and leave no bare
     expect(result.bare).toEqual([]);
     expect(result.tech).toEqual({ petition:'none', history:'none' });
   });
+});
+
+test('legacy restore derives only the current protagonist personal station',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const parent = FB.parentsOf(s, me)[0];
+      const sibling = FB.siblingsOf(s, me)[0];
+      FB.setPlayerTier(s, 1, { freedomResolution:true });
+      const payload = JSON.parse(FB.save.serialize());
+      delete payload.state.chars[me.id].station;
+      delete payload.state.chars[me.id].unfree;
+      delete payload.state.chars[parent.id].unfree;
+      delete payload.state.chars[sibling.id].unfree;
+      delete payload.state.player.familyFreedom;
+      FB.save.restore(payload);
+      return {
+        current:FB.stationOf(FB.state.chars[me.id]),
+        parent:FB.stationOf(FB.state.chars[parent.id]),
+        sibling:FB.stationOf(FB.state.chars[sibling.id])
+      };
+    });
+
+    expect(result).toEqual({ current:1, parent:0, sibling:0 });
+  });
 
 test('saved offers round-trip and the rank, petition, and Kin surfaces expose stable selectors',
   async function ({ page }) {
@@ -1158,6 +1171,7 @@ test('local advocacy snapshots an exact +10 term and acceptance falls back to th
     expect(result.tech).toEqual({ participants:'none', advocacy:'none' });
   });
 
+sharedFreedom('petition, deed, portraits and gratitude', function () {
 test('the petition sheet discloses optional advocacy before creation and preserves its saved audit',
   async function ({ page }) {
     const expected = await page.evaluate(function () {
@@ -1281,4 +1295,5 @@ test('purchased freedom earns gratitude only once from each newly freed relative
       individual:FB.standingOf(s, other) - otherBefore };
   });
   expect(result).toEqual({ gain:20, unselected:0, repeated:false, final:20, individual:20 });
+});
 });

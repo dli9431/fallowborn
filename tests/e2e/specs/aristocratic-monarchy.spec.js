@@ -7,6 +7,7 @@ const {mockCrazyGames} = require('../support/crazygames');
 const {advanceTo} = require('../support/game/parity');
 const {advanceBookmark} = require('../support/game/bookmark-acceptance');
 const {injectBrowserHarness} = require('../support/game/browser-harness');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,[
   'index.html','data/aristocratic_courts.js','data/assembly_polities.js','data/starts.js','data/bookmark_476.js','data/bookmark_476_outer.js',
@@ -23,7 +24,9 @@ dependsOnRuntime(__filename,[
 
 async function start(page,testInfo,options) {
   options = options || {};
-  if (options.crazygames) {
+  if (isSharedPage(page)) {
+    // The group's boot opened the game, installed its fixture and activated 476 (sharedCourt below).
+  } else if (options.crazygames) {
     await mockCrazyGames(page);
     await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
     await openCrazyGame(page,testInfo);
@@ -46,7 +49,7 @@ async function start(page,testInfo,options) {
     });
     FBDATA.bookmarks['476'] = b;
   });
-  if (options.fictional) {
+  if (options.fictional && !isSharedPage(page)) {
     await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/aristocratic-monarchy.js')});
     await page.evaluate(function () { FB_ARISTOCRATIC_FIXTURE.install(); });
   }
@@ -90,7 +93,24 @@ async function start(page,testInfo,options) {
   },options);
 }
 
-for (const fictional of [false,true]) {
+/* Cases that restore saves, generate the legacy opening or boot with the
+   distribution flag keep a fresh page. The others share one page per boot:
+   the ordinary catalogue, the same with the fictional court installed, or
+   the ordinary catalogue at 390px, each with 476 active. Every case still
+   begins its own campaign; ruler starts share the ordinary boot. */
+function sharedCourt(fictional,width) {
+  return {boot:async function (page,testInfo) {
+    if (width) await page.setViewportSize({width:width,height:844});
+    await openGame(page,testInfo);
+    if (fictional) {
+      await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/aristocratic-monarchy.js')});
+      await page.evaluate(function () { FB_ARISTOCRATIC_FIXTURE.install(); });
+    }
+    await activateBookmark(page,'476');
+  }};
+}
+
+function courtCases(fictional) {
   test((fictional ? 'fictional chartered court' : '476 Sasanian court') + ' separates royal descent, local rights, public office and private estates', async function ({page},testInfo) {
     await start(page,testInfo,{fictional:fictional});
     const result = await page.evaluate(function (fictional) {
@@ -145,6 +165,9 @@ for (const fictional of [false,true]) {
     expect(result).toEqual({noFalseDeath:true,withdrawn:true,blocked:true,empty:true,bounded:true,accepted:true,once:true,generation:true,property:true,clear:true});
   });
 }
+
+describeSharedPage('476 courts on one ordinary booted page',sharedCourt(false),function () {
+courtCases(false);
 
 test('paid support reviews bind ancestry, participants, jurisdiction, generation, terms and actual payer', async function ({page},testInfo) {
   await start(page,testInfo);
@@ -241,23 +264,6 @@ test('magnate probate and governor replacement retain private estates and family
       estate:!!privateHeir && estate.holderId === privateHeir.id,nonroyal:!A.royalEligibility(s,a.rid,quote.heirId).allowed};
   });
   expect(result).toEqual({applied:true,once:true,privateUntouched:true,principalChanged:true,family:true,governor:true,dismissal:true,aliveRights:true,estate:true,nonroyal:true});
-});
-
-test('minor royal accession needs living stewardship and keeps administration during a real vacancy', async function ({page},testInfo) {
-  await start(page,testInfo,{fictional:true});
-  const result = await page.evaluate(function () {
-    const s=FB.state,a=ARISTO,A=FB.aristocracy,R=FB.governmentRecognition;
-    const minor=R.candidates(s,a.rid).find(function (c) { return c.minor; }); a.back(minor.id);
-    const quote=FB.publicAccessionQuote(s,a.actor,a.rid,'abdication');
-    const approved=!!FB.publicAccede(s,quote),regency=a.data().regency;
-    const principal=s.chars[regency.stewardId]; principal.dead=true;
-    const impaired=!FB.political.consent(s,a.actor,'war',{}).allowed;
-    const serialized=JSON.parse(FB.save.serialize()); FB.save.restore(serialized);
-    const restored=JSON.stringify(regency) === JSON.stringify(A.state(FB.state,a.rid).regency);
-    return {minor:quote.minor,approved:approved,steward:!!regency.stewardId,
-      generation:regency.generation === FB.realmRulerGeneration(FB.state,a.rid),impaired:impaired,restored:restored};
-  });
-  expect(result).toEqual({minor:true,approved:true,steward:true,generation:true,impaired:true,restored:true});
 });
 
 test('public assignments conserve the existing purse and reuse source receipts once per season', async function ({page},testInfo) {
@@ -358,6 +364,80 @@ test('AI honors a principal refusal, provincial support and an unfunded court wi
   expect(result).toEqual({refusal:true,same:true,noGrowth:true,player:true,paid:true});
 });
 
+test('profile mods validate detached policy and fresh openings without historical engine selectors', async function ({page},testInfo) {
+  if (!isSharedPage(page)) await openGame(page,testInfo);
+  const result=await page.evaluate(function () {
+    const copy=JSON.parse(JSON.stringify(FBDATA.aristocraticProfiles.chartered_court));
+    copy.name='Another fictional court';
+    const good=FB.mods.validate({aristocraticProfiles:{another_court:copy}});
+    const saved=JSON.stringify(FBDATA.aristocraticProfiles),rng=FB.getRngState(),uid=FB.getUidCounter();
+    copy.interests[1].provinceId=copy.interests[0].provinceId;
+    const bad=FB.mods.validate({aristocraticProfiles:{another_court:copy}});
+    const opening=JSON.parse(JSON.stringify(FB.bookmark('476')));
+    delete opening.opening.actors.mihran_elder;
+    return {good:good,bad:bad.length > 0,opening:FB.validateBookmark(opening).length > 0,
+      detached:saved === JSON.stringify(FBDATA.aristocraticProfiles) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result).toEqual({good:[],bad:true,opening:true,detached:true});
+});
+
+test('surviving local rights can be probated under dynastic government before a reviewed return', async function ({page},testInfo) {
+  await start(page,testInfo,{ruler:true});
+  const evidence=await page.evaluate(function () {
+    const s=FB.state,a=ARISTO,A=FB.aristocracy,m=a.voices()[0];
+    A.convert(s,A.conversionQuote(s,a.actor,a.rid,'regnum'));s.chars[m.principal.id].dead=true;
+    const q=A.inheritanceQuote(s,a.actor,a.rid,m.id);
+    const estate=JSON.stringify(s.bookmarkSetup.estates),records=JSON.stringify(a.data().interests);
+    FB.ui.showProvincialContinuity();return {heir:q.heirId,estate:estate,records:records};
+  });
+  await expect(page.locator('#provincial-return')).toBeDisabled();
+  await page.locator('#provincial-probate-mihran').click();
+  await expect(page.locator('#provincial-return-confirm')).toContainText('Confirm inherited rights');
+  await page.locator('#provincial-return-confirm').click();
+  await expect(page.locator('#provincial-return')).toBeEnabled();
+  const probate=await page.evaluate(function (e) {
+    const s=FB.state,A=FB.aristocracy,d=A.state(s,'player'),m=d.interests[0];
+    return {same:e.records === JSON.stringify(d.interests),estate:e.estate === JSON.stringify(s.bookmarkSetup.estates),
+      heir:s.authority.appointments.find(function (r) { return r.id === m.appointmentId; }).holder.id === e.heir,
+      form:FB.governments.forRealm(s,'player').id};
+  },evidence);
+  expect(probate).toEqual({same:true,estate:true,heir:true,form:'regnum'});
+  await page.locator('#provincial-return').click();await page.locator('#provincial-return-confirm').click();
+  expect(await page.evaluate(function () { return FB.aristocracy.validateState(FB.state); })).toBeNull();
+});
+
+test('an AI dynastic court continues existing hereditary rights without reseeding or spending player funds', async function ({page},testInfo) {
+  await start(page,testInfo);
+  const result=await page.evaluate(function () {
+    const s=FB.state,a=ARISTO,A=FB.aristocracy,m=a.voices()[0];
+    A.convert(s,A.conversionQuote(s,a.actor,a.rid,'regnum'));s.chars[m.principal.id].dead=true;
+    const q=A.inheritanceQuote(s,a.actor,a.rid,m.id),records=JSON.stringify(a.data().interests);
+    const uid=FB.getUidCounter(),cash=s.player.gold;s.turn+=90;FB.publicOfficeSettle(s,null,1,false);
+    const row=s.authority.appointments.find(function (r) { return r.id === m.appointmentId; });
+    return {heir:row.holder.id === q.heirId,records:records === JSON.stringify(a.data().interests),
+      uid:uid === FB.getUidCounter(),cash:cash === s.player.gold,valid:A.validateState(s)};
+  });
+  expect(result).toEqual({heir:true,records:true,uid:true,cash:true,valid:null});
+});
+});
+
+test('minor royal accession needs living stewardship and keeps administration during a real vacancy', async function ({page},testInfo) {
+  await start(page,testInfo,{fictional:true});
+  const result = await page.evaluate(function () {
+    const s=FB.state,a=ARISTO,A=FB.aristocracy,R=FB.governmentRecognition;
+    const minor=R.candidates(s,a.rid).find(function (c) { return c.minor; }); a.back(minor.id);
+    const quote=FB.publicAccessionQuote(s,a.actor,a.rid,'abdication');
+    const approved=!!FB.publicAccede(s,quote),regency=a.data().regency;
+    const principal=s.chars[regency.stewardId]; principal.dead=true;
+    const impaired=!FB.political.consent(s,a.actor,'war',{}).allowed;
+    const serialized=JSON.parse(FB.save.serialize()); FB.save.restore(serialized);
+    const restored=JSON.stringify(regency) === JSON.stringify(A.state(FB.state,a.rid).regency);
+    return {minor:quote.minor,approved:approved,steward:!!regency.stewardId,
+      generation:regency.generation === FB.realmRulerGeneration(FB.state,a.rid),impaired:impaired,restored:restored};
+  });
+  expect(result).toEqual({minor:true,approved:true,steward:true,generation:true,impaired:true,restored:true});
+});
+
 test('detached v4 validation rejects forged ancestry, duplicate scope, invalid commitments and dangling principals before adoption', async function ({page},testInfo) {
   await start(page,testInfo);
   const result = await page.evaluate(function () {
@@ -449,6 +529,9 @@ test('a recognized royal household heir continues one player crown and the same 
   expect(result).toEqual({applied:true,person:true,once:true,single:true,grants:true,frontier:true,valid:null,origin:'sasanian_476'});
 });
 
+describeSharedPage('fictional chartered courts on one booted page',sharedCourt(true),function () {
+courtCases(true);
+
 test('minority stewardship can recover through a reviewed living principal and ends at adulthood', async function ({page},testInfo) {
   await start(page,testInfo,{fictional:true});
   const result=await page.evaluate(function () {
@@ -467,23 +550,6 @@ test('minority stewardship can recover through a reviewed living principal and e
   expect(result).toEqual({pure:true,replaced:true,once:true,governing:true,adult:true});
 });
 
-test('profile mods validate detached policy and fresh openings without historical engine selectors', async function ({page},testInfo) {
-  await openGame(page,testInfo);
-  const result=await page.evaluate(function () {
-    const copy=JSON.parse(JSON.stringify(FBDATA.aristocraticProfiles.chartered_court));
-    copy.name='Another fictional court';
-    const good=FB.mods.validate({aristocraticProfiles:{another_court:copy}});
-    const saved=JSON.stringify(FBDATA.aristocraticProfiles),rng=FB.getRngState(),uid=FB.getUidCounter();
-    copy.interests[1].provinceId=copy.interests[0].provinceId;
-    const bad=FB.mods.validate({aristocraticProfiles:{another_court:copy}});
-    const opening=JSON.parse(JSON.stringify(FB.bookmark('476')));
-    delete opening.opening.actors.mihran_elder;
-    return {good:good,bad:bad.length > 0,opening:FB.validateBookmark(opening).length > 0,
-      detached:saved === JSON.stringify(FBDATA.aristocraticProfiles) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  });
-  expect(result).toEqual({good:[],bad:true,opening:true,detached:true});
-});
-
 test('a living steward who loses provincial jurisdiction must yield to a reviewed capable principal', async function ({page},testInfo) {
   await start(page,testInfo,{fictional:true});
   const result=await page.evaluate(function () {
@@ -500,8 +566,9 @@ test('a living steward who loses provincial jurisdiction must yield to a reviewe
   });
   expect(result).toEqual({alive:true,denied:true,unchanged:true,review:true,changed:true,governing:true});
 });
+});
 
-for (const crazygames of [false,true]) {
+function mobileReviewCase(crazygames) {
   test('mobile provincial review preserves terms, disclosure, position and keyboard return with distribution flag ' + crazygames, async function ({page},testInfo) {
     await page.setViewportSize({width:390,height:844});
     await start(page,testInfo,{ruler:true,crazygames:crazygames});
@@ -520,6 +587,10 @@ for (const crazygames of [false,true]) {
     expect(unchanged).toBe(true);
   });
 }
+mobileReviewCase(true);
+
+describeSharedPage('ruler reviews on one 390px booted page',sharedCourt(false,390),function () {
+mobileReviewCase(false);
 
 test('a ruler can review a return from dynastic government without bypassing provincial assent', async function ({page},testInfo) {
   await page.setViewportSize({width:390,height:844});
@@ -539,6 +610,7 @@ test('a ruler can review a return from dynastic government without bypassing pro
   await review.click();await page.locator('#provincial-return-confirm').click();
   await expect(page.locator('#gm-title')).toHaveText('Public administration');
   expect(await page.evaluate(function () { return FB.governments.forRealm(FB.state,'player').id; })).toBe('aristocratic_monarchy');
+});
 });
 
 test('a real seasonal continuation replays exactly and keeps recognition and hereditary ledgers bounded', async function ({page},testInfo) {
@@ -573,45 +645,6 @@ test('a real seasonal continuation replays exactly and keeps recognition and her
   });
   expect(bounded).toMatchObject({interests:4,provincial:4,valid:null,mode:'aristocratic_monarchy'});
   expect(bounded.recognition).toBeLessThanOrEqual(5);
-});
-
-test('surviving local rights can be probated under dynastic government before a reviewed return', async function ({page},testInfo) {
-  await start(page,testInfo,{ruler:true});
-  const evidence=await page.evaluate(function () {
-    const s=FB.state,a=ARISTO,A=FB.aristocracy,m=a.voices()[0];
-    A.convert(s,A.conversionQuote(s,a.actor,a.rid,'regnum'));s.chars[m.principal.id].dead=true;
-    const q=A.inheritanceQuote(s,a.actor,a.rid,m.id);
-    const estate=JSON.stringify(s.bookmarkSetup.estates),records=JSON.stringify(a.data().interests);
-    FB.ui.showProvincialContinuity();return {heir:q.heirId,estate:estate,records:records};
-  });
-  await expect(page.locator('#provincial-return')).toBeDisabled();
-  await page.locator('#provincial-probate-mihran').click();
-  await expect(page.locator('#provincial-return-confirm')).toContainText('Confirm inherited rights');
-  await page.locator('#provincial-return-confirm').click();
-  await expect(page.locator('#provincial-return')).toBeEnabled();
-  const probate=await page.evaluate(function (e) {
-    const s=FB.state,A=FB.aristocracy,d=A.state(s,'player'),m=d.interests[0];
-    return {same:e.records === JSON.stringify(d.interests),estate:e.estate === JSON.stringify(s.bookmarkSetup.estates),
-      heir:s.authority.appointments.find(function (r) { return r.id === m.appointmentId; }).holder.id === e.heir,
-      form:FB.governments.forRealm(s,'player').id};
-  },evidence);
-  expect(probate).toEqual({same:true,estate:true,heir:true,form:'regnum'});
-  await page.locator('#provincial-return').click();await page.locator('#provincial-return-confirm').click();
-  expect(await page.evaluate(function () { return FB.aristocracy.validateState(FB.state); })).toBeNull();
-});
-
-test('an AI dynastic court continues existing hereditary rights without reseeding or spending player funds', async function ({page},testInfo) {
-  await start(page,testInfo);
-  const result=await page.evaluate(function () {
-    const s=FB.state,a=ARISTO,A=FB.aristocracy,m=a.voices()[0];
-    A.convert(s,A.conversionQuote(s,a.actor,a.rid,'regnum'));s.chars[m.principal.id].dead=true;
-    const q=A.inheritanceQuote(s,a.actor,a.rid,m.id),records=JSON.stringify(a.data().interests);
-    const uid=FB.getUidCounter(),cash=s.player.gold;s.turn+=90;FB.publicOfficeSettle(s,null,1,false);
-    const row=s.authority.appointments.find(function (r) { return r.id === m.appointmentId; });
-    return {heir:row.holder.id === q.heirId,records:records === JSON.stringify(a.data().interests),
-      uid:uid === FB.getUidCounter(),cash:cash === s.player.gold,valid:A.validateState(s)};
-  });
-  expect(result).toEqual({heir:true,records:true,uid:true,cash:true,valid:null});
 });
 
 /* Long-run court stability is staged with two direct annual passes rather than

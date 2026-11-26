@@ -7,6 +7,7 @@ test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
 const {installRestoreFacts} = require('../support/game/restore-facts');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {describeSharedPage, isSharedPage, activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {harbor:require('../fixtures/authoring/revision-start-tracks-harbor.json'),
   dune:require('../fixtures/authoring/revision-start-tracks-dune.json')};
@@ -24,7 +25,10 @@ dependsOnRuntime(__filename, ['index.html','data/starts.js','data/mobile_confede
    a later reload from storing it again. */
 async function importExample(page, info, prefix, revision, modsScreen) {
   const file = path.resolve(__dirname, '../fixtures/authoring/revision-start-tracks-' + prefix + '.json');
-  if (modsScreen) {
+  if (isSharedPage(page)) {
+    // A shared page booted the stored text once (sharedExample below).
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+  } else if (modsScreen) {
     await openGame(page, info);
     await page.evaluate(function () { FB.ui.showMods(); });
     await page.locator('#modfile').setInputFiles(file);
@@ -67,21 +71,33 @@ async function copyStartCodeToTitle(page) {
   });
 }
 
-for (const prefix of ['harbor','dune']) {
-  test(prefix + ' accepts the complete detached import without effects', async function ({page}, info) {
-    await openGame(page, info);
-    const pure = await page.evaluate(function (input) {
-      const data = JSON.stringify(FBDATA), state = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
-      const registry = FB.stories.list(), messages = JSON.stringify(FB.englishMessages());
-      const faults = FB.mods.validate(input);
-      return {faults:faults, pure:data === JSON.stringify(FBDATA) && state === FB.state &&
-        rng === FB.getRngState() && uid === FB.getUidCounter() &&
-        messages === JSON.stringify(FB.englishMessages()) &&
-        registry.every(function (story, i) { return FB.stories.list()[i] === story; })};
-    }, examples[prefix]);
-    expect(pure).toEqual({faults:[], pure:true});
-  });
+/* Picker imports, rejected stores and applies, save restores and the modified
+   named-household import keep a fresh page. The detached validation cases
+   share one unmodded page; the other stored-example cases share one page per
+   example, booted once with its stored text and world active. One case edits
+   an expanded start-track override, which the reset returns to its booted value. */
+function sharedExample(prefix) {
+  return {boot:async function (page, info) {
+    await importExample(page, info, prefix);
+    await activateBookmark(page, prefix + '_world');
+    await page.evaluate(function (prefix) {
+      window.revisionTrackEntries = JSON.stringify(FBDATA.bookmarks[prefix + '_world'].revisions.expanded.startTrackOverrides.entries);
+    }, prefix);
+  }, reset:async function (page) {
+    await page.evaluate(function (prefix) {
+      const entries = FBDATA.bookmarks[prefix + '_world'].revisions.expanded.startTrackOverrides.entries;
+      const booted = JSON.parse(window.revisionTrackEntries);
+      Object.keys(booted).forEach(function (id) {
+        const row = entries[id];
+        Object.keys(row).forEach(function (key) { delete row[key]; });
+        Object.assign(row, booted[id]);
+      });
+    }, prefix);
+  }};
+}
 
+for (const prefix of ['harbor','dune']) {
+  describeSharedPage(prefix + ' stored example on one booted page', sharedExample(prefix), function () {
   test(prefix + ' validates both effective worlds of the imported JSON without effects', async function ({page}, info) {
     await importExample(page, info, prefix);
     const result = await page.evaluate(function (prefix) {
@@ -103,6 +119,52 @@ for (const prefix of ['harbor','dune']) {
     expect(result).toMatchObject({faults:[], fallback:true, entryFallback:true, unchanged:true, mode:'none'});
     expect(result.revisions.map(function (r) { return [r.id,r.faults,r.tracks.length,r.allowed]; }))
       .toEqual([['baseline',[],2,true],['expanded',[],4,true]]);
+  });
+
+  test(prefix + ' direct creation uses the same expanded selection and rejects an absent home storyline', async function ({page}, info) {
+    await importExample(page, info, prefix);
+    await page.evaluate(function (prefix) {
+      return new Promise(function (resolve, reject) {
+        FB.activateBookmark(prefix + '_world', null, function (error) { if (error) reject(error); else resolve(); });
+      });
+    }, prefix);
+    const result = await page.evaluate(function (prefix) {
+      const bm = FB.bookmark(prefix + '_world');
+      const sc = FBDATA.startScenarios.find(function (r) { return r.id === prefix + '_household'; });
+      FB.game.pending = {scenario:sc, bookmarkId:bm.id, provinceId:sc.fixedProvinceId,
+        name:'Review', sex:'m', familyPreset:'standard', seed:'TRACKWORLDS'};
+      FB.game.start(); FB.game.setPaused(true);
+      const count = FB.state.start.storyAttachments.tracks.length;
+      const raw = FBDATA.bookmarks[bm.id], entry = raw.revisions.expanded.startTrackOverrides.entries[sc.id];
+      const old = entry.tracks; entry.tracks = [prefix + '_opening_review'];
+      FB.game.pending = {scenario:sc, bookmarkId:bm.id, provinceId:sc.fixedProvinceId, seed:'REFUSED'};
+      const state = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
+      const rejected = FB.game.start() === false;
+      entry.tracks = old;
+      return {count:count, rejected:rejected, pure:state === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    }, prefix);
+    expect(result).toEqual({count:4, rejected:true, pure:true});
+    await expect(page.locator('#scenariolist [data-scenario="' + prefix + '_household"]')).toHaveCount(0);
+  });
+
+  test(prefix + ' code rejects an effective profile-only household despite its global storyline', async function ({page}, info) {
+    await importExample(page, info, prefix);
+    await beginBookmarkFromTitle(page, prefix + '_world', prefix + '_household');
+    const code = await copyStartCodeToTitle(page);
+    await page.evaluate(function (prefix) {
+      const sc = FBDATA.startScenarios.find(function (r) { return r.id === prefix + '_household'; });
+      const row = FBDATA.bookmarks[prefix + '_world'].revisions.expanded.startTrackOverrides.entries[sc.id];
+      row.tracks = [prefix + '_opening_review']; row.trackLocations = {};
+    }, prefix);
+    // Code parsing checks eligibility before activating this invalid edited
+    // world, preserving the same no-storyline boundary as direct creation.
+    await openStartCode(page,code);
+    await expect(page.locator('#ng-seed-err')).toContainText('doesn’t parse');
+    expect(await page.evaluate(function (prefix) {
+      const sc = FBDATA.startScenarios.find(function (r) { return r.id === prefix + '_household'; });
+      return FB.startStoryTracks(sc,sc.fixedProvinceId,null,FB.bookmark(prefix + '_world')).length;
+    }, prefix)).toBe(0);
+  });
   });
 
   for (const revision of ['baseline','expanded']) {
@@ -174,51 +236,6 @@ for (const prefix of ['harbor','dune']) {
     }
   }
 
-  test(prefix + ' direct creation uses the same expanded selection and rejects an absent home storyline', async function ({page}, info) {
-    await importExample(page, info, prefix);
-    await page.evaluate(function (prefix) {
-      return new Promise(function (resolve, reject) {
-        FB.activateBookmark(prefix + '_world', null, function (error) { if (error) reject(error); else resolve(); });
-      });
-    }, prefix);
-    const result = await page.evaluate(function (prefix) {
-      const bm = FB.bookmark(prefix + '_world');
-      const sc = FBDATA.startScenarios.find(function (r) { return r.id === prefix + '_household'; });
-      FB.game.pending = {scenario:sc, bookmarkId:bm.id, provinceId:sc.fixedProvinceId,
-        name:'Review', sex:'m', familyPreset:'standard', seed:'TRACKWORLDS'};
-      FB.game.start(); FB.game.setPaused(true);
-      const count = FB.state.start.storyAttachments.tracks.length;
-      const raw = FBDATA.bookmarks[bm.id], entry = raw.revisions.expanded.startTrackOverrides.entries[sc.id];
-      const old = entry.tracks; entry.tracks = [prefix + '_opening_review'];
-      FB.game.pending = {scenario:sc, bookmarkId:bm.id, provinceId:sc.fixedProvinceId, seed:'REFUSED'};
-      const state = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
-      const rejected = FB.game.start() === false;
-      entry.tracks = old;
-      return {count:count, rejected:rejected, pure:state === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter()};
-    }, prefix);
-    expect(result).toEqual({count:4, rejected:true, pure:true});
-    await expect(page.locator('#scenariolist [data-scenario="' + prefix + '_household"]')).toHaveCount(0);
-  });
-
-  test(prefix + ' code rejects an effective profile-only household despite its global storyline', async function ({page}, info) {
-    await importExample(page, info, prefix);
-    await beginBookmarkFromTitle(page, prefix + '_world', prefix + '_household');
-    const code = await copyStartCodeToTitle(page);
-    await page.evaluate(function (prefix) {
-      const sc = FBDATA.startScenarios.find(function (r) { return r.id === prefix + '_household'; });
-      const row = FBDATA.bookmarks[prefix + '_world'].revisions.expanded.startTrackOverrides.entries[sc.id];
-      row.tracks = [prefix + '_opening_review']; row.trackLocations = {};
-    }, prefix);
-    // Code parsing checks eligibility before activating this invalid edited
-    // world, preserving the same no-storyline boundary as direct creation.
-    await openStartCode(page,code);
-    await expect(page.locator('#ng-seed-err')).toContainText('doesn’t parse');
-    expect(await page.evaluate(function (prefix) {
-      const sc = FBDATA.startScenarios.find(function (r) { return r.id === prefix + '_household'; });
-      return FB.startStoryTracks(sc,sc.fixedProvinceId,null,FB.bookmark(prefix + '_world')).length;
-    }, prefix)).toBe(0);
-  });
-
   test(prefix + ' expanded saves reject missing original records and malformed provenance atomically', async function ({page}, info) {
     await importExample(page, info, prefix);
     await beginBookmarkFromTitle(page, prefix + '_world', prefix + '_household');
@@ -266,8 +283,25 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
+describeSharedPage('detached validation on one unmodded page', {boot:openGame}, function () {
+for (const prefix of ['harbor','dune']) {
+  test(prefix + ' accepts the complete detached import without effects', async function ({page}, info) {
+    if (!isSharedPage(page)) await openGame(page, info);
+    const pure = await page.evaluate(function (input) {
+      const data = JSON.stringify(FBDATA), state = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
+      const registry = FB.stories.list(), messages = JSON.stringify(FB.englishMessages());
+      const faults = FB.mods.validate(input);
+      return {faults:faults, pure:data === JSON.stringify(FBDATA) && state === FB.state &&
+        rng === FB.getRngState() && uid === FB.getUidCounter() &&
+        messages === JSON.stringify(FB.englishMessages()) &&
+        registry.every(function (story, i) { return FB.stories.list()[i] === story; })};
+    }, examples[prefix]);
+    expect(pure).toEqual({faults:[], pure:true});
+  });
+}
+
 test('override inheritance, complete replacement and omitted birthplace maps use whole revision semantics', async function ({page}, info) {
-  await openGame(page, info);
+  if (!isSharedPage(page)) await openGame(page, info);
   const result = await page.evaluate(function (source) {
     const input = JSON.parse(JSON.stringify(source)), b = input.bookmarks.harbor_world, sc = input.startScenarios[0];
     b.revisions.baseline.startTrackOverrides = {schema:1,entries:{harbor_household:{tracks:sc.tracks.slice()}}};
@@ -292,7 +326,7 @@ test('override inheritance, complete replacement and omitted birthplace maps use
 });
 
 test('a retained world cannot inherit fresh-only hosts, tracks or dependencies through an override', async function ({page}, info) {
-  await openGame(page, info);
+  if (!isSharedPage(page)) await openGame(page, info);
   const result = await page.evaluate(function (source) {
     const changes = [function (b) { b.revisions.baseline.startTrackOverrides = b.revisions.expanded.startTrackOverrides; },
       function (b) { b.revisions.expanded.starts = []; },
@@ -304,6 +338,7 @@ test('a retained world cannot inherit fresh-only hosts, tracks or dependencies t
     });
   }, examples.harbor);
   expect(result).toEqual([true,true,true,true]);
+});
 });
 
 for (const group of [0,1,2,3]) test('invalid complete overrides and effective references reject ordinary imports without publication, group ' + group, async function ({page}, info) {

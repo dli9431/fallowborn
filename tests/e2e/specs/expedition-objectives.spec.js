@@ -1,10 +1,13 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {installStoredMod}=require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-objective-harbor.json'),
   upland:require('../fixtures/authoring/expedition-objective-upland.json')};
@@ -17,10 +20,13 @@ dependsOnRuntime(__filename,[
   'js/story_expedition_participation.js','js/story_household.js','js/travel.js','js/save.js','js/save_v4.js','js/main.js','js/util.js']);
 
 async function begin(page,info,label) {
+  // A shared page booted the stored example once (sharedObjective below).
+  if(!isSharedPage(page)) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/expedition-objective-'+label+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  }
   const prefix=label==='harbor' ? 'harbor' : 'dune';
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
@@ -49,6 +55,18 @@ async function begin(page,info,label) {
         actor:{kind:'character',id:FB.mobile.row(s,this.rid).leaderId}});}
     };
   },label);
+}
+
+/* The Mods screen import has its own case per example, and cases that restore
+   saves and the detached unmodded check keep a fresh page. The others share one
+   page per example, booted once with the stored example text and its world
+   active; each still begins its own campaign. */
+function sharedObjective(label) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/expedition-objective-'+label+'.json'),'utf8'));
+    await activateBookmark(page,(label==='harbor' ? 'harbor' : 'dune')+'_world');
+  }};
 }
 
 for (const label of ['harbor','upland']) {
@@ -108,6 +126,7 @@ test('detached ordinary JSON validation rejects unsupported objective terms and 
   expect(result).toEqual({bad:true,columns:true,pure:true});
 });
 
+describeSharedPage('harbor objectives on one booted stored world',sharedObjective('harbor'),function () {
 test('changed campaign, occupation, original participant and current route facts reject stale orders without effects',async function ({page},info) {
   await begin(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -142,39 +161,6 @@ test('campaign replacement stops matching intent and cannot enroll the program i
   expect(result).toEqual({stopped:true,blocked:true,same:true,at:true,camp:true,pending:true,valid:true});
 });
 
-test('actual halted field arrival completes only one observation per day and leaves the civilian camp behind',async function ({page},info) {
-  await begin(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const s=FB.state,C=objectiveCase,E=FB.expeditionPrograms,M=FB.mobile;C.prepare();C.launch();
-    const r=M.row(s,C.rid),a=M.host(s,C.rid),q=E.review(s,C.rid,'objective'),camp=M.migration(s,C.rid).at;
-    E.commit(s,q);
-    // Stage the existing movement owner's completed field position, without
-    // moving its civilian camp, to exercise the exact arrival boundary.
-    a.at=q.objective.countyId;a.from=a.at;a.path=[];a.goal=null;a.moveLeft=0;
-    const sameDay=!E.review(s,C.rid,'objective').allowed;s.turn++;
-    const arrived=E.review(s,C.rid,'objective'),observed=E.commit(s,arrived),next=!E.review(s,C.rid,'hold').allowed;
-    const completed=r.expeditionProgram.steps[0].status==='complete';
-    s.turn++;const held=E.commit(s,E.review(s,C.rid,'hold'));
-    return {sameDay:sameDay,observed:observed,arrived:arrived.observation,operation:arrived.operation,next:next,completed:completed,
-      held:held,terminal:r.expeditionProgram.status,camp:M.migration(s,C.rid).at===camp && camp!==a.at,valid:M.validate(s)};
-  });
-  expect(result).toEqual({sameDay:true,observed:true,arrived:'reached',operation:null,next:true,completed:true,held:true,terminal:'complete',camp:true,valid:true});
-});
-
-test('ordinary movement advances the ordered field host while the camp stays at its real county',async function ({page},info) {
-  await begin(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const s=FB.state,C=objectiveCase,E=FB.expeditionPrograms,M=FB.mobile;C.prepare();C.launch();
-    const a=M.host(s,C.rid),origin=a.at,camp=M.migration(s,C.rid).at;
-    const issued=E.commit(s,E.review(s,C.rid,'objective'));let days=0;
-    while (days<30 && a.at===origin && (s.armies || []).indexOf(a)>=0) {
-      s.turn++;days++;FB.mobileDay(s);FB.armyTick(s);FB.federateDay(s);
-    }
-    return {issued:issued,moved:a.at!==origin,camp:M.migration(s,C.rid).at===camp,days:days};
-  });
-  expect(result).toMatchObject({issued:true,moved:true,camp:true});expect(result.days).toBeLessThanOrEqual(30);
-});
-
 test('manual replacement, pause and expiry preserve the new order and all independent obligations',async function ({page},info) {
   await begin(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -189,19 +175,6 @@ test('manual replacement, pause and expiry preserve the new order and all indepe
       resources:resources===JSON.stringify([r.members,r.accounting,r.food,s.owner,s.holder]),valid:M.validate(s)};
   });
   expect(result).toEqual({manual:true,paused:true,terminal:'complete',tickets:0,manualRoute:true,vow:true,resources:true,valid:true});
-});
-
-test('absent campaign expires with no departure, vow or manufactured following',async function ({page},info) {
-  await begin(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const s=FB.state,C=objectiveCase,E=FB.expeditionPrograms,M=FB.mobile,r=M.row(s,C.rid),a=M.host(s,C.rid);
-    const before=JSON.stringify([s.armies,r.food,r.accounting,r.members,M.migration(s,C.rid),s.owner,s.holder]);
-    s.turn=45;E.reconcile(s);
-    return {same:before===JSON.stringify([s.armies,r.food,r.accounting,r.members,M.migration(s,C.rid),s.owner,s.holder]),
-      terminal:r.expeditionProgram.status,statuses:r.expeditionProgram.steps.map(function(v){return v.status;}),
-      vow:s.greatHolyWar || null,goal:a.goal || null,valid:M.validate(s)};
-  });
-  expect(result).toEqual({same:true,terminal:'complete',statuses:['expired','expired'],vow:null,goal:null,valid:true});
 });
 
 test('strict optional objective tickets and daily budgets reject malformed saves without repair',async function ({page},info) {
@@ -266,6 +239,55 @@ test('a neutral county requires actual passage and revocation stops only the own
       stopped:!a.path.length && a.goal===null && !a.moveLeft,at:a.at===at,tickets:r.expeditionProgram.execution.orders.length};
   });
   expect(result).toEqual({issued:true,blocked:true,passage:true,stopped:true,at:true,tickets:0});
+});
+});
+
+describeSharedPage('upland objectives on one booted stored world',sharedObjective('upland'),function () {
+test('actual halted field arrival completes only one observation per day and leaves the civilian camp behind',async function ({page},info) {
+  await begin(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const s=FB.state,C=objectiveCase,E=FB.expeditionPrograms,M=FB.mobile;C.prepare();C.launch();
+    const r=M.row(s,C.rid),a=M.host(s,C.rid),q=E.review(s,C.rid,'objective'),camp=M.migration(s,C.rid).at;
+    E.commit(s,q);
+    // Stage the existing movement owner's completed field position, without
+    // moving its civilian camp, to exercise the exact arrival boundary.
+    a.at=q.objective.countyId;a.from=a.at;a.path=[];a.goal=null;a.moveLeft=0;
+    const sameDay=!E.review(s,C.rid,'objective').allowed;s.turn++;
+    const arrived=E.review(s,C.rid,'objective'),observed=E.commit(s,arrived),next=!E.review(s,C.rid,'hold').allowed;
+    const completed=r.expeditionProgram.steps[0].status==='complete';
+    s.turn++;const held=E.commit(s,E.review(s,C.rid,'hold'));
+    return {sameDay:sameDay,observed:observed,arrived:arrived.observation,operation:arrived.operation,next:next,completed:completed,
+      held:held,terminal:r.expeditionProgram.status,camp:M.migration(s,C.rid).at===camp && camp!==a.at,valid:M.validate(s)};
+  });
+  expect(result).toEqual({sameDay:true,observed:true,arrived:'reached',operation:null,next:true,completed:true,held:true,terminal:'complete',camp:true,valid:true});
+});
+
+test('ordinary movement advances the ordered field host while the camp stays at its real county',async function ({page},info) {
+  await begin(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const s=FB.state,C=objectiveCase,E=FB.expeditionPrograms,M=FB.mobile;C.prepare();C.launch();
+    const a=M.host(s,C.rid),origin=a.at,camp=M.migration(s,C.rid).at;
+    const issued=E.commit(s,E.review(s,C.rid,'objective'));let days=0;
+    while (days<30 && a.at===origin && (s.armies || []).indexOf(a)>=0) {
+      s.turn++;days++;FB.mobileDay(s);FB.armyTick(s);FB.federateDay(s);
+    }
+    return {issued:issued,moved:a.at!==origin,camp:M.migration(s,C.rid).at===camp,days:days};
+  });
+  expect(result).toMatchObject({issued:true,moved:true,camp:true});expect(result.days).toBeLessThanOrEqual(30);
+});
+
+test('absent campaign expires with no departure, vow or manufactured following',async function ({page},info) {
+  await begin(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const s=FB.state,C=objectiveCase,E=FB.expeditionPrograms,M=FB.mobile,r=M.row(s,C.rid),a=M.host(s,C.rid);
+    const before=JSON.stringify([s.armies,r.food,r.accounting,r.members,M.migration(s,C.rid),s.owner,s.holder]);
+    s.turn=45;E.reconcile(s);
+    return {same:before===JSON.stringify([s.armies,r.food,r.accounting,r.members,M.migration(s,C.rid),s.owner,s.holder]),
+      terminal:r.expeditionProgram.status,statuses:r.expeditionProgram.steps.map(function(v){return v.status;}),
+      vow:s.greatHolyWar || null,goal:a.goal || null,valid:M.validate(s)};
+  });
+  expect(result).toEqual({same:true,terminal:'complete',statuses:['expired','expired'],vow:null,goal:null,valid:true});
+});
 });
 
 test('saved opening replays canonical movement, campaign and conserved accounts deterministically',async function ({page},info) {

@@ -7,6 +7,7 @@ const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-opening-campaigns-harbor.json'),
   dune:require('../fixtures/authoring/mobile-opening-campaigns-dune.json')};
@@ -22,11 +23,14 @@ dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/mob
   'js/mods.js','js/save.js','js/save_v4.js','js/stories.js','js/story_household.js']);
 
 // Stored boots the exact fixture JSON the Mods dialog stores, so the page
-// prepares only the modded catalogue once. The other cases keep the dialog
+// prepares only the modded catalogue once. The fresh-page cases keep the dialog
 // import and its unmodded admission for both examples.
 async function start(page,info,prefix,input,scenario,stored) {
   const fixture=path.resolve(__dirname,'../fixtures/authoring/mobile-opening-campaigns-'+prefix+'.json');
-  if (stored) {
+  // A shared page booted the stored fixture once (sharedOpening below).
+  if (isSharedPage(page)) {
+    expect(await page.evaluate(function () {return FB.mods.count();})).toBe(1);
+  } else if (stored) {
     await page.addInitScript(function (source) {
       if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
     },fs.readFileSync(fixture,'utf8'));
@@ -72,6 +76,23 @@ async function start(page,info,prefix,input,scenario,stored) {
       return fresh;
     },row:function () {return M.row(FB.state,d.id);}};
   });
+}
+
+/* Cases that restore saves, import through the Mods dialog, apply a mod or
+   boot a modified copy keep a fresh page, as do the detached declaration
+   ranges, whose repeated whole-catalogue validations ran slower on one
+   long-lived page. The others share one page per example, booted once with
+   the stored fixture and its world active, and still begin their own campaign. */
+function sharedOpening(prefix) {
+  return {boot:async function (page,info) {
+    const fixture=path.resolve(__dirname,'../fixtures/authoring/mobile-opening-campaigns-'+prefix+'.json');
+    await page.addInitScript(function (source) {
+      if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+    },fs.readFileSync(fixture,'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function () {return FB.mods.count();})).toBe(1);
+    await activateBookmark(page,prefix+'_world');
+  }};
 }
 
 test('an original opponent adopted by a ruler start retains the canonical player alias and matching provenance',async function ({page},info) {
@@ -167,6 +188,7 @@ test('detached malformed and incompatible declarations reject without mutating i
 });
 }
 
+describeSharedPage('harbor opening on one booted stored world',sharedOpening('harbor'),function () {
 test('pure whole-opening preflight rejects stale parties, target control, hostile transit and conflicts before allocation',async function ({page},info) {
   await start(page,info,'harbor',null,null,true);
   const result=await page.evaluate(function () {
@@ -227,6 +249,31 @@ test('a valid live batch credits only the existing treasury allocation and prese
   expect(result).toEqual({pure:true,credit:70,outside:true,actors:true,repeated:true,fighters:160,conflicts:2});
 });
 
+test('ordinary operations retain scoped permits, stale/repeated reviews and current peaceful passage rules',async function ({page},info) {
+  await start(page,info,'harbor');
+  const result=await page.evaluate(function () {
+    const C=window.openingCase,M=FB.mobile,s=FB.state,r=C.row(),c=r.columns.entries[1],a=s.armies.find(function (a) {return a.id===c.hostId;});
+    const request={realmId:C.rid,action:'march',terms:{columnId:c.id,countyId:C.d.mobile.origin},actor:{kind:'character',id:r.leaderId}};
+    const q=M.reviewColumns(s,request),allowed=q.review.allowed;
+    a.mobileFood-=1;
+    const bytes=JSON.stringify(s),stale=!M.commit(s,q) && bytes===JSON.stringify(s);
+    const current=M.reviewColumns(s,request),committed=M.commit(s,current),after=JSON.stringify(s);
+    const repeated=!M.commit(s,current) && after===JSON.stringify(s);
+    const record=r.openingCampaigns.entries[1];
+    FB.settleOrdinaryWar(s,record.warId,'white_peace');
+    const noWar=FB.ordinaryWarById(s,record.warId)===null;
+    const denied=!M.reviewColumns(s,{realmId:C.rid,action:'march',terms:{columnId:r.columns.entries[0].id,
+      countyId:record.target},actor:request.actor}).review.allowed;
+    const cause={type:'aggression',enemy:FB.startRealmId(s,record.opponent.declaredRealmId),target:record.target};
+    const raw=JSON.stringify(s),blocked=FB.registerOrdinaryWar(s,C.rid,{enemy:cause.enemy,target:cause.target,
+      casus:cause,objectives:[cause],legacy:false})===null && raw===JSON.stringify(s);
+    return {allowed:allowed,stale:stale,committed:committed,repeated:repeated,noWar:noWar,denied:denied,blocked:blocked};
+  });
+  expect(result).toEqual({allowed:true,stale:true,committed:true,repeated:true,noWar:true,denied:true,blocked:true});
+});
+});
+
+describeSharedPage('dune opening on one booted stored world',sharedOpening('dune'),function () {
 test('the actual hostile footprint permits transit but an ungranted peaceful intervening county blocks the same target',async function ({page},info) {
   await start(page,info,'dune');
   const result=await page.evaluate(function () {
@@ -254,6 +301,7 @@ test('existing-conflict inspection accepts an already reached objective without 
   });
   expect(result).toEqual({normal:false,opening:true,pure:true});
 });
+});
 
 test('a later invalid command in the same opening batch leaves the earlier valid command entirely unformed',async function ({page},info) {
   const input=JSON.parse(JSON.stringify(examples.harbor)),b=input.bookmarks.harbor_world;
@@ -279,29 +327,6 @@ test('a later invalid command in the same opening batch leaves the earlier valid
       rng===FB.getRngState() && uid===FB.getUidCounter();
   });
   expect(result).toBe(true);
-});
-
-test('ordinary operations retain scoped permits, stale/repeated reviews and current peaceful passage rules',async function ({page},info) {
-  await start(page,info,'harbor');
-  const result=await page.evaluate(function () {
-    const C=window.openingCase,M=FB.mobile,s=FB.state,r=C.row(),c=r.columns.entries[1],a=s.armies.find(function (a) {return a.id===c.hostId;});
-    const request={realmId:C.rid,action:'march',terms:{columnId:c.id,countyId:C.d.mobile.origin},actor:{kind:'character',id:r.leaderId}};
-    const q=M.reviewColumns(s,request),allowed=q.review.allowed;
-    a.mobileFood-=1;
-    const bytes=JSON.stringify(s),stale=!M.commit(s,q) && bytes===JSON.stringify(s);
-    const current=M.reviewColumns(s,request),committed=M.commit(s,current),after=JSON.stringify(s);
-    const repeated=!M.commit(s,current) && after===JSON.stringify(s);
-    const record=r.openingCampaigns.entries[1];
-    FB.settleOrdinaryWar(s,record.warId,'white_peace');
-    const noWar=FB.ordinaryWarById(s,record.warId)===null;
-    const denied=!M.reviewColumns(s,{realmId:C.rid,action:'march',terms:{columnId:r.columns.entries[0].id,
-      countyId:record.target},actor:request.actor}).review.allowed;
-    const cause={type:'aggression',enemy:FB.startRealmId(s,record.opponent.declaredRealmId),target:record.target};
-    const raw=JSON.stringify(s),blocked=FB.registerOrdinaryWar(s,C.rid,{enemy:cause.enemy,target:cause.target,
-      casus:cause,objectives:[cause],legacy:false})===null && raw===JSON.stringify(s);
-    return {allowed:allowed,stale:stale,committed:committed,repeated:repeated,noWar:noWar,denied:denied,blocked:blocked};
-  });
-  expect(result).toEqual({allowed:true,stale:true,committed:true,repeated:true,noWar:true,denied:true,blocked:true});
 });
 
 test('peace, cancelled intent, actual losses, dead original people and moved or retired hosts survive matching restore',async function ({page},info) {
