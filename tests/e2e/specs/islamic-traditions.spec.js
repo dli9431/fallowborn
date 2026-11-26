@@ -7,6 +7,8 @@ const {startHistoricalGame} = require('../support/game/historical-start');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {releasedCatalogue} = require('../support/released-catalogue');
 const released = require('../fixtures/released-catalogue.json');
+const {useReviewStartRules} = require('../support/game/released-starts');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 
 dependsOnRuntime(__filename,[
   'index.html','data/islamic_profiles.js','data/islamic_rollout.js','data/cultures.js','data/economy.js',
@@ -43,9 +45,28 @@ const selectedRevisions = {
   '1066':'governments_v2_islamic_v1_institutions_v1'
 };
 
+/* Cases that restore saves, install catalogue fixtures or stand alone between
+   them keep a fresh page. Runs of the others share one page per group, reset
+   before each case: catalogue reads on the prepared title with no world active,
+   and starts booted once with the review start rules and a world active,
+   continuing from that prepared title. */
+function sharedTitle(title,body) {
+  describeSharedPage(title,{boot:async function (page,info) {
+    await openGame(page,info);
+  }},body);
+}
+function sharedStarts(title,bookmark,body) {
+  describeSharedPage(title,{boot:async function (page,info) {
+    await useReviewStartRules(page);
+    await openGame(page,info);
+    await activateBookmark(page,bookmark);
+  }},body);
+}
+
+sharedTitle('released and dated identity catalogue reads',function () {
 test('released communities, school descendants and baseline worlds retain their effective rules',
   async function ({page},info) {
-    await openGame(page,info);
+    if (!isSharedPage(page)) await openGame(page,info);
     // released-catalogue.spec.js owns the whole fixture; these profiles own the released Muslim family.
     const ownFaiths = ['muslim','sunni','ashari','maturidi','shia'];
     const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[],geographies:[],eras:[],governments:[],
@@ -62,7 +83,7 @@ test('released communities, school descendants and baseline worlds retain their 
 
 test('dated identity gates distinguish accepted openings from local assignment and conversion',
   async function ({page},info) {
-    await openGame(page,info);
+    if (!isSharedPage(page)) await openGame(page,info);
     expect(await page.evaluate(function (ids) {
       const dates = ['711','800','867','1066','1204'];
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -101,7 +122,7 @@ test('dated identity gates distinguish accepted openings from local assignment a
 
 test('review revisions assign only accepted court identities and preserve complete resident worlds',
   async function ({page},info) {
-    await openGame(page,info);
+    if (!isSharedPage(page)) await openGame(page,info);
     expect(await page.evaluate(function (changes) {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const rows = [];
@@ -137,7 +158,7 @@ test('review revisions assign only accepted court identities and preserve comple
 
 test('unreviewed county replacement is rejected without granting an imam or central war call',
   async function ({page},info) {
-    await openGame(page,info);
+    if (!isSharedPage(page)) await openGame(page,info);
     expect(await page.evaluate(function (ids) {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const guarded = ids.every(function (id) {
@@ -156,6 +177,7 @@ test('unreviewed county replacement is rejected without granting an imam or cent
       return {guarded:guarded,pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     },profiles)).toEqual({guarded:true,pure:true});
   });
+});
 
 for (const crazygames of [false]) {
   for (const row of [
@@ -304,6 +326,7 @@ for (const crazygames of [false]) {
         faith:'sunni',revision:selectedRevisions['800']});
     });
 
+  sharedStarts('ordinary fresh court selection, CrazyGames ' + crazygames,'800',function () {
   for (const row of [
     {bookmark:'800',province:'tahert',realm:'rustamids',faith:'ibadi'},
     {bookmark:'867',province:'tahert',realm:'rustamids',faith:'ibadi'},
@@ -311,7 +334,7 @@ for (const crazygames of [false]) {
   ]) {
     test(row.bookmark + ' ordinary fresh selection keeps the court independent of residents, CrazyGames ' + crazygames,
       async function ({page},info) {
-        await startHistoricalGame(page,info,{bookmark:row.bookmark,
+        await startHistoricalGame(page,info,{bookmark:row.bookmark,prepared:isSharedPage(page),
           code:'ISLAMICFRESH-' + row.bookmark + '-serf-' + row.province + '-m-Review-established'},crazygames);
         expect(await page.evaluate(function (input) {
           const s = FB.state, b = FB.campaignBookmark(s), c = s.chars[s.player.charId];
@@ -332,6 +355,7 @@ for (const crazygames of [false]) {
           faith:row.faith,ruler:row.faith,resident:true,population:true,head:null,institutions:true});
       });
   }
+  });
 
   for (const row of [
     {bookmark:'800',province:'kufa',revision:'inhabited_v2_governments_v2'},
@@ -444,6 +468,7 @@ for (const crazygames of [false]) {
 
 async function beginCircle(page,info,row,crazygames) {
   await startHistoricalGame(page,info,{bookmark:'1066',revision:'governments_v2_islamic_v1_institutions_v1',
+    prepared:isSharedPage(page),
     code:'ISLAMICCIRCLE-1066-serf-' + row.province + '-' + row.sex + '-Review-established'},!!crazygames);
   await page.evaluate(function (row) {
     window.islamicCircle = row;
@@ -491,6 +516,7 @@ test('two city-level circles validate in composed revisions without changing any
       technology:[],review:'none',pure:true});
   });
 
+sharedStarts('city circle learning','1066',function () {
 for (const row of circles) {
   test(row.province + ' learning keeps school, community, household work and public offices separate',
     async function ({page},info) {
@@ -554,6 +580,7 @@ test('circle admission, dates, withdrawal and stale reviews reject without payme
     })).toEqual({young:true,remote:true,dates:[true,true,true],rejected:true,pure:true,
       affiliations:0,alive:true,noLesson:true});
   });
+});
 
 /* Fictional property terms exercise the shared contract, without an attested waqf deed. */
 function installCircleSupport() {

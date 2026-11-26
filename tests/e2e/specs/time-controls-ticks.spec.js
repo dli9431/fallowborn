@@ -34,11 +34,30 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 
+// Every case starts its own campaign; no state crosses test boundaries. The
+// cases share one page booted with the 867 world active and reset before each
+// case; the reset also restores the war-cause query the Declare War case wraps,
+// removes toasts the previous case raised and drops the Self drawer body class
+// a left-panel tab leaves (inert on desktop; a new campaign clears it too).
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
 });
 
+describeSharedPage('clock ticks and fast-forward', { boot:async function (page, testInfo) {
+  await openGame(page, testInfo);
+  await activateBookmark(page, '867');
+  await page.evaluate(function () { window.timeControlsBooted = { warCauses:FB.warCauses }; });
+}, reset:async function (page) {
+  await page.evaluate(function () {
+    FB.warCauses = window.timeControlsBooted.warCauses;
+    delete window.__deedWarCauseCalls;
+    const toasts = document.getElementById('toasts');
+    while (toasts && toasts.firstChild) toasts.removeChild(toasts.firstChild);
+    document.body.classList.remove('showself');
+  });
+} }, function () {
 test('natural clock ticks keep heavy warfare panels mounted until an exact refresh',
   async function ({ page }) {
     await startDeterministicGame(page);
@@ -720,4 +739,5 @@ test('daily maintenance skips vassal discovery for non-landed households',
       }
     })).toBe(0);
   });
+});
 

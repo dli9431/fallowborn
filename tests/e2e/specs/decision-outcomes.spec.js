@@ -13,6 +13,28 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { startWarSafety } = require('../support/game/war-safety');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
+
+/* The child fever cases start their own campaigns on one page booted with the
+   867 world active and reset before each case. The reset also returns the
+   fever chance fever() tunes and removes toasts the previous case raised. */
+function sharedOutcomes(title, body) {
+  describeSharedPage(title, { boot:async function (page, testInfo) {
+    await openGame(page, testInfo);
+    await activateBookmark(page, '867');
+    await page.evaluate(function () {
+      const option = FB.eventById('child_fever').options[0];
+      window.outcomeBootedChance = Object.prototype.hasOwnProperty.call(option, 'chance') ? [option.chance] : [];
+    });
+  }, reset:async function (page) {
+    await page.evaluate(function () {
+      const option = FB.eventById('child_fever').options[0], booted = window.outcomeBootedChance;
+      if (booted.length) option.chance = booted[0]; else delete option.chance;
+      const toasts = document.getElementById('toasts');
+      while (toasts && toasts.firstChild) toasts.removeChild(toasts.firstChild);
+    });
+  } }, body);
+}
 
 async function ready(page) {
   await expect.poll(function () {
@@ -20,7 +42,7 @@ async function ready(page) {
   }).toBe(false);
 }
 async function start(page, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () {
     FB.game.setPaused(true);
@@ -51,6 +73,7 @@ async function fever(page, success) {
   }, success);
 }
 
+sharedOutcomes('child fever shortcuts and acknowledgement', function () {
 test('event choices use letter shortcuts and ignore list number shortcuts', async function ({ page }, testInfo) {
   await start(page, testInfo);
   await fever(page, true);
@@ -123,6 +146,7 @@ for (const success of [true, false]) {
       expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
     });
 }
+});
 
 test('freedom service acceptance and completion have separate truthful outcomes',
   async function ({ page }, testInfo) {

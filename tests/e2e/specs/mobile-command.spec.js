@@ -4,6 +4,7 @@ const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-command-harbor.json'),
   dune:require('../fixtures/authoring/mobile-command-dune.json')};
@@ -59,8 +60,14 @@ for (const prefix of ['harbor','dune']) {
 // Fourteen detached candidates run as two fresh-page halves of seven. Every
 // rejection must leave the title and catalogue exactly as they were before the
 // first one, so each half serializes those once and compares after every value.
-for (const part of [0,1]) test('detached command imports reject malformed scope, superior and composition atomically, part '+(part+1)+' of 2',async function ({page},info) {
+/* The two detached validation halves import nothing and start no campaign, so
+   they share one prepared title, reset before each case. Every other case
+   imports its example through the Mods screen and keeps a fresh page. */
+describeSharedPage('detached command validation',{boot:async function (page,info) {
   await openGame(page,info);
+}},function () {
+for (const part of [0,1]) test('detached command imports reject malformed scope, superior and composition atomically, part '+(part+1)+' of 2',async function ({page},info) {
+  if (!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function (args) {
     const source=args.source;
     const changes=[
@@ -82,6 +89,7 @@ for (const part of [0,1]) test('detached command imports reject malformed scope,
     });
   },{source:examples.dune,part:part});
   expect(result).toEqual(Array(7).fill(true));
+});
 });
 
 test('a retained member can change its own pledge while public command is suspended',async function ({page},info) {

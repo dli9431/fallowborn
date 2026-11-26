@@ -8,6 +8,27 @@ const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-accept
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+const {useReviewStartRules} = require('../support/game/released-starts');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
+
+/* Cases that restore saves, edit catalogue tables (the service household places
+   its fixture institution in the bookmark revision) or start from the title on
+   their own keep a fresh page. Runs of the others share one page per group,
+   reset before each case: catalogue reads on the prepared title with no world
+   active, and later household starts booted once with the review start rules
+   and a world active, continuing from that prepared title. */
+function sharedTitle(title,body) {
+  describeSharedPage(title,{boot:async function (page,testInfo) {
+    await openGame(page,testInfo);
+  }},body);
+}
+function sharedHouseholds(title,bookmark,body) {
+  describeSharedPage(title,{boot:async function (page,testInfo) {
+    await useReviewStartRules(page);
+    await openGame(page,testInfo);
+    await activateBookmark(page,bookmark);
+  }},body);
+}
 
 dependsOnRuntime(__filename, ['data/cultures.js','data/bookmarks.js','data/bookmark_476.js',
   'data/bookmark_476_outer.js','data/bookmark_476_wider_identities.js','data/bookmark_476_wider.js',
@@ -149,9 +170,10 @@ test('the wider Peroz beginning adopts the same court profile without changing t
       original:'zoroastrian',originalHidden:true,freshHidden:false});
   });
 
+sharedTitle('local identity catalogue reads',function () {
 test('Harran has bounded local worship without inherited monastic, sacred-war or raiding policy',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const id = 'mesopotamian_traditional', local = FB.religionOf(id,null);
@@ -176,7 +198,7 @@ test('Harran has bounded local worship without inherited monastic, sacred-war or
 
 test('unresolved local identities keep their separate early consumers and later scenery stays empty',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       function counties(date,faith) {
@@ -197,6 +219,7 @@ test('unresolved local identities keep their separate early consumers and later 
       sogdian:[['bukhara','chach','lower_syr_darya','nurata_foothills','samarkand','usrushana'],
         ['bukhara','chach','nurata_foothills','samarkand','usrushana']],scenery:true,noSpeculativeFaith:true,pure:true});
   });
+});
 
 test('released and generated Zoroastrian doctrine, mixed communities and an existing project survive restore',
   async function ({page},testInfo) {
@@ -549,7 +572,7 @@ test('unplaced Iranian services and gifts fail closed without creating recipient
 
 /* These starts use existing provincial identities; no temple is staged. */
 async function laterIranianHousehold(page,testInfo,date,crazygames) {
-  await startHistoricalGame(page,testInfo,{bookmark:date,
+  await startHistoricalGame(page,testInfo,{bookmark:date,prepared:isSharedPage(page),
     code:'IRANIANLEARNING-' + date + '-farmer-istakhr-f-Dena-established'},!!crazygames);
   expect(await page.evaluate(function () {
     const s = FB.state; return {faith:s.chars[s.player.charId].religion,place:s.player.provinceId};
@@ -600,6 +623,7 @@ test('later study has two bounded regional consumers and seven openings retain h
   ],activities:[],technology:[],review:'none',unplaced:true,held:true,bounds:true,pure:true});
 });
 
+sharedHouseholds('later household study','867',function () {
 for (const date of ['800','867']) {
   test(date + ' household study is free for married adults without changing religion or granting office',async function ({page},testInfo) {
     await laterIranianHousehold(page,testInfo,date);
@@ -682,6 +706,7 @@ for (const interruption of ['movement','year']) {
     },interruption)).toEqual({started:true,active:false,reward:false,skill:3,preserved:true});
   });
 }
+});
 
 function laterIranianSavedFacts() {
   const s = FB.state, f = iranianLater;

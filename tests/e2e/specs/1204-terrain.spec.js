@@ -5,6 +5,8 @@ const {openGame} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {advanceBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {injectBrowserHarness} = require('../support/game/browser-harness');
+const {useReviewStartRules} = require('../support/game/released-starts');
+const {describeSharedPage,activateBookmark} = require('../support/shared-page');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1204.js','data/bookmark_1204_campaigns.js','data/bookmark_1204_terrain.js',
@@ -255,12 +257,21 @@ test('pasture access needs the lawful direct holder, survives restore and ends u
     payment:true,restored:true,access:true,occupied:true,replaced:true,control:true,valid:true});
 });
 
+/* Each household start begins its own campaign. They share one page booted
+   once with the review start rules and the 1204 world active, reset before
+   each case; the start continues from that prepared title. */
+describeSharedPage('household beginnings',{boot:async function (page,info) {
+  await useReviewStartRules(page);
+  await openGame(page,info);
+  await activateBookmark(page,'1204');
+}},function () {
 for (const province of districts) test('a household can begin at ' + province,async function ({page},info) {
-  await startHistoricalGame(page,info,journey(province));
+  await startHistoricalGame(page,info,Object.assign({prepared:true},journey(province)));
   await injectBrowserHarness(page);
   expect(await page.evaluate(function (id) {
     return [FB.state.player.provinceId,FB.world.byId[id].wasteland || false,FBTEST.checkInvariants()];
   },province)).toEqual([province,false,[]]);
+});
 });
 
 for (const seed of ['TERRAIN1204A','TERRAIN1204B']) test(seed + ' retains authored declarations and replays its own world',

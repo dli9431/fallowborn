@@ -3,6 +3,7 @@ const { test, expect } = require('../support/fixture');
 const { openTitle, prepareGameContent } = require('../support/game/navigation');
 const { openCrazyTitle } = require('../support/game/crazygames-title');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 
 dependsOnRuntime(__filename, [
   'index.html', 'css/style.css', 'data/bookmarks.js', 'data/bookmark_manifest.js',
@@ -41,24 +42,42 @@ async function chooseStartingDate(page) {
   await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
 }
 
+function useDistributionFlag(page) {
+  return page.addInitScript(function () {
+    window.FB_DISTRIBUTION = 'crazygames';
+    window.FB_CRAZYGAMES_STORAGE = 'localstorage';
+  });
+}
+
 for (const crazygames of [false, true]) {
   test.describe('ordinary starting dates, CrazyGames flag ' + crazygames, function () {
     test.describe.configure({ mode:'parallel' });
 
     test.beforeEach(async function ({ page }) {
-      if (crazygames) await page.addInitScript(function () {
-        window.FB_DISTRIBUTION = 'crazygames';
-        window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-      });
+      if (crazygames && !isSharedPage(page)) await useDistributionFlag(page);
     });
 
+    /* The picker previews share one page per width, booted at that width with
+       this flag, its content prepared and the 476 world active, and reset before
+       each case. The save cases below boot twice and keep a fresh page. */
     for (const width of [1280, 390]) {
+      describeSharedPage('picker previews at width ' + width, {
+        context:{ viewport:{ width:width, height:800 } },
+        boot:async function (page, testInfo) {
+          if (crazygames) await useDistributionFlag(page);
+          await openDistributionTitle(page, testInfo, crazygames);
+          await prepareGameContent(page);
+          await activateBookmark(page, '476');
+        }
+      }, function () {
       for (const start of STARTS) {
         test('the picker offers merged dates and previews ' + start.id + ' at width ' + width,
           async function ({ page }, testInfo) {
             await page.setViewportSize({ width:width, height:800 });
-            await openDistributionTitle(page, testInfo, crazygames);
-            await prepareGameContent(page);
+            if (!isSharedPage(page)) {
+              await openDistributionTitle(page, testInfo, crazygames);
+              await prepareGameContent(page);
+            }
             await chooseStartingDate(page);
             const cards = page.locator('#bookmarklist button');
             // Additional dates have their own content coverage; retained dates stay in order.
@@ -81,6 +100,7 @@ for (const crazygames of [false, true]) {
             await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
           });
       }
+      });
     }
 
     for (const start of STARTS) {

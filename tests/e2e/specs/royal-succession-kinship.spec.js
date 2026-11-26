@@ -8,6 +8,17 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
+
+/* Every case starts its own campaign. The restore cases keep a fresh page; runs
+   of the others between them share one page booted with the 867 world active,
+   reset before each case. */
+function sharedCourts(title, body) {
+  describeSharedPage(title, { boot:async function (page, testInfo) {
+    await openGame(page, testInfo);
+    await activateBookmark(page, '867');
+  } }, body);
+}
 
 // A bounded court matching the reported Caen ages, isolated from shared setup.
 async function installCourt(page, options) {
@@ -80,11 +91,12 @@ async function installCourt(page, options) {
 }
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () { FB.game.setPaused(true); });
 });
 
+sharedCourts('court chips, profiles and minor fallbacks', function () {
 for (const layout of [{ width:390, sex:'m' }, { width:1280, sex:'f' }]) {
   test('court chips identify the ruler’s consort without implying a sibling marriage at ' + layout.width,
     async function ({ page }) {
@@ -361,6 +373,7 @@ test('mixed court branches keep parents, children, nieces and cousins distinct',
     await expect(link(ids.sibling).locator('.frel')).toHaveText('Mother · age 30');
     await expect(link(relatives.child).locator('.frel')).toHaveText('Cousin · Heir · age 2');
   });
+});
 
 test('restore repairs the generated minor-parent link without replacing the heir',
   async function ({ page }) {
@@ -410,6 +423,7 @@ test('restore repairs the generated minor-parent link without replacing the heir
       idempotent:true, rngUnchanged:true, uidUnchanged:true });
   });
 
+sharedCourts('compacted parent labels', function () {
 test('repair and sibling labels survive a compacted dead parent', async function ({ page }) {
   const ids = await installCourt(page, { mode:'damaged' });
   expect(await page.evaluate(function (ids) {
@@ -450,6 +464,7 @@ test('a stale compact child backlink cannot turn a sibling into a child',
         children:FB.childrenOf(s, s.chars[ids.successor]).length };
     }, ids)).toEqual({ parent:ids.fatherMember, father:ids.father, children:0 });
   });
+});
 
 // The spouse is already a real person before the sibling takes the county.
 async function installPlayerMarriageAccession(page, options) {
@@ -546,6 +561,7 @@ for (const sex of ['f', 'm']) {
     });
 }
 
+sharedCourts('player consorts and empty-line repair', function () {
 for (const width of [390, 1280]) {
   test('an existing player consort appears as spouse and parent with retained Back at ' + width,
     async function ({ page }) {
@@ -658,6 +674,7 @@ test('a childless player spouse’s court fallback can still inherit', async fun
       father:s.chars[ids.heir].fatherId, mother:s.chars[ids.heir].motherId };
   }, ids);
   expect(result).toEqual({ ruler:ids.heir, alive:true, father:null, mother:null });
+});
 });
 
 test('restore preserves an old generated child without inventing a second biological parent',
