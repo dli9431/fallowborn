@@ -1,5 +1,6 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {installPageGuards}=require('../support/page-contract');
@@ -16,12 +17,29 @@ dependsOnRuntime(__filename,['js/bookmark_sources.js','index.html','data/technol
   'js/agency.js','js/justice.js','js/intrigue.js','js/travel.js','js/save.js','js/save_v4.js','js/ui_misc.js','js/main.js']);
 
 
-function importedPartyTest(title,body) {
+// The exact text the Mods screen stores for a party fixture or its modified copy.
+function partyText(label,modified) {
+  return modified ? JSON.stringify(modified) :
+    fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/household-party-'+label+'.json'),'utf8');
+}
+/* Stores that text before a page's first boot, so the page prepares only the
+   modded catalogue. The session flag keeps a later reload from storing it again. */
+async function storeBeforeBoot(page,text) {
+  await page.addInitScript(function (text) {
+    if(sessionStorage.getItem('householdPartyStored'))return;
+    sessionStorage.setItem('householdPartyStored','1');
+    localStorage.setItem('fb_mods',JSON.stringify([text]));
+  },text);
+}
+
+// A stored text boots the shared page already modded; its body begins with installed.
+function importedPartyTest(title,body,stored) {
   test.describe(title,function () {
     test.describe.configure({mode:'default'});
     let context,page,guard;
     test.beforeAll(async function ({browser},info) {
       context=await browser.newContext();page=await context.newPage();guard=installPageGuards(page);
+      if(stored)await storeBeforeBoot(page,stored);
       await openGame(page,info);
     });
     test.afterAll(async function () {
@@ -31,20 +49,30 @@ function importedPartyTest(title,body) {
   });
 }
 
-async function start(page,info,label,modified) {
+/* A blank page stores the JSON before its first boot, except in the cases that
+   import through the Mods screen (picker). An open title imports through the
+   Mods screen, replacing a same-name mod. Installed begins on a page whose
+   stored boot already applied the JSON. */
+async function start(page,info,label,modified,install) {
   const prefix=label==='upland'?'dune':'harbor';
-  if(page.url()==='about:blank')await openGame(page,info);
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(modified ? {name:'household-party-'+label+'.json',mimeType:'application/json',
-    buffer:Buffer.from(JSON.stringify(modified))} : path.resolve(__dirname,'../fixtures/authoring/household-party-'+label+'.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+  if(install!=='installed' && page.url()==='about:blank' && install!=='picker') {
+    await storeBeforeBoot(page,partyText(label,modified));
+    await openGame(page,info);
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+  } else if(install!=='installed') {
+    if(page.url()==='about:blank')await openGame(page,info);
+    await page.evaluate(function () { FB.ui.showMods(); });
+    await page.locator('#modfile').setInputFiles(modified ? {name:'household-party-'+label+'.json',mimeType:'application/json',
+      buffer:Buffer.from(JSON.stringify(modified))} : path.resolve(__dirname,'../fixtures/authoring/household-party-'+label+'.json'));
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  }
   await page.waitForFunction(function (prefix) { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world']; },prefix);
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
 }
 
-async function prepareJourney(page,info,label) {
-  await start(page,info,label,journeys[label]);
+async function prepareJourney(page,info,label,install) {
+  await start(page,info,label,journeys[label],install);
   return page.evaluate(function(label) {
     const s=FB.state,P=FB.householdParties,id=label+'_party',actor=s.player.charId,spouse=FB.spousesOf(s,s.chars[actor])[0];
     function act(action,who,person,care){return P.commit(s,P.review(s,id,action,who,person,care));}
@@ -73,7 +101,7 @@ async function arriveJourney(page) {
 
 for(const label of ['harbor','upland']) {
   test(label+' imports an optional journey and carries only separately consenting named people on the real road',async function({page},info) {
-    await prepareJourney(page,info,label);
+    await prepareJourney(page,info,label,'picker');
     const result=await page.evaluate(function(label) {
       const s=FB.state,P=FB.householdParties,id=label+'_party',t=s.stories[id],actor=s.player.charId;
       const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),q=P.review(s,id,'depart_journey',actor);
@@ -293,7 +321,7 @@ test('journey departure reviews show names and price and Escape restores the sam
 });
 
 importedPartyTest('the same ordinary imported journey seed preserves consent, fare, carrier identity and RNG',async function({page},info) {
-  await start(page,info,'harbor',journeys.harbor);
+  await start(page,info,'harbor',journeys.harbor,'installed');
   async function depart(){return page.evaluate(function(){
     const s=FB.state,P=FB.householdParties,id='harbor_party',actor=s.player.charId,spouse=FB.spousesOf(s,s.chars[actor])[0].id;
     P.commit(s,P.review(s,id,'invite',actor,actor));P.commit(s,P.review(s,id,'accept',actor,actor));
@@ -303,11 +331,11 @@ importedPartyTest('the same ordinary imported journey seed preserves consent, fa
   });}
   const first=await depart();await beginBookmark(page,info,'harbor_world','harbor_household');
   expect(await depart()).toBe(first);
-});
+},partyText('harbor',journeys.harbor));
 
 for (const label of ['harbor','upland']) {
   test(label+' imports a distinct named association with separate consent and no movement or resources',async function ({page},info) {
-    await start(page,info,label);
+    await start(page,info,label,undefined,'picker');
     const result=await page.evaluate(function (label) {
       const s=FB.state,P=FB.householdParties,id=label+'_party',t=s.stories[id],module=FB.stories.get(id),actor=s.player.charId;
       const household=FB.householdMembers(s),spouse=FB.spousesOf(s,s.chars[actor])[0],child=household.filter(function(c){return FB.ageOf(c,s.date.year)<16;})[0];
@@ -496,7 +524,7 @@ test('strict records reject forged consent, unknown fields, missing attachments 
 });
 
 importedPartyTest('a changed same-name imported policy invalidates its saved definition fingerprint',async function ({page},info) {
-  await start(page,info,'harbor');
+  await start(page,info,'harbor',undefined,'installed');
   const source=await page.evaluate(function(){return JSON.parse(FB.save.serialize());});
   const changed=JSON.parse(JSON.stringify(examples.harbor));changed.storyInstances.harbor_party.invitationDays++;
   await start(page,info,'harbor',changed);
@@ -506,10 +534,10 @@ importedPartyTest('a changed same-name imported policy invalidates its saved def
     return rejected&&before===JSON.stringify(FB.state)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
   },source);
   expect(result).toBe(true);
-});
+},partyText('harbor'));
 
 importedPartyTest('the same imported world and start seed produce the same named invitations and consent',async function ({page},info) {
-  await start(page,info,'harbor');
+  await start(page,info,'harbor',undefined,'installed');
   async function decide() {
     return page.evaluate(function(){
       const s=FB.state,P=FB.householdParties,id='harbor_party',actor=s.player.charId,spouse=FB.spousesOf(s,s.chars[actor])[0];
@@ -521,7 +549,7 @@ importedPartyTest('the same imported world and start seed produce the same named
   const first=await decide();
   await beginBookmark(page,info,'harbor_world','harbor_household');
   expect(await decide()).toBe(first);
-});
+},partyText('harbor'));
 
 test('named consent reviews use the shared sheet and Escape leaves the invitation uncommitted',async function ({page},info) {
   await start(page,info,'harbor');
@@ -537,9 +565,14 @@ test('named consent reviews use the shared sheet and Escape leaves the invitatio
 });
 
 
-async function prepareCamp(page,info,label,modified,admit) {
-  await start(page,info,label,modified || camps[label]);
+async function prepareCamp(page,info,label,modified,admit,install) {
+  await start(page,info,label,modified || camps[label],install);
   return campConsent(page,label,admit);
+}
+// The same changed family terms the replay case below builds, for its stored first boot.
+function shortenedCampTerms() {
+  const changed=JSON.parse(JSON.stringify(camps.harbor));changed.storyInstances.harbor_party.journey.termDays--;
+  return changed;
 }
 async function campConsent(page,label,admit) {
   return page.evaluate(function(input) {
@@ -625,7 +658,7 @@ for(const label of ['harbor','upland']) {
 
 for(const label of ['harbor','upland']) {
   test(label+' imports real civilian camp places separate from personal admission and family consent',async function({page},info) {
-    await prepareCamp(page,info,label,null,false);
+    await prepareCamp(page,info,label,null,false,'picker');
     const result=await page.evaluate(function(label) {
       const s=FB.state,P=FB.householdParties,id=label+'_party',actor=s.player.charId,t=s.stories[id];
       const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -912,23 +945,23 @@ test('separating a dependent reviews the whole actual caregiver group and custod
 });
 
 importedPartyTest('changed same-name family terms reject old saves',async function({page},info) {
-  await prepareCamp(page,info,'harbor');
+  await prepareCamp(page,info,'harbor',undefined,undefined,'installed');
   const source=await page.evaluate(function(){return JSON.parse(FB.save.serialize());});
   const changed=JSON.parse(JSON.stringify(camps.harbor));changed.storyInstances.harbor_party.journey.termDays--;
   await prepareCamp(page,info,'harbor',changed);
   expect(await page.evaluate(function(saved){const before=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();let failed=false;
     try{FB.save.restore(saved);}catch(error){failed=true;}
     return failed&&before===JSON.stringify(FB.state)&&rng===FB.getRngState()&&uid===FB.getUidCounter();},source)).toBe(true);
-});
+},partyText('harbor',camps.harbor));
 
 importedPartyTest('a matching family start seed replays exact requests',async function({page},info) {
   const changed=JSON.parse(JSON.stringify(camps.harbor));changed.storyInstances.harbor_party.journey.termDays--;
-  await prepareCamp(page,info,'harbor',changed);
+  await prepareCamp(page,info,'harbor',changed,undefined,'installed');
   const first=await page.evaluate(function(){return JSON.stringify([FB.state.stories.harbor_party,FB.state.player.travel,FB.getRngState(),FB.getUidCounter()]);});
   await beginBookmark(page,info,'harbor_world','harbor_household');
   await campConsent(page,'harbor');
   expect(await page.evaluate(function(){return JSON.stringify([FB.state.stories.harbor_party,FB.state.player.travel,FB.getRngState(),FB.getUidCounter()]);})).toBe(first);
-});
+},partyText('harbor',shortenedCampTerms()));
 
 test('a formerly dependent survivor must reach adulthood and explicitly consent to a new personal road',async function({page},info) {
   await prepareJourney(page,info,'upland');

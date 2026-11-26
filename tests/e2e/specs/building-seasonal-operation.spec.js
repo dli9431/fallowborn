@@ -1,7 +1,9 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
+const {installPageGuards}=require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark,beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
@@ -10,12 +12,26 @@ const examples={dry:require('../fixtures/authoring/building-seasons-dry.json'),p
 dependsOnRuntime(__filename,['js/bookmark_sources.js','index.html','data/production_fish_drying.js','data/buildings_seasonal_pasture.js','data/production_seasonal_pasture.js','data/building_seasons.js','data/production.js','data/production_economy.js','data/building_operations.js','data/building_profiles.js','data/climate.js','data/technology.js',
   'js/building_seasons.js','js/production.js','js/production_economy.js','js/building_operations.js','js/building_profiles.js','js/site_resources.js','js/climate.js','js/world.js','js/mods.js',
   'js/main.js','js/save.js','js/save_v4.js','js/actions.js','js/population.js','js/settlement.js','js/lordships.js','js/treasury.js','js/home_authority.js','js/ui_modals.js','js/ui_misc.js']);
-async function boot(page,info,kind,ruler,custom) {
-  await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
-  await page.locator('#modfile').setInputFiles(custom ? {name:'season-example.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(custom))} :
-    path.resolve(__dirname,'../fixtures/authoring/building-seasons-'+kind+'.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+/* The ordinary import cases go through the Mods screen from a prepared unmodded
+   title. Every other case stores the same text that screen stores before its
+   first boot, so it prepares only the modded catalogue. The session flag keeps
+   a later reload from storing it again. */
+async function boot(page,info,kind,ruler,custom,modsScreen) {
+  if(modsScreen) {
+    await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
+    await page.locator('#modfile').setInputFiles(custom ? {name:'season-example.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(custom))} :
+      path.resolve(__dirname,'../fixtures/authoring/building-seasons-'+kind+'.json'));
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  } else {
+    await page.addInitScript(function(text){
+      if(sessionStorage.getItem('seasonExampleStored'))return;
+      sessionStorage.setItem('seasonExampleStored','1');
+      localStorage.setItem('fb_mods',JSON.stringify([text]));
+    },custom ? JSON.stringify(custom) : fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/building-seasons-'+kind+'.json'),'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function(){return FB.mods.count();})).toBe(1);
+  }
   await page.waitForFunction(function(id){return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[id];},'season_'+kind);
   if (!ruler) await beginBookmarkFromTitle(page,'season_'+kind,'season_'+kind+'_household');
   else {
@@ -49,7 +65,7 @@ async function bootWaterService(page,info) {
 }
 for (const kind of ['dry','pasture']) {
   test(kind+' ordinary import uses its local kind, finite resource policy and pure reviews',async function({page},info){
-    await boot(page,info,kind);
+    await boot(page,info,kind,false,undefined,true);
     const r=await page.evaluate(function(){
       const s=FB.state,S=FB.buildingSeasons,plan=S.compile(FB.campaignBookmark(s)),a=plan.assignments[0];
       const before=JSON.stringify([FBDATA,s]),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -236,19 +252,28 @@ test('missing actual fuel never produces an opted-in drying benefit',async funct
   expect(r).toEqual({allowed:false,commit:false,pure:true,effect:0});
 });
 
-test('a seasonal window supplies no replacement for missing water and same-seed opening replays exactly',async function({page},info){
-  await boot(page,info,'dry');
-  async function facts(){return page.evaluate(function(){
-    const s=FB.state,S=FB.buildingSeasons,P=FB.production,R=FB.siteResources,a=S.compile(FB.campaignBookmark(s)).assignments[0],who=FB.settlementHolder(s,a.countyId,a.slot);
-    const claim=R.commit(s,R.quote(s,{operation:'reserve',sourceId:'river_intake',actor:who,amount:12}));
-    R.commit(s,R.quote(s,{operation:'consume',sourceId:'river_intake',actor:who,reservationId:claim}));
-    S.commit(s,S.quote(s,{operation:'open',assignmentId:a.id,actor:who,lotId:null}));
-    const q=P.aiQuote(s,a.productionSiteId,'reserve',{recipeId:'dry_fish',disposition:'store'}),before=JSON.stringify(s);
-    return {allowed:q.allowed,apply:P.commit(s,q),pure:before===JSON.stringify(s),state:JSON.stringify([s.production,s.buildingSeasons,s.siteResources]),rng:FB.getRngState()>>>0,uid:FB.getUidCounter()};
-  });}
-  const first=await facts();expect(first).toMatchObject({allowed:false,apply:false,pure:true});
-  await beginBookmark(page,info,'season_dry','season_dry_household');
-  expect(await facts()).toEqual(first);
+test('a seasonal window supplies no replacement for missing water and same-seed opening replays exactly',async function({page,browser},info){
+  // The replay opens the same seed in an independent fresh context booted from
+  // the same stored JSON; its preparation overlaps this page's.
+  const context=await browser.newContext(),fresh=await context.newPage(),guard=installPageGuards(fresh);
+  try {
+    await fresh.addInitScript(function(text){localStorage.setItem('fb_mods',JSON.stringify([text]));},
+      fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/building-seasons-dry.json'),'utf8'));
+    await Promise.all([boot(page,info,'dry'),openGame(fresh,info)]);
+    async function facts(target){return target.evaluate(function(){
+      const s=FB.state,S=FB.buildingSeasons,P=FB.production,R=FB.siteResources,a=S.compile(FB.campaignBookmark(s)).assignments[0],who=FB.settlementHolder(s,a.countyId,a.slot);
+      const claim=R.commit(s,R.quote(s,{operation:'reserve',sourceId:'river_intake',actor:who,amount:12}));
+      R.commit(s,R.quote(s,{operation:'consume',sourceId:'river_intake',actor:who,reservationId:claim}));
+      S.commit(s,S.quote(s,{operation:'open',assignmentId:a.id,actor:who,lotId:null}));
+      const q=P.aiQuote(s,a.productionSiteId,'reserve',{recipeId:'dry_fish',disposition:'store'}),before=JSON.stringify(s);
+      return {allowed:q.allowed,apply:P.commit(s,q),pure:before===JSON.stringify(s),state:JSON.stringify([s.production,s.buildingSeasons,s.siteResources]),rng:FB.getRngState()>>>0,uid:FB.getUidCounter()};
+    });}
+    const first=await facts(page);expect(first).toMatchObject({allowed:false,apply:false,pure:true});
+    await beginBookmarkFromTitle(fresh,'season_dry','season_dry_household');
+    expect(await facts(fresh)).toEqual(first);
+  } finally {
+    try { expect(guard.faults).toEqual([]); } finally { await context.close(); }
+  }
 });
 
 function stockMarketExample() {

@@ -9,6 +9,7 @@ const { restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { startParityGame } = require('../support/game/parity');
 const { installRestoreFacts } = require('../support/game/restore-facts');
 const { expectModAdmission } = require('../support/game/mod-admission');
+const { installPageGuards } = require('../support/page-contract');
 const { releasedCatalogue } = require('../support/released-catalogue');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
@@ -272,23 +273,46 @@ for (const sample of [
   {file:'civic-fair-catalogue.json',id:'annual_fairs',known:['written_law'],missing:[],cost:33,fx:'trade',amount:0.009},
   {file:'survey-siege-catalogue.json',id:'siege_engineering',known:['geometry','road_surveys'],missing:['geometry'],cost:47,fx:'siege',amount:0.013}
 ]) {
-  test(sample.file + ' imports a different graph, validates purely and restores only with matching content',
+  // These independent graphs are fictional mod examples, not historical evidence.
+  function moddedCandidate() {
+    const mod = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/'+sample.file),'utf8'));
+    mod.tech[sample.id].confidence = 'modded';
+    return mod;
+  }
+
+  test(sample.file + ' imports a different graph through the Mods file picker after the disputed-source review',
     async function ({ page }, info) {
       await openGame(page,info);
       await page.evaluate(function () { FB.ui.showMods(); });
       const mod = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/'+sample.file),'utf8'));
       const disputed = await page.evaluate(function (candidate) { return FB.mods.validate(candidate); },mod);
       expect(disputed.join('\n')).toContain('Technology ' + sample.id + ': disputed chronology requires multiple sources.');
-      // These independent graphs are fictional mod examples, not historical evidence.
-      mod.tech[sample.id].confidence = 'modded';
-      await expectModAdmission(page,mod,sample.file);
+      await expectModAdmission(page,moddedCandidate(),sample.file);
       await page.locator('#modfile').setInputFiles({name:sample.file,mimeType:'application/json',
-        buffer:Buffer.from(JSON.stringify(mod),'utf8')});
+        buffer:Buffer.from(JSON.stringify(moddedCandidate()),'utf8')});
       await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
-      await prepareGameContent(page);
-      await page.waitForFunction(function (input) {
-        return window.FB && FB.game && FB.game.bootReady && FBDATA.tech[input.id].cost === input.cost;
-      },sample);
+      // The screen stores the exact text before reloading; the case below boots that text.
+      await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
+      expect(await page.evaluate(function () { return localStorage.getItem(FB.storageKey('fb_mods')); }))
+        .toBe(JSON.stringify([JSON.stringify(moddedCandidate())]));
+    });
+
+  /* The exact text the picker stores is written before the first boot, so this
+     page never prepares the unmodded catalogue. The changed same-name graph
+     boots fresh in an independent context while this one prepares. */
+  test(sample.file + ' validates purely and restores only with matching content',
+    async function ({ page, browser }, info) {
+      const text = JSON.stringify(moddedCandidate()), graph = JSON.parse(text);
+      graph.tech[sample.id].cost++;
+      const context = await browser.newContext(), changed = await context.newPage();
+      changedGraph = {context:context,guard:installPageGuards(changed)};
+      for (const [target,stored] of [[page,text],[changed,JSON.stringify(graph)]]) await target.addInitScript(function (stored) {
+        localStorage.setItem('fb_mods',JSON.stringify([stored]));
+      },stored);
+      await Promise.all([openGame(page,info),openGame(changed,info)]);
+      expect(await Promise.all([page,changed].map(function (target) {
+        return target.evaluate(function (id) { return [FB.mods.count(),FBDATA.tech[id].cost]; },sample.id);
+      }))).toEqual([[1,sample.cost],[1,sample.cost + 1]]);
       await startDeterministicGame(page); await stageSovereign(page);
       await installRestoreFacts(page);
       const before = await page.evaluate(function (input) {
@@ -314,16 +338,19 @@ for (const sample of [
       expect(await page.evaluate(function () {
         return restoreFacts(FB.state,function (v) { return v.realmTech.player; },{technologySets:true});
       })).toBe(before.record);
-      await page.evaluate(function (input) {
-        const mods = JSON.parse(localStorage.getItem('fb_mods'));
-        const mod = JSON.parse(mods[0]); mod.tech[input.id].cost++;
-        localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(mod)]));
-      },sample);
-      await openGame(page,info);
-      expect(await page.evaluate(function (text) {
+      // The independent context booted fresh with the stored text's cost raised by one.
+      expect(await changed.evaluate(function (text) {
         const state = FB.state, world = FB.world, rng = FB.getRngState(), uid = FB.getUidCounter();
         const rejected = FB.game.loadData(JSON.parse(text)) === false;
         return rejected && state === FB.state && world === FB.world && rng === FB.getRngState() && uid === FB.getUidCounter();
       },before.save)).toBe(true);
     });
 }
+
+// The changed-graph context of the case above closes after its page contract check.
+let changedGraph = null;
+test.afterEach(async function () {
+  const open = changedGraph;
+  changedGraph = null;
+  if (open) try { expect(open.guard.faults).toEqual([]); } finally { await open.context.close(); }
+});

@@ -1,7 +1,9 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
+const {installPageGuards} = require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
@@ -32,7 +34,10 @@ dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html','data/mo
   'js/story_household_party.js','js/household_party_travel.js','js/save.js','js/save_v4.js',
   'js/ui_misc.js','js/ui_modals.js','js/ui_mobile.js']);
 
-async function imported(page, info, prefix) {
+// The picker adoption cases import through the Mods screen from a prepared
+// unmodded title. Every other case stores the same text before its first boot.
+async function imported(page, info, prefix, modsScreen) {
+  if (!modsScreen) { await stored(page, info, prefix); return; }
   await openGame(page, info);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,
@@ -42,6 +47,20 @@ async function imported(page, info, prefix) {
   await page.waitForFunction(function (p) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p + '_world'];
   }, prefix);
+}
+/* Stores the fixture text exactly as the Mods screen stores it, before the
+   first boot, so a case that asserts nothing about that screen prepares only
+   the modded catalogue. The session flag keeps a later reload from storing it again. */
+async function stored(page, info, prefix) {
+  await page.addInitScript(function (text) {
+    if (sessionStorage.getItem('guardedPrincipalStored')) return;
+    sessionStorage.setItem('guardedPrincipalStored', '1');
+    localStorage.setItem('fb_mods', JSON.stringify([text]));
+  }, fs.readFileSync(path.resolve(__dirname, '../fixtures/authoring/guarded-principal-' + prefix + '.json'), 'utf8'));
+  await openGame(page, info);
+  expect(await page.evaluate(function (p) {
+    return [FB.mods.count(), !!FBDATA.bookmarks[p + '_world']];
+  }, prefix)).toEqual([1, true]);
 }
 async function choose(page) {
   await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showScreen('title'); });
@@ -70,7 +89,7 @@ async function begin(page, prefix, direct) {
 
 for (const prefix of ['harbor', 'dune']) {
   test(prefix + ' picker adopts one original guarded person at the declared county or exact site', async function ({page}, info) {
-    await imported(page, info, prefix); await choose(page);
+    await imported(page, info, prefix, true); await choose(page);
     await page.locator('[data-bookmark="' + prefix + '_world"]').click();
     const card = page.locator('[data-scenario="' + prefix + '_guarded_principal"]');
     await expect(card).toContainText('Story start'); await card.click();
@@ -124,22 +143,30 @@ for (const prefix of ['harbor', 'dune']) {
     }
   });
 
-  test(prefix + ' direct entry replays the same guarded world from a fresh boot', async function ({page}, info) {
-    await imported(page, info, prefix);
-    // Match the browser profile as well as the seed: onboarding is offered once.
-    await page.evaluate(function(){FB.game.uiPrefs.onboardingStarted=true;FB.game.saveUiPrefs();});
-    await begin(page, prefix);
-    const snapshot = function () { return page.evaluate(function () {
-      const s = FB.save.expandedSnapshot(FB.state);
-      return JSON.parse(FB.contentValues.canonical([s.seed,s.chars,s.player,s.start,s.stories,s.authority,s.armies,FB.getRngState() >>> 0,FB.getUidCounter()]));
-    }); };
-    const first = await snapshot();
-    await page.reload({waitUntil:'domcontentloaded'}); await prepareGameContent(page);
-    await begin(page, prefix, true); expect(await snapshot()).toEqual(first);
+  test(prefix + ' direct entry replays the same guarded world from a fresh boot', async function ({page, browser}, info) {
+    // The replay is a second, independent context booted from the same stored
+    // JSON and browser profile; neither prepares the unmodded catalogue, and the
+    // two preparations overlap instead of following each other.
+    const context = await browser.newContext(), fresh = await context.newPage(), guard = installPageGuards(fresh);
+    try {
+      await Promise.all([stored(page, info, prefix), stored(fresh, info, prefix)]);
+      // Match the browser profile as well as the seed: onboarding is offered once.
+      for (const life of [page, fresh]) await life.evaluate(function(){FB.game.uiPrefs.onboardingStarted=true;FB.game.saveUiPrefs();});
+      await begin(page, prefix);
+      const snapshot = function (life) { return life.evaluate(function () {
+        const s = FB.save.expandedSnapshot(FB.state);
+        return JSON.parse(FB.contentValues.canonical([s.seed,s.chars,s.player,s.start,s.stories,s.authority,s.armies,FB.getRngState() >>> 0,FB.getUidCounter()]));
+      }); };
+      const first = await snapshot(page);
+      await begin(fresh, prefix, true); expect(await snapshot(fresh)).toEqual(first);
+    } finally {
+      try { expect(guard.faults).toEqual([]); } finally { await context.close(); }
+    }
   });
 
   test(prefix + ' detached imports reject mismatched principal, authority, identity, home and track without publication', async function ({page}, info) {
-    await imported(page, info, prefix);
+    // Validation reads the installed catalogue; nothing here reads the Mods screen.
+    await stored(page, info, prefix);
     const result = await page.evaluate(function (mod) {
       const clone = function (x) { return JSON.parse(JSON.stringify(x)); };
       const sc = mod.startScenarios[0], rid = sc.originalPrincipal.realmId;

@@ -1,10 +1,12 @@
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const {test, expect} = require('../support/fixture');
 const {openGame, prepareGameContent} = require('../support/game/navigation');
 const {beginBookmark, beginBookmarkFromTitle, restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const imported = require('../fixtures/authoring/industry-law-retention.json');
+const importedFile = path.resolve(__dirname, '../fixtures/authoring/industry-law-retention.json');
 
 dependsOnRuntime(__filename, ['data/industry_laws.js','data/map_data.js','data/intrigue.js','data/economy.js',
   'js/industry_laws.js','js/ledger_retention.js','js/justice.js','js/economy.js','js/market.js','js/treasury.js',
@@ -15,20 +17,18 @@ dependsOnRuntime(__filename, ['data/industry_laws.js','data/map_data.js','data/i
    Long campaigns are staged directly: whole years, then one season boundary. */
 async function start(page, info, mod) {
   if (mod) {
-    await openGame(page, info); await prepareGameContent(page);
-    const review = await page.evaluate(function (data) {
-      const before = JSON.stringify({data:FBDATA, rng:FB.getRngState(), uid:FB.getUidCounter()});
-      const faults = FB.mods.validate(data);
-      const broken = JSON.parse(JSON.stringify(data));
-      broken.industryLaws.wharf_stall_due.retention = 720;
-      const rejected = FB.mods.validate(broken).length > 0;
-      return {faults:faults, rejected:rejected, pure:before === JSON.stringify({data:FBDATA, rng:FB.getRngState(), uid:FB.getUidCounter()})};
-    }, imported);
-    expect(review).toEqual({faults:[], rejected:true, pure:true});
-    await page.evaluate(function () { FB.ui.showMods(); });
-    await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/industry-law-retention.json'));
-    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
-    await prepareGameContent(page); await beginBookmarkFromTitle(page, '1204');
+    // The admission case below reviews this JSON against the unmodded catalogue
+    // and imports it through the file picker. These campaigns store the same
+    // text before the first boot, preparing only the modded catalogue. The
+    // session flag keeps a later reload from storing it again.
+    await page.addInitScript(function (text) {
+      if (sessionStorage.getItem('industryLawStored')) return;
+      sessionStorage.setItem('industryLawStored', '1');
+      localStorage.setItem('fb_mods', JSON.stringify([text]));
+    }, fs.readFileSync(importedFile, 'utf8'));
+    await openGame(page, info);
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+    await beginBookmarkFromTitle(page, '1204');
   } else await beginBookmark(page, info, '1204');
   await page.evaluate(function () {
     const s = FB.state, p = s.player, me = s.chars[p.charId];
@@ -276,6 +276,26 @@ test('settled hearings, petitions and permits beyond the old caps leave new comm
       records:/1 ended laws, 0 of them repealed; 2103 paid permissions/.test(records), deed:!!deed && deed.show(s), history:FB.industryLaws.hasHistory(s)};
   }, r.e1);
   expect(sheets).toEqual({business:true, hearings:true, records:true, deed:true, history:true});
+});
+
+test('ordinary JSON admission rejects a malformed window purely and the file picker installs it', async function ({page}, info) {
+  await openGame(page, info);
+  const review = await page.evaluate(function (data) {
+    const before = JSON.stringify({data:FBDATA, rng:FB.getRngState(), uid:FB.getUidCounter()});
+    const faults = FB.mods.validate(data);
+    const broken = JSON.parse(JSON.stringify(data));
+    broken.industryLaws.wharf_stall_due.retention = 720;
+    const rejected = FB.mods.validate(broken).length > 0;
+    return {faults:faults, rejected:rejected, pure:before === JSON.stringify({data:FBDATA, rng:FB.getRngState(), uid:FB.getUidCounter()})};
+  }, imported);
+  expect(review).toEqual({faults:[], rejected:true, pure:true});
+  // The screen stores the exact file text before reloading; the campaigns below boot that text.
+  await page.evaluate(function () { FB.ui.showMods(); });
+  await page.locator('#modfile').setInputFiles(importedFile);
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
+  expect(await page.evaluate(function () { return localStorage.getItem(FB.storageKey('fb_mods')); }))
+    .toBe(JSON.stringify([fs.readFileSync(importedFile, 'utf8')]));
 });
 
 test('JSON window keeps closure, debt and window records while folding settled laws exactly', async function ({page}, info) {
