@@ -9,6 +9,7 @@ const { installStoredMod } = require('../support/game/stored-mod');
 const { startDeterministicGame } = require('../support/game/start');
 const { startGames, bookGames } = require('../support/game/tournaments');
 const { beginBookmarkFromTitle } = require('../support/game/bookmark-acceptance');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 test.describe.configure({mode:'parallel'});
 
@@ -28,12 +29,23 @@ function proofPath(prefix) {
 
 /* Admission against the unmodded catalogue and the Mods screen import have
    their own case per proof below. Every mechanic case stores the same file
-   text and boots it once instead of preparing the unmodded catalogue first. */
+   text and boots it once instead of preparing the unmodded catalogue first;
+   on a shared page that boot happened once for the group. */
 async function importProof(page, info, prefix, begin) {
-  await openTitle(page, info);
-  await installStoredMod(page, fs.readFileSync(proofPath(prefix), 'utf8'));
+  if (!isSharedPage(page)) {
+    await openTitle(page, info);
+    await installStoredMod(page, fs.readFileSync(proofPath(prefix), 'utf8'));
+  }
   await page.waitForFunction(function (prefix) { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(prefix + '_court'); }, prefix);
   if (begin !== false) await beginBookmarkFromTitle(page,prefix + '_courts_900', prefix + '_court_household');
+}
+// The stored proof booted once, with its court world active for the shared cases.
+function sharedProof(prefix) {
+  return { boot:async function (page, info) {
+    await openTitle(page, info);
+    await installStoredMod(page, fs.readFileSync(proofPath(prefix), 'utf8'));
+    await activateBookmark(page, prefix + '_courts_900');
+  } };
 }
 
 for (const prefix of ['harbor','dune']) {
@@ -55,21 +67,6 @@ for (const prefix of ['harbor','dune']) {
 }
 
 for (const prefix of ['harbor','dune']) {
-  test(prefix + ' imported discipline changes shared focus previews and bounded AI priorities', async function ({ page }, info) {
-    await importProof(page, info, prefix);
-    const result = await page.evaluate(function (prefix) {
-      const s = FB.state, me = s.chars[s.player.charId];
-      me.traits = [];
-      FB.addTrait(me, prefix + '_discipline');
-      const before = JSON.stringify(s), rng = FB.getRngState();
-      const focus = FB.focuses.find(function (f) { return f.id === 'pray'; });
-      return { yield:focus.gain(s).piety, literate:FB.traitMechanic(me, 'literacy'),
-        peace:FB.traitAimWeight(me, 'keep_peace'), wealth:FB.traitAimWeight(me, 'amass_wealth'),
-        pure:before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0), faults:FB.validateTraitMechanics(FBDATA.traitMechanics) };
-    }, prefix);
-    expect(result).toEqual({ yield:prefix === 'harbor' ? 6 : 8, literate:1,
-      peace:prefix === 'harbor' ? 70 : 0, wealth:prefix === 'dune' ? 60 : 0, pure:true, faults:[] });
-  });
   test(prefix + ' JSON declares its own branches, prices, office scope and recognition source', async function ({ page }, info) {
     await importProof(page, info, prefix);
     const result = await page.evaluate(function (prefix) {
@@ -196,19 +193,6 @@ for (const prefix of ['harbor','dune']) {
 }
 
 for (const prefix of ['harbor','dune']) {
-  test(prefix + ' imported quick start uses the normal character constructor', async function ({ page }, info) {
-    await importProof(page, info, prefix, false);
-    await page.getByRole('button', { name:'New Game', exact:true }).click();
-    await page.locator('[data-quick-start="' + prefix + '_beginning"]').click();
-    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
-    const result = await page.evaluate(function () {
-      const s = FB.state, c = s.chars[s.player.charId];
-      return { name:c.name, province:s.player.provinceId, profession:s.player.profession,
-        start:s.telemetry.scenario, quickStart:s.telemetry.quickStart };
-    });
-    expect(result).toMatchObject({ name:prefix === 'harbor' ? 'Mara' : 'Tal',
-      province:prefix === 'harbor' ? 'barcelona' : 'galway', start:'serf', quickStart:prefix + '_beginning' });
-  });
   test(prefix + ' imported appointment pays once, teaches its declared trait and restores the same day', async function ({ page }, info) {
     await importProof(page, info, prefix, false);
     await startDeterministicGame(page);
@@ -274,24 +258,6 @@ for (const prefix of ['harbor','dune']) {
     }, prefix);
     expect(result).toMatchObject({ ready:true, first:true, repeated:false, property:true, retained:true, cooldown:false });
     expect(result.treasury).toBe(result.expected); expect(result.piety).toBe(result.expectedPiety);
-  });
-  test(prefix + ' declared religious ranks use contested offices rather than buying a promotion', async function ({ page }, info) {
-    await importProof(page, info, prefix, false);
-    await startDeterministicGame(page);
-    const result = await page.evaluate(function (prefix) {
-      const s = FB.state, c = s.chars[s.player.charId], id = prefix + '_vocation';
-      c.sex = 'm'; c.religion = prefix + '_rite'; c.born = s.date.year - 40;
-      s.player.profession = 'monk'; s.player.piety = 500; s.player.prestige = 500;
-      c.career = { profession:'monk', rank:'master', chosen:true, experience:20, guildRank:'none', guildStanding:0 };
-      c.skills.lea = 15; c.religiousRanks = {}; c.religiousRanks[id] = 1;
-      const before = JSON.stringify(s), rng = FB.getRngState();
-      const path = FB.religiousPathOf(s, c), q = FB.abbotAppointmentStatus(s, c);
-      const office = FB.religiousOfficePath(s, c, 'abbot');
-      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0);
-      return { id:path.id, next:path.next.id, visible:q.visible, office:office.step.id,
-        pure:pure, automatic:FB.takeReligiousStep(s, c), rank:c.religiousRanks[id] };
-    }, prefix);
-    expect(result).toEqual({ id:prefix + '_vocation', next:'keeper', visible:true, office:'keeper', pure:true, automatic:false, rank:1 });
   });
 }
 
@@ -370,54 +336,6 @@ for (const prefix of ['harbor','dune']) {
     }, prefix);
     expect(result).toMatchObject({ started:true,replay:true }); expect(result.charge).toBe(result.expected);
     expect(result.first).toMatchObject({ receipt:true,prestige:prefix === 'harbor' ? 4 : 9,purpose:prefix + '_journey',completed:true });
-  });
-  test(prefix + ' imported estates agenda follows its declared aid condition without mutating terms', async function ({ page }, info) {
-    await importProof(page, info, prefix, false); await startDeterministicGame(page);
-    const result = await page.evaluate(function (prefix) {
-      const s = FB.state, p = s.player, c = s.chars[p.charId];
-      p.tier = 3; c.station = 3; p.liege = s.owner[p.provinceId];
-      for (const rid in s.realms) if (s.realms[rid]) delete s.realms[rid].war;
-      const terms = FB.parliamentEnsure(s); terms.aid = .25;
-      const before = JSON.stringify(s), rng = FB.getRngState(), first = FB.parliamentSessionCandidates(s);
-      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0);
-      terms.aid = FBDATA.balance.parliamentAidMax || .4;
-      const second = FB.parliamentSessionCandidates(s);
-      return { pure:pure, first:first.indexOf(prefix + '_assembly') >= 0, second:second.indexOf(prefix + '_assembly') >= 0 };
-    }, prefix);
-    expect(result).toEqual({ pure:true,first:prefix === 'harbor',second:prefix === 'dune' });
-  });
-  test(prefix + ' imported research preference changes the ordinary ruler score', async function ({ page }, info) {
-    await importProof(page, info, prefix, false); await startDeterministicGame(page);
-    const result = await page.evaluate(function (prefix) {
-      const s = FB.state, rid = s.owner[s.player.provinceId];
-      const candidate = FB.techCandidates(s,rid,true).find(function (row) { return row.available && row.def.domain === 'learning'; });
-      // realm.ruler mirrors the ruler character's first trait on each sync
-      const ruler = FB.realmRulerCharacterSnapshot(s,rid);
-      ruler.traits = []; FB.realmRulerCharacter(s,rid);
-      const ordinary = FB.techAIScore(s,candidate.id,rid);
-      ruler.traits = [prefix + '_discipline']; FB.realmRulerCharacter(s,rid);
-      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
-      const preferred = FB.techAIScore(s,candidate.id,rid);
-      return { ratio:preferred/ordinary,faults:FB.validateAgencyRules(FBDATA.agencyRules),
-        chance:FBDATA.agencyRules.familyProgressChance, cooldown:FBDATA.agencyRules.approachCooldownYears,
-        pure:before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter() };
-    }, prefix);
-    expect(result).toEqual({ ratio:prefix === 'harbor' ? 2 : .5,faults:[],chance:prefix === 'harbor' ? .8 : .2,cooldown:prefix === 'harbor' ? 3 : 7,pure:true });
-  });
-}
-
-for (const prefix of ['harbor','dune']) {
-  test(prefix + ' imported deed binding uses the ordinary action gate and event queue', async function ({ page },info) {
-    await importProof(page,info,prefix,false); await startDeterministicGame(page);
-    const result = await page.evaluate(function (prefix) {
-      const s = FB.state, status = FB.instantStatus(s,'seek_blessing');
-      FB.instants.find(function (d) { return d.id === 'seek_blessing'; }).run(s);
-      const item = s.eventQueue.find(function (row) { return row.id === prefix + '_assembly'; });
-      const event = FB.eventById(item.id), prestige = s.player.prestige;
-      FB.resolveEventOption(s,event,event.options[0],item.ctx,{ automated:false });
-      return { can:status.can,prestige:s.player.prestige-prestige,old:s.eventQueue.some(function (row) { return row.id === 'seek_blessing'; }) };
-    },prefix);
-    expect(result).toEqual({ can:true,prestige:prefix === 'harbor' ? 2 : 5,old:false });
   });
 }
 
@@ -575,33 +493,6 @@ for (const prefix of ['harbor','dune']) {
 }
 
 for (const prefix of ['harbor','dune']) {
-  test(prefix + ' policies change work, mediation, rank income and AI votes through shared consumers', async function ({ page }, info) {
-    await importProof(page,info,prefix);
-    const result = await page.evaluate(function (prefix) {
-      const s = FB.state, p = s.player, me = s.chars[p.charId], rid = prefix + '_partner';
-      p.gold = 50; p.tier = 4;
-      const aim = FB.rulerAimSnapshot(s,rid);
-      s.agency.rulerAims[rid] = Object.assign({},aim,{id:'keep_peace'});
-      const motion = Object.keys(FBDATA.policies).find(function (id) { return FBDATA.policies[id].family === 'commerce'; });
-      const focus = FB.focuses.find(function (d) { return d.id === 'trade_run'; });
-      const mediation = FB.instants.find(function (d) { return d.id === 'mediate'; });
-      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
-      const projected = focus.gain(s).gold, preview = focus.preview(s), social = mediation.preview(s);
-      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
-      const gold = p.gold, prestige = p.prestige;
-      focus.tick(s); mediation.run(s);
-      return {pure:pure,projected:projected,preview:preview.seasonal[0].amount,actual:(p.gold - gold) * 90,
-        chance:social.chance,prestige:p.prestige - prestige,rank:FB.rankPrestigeYearly(s).ruling,
-        vote:FB.rulerAimMotionValue(s,rid,motion)};
-    },prefix);
-    expect(result.pure).toBe(true); expect(result.chance).toBe(1);
-    expect(result.actual).toBeCloseTo(result.projected,8);
-    // The imported household is not a trading vocation; the ordinary focus preview includes its vocational factor.
-    expect(result.preview).toBeGreaterThan(0);
-    expect(result.prestige).toBe(prefix === 'harbor' ? 5 : 9);
-    expect(result.rank).toBe(prefix === 'harbor' ? 16 : 32);
-    expect(result.vote).toBe(prefix === 'harbor' ? 18 : -6);
-  });
   test(prefix + ' independent council charter and tax demand preserve their own privilege identity', async function ({ page }, info) {
     await importProof(page,info,prefix,false);
     await startDeterministicGame(page);
@@ -671,6 +562,131 @@ for (const prefix of ['harbor','dune']) {
     expect(result.policyEvents).toEqual(prefix === 'harbor' ? {persecution:false,refugees:true,noted:[]} :
       {persecution:true,refugees:false,noted:['dune_peace']});
   });
+}
+
+/* Mechanic cases that restore no save share one page per proof, booted with the
+   stored proof and its court world active and reset before each case; each case
+   still begins its own start. Cases that restore a save stay in the loops above
+   on fresh pages. */
+for (const prefix of ['harbor','dune']) describeSharedPage(prefix + ' proof mechanics', sharedProof(prefix), function () {
+  test(prefix + ' imported discipline changes shared focus previews and bounded AI priorities', async function ({ page }, info) {
+    await importProof(page, info, prefix);
+    const result = await page.evaluate(function (prefix) {
+      const s = FB.state, me = s.chars[s.player.charId];
+      me.traits = [];
+      FB.addTrait(me, prefix + '_discipline');
+      const before = JSON.stringify(s), rng = FB.getRngState();
+      const focus = FB.focuses.find(function (f) { return f.id === 'pray'; });
+      return { yield:focus.gain(s).piety, literate:FB.traitMechanic(me, 'literacy'),
+        peace:FB.traitAimWeight(me, 'keep_peace'), wealth:FB.traitAimWeight(me, 'amass_wealth'),
+        pure:before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0), faults:FB.validateTraitMechanics(FBDATA.traitMechanics) };
+    }, prefix);
+    expect(result).toEqual({ yield:prefix === 'harbor' ? 6 : 8, literate:1,
+      peace:prefix === 'harbor' ? 70 : 0, wealth:prefix === 'dune' ? 60 : 0, pure:true, faults:[] });
+  });
+  test(prefix + ' imported quick start uses the normal character constructor', async function ({ page }, info) {
+    await importProof(page, info, prefix, false);
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('[data-quick-start="' + prefix + '_beginning"]').click();
+    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+    const result = await page.evaluate(function () {
+      const s = FB.state, c = s.chars[s.player.charId];
+      return { name:c.name, province:s.player.provinceId, profession:s.player.profession,
+        start:s.telemetry.scenario, quickStart:s.telemetry.quickStart };
+    });
+    expect(result).toMatchObject({ name:prefix === 'harbor' ? 'Mara' : 'Tal',
+      province:prefix === 'harbor' ? 'barcelona' : 'galway', start:'serf', quickStart:prefix + '_beginning' });
+  });
+  test(prefix + ' declared religious ranks use contested offices rather than buying a promotion', async function ({ page }, info) {
+    await importProof(page, info, prefix, false);
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function (prefix) {
+      const s = FB.state, c = s.chars[s.player.charId], id = prefix + '_vocation';
+      c.sex = 'm'; c.religion = prefix + '_rite'; c.born = s.date.year - 40;
+      s.player.profession = 'monk'; s.player.piety = 500; s.player.prestige = 500;
+      c.career = { profession:'monk', rank:'master', chosen:true, experience:20, guildRank:'none', guildStanding:0 };
+      c.skills.lea = 15; c.religiousRanks = {}; c.religiousRanks[id] = 1;
+      const before = JSON.stringify(s), rng = FB.getRngState();
+      const path = FB.religiousPathOf(s, c), q = FB.abbotAppointmentStatus(s, c);
+      const office = FB.religiousOfficePath(s, c, 'abbot');
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0);
+      return { id:path.id, next:path.next.id, visible:q.visible, office:office.step.id,
+        pure:pure, automatic:FB.takeReligiousStep(s, c), rank:c.religiousRanks[id] };
+    }, prefix);
+    expect(result).toEqual({ id:prefix + '_vocation', next:'keeper', visible:true, office:'keeper', pure:true, automatic:false, rank:1 });
+  });
+  test(prefix + ' imported estates agenda follows its declared aid condition without mutating terms', async function ({ page }, info) {
+    await importProof(page, info, prefix, false); await startDeterministicGame(page);
+    const result = await page.evaluate(function (prefix) {
+      const s = FB.state, p = s.player, c = s.chars[p.charId];
+      p.tier = 3; c.station = 3; p.liege = s.owner[p.provinceId];
+      for (const rid in s.realms) if (s.realms[rid]) delete s.realms[rid].war;
+      const terms = FB.parliamentEnsure(s); terms.aid = .25;
+      const before = JSON.stringify(s), rng = FB.getRngState(), first = FB.parliamentSessionCandidates(s);
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0);
+      terms.aid = FBDATA.balance.parliamentAidMax || .4;
+      const second = FB.parliamentSessionCandidates(s);
+      return { pure:pure, first:first.indexOf(prefix + '_assembly') >= 0, second:second.indexOf(prefix + '_assembly') >= 0 };
+    }, prefix);
+    expect(result).toEqual({ pure:true,first:prefix === 'harbor',second:prefix === 'dune' });
+  });
+  test(prefix + ' imported research preference changes the ordinary ruler score', async function ({ page }, info) {
+    await importProof(page, info, prefix, false); await startDeterministicGame(page);
+    const result = await page.evaluate(function (prefix) {
+      const s = FB.state, rid = s.owner[s.player.provinceId];
+      const candidate = FB.techCandidates(s,rid,true).find(function (row) { return row.available && row.def.domain === 'learning'; });
+      // realm.ruler mirrors the ruler character's first trait on each sync
+      const ruler = FB.realmRulerCharacterSnapshot(s,rid);
+      ruler.traits = []; FB.realmRulerCharacter(s,rid);
+      const ordinary = FB.techAIScore(s,candidate.id,rid);
+      ruler.traits = [prefix + '_discipline']; FB.realmRulerCharacter(s,rid);
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const preferred = FB.techAIScore(s,candidate.id,rid);
+      return { ratio:preferred/ordinary,faults:FB.validateAgencyRules(FBDATA.agencyRules),
+        chance:FBDATA.agencyRules.familyProgressChance, cooldown:FBDATA.agencyRules.approachCooldownYears,
+        pure:before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter() };
+    }, prefix);
+    expect(result).toEqual({ ratio:prefix === 'harbor' ? 2 : .5,faults:[],chance:prefix === 'harbor' ? .8 : .2,cooldown:prefix === 'harbor' ? 3 : 7,pure:true });
+  });
+  test(prefix + ' imported deed binding uses the ordinary action gate and event queue', async function ({ page },info) {
+    await importProof(page,info,prefix,false); await startDeterministicGame(page);
+    const result = await page.evaluate(function (prefix) {
+      const s = FB.state, status = FB.instantStatus(s,'seek_blessing');
+      FB.instants.find(function (d) { return d.id === 'seek_blessing'; }).run(s);
+      const item = s.eventQueue.find(function (row) { return row.id === prefix + '_assembly'; });
+      const event = FB.eventById(item.id), prestige = s.player.prestige;
+      FB.resolveEventOption(s,event,event.options[0],item.ctx,{ automated:false });
+      return { can:status.can,prestige:s.player.prestige-prestige,old:s.eventQueue.some(function (row) { return row.id === 'seek_blessing'; }) };
+    },prefix);
+    expect(result).toEqual({ can:true,prestige:prefix === 'harbor' ? 2 : 5,old:false });
+  });
+  test(prefix + ' policies change work, mediation, rank income and AI votes through shared consumers', async function ({ page }, info) {
+    await importProof(page,info,prefix);
+    const result = await page.evaluate(function (prefix) {
+      const s = FB.state, p = s.player, me = s.chars[p.charId], rid = prefix + '_partner';
+      p.gold = 50; p.tier = 4;
+      const aim = FB.rulerAimSnapshot(s,rid);
+      s.agency.rulerAims[rid] = Object.assign({},aim,{id:'keep_peace'});
+      const motion = Object.keys(FBDATA.policies).find(function (id) { return FBDATA.policies[id].family === 'commerce'; });
+      const focus = FB.focuses.find(function (d) { return d.id === 'trade_run'; });
+      const mediation = FB.instants.find(function (d) { return d.id === 'mediate'; });
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const projected = focus.gain(s).gold, preview = focus.preview(s), social = mediation.preview(s);
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
+      const gold = p.gold, prestige = p.prestige;
+      focus.tick(s); mediation.run(s);
+      return {pure:pure,projected:projected,preview:preview.seasonal[0].amount,actual:(p.gold - gold) * 90,
+        chance:social.chance,prestige:p.prestige - prestige,rank:FB.rankPrestigeYearly(s).ruling,
+        vote:FB.rulerAimMotionValue(s,rid,motion)};
+    },prefix);
+    expect(result.pure).toBe(true); expect(result.chance).toBe(1);
+    expect(result.actual).toBeCloseTo(result.projected,8);
+    // The imported household is not a trading vocation; the ordinary focus preview includes its vocational factor.
+    expect(result.preview).toBeGreaterThan(0);
+    expect(result.prestige).toBe(prefix === 'harbor' ? 5 : 9);
+    expect(result.rank).toBe(prefix === 'harbor' ? 16 : 32);
+    expect(result.vote).toBe(prefix === 'harbor' ? 18 : -6);
+  });
   test(prefix + ' new local ordinance uses the normal annual motion transaction', async function ({page},info) {
     await importProof(page,info,prefix);
     const result = await page.evaluate(function (prefix) {
@@ -693,4 +709,4 @@ for (const prefix of ['harbor','dune']) {
     },prefix);
     expect(result).toEqual({passed:true,days:360,amount:prefix === 'harbor' ? 2 : 24,repeated:false});
   });
-}
+});

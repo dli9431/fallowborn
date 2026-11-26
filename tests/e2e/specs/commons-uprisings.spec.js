@@ -8,13 +8,23 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 
-// Each case owns a fresh context and world; no state crosses test boundaries.
+// Each case starts its own campaign; no state crosses test boundaries. Cases
+// that restore or migrate saves keep a fresh page; runs of the others between
+// them share one page booted with the 867 world active, reset before each case.
 // Distribute the many independent starts across the configured worker pool.
 test.describe.configure({ mode:'parallel' });
 
+function sharedCommons(title, body) {
+  describeSharedPage(title, { boot:async function (page, testInfo) {
+    await openGame(page, testInfo);
+    await activateBookmark(page, '867');
+  } }, body);
+}
+
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () {
     const s = FB.state, p = s.player, pid = p.provinceId;
@@ -76,6 +86,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
+sharedCommons('demands, responses and stale incidents', function () {
 test('an annual commons demand escalates only after refusal and the full warning interval', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state;
@@ -224,6 +235,7 @@ for (const change of ['holder', 'succession', 'liege', 'rank', 'death']) {
     expect(result).toEqual({ rejected:true, noEffects:true, cleared:true, modifier:false });
   });
 }
+});
 
 test('save restoration retains deadlines and repair does not duplicate the uprising', async function ({ page }) {
   const result = await page.evaluate(function () {
@@ -244,6 +256,7 @@ test('save restoration retains deadlines and repair does not duplicate the upris
   expect(result.events).toBe(1);
 });
 
+sharedCommons('local uprising blockers and warnings', function () {
 for (const blocker of ['baron', 'healthy_support', 'downfall', 'queued_downfall', 'active']) {
   test(blocker + ' prevents an additional local uprising', async function ({ page }) {
     const result = await page.evaluate(function (blocker) {
@@ -321,6 +334,7 @@ for (const width of [390, 1280]) {
     await expect(page.locator('#privileges-back')).toBeFocused();
   });
 }
+});
 
 for (const stage of ['petition', 'active']) {
   test('restore recovers a consumed ' + stage + ' event exactly once', async function ({ page }) {
@@ -375,6 +389,7 @@ test('an old save without uprising fields stays free of incidents', async functi
   expect(result).toEqual({ summary:null, introduced:false, downfall:true });
 });
 
+sharedCommons('concession research and revolt resistance', function () {
 test('the original customary concession remains available after research is lost', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state, tech = FB.realmTechRecord(s);
@@ -447,6 +462,7 @@ test('effective support scales resistance after county bonuses and recovery pres
   expect(result.recovering.levy).toBeCloseTo(1.15 * 0.4 * 0.375 - 1);
   expect(result.sameDeadline).toBe(true);
 });
+});
 
 async function addCommonsCounties(page, count) {
   return page.evaluate(function (count) {
@@ -464,6 +480,7 @@ async function addCommonsCounties(page, count) {
   }, count);
 }
 
+sharedCommons('multi-county rosters', function () {
 test('a new uprising starts only in the demanding county', async function ({ page }) {
   const ids = await addCommonsCounties(page, 5);
   const result = await page.evaluate(function (ids) {
@@ -557,6 +574,7 @@ test('new holdings do not join immediately and skipped ticks do not backfill exp
   }, added);
   expect(result).toEqual({ unchanged:true, count:1, finished:true, clear:true });
 });
+});
 
 test('legacy single-county incidents migrate without expanding or losing their decision', async function ({ page }) {
   await page.evaluate(function () { window.beginCommons(); });
@@ -635,6 +653,7 @@ async function prepareSpreadChain(page) {
   }, ids);
 }
 
+sharedCommons('spread traversal and support', function () {
 test('spread traverses every connected subordinate county with independent warnings and expiries', async function ({ page }) {
   const chain = await prepareSpreadChain(page);
   const result = await page.evaluate(function (chain) {
@@ -694,6 +713,7 @@ test('support pauses spread, resets its interval, and clears warnings without re
   }, chain);
   expect(result).toEqual({ paused:true, early:1, joined:2, counties:[chain[0]], sameDue:true, active:true });
 });
+});
 
 test('spread save restoration preserves distinct deadlines and replaces stale decisions', async function ({ page }) {
   const chain = await prepareSpreadChain(page);
@@ -716,6 +736,7 @@ test('spread save restoration preserves distinct deadlines and replaces stale de
   expect(result).toEqual({ rejected:true, safe:true, deadlines:true, phase:'warning' });
 });
 
+sharedCommons('spread boundaries and vassal transfers', function () {
 for (const boundary of ['foreign', 'sibling', 'protected', 'disconnected']) {
   test('spread excludes ' + boundary + ' counties', async function ({ page }) {
     const chain = await prepareSpreadChain(page);
@@ -760,6 +781,7 @@ test('internal vassal transfers retain disruption and one concession settles bot
   }, chain);
   expect(result).toEqual({ retained:true, granted:true, pop:0, prestige:-10, territory:true, finished:true });
 });
+});
 
 test('a consumed spread petition restores once and starts its full grace only when answered', async function ({ page }) {
   const chain = await prepareSpreadChain(page);
@@ -802,6 +824,7 @@ async function prepareLocalNegotiation(page) {
   }, chain);
 }
 
+sharedCommons('player local talks', function () {
 for (const success of [true, false]) {
   test('player local talks success=' + success + ' affect only direct counties and consume one attempt', async function ({ page }) {
     const setup = await prepareLocalNegotiation(page);
@@ -840,6 +863,7 @@ for (const success of [true, false]) {
     expect(result.grantor).toEqual(success ? ['player'] : []);
   });
 }
+});
 
 for (const success of [true, false]) {
   test('a vassal independently negotiates spread from its liege success=' + success, async function ({ page }) {
@@ -881,6 +905,7 @@ for (const success of [true, false]) {
   });
 }
 
+sharedCommons('local talks reviews and spread limits', function () {
 for (const change of ['funds', 'holder', 'ruler', 'incident', 'spent', 'missing_scope']) {
   test('stale local talks reject ' + change + ' changes before costs or RNG', async function ({ page }) {
     const setup = await prepareLocalNegotiation(page);
@@ -1071,4 +1096,5 @@ test('healthy neighboring counties stop spread until their own support falls', a
   expect(result.recovered).toEqual([chain[0]]);
   expect(result.originSupport).toBeLessThan(-20);
   expect(result.originActive).toBe(true);
+});
 });

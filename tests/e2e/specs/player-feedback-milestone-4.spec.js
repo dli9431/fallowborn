@@ -23,9 +23,18 @@ const { openGame } = require('../support/game/navigation');
 const {
   START_CODE, startDeterministicGame, unlockStartTier
 } = require('../support/game/start');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
+
+/* Cases that restore a save keep a fresh page. The others share one page per
+   group, booted with the 867 world active and reset before each case; each
+   case still starts its own campaign. */
+const sharedBoot = { boot:async function (page, testInfo) {
+  await openGame(page, testInfo);
+  await activateBookmark(page, '867');
+} };
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await unlockStartTier(page, 1);
 });
 
@@ -47,6 +56,7 @@ function arrangeFamily(page, childAge) {
   }, childAge);
 }
 
+describeSharedPage('retirement and rank elevation', sharedBoot, function () {
 test('phone rank elevation keeps Freeholder on one line', async function ({ page }) {
   await startDeterministicGame(page);
   await page.evaluate(function () {
@@ -300,6 +310,7 @@ test('refuses retirement when every family successor is a minor or dead',
     expect(result.playerCharId).toBe(result.meId);
     expect(result.retired).toBe(false);
   });
+});
 
 test('save and restore preserve the retired elder marker',
   async function ({ page }) {
@@ -332,7 +343,7 @@ test('save and restore preserve the retired elder marker',
     expect(result.oldIsKin).toBe(true);
   });
 
-test.describe('sibling and collateral-household agency', function () {
+describeSharedPage('sibling and collateral-household agency', sharedBoot, function () {
 
   /* Returns the id of a living, unmarried, resident sibling of the
      protagonist, normalizing age and marital state so the manageable-kin
@@ -866,7 +877,7 @@ test.describe('sibling and collateral-household agency', function () {
     });
 });
 
-test.describe('starting-family presets', function () {
+describeSharedPage('starting-family presets', sharedBoot, function () {
 
   /* Drives the shared-code path from its secondary starting-date action:
      paste a start code, reach the character screen, and begin. */
@@ -935,8 +946,8 @@ test.describe('starting-family presets', function () {
     });
   }
 
-  /* Each code is entered on its own fresh title screen, so every case pays
-     for one complete content preparation rather than four. */
+  /* Each code is entered on its own title screen, reset to the booted baseline,
+     so the group pays for one complete content preparation. */
   test('a seven-part code with an unknown preset is rejected',
     async function ({ page }) {
       // an unknown preset id must be refused, not silently become another world
@@ -1135,7 +1146,7 @@ test.describe('starting-family presets', function () {
     });
 });
 
-test.describe('house renaming', function () {
+describeSharedPage('house renaming', sharedBoot, function () {
 
   test('renameHouse rewrites every house member and the player realm identity',
     async function ({ page }) {
@@ -1404,7 +1415,10 @@ test.describe('house renaming', function () {
       });
       expect(stateDyn).toBe('Nightingale');
     });
+});
 
+// Restoring a save keeps its own fresh page.
+test.describe('house renaming', function () {
   test('save and restore preserve the renamed house',
     async function ({ page }) {
       await startDeterministicGame(page);

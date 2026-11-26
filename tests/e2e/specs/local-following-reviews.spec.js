@@ -6,6 +6,7 @@ const {test,expect}=require('../support/fixture');
 const {openGame,openTitle}=require('../support/game/navigation');
 const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
 test.describe.configure({mode:'parallel'});
@@ -40,8 +41,10 @@ function exampleFile(prefix) {
 }
 /* Admission against the unmodded catalogue and the Mods file picker import
    have their own case per example, which proves the reload stores exactly the
-   example. Every review case stores that file text and boots it once, proving
-   it publishes, instead of preparing the unmodded catalogue first. */
+   example. Every review group stores that file text and boots it once, proving
+   it publishes, instead of preparing the unmodded catalogue first. Its cases
+   share that page with the example's world active, reset before each case,
+   and each case begins its own start. */
 async function pickerImport(page,info,prefix) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
@@ -50,9 +53,18 @@ async function pickerImport(page,info,prefix) {
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await page.waitForFunction(function () {return !!(window.FB && FB.game && FB.game.bootReady);});
 }
-async function start(page,info,prefix,home) {
+async function bootExample(page,info,prefix) {
   await openTitle(page,info);
   await installStoredMod(page,fs.readFileSync(exampleFile(prefix),'utf8'));
+}
+function sharedExample(prefix,context) {
+  return {context:context,boot:async function (page,info) {
+    await bootExample(page,info,prefix);
+    await activateBookmark(page,prefix+'_world');
+  }};
+}
+async function start(page,info,prefix,home) {
+  if (!isSharedPage(page)) await bootExample(page,info,prefix);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   if (!home) {await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');return;}
   const code=await page.evaluate(function (prefix) {
@@ -105,6 +117,7 @@ for (const prefix of ['harbor','dune']) {
     })).toEqual({count:1,stored:[require('../fixtures/authoring/local-following-reviews-'+prefix+'.json')]});
   });
 
+  describeSharedPage(prefix+' following reviews',sharedExample(prefix),function () {
   test(prefix+' actual deed selects both imported commands without authority or side effects',async function ({page},info) {
     await start(page,info,prefix);
     const before=await page.evaluate(function () {return [JSON.stringify(FB.state),FB.getRngState(),FB.getUidCounter()];});
@@ -257,8 +270,10 @@ for (const prefix of ['harbor','dune']) {
     await close(page);
     await expect(page.locator('[data-action-id="mobile_coalition"]')).toBeFocused();
   });
+  });
 }
 
+describeSharedPage('harbor reviewed target changes',sharedExample('harbor'),function () {
 for (const change of ['moved','removed','replaced','ended']) {
   test('a '+change+' reviewed target cannot receive a gift or silently switch to another following',async function ({page},info) {
     await start(page,info,'harbor');
@@ -296,6 +311,7 @@ test('a moved list target is rejected before opening and the remaining single fo
   await expect(page.locator('#mobile-followings')).toHaveCount(0);
   await expect(page.locator('.gm-footer').getByRole('button',{name:'Back',exact:true})).toBeDisabled();
 });
+});
 
 test('the locality query preserves unrelated-household and member-principal eligibility without mutation',async function ({page},info) {
   await start(page,info,'dune');
@@ -311,7 +327,11 @@ test('the locality query preserves unrelated-household and member-principal elig
   })).toEqual({local:['dune_coalition','dune_second_following'],first:'dune_coalition',pure:true,away:[],principal:['dune_second_following']});
 });
 
+// Each route group boots at the size its case sets before the first boot.
+for (const phone of [false,true]) describeSharedPage((phone?'phone':'desktop')+' selector return routes',
+  sharedExample('harbor',{viewport:phone?{width:390,height:600}:{width:1100,height:600}}),function () {
 for (const route of ['Back','Escape','phone Back','phone Escape','phone footer Back']) {
+  if ((route.indexOf('phone')===0)!==phone) continue;
   test(route+' retains selector disclosure, scroll, exact target controls and originating focus',async function ({page},info) {
     await page.setViewportSize(route.indexOf('phone')===0?{width:390,height:600}:{width:1100,height:600});
     await start(page,info,'harbor');
@@ -357,7 +377,9 @@ for (const route of ['Back','Escape','phone Back','phone Escape','phone footer B
     expect(await accounts(page,'harbor')).toEqual(before);
   });
 }
+});
 
+describeSharedPage('harbor stale confirmations',sharedExample('harbor'),function () {
 test('a single following stays a root after a recorded gift and rejects its old confirmation',async function ({page},info) {
   await start(page,info,'harbor');
   await page.evaluate(function () {FB.mobile.migration(FB.state,'harbor_second_following').at='harbor_ridge';});
@@ -396,4 +418,5 @@ test('a changed outside offer cannot be accepted through the selected stale conf
   await expect(choice(page,secondId('harbor'))).toBeFocused();
   await close(page);
   await expect(page.locator('[data-action-id="mobile_coalition"]')).toBeFocused();
+});
 });
