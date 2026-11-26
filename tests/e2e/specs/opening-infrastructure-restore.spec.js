@@ -2,7 +2,7 @@
 const { test, expect } = require('../support/fixture');
 const { restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { prepareGameContent } = require('../support/game/navigation');
-const { importWorld, startRuler, startHousehold } = require('../support/game/opening-infrastructure');
+const { importWorld, bootStoredWorld, startRuler, startHousehold } = require('../support/game/opening-infrastructure');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, ['data/relay_services.js','js/relay_services.js',
@@ -118,7 +118,8 @@ test('legacy explicit-world save without a marker keeps legacy fort repair and n
 });
 
 test('removing the ordinary imported world rejects its marked save without adopting or recreating assets', async function ({ page }, info) {
-  await importWorld(page, info, 'estuary');
+  // The other cases import through the Mods screen; this one tests only removal.
+  await bootStoredWorld(page, info, 'estuary');
   await startHousehold(page, 'estuary');
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.evaluate(function () { FB.mods.clear(); })]);

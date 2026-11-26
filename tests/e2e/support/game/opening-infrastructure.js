@@ -1,7 +1,9 @@
 'use strict';
 const { expectModAdmission } = require('./mod-admission');
-const { openGame, prepareGameContent } = require('./navigation');
+const { openGame, openTitle, prepareGameContent } = require('./navigation');
+const { installStoredMod } = require('./stored-mod');
 const { expect } = require('../fixture');
+const fs = require('fs');
 const path = require('path');
 
 const examples={estuary:require('../../fixtures/authoring/opening-infrastructure-estuary.json'),
@@ -16,6 +18,20 @@ async function importWorld(page, info, name, revision) {
     'opening-infrastructure-' + name + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  await observeImportedBoot(page, name, revision);
+}
+
+// Boot the same file text the Mods screen stores, without preparing the
+// unmodded catalogue that its reload discards. importWorld keeps the admission
+// and file picker coverage; use this only where neither is under test.
+async function bootStoredWorld(page, info, name, revision) {
+  await openTitle(page, info);
+  await installStoredMod(page, fs.readFileSync(path.join(fixtureDirectory,
+    'opening-infrastructure-' + name + '.json'), 'utf8'));
+  await observeImportedBoot(page, name, revision);
+}
+
+async function observeImportedBoot(page, name, revision) {
   await page.waitForFunction(function (name) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks['inventory_' + name];
   }, name);
@@ -90,4 +106,4 @@ async function startObserver(page, name) {
   }, 'inventory_' + name);
 }
 
-module.exports = { importWorld, startRuler, startHousehold, startObserver };
+module.exports = { importWorld, bootStoredWorld, startRuler, startHousehold, startObserver };
