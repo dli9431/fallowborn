@@ -11,7 +11,7 @@ const { test, expect } = require('../support/fixture');
 const { attachPageDiagnostic } = require('../support/game-diagnostic');
 const { installPageGuards } = require('../support/page-contract');
 const { openGame } = require('../support/game/navigation');
-const { startDeterministicGame } = require('../support/game/start');
+const { START_CODE, startDeterministicGame, unlockStartTier } = require('../support/game/start');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 
 async function runScript(page, testInfo) {
@@ -233,4 +233,89 @@ test('serf tenure formation, legacy repair, context-slot resolution, and archety
       townFacilityEvent: 'serf_mill_multure',
       forestPaganHeavyEvent: 'serf_deadwood_amerced'
     });
+  });
+
+/* Runs in the page. Creates the campaign and reads it in the same task, so no
+   panel or map read has had a chance to run an additive repair first, then
+   reports the saved fields that FB.armiesEnsure and, for a played campaign,
+   FB.ensureEconomy would still have to add or change. */
+function createdCampaignShape(observerSeed) {
+  function saved() {
+    return JSON.parse(FB.contentValues.canonical(
+      [FB.save.expandedSnapshot(FB.state), FB.getRngState(), FB.getUidCounter()]));
+  }
+  function differing(before, after, prefix, out) {
+    Object.keys(Object.assign({}, before, after)).sort().forEach(function (key) {
+      if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) out.push(prefix + key);
+    });
+    return out;
+  }
+  function shape() {
+    const created = saved();
+    FB.armiesEnsure(FB.state);
+    if (!observerSeed) FB.ensureEconomy(FB.state);
+    const repaired = saved();
+    const changed = differing(created[0], repaired[0], 'state.', []);
+    if (created[0].economy && repaired[0].economy) {
+      differing(created[0].economy, repaired[0].economy, 'state.economy.', changed);
+    }
+    if (created[1] !== repaired[1]) changed.push('rng');
+    if (created[2] !== repaired[2]) changed.push('identity counter');
+    const out = { cohorts:JSON.stringify(created[0].armyCohorts), changed:changed };
+    if (!observerSeed) {
+      out.coinage = [created[0].economy.debasements, created[0].economy.recoinages];
+    }
+    return out;
+  }
+  if (!observerSeed) {
+    if (FB.game.start() === false) throw new Error('The deterministic start was rejected.');
+    FB.game.setPaused(true);
+    return shape();
+  }
+  return new Promise(function (resolve, reject) {
+    FB.activateBookmark('867', null, function (fault) {
+      if (fault) { reject(fault); return; }
+      try {
+        FB.game.pending = { seed:observerSeed };
+        if (FB.game.startObserve() === false) throw new Error('The observer start was rejected.');
+        FB.game.setPaused(true);
+        resolve(shape());
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
+}
+
+test('a new campaign is created with every field its additive repairs supply',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-file',
+      'The fresh campaign shape canary runs against the primary file target.');
+
+    await openGame(page, testInfo);
+    await unlockStartTier(page, 1);
+    const fullStartButton = page.locator('#btn-choose-beginning');
+    if (await fullStartButton.isVisible()) await fullStartButton.click();
+    else await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#btn-bm-seed').click();
+    const seedInput = page.locator('#ng-seed');
+    await seedInput.fill(START_CODE);
+    await expect(seedInput).toHaveValue(START_CODE);
+    await seedInput.press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+
+    /* A save, a replay comparison or a restore fingerprint taken the moment a
+       campaign begins must not depend on whether the first frame has drawn. */
+    expect(await page.evaluate(createdCampaignShape, null))
+      .toEqual({ cohorts:'{}', changed:[], coinage:[0, 0] });
+  });
+
+test('a new observer campaign is created with its replacement cohort ledger',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-file',
+      'The fresh campaign shape canary runs against the primary file target.');
+
+    await openGame(page, testInfo);
+    expect(await page.evaluate(createdCampaignShape, 'FRESH-SHAPE-OBSERVER'))
+      .toEqual({ cohorts:'{}', changed:[] });
   });
