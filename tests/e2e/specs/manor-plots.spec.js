@@ -274,8 +274,18 @@ test('keeps one-plot rows compact and exposes full terms when unaffordable',
     });
     expect(height).toBeLessThan(100);
 
-    await choice.focus();
+    /* The dialog focuses its first row after it opens, so focusing that row
+       again would fire no focusin. The pointer left by the start flow now rests
+       over the dialog, and its late hover update can dismiss the tooltip that
+       the initial focus opened. */
+    await expect(choice).toBeFocused();
     const tooltip = page.locator('#tooltip');
+    // Settle hover on the title, outside every tooltip trigger, then refocus.
+    await page.locator('#gm-title').hover();
+    await expect(tooltip).toBeHidden();
+    await choice.blur();
+    await choice.focus();
+    await expect(choice).toBeFocused();
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText('Cost');
     await expect(tooltip).toContainText('not affordable');
