@@ -6,6 +6,7 @@ test.describe.configure({mode:'parallel'});
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {useReleasedStartRules} = require('../support/game/released-starts');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,['data/bookmark_manifest.js',
@@ -62,9 +63,18 @@ async function beginUmar(page,info,code,fromTitle) {
   await page.evaluate(function () { FB.game.setPaused(true); });
 }
 
-test('634 offers the complete Umar graph and retains its earlier program with pure validation',async function ({page},info) {
+/* Cases that restore saves, wrap the start adoption, intercept sources or
+   import mods keep a fresh page. The three read-only catalogue checks share
+   one page booted once under the released start rules. */
+describeSharedPage('634 released catalogue reads on one booted page',{boot:async function (page,info) {
   await useReleasedStartRules(page);
   await openGame(page,info);
+}},function () {
+test('634 offers the complete Umar graph and retains its earlier program with pure validation',async function ({page},info) {
+  if (!isSharedPage(page)) {
+  await useReleasedStartRules(page);
+  await openGame(page,info);
+  }
   expect(await page.evaluate(function () {
     const b = FB.bookmark('634'), scenario = FBDATA.startScenarios.find(function (s) { return s.id === 'umar_634'; });
     const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -80,6 +90,54 @@ test('634 offers the complete Umar graph and retains its earlier program with pu
   })).toEqual({hidden:[false,false],available:true,faults:[],tracks:['umar_court_agenda_634'],retainedTracks:['umar_agenda_634'],locations:['medina'],
     revision:'core_courts_v4',layout:'634_opening',isolated:true,yazdegerdOffered:true,
     stages:[['accession_review_634',634,2],['syrian_review_634',634,2],['iraqi_review_634',634,2],['mandate_conclusion_634',634,2]],pure:true});
+});
+
+test('Yazdegerd is offered, complete and isolated to the capable full court revision',async function ({page},info) {
+  if (!isSharedPage(page)) { await useReleasedStartRules(page); await openGame(page,info); }
+  expect(await page.evaluate(function () {
+    const scenario=FBDATA.startScenarios.find(function (s) { return s.id==='yazdegerd_634'; });
+    if (!scenario || !FB.bookmark('634')) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
+    const before=JSON.stringify([FBDATA,FB.getRngState(),FB.getUidCounter()]);
+    const full=FB.bookmark('634','core_courts_v4'),old=FB.bookmark('634');
+    const oldStarts=['farmer_634','craftsman_634','ctesiphon_household_634','umar_634','heraclius_634',
+      'damascus_household_634','frontier_household_634','medina_household_634'];
+    const revisions=FB.bookmarkRevisions('634');
+    const faults=revisions.map(function (b) { return FB.validateBookmark(b); });
+    const earlier=revisions.filter(function (b) { return b.revision!=='core_courts_v4'; });
+    return {hidden:[scenario.hidden,full.hidden],fresh:old.revision,faults:faults.every(function (f) { return !f.length; }),
+      earlier:earlier.every(function (b) { return JSON.stringify(b.starts)===JSON.stringify(oldStarts) &&
+        !FB.startRuntimeReport(scenario,b).available; }),
+      full:JSON.stringify(full.starts)===JSON.stringify(oldStarts.slice(0,5).concat(['yazdegerd_634'],oldStarts.slice(5))) &&
+        FB.startRuntimeReport(scenario,full).available,
+      tracks:FB.startStoryTracks(scenario,'baghdad',null,full),locations:full.startLocations.yazdegerd_634,
+      isolated:['476','568','867','1066'].every(function (id) { return !FB.startRuntimeReport(scenario,FB.bookmark(id)).available; }),
+      pure:before===JSON.stringify([FBDATA,FB.getRngState(),FB.getUidCounter()])};
+  })).toEqual({hidden:[false,false],fresh:'core_courts_v4',faults:true,earlier:true,full:true,
+    tracks:['yazdegerd_agenda_634'],locations:['baghdad'],isolated:true,pure:true});
+});
+
+test('634 offers the complete Heraclius graph and retains its earlier program with pure validation',async function ({page},info) {
+  if (!isSharedPage(page)) {
+  await useReleasedStartRules(page);
+  await openGame(page,info);
+  }
+  expect(await page.evaluate(function () {
+    const b = FB.bookmark('634'), scenario = FBDATA.startScenarios.find(function (s) { return s.id === 'heraclius_634'; });
+    if (!b || !scenario) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
+    const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const faults = FB.validateBookmark(b);
+    const tracks = FB.startStoryTracks(scenario,'constantinople',null,b);
+    return {hidden:[b.hidden,scenario.hidden],available:FB.bookmarkAvailable('634'),faults:faults,
+      tracks:tracks,retainedTracks:FB.startStoryTracks(scenario,'constantinople',null,FB.bookmark('634','core_identities_v3')),locations:b.startLocations.heraclius_634,revision:b.revision,layout:b.settlementLayout,
+      isolated:['476','568','867','1066'].every(function (id) {
+        return !FB.startRuntimeReport(scenario,FB.bookmark(id)).available;
+      }),yazdegerdOffered:FBDATA.startScenarios.some(function (s) { return s.id === 'yazdegerd_634' && s.hidden === false; }) && b.starts.indexOf('yazdegerd_634') >= 0,
+      stages:FB.stories.get('heraclius_agenda_634').declaration.stages.map(function (st) { return [st.id,st.year,st.season]; }),
+      pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  })).toEqual({hidden:[false,false],available:true,faults:[],tracks:['heraclius_court_agenda_634'],retainedTracks:['heraclius_agenda_634'],locations:['constantinople'],
+    revision:'core_courts_v4',layout:'634_opening',isolated:true,yazdegerdOffered:true,
+    stages:[['imperial_court_review_634',634,2],['eastern_holdings_review_634',634,2],['defense_diplomacy_review_634',634,2],['imperial_conclusion_634',634,2]],pure:true});
+});
 });
 
 async function beginYazdegerd(page,info,code,fromTitle) {
@@ -134,30 +192,6 @@ async function beginYazdegerd(page,info,code,fromTitle) {
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.evaluate(function () { FB.game.setPaused(true); });
 }
-
-test('Yazdegerd is offered, complete and isolated to the capable full court revision',async function ({page},info) {
-  await useReleasedStartRules(page); await openGame(page,info);
-  expect(await page.evaluate(function () {
-    const scenario=FBDATA.startScenarios.find(function (s) { return s.id==='yazdegerd_634'; });
-    if (!scenario || !FB.bookmark('634')) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
-    const before=JSON.stringify([FBDATA,FB.getRngState(),FB.getUidCounter()]);
-    const full=FB.bookmark('634','core_courts_v4'),old=FB.bookmark('634');
-    const oldStarts=['farmer_634','craftsman_634','ctesiphon_household_634','umar_634','heraclius_634',
-      'damascus_household_634','frontier_household_634','medina_household_634'];
-    const revisions=FB.bookmarkRevisions('634');
-    const faults=revisions.map(function (b) { return FB.validateBookmark(b); });
-    const earlier=revisions.filter(function (b) { return b.revision!=='core_courts_v4'; });
-    return {hidden:[scenario.hidden,full.hidden],fresh:old.revision,faults:faults.every(function (f) { return !f.length; }),
-      earlier:earlier.every(function (b) { return JSON.stringify(b.starts)===JSON.stringify(oldStarts) &&
-        !FB.startRuntimeReport(scenario,b).available; }),
-      full:JSON.stringify(full.starts)===JSON.stringify(oldStarts.slice(0,5).concat(['yazdegerd_634'],oldStarts.slice(5))) &&
-        FB.startRuntimeReport(scenario,full).available,
-      tracks:FB.startStoryTracks(scenario,'baghdad',null,full),locations:full.startLocations.yazdegerd_634,
-      isolated:['476','568','867','1066'].every(function (id) { return !FB.startRuntimeReport(scenario,FB.bookmark(id)).available; }),
-      pure:before===JSON.stringify([FBDATA,FB.getRngState(),FB.getUidCounter()])};
-  })).toEqual({hidden:[false,false],fresh:'core_courts_v4',faults:true,earlier:true,full:true,
-    tracks:['yazdegerd_agenda_634'],locations:['baghdad'],isolated:true,pure:true});
-});
 
 for (const code of [false,true]) {
   test('Yazdegerd adopts the child, Ctesiphon site and stewardship once through '+(code?'a code':'the picker'),async function ({page},info) {
@@ -542,27 +576,6 @@ async function beginHeraclius(page,info,code,fromTitle) {
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.evaluate(function () { FB.game.setPaused(true); });
 }
-
-test('634 offers the complete Heraclius graph and retains its earlier program with pure validation',async function ({page},info) {
-  await useReleasedStartRules(page);
-  await openGame(page,info);
-  expect(await page.evaluate(function () {
-    const b = FB.bookmark('634'), scenario = FBDATA.startScenarios.find(function (s) { return s.id === 'heraclius_634'; });
-    if (!b || !scenario) throw new Error(JSON.stringify(FB.bookmarkRuntimeDiagnostics()));
-    const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
-    const faults = FB.validateBookmark(b);
-    const tracks = FB.startStoryTracks(scenario,'constantinople',null,b);
-    return {hidden:[b.hidden,scenario.hidden],available:FB.bookmarkAvailable('634'),faults:faults,
-      tracks:tracks,retainedTracks:FB.startStoryTracks(scenario,'constantinople',null,FB.bookmark('634','core_identities_v3')),locations:b.startLocations.heraclius_634,revision:b.revision,layout:b.settlementLayout,
-      isolated:['476','568','867','1066'].every(function (id) {
-        return !FB.startRuntimeReport(scenario,FB.bookmark(id)).available;
-      }),yazdegerdOffered:FBDATA.startScenarios.some(function (s) { return s.id === 'yazdegerd_634' && s.hidden === false; }) && b.starts.indexOf('yazdegerd_634') >= 0,
-      stages:FB.stories.get('heraclius_agenda_634').declaration.stages.map(function (st) { return [st.id,st.year,st.season]; }),
-      pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toEqual({hidden:[false,false],available:true,faults:[],tracks:['heraclius_court_agenda_634'],retainedTracks:['heraclius_agenda_634'],locations:['constantinople'],
-    revision:'core_courts_v4',layout:'634_opening',isolated:true,yazdegerdOffered:true,
-    stages:[['imperial_court_review_634',634,2],['eastern_holdings_review_634',634,2],['defense_diplomacy_review_634',634,2],['imperial_conclusion_634',634,2]],pure:true});
-});
 
 for (const code of [false,true]) {
   test('Heraclius adopts the existing court once through '+(code?'a code':'the picker'),async function ({page},info) {

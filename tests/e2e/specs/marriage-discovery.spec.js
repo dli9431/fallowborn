@@ -6,10 +6,19 @@ dependsOnRuntime(__filename, ['data/cultures.js', 'js/agency.js', 'js/model.js',
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await startDeterministicGame(page);
+  // The shared group's reset returns the game functions its cases replace to these.
+  if (isSharedPage(page)) await page.evaluate(function () {
+    if (window.matchBootOriginals) return;
+    window.matchBootOriginals = { fb:{ royalKinMatchCandidates:FB.royalKinMatchCandidates,
+      proposeRoyalKinMatch:FB.proposeRoyalKinMatch, socialVisitPreview:FB.socialVisitPreview,
+      courtshipStatus:FB.courtshipStatus, realmHostAvailability:FB.realmHostAvailability },
+    ui:{ showMarriageLineageReview:FB.ui.showMarriageLineageReview } };
+  });
   await page.evaluate(function () {
     const s = FB.state, me = s.chars[s.player.charId];
     const child = FB.makeCharacter(s, { name:'Discovery Child', sex:me.sex,
@@ -39,6 +48,21 @@ async function openNavigationFinder(page, charactersOnly) {
   await page.evaluate(function () { FB.ui.showMarriageFinder(); });
 }
 
+/* The marriage finder keeps its filters, sort and position in private interface
+   state that no reset reaches, so every case that opens it keeps a fresh page.
+   The match picker, shortlist, review and query cases share one page booted
+   with the 867 world active; the beforeEach above still begins each campaign. */
+describeSharedPage('match pickers, shortlists and candidate queries', { boot:async function (page, testInfo) {
+  await openGame(page, testInfo);
+  await activateBookmark(page, '867');
+}, reset:async function (page) {
+  await page.evaluate(function () {
+    const saved = window.matchBootOriginals;
+    if (!saved) return;
+    Object.keys(saved.fb).forEach(function (key) { FB[key] = saved.fb[key]; });
+    Object.keys(saved.ui).forEach(function (key) { FB.ui[key] = saved.ui[key]; });
+  });
+} }, function () {
 for (const width of [320, 390, 528]) {
   test('match cards keep names and touch actions readable at width ' + width, async function ({ page }) {
     await page.setViewportSize({ width:width, height:740 });
@@ -68,31 +92,6 @@ for (const width of [320, 390, 528]) {
     }
   });
 }
-
-test('ruler match choices expose Q and W action shortcuts for local and dynastic searches', async function ({ page }) {
-  await page.evaluate(function () {
-    FB.game.setPaused(true);
-    FB.setPlayerTier(FB.state, 3);
-    window.matchShortcutCalls = [];
-    window.matchOriginalInstant = FB.runInstant;
-    FB.runInstant = function (state, id, options) {
-      window.matchShortcutCalls.push({ id:id, localMatch:options.localMatch });
-      return false;
-    };
-    FB.ui.showMatchChoices();
-  });
-  try {
-    await expect(page.locator('#match-local .keyhint')).toHaveText('Q');
-    await expect(page.locator('#match-dynastic .keyhint')).toHaveText('W');
-    await page.keyboard.press('q');
-    expect(await page.evaluate(function () { return window.matchShortcutCalls; }))
-      .toEqual([{ id:'seek_match', localMatch:true }]);
-  } finally {
-    await page.evaluate(function () { FB.runInstant = window.matchOriginalInstant; });
-  }
-  await page.keyboard.press('w');
-  await expect(page.locator('#finder-scope')).toHaveValue('near');
-});
 
 [3, 4].forEach(function (count) {
   test('generated suitor shortlist maps digits and numpad to all ' + count + ' matches', async function ({ page }) {
@@ -190,6 +189,160 @@ test('both subjects browse scopes and filters without writing state or consuming
   expect(result.nearbyValid).toBe(true);
   expect(result.filtersValid).toBe(true);
   expect(result.blockedExplain).toBe(true);
+});
+
+test('selected royal match reviews lineage and retains its subject after an unresolved proposal', async function ({ page }) {
+  const setup = await page.evaluate(function () {
+    const s = FB.state, child = s.chars[window.discoveryChildId];
+    child.culture = 'nubian';
+    const partner = FB.makeCharacter(s, { sex:child.sex === 'm' ? 'f' : 'm',
+      born:s.date.year - 20, culture:'nubian', religion:child.religion });
+    partner.royalLine = { realmId:s.player.liege, memberId:'review-partner' };
+    // Fix candidate availability to isolate the selected-subject navigation contract.
+    FB.royalKinMatchCandidates = function () {
+      return [child, s.chars[s.player.charId]].map(function (c) {
+        return { character:c, status:{ ready:true, chance:0.5, descendantKind:'child' } };
+      });
+    };
+    FB.proposeRoyalKinMatch = function (state, childId, partnerId, lineage) {
+      window.reviewedRoyalPair = { child:childId, partner:partnerId, lineage:lineage };
+      return { resolved:false };
+    };
+    const before = { state:JSON.stringify(s), rng:FB.getRngState() };
+    FB.ui.showRoyalKinMatchPicker(partner.id, null, false, child.id);
+    return { child:child.id, partner:partner.id, before:before };
+  });
+  await page.locator('[data-royal-kin-match]').click();
+  await expect(page.locator('#marriage-lineage')).toHaveValue('paternal');
+  await page.locator('#gm-cancel').click();
+  await expect(page.locator('[data-royal-kin-match]')).toHaveCount(1);
+  await expect(page.locator('[data-royal-kin-match]')).toHaveAttribute('data-royal-kin-match', setup.child);
+  await page.locator('[data-royal-kin-match]').click();
+  await page.locator('#marriage-lineage').selectOption('maternal');
+  await page.locator('#marriage-lineage-confirm').click();
+  await expect(page.locator('[data-royal-kin-match]')).toHaveCount(1);
+  await expect(page.locator('[data-royal-kin-match]')).toHaveAttribute('data-royal-kin-match', setup.child);
+  expect(await page.evaluate(function () { return window.reviewedRoyalPair; })).toEqual({
+    child:setup.child, partner:setup.partner, lineage:'maternal'
+  });
+  expect(await page.evaluate(function () {
+    return { state:JSON.stringify(FB.state), rng:FB.getRngState() };
+  })).toEqual(setup.before);
+  for (const invitation of [false, true]) {
+    await page.evaluate(function (args) {
+      FB.ui.closeModal();
+      if (args.invitation) FB.ui.showMarriageCultureInvitation(args.partner, args.child);
+      else FB.ui.showMarriageLineageReview(args.child, args.partner, function () {});
+    }, { child:setup.child, partner:setup.partner, invitation:invitation });
+    await expect(page.locator('[data-modal-nav="back"]')).toBeDisabled();
+    await page.locator('[data-modal-nav="close"]').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+  }
+});
+
+test('travel review keeps decision terms visible and calculations in Details', async function ({ page }) {
+  await page.setViewportSize({ width:390, height:844 });
+  await page.evaluate(function () {
+    // Fixed preview isolates presentation from distance and social-rate balance.
+    const s = FB.state;
+    const original = FB.socialVisitPreview;
+    FB.socialVisitPreview = function () {
+      return { eligible:true, destinationId:s.player.provinceId, dailyRate:0.2,
+        standingThreshold:40, daysToThreshold:195, daysFromDeparture:204,
+        days:9, minimumStay:90, cost:3 };
+    };
+    try { FB.ui.showSocialVisit(window.discoveryChildId, { courtship:true }); }
+    finally { FB.socialVisitPreview = original; }
+  });
+  const summary = page.locator('[data-social-visit-summary]');
+  await expect(summary.locator('canvas.pface')).toHaveCount(1);
+  await expect(summary).toContainText('3 gold upfront');
+  await expect(summary).toContainText('9 days each way');
+  await expect(summary).toContainText('90 days');
+  await expect(summary).toContainText('About 204 days from departure');
+  await expect(summary).toContainText('Not guaranteed');
+  await expect(page.locator('#gm-body .gm-footer #social-visit-cancel')).toHaveCount(1);
+  await expect(page.locator('#gm-title-details')).toBeHidden();
+  await page.locator('.modal-title-info').click();
+  await expect(page.locator('#gm-title-details')).toBeVisible();
+  await expect(page.locator('#gm-title-details')).toContainText('Standing improves only while together');
+  await expect(page.locator('#social-visit-depart')).toHaveText(/^(?:1\s*)?Depart$/);
+});
+
+test('dynastic sorting weighs multiple titles and current realm levies without mutations', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, me = s.chars[s.player.charId];
+    const template = s.realms[Object.keys(s.realms).find(function (id) { return s.realms[id].alive && id !== 'player'; })];
+    const people = {};
+    ['Many', 'High', 'Low', 'None'].forEach(function (name) {
+      people[name] = FB.makeCharacter(s, { name:'Sortfixture ' + name,
+        sex:me.sex === 'm' ? 'f' : 'm', born:s.date.year - 20,
+        culture:me.culture, religion:me.religion });
+    });
+    function court(id, rank, names, order, elective) {
+      const members = {};
+      names.forEach(function (name) {
+        const c = people[name];
+        members[name] = { id:name, charId:c.id, name:c.name, sex:c.sex,
+          born:c.born, alive:true, parentId:null };
+      });
+      s.realms[id] = Object.assign({}, template, { id:id, rank:rank, liege:null,
+        succession:{ members:members, order:order, heirId:order[0],
+          rulerMemberId:null, papalElective:!!elective } });
+    }
+    court('sort-a', 2, ['Many'], ['Many', 'Many']);
+    court('sort-b', 2, ['Many'], ['Many']);
+    court('sort-c', 3, ['High'], ['High']);
+    court('sort-d', 1, ['Low'], ['Low']);
+    court('sort-e', 4, ['None'], ['None'], true);
+    FB.courtshipStatus = function () { return { ready:false, reason:'Fixture' }; };
+    const originalLevies = FB.realmHostAvailability;
+    FB.realmHostAvailability = function (state, rid) {
+      const values = { 'sort-a':100, 'sort-b':100, 'sort-c':300, 'sort-d':200, 'sort-e':0 };
+      return values[rid] === undefined ? originalLevies(state, rid)
+        : { current:values[rid], maximum:1000 - values[rid] };
+    };
+    const before = JSON.stringify(s), rng = FB.getRngState();
+    function query(sort) {
+      return FB.marriageCandidateQuery(s, { scope:'all', availability:'all', search:'Sortfixture', sort:sort })
+        .map(function (row) { return row.characterId; });
+    }
+    const claims = query('claims'), alliance = query('alliance');
+    return { claims:claims, alliance:alliance,
+      expectedClaims:['Many', 'High', 'Low', 'None'].map(function (name) { return people[name].id; }),
+      expectedAlliance:['High', 'Low', 'Many', 'None'].map(function (name) { return people[name].id; }),
+      unchanged:before === JSON.stringify(s), rngSame:rng === FB.getRngState() };
+  });
+  expect(result.claims).toEqual(result.expectedClaims);
+  expect(result.alliance).toEqual(result.expectedAlliance);
+  expect(result.unchanged).toBe(true);
+  expect(result.rngSame).toBe(true);
+});
+});
+
+test('ruler match choices expose Q and W action shortcuts for local and dynastic searches', async function ({ page }) {
+  await page.evaluate(function () {
+    FB.game.setPaused(true);
+    FB.setPlayerTier(FB.state, 3);
+    window.matchShortcutCalls = [];
+    window.matchOriginalInstant = FB.runInstant;
+    FB.runInstant = function (state, id, options) {
+      window.matchShortcutCalls.push({ id:id, localMatch:options.localMatch });
+      return false;
+    };
+    FB.ui.showMatchChoices();
+  });
+  try {
+    await expect(page.locator('#match-local .keyhint')).toHaveText('Q');
+    await expect(page.locator('#match-dynastic .keyhint')).toHaveText('W');
+    await page.keyboard.press('q');
+    expect(await page.evaluate(function () { return window.matchShortcutCalls; }))
+      .toEqual([{ id:'seek_match', localMatch:true }]);
+  } finally {
+    await page.evaluate(function () { FB.runInstant = window.matchOriginalInstant; });
+  }
+  await page.keyboard.press('w');
+  await expect(page.locator('#finder-scope')).toHaveValue('near');
 });
 
 test('fresh dynastic searches and clearing a court default to nearby courts', async function ({ page }) {
@@ -298,55 +451,6 @@ test('Kin omits the standalone finder while descendant sheets retain their short
   await page.getByRole('button', { name:'Find a marriage', exact:false }).click();
   const childId = await page.evaluate(function () { return window.discoveryChildId; });
   await expect(page.locator('#finder-subject')).toHaveValue(childId);
-});
-
-test('selected royal match reviews lineage and retains its subject after an unresolved proposal', async function ({ page }) {
-  const setup = await page.evaluate(function () {
-    const s = FB.state, child = s.chars[window.discoveryChildId];
-    child.culture = 'nubian';
-    const partner = FB.makeCharacter(s, { sex:child.sex === 'm' ? 'f' : 'm',
-      born:s.date.year - 20, culture:'nubian', religion:child.religion });
-    partner.royalLine = { realmId:s.player.liege, memberId:'review-partner' };
-    // Fix candidate availability to isolate the selected-subject navigation contract.
-    FB.royalKinMatchCandidates = function () {
-      return [child, s.chars[s.player.charId]].map(function (c) {
-        return { character:c, status:{ ready:true, chance:0.5, descendantKind:'child' } };
-      });
-    };
-    FB.proposeRoyalKinMatch = function (state, childId, partnerId, lineage) {
-      window.reviewedRoyalPair = { child:childId, partner:partnerId, lineage:lineage };
-      return { resolved:false };
-    };
-    const before = { state:JSON.stringify(s), rng:FB.getRngState() };
-    FB.ui.showRoyalKinMatchPicker(partner.id, null, false, child.id);
-    return { child:child.id, partner:partner.id, before:before };
-  });
-  await page.locator('[data-royal-kin-match]').click();
-  await expect(page.locator('#marriage-lineage')).toHaveValue('paternal');
-  await page.locator('#gm-cancel').click();
-  await expect(page.locator('[data-royal-kin-match]')).toHaveCount(1);
-  await expect(page.locator('[data-royal-kin-match]')).toHaveAttribute('data-royal-kin-match', setup.child);
-  await page.locator('[data-royal-kin-match]').click();
-  await page.locator('#marriage-lineage').selectOption('maternal');
-  await page.locator('#marriage-lineage-confirm').click();
-  await expect(page.locator('[data-royal-kin-match]')).toHaveCount(1);
-  await expect(page.locator('[data-royal-kin-match]')).toHaveAttribute('data-royal-kin-match', setup.child);
-  expect(await page.evaluate(function () { return window.reviewedRoyalPair; })).toEqual({
-    child:setup.child, partner:setup.partner, lineage:'maternal'
-  });
-  expect(await page.evaluate(function () {
-    return { state:JSON.stringify(FB.state), rng:FB.getRngState() };
-  })).toEqual(setup.before);
-  for (const invitation of [false, true]) {
-    await page.evaluate(function (args) {
-      FB.ui.closeModal();
-      if (args.invitation) FB.ui.showMarriageCultureInvitation(args.partner, args.child);
-      else FB.ui.showMarriageLineageReview(args.child, args.partner, function () {});
-    }, { child:setup.child, partner:setup.partner, invitation:invitation });
-    await expect(page.locator('[data-modal-nav="back"]')).toBeDisabled();
-    await page.locator('[data-modal-nav="close"]').click();
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-  }
 });
 
 
@@ -490,35 +594,6 @@ for (const width of [320, 390]) {
   });
 }
 
-test('travel review keeps decision terms visible and calculations in Details', async function ({ page }) {
-  await page.setViewportSize({ width:390, height:844 });
-  await page.evaluate(function () {
-    // Fixed preview isolates presentation from distance and social-rate balance.
-    const s = FB.state;
-    const original = FB.socialVisitPreview;
-    FB.socialVisitPreview = function () {
-      return { eligible:true, destinationId:s.player.provinceId, dailyRate:0.2,
-        standingThreshold:40, daysToThreshold:195, daysFromDeparture:204,
-        days:9, minimumStay:90, cost:3 };
-    };
-    try { FB.ui.showSocialVisit(window.discoveryChildId, { courtship:true }); }
-    finally { FB.socialVisitPreview = original; }
-  });
-  const summary = page.locator('[data-social-visit-summary]');
-  await expect(summary.locator('canvas.pface')).toHaveCount(1);
-  await expect(summary).toContainText('3 gold upfront');
-  await expect(summary).toContainText('9 days each way');
-  await expect(summary).toContainText('90 days');
-  await expect(summary).toContainText('About 204 days from departure');
-  await expect(summary).toContainText('Not guaranteed');
-  await expect(page.locator('#gm-body .gm-footer #social-visit-cancel')).toHaveCount(1);
-  await expect(page.locator('#gm-title-details')).toBeHidden();
-  await page.locator('.modal-title-info').click();
-  await expect(page.locator('#gm-title-details')).toBeVisible();
-  await expect(page.locator('#gm-title-details')).toContainText('Standing improves only while together');
-  await expect(page.locator('#social-visit-depart')).toHaveText(/^(?:1\s*)?Depart$/);
-});
-
 
 for (const width of [390, 1280]) {
 test('finder exposes terms and current/max realm levies and preserves review return position at ' + width, async function ({ page }) {
@@ -653,56 +728,6 @@ test('realm levy tooltip always shows both current and maximum men', async funct
     FB.ui.showMarriageFinder();
   });
   await expect(page.locator('.finder-realm-stats').first()).toHaveText('Realm levies: 1200/1200 men');
-});
-
-test('dynastic sorting weighs multiple titles and current realm levies without mutations', async function ({ page }) {
-  const result = await page.evaluate(function () {
-    const s = FB.state, me = s.chars[s.player.charId];
-    const template = s.realms[Object.keys(s.realms).find(function (id) { return s.realms[id].alive && id !== 'player'; })];
-    const people = {};
-    ['Many', 'High', 'Low', 'None'].forEach(function (name) {
-      people[name] = FB.makeCharacter(s, { name:'Sortfixture ' + name,
-        sex:me.sex === 'm' ? 'f' : 'm', born:s.date.year - 20,
-        culture:me.culture, religion:me.religion });
-    });
-    function court(id, rank, names, order, elective) {
-      const members = {};
-      names.forEach(function (name) {
-        const c = people[name];
-        members[name] = { id:name, charId:c.id, name:c.name, sex:c.sex,
-          born:c.born, alive:true, parentId:null };
-      });
-      s.realms[id] = Object.assign({}, template, { id:id, rank:rank, liege:null,
-        succession:{ members:members, order:order, heirId:order[0],
-          rulerMemberId:null, papalElective:!!elective } });
-    }
-    court('sort-a', 2, ['Many'], ['Many', 'Many']);
-    court('sort-b', 2, ['Many'], ['Many']);
-    court('sort-c', 3, ['High'], ['High']);
-    court('sort-d', 1, ['Low'], ['Low']);
-    court('sort-e', 4, ['None'], ['None'], true);
-    FB.courtshipStatus = function () { return { ready:false, reason:'Fixture' }; };
-    const originalLevies = FB.realmHostAvailability;
-    FB.realmHostAvailability = function (state, rid) {
-      const values = { 'sort-a':100, 'sort-b':100, 'sort-c':300, 'sort-d':200, 'sort-e':0 };
-      return values[rid] === undefined ? originalLevies(state, rid)
-        : { current:values[rid], maximum:1000 - values[rid] };
-    };
-    const before = JSON.stringify(s), rng = FB.getRngState();
-    function query(sort) {
-      return FB.marriageCandidateQuery(s, { scope:'all', availability:'all', search:'Sortfixture', sort:sort })
-        .map(function (row) { return row.characterId; });
-    }
-    const claims = query('claims'), alliance = query('alliance');
-    return { claims:claims, alliance:alliance,
-      expectedClaims:['Many', 'High', 'Low', 'None'].map(function (name) { return people[name].id; }),
-      expectedAlliance:['High', 'Low', 'Many', 'None'].map(function (name) { return people[name].id; }),
-      unchanged:before === JSON.stringify(s), rngSame:rng === FB.getRngState() };
-  });
-  expect(result.claims).toEqual(result.expectedClaims);
-  expect(result.alliance).toEqual(result.expectedAlliance);
-  expect(result.unchanged).toBe(true);
-  expect(result.rngSame).toBe(true);
 });
 
 for (const sort of ['claims', 'alliance']) {

@@ -4,8 +4,22 @@ dependsOnRuntime(__filename, ['index.html','data/tournaments.js','data/events_to
   'data/technology.js','js/tournaments.js','js/travel.js','js/actions.js','js/events.js','js/main.js',
   'js/lordships.js','js/treasury.js','js/holywar.js','js/wars.js','js/rebellions.js','js/save.js','js/model.js','js/world.js']);
 const { test, expect } = require('../support/fixture');
-const { startGames, bookGames } = require('../support/game/tournaments');
+const tournaments = require('../support/game/tournaments');
+const { bookGames } = tournaments;
+const { openGame } = require('../support/game/navigation');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 
+// A shared page's boot already opened the title; every case still begins its own campaign.
+function startGames(page, info) {
+  return tournaments.startGames(page, info, isSharedPage(page) ? { open:async function () {} } : undefined);
+}
+
+/* The save restore case keeps a fresh page and follows this group. The others
+   share one page booted with the 867 world active, reset before each case. */
+describeSharedPage('scheduled games on one booted page', { boot:async function (page, info) {
+  await openGame(page, info);
+  await activateBookmark(page, '867');
+} }, function () {
 test('venue names read the supplied campaign without mutating state or original geography', async function ({page},info) {
   const ids = await startGames(page,info);
   const r = await page.evaluate(function (ids) {
@@ -211,28 +225,6 @@ test('a visitor war during outbound travel refunds entry and returns physically 
   expect(r.journey).toBeNull();expect(r.entry).toBe('interrupted');expect(r.event).toBe('announced');
 });
 
-test('three scored rounds pay once, preserve save state and bound skill gains',async function({page},info){
-  const ids=await startGames(page,info),id=await bookGames(page,ids,false);
-  const r=await page.evaluate(function(id){
-    var s=FB.state,T=FB.tournaments,e=T.get(s,id),c=s.chars[s.player.charId];
-    c.skills.mar=50;var p=T.enter(s,T.entry(s,id,c.id,'archery')),before=FB.skillOf(c,'mar');
-    FB.setRngState(72931);
-    for(var i=0;i<3;i++){
-      s.turn=e.startTurn+1+i*2;
-      var q=T.roundPreview(s,id,c.id,'balanced');
-      if(!T.resolveRound(s,q))throw new Error('Round refused');
-      if(T.resolveRound(s,q)!==false)throw new Error('Duplicate round resolved');
-    }
-    var gold=s.player.gold,paid=e.paid['prize:archery'];
-    var encoded=FB.save.serialize();FB.save.restore(JSON.parse(encoded));s=FB.state;e=T.get(s,id);p=T.participant(e,s.player.charId);
-    var restoredGold=s.player.gold;s.turn=e.closeTurn;T.tick(s);var skill=FB.skillOf(s.chars[s.player.charId],'mar');
-    T.tick(s);
-    return {names:e.contests.archery.entrants.length,rounds:e.contests.archery.results.length,paid:paid,purse:e.funding.prizes.archery,gold:gold,restored:restoredGold,skill:skill,before:before,twice:FB.skillOf(s.chars[s.player.charId],'mar'),won:p.won};
-  },id);
-  expect(r.names).toBe(8);expect(r.rounds).toBe(3);expect(r.won).toBe(true);expect(r.paid).toBe(r.purse);
-  expect(r.restored).toBe(r.gold);expect(r.skill-r.before).toBeLessThanOrEqual(1);expect(r.twice).toBe(r.skill);
-});
-
 
 test('AI ruler scales use realm rank and share atomic world capacity with the player',async function({page},info){
   const ids=await startGames(page,info);
@@ -293,4 +285,27 @@ test('actual world definition changes recalculate capacity while funded editions
     }finally{FB.world.byId=world;}
   },id);
   expect(r.count).toBe(1);expect(r.limits).toEqual([1,1,1]);expect(r.used).toEqual([1,0,0]);expect(r.status).toBe('announced');expect(r.booking).toBe(false);
+});
+});
+
+test('three scored rounds pay once, preserve save state and bound skill gains',async function({page},info){
+  const ids=await startGames(page,info),id=await bookGames(page,ids,false);
+  const r=await page.evaluate(function(id){
+    var s=FB.state,T=FB.tournaments,e=T.get(s,id),c=s.chars[s.player.charId];
+    c.skills.mar=50;var p=T.enter(s,T.entry(s,id,c.id,'archery')),before=FB.skillOf(c,'mar');
+    FB.setRngState(72931);
+    for(var i=0;i<3;i++){
+      s.turn=e.startTurn+1+i*2;
+      var q=T.roundPreview(s,id,c.id,'balanced');
+      if(!T.resolveRound(s,q))throw new Error('Round refused');
+      if(T.resolveRound(s,q)!==false)throw new Error('Duplicate round resolved');
+    }
+    var gold=s.player.gold,paid=e.paid['prize:archery'];
+    var encoded=FB.save.serialize();FB.save.restore(JSON.parse(encoded));s=FB.state;e=T.get(s,id);p=T.participant(e,s.player.charId);
+    var restoredGold=s.player.gold;s.turn=e.closeTurn;T.tick(s);var skill=FB.skillOf(s.chars[s.player.charId],'mar');
+    T.tick(s);
+    return {names:e.contests.archery.entrants.length,rounds:e.contests.archery.results.length,paid:paid,purse:e.funding.prizes.archery,gold:gold,restored:restoredGold,skill:skill,before:before,twice:FB.skillOf(s.chars[s.player.charId],'mar'),won:p.won};
+  },id);
+  expect(r.names).toBe(8);expect(r.rounds).toBe(3);expect(r.won).toBe(true);expect(r.paid).toBe(r.purse);
+  expect(r.restored).toBe(r.gold);expect(r.skill-r.before).toBeLessThanOrEqual(1);expect(r.twice).toBe(r.skill);
 });

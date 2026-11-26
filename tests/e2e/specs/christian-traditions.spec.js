@@ -6,6 +6,7 @@ const {openGame} = require('../support/game/navigation');
 const {startParityGame} = require('../support/game/parity');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {releasedCatalogue} = require('../support/released-catalogue');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, ['index.html','data/cultures.js','data/economy.js',
@@ -28,7 +29,7 @@ async function startEarly(page, testInfo) {
 }
 
 async function startChurch493(page, testInfo, county) {
-  await openGame(page,testInfo);
+  if (!isSharedPage(page)) await openGame(page,testInfo);
   await page.evaluate(function () { FBDATA.bookmarks['493'].hidden = false; });
   const beginning = page.locator('#btn-choose-beginning');
   if (await beginning.isVisible()) await beginning.click();
@@ -54,7 +55,7 @@ async function startChurch493(page, testInfo, county) {
 }
 
 async function startDatedChurch(page, testInfo, bookmark, revision, county) {
-  await openGame(page,testInfo);
+  if (!isSharedPage(page)) await openGame(page,testInfo);
   await page.evaluate(function (o) {
     FBDATA.bookmarks[o.bookmark].hidden = false;
     FBDATA.bookmarks[o.bookmark].revision = o.revision;
@@ -78,9 +79,21 @@ async function startDatedChurch(page, testInfo, bookmark, revision, county) {
   });
 }
 
+/* Cases that restore saves or begin a world no other case shares keep a fresh
+   page. The others share one page per identical boot: the unmodded title for
+   the catalogue reads, and 493 or the dated 800 revision active for the cases
+   that begin there. Each still begins its own campaign. */
+function sharedWorld(id,revision) {
+  return {boot:async function (page,testInfo) {
+    await openGame(page,testInfo);
+    if (id) await activateBookmark(page,id,revision);
+  }};
+}
+
+describeSharedPage('catalogue reads on one unmodded page',sharedWorld(null),function () {
 test('early profiles use neutral war vocabulary and retain canonical offices and released doctrine',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
     // released-catalogue.spec.js owns the whole fixture; early profiles own the released Christian doctrine.
     const ownFaiths = ['christian','catholic','orthodox','eastern'];
@@ -115,7 +128,7 @@ test('early profiles use neutral war vocabulary and retain canonical offices and
 
 test('held regional county, court and congregation assignments are preserved',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     const result = await page.evaluate(function () {
       return ['476','493'].map(function (id) {
         const b = FB.bookmark(id);
@@ -153,6 +166,42 @@ test('held regional county, court and congregation assignments are preserved',
         axum:{religion:'aksumite_christian_476',communities:[['aksumite_christian_476',7000],['horn_traditional_476',3000]]}}
     ]);
   });
+
+test('all dated declarations validate while original revisions and unresolved consumers remain intact',
+  async function ({page},testInfo) {
+    if (!isSharedPage(page)) await openGame(page,testInfo);
+    expect(await page.evaluate(function () {
+      var dates = ['476','493','711','800','867','1066','1204'];
+      var errors = dates.map(function (id) { return FB.validateBookmark(FB.bookmark(id)); });
+      ['867','1066'].forEach(function (id) {
+        errors.push(FB.validateBookmark(FB.bookmark(id,'inhabited_v2_governments_v2')));
+      });
+      var baseline = dates.map(function (id) {
+        var b = FB.bookmark(id,'baseline');
+        return !Object.keys(b.localInstitutions || {}).some(function (iid) {
+          return /^(alexandrian_|ibrim_service_|baghdad_catholicos_|east_syriac_catholicos_|constantinople_.*_service_|ctesiphon_catholicos_476)/.test(iid);
+        });
+      });
+      var b = FB.bookmark('1204'), defs = b.localInstitutions;
+      function rejects(change) {
+        var copy = JSON.parse(JSON.stringify(FB.bookmark('800'))); change(copy.localInstitutions);
+        return FB.localInstitutionDefinitionFaults(copy,FBDATA).length > 0;
+      }
+      var constantinople = b.provinces.filter(function (p) { return p.id === 'constantinople'; })[0];
+      var old = FB.bookmark('1204','baseline').provinces.filter(function (p) { return p.id === 'constantinople'; })[0];
+      return {errors:errors,baseline:baseline.every(Boolean),profiles:FB.religiousInstitutionCatalogFaults(FBDATA),
+        activities:FB.religiousActivityCatalogFaults(FBDATA),
+        disputed:defs.west_syriac_patriarch_1204.vacant && !defs.west_syriac_patriarch_1204.historicalName,
+        held:!defs.ibrim_service_1204 && !defs.latin_patriarch_1204 && !defs.armenian_catholicos_1204,
+        population:JSON.stringify(constantinople.communities) === JSON.stringify(old.communities),
+        latin1066:!FB.bookmark('1066').localInstitutions.constantinople_latin_service_1066,
+        invalidSystem:rejects(function (d) { d.baghdad_catholicos_800.officeSystem = 'missing_system'; }),
+        invalidCommunion:rejects(function (d) { d.alexandrian_patriarch_800.communionWith = ['absent_office']; }),
+        emptyOnMap:rejects(function (d) { d.baghdad_catholicos_800.jurisdictionIds = []; })};
+    })).toEqual({errors:[[],[],[],[],[],[],[],[],[]],baseline:true,profiles:[],activities:[],
+      disputed:true,held:true,population:true,latin1066:true,invalidSystem:true,invalidCommunion:true,emptyOnMap:true});
+  });
+});
 
 test('East Syriac lay service charges existing costs without altering mixed communities or offices',
   async function ({page},testInfo) {
@@ -242,6 +291,7 @@ test('East Syriac clerical progress preserves lay standing and saved rank indice
       path:'late_antique_clerical',rank:'bishop',ranks:true,restored:true,canonical:true,pure:true});
   });
 
+describeSharedPage('493 church service on one booted world',sharedWorld('493'),function () {
 test('493 institutions keep the catholicos separate from the shah and open service groups without representatives',
   async function ({page},testInfo) {
     await startChurch493(page,testInfo,'baghdad');
@@ -303,43 +353,6 @@ test('493 married East Syriac clergy and household service do not imply ordinati
       vow:false,affiliations:['east_syriac_nicene_reception'],unchanged:true});
   });
 
-[
-  {county:'baghdad',faith:'east_syriac',institution:'ctesiphon_church_service_493',activity:'ctesiphon_church_service_493',duration:2},
-  {county:'dvin',faith:'caucasian_christian_476',institution:'dvin_church_service_493',activity:'dvin_church_relief_493',duration:1}
-].forEach(function (f) {
-  test(f.county + ' household service uses pure review, one payment and a retained single reward',
-    async function ({page},testInfo) {
-      await startChurch493(page,testInfo,f.county);
-      expect(await page.evaluate(function (f) {
-        var s = FB.state, c = s.chars[s.player.charId]; c.religion = f.faith;
-        c.born = s.date.year - 30; c.health = 8; c.skills.int = 5;
-        s.player.gold = 100; s.player.piety = 10;
-        churchAct(f.institution,c.id,'admit',{roleId:'household'});
-        var before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
-        var q = FB.religiousActivityQuote(s,f.activity,c.id);
-        var pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
-        s.player.gold--;
-        var staleBefore = JSON.stringify(s), stale = !FB.religiousActivityApply(s,q) && staleBefore === JSON.stringify(s);
-        s.player.gold++;
-        var land = JSON.stringify([s.owner,s.holder,s.population,s.religiousHeads,s.abbeys || null,c.career]);
-        var started = FB.religiousActivityApply(s,FB.religiousActivityQuote(s,f.activity,c.id));
-        var paid = s.player.gold;
-        var saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
-        s = FB.state; c = s.chars[s.player.charId];
-        var retained = !!c.religiousActivity && s.localInstitutions[f.institution].members[c.id].status === 'active';
-        FB.religiousActivityTick(s);
-        var early = !!c.religiousActivity && s.player.piety === 10;
-        s.turn += f.duration; FB.religiousActivityTick(s); FB.religiousActivityTick(s);
-        var history = c.religiousActivityHistory[FBDATA.religiousActivities[f.activity].milestone];
-        return {pure:pure,stale:stale,started:started,spent:100 - paid,retained:retained,early:early,
-          complete:!c.religiousActivity && history.performed && history.rewarded,piety:s.player.piety,intelligence:c.skills.int,
-          repeat:FB.religiousActivityQuote(s,f.activity,c.id).allowed,
-          unchanged:land === JSON.stringify([s.owner,s.holder,s.population,s.religiousHeads,s.abbeys || null,c.career])};
-      },f)).toEqual({pure:true,stale:true,started:true,spent:2,retained:true,early:true,
-        complete:true,piety:11,intelligence:f.county === 'baghdad' ? 6 : 5,repeat:false,unchanged:true});
-    });
-});
-
 test('Dvin mediation needs current local assent and disputed support grants no government or doctrine',
   async function ({page},testInfo) {
     await startChurch493(page,testInfo,'dvin');
@@ -377,6 +390,44 @@ test('Dvin mediation needs current local assent and disputed support grants no g
     })).toEqual({missing:'consent',missingPure:true,pure:true,outside:true,applied:true,issuer:'religious-institution',
       scope:{kind:'county',id:'dvin'},disputed:0,unchanged:true});
   });
+});
+
+[
+  {county:'baghdad',faith:'east_syriac',institution:'ctesiphon_church_service_493',activity:'ctesiphon_church_service_493',duration:2},
+  {county:'dvin',faith:'caucasian_christian_476',institution:'dvin_church_service_493',activity:'dvin_church_relief_493',duration:1}
+].forEach(function (f) {
+  test(f.county + ' household service uses pure review, one payment and a retained single reward',
+    async function ({page},testInfo) {
+      await startChurch493(page,testInfo,f.county);
+      expect(await page.evaluate(function (f) {
+        var s = FB.state, c = s.chars[s.player.charId]; c.religion = f.faith;
+        c.born = s.date.year - 30; c.health = 8; c.skills.int = 5;
+        s.player.gold = 100; s.player.piety = 10;
+        churchAct(f.institution,c.id,'admit',{roleId:'household'});
+        var before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        var q = FB.religiousActivityQuote(s,f.activity,c.id);
+        var pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+        s.player.gold--;
+        var staleBefore = JSON.stringify(s), stale = !FB.religiousActivityApply(s,q) && staleBefore === JSON.stringify(s);
+        s.player.gold++;
+        var land = JSON.stringify([s.owner,s.holder,s.population,s.religiousHeads,s.abbeys || null,c.career]);
+        var started = FB.religiousActivityApply(s,FB.religiousActivityQuote(s,f.activity,c.id));
+        var paid = s.player.gold;
+        var saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
+        s = FB.state; c = s.chars[s.player.charId];
+        var retained = !!c.religiousActivity && s.localInstitutions[f.institution].members[c.id].status === 'active';
+        FB.religiousActivityTick(s);
+        var early = !!c.religiousActivity && s.player.piety === 10;
+        s.turn += f.duration; FB.religiousActivityTick(s); FB.religiousActivityTick(s);
+        var history = c.religiousActivityHistory[FBDATA.religiousActivities[f.activity].milestone];
+        return {pure:pure,stale:stale,started:started,spent:100 - paid,retained:retained,early:early,
+          complete:!c.religiousActivity && history.performed && history.rewarded,piety:s.player.piety,intelligence:c.skills.int,
+          repeat:FB.religiousActivityQuote(s,f.activity,c.id).allowed,
+          unchanged:land === JSON.stringify([s.owner,s.holder,s.population,s.religiousHeads,s.abbeys || null,c.career])};
+      },f)).toEqual({pure:true,stale:true,started:true,spent:2,retained:true,early:true,
+        complete:true,piety:11,intelligence:f.county === 'baghdad' ? 6 : 5,repeat:false,unchanged:true});
+    });
+});
 
 test('catholicos mediation, bounded clerical AI and explicit vacancy use existing canonical records',
   async function ({page},testInfo) {
@@ -474,41 +525,7 @@ datedChurchCases.forEach(function (o) {
     });
 });
 
-test('all dated declarations validate while original revisions and unresolved consumers remain intact',
-  async function ({page},testInfo) {
-    await openGame(page,testInfo);
-    expect(await page.evaluate(function () {
-      var dates = ['476','493','711','800','867','1066','1204'];
-      var errors = dates.map(function (id) { return FB.validateBookmark(FB.bookmark(id)); });
-      ['867','1066'].forEach(function (id) {
-        errors.push(FB.validateBookmark(FB.bookmark(id,'inhabited_v2_governments_v2')));
-      });
-      var baseline = dates.map(function (id) {
-        var b = FB.bookmark(id,'baseline');
-        return !Object.keys(b.localInstitutions || {}).some(function (iid) {
-          return /^(alexandrian_|ibrim_service_|baghdad_catholicos_|east_syriac_catholicos_|constantinople_.*_service_|ctesiphon_catholicos_476)/.test(iid);
-        });
-      });
-      var b = FB.bookmark('1204'), defs = b.localInstitutions;
-      function rejects(change) {
-        var copy = JSON.parse(JSON.stringify(FB.bookmark('800'))); change(copy.localInstitutions);
-        return FB.localInstitutionDefinitionFaults(copy,FBDATA).length > 0;
-      }
-      var constantinople = b.provinces.filter(function (p) { return p.id === 'constantinople'; })[0];
-      var old = FB.bookmark('1204','baseline').provinces.filter(function (p) { return p.id === 'constantinople'; })[0];
-      return {errors:errors,baseline:baseline.every(Boolean),profiles:FB.religiousInstitutionCatalogFaults(FBDATA),
-        activities:FB.religiousActivityCatalogFaults(FBDATA),
-        disputed:defs.west_syriac_patriarch_1204.vacant && !defs.west_syriac_patriarch_1204.historicalName,
-        held:!defs.ibrim_service_1204 && !defs.latin_patriarch_1204 && !defs.armenian_catholicos_1204,
-        population:JSON.stringify(constantinople.communities) === JSON.stringify(old.communities),
-        latin1066:!FB.bookmark('1066').localInstitutions.constantinople_latin_service_1066,
-        invalidSystem:rejects(function (d) { d.baghdad_catholicos_800.officeSystem = 'missing_system'; }),
-        invalidCommunion:rejects(function (d) { d.alexandrian_patriarch_800.communionWith = ['absent_office']; }),
-        emptyOnMap:rejects(function (d) { d.baghdad_catholicos_800.jurisdictionIds = []; })};
-    })).toEqual({errors:[[],[],[],[],[],[],[],[],[]],baseline:true,profiles:[],activities:[],
-      disputed:true,held:true,population:true,latin1066:true,invalidSystem:true,invalidCommunion:true,emptyOnMap:true});
-  });
-
+describeSharedPage('800 church service on one booted dated world',sharedWorld('800','inhabited_v2_governments_v2'),function () {
 test('800 synodical recognition is directional, personal, pure to read and cannot pass to a replacement',
   async function ({page},testInfo) {
     await startDatedChurch(page,testInfo,'800','inhabited_v2_governments_v2','baghdad');
@@ -533,6 +550,30 @@ test('800 synodical recognition is directional, personal, pure to read and canno
         unchanged:canonical === JSON.stringify([s.owner,s.holder,s.population,s.papacy || null,s.authority.rights])};
     })).toEqual({pure:true,named:true,resigned:true,lapsed:true,inherited:0,unchanged:true});
   });
+
+test('Samarkand service is local and voluntary while later AI creates no unverified clergy or recognition',
+  async function ({page},testInfo) {
+    await startDatedChurch(page,testInfo,'800','inhabited_v2_governments_v2','samarkand');
+    expect(await page.evaluate(function () {
+      var s = FB.state, c = s.chars[s.player.charId], iid = 'samarkand_service_800';
+      var population = JSON.stringify(s.population), heads = JSON.stringify(s.religiousHeads);
+      c.religion = s.player.religion = 'east_syriac'; c.born = 760; s.player.gold = 20;
+      var q = FB.religiousInstitutionQuote(s,iid,{kind:'character',id:c.id},'admit',{roleId:'household'});
+      var entered = q.allowed && FB.religiousInstitutionApply(s,q);
+      var activity = FB.religiousActivityQuote(s,iid,c.id);
+      s.player.provinceId = 'baghdad';
+      var stale = !FB.religiousActivityApply(s,activity), gold = s.player.gold;
+      s.player.provinceId = 'samarkand';
+      var people = Object.keys(s.chars).sort().join(','), supports = JSON.stringify(s.authority.recognitions);
+      s.turn = 90;
+      var actions = FB.religiousInstitutionAI(s), again = FB.religiousInstitutionAI(s);
+      return {entered:entered,offered:activity.allowed,stale:stale,unpaid:gold === 20 && s.player.gold === gold,
+        actions:actions,again:again,unseeded:people === Object.keys(s.chars).sort().join(',') &&
+          supports === JSON.stringify(s.authority.recognitions),
+        unchanged:population === JSON.stringify(s.population) && heads === JSON.stringify(s.religiousHeads)};
+    })).toEqual({entered:true,offered:true,stale:true,unpaid:true,actions:0,again:0,unseeded:true,unchanged:true});
+  });
+});
 
 test('1204 local role promises distinguish married Greek clergy, Latin clergy and ordinary households',
   async function ({page},testInfo) {
@@ -616,29 +657,6 @@ test('local minority relief preserves communities, incumbents, papacy and active
     expect(result).toMatchObject({restored:true,gold:true,completed:true,repeat:true,opening:'800',absent:true});
   });
 
-
-test('Samarkand service is local and voluntary while later AI creates no unverified clergy or recognition',
-  async function ({page},testInfo) {
-    await startDatedChurch(page,testInfo,'800','inhabited_v2_governments_v2','samarkand');
-    expect(await page.evaluate(function () {
-      var s = FB.state, c = s.chars[s.player.charId], iid = 'samarkand_service_800';
-      var population = JSON.stringify(s.population), heads = JSON.stringify(s.religiousHeads);
-      c.religion = s.player.religion = 'east_syriac'; c.born = 760; s.player.gold = 20;
-      var q = FB.religiousInstitutionQuote(s,iid,{kind:'character',id:c.id},'admit',{roleId:'household'});
-      var entered = q.allowed && FB.religiousInstitutionApply(s,q);
-      var activity = FB.religiousActivityQuote(s,iid,c.id);
-      s.player.provinceId = 'baghdad';
-      var stale = !FB.religiousActivityApply(s,activity), gold = s.player.gold;
-      s.player.provinceId = 'samarkand';
-      var people = Object.keys(s.chars).sort().join(','), supports = JSON.stringify(s.authority.recognitions);
-      s.turn = 90;
-      var actions = FB.religiousInstitutionAI(s), again = FB.religiousInstitutionAI(s);
-      return {entered:entered,offered:activity.allowed,stale:stale,unpaid:gold === 20 && s.player.gold === gold,
-        actions:actions,again:again,unseeded:people === Object.keys(s.chars).sort().join(',') &&
-          supports === JSON.stringify(s.authority.recognitions),
-        unchanged:population === JSON.stringify(s.population) && heads === JSON.stringify(s.religiousHeads)};
-    })).toEqual({entered:true,offered:true,stale:true,unpaid:true,actions:0,again:0,unseeded:true,unchanged:true});
-  });
 
 test('existing councils, official profession and their support restore without replay or primary-faith migration',
   async function ({page},testInfo) {

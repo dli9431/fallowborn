@@ -1,10 +1,13 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {installStoredMod}=require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-preparation-harbor.json'),
   upland:require('../fixtures/authoring/mobile-preparation-upland.json')};
@@ -18,10 +21,13 @@ dependsOnRuntime(__filename,[
   'js/household_party_travel.js','js/household_party_camp.js','js/save.js','js/save_v4.js','js/main.js']);
 
 async function begin(page,info,label) {
+  // A shared page booted the stored example once (sharedPreparation below).
+  if(!isSharedPage(page)) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/mobile-preparation-'+label+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  }
   const prefix=label==='harbor' ? 'harbor' : 'dune';
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
@@ -40,21 +46,19 @@ async function begin(page,info,label) {
   },label);
 }
 
-for (const label of ['harbor','upland']) {
-  test(label+' ordinary import attaches a zero-funded preparation without a host or county withdrawal',async function ({page},info) {
-    await begin(page,info,label);
-    const result=await page.evaluate(function () {
-      const s=FB.state,C=preparationCase,P=FB.expeditionPreparation,t=C.record(s),
-        before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),q=P.review(s,C.id,'form',C.leader(s));
-      const pure=before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
-      return {status:t.status,noHost:!FB.mobile.row(s,C.rid) && !s.armies.some(function(a){return a.realm===C.rid;}) &&
-        !(s.authority.migrations || []).some(function(m){return m.realmId===C.rid;}),zero:FB.treasuryAvailable(s,C.rid)===0,
-        reserved:t.reserves.reduce(function(n,c){return n+c.count;},0),consumed:t.consumed.length,
-        denied:!q.allowed,pure:pure,valid:FB.mobile.validate(s),definition:FB.validateBookmark(FB.campaignBookmark(s)).length};
-    });
-    expect(result).toEqual({status:'preparing',noHost:true,zero:true,reserved:label==='harbor' ? 1400 : 0,consumed:0,denied:true,pure:true,valid:true,definition:0});
-  });
+/* The Mods screen import has its own case per example, and cases that restore
+   or reject saves and the detached unmodded check keep a fresh page. The others
+   share one page per example, booted once with the stored example text and its
+   world active; each still begins its own campaign. */
+function sharedPreparation(label) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/mobile-preparation-'+label+'.json'),'utf8'));
+    await activateBookmark(page,(label==='harbor' ? 'harbor' : 'dune')+'_world');
+  }};
+}
 
+function formationCase(label) {
   test(label+' later formation pays once and conserves the exact people, public money and market food',async function ({page},info) {
     await begin(page,info,label);
     const result=await page.evaluate(function () {
@@ -85,6 +89,22 @@ for (const label of ['harbor','upland']) {
     expect(result).toEqual({authorized:true,unfunded:true,grant:true,formed:true,repeat:false,source:true,
       people:label==='harbor' ? 1400 : 1600,localWithdrawal:label==='harbor' ? 0 : 1600,
       food:label==='harbor' ? 40 : 60,paid:true,seller:true,actual:true,host:true,arrivals:true,unchanged:true,identity:true,valid:true});
+  });
+}
+
+for (const label of ['harbor','upland']) {
+  test(label+' ordinary import attaches a zero-funded preparation without a host or county withdrawal',async function ({page},info) {
+    await begin(page,info,label);
+    const result=await page.evaluate(function () {
+      const s=FB.state,C=preparationCase,P=FB.expeditionPreparation,t=C.record(s),
+        before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),q=P.review(s,C.id,'form',C.leader(s));
+      const pure=before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
+      return {status:t.status,noHost:!FB.mobile.row(s,C.rid) && !s.armies.some(function(a){return a.realm===C.rid;}) &&
+        !(s.authority.migrations || []).some(function(m){return m.realmId===C.rid;}),zero:FB.treasuryAvailable(s,C.rid)===0,
+        reserved:t.reserves.reduce(function(n,c){return n+c.count;},0),consumed:t.consumed.length,
+        denied:!q.allowed,pure:pure,valid:FB.mobile.validate(s),definition:FB.validateBookmark(FB.campaignBookmark(s)).length};
+    });
+    expect(result).toEqual({status:'preparing',noHost:true,zero:true,reserved:label==='harbor' ? 1400 : 0,consumed:0,denied:true,pure:true,valid:true,definition:0});
   });
 
   test(label+' matching pending and formed saves retain reserves and never replay initialization',async function ({page},info) {
@@ -126,6 +146,9 @@ test('detached malformed ordinary imports reject without publishing or changing 
   expect(result).toEqual({errors:Array(19).fill(true),pure:true});
 });
 
+describeSharedPage('upland preparation on one booted stored world',sharedPreparation('upland'),function () {
+formationCase('upland');
+
 test('stale actor, authority, source, provisions, account and consent facts reject atomic formation',async function ({page},info) {
   await begin(page,info,'upland');
   const result=await page.evaluate(function () {
@@ -145,6 +168,43 @@ test('stale actor, authority, source, provisions, account and consent facts reje
   });
   expect(result).toEqual(Array(14).fill(true));
 });
+
+test('a local no-departure ending withdraws nothing and closed acceptance never supplies consent',async function ({page},info) {
+  await begin(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const s=FB.state,C=preparationCase,t=C.record(s),story=FB.stories.get(C.id),before=JSON.stringify([s.population,s.market,s.realms]);
+    story.day(s,t);const closedPolicy=t.authorizedTurn===null;
+    s.turn=t.endTurn;story.day(s,t);
+    return {closedPolicy:closedPolicy,closed:t.status==='closed' && t.reason==='expired',empty:!t.reserves.length && !t.consumed.length && !t.released.length,
+      unchanged:before===JSON.stringify([s.population,s.market,s.realms]),valid:FB.mobile.validate(s)};
+  });
+  expect(result).toEqual({closedPolicy:true,closed:true,empty:true,unchanged:true,valid:true});
+});
+
+test('ordinary unit gates, zero stock and insufficient local residents refuse without partial costs',async function ({page},info) {
+  await begin(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const C=preparationCase,P=FB.expeditionPreparation;C.authorize(FB.state);C.grant(FB.state);
+    const checks=[];
+    for (const change of [function(s){s.population.counties[C.origin].count=1;},
+      function(s){s.market.counties[C.origin][0][s.market.goods.indexOf('provisions')]=0;},
+      function(s){s.realms[C.rid].treasury.militaryAccrued=s.realms[C.rid].treasury.gold;}]) {
+      const s=JSON.parse(JSON.stringify(FB.state));change(s);const before=JSON.stringify(s),q=P.review(s,C.id,'form',C.leader(s));
+      checks.push(!q.allowed && !P.commit(s,q) && before===JSON.stringify(s));
+    }
+    const s=JSON.parse(JSON.stringify(FB.state)),unit=FBDATA.unitClasses.cav,old=unit.notCultures;
+    unit.notCultures=[s.chars[C.leader(s)].culture];
+    const before=JSON.stringify(s),q=P.review(s,C.id,'form',C.leader(s));
+    checks.push(!q.allowed && !P.commit(s,q) && before===JSON.stringify(s));
+    if (old===undefined) delete unit.notCultures;else unit.notCultures=old;
+    return checks;
+  });
+  expect(result).toEqual(Array(4).fill(true));
+});
+});
+
+describeSharedPage('harbor preparation on one booted stored world',sharedPreparation('harbor'),function () {
+formationCase('harbor');
 
 test('public and private preparation funding retain consent, separate accounts and one-use review stamps',async function ({page},info) {
   await begin(page,info,'harbor');
@@ -180,18 +240,6 @@ test('refuse, stop, expiry and changed principals close without departure or loc
   expect(result).toEqual(Array(4).fill(true));
 });
 
-test('a local no-departure ending withdraws nothing and closed acceptance never supplies consent',async function ({page},info) {
-  await begin(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const s=FB.state,C=preparationCase,t=C.record(s),story=FB.stories.get(C.id),before=JSON.stringify([s.population,s.market,s.realms]);
-    story.day(s,t);const closedPolicy=t.authorizedTurn===null;
-    s.turn=t.endTurn;story.day(s,t);
-    return {closedPolicy:closedPolicy,closed:t.status==='closed' && t.reason==='expired',empty:!t.reserves.length && !t.consumed.length && !t.released.length,
-      unchanged:before===JSON.stringify([s.population,s.market,s.realms]),valid:FB.mobile.validate(s)};
-  });
-  expect(result).toEqual({closedPolicy:true,closed:true,empty:true,unchanged:true,valid:true});
-});
-
 test('NPC provider consent uses the same quote and never automates a player provider',async function ({page},info) {
   await begin(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -201,6 +249,20 @@ test('NPC provider consent uses the same quote and never automates a player prov
     return {player:player,npc:t.authorizedTurn===s.turn,noHost:!FB.mobile.row(s,C.rid),zero:FB.treasuryAvailable(s,C.rid)===0};
   });
   expect(result).toEqual({player:true,npc:true,noHost:true,zero:true});
+});
+
+test('shared preparation review displays actual costs and returns through Back without forming',async function ({page},info) {
+  await begin(page,info,'harbor');
+  await page.evaluate(function () {
+    const C=preparationCase,s=FB.state;C.authorize(s);C.grant(s);s.player.charId=C.leader(s);FB.ui.showStorySheet(C.id);
+  });
+  await page.locator('[data-story-choice="form"]').click();
+  await expect(page.locator('#genmodal')).toContainText('Public training cost:');
+  await expect(page.locator('#genmodal')).toContainText('Public provision cost:');
+  await page.locator('#genmodal').getByRole('button',{name:'Back',exact:true}).click();
+  await expect(page.locator('[data-story-choice="form"]')).toBeVisible();
+  expect(await page.evaluate(function () {return FB.state.stories[preparationCase.id].status;})).toBe('preparing');
+});
 });
 
 test('strict optional preparation saves reject erased, duplicated and forged provenance before adoption',async function ({page},info) {
@@ -256,27 +318,6 @@ test('formed receipts reject forged owner identities and erased mobile state wit
   expect(result).toEqual({formed:true,rejected:Array(11).fill(true),unchanged:true});
 });
 
-test('ordinary unit gates, zero stock and insufficient local residents refuse without partial costs',async function ({page},info) {
-  await begin(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const C=preparationCase,P=FB.expeditionPreparation;C.authorize(FB.state);C.grant(FB.state);
-    const checks=[];
-    for (const change of [function(s){s.population.counties[C.origin].count=1;},
-      function(s){s.market.counties[C.origin][0][s.market.goods.indexOf('provisions')]=0;},
-      function(s){s.realms[C.rid].treasury.militaryAccrued=s.realms[C.rid].treasury.gold;}]) {
-      const s=JSON.parse(JSON.stringify(FB.state));change(s);const before=JSON.stringify(s),q=P.review(s,C.id,'form',C.leader(s));
-      checks.push(!q.allowed && !P.commit(s,q) && before===JSON.stringify(s));
-    }
-    const s=JSON.parse(JSON.stringify(FB.state)),unit=FBDATA.unitClasses.cav,old=unit.notCultures;
-    unit.notCultures=[s.chars[C.leader(s)].culture];
-    const before=JSON.stringify(s),q=P.review(s,C.id,'form',C.leader(s));
-    checks.push(!q.allowed && !P.commit(s,q) && before===JSON.stringify(s));
-    if (old===undefined) delete unit.notCultures;else unit.notCultures=old;
-    return checks;
-  });
-  expect(result).toEqual(Array(4).fill(true));
-});
-
 test('the original formation receipt survives canonical host loss and commander death without reforming',async function ({page},info) {
   await begin(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -290,17 +331,4 @@ test('the original formation receipt survives canonical host loss and commander 
       noHost:!M.host(FB.state,C.rid),noReform:!C.form(FB.state),noReplacement:M.row(FB.state,C.rid).leaderId===null};
   });
   expect(result).toEqual({formed:true,valid:true,receipt:true,noHost:true,noReform:true,noReplacement:true});
-});
-
-test('shared preparation review displays actual costs and returns through Back without forming',async function ({page},info) {
-  await begin(page,info,'harbor');
-  await page.evaluate(function () {
-    const C=preparationCase,s=FB.state;C.authorize(s);C.grant(s);s.player.charId=C.leader(s);FB.ui.showStorySheet(C.id);
-  });
-  await page.locator('[data-story-choice="form"]').click();
-  await expect(page.locator('#genmodal')).toContainText('Public training cost:');
-  await expect(page.locator('#genmodal')).toContainText('Public provision cost:');
-  await page.locator('#genmodal').getByRole('button',{name:'Back',exact:true}).click();
-  await expect(page.locator('[data-story-choice="form"]')).toBeVisible();
-  expect(await page.evaluate(function () {return FB.state.stories[preparationCase.id].status;})).toBe('preparing');
 });

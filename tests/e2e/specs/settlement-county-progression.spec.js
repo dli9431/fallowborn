@@ -10,9 +10,10 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () {
     const s = FB.state, p = s.player, pid = p.provinceId;
@@ -42,6 +43,13 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
+/* Cases that restore saves keep a fresh page and follow this group. The
+   others share one page booted with the 867 world active, reset before each
+   case; the beforeEach above still begins every case's own campaign. */
+describeSharedPage('county challenges, grants and holdings', { boot:async function (page, testInfo) {
+  await openGame(page, testInfo);
+  await activateBookmark(page, '867');
+} }, function () {
 test('higher-ruler investiture protects seats and vassal counties and retains the family barony', async function ({ page }) {
   const r = await page.evaluate(function () {
     const s = FB.state, p = s.player, f = countyFixture;
@@ -101,41 +109,6 @@ for (const kind of ['sanctioned', 'claim', 'usurpation']) {
       blocked:false, landlessBlocked:true, counties:0 });
     expect(r.rally).toBe(r.expected);
     expect(r.holder).toBe(r.incumbent);
-  });
-
-  test(kind + ' challenger can muster a barony beside the incumbent host without owning a county', async function ({ page }) {
-    const result = await page.evaluate(function (kind) {
-      let s = FB.state;
-      const f = countyFixture;
-      s.armies = [];
-      s.armyDown = {};
-      // Save a zero call so declaration does not already exhaust the levy.
-      s.player.musterSelection = {};
-      if (kind !== 'usurpation') s.player.fabricatedClaims = { [f.pid]:{ pid:f.pid, madeTurn:s.turn } };
-      if (kind === 'sanctioned') FB.requestCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
-      const declared = FB.beginCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
-      const zeroCall = !s.armies.some(function (host) { return host.realm === 'player'; });
-      s.player.musterSelection = null;
-      s.armies.push({ id:'incumbent_muster_test', realm:f.countId, at:f.pid,
-        men:1000, size:1000, units:{ levy:1000 }, path:[], moveLeft:0 });
-      // Exercise the persisted campaign too, rather than only its declaration context.
-      FB.save.restore(JSON.parse(FB.save.serialize()));
-      s = FB.state;
-      const territory = FB.recruitmentTerritory(s, 'player');
-      const quote = FB.playerMusterSelectionQuote(s, null, 'gather');
-      FB.savePlayerMusterSelection(s, null, 'gather', f.pid);
-      const host = FB.raisePlayerHost(s);
-      return { declared:declared, zeroCall:zeroCall, eligible:territory.eligible.indexOf(f.pid) >= 0,
-        canRaise:quote.canRaise, host:!!host, at:host && host.at,
-        expected:f.pid, tier:s.player.tier, counties:s.player.provs.length,
-        holder:s.holder[f.pid], incumbent:f.countId,
-        twice:!!FB.raisePlayerHost(s),
-        ownHostBlocks:FB.recruitmentCountyBlocked(s, 'player', f.pid) };
-    }, kind);
-    expect(result).toMatchObject({ declared:true, zeroCall:true, eligible:true, canRaise:true,
-      host:true, tier:3, counties:0, twice:false, ownHostBlocks:false });
-    expect(result.at).toBe(result.expected);
-    expect(result.holder).toBe(result.incumbent);
   });
 
   test(kind + ' challenge discloses the defender and transfers only its county objective', async function ({ page }) {
@@ -207,58 +180,6 @@ test('independent victory grants countship without a superior-recognition requir
   });
   expect(r.tier).toBe(4); expect(r.liege).toBeFalsy(); expect(r.disputed).toBe(false);
   expect(r.rival).toBe(1); expect(r.repeat).toBe(false);
-});
-
-test('barons can fabricate local claims, retain them across save/load and cannot use stale declaration reviews', async function ({ page }) {
-  const r = await page.evaluate(function () {
-    let s = FB.state;
-    const f = countyFixture, candidates = FB.claimCandidates(s);
-    FB.fns.fabricate_claim_success(s, { pid:f.pid });
-    const claim = FB.countyClaim(s, f.pid);
-    const old = FB.countyChallengeQuote(s, f.pid), gold = s.player.gold;
-    const authorized = FB.requestCountyChallenge(s, old);
-    const stale = FB.beginCountyChallenge(s, old);
-    const clean = s.player.gold === gold && !FB.realmWars(s, 'player').length;
-    FB.beginCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
-    const id = FB.realmWars(s, 'player')[0].id;
-    FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
-    return { candidate:candidates.indexOf(f.pid) >= 0, claim:claim, authorized:authorized.accepted,
-      stale:stale, clean:clean, retained:FB.fabricatedClaimsOf(s).some(function (c) { return c.pid === f.pid; }),
-      campaign:FB.ordinaryWarById(s, id).countyChallenge.justification,
-      errors:FB.validateTechnologyData() };
-  });
-  expect(r.candidate).toBe(true); expect(r.claim).toBe('fabricated'); expect(r.authorized).toBe(true);
-  expect(r.stale).toBe(false); expect(r.clean).toBe(true); expect(r.retained).toBe(true);
-  expect(r.campaign).toBe('sanctioned'); expect(r.errors).toEqual([]);
-});
-
-test('recognition charges only on acceptance, preserves rival claims and survives save/load', async function ({ page }) {
-  const r = await page.evaluate(function () {
-    let s = FB.state;
-    const f = countyFixture;
-    FB.beginCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
-    const w = FB.realmWars(s, 'player')[0]; w.occupations[f.pid] = { occupied:true };
-    FB.withOrdinaryWar(s, w.id, function () { FB.warCapture(s); });
-    FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
-    const gold = s.player.gold, claims = JSON.stringify(s.settlementLordships.countyClaims);
-    const chance = FB.chance; let refused, accepted, q;
-    try {
-      FB.chance = function () { return false; };
-      refused = FB.petitionCountyRecognition(s, FB.countyRecognitionQuote(s, f.pid));
-      const unpaid = gold === s.player.gold;
-      s.turn += FB.countyPetitionDays(); q = FB.countyRecognitionQuote(s, f.pid);
-      FB.chance = function () { return true; };
-      accepted = FB.petitionCountyRecognition(s, q);
-      return { refused:refused.accepted, accepted:accepted.accepted, unpaid:unpaid,
-        spent:gold - s.player.gold, cost:q.cost.gold, held:s.holder[f.pid],
-        disputed:!!s.settlementLordships.disputedCounties[f.pid],
-        claims:claims === JSON.stringify(s.settlementLordships.countyClaims),
-        repeat:FB.petitionCountyRecognition(s, q) };
-    } finally { FB.chance = chance; }
-  });
-  expect(r.refused).toBe(false); expect(r.accepted).toBe(true); expect(r.unpaid).toBe(true);
-  expect(r.spent).toBe(r.cost); expect(r.held).toBe('player'); expect(r.disputed).toBe(false);
-  expect(r.claims).toBe(true); expect(r.repeat).toBe(false);
 });
 
 test('inheritance and explicit revocation/restoration preserve barony provenance and works', async function ({ page }) {
@@ -434,4 +355,94 @@ test('holding scans read visibility once per county and observe live ownership c
   expect(result.mismatches).toEqual([]);
   expect(result.reads.length).toBeGreaterThan(0);
   expect(result.reads.every(function (n) { return n === 1; })).toBe(true);
+});
+});
+
+for (const kind of ['sanctioned', 'claim', 'usurpation']) {
+  test(kind + ' challenger can muster a barony beside the incumbent host without owning a county', async function ({ page }) {
+    const result = await page.evaluate(function (kind) {
+      let s = FB.state;
+      const f = countyFixture;
+      s.armies = [];
+      s.armyDown = {};
+      // Save a zero call so declaration does not already exhaust the levy.
+      s.player.musterSelection = {};
+      if (kind !== 'usurpation') s.player.fabricatedClaims = { [f.pid]:{ pid:f.pid, madeTurn:s.turn } };
+      if (kind === 'sanctioned') FB.requestCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
+      const declared = FB.beginCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
+      const zeroCall = !s.armies.some(function (host) { return host.realm === 'player'; });
+      s.player.musterSelection = null;
+      s.armies.push({ id:'incumbent_muster_test', realm:f.countId, at:f.pid,
+        men:1000, size:1000, units:{ levy:1000 }, path:[], moveLeft:0 });
+      // Exercise the persisted campaign too, rather than only its declaration context.
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      s = FB.state;
+      const territory = FB.recruitmentTerritory(s, 'player');
+      const quote = FB.playerMusterSelectionQuote(s, null, 'gather');
+      FB.savePlayerMusterSelection(s, null, 'gather', f.pid);
+      const host = FB.raisePlayerHost(s);
+      return { declared:declared, zeroCall:zeroCall, eligible:territory.eligible.indexOf(f.pid) >= 0,
+        canRaise:quote.canRaise, host:!!host, at:host && host.at,
+        expected:f.pid, tier:s.player.tier, counties:s.player.provs.length,
+        holder:s.holder[f.pid], incumbent:f.countId,
+        twice:!!FB.raisePlayerHost(s),
+        ownHostBlocks:FB.recruitmentCountyBlocked(s, 'player', f.pid) };
+    }, kind);
+    expect(result).toMatchObject({ declared:true, zeroCall:true, eligible:true, canRaise:true,
+      host:true, tier:3, counties:0, twice:false, ownHostBlocks:false });
+    expect(result.at).toBe(result.expected);
+    expect(result.holder).toBe(result.incumbent);
+  });
+}
+
+test('barons can fabricate local claims, retain them across save/load and cannot use stale declaration reviews', async function ({ page }) {
+  const r = await page.evaluate(function () {
+    let s = FB.state;
+    const f = countyFixture, candidates = FB.claimCandidates(s);
+    FB.fns.fabricate_claim_success(s, { pid:f.pid });
+    const claim = FB.countyClaim(s, f.pid);
+    const old = FB.countyChallengeQuote(s, f.pid), gold = s.player.gold;
+    const authorized = FB.requestCountyChallenge(s, old);
+    const stale = FB.beginCountyChallenge(s, old);
+    const clean = s.player.gold === gold && !FB.realmWars(s, 'player').length;
+    FB.beginCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
+    const id = FB.realmWars(s, 'player')[0].id;
+    FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+    return { candidate:candidates.indexOf(f.pid) >= 0, claim:claim, authorized:authorized.accepted,
+      stale:stale, clean:clean, retained:FB.fabricatedClaimsOf(s).some(function (c) { return c.pid === f.pid; }),
+      campaign:FB.ordinaryWarById(s, id).countyChallenge.justification,
+      errors:FB.validateTechnologyData() };
+  });
+  expect(r.candidate).toBe(true); expect(r.claim).toBe('fabricated'); expect(r.authorized).toBe(true);
+  expect(r.stale).toBe(false); expect(r.clean).toBe(true); expect(r.retained).toBe(true);
+  expect(r.campaign).toBe('sanctioned'); expect(r.errors).toEqual([]);
+});
+
+test('recognition charges only on acceptance, preserves rival claims and survives save/load', async function ({ page }) {
+  const r = await page.evaluate(function () {
+    let s = FB.state;
+    const f = countyFixture;
+    FB.beginCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
+    const w = FB.realmWars(s, 'player')[0]; w.occupations[f.pid] = { occupied:true };
+    FB.withOrdinaryWar(s, w.id, function () { FB.warCapture(s); });
+    FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+    const gold = s.player.gold, claims = JSON.stringify(s.settlementLordships.countyClaims);
+    const chance = FB.chance; let refused, accepted, q;
+    try {
+      FB.chance = function () { return false; };
+      refused = FB.petitionCountyRecognition(s, FB.countyRecognitionQuote(s, f.pid));
+      const unpaid = gold === s.player.gold;
+      s.turn += FB.countyPetitionDays(); q = FB.countyRecognitionQuote(s, f.pid);
+      FB.chance = function () { return true; };
+      accepted = FB.petitionCountyRecognition(s, q);
+      return { refused:refused.accepted, accepted:accepted.accepted, unpaid:unpaid,
+        spent:gold - s.player.gold, cost:q.cost.gold, held:s.holder[f.pid],
+        disputed:!!s.settlementLordships.disputedCounties[f.pid],
+        claims:claims === JSON.stringify(s.settlementLordships.countyClaims),
+        repeat:FB.petitionCountyRecognition(s, q) };
+    } finally { FB.chance = chance; }
+  });
+  expect(r.refused).toBe(false); expect(r.accepted).toBe(true); expect(r.unpaid).toBe(true);
+  expect(r.spent).toBe(r.cost); expect(r.held).toBe('player'); expect(r.disputed).toBe(false);
+  expect(r.claims).toBe(true); expect(r.repeat).toBe(false);
 });

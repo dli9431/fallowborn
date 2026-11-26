@@ -1,19 +1,25 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/production-suppliers-harbor.json'),inland:require('../fixtures/authoring/production-suppliers-inland.json')};
 dependsOnRuntime(__filename,['data/relay_services.js','js/relay_services.js','data/building_profiles.js','js/building_profiles.js','index.html','data/production.js','data/production_economy.js','data/technology.js','data/economy.js',
   'js/production.js','js/production_economy.js','js/market.js','js/logistics.js','js/economy.js','js/lordships.js','js/treasury.js',
   'js/world.js','js/mods.js','js/main.js','js/starts.js','js/save.js','js/save_v4.js','js/wars.js','js/util.js','js/ui_modals.js','js/ui_misc.js','js/model.js']);
 async function boot(page,info,kind) {
+  // A shared page booted the stored example once (sharedSuppliers below).
+  if(!isSharedPage(page)) {
   await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/production-suppliers-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
   const full=page.locator('#btn-choose-beginning');
   if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
@@ -30,18 +36,18 @@ async function boot(page,info,kind) {
     FB.state.realms[kind==='harbor'?'supplier_bank_court':'resource_fold_court'].treasury.gold=10000;
   },kind);
 }
-for(const kind of ['harbor','inland']) {
-  test(kind+' ordinary import exposes finite exact stock, independent demand and pure current quotes',async function({page},info){
-    await boot(page,info,kind);
-    const r=await page.evaluate(function(kind){
-      const s=FB.state,E=FB.productionEconomy,before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
-      const q=E.aiQuote(s,kind==='harbor'?'fish_market':'ore_market',1,'buy');FB.production.validate(s);
-      return {allowed:q.allowed,cost:q.cost,demand:q.remainingDemand,pure:before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter(),
-        receipts:s.production.economy.receipts.length,review:FBDATA.techImpactReviews.features.finite_production_exchange.mode};
-    },kind);
-    expect(r).toMatchObject({allowed:true,pure:true,receipts:0,review:'none'});
-    expect(r.cost).toBeGreaterThan(0);expect(r.demand).toBe(kind==='harbor'?4:2);
-  });
+/* The Mods screen import has its own case per example; restores, the unmodded
+   declaration check and the viewport journeys also keep a fresh page. The other
+   cases share one page per example, booted once with the stored example text
+   and its supplier world active; each still begins its own campaign. */
+function sharedSuppliers(kind) {
+  return {boot:async function(page,info){
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/production-suppliers-'+kind+'.json'),'utf8'));
+    await activateBookmark(page,'production_suppliers_'+kind);
+  }};
+}
+function exchangeCase(kind) {
   test(kind+' exchange conserves stock and actual two-account cash, and rejects repeat confirmation',async function({page},info){
     await boot(page,info,kind);
     const r=await page.evaluate(function(kind){
@@ -57,6 +63,19 @@ for(const kind of ['harbor','inland']) {
     },kind);
     expect(r).toMatchObject({id:true,repeat:false,total:true,remaining:1});
     expect(r.buyer).toBe(r.cost);expect(r.seller).toBe(r.cost);expect(r.origin.kind).toBe('exchange');
+  });
+}
+for(const kind of ['harbor','inland']) {
+  test(kind+' ordinary import exposes finite exact stock, independent demand and pure current quotes',async function({page},info){
+    await boot(page,info,kind);
+    const r=await page.evaluate(function(kind){
+      const s=FB.state,E=FB.productionEconomy,before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const q=E.aiQuote(s,kind==='harbor'?'fish_market':'ore_market',1,'buy');FB.production.validate(s);
+      return {allowed:q.allowed,cost:q.cost,demand:q.remainingDemand,pure:before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter(),
+        receipts:s.production.economy.receipts.length,review:FBDATA.techImpactReviews.features.finite_production_exchange.mode};
+    },kind);
+    expect(r).toMatchObject({allowed:true,pure:true,receipts:0,review:'none'});
+    expect(r.cost).toBeGreaterThan(0);expect(r.demand).toBe(kind==='harbor'?4:2);
   });
   test(kind+' matching restore retains stock, receipts and cash without repeating a trade',async function({page},info){
     await boot(page,info,kind);
@@ -76,6 +95,8 @@ for(const kind of ['harbor','inland']) {
     expect(r.after).toEqual(r.before);expect(r.repeat).toBe(false);
   });
 }
+describeSharedPage('harbor exchanges on one booted supplier world',sharedSuppliers('harbor'),function(){
+exchangeCase('harbor');
 test('owner-provided materials move once without payment or a new source allocation',async function({page},info){
   await boot(page,info,'harbor');
   const r=await page.evaluate(function(){const s=FB.state,E=FB.productionEconomy,q=E.aiQuote(s,'owned_delivery',2,'transfer'),gold=s.player.gold;
@@ -84,6 +105,28 @@ test('owner-provided materials move once without payment or a new source allocat
       target:FB.production.snapshot(s).find(function(r){return r.site.id==='fish_plant';}).lots[0].remaining};});
   expect(r).toEqual({ok:true,paid:0,cash:true,source:4,target:2});
 });
+test('generic provisions never satisfy a typed fish request and empty suppliers do not renew',async function({page},info){
+  await boot(page,info,'harbor');
+  const r=await page.evaluate(function(){const s=FB.state,E=FB.productionEconomy;
+    E.commit(s,E.aiQuote(s,'owned_delivery',6,'transfer'));s.turn=90;s.date.season=1;
+    const q=E.aiQuote(s,'fish_market',1,'sell'),before=JSON.stringify(s.production);E.harvest(s);
+    return {allowed:q.allowed,generic:FB.production.snapshot(s)[0].lots.find(function(l){return l.goodId==='generic_food';}).remaining,
+      same:before===JSON.stringify(s.production)};});
+  expect(r).toEqual({allowed:false,generic:10,same:true});
+});
+test('counterparty history retains its actual person while changed authority blocks a stale sale',async function({page},info){
+  await boot(page,info,'harbor');
+  const r=await page.evaluate(function(){const s=FB.state,E=FB.productionEconomy,q=E.aiQuote(s,'fish_market',1,'sell');E.commit(s,q);
+    const receipt=s.production.economy.receipts[0],cid=receipt.buyerIdentity.characterId,next=E.aiQuote(s,'fish_market',1,'sell');
+    const retained=E.referencesCharacter(s,cid)&&FB.courtRecordRetained(s,s.chars[cid]);
+    s.realms.supplier_bank_court.ruler.generation=FB.realmRulerGeneration(s,'supplier_bank_court')+1;
+    const before=JSON.stringify(s),stale=E.commit(s,next);FB.production.validate(s);
+    return {retained:retained,stale:stale,pure:before===JSON.stringify(s)};});
+  expect(r).toEqual({retained:true,stale:false,pure:true});
+});
+});
+describeSharedPage('inland exchanges on one booted supplier world',sharedSuppliers('inland'),function(){
+exchangeCase('inland');
 test('bought ore and fuel feed the canonical paid batch and its output can sell only once',async function({page},info){
   await boot(page,info,'inland');
   const r=await page.evaluate(function(){const s=FB.state,E=FB.productionEconomy,P=FB.production;
@@ -108,15 +151,6 @@ test('unfunded, contested, ruined, over-demand, changed-price and reserved-stock
     return {blocked:blocked,over:over,batch:!!batch,remainingDemand:E.aiQuote(s,'ore_market',1,'buy').allowed};});
   expect(r).toEqual({blocked:Array(5).fill(true),over:false,batch:true,remainingDemand:false});
 });
-test('generic provisions never satisfy a typed fish request and empty suppliers do not renew',async function({page},info){
-  await boot(page,info,'harbor');
-  const r=await page.evaluate(function(){const s=FB.state,E=FB.productionEconomy;
-    E.commit(s,E.aiQuote(s,'owned_delivery',6,'transfer'));s.turn=90;s.date.season=1;
-    const q=E.aiQuote(s,'fish_market',1,'sell'),before=JSON.stringify(s.production);E.harvest(s);
-    return {allowed:q.allowed,generic:FB.production.snapshot(s)[0].lots.find(function(l){return l.goodId==='generic_food';}).remaining,
-      same:before===JSON.stringify(s.production)};});
-  expect(r).toEqual({allowed:false,generic:10,same:true});
-});
 test('a pending supplier batch and spent buyer budget remain independent of available cash and renewed demand',async function({page},info){
   await boot(page,info,'inland');
   const r=await page.evaluate(function(){const s=FB.state,E=FB.productionEconomy,P=FB.production;
@@ -129,22 +163,24 @@ test('a pending supplier batch and spent buyer budget remain independent of avai
   expect(r).toMatchObject({batch:true,ore:true,fuel:true,budget:false,reserved:false,reason:'stock',source:2});
   expect(r.remaining).toBeLessThan(4);
 });
-test('counterparty history retains its actual person while changed authority blocks a stale sale',async function({page},info){
-  await boot(page,info,'harbor');
-  const r=await page.evaluate(function(){const s=FB.state,E=FB.productionEconomy,q=E.aiQuote(s,'fish_market',1,'sell');E.commit(s,q);
-    const receipt=s.production.economy.receipts[0],cid=receipt.buyerIdentity.characterId,next=E.aiQuote(s,'fish_market',1,'sell');
-    const retained=E.referencesCharacter(s,cid)&&FB.courtRecordRetained(s,s.chars[cid]);
-    s.realms.supplier_bank_court.ruler.generation=FB.realmRulerGeneration(s,'supplier_bank_court')+1;
-    const before=JSON.stringify(s),stale=E.commit(s,next);FB.production.validate(s);
-    return {retained:retained,stale:stale,pure:before===JSON.stringify(s)};});
-  expect(r).toEqual({retained:true,stale:false,pure:true});
-});
 test('the same exact finite exchange produces identical receipts, stock and cash without RNG or new global ids',async function({page},info){
   await boot(page,info,'inland');
   const r=await page.evaluate(function(){const E=FB.productionEconomy,base=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
     const a=JSON.parse(base),b=JSON.parse(base),one=E.commit(a,E.aiQuote(a,'ore_market',1,'buy')),two=E.commit(b,E.aiQuote(b,'ore_market',1,'buy'));
     return {one:!!one,two:!!two,same:JSON.stringify(a)===JSON.stringify(b),rng:rng===FB.getRngState(),ids:uid===FB.getUidCounter()};});
   expect(r).toEqual({one:true,two:true,same:true,rng:true,ids:true});
+});
+test('strict receipt provenance rejects forged goods, cash, source references, duplicate ids and missing links before adoption',async function({page},info){
+  await boot(page,info,'inland');
+  const r=await page.evaluate(function(){const s=FB.state,E=FB.productionEconomy;E.commit(s,E.aiQuote(s,'ore_market',1,'buy'));
+    const changes=[function(t){t.production.economy.receipts[0].paid++;},function(t){t.production.economy.receipts[0].inputs[0].quantity++;},
+      function(t){t.production.economy.receipts.push(JSON.parse(JSON.stringify(t.production.economy.receipts[0])));},
+      function(t){t.production.lots[t.production.lots.length-1].remaining++;},function(t){delete t.production.economy;},
+      function(t){t.production.economy.receipts[0].payer={kind:'realm',id:'resource_fold_court'};}];
+    return changes.map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t);let rejected=false;
+      try{FB.save.v4.validatePlatform(t);}catch(error){rejected=/production/.test(error.message);}return rejected&&before===JSON.stringify(t);});});
+  expect(r).toEqual(Array(6).fill(true));
+});
 });
 for(const kind of ['harbor','inland'])test(kind+' actual staffed seasonal output diverts once from both market output and ordinary proceeds',async function({page},info){
   await boot(page,info,kind);
@@ -178,17 +214,6 @@ test('declarations resolve same-import references and reject unsupported paths, 
     return {valid:FB.mods.validate(example),rejected:rejected,pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&rng===FB.getRngState()&&uid===FB.getUidCounter()};
   },examples.harbor);
   expect(r).toEqual({valid:[],rejected:Array(7).fill(true),pure:true});
-});
-test('strict receipt provenance rejects forged goods, cash, source references, duplicate ids and missing links before adoption',async function({page},info){
-  await boot(page,info,'inland');
-  const r=await page.evaluate(function(){const s=FB.state,E=FB.productionEconomy;E.commit(s,E.aiQuote(s,'ore_market',1,'buy'));
-    const changes=[function(t){t.production.economy.receipts[0].paid++;},function(t){t.production.economy.receipts[0].inputs[0].quantity++;},
-      function(t){t.production.economy.receipts.push(JSON.parse(JSON.stringify(t.production.economy.receipts[0])));},
-      function(t){t.production.lots[t.production.lots.length-1].remaining++;},function(t){delete t.production.economy;},
-      function(t){t.production.economy.receipts[0].payer={kind:'realm',id:'resource_fold_court'};}];
-    return changes.map(function(change){const t=JSON.parse(JSON.stringify(s));change(t);const before=JSON.stringify(t);let rejected=false;
-      try{FB.save.v4.validatePlatform(t);}catch(error){rejected=/production/.test(error.message);}return rejected&&before===JSON.stringify(t);});});
-  expect(r).toEqual(Array(6).fill(true));
 });
 for(const width of [390,1280])test(width+'px exchange confirmation retains scroll, focus and output choice',async function({page},info){
   await page.setViewportSize({width:width,height:844});await boot(page,info,'harbor');

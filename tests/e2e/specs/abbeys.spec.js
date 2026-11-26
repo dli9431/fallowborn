@@ -10,6 +10,7 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 
 /* Scenario setup stays here: ordinary shared journeys have no abbey assumptions. */
 async function prepare(page) {
@@ -51,11 +52,31 @@ async function prepare(page) {
 }
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await startDeterministicGame(page);
   await prepare(page);
 });
 
+/* The save restore case keeps a fresh page and follows this group. The others
+   share one page booted with the 867 world active, reset before each case; the
+   beforeEach above still begins every case's own campaign. Two cases tune the
+   abbey donation and rents records, which the reset hook returns to their
+   booted values. */
+describeSharedPage('abbey offices, hospitality, estates and reviews', { boot:async function (page, testInfo) {
+  await openGame(page, testInfo);
+  await activateBookmark(page, '867');
+  await page.evaluate(function () {
+    window.abbeyBootedData = { donation:FBDATA.abbeys.donation,
+      rents:Object.assign({}, FBDATA.abbeys.actions.rents) };
+  });
+}, reset:async function (page) {
+  await page.evaluate(function () {
+    const booted = window.abbeyBootedData, rents = FBDATA.abbeys.actions.rents;
+    FBDATA.abbeys.donation = booted.donation;
+    Object.keys(rents).forEach(function (key) { delete rents[key]; });
+    Object.assign(rents, booted.rents);
+  });
+} }, function () {
 test('religious elections are free, contested, and grant an office without secular land', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state, p = s.player, c = s.chars[p.charId];
@@ -358,27 +379,6 @@ test('a qualified daughter of another dynasty can be nominated without receiving
     tier:2, candidateVows:true, playerVows:false, patron:true });
 });
 
-test('save restore preserves offices, vows and endowments without RNG or land grants', async function ({ page }) {
-  const result = await page.evaluate(function () {
-    let s = FB.state;
-    const h = window.abbeyTestElect();
-    FB.endowAbbey(s, h);
-    const saved = JSON.parse(FB.save.serialize());
-    FB.save.restore(saved); s = FB.state;
-    const before = FB.getRngState(), uid = FB.getUidCounter();
-    FB.repairAbbeys(s);
-    const restored = FB.abbeyOf(s);
-    return { capital:restored.capital, rank:s.chars[s.player.charId].religiousRanks.catholic_monastic,
-      vows:FB.papacyCelibateSnapshot(s, s.chars[s.player.charId]),
-      sites:FB.directSettlements(s).length, rng:FB.getRngState() === before,
-      uid:FB.getUidCounter() === uid, version:saved.v,
-      ledger:Object.keys(FBDATA.techImpactReviews.features).filter(function (id) { return id.indexOf('abbey_') === 0; }).every(function (id) {
-        return FBDATA.techImpactReviews.features[id].mode === 'none';
-      }) };
-  });
-  expect(result).toMatchObject({ capital:100, rank:3, vows:true, sites:0, rng:true, uid:true, version:4, ledger:true });
-});
-
 test('the Work election discloses vows and opens the endowed office after acceptance', async function ({ page }) {
   await page.evaluate(function () {
     window.abbeySavedChance = FB.chance;
@@ -580,4 +580,26 @@ test('the Self entry describes the abbey sheet and opens it', async function ({ 
   await page.locator('#gm-body > .modal-navigation [data-modal-nav="close"]').click();
   await expect(page.locator('#genmodal')).toBeHidden();
   await expect(entry).toBeFocused();
+});
+});
+
+test('save restore preserves offices, vows and endowments without RNG or land grants', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    let s = FB.state;
+    const h = window.abbeyTestElect();
+    FB.endowAbbey(s, h);
+    const saved = JSON.parse(FB.save.serialize());
+    FB.save.restore(saved); s = FB.state;
+    const before = FB.getRngState(), uid = FB.getUidCounter();
+    FB.repairAbbeys(s);
+    const restored = FB.abbeyOf(s);
+    return { capital:restored.capital, rank:s.chars[s.player.charId].religiousRanks.catholic_monastic,
+      vows:FB.papacyCelibateSnapshot(s, s.chars[s.player.charId]),
+      sites:FB.directSettlements(s).length, rng:FB.getRngState() === before,
+      uid:FB.getUidCounter() === uid, version:saved.v,
+      ledger:Object.keys(FBDATA.techImpactReviews.features).filter(function (id) { return id.indexOf('abbey_') === 0; }).every(function (id) {
+        return FBDATA.techImpactReviews.features[id].mode === 'none';
+      }) };
+  });
+  expect(result).toMatchObject({ capital:100, rank:3, vows:true, sites:0, rng:true, uid:true, version:4, ledger:true });
 });
