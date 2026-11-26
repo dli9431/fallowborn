@@ -6,6 +6,7 @@ const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/dated-home-authority-harbor.json'),
   dune:require('../fixtures/authoring/dated-home-authority-dune.json')};
@@ -22,12 +23,15 @@ dependsOnRuntime(__filename,['js/bookmark_composition.js','js/util.js','index.ht
    flag keeps a later reload from storing it again. */
 async function importWorld(page,info,prefix,modified,modsScreen) {
   if(!modsScreen) {
+    // A shared page booted this unmodified example once (storedWorld below).
+    if(!isSharedPage(page)) {
     await page.addInitScript(function (text) {
       if(sessionStorage.getItem('datedHomeStored'))return;
       sessionStorage.setItem('datedHomeStored','1');
       localStorage.setItem('fb_mods',JSON.stringify([text]));
     },modified ? JSON.stringify(modified) : fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/dated-home-authority-'+prefix+'.json'),'utf8'));
     await openGame(page,info);
+    }
     expect(await page.evaluate(function (prefix) {return [FB.mods.count(),!!FBDATA.bookmarks[prefix+'_world']];},prefix)).toEqual([1,true]);
     return;
   }
@@ -63,8 +67,20 @@ async function beginHome(page,prefix,revision,entry) {
   await page.evaluate(function () {FB.game.setPaused(true);});
 }
 
+/* Cases that import through the Mods screen, restore or migrate saves or boot a
+   modified example keep a fresh page. The other stored-text cases of each
+   example share one page, booted with its world active at the example's own
+   local_policy revision and reset before each case; each case still begins its
+   own campaign. Detached validation shares one prepared unmodded title. */
+function storedWorld(prefix) {
+  return {boot:async function(page,info){
+    await importWorld(page,info,prefix);
+    await activateBookmark(page,prefix+'_world');
+  }};
+}
+
 for(const prefix of ['harbor','dune']) {
-  for(const entry of ['picker','code']) {
+  const adoptCase=function(entry) {
     test(prefix+' '+entry+' adopts the original form and person with a scoped policy',async function({page},info) {
       await importWorld(page,info,prefix,undefined,entry==='picker');
       await beginHome(page,prefix,'local_policy',entry);
@@ -87,6 +103,9 @@ for(const prefix of ['harbor','dune']) {
         provider:true,allowed:true,policy:{schema:1,presence:prefix==='harbor'?'capital':'territory',delegation:prefix==='harbor'},
         global:true,equal:true,separate:true,noHost:true,noFreeMoney:true,valid:true,pure:true});
     });
+  };
+  adoptCase('picker');
+  for(const entry of ['picker','code']) {
 
     test(prefix+' retained '+entry+' keeps the same scenario without policy commands or inferred deputies',async function({page},info) {
       await importWorld(page,info,prefix,undefined,entry==='picker');
@@ -112,6 +131,10 @@ for(const prefix of ['harbor','dune']) {
         noCommand:true,noDeputy:true,noPreparation:true,unchanged:true,freshPolicy:true,valid:true});
     });
   }
+
+  describeSharedPage(prefix+' stored example decisions and policy reads',storedWorld(prefix),function() {
+  adoptCase('code');
+  if(prefix==='harbor') resolverCase(); else provenanceCase();
 
   test(prefix+' actual home decisions funding and once-only formation share the dated resolver',async function({page},info) {
     await importWorld(page,info,prefix);
@@ -182,6 +205,7 @@ for(const prefix of ['harbor','dune']) {
     },prefix);
     expect(result).toEqual({consent:true,unchanged:true,denied:true,interrupted:true,same:true,noHost:true});
   });
+  });
 
   test(prefix+' matching pending closed and formed saves retain exact policies without replay',async function({page},info) {
     await importWorld(page,info,prefix);
@@ -215,8 +239,11 @@ for(const prefix of ['harbor','dune']) {
 // Twelve detached candidates run as two fresh-page halves of six. Every
 // rejection must leave the title and catalogue exactly as they were before the
 // first one, so each half serializes those once and compares after every value.
+// The halves and the compatibility check share one prepared unmodded title.
+describeSharedPage('detached policy validation',{boot:openGame},function() {
+compatibilityCase();
 for(const part of [0,1]) test('malformed compositions reject through detached ordinary JSON without publishing identities or policies, part '+(part+1)+' of 2',async function({page},info) {
-  await openGame(page,info);
+  if(!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function(input) {
     const source=input.source;
     const changes=[function(p,b){b.homeAuthorityPolicies=null;},function(p,b){b.homeAuthorityPolicies=[];},
@@ -232,6 +259,7 @@ for(const part of [0,1]) test('malformed compositions reject through detached or
       return errors.length>0 && before===JSON.stringify([FB.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter();});
   },{source:examples.harbor,part:part});
   expect(result).toEqual(Array(6).fill(true));
+});
 });
 
 test('forged or deleted opted-in policy provenance fails detached adoption without policy or deputy repair',async function({page},info) {
@@ -273,6 +301,8 @@ test('retained home adoption preserves a real liege and rejects unsolicited poli
     form:'territorial',absent:true,rejected:true,pure:true});
 });
 
+// Registered in the shared harbor stored-example group above.
+function resolverCase() {
 test('the resolver retains form defaults and isolates other worlds and saved revisions',async function({page},info) {
   await importWorld(page,info,'harbor');await beginHome(page,'harbor','local_policy','code');
   const result=await page.evaluate(function(){
@@ -286,9 +316,12 @@ test('the resolver retains form defaults and isolates other worlds and saved rev
   });
   expect(result).toEqual({fresh:'capital',old:null,unrelated:null,unknown:null,fallback:true,live:'capital',pure:true});
 });
+}
 
+// Registered in the shared detached validation group above.
+function compatibilityCase() {
 test('dated command policies preserve the opening-campaign compatibility boundary',async function({page},info) {
-  await openGame(page,info);
+  if(!isSharedPage(page)) await openGame(page,info);
   const source=require('../fixtures/authoring/mobile-opening-campaigns-harbor.json');
   const result=await page.evaluate(function(source) {
     const good=FB.mods.validate(source),d=JSON.parse(JSON.stringify(source));
@@ -298,7 +331,10 @@ test('dated command policies preserve the opening-campaign compatibility boundar
   },source);
   expect(result).toEqual({good:0,bad:true,pure:true});
 });
+}
 
+// Registered in the shared dune stored-example group above.
+function provenanceCase() {
 test('policy provenance survives current form and office loss without restoring original eligibility',async function({page},info) {
   await importWorld(page,info,'dune');await beginHome(page,'dune','local_policy','code');
   const result=await page.evaluate(function() {
@@ -314,3 +350,4 @@ test('policy provenance survives current form and office loss without restoring 
   });
   expect(result).toEqual({pure:true,converted:true,dead:true,retained:true});
 });
+}

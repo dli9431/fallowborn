@@ -7,6 +7,8 @@ const {startDeterministicGame} = require('../support/game/start');
 const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {releasedCatalogue} = require('../support/released-catalogue');
 const {startHistoricalGame} = require('../support/game/historical-start');
+const {useReviewStartRules} = require('../support/game/released-starts');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, ['data/cultures.js','data/economy.js','data/technology.js',
@@ -28,9 +30,45 @@ dependsOnRuntime(__filename, ['data/cultures.js','data/economy.js','data/technol
   'data/arabian_openings.js','data/islamic_institutions.js','data/islamic_rollout.js',
   'data/geographies.js','data/geography_expansion.js','js/bookmark_setup.js']);
 
+/* Cases that restore saves or boot the CrazyGames distribution keep a fresh
+   page, as does the 867 student case, whose world no group activates.
+   Catalogue reads share one prepared title. The 711 household cases share one
+   page per group, booted under the review rules with the 711 world active and
+   reset before each case; each case still begins its own campaign, and the
+   reset also puts back the activity and patronage tables and the 711
+   institution layers some cases replace. */
+const titleBoot = {boot:openGame};
+const householdBoot = {boot:async function (page,testInfo) {
+  await useReviewStartRules(page);
+  await openGame(page,testInfo);
+  await activateBookmark(page,'711');
+  await page.evaluate(function () {
+    const revisions = FBDATA.bookmarks['711'].revisions || {};
+    window.buddhistBooted = {activities:FBDATA.religiousActivities,patronage:FBDATA.religiousPatronage,
+      layers:Object.keys(revisions).filter(function (id) {
+        return revisions[id] && typeof revisions[id] === 'object';
+      }).map(function (id) {
+        return [id,Object.prototype.hasOwnProperty.call(revisions[id],'localInstitutions'),revisions[id].localInstitutions];
+      })};
+  });
+},reset:async function (page) {
+  await page.evaluate(function () {
+    const booted = window.buddhistBooted, revisions = FBDATA.bookmarks['711'].revisions || {};
+    FBDATA.religiousActivities = booted.activities;
+    FBDATA.religiousPatronage = booted.patronage;
+    booted.layers.forEach(function (row) {
+      if (row[1]) revisions[row[0]].localInstitutions = row[2];
+      else delete revisions[row[0]].localInstitutions;
+    });
+  });
+}};
+
+describeSharedPage('Buddhist catalogue and opening reads',titleBoot,function () {
+layContractCase();
+datedRevisionCase();
 test('Buddhist household corrections preserve the released effective catalogue',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
     // released-catalogue.spec.js owns the whole fixture; local household rules keep the shared faith defaults.
     const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[],geographies:[],eras:[],governments:[],
@@ -40,7 +78,7 @@ test('Buddhist household corrections preserve the released effective catalogue',
 
 test('household profiles resolve independent study rules without an ordained ladder or central office',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const rows = ['buddhist_476','buddhist_711'].map(function (id) {
@@ -73,7 +111,7 @@ test('household profiles resolve independent study rules without an ordained lad
 
 test('held identities retain their separate opening scopes and every fresh world validates',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function () {
       const dates = ['476','493','711','800','867','1066','1204'];
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -88,7 +126,7 @@ test('held identities retain their separate opening scopes and every fresh world
 
 test('early mixed-community consumers retain distinct opening assignments and shares',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const rows = ['476','493'].map(function (id) {
@@ -119,7 +157,7 @@ test('early mixed-community consumers retain distinct opening assignments and sh
 
 test('the held 1204 superior court neither changes Samarkand residents nor supplies a Buddhist institution',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function () {
       const b = FB.bookmark('1204'), before = JSON.stringify(FBDATA);
       const rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -135,6 +173,7 @@ test('the held 1204 superior court neither changes Samarkand residents nor suppl
     })).toEqual({court:['buddhist_476',true,'samarkand','regnum'],residents:'sunni',
       BuddhistResidents:false,institutions:[],office:null,pure:true});
   });
+});
 
 test('ordinary male and female religious students retain courtship without acquiring ordained standing',
   async function ({page},testInfo) {
@@ -212,7 +251,7 @@ for (const opening of [{bookmark:'493',faith:'buddhist_476',county:'balkh'},
    Dated physical placement remains a separate acceptance decision. */
 async function layHousehold(page, testInfo, crazygames) {
   await startHistoricalGame(page,testInfo,{
-    bookmark:'711',code:'LAYHOUSE-711-farmer-ghazni-f-Pema-established'
+    bookmark:'711',code:'LAYHOUSE-711-farmer-ghazni-f-Pema-established',prepared:isSharedPage(page)
   },!!crazygames);
   await page.evaluate(function () {
     const s = FB.state, me = s.chars[s.player.charId];
@@ -267,9 +306,11 @@ async function layHousehold(page, testInfo, crazygames) {
   });
 }
 
+// Registered in the shared catalogue group above.
+function layContractCase() {
 test('lay house contracts validate without seeding historical premises, ordination or journeys',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const profiles = ['tapa_sardar_lay_support','tepe_narenj_lay_support'];
@@ -298,7 +339,9 @@ test('lay house contracts validate without seeding historical premises, ordinati
     })).toEqual({institutions:[],activities:[],mods:[],placed:false,noOrdination:true,
       noJourney:true,technology:['none','none','none','none'],pure:true});
   });
+}
 
+describeSharedPage('711 lay household visibility, practice, admission and lessons',householdBoot,function () {
 test('household activities keep early and 711 faith, date and revision qualifications separate',
   async function ({page},testInfo) {
     await layHousehold(page,testInfo);
@@ -333,7 +376,7 @@ test('household activities keep early and 711 faith, date and revision qualifica
 test('unplaced and out-of-period support does not expose unrelated household activity controls',
   async function ({page},testInfo) {
     await startHistoricalGame(page,testInfo,{
-      bookmark:'711',code:'LAYVISIBLE-711-farmer-ghazni-f-Pema-established'
+      bookmark:'711',code:'LAYVISIBLE-711-farmer-ghazni-f-Pema-established',prepared:isSharedPage(page)
     });
     expect(await page.evaluate(function () {
       const s = FB.state, me = s.chars[s.player.charId];
@@ -476,7 +519,9 @@ test('restricted public worship interrupts a funded lesson while households and 
         faith:s.chars[f.cid].religion};
     })).toEqual({started:true,cancelled:true,household:true,piety:1,int:3,property:true,community:true,faith:'buddhist_711'});
   });
+});
 
+describeSharedPage('711 lay household succession, interruptions, reviews and gifts',householdBoot,function () {
 test('withdrawal and donor death create no succession and cannot privatize the learning house',
   async function ({page},testInfo) {
     await layHousehold(page,testInfo);
@@ -607,6 +652,7 @@ test('autonomous lay membership and public gifts use real NPC accounts with boun
     })).toEqual({bounded:true,repeat:0,npc:true,noPlayer:true,paid:true,aiPaid:1,aiRepeat:0,spent:2,restricted:2,
       reserve:true,player:true,gold:true,heads:true});
   });
+});
 
 function laySavedFacts() {
   const s = FB.state, f = buddhistFixture;
@@ -646,10 +692,12 @@ for (const distribution of ['standard','CrazyGames']) {
 }
 
 /* Acceptance uses retained revisions as well as the current fresh selection.
-   Unresolved physical sites and identities are deliberate content boundaries. */
+   Unresolved physical sites and identities are deliberate content boundaries.
+   Registered in the shared catalogue group above. */
+function datedRevisionCase() {
 test('all dated revisions withhold unaccepted Buddhist houses and later population replacements',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const faults = [], dates = ['476','493','711','800','867','1066','1204'];
@@ -682,11 +730,13 @@ test('all dated revisions withhold unaccepted Buddhist houses and later populati
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     })).toEqual({faults:[],replacement:false,pure:true});
   });
+}
 
+describeSharedPage('711 unplaced houses and live year boundaries',householdBoot,function () {
 test('an actual 711 household cannot fund or attend either unplaced house',
   async function ({page},testInfo) {
     await startHistoricalGame(page,testInfo,{
-      bookmark:'711',code:'UNPLACED-711-farmer-ghazni-f-Pema-established'
+      bookmark:'711',code:'UNPLACED-711-farmer-ghazni-f-Pema-established',prepared:isSharedPage(page)
     });
     expect(await page.evaluate(function () {
       const s = FB.state, me = s.chars[s.player.charId];
@@ -739,6 +789,7 @@ for (const house of ['tapa_sardar','tepe_narenj']) {
         member:'active',faith:'buddhist_711',fresh:true,gift:true,stale:false,pure:true});
     });
 }
+});
 
 function earlyHouseholdFacts() {
   const s = FB.state, me = s.chars[s.player.charId];

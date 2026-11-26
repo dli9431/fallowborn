@@ -3,6 +3,7 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/story_household_effects_711_800_1204.js', 'js/story_household_observer.js',
@@ -47,7 +48,7 @@ test('CrazyGames offers 800 in its live start registry', async function ({ page 
 });
 
 async function observe(page, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   const error = await page.evaluate(function () {
     return new Promise(function (resolve) {
       FB.activateBookmark('800', null, function (fault) {
@@ -81,8 +82,15 @@ async function start(page, testInfo, scenario) {
   });
 }
 
-test('800 is selectable and owns independent world data', async function ({ page }, testInfo) {
+/* Cases that restore saves or boot the CrazyGames distribution keep a fresh
+   page. The two catalogue and observer cases share one page booted with the
+   800 world active and reset before each case. */
+describeSharedPage('800 catalogue and observed world', { boot:async function (page, testInfo) {
   await openGame(page, testInfo);
+  await activateBookmark(page, '800');
+} }, function () {
+test('800 is selectable and owns independent world data', async function ({ page }, testInfo) {
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   const result = await page.evaluate(function () {
     const b = FBDATA.bookmarkCandidates['800'];
     const previous = FBDATA.bookmarks['867'];
@@ -147,6 +155,7 @@ test('800 activates the full world, period communities and subordinate courts', 
     sicily:[['byzantium','greek','orthodox'],['byzantium','greek','orthodox'],['byzantium','greek','orthodox']],
     seats:['Malamocco','Iria Flavia','Walila','Raqqa'],
     traditions:[['latin'],['islamic','persianate']], stories:STORIES });
+});
 });
 
 for (const scenario of ['serf','farmer','apprentice','monk','soldier','knight','baron']) {
