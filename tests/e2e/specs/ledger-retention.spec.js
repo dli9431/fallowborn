@@ -1,6 +1,7 @@
 'use strict';
 const {test,expect}=require('../support/fixture');
-const {openGame,prepareGameContent}=require('../support/game/navigation');
+const {openGame,openTitle,prepareGameContent}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const inland=require('../fixtures/authoring/production-suppliers-inland.json');
 dependsOnRuntime(__filename,['index.html','data/map_data.js','data/production.js','data/production_economy.js','data/technology.js','data/economy.js',
@@ -22,20 +23,29 @@ function variant(days) {
   if(days)mod.balance={ledgerRetentionDays:days};
   return mod;
 }
-async function boot(page,info,days) {
-  await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
-  await page.locator('#modfile').setInputFiles({name:'ledger-retention.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(variant(days)),'utf8')});
-  const faults=await page.evaluate(function(text){return FB.mods.validate(JSON.parse(text));},JSON.stringify(variant(days)));
-  if(faults.length)throw new Error('Mod faults: '+faults.join(' | '));
-  const errors=[];
-  page.on('pageerror',function(error){errors.push(error.message);});
-  const navigation=page.waitForNavigation({waitUntil:'domcontentloaded'}).then(function(){return null;},function(){return 'no reload; page errors: '+errors.join(' | ');});
-  await page.locator('#mod-apply').click();
-  // A rejected import explains itself through its toast instead of a navigation timeout.
-  const rejected=page.locator('#toasts .toast').first().waitFor({state:'attached'}).then(function(){return page.locator('#toasts').textContent();},function(){return new Promise(function(){});});
-  const outcome=await Promise.race([navigation,rejected]);
-  if(outcome)throw new Error('Mod import rejected: '+outcome);
-  await prepareGameContent(page);
+/* Each configuration has a case that is admitted against the unmodded
+   catalogue and imports through the Mods file picker. The other cases store
+   the same JSON text and boot it once instead of preparing the unmodded
+   catalogue that the picker reload discards. */
+async function boot(page,info,days,picker) {
+  if(!picker){
+    await openTitle(page,info);
+    await installStoredMod(page,JSON.stringify(variant(days)));
+  } else {
+    await openGame(page,info);await page.evaluate(function(){FB.ui.showMods();});
+    await page.locator('#modfile').setInputFiles({name:'ledger-retention.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(variant(days)),'utf8')});
+    const faults=await page.evaluate(function(text){return FB.mods.validate(JSON.parse(text));},JSON.stringify(variant(days)));
+    if(faults.length)throw new Error('Mod faults: '+faults.join(' | '));
+    const errors=[];
+    page.on('pageerror',function(error){errors.push(error.message);});
+    const navigation=page.waitForNavigation({waitUntil:'domcontentloaded'}).then(function(){return null;},function(){return 'no reload; page errors: '+errors.join(' | ');});
+    await page.locator('#mod-apply').click();
+    // A rejected import explains itself through its toast instead of a navigation timeout.
+    const rejected=page.locator('#toasts .toast').first().waitFor({state:'attached'}).then(function(){return page.locator('#toasts').textContent();},function(){return new Promise(function(){});});
+    const outcome=await Promise.race([navigation,rejected]);
+    if(outcome)throw new Error('Mod import rejected: '+outcome);
+    await prepareGameContent(page);
+  }
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
   const full=page.locator('#btn-choose-beginning');
   if(await full.isVisible())await full.click();else await page.getByRole('button',{name:'New Game',exact:true}).click();
@@ -162,7 +172,7 @@ test('mature production save separates live closure, exact folded totals and per
 });
 
 test('live reservations, stored output and trade provenance survive compaction and round-trip through saves',async function({page},info){
-  await boot(page,info,null);
+  await boot(page,info,null,true);
   const r=await page.evaluate(function(){
     const s=FB.state,P=FB.production,E=FB.productionEconomy,H=window.retentionStage;
     const trade=E.commit(s,E.aiQuote(s,'ore_market',2,'buy'));
@@ -239,6 +249,13 @@ test('too many live records are still refused at write and rejected on load',asy
   expect(r.live).toMatchObject({lots:512,batches:508});
   expect(r).toMatchObject({reserve:false,buy:false,folded:0,batches:508,unchanged:true});
   expect(r.message).toMatch(/Invalid saved production/);
+});
+
+test('the shorter retention window is admitted against the unmodded catalogue and imports through the Mods file picker',async function({page},info){
+  await boot(page,info,720,true);
+  expect(await page.evaluate(function(){
+    return {count:FB.mods.count(),days:FB.ledgerRetention.days(),start:FB.state.start.id};
+  })).toEqual({count:1,days:720,start:'production_suppliers_inland'});
 });
 
 test('an imported shorter retention window folds only history settled before its own cutoff',async function({page},info){

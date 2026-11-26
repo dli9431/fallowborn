@@ -1,9 +1,11 @@
 'use strict';
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
-const {openGame} = require('../support/game/navigation');
+const {openGame,openTitle} = require('../support/game/navigation');
+const {installStoredMod} = require('../support/game/stored-mod');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {harbor:require('../fixtures/authoring/mobile-vow-harbor.json'),
@@ -19,15 +21,24 @@ dependsOnRuntime(__filename, ['index.html','data/technology.js','data/mobile_con
   'js/world.js','js/model.js','js/station.js','js/mods.js','js/save.js','js/save_v4.js',
   'js/ui_mobile.js','js/ui_misc.js','js/ui_modals.js','js/main.js']);
 
-async function begin(page, info, label, modified) {
-  await openGame(page,info);
-  await page.evaluate(function () {FB.ui.showMods();});
-  await expectModAdmission(page,modified || examples[label]);
-  await page.locator('#modfile').setInputFiles(modified ? {name:'mobile-vow.json',mimeType:'application/json',
-    buffer:Buffer.from(JSON.stringify(modified))} : path.resolve(__dirname,'../fixtures/authoring/mobile-vow-'+label+'.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+/* The first case per example and the camp beginnings are admitted against the
+   unmodded catalogue and import through the ordinary Mods file picker. The
+   other cases store the same example file text and boot it once instead. */
+async function begin(page, info, label, modified, picker) {
+  const file = path.resolve(__dirname,'../fixtures/authoring/mobile-vow-'+label+'.json');
+  if (picker || modified) {
+    await openGame(page,info);
+    await page.evaluate(function () {FB.ui.showMods();});
+    await expectModAdmission(page,modified || examples[label]);
+    await page.locator('#modfile').setInputFiles(modified ? {name:'mobile-vow.json',mimeType:'application/json',
+      buffer:Buffer.from(JSON.stringify(modified))} : file);
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  } else {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(file,'utf8'));
+  }
   const prefix = label === 'harbor' ? 'harbor' : 'dune';
-  await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady &&
     FBDATA.bookmarks[prefix+'_world'];},prefix);
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
@@ -80,7 +91,7 @@ async function beginAtCamp(page,info,label) {
 
 for (const label of ['harbor','upland']) {
   test(label+' ordinary import joins one zero-paper mobile host through a pure review',async function ({page},info) {
-    await begin(page,info,label);
+    await begin(page,info,label,null,true);
     const result=await page.evaluate(function () {
       const s=FB.state,t=vowTest,M=FB.mobile,h=M.host(s,t.rid),r=M.row(s,t.rid);
       t.call(true);

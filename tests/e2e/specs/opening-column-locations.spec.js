@@ -1,9 +1,11 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {installRestoreFacts}=require('../support/game/restore-facts');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
@@ -17,13 +19,22 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
   'js/starts.js','js/util.js','js/save.js','js/save_v4.js','js/main.js','js/model.js','js/station.js',
   'js/technology.js','js/justice.js','js/story_household.js','js/stories.js']);
 
-async function imported(page,info,prefix,input) {
-  await openGame(page,info);
-  await page.evaluate(function () {FB.ui.showMods();});
-  await page.locator('#modfile').setInputFiles(input ? {name:'locations.json',mimeType:'application/json',
-    buffer:Buffer.from(JSON.stringify(input))} : path.resolve(__dirname,'../fixtures/authoring/opening-column-locations-'+prefix+'.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+/* The first case per example imports through the ordinary Mods file picker.
+   Every other case stores the same JSON text and boots it once, instead of
+   preparing the unmodded catalogue that the picker reload discards. */
+async function imported(page,info,prefix,input,picker) {
+  const file=path.resolve(__dirname,'../fixtures/authoring/opening-column-locations-'+prefix+'.json');
+  if (picker) {
+    await openGame(page,info);
+    await page.evaluate(function () {FB.ui.showMods();});
+    await page.locator('#modfile').setInputFiles(input ? {name:'locations.json',mimeType:'application/json',
+      buffer:Buffer.from(JSON.stringify(input))} : file);
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  } else {
+    await openTitle(page,info);
+    await installStoredMod(page,input ? JSON.stringify(input) : fs.readFileSync(file,'utf8'));
+  }
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await installRestoreFacts(page);
@@ -31,7 +42,7 @@ async function imported(page,info,prefix,input) {
 
 for (const prefix of ['harbor','dune']) {
   test(prefix+' ordinary import locates the first host separately while conserving the original camp, people and stores',async function ({page},info) {
-    await imported(page,info,prefix);
+    await imported(page,info,prefix,null,true);
     const result=await page.evaluate(function () {
       const s=FB.state,M=FB.mobile,d=FB.campaignBookmark(s).realms.find(function (v) {return v.mobile;}),rid=d.id;
       const r=M.row(s,rid),moving=M.migration(s,rid),snap=M.columnSnapshot(s,rid);
@@ -61,9 +72,14 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
-test('detached county and exact-site rejection preserves input, registries, campaign and identity streams',async function ({page},info) {
+// Each half of the fourteen detached rejections has its own fresh page. The
+// catalogue, campaign and identity snapshot is recorded once in the page and
+// every rejection is compared with it.
+for (const group of [{name:'county',from:0,to:7},{name:'exact-site',from:7,to:14}])
+test('detached '+group.name+' rejection preserves input, registries, campaign and identity streams',async function ({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function (source) {
+  const result=await page.evaluate(function (args) {
+    const source=args.source;
     const changes=[function (b,c) {c.openingLocation=null;},function (b,c) {c.openingLocation=[];},
       function (b,c) {c.openingLocation={};},function (b,c) {c.openingLocation.countyId=1;},
       function (b,c) {c.openingLocation.countyId='missing';},function (b,c) {c.openingLocation.countyId='constructor';},
@@ -73,21 +89,24 @@ test('detached county and exact-site rejection preserves input, registries, camp
       function (b,c) {b.provinces.find(function (p) {return p.id===c.openingLocation.countyId;}).wasteland=true;},
       function (b,c) {b.provinces.find(function (p) {return p.id===c.openingLocation.countyId;}).settlements[0].fill=true;},
       function (b,c) {b.provinces[0].settlements.push({site:c.openingLocation.siteId,name:'Duplicate camp',kind:'village'});}];
-    return changes.map(function (change) {
+    const data=JSON.stringify(FBDATA),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
+    return changes.slice(args.from,args.to).map(function (change) {
       const input=JSON.parse(JSON.stringify(source)),b=input.bookmarks.harbor_world;
       change(b,b.realms.find(function (r) {return r.mobile;}).mobile.columns.entries[0]);
-      const bytes=JSON.stringify(input),data=JSON.stringify(FBDATA),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const bytes=JSON.stringify(input);
       return FB.mods.validate(input).length>0 && bytes===JSON.stringify(input) && data===JSON.stringify(FBDATA) &&
         state===JSON.stringify(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter();
     });
-  },examples.harbor);
-  expect(result).toEqual(Array(14).fill(true));
+  },{source:examples.harbor,from:group.from,to:group.to});
+  expect(result).toEqual(Array(group.to-group.from).fill(true));
 });
 
 test('fresh position preflight rejects disconnected, inaccessible, stale and missing live locations before any allocation',async function ({page},info) {
   await imported(page,info,'harbor');
   const result=await page.evaluate(function () {
     const M=FB.mobile,d=FB.campaignBookmark(FB.state).realms.find(function (r) {return r.mobile;}),rid=d.id;
+    // One catalogue snapshot in the page; each candidate is compared with it.
+    const data=JSON.stringify(FBDATA);
     return ['owner','holder','capacity','late','disconnected','site','changed'].map(function (kind) {
       const s=JSON.parse(JSON.stringify(FB.state)),candidate=JSON.parse(JSON.stringify(d)),pid='harbor_gardens';
       s.armies=s.armies.filter(function (a) {return a.realm!==rid;});
@@ -101,7 +120,7 @@ test('fresh position preflight rejects disconnected, inaccessible, stale and mis
       const adjacency=FB.world.adj,sites=FB.world.sitesByProv;
       if (kind==='disconnected') FB.world.adj=Object.assign({},adjacency,{harbor_quay:{}});
       if (kind==='site') FB.world.sitesByProv=Object.assign({},sites,{harbor_gardens:{list:[]}});
-      const before=JSON.stringify(s),data=JSON.stringify(FBDATA),rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
+      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
       try {M.initialize(s,[candidate]);} catch(error) {rejected=true;}
       finally {FB.world.adj=adjacency;FB.world.sitesByProv=sites;}
       return rejected && before===JSON.stringify(s) && data===JSON.stringify(FBDATA) &&

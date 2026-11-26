@@ -69,11 +69,25 @@ async function installAvailabilityReference(page) {
   });
 }
 
-test('availability retains every scoped evaluation and short circuit while resolving its world once',
+// Each row names its stage, its run options and the number of scoped visits
+// its candidate must make. The sixteen rows form two halves, each in its own
+// fresh page, because every run serializes the whole catalogue twice.
+const availabilityRows = [
+  {stage:'negative', visits:7}, {stage:'default', visits:1}, {stage:'era', visits:1}, {stage:'government', visits:1},
+  {stage:'static first', visits:2}, {stage:'static second', visits:3}, {stage:'generated first', visits:4},
+  {stage:'generated second', visits:5}, {stage:'realm first', visits:6}, {stage:'realm second', visits:7},
+  {stage:'bookmark enable', visits:0}, {stage:'bookmark disable', visits:0}, {stage:'legacy', visits:0},
+  {stage:'legacy overridden', visits:0}, {stage:'missing world', run:'negative', missing:true, visits:7},
+  {stage:'independent queries', run:'negative', independent:true, visits:7}];
+
+for (const part of [{name:'default, era, government and faith', from:0, to:8},
+  {name:'realm, bookmark, legacy, missing world and independent', from:8, to:16}])
+test('availability retains every ' + part.name + ' scoped evaluation and short circuit while resolving its world once',
   async function ({ page }, info) {
     await openGame(page, info);
     await installAvailabilityReference(page);
-    const rows = await page.evaluate(function () {
+    const specs = availabilityRows.slice(part.from, part.to);
+    const rows = await page.evaluate(function (specs) {
       const live = FBDATA, active = FB.activeBookmark, lookup = FB.bookmark;
       const enabled = FB.systemEnabled, government = FB.political.governmentFormId;
       const rows = [], id = 'royal_council';
@@ -164,24 +178,21 @@ test('availability retains every scoped evaluation and short circuit while resol
         return sample;
       }
       try {
-        const stages = ['negative','default','era','government','static first','static second',
-          'generated first','generated second','realm first','realm second',
-          'bookmark enable','bookmark disable','legacy','legacy overridden'];
-        stages.forEach(function (stage) {
-          rows.push({stage:stage, candidate:run(stage, false), reference:run(stage, true)});
+        specs.forEach(function (spec) {
+          const stage = spec.run || spec.stage;
+          rows.push({stage:spec.stage, candidate:run(stage, false, spec.missing, spec.independent),
+            reference:run(stage, true, spec.missing, spec.independent)});
         });
-        rows.push({stage:'missing world', candidate:run('negative', false, true), reference:run('negative', true, true)});
-        rows.push({stage:'independent queries', candidate:run('negative', false, false, true),
-          reference:run('negative', true, false, true)});
         return rows;
       } finally {
         window.FBDATA = live; FB.activeBookmark = active; FB.bookmark = lookup;
         FB.systemEnabled = enabled; FB.political.governmentFormId = government;
       }
-    });
+    }, specs);
     const allVisits = [{faith:null, realm:null}, {faith:'e2e_first'}, {faith:'e2e_second'},
       {faith:'e2e_branch_a'}, {faith:'e2e_branch_b'}, {realm:'first'}, {realm:'second'}];
-    const lengths = [7,1,1,1,2,3,4,5,6,7,0,0,0,0,7,7];
+    expect(rows.map(function (row) { return row.stage; })).toEqual(specs.map(function (spec) { return spec.stage; }));
+    const lengths = specs.map(function (spec) { return spec.visits; });
     rows.forEach(function (row, index) {
       const c = row.candidate, r = row.reference;
       expect(c.visits, row.stage).toEqual(allVisits.slice(0, lengths[index]));
@@ -196,8 +207,12 @@ test('availability retains every scoped evaluation and short circuit while resol
     });
   });
 
-for (const crazygames of [false, true]) {
-test('availability matches the original search for retained campaigns, active dates and restored states, distribution ' + crazygames,
+// The retained campaign dates and the missing, live and restored campaigns
+// each have their own fresh page and nine comparisons.
+for (const crazygames of [false, true])
+for (const part of [{name:'retained campaigns and active dates', retained:true},
+  {name:'missing worlds and the live, switched and restored campaign', retained:false}]) {
+test('availability matches the original search for ' + part.name + ', distribution ' + crazygames,
   async function ({ page }, info) {
     if (crazygames) {
       await mockCrazyGames(page);
@@ -207,10 +222,14 @@ test('availability matches the original search for retained campaigns, active da
     await installAvailabilityReference(page);
     await page.addScriptTag({path:path.resolve(__dirname, '../fixtures/resolved-world-cache/uncached-bookmark.js')});
     await startDeterministicGame(page);
-    const result = await page.evaluate(function () {
+    const result = await page.evaluate(function (retained) {
       const lookup = FB.bookmark, active = FB.activeBookmark, rows = [];
+      // Record the catalogue once in the page (and again after the restore
+      // below) and compare every query with it, instead of serializing it
+      // before and after each comparison.
+      let data = JSON.stringify(FBDATA);
       function compare(s, label) {
-        const before = JSON.stringify([s, FBDATA]), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
         FB.systems.ids().forEach(function (id) {
           const actual = FB.systemAvailable(s, id);
           FB.bookmark = uncachedBookmark;
@@ -219,21 +238,26 @@ test('availability matches the original search for retained campaigns, active da
           finally { FB.bookmark = lookup; }
           if (actual !== expected) throw new Error(label + ': ' + id);
         });
-        if (before !== JSON.stringify([s, FBDATA]) || rng !== FB.getRngState() || uid !== FB.getUidCounter())
+        if (before !== JSON.stringify(s) || data !== JSON.stringify(FBDATA) || rng !== FB.getRngState() || uid !== FB.getUidCounter())
           throw new Error(label + ': mutated query inputs');
         rows.push(label);
       }
       try {
-        ['476','1096','1204'].forEach(function (id) {
-          const base = FBDATA.bookmarks[id];
-          FB.activeBookmark = FB.bookmark(id === '476' ? '1204' : '476');
-          [undefined, 'baseline', base.revision].forEach(function (revision) {
-            const s = {start:{id:id, revision:revision}, faiths:{e2e_branch:{name:'Branch', parent:'catholic',
-              properties:{systems:{enable:['royal_council']}}}}, realms:{dead:{alive:false},
-              live:{alive:true, religion:'e2e_branch'}}};
-            compare(s, id + ':' + String(revision));
+        if (retained) {
+          ['476','1096','1204'].forEach(function (id) {
+            const base = FBDATA.bookmarks[id];
+            FB.activeBookmark = FB.bookmark(id === '476' ? '1204' : '476');
+            [undefined, 'baseline', base.revision].forEach(function (revision) {
+              const s = {start:{id:id, revision:revision}, faiths:{e2e_branch:{name:'Branch', parent:'catholic',
+                properties:{systems:{enable:['royal_council']}}}}, realms:{dead:{alive:false},
+                live:{alive:true, religion:'e2e_branch'}}};
+              compare(s, id + ':' + String(revision));
+            });
           });
-        });
+          return {rows:rows};
+        }
+        // The retained dates above end with 476 as the active world.
+        FB.activeBookmark = FB.bookmark('476');
         compare(null, 'no state'); compare({}, 'no start');
         compare({start:{}}, 'missing start id'); compare({start:{id:null}}, 'null start id');
         FB.activeBookmark = null;
@@ -247,13 +271,14 @@ test('availability matches the original search for retained campaigns, active da
         compare(FB.state, 'campaign with another active date');
         FB.activeBookmark = active;
         FB.save.restore(saved);
+        data = JSON.stringify(FBDATA);
         compare(FB.state, 'after restore');
         return {rows:rows, fingerprint:fingerprint === FB.mods.fingerprint(FB.campaignBookmark(FB.state)),
           signature:signature === FB.mods.sig(), restored:FB.state.start.id === saved.state.start.id};
       } finally { FB.bookmark = lookup; FB.activeBookmark = active; }
-    });
-    expect(result.rows).toHaveLength(18);
-    expect(result).toMatchObject({fingerprint:true, signature:true, restored:true});
+    }, part.retained);
+    expect(result.rows).toHaveLength(9);
+    if (!part.retained) expect(result).toMatchObject({fingerprint:true, signature:true, restored:true});
   });
 }
 

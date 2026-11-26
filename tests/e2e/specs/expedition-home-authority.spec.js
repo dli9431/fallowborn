@@ -1,8 +1,12 @@
 'use strict';
+const fs=require('fs');
+const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
 const {startAuthority,examples}=require('../support/game/expedition-authority');
+const {installStoredMod}=require('../support/game/stored-mod');
+const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/political_institutions.js',
   'js/home_authority.js','js/governments.js','js/government_continuity.js','js/government_levy.js',
@@ -10,9 +14,20 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
   'js/actions.js','js/fortifications.js','js/lordships.js','js/mobile_confederations.js','js/mobile_command.js',
   'js/bookmark_setup.js','js/starts.js','js/main.js','js/model.js','js/travel.js','js/mods.js','js/save_v4.js']);
 
+/* The household starts store the same example file text and boot it once.
+   The shared household helper imports through the Mods file picker and then
+   reopens the game, preparing the whole catalogue three times. The home starts
+   below keep that ordinary Mods file picker import for both examples. */
+async function startStored(page,info,prefix) {
+  await openTitle(page,info);
+  await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/expedition-authority-'+prefix+'.json'),'utf8'));
+  await page.waitForFunction(function (prefix) {return !!FBDATA.bookmarks[prefix+'_world'];},prefix);
+  await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
+}
+
 for(const prefix of ['harbor','dune']) {
   test(prefix+' imports a pure local presence policy and existing exact deputy',async function ({page},info) {
-    await startAuthority(page,info,prefix);
+    await startStored(page,info,prefix);
     const result=await page.evaluate(function (prefix) {
       const s=FB.state,H=FB.homeAuthority,rid=prefix==='harbor'?'harbor_upland':'dune_gate';
       const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -46,7 +61,7 @@ for(const prefix of ['harbor','dune']) {
 }
 
 test('expiry, recall, issuer generation, scope, custody and a host Ban never supply missing civil powers',async function ({page},info) {
-  await startAuthority(page,info,'harbor');
+  await startStored(page,info,'harbor');
   const result=await page.evaluate(function () {
     const s=FB.state,H=FB.homeAuthority,rid='harbor_upland',c=FB.bookmarkActor(s,'harbor_civil_officer');
     const a=s.authority.appointments.find(function (a) {return a.officeId==='harbor_civil_deputy';});

@@ -1,7 +1,9 @@
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
-const {openGame,prepareGameContent} = require('../support/game/navigation');
+const {openGame,openTitle} = require('../support/game/navigation');
+const {installStoredMod} = require('../support/game/stored-mod');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {prepareJourneyBookmark} = require('../support/game/parity');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
@@ -19,16 +21,24 @@ dependsOnRuntime(__filename,['data/events_civic_assembly.js','data/civic_profile
   'js/actions.js','js/parliament.js','js/politics.js','js/economy.js','js/market.js','js/world.js','js/model.js',
   'js/main.js','js/starts.js','js/progression.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js','js/keys.js']);
 
+/* Admission against the unmodded catalogue and the Mods file picker import
+   have their own case, which proves the reload stores exactly the example.
+   Every imported case stores that file text and boots it once, proving it
+   publishes, instead of preparing the unmodded catalogue first. */
+async function pickerImport(page,info) {
+  await openGame(page,info);
+  expect(await page.evaluate(function (m) {return FB.mods.validate(m);},example)).toEqual([]);
+  await page.evaluate(function () {FB.ui.showMods();});
+  await page.locator('#modfile').setInputFiles(examplePath);
+  await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
+  await page.waitForFunction(function () {return !!(window.FB && FB.game && FB.game.bootReady);});
+}
 async function start(page,info,imported) {
   const code = 'CIVICREVIEW-1204-farmer-venezia-m-Reader';
   if (imported) {
-    await openGame(page,info);
-    expect(await page.evaluate(function (m) {return FB.mods.validate(m);},example)).toEqual([]);
-    await page.evaluate(function () {FB.ui.showMods();});
-    await page.locator('#modfile').setInputFiles(examplePath);
-    await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
-    await prepareGameContent(page);
-    // Continue from the ordinary Mods reload instead of booting its catalogue again.
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(examplePath,'utf8'));
+    // Continue from the prepared modded title instead of booting its catalogue again.
     await prepareJourneyBookmark(page,{bookmark:'1204',unhide:true});
     await page.evaluate(function () {FB.startProgression.noteTier(3);});
     const fullStart = page.locator('#btn-choose-beginning');
@@ -189,6 +199,13 @@ async function restoreTwice(page,text) {
     expect(restored.rng).toBe(restored.expectedRng);expect(restored.uid).toBe(restored.expectedUid);expect(restored.sig).toBe(restored.expectedSig);
   }
 }
+
+test('the civic review example is admitted against the unmodded catalogue and imports through the Mods file picker',async function ({page},info) {
+  await pickerImport(page,info);
+  expect(await page.evaluate(function () {
+    return {count:FB.mods.count(),stored:JSON.parse(localStorage.getItem(FB.storageKey('fb_mods')) || '[]').map(function (text) {return JSON.parse(text);})};
+  })).toEqual({count:1,stored:[example]});
+});
 
 for (const imported of [false,true]) {
   const label = imported ? 'ordinary JSON' : 'native';

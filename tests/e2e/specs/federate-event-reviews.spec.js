@@ -1,7 +1,9 @@
 'use strict';
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
-const {openGame,prepareGameContent}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {startParityGame}=require('../support/game/parity');
 const {useReviewStartRules}=require('../support/game/released-starts');
 const {beginBookmark,beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
@@ -22,13 +24,22 @@ dependsOnRuntime(__filename,['index.html','data/events_federate_life.js','data/p
 // Each case opens its own campaign and browser context, so CI can shard the cases independently.
 test.describe.configure({mode:'parallel'});
 
-async function imported(page,info,ruler) {
+/* Admission against the unmodded catalogue and the Mods file picker import
+   have their own case. Every review case stores the same example file text
+   and boots it once instead of preparing the unmodded catalogue first. */
+// The picker case proves admission and that the reload stores exactly this
+// example; every review case boots that stored text and proves it publishes.
+async function pickerImport(page,info) {
   await openGame(page,info);
   expect(await page.evaluate(function(m) {return FB.mods.validate(m);},example)).toEqual([]);
   await page.evaluate(function() {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(examplePath);
   await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+  await page.waitForFunction(function() {return !!(window.FB && FB.game && FB.game.bootReady);});
+}
+async function imported(page,info,ruler) {
+  await openTitle(page,info);
+  await installStoredMod(page,fs.readFileSync(examplePath,'utf8'));
   if (!ruler) {await beginBookmarkFromTitle(page,'inventory_estuary','inventory_estuary_household');return;}
   await page.evaluate(function() {FB.startProgression.noteTier(3);});
   const full=page.locator('#btn-choose-beginning');
@@ -106,6 +117,13 @@ async function helpers(page) {
     };
   });
 }
+
+test('the estuary review example is admitted against the unmodded catalogue and imports through the Mods file picker',async function({page},info) {
+  await pickerImport(page,info);
+  expect(await page.evaluate(function() {
+    return {count:FB.mods.count(),stored:JSON.parse(localStorage.getItem(FB.storageKey('fb_mods')) || '[]').map(function(text) {return JSON.parse(text);})};
+  })).toEqual({count:1,stored:[example]});
+});
 
 test('ordinary JSON review candidates validate atomically in their actual dated composition and preserve legacy choices',async function({page},info) {
   await imported(page,info,false);

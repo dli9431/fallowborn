@@ -1,7 +1,11 @@
 'use strict';
+const fs = require('fs');
+const path = require('path');
 const {test, expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
-const {prepareGameContent} = require('../support/game/navigation');
+const {openTitle} = require('../support/game/navigation');
+const {installStoredMod} = require('../support/game/stored-mod');
+const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {start, river} = require('../support/game/living-nomination');
 dependsOnRuntime(__filename, ['data/political_institutions.js','data/technology.js',
   'js/government_selection.js','js/government_lineage.js','js/government_elective.js',
@@ -10,9 +14,64 @@ dependsOnRuntime(__filename, ['data/political_institutions.js','data/technology.
   'js/station.js','js/justice.js','js/authority.js','js/treasury.js',
   'js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);
 
-test('stale principals, residence, status, age and occupied bindings reject admission without mutation', async function ({page},info) {
-  await start(page,info,'river');
-  const result = await page.evaluate(function () {
+function fixtureText(kind) {
+  return fs.readFileSync(path.resolve(__dirname,'../fixtures/living-nomination/' +
+    (kind === 'consultation' ? 'consultation.json' : 'river-consultation.json')),'utf8');
+}
+
+/* The shared start admits each fixture against the unmodded catalogue and
+   imports it through the Mods file picker; the cases below that still use it
+   keep that coverage. The rejection cases store the same fixture text and boot
+   it once, then install the livingTest members they use exactly as the shared
+   start defines them. */
+async function storedStart(page, info, kind) {
+  await openTitle(page, info);
+  await installStoredMod(page, fixtureText(kind));
+  await beginBookmarkFromTitle(page, kind === 'consultation' ? 'consultation_world' : 'river_consultation_world',
+    kind === 'consultation' ? 'consultation_farmer' : 'river_farmer_demo');
+  await page.evaluate(function (kind) {
+    const s = FB.state, S = FB.governmentSelection;
+    const rid = kind === 'consultation' ? 'consultation_court' : 'river_court_demo';
+    const home = s.realms[rid].capital;
+    FB.realmHeldCounties(s,rid).forEach(function (pid) { FB.setCountySupport(s,pid,40); });
+    let c;
+    if (kind === 'river') c = s.chars[s.localInstitutions.river_council_demo.representativeId];
+    else {
+      c = FB.makeCharacter(s,{name:'Nadir',dyn:'Independent House',sex:'m',born:s.date.year-30,
+        culture:'arabic',religion:'consultation_faith_demo',station:2,role:'notable',quality:1,traitsN:0});
+      c.homeProvinceId = home; c.gold = 29;
+    }
+    window.livingTest = {
+      rid:rid, cid:c.id,
+      request:function (cid, memberId) {
+        const m = S.constituency(FB.state,rid).find(function (row) { return !memberId || row.id === memberId; });
+        return {action:'nominate',memberId:m.id,characterId:cid || this.cid,
+          actor:m.currentPrincipal && m.currentPrincipal.kind === 'character' ?
+            {kind:'character',id:m.currentPrincipal.id} : {kind:'constituency',realmId:rid,id:m.id}};
+      },
+      snapshot:function () {
+        return {state:FB.state,data:FBDATA,world:FB.world,active:FB.activeBookmark,
+          bytes:JSON.stringify([FB.state,FBDATA,FB.englishMessages(),FB.stories.list(),
+            FB.world && [FB.world.provs,FB.world.sites,FB.world.sitesByProv,FB.world.sitesRender],
+            FB.mods.sig(),localStorage,FB.getRngState() >>> 0,FB.getUidCounter()])};
+      },
+      same:function (before) {
+        const after = this.snapshot();
+        return before.state === after.state && before.data === after.data && before.world === after.world &&
+          before.active === after.active && before.bytes === after.bytes;
+      },
+      admit:function () { return S.apply(FB.state,S.quote(FB.state,rid,this.request())); },
+      id:function () { return FB.state.chars[this.cid].royalLine.memberId; }
+    };
+  },kind);
+}
+
+// Each half of the stale-candidate rejections has its own fresh page.
+for (const group of [{name:'age, freedom, captivity and exile changes',cases:['age','unfree','captivity','exile']},
+  {name:'stale principals, residence, scope and occupied bindings',cases:['binding','foreign home','principal','scope']}])
+test(group.name+' reject admission without mutation', async function ({page},info) {
+  await storedStart(page,info,'river');
+  const result = await page.evaluate(function (names) {
     const L = livingTest, s = FB.state, S = FB.governmentSelection, rid = L.rid, c = s.chars[L.cid];
     const changes = [
       ['age',function () { c.born=s.date.year-20; }],
@@ -23,7 +82,7 @@ test('stale principals, residence, status, age and occupied bindings reject admi
       ['foreign home',function () { c.homeProvinceId='invented'; }],
       ['principal',function () { s.chars[s.localInstitutions.river_households_demo.representativeId].dead=true; }],
       ['scope',function () { s.owner.river_home_demo='invented'; }]
-    ];
+    ].filter(function (row) { return names.indexOf(row[0]) >= 0; });
     const out = changes.map(function (row) {
       const person = JSON.parse(JSON.stringify(c)), owner = s.owner.river_home_demo;
       const principal = s.chars[s.localInstitutions.river_households_demo.representativeId], dead = principal.dead;
@@ -35,16 +94,20 @@ test('stale principals, residence, status, age and occupied bindings reject admi
       return {case:row[0],rejected:rejected};
     });
     return out;
-  });
-  expect(result).toEqual(['age','unfree','captivity','exile','binding','foreign home','principal','scope'].map(function (name) {
+  },group.cases);
+  expect(result).toEqual(group.cases.map(function (name) {
     return {case:name,rejected:true};
   }));
 });
 
-for (const action of ['designate','support']) {
-  test('later candidate changes and new admissions invalidate '+action+' reviews', async function ({page},info) {
-    await start(page,info,'consultation');
-    const result = await page.evaluate(function (action) {
+// Each action's later changes form two halves, each in its own fresh page.
+for (const action of ['designate','support'])
+for (const group of [{name:'later identity changes',cases:['age','sex','faith','unfree'],admission:false},
+  {name:'later custody, death, binding changes and new admissions',cases:['captivity','death','binding'],admission:true}]) {
+  test(group.name+' invalidate '+action+' reviews', async function ({page},info) {
+    await storedStart(page,info,'consultation');
+    const result = await page.evaluate(function (input) {
+      const action = input.action;
       const L = livingTest, s = FB.state, S = FB.governmentSelection, rid = L.rid, actor={kind:'realm',id:rid};
       L.admit(); const c=s.chars[L.cid], id=L.id(), p=S.profile(s,rid);
       const cases = [
@@ -52,7 +115,7 @@ for (const action of ['designate','support']) {
         ['faith',function () { c.religion='catholic'; }], ['unfree',function () { c.unfree=true; }],
         ['captivity',function () { c.captive=true; }], ['death',function () { c.dead=true; }],
         ['binding',function () { c.royalLine.memberId='occupied'; }]
-      ];
+      ].filter(function (row) { return input.cases.indexOf(row[0]) >= 0; });
       const out=[];
       if (action==='support') S.apply(s,S.quote(s,rid,{action:'open',actor:actor,cause:'abdication'}));
       cases.forEach(function (row) {
@@ -63,6 +126,7 @@ for (const action of ['designate','support']) {
         out.push({action:action,case:row[0],rejected:q.allowed && !S.apply(s,q) && !S.quote(s,rid,request).allowed && L.same(before)});
         Object.keys(c).forEach(function (key) { delete c[key]; }); Object.assign(c,person);
       });
+      if (!input.admission) return out;
       const request=action==='designate' ? {action:action,actor:actor,candidateId:id} :
         {action:action,actor:{kind:'constituency',realmId:rid,id:'community'},memberId:'community',candidateId:id,terms:p.terms};
       const other=FB.makeCharacter(s,{name:'Other resident',dyn:'Other House',sex:'m',born:s.date.year-25,
@@ -71,18 +135,21 @@ for (const action of ['designate','support']) {
       const prior=S.quote(s,rid,request), admitted=S.apply(s,S.quote(s,rid,L.request(other.id))), before=L.snapshot();
       out.push({action:action,case:'new admission',rejected:admitted && prior.allowed && !S.apply(s,prior) && S.quote(s,rid,request).allowed && L.same(before)});
       return out;
-    },action);
-    expect(result).toEqual(['age','sex','faith','unfree','captivity','death','binding','new admission'].map(function (name) {
+    },{action:action,cases:group.cases,admission:group.admission});
+    expect(result).toEqual(group.cases.concat(group.admission ? ['new admission'] : []).map(function (name) {
       return {action:action,case:name,rejected:true};
     }));
   });
 }
 
-test('invalid boolean and unknown procedure members reject ordinary imports without publication', async function ({page},info) {
-  await start(page,info,'river');
-  const result = await page.evaluate(function (mod) {
-    const out=[];
-    [null,0,1,'true',{},[],'unknown'].forEach(function (bad) {
+// The scalar and the structured invalid values each have their own fresh page.
+for (const group of [{name:'invalid scalar procedure values',values:[null,0,1,'true']},
+  {name:'invalid structured values and unknown procedure members',values:[{},[],'unknown']}])
+test(group.name+' reject ordinary imports without publication', async function ({page},info) {
+  await storedStart(page,info,'river');
+  const result = await page.evaluate(function (args) {
+    const mod=args.mod, out=[];
+    args.values.forEach(function (bad) {
       const input=JSON.parse(JSON.stringify(mod)), p=input.governmentForms.river_consultation_demo.selectionProfile;
       if (bad==='unknown') p.procedure.extraNomination=true; else p.procedure.livingNomination=bad;
       const bytes=JSON.stringify(input), before=livingTest.snapshot(), faults=FB.mods.validate(input);
@@ -90,8 +157,8 @@ test('invalid boolean and unknown procedure members reject ordinary imports with
       out.push({faults:faults.length>0,threw:threw,pure:livingTest.same(before),input:bytes===JSON.stringify(input)});
     });
     return out;
-  },river);
-  expect(result).toEqual(Array.from({length:7},function () { return {faults:true,threw:true,pure:true,input:true}; }));
+  },{mod:river,values:group.values});
+  expect(result).toEqual(Array.from({length:group.values.length},function () { return {faults:true,threw:true,pure:true,input:true}; }));
 });
 
 test('the existing candidate cap, foreign royal exclusion and optional office qualification also bind living admission', async function ({page},info) {
@@ -152,16 +219,15 @@ test('strict detached restoration rejects forged living nomination bindings', as
   expect(result).toEqual({out:Array.from({length:4},function () { return {migration:true,restore:true,pure:true,input:true}; }),signature:true,valid:true});
 });
 
+// The changed policy replaces the stored river configuration and boots once.
+// Its Mods file picker import is covered by the ordinary JSON control cases.
 test('changed living nomination policy rejects the original save fingerprint without effects', async function ({page},info) {
-  await start(page,info,'river');
+  await storedStart(page,info,'river');
   expect(await page.evaluate(function () {return livingTest.admit();})).toBe(true);
   const saved=await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
   const changed=JSON.parse(JSON.stringify(river));
   changed.governmentForms.river_consultation_demo.selectionProfile.procedure.livingNomination=false;
-  await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles({name:'river-consultation.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(changed))});
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+  await installStoredMod(page,JSON.stringify(changed));
   expect(await page.evaluate(function (source) {
     const before=JSON.stringify([FB.state,FB.getRngState(),FB.getUidCounter(),localStorage,FB.mods.sig()]);
     const mismatch=FB.save.otherWorld(source), loaded=FB.game.loadData(source);
