@@ -161,10 +161,13 @@ test('invalid typed declarations reject purely, including attempts to require a 
       function (m) {m.expeditionProgram.steps[1].after=['stock'];},
       function (m) {m.expeditionProgram.steps[1].adapter='holy_objective';m.expeditionProgram.steps[1].terms={};},
       function (m) {const a=JSON.parse(JSON.stringify(m.expeditionProgram.steps[0]));a.id='repeat';m.expeditionProgram.steps.push(a);}];
+    // Every rejection compares catalogue and state with one snapshot taken before
+    // the first, which also covers any change an earlier rejection could leave.
+    const original=JSON.stringify([FBDATA,FB.state]);
     return changes.map(function (change) {
       const mod=JSON.parse(JSON.stringify(source));change(mod.bookmarks.dune_world.realms.find(function (r) {return r.mobile;}).mobile);
-      const bytes=JSON.stringify([mod,FBDATA,FB.state]),rng=FB.getRngState(),uid=FB.getUidCounter();
-      return FB.mods.validate(mod).length>0 && bytes===JSON.stringify([mod,FBDATA,FB.state]) &&
+      const bytes=JSON.stringify(mod),rng=FB.getRngState(),uid=FB.getUidCounter();
+      return FB.mods.validate(mod).length>0 && bytes===JSON.stringify(mod) && original===JSON.stringify([FBDATA,FB.state]) &&
         rng===FB.getRngState() && uid===FB.getUidCounter();
     });
   },examples.dune);

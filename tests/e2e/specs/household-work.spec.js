@@ -1,5 +1,6 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -26,8 +27,18 @@ async function beginImported(page, scenario) {
   await beginBookmarkFromTitle(page, '867', scenario);
 }
 
+// Boots the exact JSON the Mods dialog stores, so the page prepares only the
+// modded catalogue once. The other graph cases keep the dialog import.
+async function bootStoredExamples(page, info) {
+  await page.addInitScript(function (source) {
+    if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods', JSON.stringify([source]));
+  }, fs.readFileSync(path.resolve(__dirname, '../fixtures/authoring/household-work.json'), 'utf8'));
+  await openGame(page, info);
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.mods.count() === 1 && FB.stories.get('bench_work_example'); });
+}
+
 test('JSON work graphs charge once and observe actual focus income without replay', async function ({ page }, info) {
-  await importExamples(page, info);
+  await bootStoredExamples(page, info);
   await beginImported(page, 'bench_work_example_start');
   expect(await page.evaluate(function () {
     let s = FB.state;

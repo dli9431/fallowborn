@@ -2,6 +2,7 @@
 const {installRestoreFacts}=require('../support/game/restore-facts');
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -20,14 +21,26 @@ dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/mob
   'js/starts.js','js/world.js','js/main.js','js/model.js','js/station.js','js/util.js','js/justice.js',
   'js/mods.js','js/save.js','js/save_v4.js','js/stories.js','js/story_household.js']);
 
-async function start(page,info,prefix,input,scenario) {
-  await openGame(page,info);
-  await page.evaluate(function () {FB.ui.showMods();});
-  await expectModAdmission(page,input || examples[prefix]);
-  await page.locator('#modfile').setInputFiles(input ? {name:'campaigns.json',mimeType:'application/json',
-    buffer:Buffer.from(JSON.stringify(input))} : path.resolve(__dirname,'../fixtures/authoring/mobile-opening-campaigns-'+prefix+'.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+// Stored boots the exact fixture JSON the Mods dialog stores, so the page
+// prepares only the modded catalogue once. The other cases keep the dialog
+// import and its unmodded admission for both examples.
+async function start(page,info,prefix,input,scenario,stored) {
+  const fixture=path.resolve(__dirname,'../fixtures/authoring/mobile-opening-campaigns-'+prefix+'.json');
+  if (stored) {
+    await page.addInitScript(function (source) {
+      if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+    },fs.readFileSync(fixture,'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function () {return FB.mods.count();})).toBe(1);
+  } else {
+    await openGame(page,info);
+    await page.evaluate(function () {FB.ui.showMods();});
+    await expectModAdmission(page,input || examples[prefix]);
+    await page.locator('#modfile').setInputFiles(input ? {name:'campaigns.json',mimeType:'application/json',
+      buffer:Buffer.from(JSON.stringify(input))} : fixture);
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  }
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   if(scenario){
     const sc=(input || examples[prefix]).startScenarios.find(function(row){return row.id===scenario;});
@@ -155,9 +168,12 @@ test('detached malformed and incompatible declarations reject without mutating i
 }
 
 test('pure whole-opening preflight rejects stale parties, target control, hostile transit and conflicts before allocation',async function ({page},info) {
-  await start(page,info,'harbor');
+  await start(page,info,'harbor',null,null,true);
   const result=await page.evaluate(function () {
     const C=window.openingCase,M=FB.mobile;
+    // Every rejection compares the catalogue with one snapshot taken before
+    // the first, which also covers any change an earlier rejection could leave.
+    const data=JSON.stringify(FBDATA);
     return ['dead','custody','generation','target','peaceful','disconnected','collision','existing','late','forged'].map(function (kind) {
       const s=C.fresh(),d=JSON.parse(JSON.stringify(C.d)),e=d.mobile.openingCampaigns.entries[1],enemy=e.opponent.realmId;
       const actor=FB.bookmarkActor(s,e.opponent.actorId),adj=FB.world.adj;
@@ -174,7 +190,7 @@ test('pure whole-opening preflight rejects stale parties, target control, hostil
       }
       if (kind==='late') s.turn=1;
       if (kind==='forged') d.mobile.openingCampaigns.entries[0].columnIds=['reed_column'];
-      const before=JSON.stringify(s),data=JSON.stringify(FBDATA),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
       let rejected=false,denied=false;
       try {denied=!M.openingPlan(s,d).allowed;M.initialize(s,[d]);} catch(error) {rejected=true;}
       finally {FB.world.adj=adj;}

@@ -109,6 +109,8 @@ test('complete court batch a replacement imports and retains household identitie
   await openGame(page,info);
   await prepareGameContent(page);
   await loadCourts(page);
+  // The page keeps its composition for admission; only the file picker needs
+  // the text in Node.
   const payload = await page.evaluate(function () {
     const rows = FBDATA.bookmarkRevisionContent_634_courts_a.realms;
     const raw = JSON.parse(JSON.stringify(FBDATA.bookmarks['634']));
@@ -117,9 +119,10 @@ test('complete court batch a replacement imports and retains household identitie
     raw.revisions[raw.revision].realms = current.realms.map(function (r) {
       return rows.find(function (row) { return row.id === r.id; }) || r;
     });
-    return JSON.stringify({name:'634 court composition review',bookmarks:{'634':raw}});
+    window.courtPayload = JSON.stringify({name:'634 court composition review',bookmarks:{'634':raw}});
+    return window.courtPayload;
   });
-  expect(await page.evaluate(function (payload) { return FB.mods.validate(JSON.parse(payload)); },payload)).toEqual([]);
+  expect(await page.evaluate(function () { return FB.mods.validate(JSON.parse(window.courtPayload)); })).toEqual([]);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles({name:'western-courts.json',mimeType:'application/json',
     buffer:Buffer.from(payload,'utf8')});

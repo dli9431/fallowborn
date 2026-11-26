@@ -2,6 +2,7 @@
 const {installRestoreFacts}=require('../support/game/restore-facts');
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
@@ -18,15 +19,26 @@ dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/tec
   'js/population.js','js/settlement.js','js/world.js','js/starts.js','js/model.js','js/mods.js',
   'js/save.js','js/save_v4.js','js/main.js','js/ui_misc.js','js/ui_panels.js','js/i18n.js']);
 
-async function start(page,info,prefix,modified) {
-  await openGame(page,info);
-  await page.evaluate(function () {FB.ui.showMods();});
-  await expectModAdmission(page,modified || examples[prefix]);
-  await page.locator('#modfile').setInputFiles(modified ? {name:'terms.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(modified))} :
-    path.resolve(__dirname,'../fixtures/authoring/expedition-terms-'+
-    (prefix==='harbor' ? 'harbor' : 'upland')+'.json'));
-  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
+// Stored boots the exact fixture JSON the Mods dialog stores, so the page
+// prepares only the modded catalogue once. The other cases keep the dialog
+// import and its unmodded admission for both examples.
+async function start(page,info,prefix,modified,stored) {
+  const fixture=path.resolve(__dirname,'../fixtures/authoring/expedition-terms-'+(prefix==='harbor' ? 'harbor' : 'upland')+'.json');
+  if (stored) {
+    await page.addInitScript(function (source) {
+      if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+    },fs.readFileSync(fixture,'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function () {return FB.mods.count();})).toBe(1);
+  } else {
+    await openGame(page,info);
+    await page.evaluate(function () {FB.ui.showMods();});
+    await expectModAdmission(page,modified || examples[prefix]);
+    await page.locator('#modfile').setInputFiles(modified ? {name:'terms.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(modified))} :
+      fixture);
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+  }
   await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
   const sc=examples[prefix].startScenarios.find(function (s) {return s.id===prefix+'_command_start';});
   const code='TERMS-'+prefix+'_world-'+sc.id+'-'+sc.fixedProvinceId+'-'+sc.sex+'-'+
@@ -239,7 +251,7 @@ test('malformed review saves reject before adopting state or RNG',async function
 });
 
 test('matching saved content cannot silently change the review term or claim scope',async function ({page},info) {
-  await start(page,info,'dune');
+  await start(page,info,'dune',null,true);
   const result=await page.evaluate(function (input) {
     const saved=JSON.parse(FB.save.serialize());input.storyInstances.dune_terms.endTurn++;
     if (FB.mods.validate(input).length) return false;

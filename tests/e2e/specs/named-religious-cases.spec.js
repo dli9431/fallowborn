@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
@@ -271,7 +272,9 @@ test('current-content proceedings and payments survive two restores; malformed r
   expect(rejected).toEqual(Array(6).fill(true));
 });
 
-test('ordinary fictional JSON import varies recipients and refusal policy, with pure validation and exact saved content',async function ({page},info) {
+// Validation and the Mods file picker form one journey; the mechanics below boot
+// the same stored JSON once instead of preparing the catalogue a second time.
+test('ordinary fictional JSON validation is pure and the Mods file picker admits the river court',async function ({page},info) {
   await openGame(page,info);await prepareGameContent(page);
   const valid=await page.evaluate(function(mod){
     const before=JSON.stringify(FBDATA),rng=FB.getRngState(),uid=FB.getUidCounter(),good=FB.mods.validate(mod);
@@ -284,7 +287,20 @@ test('ordinary fictional JSON import varies recipients and refusal policy, with 
   await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/religious-river-court.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);await beginBookmarkFromTitle(page,'1204','baron');await bind(page);
+  await prepareGameContent(page);
+  expect(await page.evaluate(function(){
+    FB.mods.assertReady();
+    return {count:FB.mods.count(),stored:JSON.parse(localStorage.getItem('fb_mods')).length,declared:!!FBDATA.religiousCases.river_clerical_peace};
+  })).toEqual({count:1,stored:1,declared:true});
+});
+
+test('the imported fictional river court varies recipients and refusal policy with exact saved content',async function ({page},info) {
+  await page.addInitScript(function(source){
+    if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+  },fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/religious-river-court.json'),'utf8'));
+  await openGame(page,info);
+  expect(await page.evaluate(function(){return FB.mods.count();})).toBe(1);
+  await beginBookmarkFromTitle(page,'1204','baron');await bind(page);
   const result=await page.evaluate(function(){
     const s=FB.state,R=FB.religiousCases;
     // Stage an actual superior court, preserving the bishop's local holdings.

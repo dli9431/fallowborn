@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+const {installPageGuards} = require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
 const {startDeterministicGame} = require('../support/game/start');
@@ -111,52 +112,74 @@ test('dated consumer rejection covers communities, rulers, courts, openings, ins
     })).toEqual({rejected:[true,true,true,true,true,true,true],pure:true});
   });
 
-test('two independent fictional profiles enter through the public stored JSON mod path',
+test('the two fictional profiles pass ordinary validation against the unmodded catalogue',
   async function ({page},testInfo) {
     const mod = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/religion-coverage-mod.json'),'utf8'));
     await openGame(page,testInfo);
-    expect(await page.evaluate(function (mod) {
-      const errors = FB.mods.validate(mod);
-      if (!errors.length) localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(mod)]));
-      return errors;
-    },mod)).toEqual([]);
-    await openGame(page,testInfo);
-    expect(await page.evaluate(function () {
-      const early = 'e2e_river_observance', late = 'e2e_city_teaching';
-      const a = JSON.parse(JSON.stringify(FB.bookmark('476'))), b = JSON.parse(JSON.stringify(FB.bookmark('1066')));
-      function minority(bookmark, pid, faith) {
-        const p = bookmark.provinces.find(function (row) { return row.id === pid; });
-        p.communities = p.communities || [{culture:p.culture,religion:p.religion,populationShare0:10000}];
-        p.communities[0].populationShare0 -= 1000;
-        p.communities.push({culture:p.culture,religion:faith,populationShare0:1000,paired:true});
-      }
-      minority(a,'candia',early); minority(b,'london',late);
-      function atYear(id, year) {
-        return FB.faithHistoricalAvailable(id,Object.assign({},a,{date:{year:year,season:0,day:1}}),'community');
-      }
-      return {early476:FB.faithHistoricalAvailable(early,FB.bookmark('476'),'community'),
-        early493:FB.faithHistoricalAvailable(early,FB.bookmark('493'),'character'),
-        early711:FB.faithHistoricalAvailable(early,FB.bookmark('711'),'community'),
-        earlyOffice:FB.faithHistoricalAvailable(early,FB.bookmark('476'),'institution'),
-        late867:FB.faithHistoricalAvailable(late,FB.bookmark('867'),'community'),
-        late1066:FB.faithHistoricalAvailable(late,FB.bookmark('1066'),'institution'),
-        late1204:FB.faithHistoricalAvailable(late,FB.bookmark('1204'),'community'),
-        independentAssignments:[FB.validateBookmark(a),FB.validateBookmark(b)],
-        boundaries:[atYear(early,475),atYear(early,476),atYear(early,620),atYear(early,621),
-          atYear(late,999),atYear(late,1000),atYear(late,1250),atYear(late,1251)],
-        roles:[FB.religionOf(early,null).roles.priestM,FB.religionOf(late,null).roles.priestM],
-        headless:FB.faithOfficeId(early,null) === null && FB.faithOfficeId(late,null) === null};
-    })).toEqual({early476:true,early493:true,early711:false,earlyOffice:false,
-      late867:false,late1066:true,late1204:true,independentAssignments:[[],[]],
-      boundaries:[false,true,true,false,false,true,true,false],roles:['Keeper','Teacher'],headless:true});
-    await startDeterministicGame(page);
-    const saved = await page.evaluate(function () { return FB.save.serialize(); });
-    await openGame(page,testInfo);
-    await restoreBookmark(page,saved);
-    expect(await page.evaluate(function (saved) {
-      return JSON.parse(FB.save.serialize()).mods === JSON.parse(saved).mods &&
-        FB.religionOf('e2e_city_teaching',FB.state).roles.priestM === 'Teacher';
-    },saved)).toBe(true);
+    expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },mod)).toEqual([]);
+  });
+
+/* Each page stores the fixture's compact JSON before its first boot, where the
+   public stored mod path reads it, so it prepares only the modded catalogue.
+   Validation against the unmodded catalogue has its own case above. The restore
+   page boots in its own fresh context beside the campaign page, so it prepares
+   at the same time instead of after a reload. */
+async function bootStoredProfiles(page,testInfo) {
+  const mod = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/religion-coverage-mod.json'),'utf8'));
+  await page.addInitScript(function (source) {
+    if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+  },JSON.stringify(mod));
+  await openGame(page,testInfo);
+  expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+}
+
+test('two independent fictional profiles enter through the public stored JSON mod path',
+  async function ({page,browser},testInfo) {
+    const context = await browser.newContext({viewport:{width:1280,height:800},locale:'en-US',timezoneId:'UTC'});
+    try {
+      const restored = await context.newPage(), guard = installPageGuards(restored);
+      await Promise.all([bootStoredProfiles(page,testInfo),bootStoredProfiles(restored,testInfo)]);
+      // The restore page reads the same stored catalogue while this page starts
+      // its campaign, so the detached checks do not wait for the start.
+      const started = startDeterministicGame(page).then(function () { return null; },function (error) { return error; });
+      expect(await restored.evaluate(function () {
+        const early = 'e2e_river_observance', late = 'e2e_city_teaching';
+        const a = JSON.parse(JSON.stringify(FB.bookmark('476'))), b = JSON.parse(JSON.stringify(FB.bookmark('1066')));
+        function minority(bookmark, pid, faith) {
+          const p = bookmark.provinces.find(function (row) { return row.id === pid; });
+          p.communities = p.communities || [{culture:p.culture,religion:p.religion,populationShare0:10000}];
+          p.communities[0].populationShare0 -= 1000;
+          p.communities.push({culture:p.culture,religion:faith,populationShare0:1000,paired:true});
+        }
+        minority(a,'candia',early); minority(b,'london',late);
+        function atYear(id, year) {
+          return FB.faithHistoricalAvailable(id,Object.assign({},a,{date:{year:year,season:0,day:1}}),'community');
+        }
+        return {early476:FB.faithHistoricalAvailable(early,FB.bookmark('476'),'community'),
+          early493:FB.faithHistoricalAvailable(early,FB.bookmark('493'),'character'),
+          early711:FB.faithHistoricalAvailable(early,FB.bookmark('711'),'community'),
+          earlyOffice:FB.faithHistoricalAvailable(early,FB.bookmark('476'),'institution'),
+          late867:FB.faithHistoricalAvailable(late,FB.bookmark('867'),'community'),
+          late1066:FB.faithHistoricalAvailable(late,FB.bookmark('1066'),'institution'),
+          late1204:FB.faithHistoricalAvailable(late,FB.bookmark('1204'),'community'),
+          independentAssignments:[FB.validateBookmark(a),FB.validateBookmark(b)],
+          boundaries:[atYear(early,475),atYear(early,476),atYear(early,620),atYear(early,621),
+            atYear(late,999),atYear(late,1000),atYear(late,1250),atYear(late,1251)],
+          roles:[FB.religionOf(early,null).roles.priestM,FB.religionOf(late,null).roles.priestM],
+          headless:FB.faithOfficeId(early,null) === null && FB.faithOfficeId(late,null) === null};
+      })).toEqual({early476:true,early493:true,early711:false,earlyOffice:false,
+        late867:false,late1066:true,late1204:true,independentAssignments:[[],[]],
+        boundaries:[false,true,true,false,false,true,true,false],roles:['Keeper','Teacher'],headless:true});
+      const startError = await started;
+      if (startError) throw startError;
+      const saved = await page.evaluate(function () { return FB.save.serialize(); });
+      await restoreBookmark(restored,saved);
+      expect(await restored.evaluate(function (saved) {
+        return JSON.parse(FB.save.serialize()).mods === JSON.parse(saved).mods &&
+          FB.religionOf('e2e_city_teaching',FB.state).roles.priestM === 'Teacher';
+      },saved)).toBe(true);
+      expect(guard.faults,'restore context faults').toEqual([]);
+    } finally { await context.close(); }
   });
 
 test('fresh head assignments apply the same period gate to faith and office keys',

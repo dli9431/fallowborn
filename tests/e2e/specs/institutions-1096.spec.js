@@ -2,6 +2,7 @@
 const {prepareGameContent} = require('../support/game/navigation');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+const {installPageGuards} = require('../support/page-contract');
 const {openGame} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
@@ -251,7 +252,7 @@ test('strict saved localities and memberships reject malformed rows without repa
   })).toEqual({faults:[true,true,true],pure:true});
 });
 
-test('the ordinary JSON importer retains date-local declarations and exact content fingerprints',async function ({page},info) {
+test('the ordinary JSON importer retains date-local declarations and exact content fingerprints',async function ({page,browser},info) {
   await openGame(page,info);
   const mod = await page.evaluate(function () {
     const b = JSON.parse(JSON.stringify(FBDATA.bookmarks['1096']));
@@ -263,25 +264,38 @@ test('the ordinary JSON importer retains date-local declarations and exact conte
       throw new Error('Detached validation mutated the campaign');
     return mod;
   });
-  await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles({name:'institutions-1096.json',
-    mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))});
-  await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
-  await prepareGameContent(page);
-  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.mods.count() === 1; });
-  await page.evaluate(function () { FBDATA.bookmarks['1096'].revision = 'baseline'; });
-  await beginBookmarkFromTitle(page,'1096','farmer');
-  expect(await page.evaluate(function () { return FB.state.start.revision; })).toBe('baseline');
-  expect(await page.evaluate(function () { return Object.keys(FB.localInstitutionDefinitions(FB.state)); })).toEqual(ids);
-  const saved = await page.evaluate(function () { return FB.save.serialize(); });
-  await restoreBookmark(page,saved);
-  mod.bookmarks['1096'].localInstitutions.mainz_jewish_congregation_1096.city = 'Changed local group';
-  await page.evaluate(function (mod) { localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(mod)])); },mod);
-  await openGame(page,info);
-  expect(await page.evaluate(function (saved) {
-    const source = JSON.parse(saved), unchanged = JSON.stringify(source), state = FB.state, world = FB.world,
-      rng = FB.getRngState(), uid = FB.getUidCounter();
-    return FB.game.loadData(source) === false && unchanged === JSON.stringify(source) && state === FB.state &&
-      world === FB.world && rng === FB.getRngState() && uid === FB.getUidCounter();
-  },saved)).toBe(true);
+  // The changed configuration boots its stored JSON in its own fresh context
+  // while this page imports and plays the original, so its preparation does not
+  // wait for them and a later reload.
+  const changed = JSON.parse(JSON.stringify(mod));
+  changed.bookmarks['1096'].localInstitutions.mainz_jewish_congregation_1096.city = 'Changed local group';
+  const context = await browser.newContext({viewport:{width:1280,height:800},locale:'en-US',timezoneId:'UTC'});
+  try {
+    const other = await context.newPage(), guard = installPageGuards(other);
+    await other.addInitScript(function (source) {
+      if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+    },JSON.stringify(changed));
+    const otherBooted = openGame(other,info).then(function () { return null; },function (error) { return error; });
+    await page.evaluate(function () { FB.ui.showMods(); });
+    await page.locator('#modfile').setInputFiles({name:'institutions-1096.json',
+      mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))});
+    await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#mod-apply').click()]);
+    await prepareGameContent(page);
+    await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.mods.count() === 1; });
+    await page.evaluate(function () { FBDATA.bookmarks['1096'].revision = 'baseline'; });
+    await beginBookmarkFromTitle(page,'1096','farmer');
+    expect(await page.evaluate(function () { return FB.state.start.revision; })).toBe('baseline');
+    expect(await page.evaluate(function () { return Object.keys(FB.localInstitutionDefinitions(FB.state)); })).toEqual(ids);
+    const saved = await page.evaluate(function () { return FB.save.serialize(); });
+    await restoreBookmark(page,saved);
+    const bootError = await otherBooted;
+    if (bootError) throw bootError;
+    expect(await other.evaluate(function (saved) {
+      const source = JSON.parse(saved), unchanged = JSON.stringify(source), state = FB.state, world = FB.world,
+        rng = FB.getRngState(), uid = FB.getUidCounter();
+      return FB.mods.count() === 1 && FB.game.loadData(source) === false && unchanged === JSON.stringify(source) &&
+        state === FB.state && world === FB.world && rng === FB.getRngState() && uid === FB.getUidCounter();
+    },saved)).toBe(true);
+    expect(guard.faults,'changed configuration context faults').toEqual([]);
+  } finally { await context.close(); }
 });

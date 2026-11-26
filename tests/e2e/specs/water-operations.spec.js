@@ -2,11 +2,13 @@
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {installRestoreFacts}=require('../support/game/restore-facts');
 const {prepareGameContent} = require('../support/game/navigation');
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
+const {installPageGuards} = require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
-const {beginBookmark,beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/water-operations-river.json'),
   catchment:require('../fixtures/authoring/water-operations-catchment.json')};
@@ -38,6 +40,19 @@ async function importExample(page,info,name,custom,ruler) {
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.evaluate(function () { FB.game.setPaused(true); });
+}
+
+// Boots the exact fixture JSON the Mods dialog stores, so the page prepares only
+// the modded catalogue once. The dialog import and its unmodded admission keep
+// their own cases.
+async function bootStored(page,info,name) {
+  await page.addInitScript(function (source) {
+    if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+  },fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/water-operations-' + name + '.json'),'utf8'));
+  await openGame(page,info);
+  expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+  const origin = name === 'river' ? 'river' : 'upland';
+  await beginBookmarkFromTitle(page,'resource_' + origin,'resource_' + origin + '_household');
 }
 
 // Setup purchases through the same realm transaction used by the annual AI.
@@ -210,9 +225,8 @@ test('public reserves, work funding and competing source draw fail without parti
   expect(result).toEqual(Array(3).fill(true));
 });
 
-test('same-seed fresh campaigns reproduce exact paid receipts, resource balances, people and identities',async function ({page},info) {
-  await importExample(page,info,'river');
-  async function facts() {
+test('same-seed fresh campaigns reproduce exact paid receipts, resource balances, people and identities',async function ({page,browser},info) {
+  async function facts(page) {
     await prepare(page,true);
     return page.evaluate(function () {
       const s=FB.state,O=FB.buildingOperations,a=O.compile(FB.campaignBookmark(s)).assignments[1],who=FB.settlementHolder(s,a.countyId,a.slot);
@@ -221,9 +235,16 @@ test('same-seed fresh campaigns reproduce exact paid receipts, resource balances
       return {facts:JSON.stringify([s.buildingOperations,s.siteResources,s.population,s.buildings,s.chars,s.realms,s.owner,s.holder]),rng:FB.getRngState()>>>0,uid:FB.getUidCounter()};
     });
   }
-  const first=await facts();
-  await beginBookmark(page,info,'resource_river','resource_river_household');
-  expect(await facts()).toEqual(first);
+  // The second fresh campaign boots in its own context beside the first, so it
+  // prepares at the same time instead of after another reload.
+  const context=await browser.newContext({viewport:{width:1280,height:800},locale:'en-US',timezoneId:'UTC'});
+  try {
+    const second=await context.newPage(),guard=installPageGuards(second);
+    await Promise.all([bootStored(page,info,'river'),bootStored(second,info,'river')]);
+    const first=await facts(page);
+    expect(await facts(second)).toEqual(first);
+    expect(guard.faults,'second context faults').toEqual([]);
+  } finally { await context.close(); }
 });
 
 test('detached validation rejects bad types, unsupported bonuses, routes, cycles and foreign demand without publication',async function ({page},info) {

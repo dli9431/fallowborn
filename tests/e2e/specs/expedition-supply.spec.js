@@ -93,9 +93,13 @@ for (const prefix of ['harbor','upland']) {
   });
 }
 
-test('malformed supply policies reject detached, including unknown classes and same-import references',async function ({page},info) {
+// Each case reviews part of the malformed list from its own fresh page, so no
+// case validates the whole list after preparing the catalogue.
+for (const range of [[0,10],[10,19]]) {
+test('malformed supply policies reject detached, including unknown classes and same-import references '+range[0],async function ({page},info) {
   await openGame(page,info);
-  const result=await page.evaluate(function (source) {
+  const result=await page.evaluate(function (input) {
+    const source=input.source;
     const changes=[function (p) {p.schema=2;},function (p) {delete p.schema;},function (p) {p.extra=true;},
       function (p) {p.targetDays=0;},function (p) {p.targetDays=31;},function (p) {p.targetDays=1.5;},
       function (p) {p.carryDays=0;},function (p) {p.carryDays=31;},function (p) {p.cashReserve=-1;},
@@ -104,18 +108,23 @@ test('malformed supply policies reject detached, including unknown classes and s
       function (p) {p.replacement.unitIds=[];},function (p) {p.replacement.unitIds=['missing_supply_class'];},
       function (p) {p.replacement.unitIds=['arch','arch'];},function (p) {p.replacement.unitIds=['merc'];},
       function (p) {p.replacement.extra=true;},function (p) {p.replacement=null;}];
-    const rejected=changes.map(function (change) {
+    // Every rejection compares state and catalogue with one snapshot taken before
+    // the first, which also covers any change an earlier rejection could leave.
+    const original=JSON.stringify([FB.state,FBDATA]);
+    const rejected=changes.slice(input.from,input.to).map(function (change) {
       const input=JSON.parse(JSON.stringify(source)),p=input.mobileProfiles.harbor_compact.supplyPolicy;change(p);
-      const before=JSON.stringify([input,FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter();
-      return FB.mods.validate(input).length>0 && before===JSON.stringify([input,FB.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter();
+      const before=JSON.stringify(input),rng=FB.getRngState(),uid=FB.getUidCounter();
+      return FB.mods.validate(input).length>0 && before===JSON.stringify(input) && original===JSON.stringify([FB.state,FBDATA]) &&
+        rng===FB.getRngState() && uid===FB.getUidCounter();
     });
     const added=JSON.parse(JSON.stringify(source));added.unitClasses={supply_arch:JSON.parse(JSON.stringify(FBDATA.unitClasses.arch))};
     added.mobileProfiles.harbor_compact.supplyPolicy.replacement.unitIds=['supply_arch'];
     const omitted=JSON.parse(JSON.stringify(source));delete omitted.mobileProfiles.harbor_compact.supplyPolicy;
-    return {rejected:rejected,sameImport:FB.mods.validate(added),omitted:FB.mods.validate(omitted)};
-  },examples.harbor);
-  expect(result).toEqual({rejected:Array(19).fill(true),sameImport:[],omitted:[]});
+    return {total:changes.length,rejected:rejected,sameImport:FB.mods.validate(added),omitted:FB.mods.validate(omitted)};
+  },{source:examples.harbor,from:range[0],to:range[1]});
+  expect(result).toEqual({total:19,rejected:Array(range[1]-range[0]).fill(true),sameImport:[],omitted:[]});
 });
+}
 
 test('empty markets, reserved cash, refused access and obsolete quotes transfer nothing',async function ({page},info) {
   await start(page,info,'harbor');

@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
@@ -15,7 +16,18 @@ dependsOnRuntime(__filename,[
   'tests/e2e/fixtures/authoring/ai-investment-guarded.json'
 ]);
 
-async function begin(page,info,kind) {
+// Stored boots the exact fixture JSON the Mods dialog stores, so the page
+// prepares only the modded catalogue once. The import cases keep the dialog.
+async function begin(page,info,kind,stored) {
+  if (stored) {
+    await page.addInitScript(function (source) {
+      if (localStorage.getItem('fb_mods') === null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+    },fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/ai-investment-'+kind+'.json'),'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function () { return FB.mods.count(); })).toBe(1);
+    await startDeterministicGame(page);
+    return;
+  }
   await openGame(page,info);
   if (kind) {
     await page.evaluate(function () { FB.ui.showMods(); });
@@ -136,7 +148,7 @@ for (const kind of ['learned','guarded']) {
 }
 
 test('annual construction preserves insolvency, reserves, technology, physical site, contest and player exclusions',async function ({page},info) {
-  await begin(page,info,'learned');
+  await begin(page,info,'learned',true);
   const ids = await stage(page);
   const out = await page.evaluate(function (ids) {
     const initial = JSON.stringify(FB.state),rid = ids.rid,pid = ids.pid;
