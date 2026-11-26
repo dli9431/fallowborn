@@ -4,6 +4,7 @@ test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { restoreBookmark } = require('../support/game/bookmark-acceptance');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/religious_institutions.js', 'data/political_institutions.js', 'data/ecclesiastical_profiles.js',
@@ -91,13 +92,65 @@ function installInstitutions() {
     return q;
   };
 }
+
+/* Runs in the page after a shared boot. Records the catalogue rows that
+   installInstitutions, installHouseholdRoutes and single cases add or replace:
+   whole rows of the religious tables, faith properties and the 867 seats. */
+function captureInstitutionBoot() {
+  var own = function (o, k) { return Object.prototype.hasOwnProperty.call(o, k); };
+  var slot = function (o, k) { return own(o, k) ? [o[k]] : []; };
+  var tables = {}, properties = {}, raw = FBDATA.bookmarks['867'], revisions = {};
+  ['religions','religiousAffiliations','religiousInstitutionProfiles','ecclesiasticalProfiles','religiousPaths'].forEach(function (name) {
+    tables[name] = Object.assign({}, FBDATA[name]);
+  });
+  Object.keys(FBDATA.religions).forEach(function (id) { properties[id] = slot(FBDATA.religions[id], 'properties'); });
+  Object.keys(raw.revisions || {}).forEach(function (id) { revisions[id] = slot(raw.revisions[id], 'localInstitutions'); });
+  window.institutionBoot = { tables:tables, properties:properties, seats:slot(raw, 'localInstitutions'), revisions:revisions };
+}
+
+// Runs in the page before each shared reset. Removes those fictional rows again.
+function restoreInstitutionBoot() {
+  var boot = window.institutionBoot;
+  if (!boot) return;
+  var own = function (o, k) { return Object.prototype.hasOwnProperty.call(o, k); };
+  var put = function (o, k, saved) {
+    if (saved.length) { if (o[k] !== saved[0]) o[k] = saved[0]; }
+    else if (own(o, k)) delete o[k];
+  };
+  Object.keys(boot.tables).forEach(function (name) {
+    var table = FBDATA[name], saved = boot.tables[name];
+    Object.keys(table).forEach(function (key) { if (!own(saved, key)) delete table[key]; });
+    Object.keys(saved).forEach(function (key) { if (table[key] !== saved[key]) table[key] = saved[key]; });
+  });
+  Object.keys(boot.properties).forEach(function (id) { put(FBDATA.religions[id], 'properties', boot.properties[id]); });
+  var raw = FBDATA.bookmarks['867'];
+  put(raw, 'localInstitutions', boot.seats);
+  Object.keys(boot.revisions).forEach(function (id) { put(raw.revisions[id], 'localInstitutions', boot.revisions[id]); });
+  FB.invalidateReligionData();
+}
+
+/* The restore after another bookmark keeps a fresh page. Runs of the other
+   cases share one page per group, booted with the 867 world active and reset
+   before each case after the fictional catalogue rows are removed; each case
+   still starts its own campaign and installs its own institutions. */
+function sharedInstitutions(title, body) {
+  describeSharedPage(title, { boot:async function (page, testInfo) {
+    await openGame(page, testInfo);
+    await activateBookmark(page, '867');
+    await page.evaluate(captureInstitutionBoot);
+  }, reset:async function (page) {
+    await page.evaluate(restoreInstitutionBoot);
+  } }, body);
+}
+
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () { FB.game.setPaused(true); });
   await page.evaluate(installInstitutions);
 });
 
+sharedInstitutions('membership visibility, validation and appointments', function () {
 test('membership button short-circuits the player and preserves household-only and independent-authority visibility',async function ({page}) {
   const result = await page.evaluate(function () {
     const s = FB.state, me = s.chars[s.player.charId], kin = s.chars[institutionFixture.house];
@@ -250,7 +303,9 @@ for (const institution of ['test_house','test_school']) {
     expect(result).toEqual({ appointed:true, disputed:0, vacant:true, member:'active', rightsUnchanged:true, legacy:true });
   });
 }
+});
 
+sharedInstitutions('assent, stale reviews, admission and limits', function () {
 test('a school committee needs individual current assent and cannot appoint by claiming other votes', async function ({ page }) {
   const result = await page.evaluate(function () {
     var s = FB.state, f = institutionFixture, actor = { kind:'character', id:f.teacher };
@@ -429,7 +484,9 @@ test('withdrawal leaves the abbey ledger, household assets, followers and instit
   });
   expect(result).toEqual({ assets:true, person:true, house:true, withdrawn:'withdrawn', vacant:true });
 });
+});
 
+sharedInstitutions('schema, opening records and detached validation', function () {
 test('schema errors and unknown affiliation, profile, role, office and jurisdiction references fail closed', async function ({ page }) {
   const result = await page.evaluate(function () {
     var s = FB.state, f = institutionFixture, failures = [];
@@ -504,6 +561,7 @@ test('optional memberships, affiliation and canonical recognition survive detach
   });
   expect(result).toBe(true);
 });
+});
 
 function installHouseholdRoutes() {
   FBDATA.religiousPaths.test_household_lay = { kind:'lay', faiths:['jewish'], ranks:[
@@ -527,6 +585,7 @@ function installHouseholdRoutes() {
   s.player.piety = 100; s.player.gold = 100;
 }
 
+sharedInstitutions('household routes, AI and ecclesiastical bindings', function () {
 test('headless lay and specialist routes grant declared work and titles without inventing an office', async function ({ page }) {
   await page.evaluate(installHouseholdRoutes);
   const result = await page.evaluate(function () {
@@ -829,6 +888,7 @@ test('household review restores details and keyboard focus, rejects changed term
     var box = document.getElementById('gm-body');
     return box.scrollWidth <= box.clientWidth + 1;
   })).toBe(true);
+});
 });
 
 function retainedInstitutionFacts() {

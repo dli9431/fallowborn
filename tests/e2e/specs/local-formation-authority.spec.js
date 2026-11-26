@@ -6,6 +6,10 @@ const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const fs=require('fs');
+const {openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/local-formation-harbor.json'),
   upland:require('../fixtures/authoring/local-formation-upland.json')};
@@ -20,12 +24,16 @@ dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/mob
   'js/travel.js','js/save.js','js/save_v4.js','js/main.js']);
 
 async function begin(page,info,label,legacy) {
+  // A shared page booted the current example once (sharedWorld below).
+  if(isSharedPage(page) && legacy) throw new Error('A shared page cannot import a legacy example');
+  if(!isSharedPage(page)) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   const name=(legacy ? 'mobile-preparation-' : 'local-formation-')+label+'.json';
   await expectModAdmission(page,require('../fixtures/authoring/'+name));
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring',name));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  }
   const prefix=label==='harbor' ? 'harbor' : 'dune';
   await prepareGameContent(page);
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
@@ -49,7 +57,22 @@ async function begin(page,info,label,legacy) {
   },label);
 }
 
+/* Cases that restore saves or import a legacy example keep a fresh page with
+   the admission check and actual file import. Runs of the others share one
+   page per example, booted once from the exact text that import stores with
+   the example's world active, reset before each case; each case still begins
+   its own start. */
+function sharedWorld(label) {
+  const prefix=label==='harbor' ? 'harbor' : 'dune';
+  return {boot:async function(page,info){
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/local-formation-'+label+'.json'),'utf8'));
+    await activateBookmark(page,prefix+'_world');
+  }};
+}
+
 for(const label of ['harbor','upland']) {
+  describeSharedPage(label+' formation reviews',sharedWorld(label),function(){
   test(label+' ordinary JSON binds actual scoped authority away from the origin sovereign without a host or gift',async function({page},info){
     await begin(page,info,label);
     const result=await page.evaluate(function(){
@@ -111,26 +134,6 @@ for(const label of ['harbor','upland']) {
         return q.allowed && !P.commit(s,q) && before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();});
     });
     expect(result).toEqual(Array(11).fill(true));
-  });
-
-  test(label+' pending contributed and formed matching restores preserve authority and never debit or form again',async function({page},info){
-    await begin(page,info,label);
-    const result=await page.evaluate(function(){
-      const C=formationCase,P=FB.expeditionPreparation;
-      function facts(state){return restoreFacts(state,function (s) {
-        return [C.record(s),s.player.gold,s.treasuryAccounting,s.realms[C.rid].treasury,
-          s.population,s.market,s.armies,s.authority,s.chars];
-      });}
-      function restore(){const before=facts(FB.state),save=FB.save.serialize();FB.save.restore(JSON.parse(save));
-        FB.save.restore(JSON.parse(save));return assertRestoreFacts(facts(FB.state),before);}
-      const pending=restore();FB.state.player.gold=500;
-      const gift=P.commit(FB.state,P.review(FB.state,C.id,'contribute',FB.state.player.charId)),contributed=restore(),
-        okay=C.fund(FB.state) && C.authorize(FB.state) && C.form(FB.state),formed=okay && restore(),
-        before=facts(FB.state),again=!C.form(FB.state);
-      FB.mobile.initialize(FB.state,FB.campaignBookmark(FB.state).realms);FB.stories.start(FB.state);
-      return {pending:pending,gift:gift,contributed:contributed,formed:formed,again:again,noReplay:assertRestoreFacts(facts(FB.state),before),valid:FB.mobile.validate(FB.state)};
-    });
-    expect(result).toEqual({pending:true,gift:true,contributed:true,formed:true,again:true,noReplay:true,valid:true});
   });
 
   test(label+' zero-funded wait refusal expiry and interrupted authority create no host or market purchase',async function({page},info){
@@ -200,6 +203,27 @@ for(const label of ['harbor','upland']) {
     });
     expect(result).toEqual({okay:true,authorized:label==='harbor',same:true,noGift:true,noHost:true});
   });
+  });
+
+  test(label+' pending contributed and formed matching restores preserve authority and never debit or form again',async function({page},info){
+    await begin(page,info,label);
+    const result=await page.evaluate(function(){
+      const C=formationCase,P=FB.expeditionPreparation;
+      function facts(state){return restoreFacts(state,function (s) {
+        return [C.record(s),s.player.gold,s.treasuryAccounting,s.realms[C.rid].treasury,
+          s.population,s.market,s.armies,s.authority,s.chars];
+      });}
+      function restore(){const before=facts(FB.state),save=FB.save.serialize();FB.save.restore(JSON.parse(save));
+        FB.save.restore(JSON.parse(save));return assertRestoreFacts(facts(FB.state),before);}
+      const pending=restore();FB.state.player.gold=500;
+      const gift=P.commit(FB.state,P.review(FB.state,C.id,'contribute',FB.state.player.charId)),contributed=restore(),
+        okay=C.fund(FB.state) && C.authorize(FB.state) && C.form(FB.state),formed=okay && restore(),
+        before=facts(FB.state),again=!C.form(FB.state);
+      FB.mobile.initialize(FB.state,FB.campaignBookmark(FB.state).realms);FB.stories.start(FB.state);
+      return {pending:pending,gift:gift,contributed:contributed,formed:formed,again:again,noReplay:assertRestoreFacts(facts(FB.state),before),valid:FB.mobile.validate(FB.state)};
+    });
+    expect(result).toEqual({pending:true,gift:true,contributed:true,formed:true,again:true,noReplay:true,valid:true});
+  });
 }
 
 test('detached imports reject invalid provider and contribution policies without mutation',async function({page},info){
@@ -225,6 +249,7 @@ test('detached imports reject invalid provider and contribution policies without
   expect(result).toEqual({rejected:[Array(14).fill(true),Array(14).fill(true)],delegation:true,pure:true});
 });
 
+describeSharedPage('harbor grants and contribution review',sharedWorld('harbor'),function(){
 test('incumbent and deputy public grant permissions remain distinct from levy consent and private gifts',async function({page},info){
   await begin(page,info,'harbor');
   const result=await page.evaluate(function(){
@@ -238,6 +263,24 @@ test('incumbent and deputy public grant permissions remain distinct from levy co
   expect(result).toEqual({paid:true,replay:false,private:true,exact:true,separate:true});
 });
 
+test('the local household contribution review names its exact private amount and preserves Back and Escape',async function({page},info){
+  await begin(page,info,'harbor');
+  await page.setViewportSize({width:390,height:844});
+  await page.evaluate(function(){FB.state.player.gold=500;FB.ui.showStorySheet(formationCase.id);});
+  await expect(page.locator('[data-story-choice="form"]')).toHaveCount(0);
+  await page.locator('[data-story-choice="contribute"]').click();
+  await expect(page.locator('#genmodal')).toContainText('Private contribution:');
+  await expect(page.locator('#genmodal')).toContainText('no formation consent or refund');
+  await page.locator('#genmodal').getByRole('button',{name:'Back',exact:true}).click();
+  await expect(page.locator('[data-story-choice="contribute"]')).toBeVisible();
+  await page.locator('[data-story-choice="contribute"]').click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-story-choice="contribute"]')).toBeVisible();
+  expect(await page.evaluate(function(){return FB.treasuryAvailable(FB.state,formationCase.rid);})).toBe(0);
+});
+});
+
+describeSharedPage('upland deputy authority',sharedWorld('upland'),function(){
 test('a levy-only county deputy authorizes but never grants and revoked or replaced authority interrupts',async function({page},info){
   await begin(page,info,'upland');
   const result=await page.evaluate(function(){
@@ -258,19 +301,6 @@ test('a levy-only county deputy authorizes but never grants and revoked or repla
   expect(result).toEqual({denied:true,authorized:true,rejected:Array(7).fill(true)});
 });
 
-test('canonical expiry and recall preserve original deputy provenance on restore without selecting a replacement',async function({page},info){
-  await begin(page,info,'upland');
-  const result=await page.evaluate(function(){
-    const C=formationCase,story=FB.stories.get(C.id),s=FB.state,t=C.record(s);C.authorize(s);
-    const a=s.authority.appointments.find(function(a){return a.id===t.provider.appointmentId;}),
-      original=JSON.stringify(t.provider),removed=FB.authorityAppointmentTransition(s,a.id,'remove');
-    story.day(s,t);const receipt=JSON.stringify(t),save=FB.save.serialize();FB.save.restore(JSON.parse(save));
-    return {removed:removed,closed:C.record(FB.state).status==='closed',original:original===JSON.stringify(C.record(FB.state).provider),
-      same:receipt===JSON.stringify(C.record(FB.state)),noHost:!FB.mobile.row(FB.state,C.rid)};
-  });
-  expect(result).toEqual({removed:true,closed:true,original:true,same:true,noHost:true});
-});
-
 test('a newer issuer may reaffirm the retained office without renewing the original formation consent',async function({page},info){
   await begin(page,info,'upland');
   const result=await page.evaluate(function(){
@@ -282,6 +312,34 @@ test('a newer issuer may reaffirm the retained office without renewing the origi
       original:original===JSON.stringify(t.provider),noHost:!FB.mobile.row(s,C.rid)};
   });
   expect(result).toEqual({contested:true,confirmed:true,interrupted:true,valid:true,original:true,noHost:true});
+});
+
+test('depleted market rejects fully funded formation without creating provisions or losing gifts on closure',async function({page},info){
+  await begin(page,info,'upland');
+  const result=await page.evaluate(function(){
+    const s=FB.state,C=formationCase,P=FB.expeditionPreparation;s.player.gold=500;const okay=C.fund(s) && C.authorize(s),
+      money=FB.treasuryAvailable(s,C.rid),privateGold=s.player.gold;
+    s.market.counties[C.origin][0][s.market.goods.indexOf('provisions')]=0;
+    const before=JSON.stringify(s),q=P.review(s,C.id,'form',C.leader(s)),failed=!P.commit(s,q),pure=before===JSON.stringify(s),
+      stop=P.commit(s,P.review(s,C.id,'stop',C.leader(s)));
+    return {okay:okay,failed:failed,reason:q.reason,pure:pure,stop:stop,noHost:!FB.mobile.host(s,C.rid),
+      retained:money===FB.treasuryAvailable(s,C.rid) && privateGold===s.player.gold};
+  });
+  expect(result).toEqual({okay:true,failed:true,reason:'provisions',pure:true,stop:true,noHost:true,retained:true});
+});
+});
+
+test('canonical expiry and recall preserve original deputy provenance on restore without selecting a replacement',async function({page},info){
+  await begin(page,info,'upland');
+  const result=await page.evaluate(function(){
+    const C=formationCase,story=FB.stories.get(C.id),s=FB.state,t=C.record(s);C.authorize(s);
+    const a=s.authority.appointments.find(function(a){return a.id===t.provider.appointmentId;}),
+      original=JSON.stringify(t.provider),removed=FB.authorityAppointmentTransition(s,a.id,'remove');
+    story.day(s,t);const receipt=JSON.stringify(t),save=FB.save.serialize();FB.save.restore(JSON.parse(save));
+    return {removed:removed,closed:C.record(FB.state).status==='closed',original:original===JSON.stringify(C.record(FB.state).provider),
+      same:receipt===JSON.stringify(C.record(FB.state)),noHost:!FB.mobile.row(FB.state,C.rid)};
+  });
+  expect(result).toEqual({removed:true,closed:true,original:true,same:true,noHost:true});
 });
 
 test('strict scoped-provider saves reject forged actor appointment and generation before adoption',async function({page},info){
@@ -298,20 +356,6 @@ test('strict scoped-provider saves reject forged actor appointment and generatio
   expect(result).toEqual({rejected:Array(8).fill(true),pure:true});
 });
 
-test('depleted market rejects fully funded formation without creating provisions or losing gifts on closure',async function({page},info){
-  await begin(page,info,'upland');
-  const result=await page.evaluate(function(){
-    const s=FB.state,C=formationCase,P=FB.expeditionPreparation;s.player.gold=500;const okay=C.fund(s) && C.authorize(s),
-      money=FB.treasuryAvailable(s,C.rid),privateGold=s.player.gold;
-    s.market.counties[C.origin][0][s.market.goods.indexOf('provisions')]=0;
-    const before=JSON.stringify(s),q=P.review(s,C.id,'form',C.leader(s)),failed=!P.commit(s,q),pure=before===JSON.stringify(s),
-      stop=P.commit(s,P.review(s,C.id,'stop',C.leader(s)));
-    return {okay:okay,failed:failed,reason:q.reason,pure:pure,stop:stop,noHost:!FB.mobile.host(s,C.rid),
-      retained:money===FB.treasuryAvailable(s,C.rid) && privateGold===s.player.gold};
-  });
-  expect(result).toEqual({okay:true,failed:true,reason:'provisions',pure:true,stop:true,noHost:true,retained:true});
-});
-
 for(const label of ['harbor','upland']) {
   test(label+' legacy declarations retain exact provider snapshots commander-only gifts and matching restore',async function({page},info){
     await begin(page,info,label,true);
@@ -326,19 +370,3 @@ for(const label of ['harbor','upland']) {
     expect(result).toEqual({denied:true,legacy:true,same:true,local:true});
   });
 }
-
-test('the local household contribution review names its exact private amount and preserves Back and Escape',async function({page},info){
-  await begin(page,info,'harbor');
-  await page.setViewportSize({width:390,height:844});
-  await page.evaluate(function(){FB.state.player.gold=500;FB.ui.showStorySheet(formationCase.id);});
-  await expect(page.locator('[data-story-choice="form"]')).toHaveCount(0);
-  await page.locator('[data-story-choice="contribute"]').click();
-  await expect(page.locator('#genmodal')).toContainText('Private contribution:');
-  await expect(page.locator('#genmodal')).toContainText('no formation consent or refund');
-  await page.locator('#genmodal').getByRole('button',{name:'Back',exact:true}).click();
-  await expect(page.locator('[data-story-choice="contribute"]')).toBeVisible();
-  await page.locator('[data-story-choice="contribute"]').click();
-  await page.keyboard.press('Escape');
-  await expect(page.locator('[data-story-choice="contribute"]')).toBeVisible();
-  expect(await page.evaluate(function(){return FB.treasuryAvailable(FB.state,formationCase.rid);})).toBe(0);
-});

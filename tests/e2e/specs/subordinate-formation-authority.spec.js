@@ -5,6 +5,10 @@ const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const fs=require('fs');
+const {openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/subordinate-formation-harbor.json'),
   dune:require('../fixtures/authoring/subordinate-formation-dune.json')};
@@ -28,12 +32,16 @@ function generatedDuke() {
 }
 
 async function begin(page,info,prefix,modified,household) {
+  // A shared page booted this unmodified example once (sharedWorld below).
+  if(isSharedPage(page) && modified) throw new Error('A shared page cannot import a modified example');
+  if(!isSharedPage(page)) {
   await openGame(page,info);
   await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(modified ? {name:'subordinate.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(modified))} : path.resolve(__dirname,'../fixtures/authoring/subordinate-formation-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function(prefix){return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   if(prefix==='harbor' || household) await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   else {
@@ -63,7 +71,21 @@ async function begin(page,info,prefix,modified,household) {
   },prefix);
 }
 
+/* Cases that restore or migrate saves, import through the Mods screen or boot
+   a modified example keep a fresh page and the actual file import. Runs of the
+   others share one page per example, booted once from the exact text that
+   import stores with the example's world active, reset before each case; each
+   case still begins its own start. */
+function sharedWorld(prefix) {
+  return {boot:async function(page,info){
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/subordinate-formation-'+prefix+'.json'),'utf8'));
+    await activateBookmark(page,prefix+'_world');
+  }};
+}
+
 for(const prefix of ['harbor','dune']) {
+  describeSharedPage(prefix+' formation transactions',sharedWorld(prefix),function(){
   test(prefix+' actual JSON binds a subordinate office and its original people without changing sovereignty',async function({page},info){
     await begin(page,info,prefix);
     const result=await page.evaluate(function(prefix){
@@ -160,6 +182,46 @@ for(const prefix of ['harbor','dune']) {
     expect(result).toEqual(Array(4).fill(true));
   });
 
+  test(prefix+' exhausted finite market blocks formation while closure retains contributed funds',async function({page},info){
+    await begin(page,info,prefix);
+    const result=await page.evaluate(function(){
+      const s=FB.state,C=subordinateCase,P=FB.expeditionPreparation,funded=C.localGift(s),authorized=C.authorize(s),
+        money=FB.treasuryAvailable(s,C.rid),privateGold=s.player.gold;
+      s.market.counties[C.origin][0][s.market.goods.indexOf('provisions')]=0;
+      const before=JSON.stringify(s),q=P.review(s,C.id,'form',C.leader(s)),failed=!P.commit(s,q),pure=before===JSON.stringify(s),
+        stopped=P.commit(s,P.review(s,C.id,'stop',C.leader(s)));
+      return {funded:funded,authorized:authorized,failed:failed,reason:q.reason,pure:pure,stopped:stopped,
+        retained:money===FB.treasuryAvailable(s,C.rid) && privateGold===s.player.gold,noHost:!FB.mobile.host(s,C.rid)};
+    });
+    expect(result).toEqual({funded:true,authorized:true,failed:true,reason:'provisions',pure:true,stopped:true,retained:true,noHost:true});
+  });
+
+  test(prefix+' enemy military occupation blocks formation while legal sovereignty and direct holding stay unchanged',async function({page},info){
+    await begin(page,info,prefix);
+    const result=await page.evaluate(function(prefix){
+      const s=FB.state,C=subordinateCase,P=FB.expeditionPreparation,t=C.record(s),story=FB.stories.get(C.id),
+        funded=C.localGift(s),authorized=C.authorize(s),q=P.review(s,C.id,'form',C.leader(s)),
+        owners=JSON.stringify([s.owner,s.holder]),sovereign=s.owner[C.origin],
+        enemy=Object.keys(s.realms).find(function(rid){return rid!==sovereign && rid!==C.rid && s.realms[rid].alive;});
+      let war;
+      if(FB.civicGovernment.active(s,enemy)) {
+        s.realms[enemy].treasury.gold=10000;
+        const cause={type:'aggression',enemy:sovereign,target:s.realms[sovereign].capital},
+          declaration=FB.civicGovernment.warQuote(s,enemy,{causes:[cause]});
+        if(!FB.civicGovernment.launchWar(s,declaration))throw new Error('Civic occupation declaration refused: '+declaration.reason);
+        war=FB.ordinaryWarBetween(s,enemy,sovereign);
+      } else war=FB.registerOrdinaryWar(s,enemy,{enemy:sovereign,target:C.origin,legacy:false,occupations:{}});
+      if(!war)throw new Error('Occupation requires distinct actual war parties');
+      war.occupations[C.origin]={occupied:true,progress:100,homeRealm:sovereign};
+      const before=JSON.stringify(s),rejected=!P.commit(s,q),fresh=!P.review(s,C.id,'form',C.leader(s)).allowed,
+        pure=before===JSON.stringify(s);story.day(s,t);
+      return {funded:funded,authorized:authorized,rejected:rejected,fresh:fresh,pure:pure,
+        legal:owners===JSON.stringify([s.owner,s.holder]),closed:t.reason==='interrupted',noHost:!FB.mobile.row(s,C.rid)};
+    },prefix);
+    expect(result).toEqual({funded:true,authorized:true,rejected:true,fresh:true,pure:true,legal:true,closed:true,noHost:true});
+  });
+  });
+
   test(prefix+' matching pending funded formed and divergent terminal restores never select or replay',async function({page},info){
     await begin(page,info,prefix);
     const result=await page.evaluate(function(){
@@ -212,49 +274,12 @@ for(const prefix of ['harbor','dune']) {
     });
     expect(result).toEqual({retained:true,present:true,closed:true,original:true,noHost:true});
   });
-
-  test(prefix+' exhausted finite market blocks formation while closure retains contributed funds',async function({page},info){
-    await begin(page,info,prefix);
-    const result=await page.evaluate(function(){
-      const s=FB.state,C=subordinateCase,P=FB.expeditionPreparation,funded=C.localGift(s),authorized=C.authorize(s),
-        money=FB.treasuryAvailable(s,C.rid),privateGold=s.player.gold;
-      s.market.counties[C.origin][0][s.market.goods.indexOf('provisions')]=0;
-      const before=JSON.stringify(s),q=P.review(s,C.id,'form',C.leader(s)),failed=!P.commit(s,q),pure=before===JSON.stringify(s),
-        stopped=P.commit(s,P.review(s,C.id,'stop',C.leader(s)));
-      return {funded:funded,authorized:authorized,failed:failed,reason:q.reason,pure:pure,stopped:stopped,
-        retained:money===FB.treasuryAvailable(s,C.rid) && privateGold===s.player.gold,noHost:!FB.mobile.host(s,C.rid)};
-    });
-    expect(result).toEqual({funded:true,authorized:true,failed:true,reason:'provisions',pure:true,stopped:true,retained:true,noHost:true});
-  });
-
-  test(prefix+' enemy military occupation blocks formation while legal sovereignty and direct holding stay unchanged',async function({page},info){
-    await begin(page,info,prefix);
-    const result=await page.evaluate(function(prefix){
-      const s=FB.state,C=subordinateCase,P=FB.expeditionPreparation,t=C.record(s),story=FB.stories.get(C.id),
-        funded=C.localGift(s),authorized=C.authorize(s),q=P.review(s,C.id,'form',C.leader(s)),
-        owners=JSON.stringify([s.owner,s.holder]),sovereign=s.owner[C.origin],
-        enemy=Object.keys(s.realms).find(function(rid){return rid!==sovereign && rid!==C.rid && s.realms[rid].alive;});
-      let war;
-      if(FB.civicGovernment.active(s,enemy)) {
-        s.realms[enemy].treasury.gold=10000;
-        const cause={type:'aggression',enemy:sovereign,target:s.realms[sovereign].capital},
-          declaration=FB.civicGovernment.warQuote(s,enemy,{causes:[cause]});
-        if(!FB.civicGovernment.launchWar(s,declaration))throw new Error('Civic occupation declaration refused: '+declaration.reason);
-        war=FB.ordinaryWarBetween(s,enemy,sovereign);
-      } else war=FB.registerOrdinaryWar(s,enemy,{enemy:sovereign,target:C.origin,legacy:false,occupations:{}});
-      if(!war)throw new Error('Occupation requires distinct actual war parties');
-      war.occupations[C.origin]={occupied:true,progress:100,homeRealm:sovereign};
-      const before=JSON.stringify(s),rejected=!P.commit(s,q),fresh=!P.review(s,C.id,'form',C.leader(s)).allowed,
-        pure=before===JSON.stringify(s);story.day(s,t);
-      return {funded:funded,authorized:authorized,rejected:rejected,fresh:fresh,pure:pure,
-        legal:owners===JSON.stringify([s.owner,s.holder]),closed:t.reason==='interrupted',noHost:!FB.mobile.row(s,C.rid)};
-    },prefix);
-    expect(result).toEqual({funded:true,authorized:true,rejected:true,fresh:true,pure:true,legal:true,closed:true,noHost:true});
-  });
 }
 
+// Detached validation reads the unmodded catalogue; one boot serves all three.
+describeSharedPage('unmodded detached validation',{boot:openGame},function(){
 test('candidate jurisdiction bindings reject detached mismatches without generating holders or consuming RNG',async function({page},info){
-  await openGame(page,info);
+  if(!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function(examples){
     const before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),
       changes=[function(p,b){p.provider.jurisdiction.kind='sovereign';},function(p,b){p.provider.jurisdiction.extra=true;},
@@ -271,7 +296,7 @@ test('candidate jurisdiction bindings reject detached mismatches without generat
 });
 
 test('whole-catalogue validation accepts both independent JSON worlds and generated duke without publication',async function({page},info){
-  await openGame(page,info);
+  if(!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function(inputs){
     const before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),
       registry=FB.stories.list().map(function(story){return story.id;}).join('|');
@@ -284,7 +309,7 @@ test('whole-catalogue validation accepts both independent JSON worlds and genera
 });
 
 test('whole-catalogue generated bindings reject forged holders counties sovereigns forms and executable-hook data',async function({page},info){
-  await openGame(page,info);
+  if(!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function(example){
     const before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),
       changes=[function(p,b){p.provider.realmId='c_not_a_county';},
@@ -300,6 +325,7 @@ test('whole-catalogue generated bindings reject forged holders counties sovereig
       rng===FB.getRngState() && uid===FB.getUidCounter()};
   },generatedDuke());
   expect(result).toEqual({rejected:Array(6).fill(true),pure:true});
+});
 });
 
 for(const variant of ['count','duke','named']) {
@@ -341,34 +367,6 @@ test('generated duke forms once through canonical funding and preserves the exac
   expect(result).toEqual({funded:true,authorized:true,formed:true,repeat:false,food:true,debit:true,credit:true,same:true,single:true});
 });
 
-test('generated-provider proof cannot escape its exact field or effective revision',async function({page},info){
-  await begin(page,info,'harbor');
-  const result=await page.evaluate(function(){
-    const before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),
-      base=FBDATA.bookmarks.harbor_world;
-    // The first change invalidates the proof only in a retained revision.
-    const wrongRevision=JSON.parse(JSON.stringify(base));wrongRevision.revision='current';
-    const provinces=JSON.parse(JSON.stringify(base.provinces));
-    provinces.find(function(p){return p.id==='harbor_meadow';}).duchy='harbor_district';
-    wrongRevision.revisions={baseline:{provinces:provinces},current:{provinces:base.provinces}};
-    const retained=FB.validateBookmark(wrongRevision),
-      wrongReference=JSON.parse(JSON.stringify(FBDATA.storyInstances));
-    const unrelatedWorld=JSON.parse(JSON.stringify(base));unrelatedWorld.stories.push('harbor_reference_probe');
-    wrongReference.harbor_reference_probe={id:'harbor_reference_probe',type:'government_contest',
-      name:'Unrelated court',desc:'An unrelated court reference.',realmId:'c_harbor_meadow'};
-    const context=FB.stories.compile(wrongReference),unrelated=FB.validateBookmark(unrelatedWorld,false,context);
-    const required=JSON.parse(JSON.stringify(FBDATA.storyInstances));
-    required.harbor_reference_probe={id:'harbor_reference_probe',type:'government_contest',
-      name:'Unrelated court',desc:'An unrelated court reference.',realmId:'harbor_commune',requirements:{realms:['c_harbor_meadow']}};
-    const requirements=FB.validateBookmark(unrelatedWorld,false,FB.stories.compile(required));
-    return {retained:retained.some(function(e){return e.indexOf('opening direct-holder jurisdiction')>=0;}),
-      unrelated:unrelated.some(function(e){return e.indexOf('story harbor_reference_probe: realmId references unknown id c_harbor_meadow')>=0;}),
-      requirements:requirements.some(function(e){return e.indexOf('unknown realms requirement c_harbor_meadow')>=0;}),
-      pure:before===JSON.stringify([FB.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter()};
-  });
-  expect(result).toEqual({retained:true,unrelated:true,requirements:true,pure:true});
-});
-
 test('otherwise valid-looking generated references fail actual file import without changing storage or live catalogues',async function({page},info){
   await openGame(page,info);
   const mod=generatedDuke();mod.storyInstances.harbor_preparation.provider.realmId='c_harbor_fen';
@@ -400,6 +398,35 @@ test('unopted retained ruler world restores without jurisdiction preparation pub
   expect(result).toEqual({absent:true,same:true,form:'territorial'});
 });
 
+describeSharedPage('harbor proof and jurisdiction reviews',sharedWorld('harbor'),function(){
+test('generated-provider proof cannot escape its exact field or effective revision',async function({page},info){
+  await begin(page,info,'harbor');
+  const result=await page.evaluate(function(){
+    const before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),
+      base=FBDATA.bookmarks.harbor_world;
+    // The first change invalidates the proof only in a retained revision.
+    const wrongRevision=JSON.parse(JSON.stringify(base));wrongRevision.revision='current';
+    const provinces=JSON.parse(JSON.stringify(base.provinces));
+    provinces.find(function(p){return p.id==='harbor_meadow';}).duchy='harbor_district';
+    wrongRevision.revisions={baseline:{provinces:provinces},current:{provinces:base.provinces}};
+    const retained=FB.validateBookmark(wrongRevision),
+      wrongReference=JSON.parse(JSON.stringify(FBDATA.storyInstances));
+    const unrelatedWorld=JSON.parse(JSON.stringify(base));unrelatedWorld.stories.push('harbor_reference_probe');
+    wrongReference.harbor_reference_probe={id:'harbor_reference_probe',type:'government_contest',
+      name:'Unrelated court',desc:'An unrelated court reference.',realmId:'c_harbor_meadow'};
+    const context=FB.stories.compile(wrongReference),unrelated=FB.validateBookmark(unrelatedWorld,false,context);
+    const required=JSON.parse(JSON.stringify(FBDATA.storyInstances));
+    required.harbor_reference_probe={id:'harbor_reference_probe',type:'government_contest',
+      name:'Unrelated court',desc:'An unrelated court reference.',realmId:'harbor_commune',requirements:{realms:['c_harbor_meadow']}};
+    const requirements=FB.validateBookmark(unrelatedWorld,false,FB.stories.compile(required));
+    return {retained:retained.some(function(e){return e.indexOf('opening direct-holder jurisdiction')>=0;}),
+      unrelated:unrelated.some(function(e){return e.indexOf('story harbor_reference_probe: realmId references unknown id c_harbor_meadow')>=0;}),
+      requirements:requirements.some(function(e){return e.indexOf('unknown realms requirement c_harbor_meadow')>=0;}),
+      pure:before===JSON.stringify([FB.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter()};
+  });
+  expect(result).toEqual({retained:true,unrelated:true,requirements:true,pure:true});
+});
+
 test('NPC direct-holder consent uses the same transaction without touching either purse',async function({page},info){
   await begin(page,info,'harbor');
   const result=await page.evaluate(function(){
@@ -421,6 +448,7 @@ test('direct funding reviews include the same live jurisdiction facts and reject
     return {allowed:q.allowed,rejected:rejected,pure:before===JSON.stringify(s),noConsent:t.authorizedTurn===null,noHost:!FB.mobile.row(s,C.rid)};
   });
   expect(result).toEqual({allowed:true,rejected:true,pure:true,noConsent:true,noHost:true});
+});
 });
 
 test('a declared county deputy retains exact scope while levy consent grants no public spending power',async function({page},info){

@@ -5,6 +5,9 @@ const {prepareGameContent} = require('../support/game/navigation');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {beginBookmarkFromTitle,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {openTitle} = require('../support/game/navigation');
+const {installStoredMod} = require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/regional-milling-river.json'),
   catchment:require('../fixtures/authoring/regional-milling-catchment.json')};
@@ -17,15 +20,27 @@ dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/bui
   'js/population.js','js/technology.js','js/treasury.js','js/authority.js','js/home_authority.js','js/governments.js','js/government_ai.js','js/ai_decisions.js',
   'js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);
 
+// The exact configuration text the import below stores for one example and revision.
+function millSource(label,revision) {
+  const source=JSON.parse(JSON.stringify(examples[label]));
+  source.bookmarks[label==='river'?'resource_river':'resource_upland'].revision=revision||'empty';
+  return source;
+}
+
 async function start(page,info,label,revision) {
+  const world=label==='river'?'resource_river':'resource_upland';
+  // A shared page booted one configuration once (sharedMill below).
+  if(isSharedPage(page)) {
+    const booted=await page.evaluate(function(world){return FBDATA.bookmarks[world]?FBDATA.bookmarks[world].revision:null;},world);
+    if(booted!==(revision||'empty'))throw new Error('This shared page booted another milling configuration');
+  } else {
   await openGame(page,info);
   await page.evaluate(function(){FB.ui.showMods();});
-  const source=JSON.parse(JSON.stringify(examples[label]));
-  const world=label==='river'?'resource_river':'resource_upland';
-  source.bookmarks[world].revision=revision||'empty';
+  const source=millSource(label,revision);
   await expectModAdmission(page,source,'regional milling '+label);
   await page.locator('#modfile').setInputFiles({name:'regional-milling-'+label+'.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(source))});
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  }
   await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB&&FB.game&&FB.game.bootReady;});
   await beginBookmarkFromTitle(page,world,world+'_household');
@@ -76,6 +91,20 @@ async function preparePublicMill(page) {
   });
 }
 
+/* Cases that restore saves, size the page before boot, read the unmodded
+   catalogue or use another example or revision keep a fresh page with the
+   admission check and actual file import. Runs of the river example at its
+   empty revision share one page, booted once from the exact text that import
+   stores with that world active, reset before each case; each case still
+   begins its own start. */
+function sharedMill(label,revision) {
+  return {boot:async function(page,info){
+    await openTitle(page,info);
+    await installStoredMod(page,JSON.stringify(millSource(label,revision)));
+    await activateBookmark(page,label==='river'?'resource_river':'resource_upland');
+  }};
+}
+
 for(const label of ['river','catchment']) {
   test(label+' real ordinary import validates without creating stock, effects or a machine',async function({page},info){
     await start(page,info,label);
@@ -105,6 +134,7 @@ for(const label of ['river','catchment']) {
   });
 }
 
+describeSharedPage('river empty revision construction and service',sharedMill('river'),function(){
 test('bundled horizontal profile has exact weaker replacements, one existing gate and no added technology',async function({page},info){
   await start(page,info,'river');
   const r=await page.evaluate(function(){
@@ -201,21 +231,6 @@ test('ruin, expiry, custody and changed holder stop both current effects without
   expect(r).toEqual({effects:[[0,0],[0,0],[0,0],[0,0]],uncharged:true,retained:'horizontal_mill'});
 });
 
-for(const label of ['river','catchment']) test(label+' inherited ruin repair retains identity outside construction dates and knowledge',async function({page},info){
-  await start(page,info,label,'ruined');await hold(page);
-  const r=await page.evaluate(function(){
-    const s=FB.state,pid=millCase.pid,b=s.buildings[pid].find(function(r){return r.id==='mill';}),stamp=JSON.stringify(b.buildingProfile),dev=s.dev[pid];
-    millKnowledge(millActor,[]);s.date.year=1400;
-    const q=FB.repairBuildingStatus(s,pid,b.s,b.id),gold=s.player.gold,
-      built=FB.repairBuilding(s,pid,b.s,b.id,q.cost),again=FB.repairBuilding(s,pid,b.s,b.id,q.cost);
-    return {ready:q.ready,repaired:built,again:again,paid:gold-s.player.gold,price:q.cost,
-      identity:stamp===JSON.stringify(b.buildingProfile),dev:s.dev[pid]-dev,granted:b.devGranted,effects:millEffects(),
-      noService:!s.buildingOperations,noWater:!s.siteResources,construction:FB.buildingProfiles.status(s,pid,b.s,b.id,millCase.profileId,millActor).ready};
-  });
-  expect(r).toMatchObject({ready:true,repaired:true,again:false,identity:true,dev:0,granted:0,effects:[0,0],noService:true,noWater:true,construction:false});
-  expect(r.paid).toBe(r.price);expect(r.price).toBeGreaterThan(0);
-});
-
 test('public AI construction and service use the same technology, reserves and receipt',async function({page},info){
   await start(page,info,'river');
   const funding=await preparePublicMill(page);
@@ -308,6 +323,29 @@ test('annual public builder considers separately prioritized profiles at their o
   expect(r.expense).toBe(r.invoice);expect(r.invoice).toBeGreaterThan(0);expect(r.privateGold).toBe(funding.privateGold);
 });
 
+test('Water Power reverse discovery names the real mill profile and its base owner',async function({page},info){
+  await start(page,info,'river');await page.evaluate(function(){FB.ui.showTechDetail('water_power');});
+  await expect(page.locator('#gm-body')).toContainText('Horizontal Watermill');
+  const base=await page.evaluate(function(){return FBDATA.buildings.mill.name;});
+  await expect(page.locator('#gm-body')).toContainText(base);
+});
+});
+
+for(const label of ['river','catchment']) test(label+' inherited ruin repair retains identity outside construction dates and knowledge',async function({page},info){
+  await start(page,info,label,'ruined');await hold(page);
+  const r=await page.evaluate(function(){
+    const s=FB.state,pid=millCase.pid,b=s.buildings[pid].find(function(r){return r.id==='mill';}),stamp=JSON.stringify(b.buildingProfile),dev=s.dev[pid];
+    millKnowledge(millActor,[]);s.date.year=1400;
+    const q=FB.repairBuildingStatus(s,pid,b.s,b.id),gold=s.player.gold,
+      built=FB.repairBuilding(s,pid,b.s,b.id,q.cost),again=FB.repairBuilding(s,pid,b.s,b.id,q.cost);
+    return {ready:q.ready,repaired:built,again:again,paid:gold-s.player.gold,price:q.cost,
+      identity:stamp===JSON.stringify(b.buildingProfile),dev:s.dev[pid]-dev,granted:b.devGranted,effects:millEffects(),
+      noService:!s.buildingOperations,noWater:!s.siteResources,construction:FB.buildingProfiles.status(s,pid,b.s,b.id,millCase.profileId,millActor).ready};
+  });
+  expect(r).toMatchObject({ready:true,repaired:true,again:false,identity:true,dev:0,granted:0,effects:[0,0],noService:true,noWater:true,construction:false});
+  expect(r.paid).toBe(r.price);expect(r.price).toBeGreaterThan(0);
+});
+
 test('catchment permission, paid filling and finite stored discharge are separate commitments',async function({page},info){
   await start(page,info,'catchment','inherited');
   const r=await page.evaluate(function(){
@@ -396,13 +434,6 @@ test('phone profile review keeps the exact missing gate and retained selection t
   await expect(page.locator('#gm-profile-choice')).toHaveValue('horizontal_mill');
   await page.locator('#gm-profile-back').click();await expect(entry).toBeFocused();
   expect(await page.evaluate(function(){return !(FB.state.buildings[millCase.pid]||[]).length;})).toBe(true);
-});
-
-test('Water Power reverse discovery names the real mill profile and its base owner',async function({page},info){
-  await start(page,info,'river');await page.evaluate(function(){FB.ui.showTechDetail('water_power');});
-  await expect(page.locator('#gm-body')).toContainText('Horizontal Watermill');
-  const base=await page.evaluate(function(){return FBDATA.buildings.mill.name;});
-  await expect(page.locator('#gm-body')).toContainText(base);
 });
 
 

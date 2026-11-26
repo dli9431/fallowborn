@@ -6,6 +6,9 @@ const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
+const {openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-terms-harbor.json'),
   dune:require('../fixtures/authoring/expedition-terms-upland.json')};
@@ -24,7 +27,11 @@ dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/tec
 // import and its unmodded admission for both examples.
 async function start(page,info,prefix,modified,stored) {
   const fixture=path.resolve(__dirname,'../fixtures/authoring/expedition-terms-'+(prefix==='harbor' ? 'harbor' : 'upland')+'.json');
-  if (stored) {
+  // A shared page booted this unmodified example once (sharedExample below).
+  if (isSharedPage(page) && (modified || stored)) throw new Error('A shared page cannot import another configuration');
+  if (isSharedPage(page)) {
+    await prepareGameContent(page);
+  } else if (stored) {
     await page.addInitScript(function (source) {
       if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
     },fs.readFileSync(fixture,'utf8'));
@@ -52,6 +59,19 @@ async function start(page,info,prefix,modified,stored) {
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.evaluate(function () {FB.game.setPaused(true);});
   await installRestoreFacts(page);
+}
+
+/* Cases that restore saves, apply or import another configuration, boot
+   stored text of their own or size the page before boot keep a fresh page with
+   the actual file import. Runs of the unmodified dune cases share one page,
+   booted once from the exact text that import stores with the dune world
+   active, reset before each case; each case still begins its own start. */
+function sharedExample(prefix) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/expedition-terms-'+(prefix==='harbor' ? 'harbor' : 'upland')+'.json'),'utf8'));
+    await activateBookmark(page,prefix+'_world');
+  }};
 }
 
 for (const prefix of ['harbor','dune']) {
@@ -134,23 +154,6 @@ test('campaigns without the optional declaration restore without creating a revi
   expect(absent).toBe(true);
 });
 
-test('unsupported assurances and claims cannot become active promises or transfer rights',async function ({page},info) {
-  await start(page,info,'dune');
-  const result=await page.evaluate(function () {
-    const s=FB.state,id='dune_terms',r=s.stories[id],m=FB.stories.get(id),E=FB.expeditionAgreements;
-    s.turn=5;s.date=FB.dateAtTurn(s,5);
-    const rid=m.declaration.actor.realmId,before=JSON.stringify([s.owner,s.holder,s.authority,s.armies,s.player.gold,s.player.piety]);
-    E.commit(s,id,E.review(s,id,'acknowledge',r.partyIds[0]));m.day(s,r);
-    const actor={kind:'realm',id:rid};
-    return {reviewed:r.status==='reviewed',unchanged:before===JSON.stringify([s.owner,s.holder,s.authority,s.armies,s.player.gold,s.player.piety]),
-      noGrant:!FB.mobile.review(s,{realmId:rid,action:'land',terms:{countyId:'dune_pass'},actor:actor}).review.allowed,
-      noPassage:!FB.mobile.passage(s,rid,'dune_pass',true),noPatron:FB.mobile.migration(s,rid).patronRealmId===null,
-      noFulfilled:Object.keys(r).indexOf('fulfillmentReceipt')<0,
-      disclosure:FB.stories.status(s,id).lines.join(' ').includes('does not prove a lawful capture')};
-  });
-  expect(result).toEqual({reviewed:true,unchanged:true,noGrant:true,noPassage:true,noPatron:true,noFulfilled:true,disclosure:true});
-});
-
 test('refusal, party loss, command suspension and finite expiry close only their own review',async function ({page},info) {
   await start(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -175,6 +178,24 @@ test('refusal, party loss, command suspension and finite expiry close only their
   }));
 });
 
+describeSharedPage('dune claims, scope and market access',sharedExample('dune'),function () {
+test('unsupported assurances and claims cannot become active promises or transfer rights',async function ({page},info) {
+  await start(page,info,'dune');
+  const result=await page.evaluate(function () {
+    const s=FB.state,id='dune_terms',r=s.stories[id],m=FB.stories.get(id),E=FB.expeditionAgreements;
+    s.turn=5;s.date=FB.dateAtTurn(s,5);
+    const rid=m.declaration.actor.realmId,before=JSON.stringify([s.owner,s.holder,s.authority,s.armies,s.player.gold,s.player.piety]);
+    E.commit(s,id,E.review(s,id,'acknowledge',r.partyIds[0]));m.day(s,r);
+    const actor={kind:'realm',id:rid};
+    return {reviewed:r.status==='reviewed',unchanged:before===JSON.stringify([s.owner,s.holder,s.authority,s.armies,s.player.gold,s.player.piety]),
+      noGrant:!FB.mobile.review(s,{realmId:rid,action:'land',terms:{countyId:'dune_pass'},actor:actor}).review.allowed,
+      noPassage:!FB.mobile.passage(s,rid,'dune_pass',true),noPatron:FB.mobile.migration(s,rid).patronRealmId===null,
+      noFulfilled:Object.keys(r).indexOf('fulfillmentReceipt')<0,
+      disclosure:FB.stories.status(s,id).lines.join(' ').includes('does not prove a lawful capture')};
+  });
+  expect(result).toEqual({reviewed:true,unchanged:true,noGrant:true,noPassage:true,noPatron:true,noFulfilled:true,disclosure:true});
+});
+
 test('scope changes invalidate restitution reviews, and an unrelated person cannot acknowledge',async function ({page},info) {
   await start(page,info,'dune');
   const result=await page.evaluate(function () {
@@ -186,6 +207,28 @@ test('scope changes invalidate restitution reviews, and an unrelated person cann
     return {early:early,stale:stale,outsider:outsider,pure:before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter()};
   });
   expect(result).toEqual({early:true,stale:true,outsider:true,pure:true});
+});
+
+test('market purchases require local access, finite stock and actual public payment',async function ({page},info) {
+  await start(page,info,'dune');
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='dune_coalition',r=M.row(s,rid),partner='dune_gate';
+    M.commit(s,M.review(s,{realmId:rid,action:'offer',actor:{kind:'realm',id:rid},terms:{kind:'access',partnerId:partner,
+      countyIds:['dune_pass'],capacity:100,allowRecruit:false,price:7,duration:20}}));
+    const a=r.agreements.find(function (a) {return a.kind==='access';});
+    M.commit(s,M.review(s,{realmId:rid,action:'accept',terms:{agreementId:a.id},actor:{kind:'realm',id:partner}}));
+    const request={realmId:rid,action:'trade',terms:{countyId:'dune_pass',count:1,direction:'buy'},actor:{kind:'realm',id:rid}};
+    const remote=!M.review(s,request).review.allowed;
+    // Stage actual camp presence; purchase behavior, not a travel journey, is under test.
+    M.migration(s,rid).at='dune_pass';
+    const stock=FB.marketProvisionSnapshot(s,'dune_pass'),food=r.food,gold=FB.treasuryAvailable(s,rid),privateGold=s.player.gold;
+    const tooMuch=JSON.parse(JSON.stringify(request));tooMuch.terms.count=stock.stock+1;
+    const bounded=!M.review(s,tooMuch).review.allowed,q=M.review(s,request),bought=M.commit(s,q);
+    return {remote:remote,bounded:bounded,bought:bought,food:r.food-food,stock:stock.stock-FB.marketProvisionSnapshot(s,'dune_pass').stock,
+      paid:Math.abs(gold-FB.treasuryAvailable(s,rid)-q.review.cost)<0.000001,positive:q.review.cost>0,private:s.player.gold===privateGold};
+  });
+  expect(result).toEqual({remote:true,bounded:true,bought:true,food:1,stock:1,paid:true,positive:true,private:true});
+});
 });
 
 test('separate canonical access charges once and survives a declined records review and restore',async function ({page},info) {
@@ -208,27 +251,6 @@ test('separate canonical access charges once and survives a declined records rev
       preserved:record===JSON.stringify(M.row(FB.state,rid).agreements),passage:M.passage(FB.state,rid,'dune_pass',true)};
   });
   expect(result).toEqual({offered:true,stale:true,accepted:true,repeat:true,declined:true,debit:7,credit:7,noReplay:true,preserved:true,passage:true});
-});
-
-test('market purchases require local access, finite stock and actual public payment',async function ({page},info) {
-  await start(page,info,'dune');
-  const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='dune_coalition',r=M.row(s,rid),partner='dune_gate';
-    M.commit(s,M.review(s,{realmId:rid,action:'offer',actor:{kind:'realm',id:rid},terms:{kind:'access',partnerId:partner,
-      countyIds:['dune_pass'],capacity:100,allowRecruit:false,price:7,duration:20}}));
-    const a=r.agreements.find(function (a) {return a.kind==='access';});
-    M.commit(s,M.review(s,{realmId:rid,action:'accept',terms:{agreementId:a.id},actor:{kind:'realm',id:partner}}));
-    const request={realmId:rid,action:'trade',terms:{countyId:'dune_pass',count:1,direction:'buy'},actor:{kind:'realm',id:rid}};
-    const remote=!M.review(s,request).review.allowed;
-    // Stage actual camp presence; purchase behavior, not a travel journey, is under test.
-    M.migration(s,rid).at='dune_pass';
-    const stock=FB.marketProvisionSnapshot(s,'dune_pass'),food=r.food,gold=FB.treasuryAvailable(s,rid),privateGold=s.player.gold;
-    const tooMuch=JSON.parse(JSON.stringify(request));tooMuch.terms.count=stock.stock+1;
-    const bounded=!M.review(s,tooMuch).review.allowed,q=M.review(s,request),bought=M.commit(s,q);
-    return {remote:remote,bounded:bounded,bought:bought,food:r.food-food,stock:stock.stock-FB.marketProvisionSnapshot(s,'dune_pass').stock,
-      paid:Math.abs(gold-FB.treasuryAvailable(s,rid)-q.review.cost)<0.000001,positive:q.review.cost>0,private:s.player.gold===privateGold};
-  });
-  expect(result).toEqual({remote:true,bounded:true,bought:true,food:1,stock:1,paid:true,positive:true,private:true});
 });
 
 test('malformed review saves reject before adopting state or RNG',async function ({page},info) {

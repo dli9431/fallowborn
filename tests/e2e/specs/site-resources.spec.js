@@ -7,6 +7,9 @@ const {installPageGuards} = require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
 const {openGame} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {openTitle} = require('../support/game/navigation');
+const {installStoredMod} = require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/site-resources-river.json'),upland:require('../fixtures/authoring/site-resources-upland.json')};
 dependsOnRuntime(__filename,['index.html','data/site_resources.js','data/technology.js','data/political_institutions.js',
@@ -15,10 +18,13 @@ dependsOnRuntime(__filename,['index.html','data/site_resources.js','data/technol
   'js/government_continuity.js','js/government_selection.js','js/home_authority.js','js/ui_modals.js','js/ui_misc.js']);
 
 async function importExample(page,info,name,ruler) {
+  // A shared page booted this example once (sharedExample below).
+  if (!isSharedPage(page)) {
   await openGame(page,info);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/site-resources-' + name + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  }
   await prepareGameContent(page);
   await page.waitForFunction(function (name) { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks['resource_' + name]; },name);
   if (!ruler) return beginBookmarkFromTitle(page,'resource_' + name,'resource_' + name + '_household');
@@ -45,7 +51,22 @@ async function bootStored(page,info,name) {
   await beginBookmarkFromTitle(page,'resource_' + name,'resource_' + name + '_household');
 }
 
+/* Cases that restore saves, apply a changed configuration, replay in a second
+   context, read the unmodded catalogue or size the page before boot keep a
+   fresh page with the actual file import. Runs of the others share one page per
+   example, booted once from the exact text that import stores with the
+   example's world active, reset before each case; each case still begins its
+   own start. */
+function sharedExample(name) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/site-resources-' + name + '.json'),'utf8'));
+    await activateBookmark(page,'resource_' + name);
+  }};
+}
+
 for (const name of ['river','upland']) {
+  describeSharedPage(name + ' resource claims',sharedExample(name),function () {
   test(name + ' imports typed physical resources without initializing stock or changing other owners',async function ({page},info) {
     await importExample(page,info,name);
     const result = await page.evaluate(function () {
@@ -102,8 +123,10 @@ for (const name of ['river','upland']) {
     expect(result).toMatchObject({last:(name==='river'?12:3)-2,available:name==='river'?12:3,stock:1,pure:true,lost:false,consumed:0,reserved:name==='river'?12:3});
     expect(result.next).toBeGreaterThan(result.expired);
   });
+  });
 }
 
+describeSharedPage('river capacity, holder claims and revisions',sharedExample('river'),function () {
 test('release, overdraw, overfull storage and unrelated destinations cannot mint or duplicate capacity',async function ({page},info) {
   await importExample(page,info,'river');
   const result=await page.evaluate(function () {
@@ -121,6 +144,33 @@ test('release, overdraw, overfull storage and unrelated destinations cannot mint
   expect(result.rows[1]).toMatchObject({stock:5});
 });
 
+test('capture, custody, time and competing source changes invalidate reviewed holder claims',async function ({page},info) {
+  await importExample(page,info,'river',true);
+  const result=await page.evaluate(function () {
+    const s=FB.state,R=FB.siteResources,request={operation:'reserve',sourceId:'river_intake',actor:{kind:'realm',id:'player'},amount:2};
+    const changes=[function(t){t.turn++;},function(t){t.chars[t.player.charId].captive=true;},function(t){t.chars[t.player.charId].dead=true;},
+      function(t){delete t.owner.resource_quay;delete t.holder.resource_quay;},
+      function(t){R.commit(t,R.quote(t,Object.assign({},request,{amount:1})));}];
+    const rows=changes.map(function(change){const t=JSON.parse(JSON.stringify(s)),q=R.quote(t,request);change(t);const before=JSON.stringify(t),rng=FB.getRngState(),uid=FB.getUidCounter();
+      return q.allowed&&!R.commit(t,q)&&before===JSON.stringify(t)&&rng===FB.getRngState()&&uid===FB.getUidCounter();});
+    return rows;
+  });
+  expect(result).toEqual(Array(5).fill(true));
+});
+
+test('whole revisions retain absent and empty resource declarations and released worlds stay unopted',async function ({page},info) {
+  await importExample(page,info,'river');
+  const result=await page.evaluate(function () {
+    const R=FB.siteResources;
+    return {baseline:R.compile(FB.bookmark('resource_river','baseline')),dry:R.compile(FB.bookmark('resource_river','dry')),
+      released:['867','1066'].map(function(id){return R.compile(FB.bookmark(id));})};
+  });
+  expect(result.baseline).toEqual({sources:[],errors:[]});expect(result.dry).toEqual(result.baseline);
+  expect(result.released).toEqual([result.baseline,result.baseline]);
+});
+});
+
+describeSharedPage('upland offices and generations',sharedExample('upland'),function () {
 test('a permitted existing office is exact, current, scoped and independent of owning the court',async function ({page},info) {
   await importExample(page,info,'upland');
   const result=await page.evaluate(function () {
@@ -142,20 +192,6 @@ test('a permitted existing office is exact, current, scoped and independent of o
   expect(result).toEqual({absent:false,appointed:true,allowed:true,committed:true,checks:Array(7).fill(true)});
 });
 
-test('capture, custody, time and competing source changes invalidate reviewed holder claims',async function ({page},info) {
-  await importExample(page,info,'river',true);
-  const result=await page.evaluate(function () {
-    const s=FB.state,R=FB.siteResources,request={operation:'reserve',sourceId:'river_intake',actor:{kind:'realm',id:'player'},amount:2};
-    const changes=[function(t){t.turn++;},function(t){t.chars[t.player.charId].captive=true;},function(t){t.chars[t.player.charId].dead=true;},
-      function(t){delete t.owner.resource_quay;delete t.holder.resource_quay;},
-      function(t){R.commit(t,R.quote(t,Object.assign({},request,{amount:1})));}];
-    const rows=changes.map(function(change){const t=JSON.parse(JSON.stringify(s)),q=R.quote(t,request);change(t);const before=JSON.stringify(t),rng=FB.getRngState(),uid=FB.getUidCounter();
-      return q.allowed&&!R.commit(t,q)&&before===JSON.stringify(t)&&rng===FB.getRngState()&&uid===FB.getUidCounter();});
-    return rows;
-  });
-  expect(result).toEqual(Array(5).fill(true));
-});
-
 test('new realm generations cannot inherit reservations and dead original people remain historical save references',async function ({page},info) {
   await importExample(page,info,'upland');
   const result=await page.evaluate(function () {
@@ -171,6 +207,7 @@ test('new realm generations cannot inherit reservations and dead original people
       unavailable:!R.quote(s,request).allowed};
   });
   expect(result).toEqual({generation:true,retained:true,amount:2,unavailable:true});
+});
 });
 
 test('detached imports reject malformed capacities, sites, rights, aliases and source graphs without publication',async function ({page},info) {
@@ -239,17 +276,6 @@ test('replayed same-seed campaigns retain exact resource, population and identit
     expect(await facts(second)).toEqual(first);
     expect(guard.faults,'second context faults').toEqual([]);
   } finally { await context.close(); }
-});
-
-test('whole revisions retain absent and empty resource declarations and released worlds stay unopted',async function ({page},info) {
-  await importExample(page,info,'river');
-  const result=await page.evaluate(function () {
-    const R=FB.siteResources;
-    return {baseline:R.compile(FB.bookmark('resource_river','baseline')),dry:R.compile(FB.bookmark('resource_river','dry')),
-      released:['867','1066'].map(function(id){return R.compile(FB.bookmark(id));})};
-  });
-  expect(result.baseline).toEqual({sources:[],errors:[]});expect(result.dry).toEqual(result.baseline);
-  expect(result.released).toEqual([result.baseline,result.baseline]);
 });
 
 test('changed resource content changes the exact mod fingerprint and rejects a previous save without adoption',async function ({page},info) {
