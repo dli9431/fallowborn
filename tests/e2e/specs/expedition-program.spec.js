@@ -1,10 +1,13 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-program-harbor.json'),
   dune:require('../fixtures/authoring/expedition-program-dune.json')};
@@ -17,7 +20,21 @@ dependsOnRuntime(__filename,['js/bookmark_sources.js',
   'js/mods.js','js/world.js','js/bookmark_setup.js','js/starts.js','js/save.js','js/save_v4.js','js/home_authority.js',
   'js/main.js','js/util.js']);
 
+/* Each example's import case, and cases that restore saves or import a
+   modified copy, keep a fresh page with the unmodded validation and the Mods
+   file import. Runs of the others share one page per example that stores its
+   exact file text and boots it once with its world active, reset before each
+   case; each case begins its own start. */
+function sharedExample(prefix) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/expedition-program-'+prefix+'.json'),'utf8'));
+    await activateBookmark(page,prefix+'_world');
+  }};
+}
 async function start(page,info,prefix,input) {
+  if (isSharedPage(page) && input) throw new Error('A modified example needs a fresh page');
+  if (!isSharedPage(page)) {
   await openGame(page,info);
   expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},input || examples[prefix]),
     prefix+' ordinary import validation').toEqual([]);
@@ -26,6 +43,7 @@ async function start(page,info,prefix,input) {
   else await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/expedition-program-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await page.evaluate(function () {
@@ -59,8 +77,10 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
+// Detached validation shares one unmodded page.
+describeSharedPage('detached program validation',{boot:openGame},function () {
 for (const offset of [0,11,22]) test('detached validation rejects unsupported declarations atomically without RNG or registry changes, group '+(offset/11+1),async function ({page},info) {
-  await openGame(page,info);
+  if (!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function (input) {
     const source=input.source,offset=input.offset;
     const changes=[function (p) {p.schema=2;},function (p) {p.extra=true;},function (p) {p.id='';},
@@ -93,7 +113,9 @@ for (const offset of [0,11,22]) test('detached validation rejects unsupported de
   },{source:examples.dune,offset:offset});
   expect(result).toHaveLength(11);expect(result.every(Boolean)).toBe(true);
 });
+});
 
+describeSharedPage('dune program reviews',sharedExample('dune'),function () {
 test('finite boundaries and dependencies are observations and never advance or expire checkpoints',async function ({page},info) {
   await start(page,info,'dune');
   const result=await page.evaluate(function () {
@@ -106,20 +128,6 @@ test('finite boundaries and dependencies are observations and never advance or e
     return {reasons:out,unchanged:bytes===JSON.stringify(p),host:s.armies.length===FB.state.armies.length};
   });
   expect(result).toEqual({reasons:['window','dependency','expired','expired'],unchanged:true,host:true});
-});
-
-test('route observations distinguish a field host, civilian camp and permanent household home',async function ({page},info) {
-  await start(page,info,'harbor');
-  const result=await page.evaluate(function () {
-    const C=programCase,s=JSON.parse(JSON.stringify(FB.state)),E=FB.expeditionPrograms,M=FB.mobile,a=C.host(s),home=s.player.provinceId;
-    const target=C.definition.mobile.expeditionProgram.steps[0].terms.waypoints[0],camp=M.migration(s,C.rid).at;
-    a.at=target;a.from=target;a.path=[];a.moveLeft=0;
-    const before=JSON.stringify(s),q=E.review(s,C.rid,'approach');
-    return {allowed:q.allowed,reached:q.observation,operation:q.operation,field:q.facts.fieldCountyId===target,
-      camp:q.facts.campCountyId===camp,home:s.player.provinceId===home,pure:before===JSON.stringify(s),
-      progress:M.row(s,C.rid).expeditionProgram.steps[0].cursor};
-  });
-  expect(result).toEqual({allowed:true,reached:'reached',operation:null,field:true,camp:true,home:true,pure:true,progress:0});
 });
 
 test('current funds, consent, command, carriers and cancellation invalidate previous reviews',async function ({page},info) {
@@ -139,25 +147,6 @@ test('current funds, consent, command, carriers and cancellation invalidate prev
     });
   });
   expect(result).toEqual(Array(11).fill(true));
-});
-
-test('resource thresholds and exact current access fail without borrowing camp food or private gold',async function ({page},info) {
-  const input=JSON.parse(JSON.stringify(examples.dune)),t=input.bookmarks.dune_world.realms.find(function (r) {return r.mobile;}).mobile;
-  t.expeditionProgram.steps[0].requirements.minFood=1;
-  t.expeditionProgram.steps[0].requirements.minTreasury=1;
-  t.expeditionProgram.steps[0].requirements.access.countyIds=['dune_flats'];
-  await start(page,info,'dune',input);
-  const result=await page.evaluate(function () {
-    const C=programCase,s=JSON.parse(JSON.stringify(FB.state)),M=FB.mobile,E=FB.expeditionPrograms,r=M.row(s,C.rid),a=C.host(s);
-    r.food=100000;s.player.gold=100000;
-    const resources=E.review(s,C.rid,'approach').reason;
-    a.mobileFood=2;FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid));
-    const funds=E.review(s,C.rid,'approach').reason;
-    FB.treasuryCredit(s,C.rid,2);r.agreements=[];
-    const access=E.review(s,C.rid,'approach').reason;
-    return {resources:resources,funds:funds,access:access,camp:r.food,privateGold:s.player.gold};
-  });
-  expect(result).toEqual({resources:'resources',funds:'resources',access:'access',camp:100000,privateGold:100000});
 });
 
 test('supply, outside offers and war objectives reuse their canonical reviews without execution',async function ({page},info) {
@@ -197,6 +186,42 @@ test('strict optional saved records reject forged identities, cursors and lifecy
     });
   });
   expect(result).toEqual(Array(17).fill(true));
+});
+});
+
+describeSharedPage('harbor route observations',sharedExample('harbor'),function () {
+test('route observations distinguish a field host, civilian camp and permanent household home',async function ({page},info) {
+  await start(page,info,'harbor');
+  const result=await page.evaluate(function () {
+    const C=programCase,s=JSON.parse(JSON.stringify(FB.state)),E=FB.expeditionPrograms,M=FB.mobile,a=C.host(s),home=s.player.provinceId;
+    const target=C.definition.mobile.expeditionProgram.steps[0].terms.waypoints[0],camp=M.migration(s,C.rid).at;
+    a.at=target;a.from=target;a.path=[];a.moveLeft=0;
+    const before=JSON.stringify(s),q=E.review(s,C.rid,'approach');
+    return {allowed:q.allowed,reached:q.observation,operation:q.operation,field:q.facts.fieldCountyId===target,
+      camp:q.facts.campCountyId===camp,home:s.player.provinceId===home,pure:before===JSON.stringify(s),
+      progress:M.row(s,C.rid).expeditionProgram.steps[0].cursor};
+  });
+  expect(result).toEqual({allowed:true,reached:'reached',operation:null,field:true,camp:true,home:true,pure:true,progress:0});
+});
+});
+
+test('resource thresholds and exact current access fail without borrowing camp food or private gold',async function ({page},info) {
+  const input=JSON.parse(JSON.stringify(examples.dune)),t=input.bookmarks.dune_world.realms.find(function (r) {return r.mobile;}).mobile;
+  t.expeditionProgram.steps[0].requirements.minFood=1;
+  t.expeditionProgram.steps[0].requirements.minTreasury=1;
+  t.expeditionProgram.steps[0].requirements.access.countyIds=['dune_flats'];
+  await start(page,info,'dune',input);
+  const result=await page.evaluate(function () {
+    const C=programCase,s=JSON.parse(JSON.stringify(FB.state)),M=FB.mobile,E=FB.expeditionPrograms,r=M.row(s,C.rid),a=C.host(s);
+    r.food=100000;s.player.gold=100000;
+    const resources=E.review(s,C.rid,'approach').reason;
+    a.mobileFood=2;FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid));
+    const funds=E.review(s,C.rid,'approach').reason;
+    FB.treasuryCredit(s,C.rid,2);r.agreements=[];
+    const access=E.review(s,C.rid,'approach').reason;
+    return {resources:resources,funds:funds,access:access,camp:r.food,privateGold:s.player.gold};
+  });
+  expect(result).toEqual({resources:'resources',funds:'resources',access:'access',camp:100000,privateGold:100000});
 });
 
 test('matching restore retains progress and cancellation without replaying movement, resources or identities',async function ({page},info) {

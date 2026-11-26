@@ -5,8 +5,10 @@ const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {installPageGuards}=require('../support/page-contract');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const harbor=require('../fixtures/authoring/landed-expedition-harbor.json');
 
@@ -42,8 +44,19 @@ async function beginHome(page) {
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.evaluate(function () {FB.game.setPaused(true);});
 }
+/* Cases that restore saves, import a modified copy, replay in a second context
+   or begin the home start keep a fresh page with the unmodded validation and
+   the Mods file import. Runs of the others share one page that stores the
+   exact harbor file text and boots it once with its world active, reset before
+   each case; each case begins its own start. */
+const sharedHarbor={boot:async function (page,info) {
+  await openTitle(page,info);
+  await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/landed-expedition-harbor.json'),'utf8'));
+  await activateBookmark(page,'harbor_world');
+}};
 async function start(page,info,modified) {
-  await importWorld(page,info,'harbor',modified);
+  if (isSharedPage(page) && modified) throw new Error('A modified example needs a fresh page');
+  if (!isSharedPage(page)) await importWorld(page,info,'harbor',modified);
   await beginBookmarkFromTitle(page,'harbor_world','harbor_household');
 }
 // Boots the exact harbor JSON the Mods dialog stores, so the page prepares only
@@ -56,29 +69,6 @@ async function bootStoredHarbor(page,info) {
   await openGame(page,info);
   await page.waitForFunction(function () {return window.FB && FB.game && FB.game.bootReady && FB.mods.count()===1 && FBDATA.bookmarks.harbor_world;});
 }
-
-test('a landed principal retains one home crown, family, public command and private station',async function ({page},info) {
-  await start(page,info);
-  const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='harbor_following',c=FB.bookmarkActor(s,'harbor_home_ruler');
-    const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),r=M.row(s,rid);
-    const facts={same:M.leader(s,rid)===c && FB.realmRulerCharacterSnapshot(s,'harbor_upland')===c,
-      home:FB.realmIdForRulerCharacter(s,c),noElection:r.selection===null,
-      noCommandLand:FB.realmTerritory(s,rid).length===0,
-      homeLand:FB.realmTerritory(s,'harbor_upland').length>0,
-      privateStation:FB.station.subject(c,s).tier===FB.realmRank.tier(s.realms.harbor_upland,s),
-      oneIdentity:Object.keys(s.chars).filter(function (id) {return s.chars[id].name===c.name;}).length===1,
-      declared:M.landedLink(s,rid).characterId===c.id && M.landedLink(s,rid).homeRealmId==='harbor_upland',
-      separate:s.realms[rid].treasury!==s.realms.harbor_upland.treasury,
-      publicGold:FB.treasuryAvailable(s,rid),total:M.total(s,rid)===r.accounting.initial,valid:M.validate(s)};
-    M.commandSnapshot(s,rid);M.leader(s,rid);M.landedCommandReason(s,rid);
-    facts.pure=before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
-    return facts;
-  });
-  expect(result).toMatchObject({same:true,home:'harbor_upland',noElection:true,noCommandLand:true,homeLand:true,
-    privateStation:true,oneIdentity:true,declared:true,separate:true,total:true,valid:true,pure:true});
-  expect(result.publicGold).toBeGreaterThan(0);
-});
 
 test('the independent nonlanded import retains voluntary consent without a deputy or superior recall',async function ({page},info) {
   await importWorld(page,info,'upland');
@@ -128,6 +118,30 @@ test('a home start with '+(explicit ? 'explicit' : 'ordinary')+' infrastructure 
     appointment:true,declaration:true});
 });
 }
+
+describeSharedPage('harbor landed command',sharedHarbor,function () {
+test('a landed principal retains one home crown, family, public command and private station',async function ({page},info) {
+  await start(page,info);
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='harbor_following',c=FB.bookmarkActor(s,'harbor_home_ruler');
+    const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),r=M.row(s,rid);
+    const facts={same:M.leader(s,rid)===c && FB.realmRulerCharacterSnapshot(s,'harbor_upland')===c,
+      home:FB.realmIdForRulerCharacter(s,c),noElection:r.selection===null,
+      noCommandLand:FB.realmTerritory(s,rid).length===0,
+      homeLand:FB.realmTerritory(s,'harbor_upland').length>0,
+      privateStation:FB.station.subject(c,s).tier===FB.realmRank.tier(s.realms.harbor_upland,s),
+      oneIdentity:Object.keys(s.chars).filter(function (id) {return s.chars[id].name===c.name;}).length===1,
+      declared:M.landedLink(s,rid).characterId===c.id && M.landedLink(s,rid).homeRealmId==='harbor_upland',
+      separate:s.realms[rid].treasury!==s.realms.harbor_upland.treasury,
+      publicGold:FB.treasuryAvailable(s,rid),total:M.total(s,rid)===r.accounting.initial,valid:M.validate(s)};
+    M.commandSnapshot(s,rid);M.leader(s,rid);M.landedCommandReason(s,rid);
+    facts.pure=before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
+    return facts;
+  });
+  expect(result).toMatchObject({same:true,home:'harbor_upland',noElection:true,noCommandLand:true,homeLand:true,
+    privateStation:true,oneIdentity:true,declared:true,separate:true,total:true,valid:true,pure:true});
+  expect(result.publicGold).toBeGreaterThan(0);
+});
 
 test('members consent only to their own pledge and cannot appoint a successor',async function ({page},info) {
   await start(page,info);
@@ -195,6 +209,7 @@ for (const condition of ['custody','incapacity','generation','office','expiry','
     expect(result).toEqual({initial:true,blocked:true,pure:true,stopped:true,reason:true,unchangedMoney:true,conserved:true,noElection:true});
   });
 }
+});
 
 test('one death notifies the home crown and command once without inheriting the command',async function ({page},info) {
   await start(page,info);

@@ -1,10 +1,13 @@
 'use strict';
 const {expectModAdmission}=require('../support/game/mod-admission');
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-opening-reserves-harbor.json'),
   dune:require('../fixtures/authoring/mobile-opening-reserves-dune.json')};
@@ -19,7 +22,21 @@ dependsOnRuntime(__filename,[
   'js/market.js','js/logistics.js','js/bookmark_setup.js','js/model.js','js/stories.js',
   'js/starts.js','js/world.js','js/main.js','js/mods.js','js/save.js','js/save_v4.js']);
 
+/* The file import cases, and cases that restore saves, apply mods or import a
+   modified copy, keep a fresh page with the unmodded admission and the Mods
+   file import. Runs of the others share one page that stores the exact harbor
+   file text and boots it once with its world active, reset before each case;
+   each case begins its own start. */
+function sharedExample(prefix) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/mobile-opening-reserves-'+prefix+'.json'),'utf8'));
+    await activateBookmark(page,prefix+'_world');
+  }};
+}
 async function load(page,info,prefix,input) {
+  if (isSharedPage(page) && input) throw new Error('A modified example needs a fresh page');
+  if (!isSharedPage(page)) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});
   await expectModAdmission(page,input || examples[prefix]);
@@ -29,6 +46,7 @@ async function load(page,info,prefix,input) {
     '../fixtures/authoring/mobile-opening-reserves-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function (prefix) {
     return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];
   },prefix);
@@ -203,9 +221,11 @@ test('a fresh player command keeps the same partition and separate private purse
     initial:1400,arrivals:0,hosts:2,men:160,food:2000,program:true,camp:true,noTeleport:true,valid:true});
 });
 
+// Detached validation shares one unmodded page.
+describeSharedPage('detached reserve validation',{boot:openGame},function () {
 for(const range of [[0,6],[6,12],[12,18]]){
 test('detached reserve declarations reject malformed, excess and conflicting allocations without side effects '+range[0],async function ({page},info) {
-  await openGame(page,info);
+  if (!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function (input) {
     const source=input.source;
     const changes=[
@@ -231,6 +251,7 @@ test('detached reserve declarations reject malformed, excess and conflicting all
   expect(result).toEqual(Array(range[1]-range[0]).fill(true));
 });
 }
+});
 
 test('whole-batch live preflight rejects before creating a person, host, camp or account',async function ({page},info) {
   const input=JSON.parse(JSON.stringify(examples.harbor)),mobile=input.bookmarks.harbor_world.realms
@@ -266,6 +287,7 @@ test('whole-batch live preflight rejects before creating a person, host, camp or
   expect(result).toEqual({pure:true,rejected:Array(8).fill(true)});
 });
 
+describeSharedPage('harbor reserve gates and provisioning',sharedExample('harbor'),function () {
 test('opening reserves retain paid recruitment, pledge and equipment gates',async function ({page},info) {
   await start(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -294,6 +316,24 @@ test('opening reserves retain paid recruitment, pledge and equipment gates',asyn
     blocked:[true,true,true],unit:true,valid:true});
 });
 
+test('column provisioning transfers real camp food without altering reserves or treasury',async function ({page},info) {
+  await start(page,info,'harbor');
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='harbor_following',r=M.row(s,rid),c=r.columns.entries[0],
+      a=s.armies.find(function (a) {return a.id===c.hostId;}),camp=r.food,bag=a.mobileFood,
+      money=FB.treasuryAvailable(s,rid),pools=JSON.stringify(r.members),
+      marker=JSON.stringify(r.openingReserves),q=M.columnSupplyReview(s,rid,c.id,'load'),
+      loaded=M.commit(s,q),count=q.request.terms.count;
+    const exact=count>0 && Math.abs(camp-r.food-count)<0.000001 && Math.abs(a.mobileFood-bag-count)<0.000001,
+      repeated=!M.commit(s,q),back=M.columnSupplyReview(s,rid,c.id,'unload'),returned=M.commit(s,back);
+    return {loaded:loaded,exact:exact,repeated:repeated,returned:returned,
+      food:Math.abs(camp+bag-r.food-a.mobileFood)<0.000001,money:money===FB.treasuryAvailable(s,rid),
+      pools:pools===JSON.stringify(r.members),marker:marker===JSON.stringify(r.openingReserves),valid:M.validate(s)};
+  });
+  expect(result).toEqual({loaded:true,exact:true,repeated:true,returned:true,food:true,money:true,pools:true,marker:true,valid:true});
+});
+});
+
 test('demuster, field loss and camp starvation keep their existing conserving owners',async function ({page},info) {
   await start(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -316,23 +356,6 @@ test('demuster, field loss and camp starvation keep their existing conserving ow
   });
   expect(result).toEqual({demustered:true,returned:true,fieldLoss:true,starved:true,conserved:true,once:true,
     marker:true,restored:true,valid:true});
-});
-
-test('column provisioning transfers real camp food without altering reserves or treasury',async function ({page},info) {
-  await start(page,info,'harbor');
-  const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='harbor_following',r=M.row(s,rid),c=r.columns.entries[0],
-      a=s.armies.find(function (a) {return a.id===c.hostId;}),camp=r.food,bag=a.mobileFood,
-      money=FB.treasuryAvailable(s,rid),pools=JSON.stringify(r.members),
-      marker=JSON.stringify(r.openingReserves),q=M.columnSupplyReview(s,rid,c.id,'load'),
-      loaded=M.commit(s,q),count=q.request.terms.count;
-    const exact=count>0 && Math.abs(camp-r.food-count)<0.000001 && Math.abs(a.mobileFood-bag-count)<0.000001,
-      repeated=!M.commit(s,q),back=M.columnSupplyReview(s,rid,c.id,'unload'),returned=M.commit(s,back);
-    return {loaded:loaded,exact:exact,repeated:repeated,returned:returned,
-      food:Math.abs(camp+bag-r.food-a.mobileFood)<0.000001,money:money===FB.treasuryAvailable(s,rid),
-      pools:pools===JSON.stringify(r.members),marker:marker===JSON.stringify(r.openingReserves),valid:M.validate(s)};
-  });
-  expect(result).toEqual({loaded:true,exact:true,repeated:true,returned:true,food:true,money:true,pools:true,marker:true,valid:true});
 });
 
 test('missing, forged and unknown saved reserve provenance rejects without restore repair',async function ({page},info) {
