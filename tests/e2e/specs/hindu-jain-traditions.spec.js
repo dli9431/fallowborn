@@ -8,6 +8,7 @@ const {mockCrazyGames} = require('../support/crazygames');
 const {openCrazyGame} = require('../support/game/crazygames-title');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {releasedCatalogue} = require('../support/released-catalogue');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -28,9 +29,20 @@ dependsOnRuntime(__filename,[
   'js/technology.js','js/systems.js','js/util.js','js/crazygames.js','index.html'
 ]);
 
+/* Cases that restore saves or boot the CrazyGames distribution keep a fresh
+   page. Catalogue reads share one prepared title. Household cases share one
+   page per group, booted with their world (1204, or 711 at the Hindu review
+   revision) active and reset before each case; each case still begins its own
+   campaign, and the 711 reset also puts back the activity and patronage tables
+   one case replaces. */
+const titleBoot = {boot:openGame};
+
+describeSharedPage('Jain and Hindu catalogue reads',titleBoot,function () {
+hinduReviewCase();
+openingsCase();
 test('the Jain institution identity is independent and leaves released faith rules intact',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     const catalogue = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
     // released-catalogue.spec.js owns the whole fixture; undeclared Jain rules keep the shared faith defaults.
     const ownHashes = (await page.evaluate(releasedCatalogue,{bookmarks:[],geographies:[],eras:[],governments:[],
@@ -53,7 +65,7 @@ test('the Jain institution identity is independent and leaves released faith rul
 
 test('Jain scope permits only dated institutional authoring and seeds no local community',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const dates = ['476','493','711','800','867','1066','1204'];
@@ -93,7 +105,7 @@ test('Jain scope permits only dated institutional authoring and seeds no local c
 
 for (const id of ['476','493','711']) test('retained Hindu consumers and mixed residents are complete in ' + id,
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function (id) {
       const faith = id === '711' ? 'hindu_711' : 'brahmanical_476', b = FB.bookmark(id);
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -122,6 +134,7 @@ for (const id of ['476','493','711']) test('retained Hindu consumers and mixed r
       partitioned:true,institutions:[],scenery:true,
       scope:id === '711' ? [false,false,true,false,false,false,false] : [true,true,false,false,false,false,false],pure:true});
   });
+});
 
 // Expose hidden review dates only in this specification's isolated context.
 async function startIndusHousehold(page,testInfo,id,options) {
@@ -133,7 +146,7 @@ async function startIndusHousehold(page,testInfo,id,options) {
       window.FB_CRAZYGAMES_STORAGE = 'localstorage';
     });
     await openCrazyGame(page,testInfo);
-  } else await openGame(page,testInfo);
+  } else if (!isSharedPage(page)) await openGame(page,testInfo);
   await page.evaluate(function (input) {
     FBDATA.bookmarks[input.id].hidden = false;
     if (input.revision) FBDATA.bookmarks[input.id].revision = input.revision;
@@ -154,6 +167,11 @@ async function startIndusHousehold(page,testInfo,id,options) {
   expect(await page.evaluate(function () { return FB.state.start.id; })).toBe(id);
 }
 
+describeSharedPage('1204 Indus household',{boot:async function (page,testInfo) {
+  await openGame(page,testInfo);
+  await activateBookmark(page,'1204');
+}},function () {
+jainEvidenceCase();
 test('institution eligibility cannot be used to convert a household or fund a Jain community project',
   async function ({page},testInfo) {
     await startIndusHousehold(page,testInfo,'1204');
@@ -172,6 +190,7 @@ test('institution eligibility cannot be used to convert a household or fund a Ja
       return result;
     })).toEqual({institution:true,conversion:false,targets:false,projectTargets:false,preview:null,applied:null,pure:true});
   });
+});
 
 function indusSnapshot() {
   const s = FB.state, b = FB.campaignBookmark(s), faith = b.id === '711' ? 'hindu_711' : 'brahmanical_476';
@@ -267,9 +286,24 @@ async function startHinduService(page,testInfo,crazygames) {
   });
 }
 
+const hinduBoot = {boot:async function (page,testInfo) {
+  await openGame(page,testInfo);
+  await activateBookmark(page,'711',HINDU_REVIEW);
+  await page.evaluate(function () {
+    window.hinduBooted = {activities:FBDATA.religiousActivities,patronage:FBDATA.religiousPatronage};
+  });
+},reset:async function (page) {
+  await page.evaluate(function () {
+    FBDATA.religiousActivities = window.hinduBooted.activities;
+    FBDATA.religiousPatronage = window.hinduBooted.patronage;
+  });
+}};
+
+// Registered in the shared catalogue group above.
+function hinduReviewCase() {
 test('711 Hindu review adds only two vacant lay groups and preserves every source world',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const source = FB.bookmark('711','terrain_v2_governments_v2');
@@ -302,7 +336,9 @@ test('711 Hindu review adds only two vacant lay groups and preserves every sourc
       newIds:['brahmanabad_ritual_support_711','debal_temple_service_711'],sites:['debal_711','mansura_711'],
       vacant:true,layOnly:true,errors:[[],[],[]],tech:['none','none','none'],pure:true});
   });
+}
 
+describeSharedPage('711 Hindu observance, membership, support and interruptions',hinduBoot,function () {
 test('poor Hindu households of either sex can observe locally without admission, vows or a temple estate',
   async function ({page},testInfo) {
     await startHinduService(page,testInfo);
@@ -488,7 +524,10 @@ test('public ritual support uses an existing ruler treasury and respects the dec
         household:household === s.player.gold};
     })).toEqual({gift:true,reserve:true,privatePayer:true,ai:1,repeat:0,spent:4,fund:4,household:true});
   });
+});
 
+// Registered in the shared 1204 Indus household group above.
+function jainEvidenceCase() {
 test('Jain evidence scope creates neither an in-bounds substitute nor an unreviewed Patan service',
   async function ({page},testInfo) {
     await startIndusHousehold(page,testInfo,'1204');
@@ -507,6 +546,7 @@ test('Jain evidence scope creates neither an in-bounds substitute nor an unrevie
         pure:before === JSON.stringify(s) && data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     })).toEqual({scope:true,local:null,activity:null,noService:true,noTravel:true,noPeople:true,pure:true});
   });
+}
 
 function hinduServiceFacts() {
   const s = FB.state, me = s.chars[s.player.charId];
@@ -543,6 +583,8 @@ for (const distribution of ['standard','CrazyGames']) test(distribution + ' reta
   });
 
 
+// Registered in the shared 711 expiry group below.
+function donorDeathCase() {
 test('a deceased lay donor creates no temple successor or return of dedicated property',
   async function ({page},testInfo) {
     await startHinduService(page,testInfo);
@@ -559,12 +601,15 @@ test('a deceased lay donor creates no temple successor or return of dedicated pr
         pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     })).toEqual({property:true,heads:true,people:true,holder:null,land:0,privateHolder:null,pure:true});
   });
+}
 
 
 // Each retained world has its own placement decision; a later date is not consent.
+// Registered in the shared catalogue group above.
+function openingsCase() {
 test('all seven openings keep Hindu service scoped and Jain delivery unplaced',
   async function ({page},testInfo) {
-    await openGame(page,testInfo);
+    if (!isSharedPage(page)) await openGame(page,testInfo);
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const faults = [], serviceIds = ['brahmanabad_ritual_support_711','debal_temple_service_711'];
@@ -600,7 +645,10 @@ test('all seven openings keep Hindu service scoped and Jain delivery unplaced',
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     })).toEqual({faults:[],selected:'terrain_v2_governments_v2',pure:true});
   });
+}
 
+describeSharedPage('711 Hindu service expiry and donor death',hinduBoot,function () {
+donorDeathCase();
 for (const key of ['debal','brahmanabad']) test(key + ' service expiry preserves the community, membership and unused gifts',
   async function ({page},testInfo) {
     await startHinduService(page,testInfo);
@@ -630,6 +678,7 @@ for (const key of ['debal','brahmanabad']) test(key + ' service expiry preserves
     },key)).toEqual({ended:true,reward:false,piety:0,property:true,residents:true,member:'active',
       faith:'hindu_711',denied:true,applied:false,pure:true});
   });
+});
 
 for (const distribution of ['standard','CrazyGames']) {
   test(distribution + ' retained 711 save never acquires opt-in service institutions',

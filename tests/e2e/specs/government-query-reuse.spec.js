@@ -5,6 +5,7 @@ test.describe.configure({mode:'parallel'});
 const {openGame,openTitle,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
 const {installStoredMod} = require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -27,11 +28,23 @@ async function inject(page) {
     await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/government-query-reuse/'+file)});
 }
 async function start(page,info,crazygames,bookmark) {
-  await openGame(page,info);
+  if (!isSharedPage(page)) await openGame(page,info);
   await beginBookmarkFromTitle(page,bookmark || '476');
   await inject(page);
 }
 
+/* Cases that import, store or apply mods, restore saves, register government
+   strategies or begin without a campaign keep a fresh page. The 476 campaign
+   cases without those share one page per group, booted with the 476 world
+   active and reset before each case; each case still begins its own campaign
+   and injects its own probes. */
+const campaignBoot = {boot:async function (page,info) {
+  await openGame(page,info);
+  await activateBookmark(page,'476');
+}};
+
+describeSharedPage('476 constituency, ledger and scalar system reads',campaignBoot,function () {
+scalarSystemReadsCase();
 for (const crazygames of [false]) {
   test('ordered constituency reference parity observes same-turn ledger and eligibility mutations, distribution '+crazygames, async function ({page},info) {
     await start(page,info,crazygames);
@@ -321,6 +334,7 @@ test('rights eligibility checks keep ledger order even when requests are reverse
   });
   expect(result.candidate).toEqual(result.expected); expect(result.candidate).toEqual(result.reference);
 });
+});
 
 for (const bookmark of ['1096','1204']) {
   test(bookmark+' without aristocratic data keeps empty reads and matching restore', async function ({page},info) {
@@ -575,6 +589,7 @@ test('ordinary JSON government removal discards warmed scalar answers and restor
   expect(result).toEqual({absent:true,count:0,signature:'',form:'aristocratic_monarchy'});
 });
 
+describeSharedPage('476 scalar government families',campaignBoot,function () {
 for (const family of ['rows','forms','defaults','actors','contexts']) {
   for (const crazygames of [false]) {
     test('scalar government '+family+' match detached queries through same-turn changes, distribution '+crazygames, async function ({page},info) {
@@ -682,6 +697,7 @@ for (const family of ['rows','forms','defaults','actors','contexts']) {
     });
   }
 }
+});
 
 async function injectResolver(page) {
   for (const file of ['resolver-reference.js','resolver-probe.js'])
@@ -749,6 +765,8 @@ for (const bookmark of ['476','1096','1204']) {
   }
 }
 
+// Registered in the first shared 476 campaign group above.
+function scalarSystemReadsCase() {
 test('scalar system reads preserve layer precedence, fallback and immediate definition edits', async function ({page},info) {
   await start(page,info); await injectScalar(page);
   const result=await page.evaluate(function () {
@@ -796,6 +814,7 @@ test('scalar system reads preserve layer precedence, fallback and immediate defi
   expect(result.overrides.map(function (r) { return r.value; })).toEqual([false,true,true,false]);
   for (const row of result.overrides) expect(row.counts).toMatchObject({scalarQueries:0,publicQueries:0,actorQueries:0,rulesStringifies:0,rulesParses:0});
 });
+}
 
 for (const bookmark of ['476','1096','1204']) {
   test(bookmark+' system scopes eliminate only their rules copies and preserve detached queries and restore', async function ({page},info) {

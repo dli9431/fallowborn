@@ -10,6 +10,15 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
+
+/* Cases that restore a save keep a fresh page. The others share one page per
+   group, booted with the 867 world active and reset before each case; each
+   case still starts its own campaign in beforeEach. */
+const sharedBoot = { boot:async function (page, testInfo) {
+  await openGame(page, testInfo);
+  await activateBookmark(page, '867');
+} };
 
 async function accept(page, roleId) {
   return page.evaluate(function (id) {
@@ -33,7 +42,7 @@ async function setServiceTraits(page, traits, skills) {
 }
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () {
     const s = FB.state;
@@ -47,6 +56,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
+describeSharedPage('service progress, pay, promotion and trait fit', sharedBoot, function () {
 for (const width of [390,1360]) {
   test('service shows current-role days and literacy progress separately from the occupation at width ' + width,
     async function ({ page }) {
@@ -326,7 +336,9 @@ test('trait fit is bounded, role-specific, read-only and leaves basic entry work
     return FB.householdServiceStatus(FB.state, 'storekeeper').qualification.traitBonus;
   })).toBe(1);
 });
+});
 
+describeSharedPage('service gates, duties, offices and cases', sharedBoot, function () {
 test('favorable traits preserve experience, Standing, literacy and military gates', async function ({ page }) {
   expect(await accept(page, 'helper')).toBe(true);
   await setServiceTraits(page, ['honest','patient','rent_shrewd'], {ste:20,lea:20,dip:20,mar:20});
@@ -547,7 +559,9 @@ test('a new ruler requires explicit renewal and a stale offer cannot appoint und
   expect(result).toEqual({suspended:true,paid:false,stale:false,oldCase:false,renewal:true,renewed:true,
     noWindfall:true,newPatron:true,worked:180});
 });
+});
 
+// The two save-restore cases keep fresh pages.
 test('dismissal and landed rank stop earnings, and legacy saves acquire no employment record', async function ({ page }) {
   expect(await accept(page, 'helper')).toBe(true);
   const result = await page.evaluate(function () {
@@ -600,6 +614,7 @@ test('save repair keeps bounded experience, while retirement and relocation end 
   expect(result).toEqual({restored:{helper:42},noProse:true,moved:true,retired:true,heir:true,noJob:true,oldHistory:true});
 });
 
+describeSharedPage('service reviews and labels', sharedBoot, function () {
 for (const width of [1280, 390]) {
   test('service trait breakdown and stale review retain navigation at width ' + width, async function ({ page }) {
     await page.setViewportSize({width:width,height:720});
@@ -780,3 +795,4 @@ for (const width of [390, 690]) {
     expect(labels.filter(function (label) { return label.split; })).toEqual([]);
   });
 }
+});

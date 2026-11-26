@@ -20,6 +20,7 @@ test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { useReviewStartRules } = require('../support/game/released-starts');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 
 const STARTS = [
   { id:'nepos_476', realm:'croatia', province:'split', name:'Julius_Nepos', age:46,
@@ -47,8 +48,11 @@ function rulerCode(def) {
   return 'RULERS-476-' + def.id + '-' + def.province + '-m-' + def.name;
 }
 async function start(page, testInfo, def) {
+  // A shared page was booted once under the review rules (reviewBoot below).
+  if (!isSharedPage(page)) {
   await useReviewStartRules(page);
   await openGame(page, testInfo);
+  }
   await fullStart(page);
   await page.locator('#ng-seed').fill(rulerCode(def));
   await page.locator('#ng-seed').press('Enter');
@@ -79,6 +83,17 @@ async function winRavenna(page) {
   });
   expect(result).toEqual({ launched:true, noAward:true, phase:'won' });
 }
+
+/* Cases that restore saves, apply mods, boot without the review rules, set a
+   viewport before boot or assert unchanged start progression keep a fresh page.
+   The other review-rule cases share one page, booted under the review rules
+   with the 476 world active and reset before each case; each case still begins
+   its own campaign. */
+const reviewBoot = { boot:async function (page, testInfo) {
+  await useReviewStartRules(page);
+  await openGame(page, testInfo);
+  await activateBookmark(page, '476');
+} };
 
 test('unreviewed ruler starts stay out of the picker and reject start codes and direct creation', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -308,9 +323,13 @@ test('Odoacer choices, stale review, standing host and contract consent stay pla
     aiDeferred:true, accepted:true, durable:true, owners:true });
 });
 
+// Registered in the shared review-rule group below.
+function rulerCodeCase() {
 test('visible ruler codes reject changes to bookmark, named actor, family, site and community', async function ({ page }, testInfo) {
+  if (!isSharedPage(page)) {
   await useReviewStartRules(page);
   await openGame(page, testInfo);
+  }
   await fullStart(page);
   const codes = [
     'RULERS-867-odoacer_476-pavia-m-Odoacer',
@@ -327,6 +346,7 @@ test('visible ruler codes reject changes to bookmark, named actor, family, site 
     await expect(page.locator('#chargen:not(.hidden)')).toHaveCount(0);
   }
 });
+}
 
 test('ruler scenario mod fields validate atomically and preserve the source court rank', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -350,6 +370,8 @@ test('ruler scenario mod fields validate atomically and preserve the source cour
   expect(result).toEqual({ rejected:[true,true,true,true,true,true,true], accepted:true, technology:[] });
 });
 
+// Registered in the shared review-rule group below.
+function paidServiceCase() {
 test('Odoacer explicitly accepts paid service without receiving Ravenna or an imperial mandate', async function ({ page }, testInfo) {
   await start(page, testInfo, STARTS[1]);
   const result = await page.evaluate(function () {
@@ -368,6 +390,7 @@ test('Odoacer explicitly accepts paid service without receiving Ravenna or an im
   expect(result).toEqual({ allowed:true, accepted:true, phase:'negotiated', effective:true,
     pay:10, landUnchanged:true, arrears:30, office:false, replay:false });
 });
+}
 
 for (const choice of ['accept_civic_rule','retain_host_rule']) {
   test('Odoacer reviews government after actually winning Ravenna: ' + choice, async function ({ page }, testInfo) {
@@ -406,6 +429,11 @@ for (const choice of ['accept_civic_rule','retain_host_rule']) {
       form:choice === 'accept_civic_rule' ? 'roman_civic' : 'federate_polity' });
   });
 }
+
+describeSharedPage('review-rule ruler codes and Odoacer choices without restore', reviewBoot, function () {
+rulerCodeCase();
+paidServiceCase();
+completedChoiceCases();
 
 test('Odoacer cannot replace a missing, pending or refused council vote with goodwill', async function ({ page }, testInfo) {
   await start(page, testInfo, STARTS[1]);
@@ -465,6 +493,7 @@ for (const invalidation of ['expired','delegate_dead','incomplete_terms']) {
       blocked:true, applied:false, pure:true, unresolved:true, government:'federate_polity' });
   });
 }
+});
 
 for (const stage of ['opening','campaign','civic']) {
   for (const transition of ['death','handover']) {
@@ -534,6 +563,8 @@ for (const stage of ['opening','campaign','civic']) {
   }
 }
 
+// Registered in the shared review-rule group above.
+function completedChoiceCases() {
 for (const choice of ['accept_service','keep_host','retain_host_rule']) {
   test('Odoacer completed ' + choice + ' stays recorded after succession', async function ({ page }, testInfo) {
     await start(page, testInfo, STARTS[1]);
@@ -553,6 +584,7 @@ for (const choice of ['accept_service','keep_host','retain_host_rule']) {
     }, choice);
     expect(result).toEqual({ accepted:true, succeeded:true, interrupted:false, recorded:true, contractPreserved:true, choices:0 });
   });
+}
 }
 
 test('malformed Odoacer interruption saves reject without replacing live state', async function ({ page }, testInfo) {

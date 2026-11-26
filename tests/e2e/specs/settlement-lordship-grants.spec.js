@@ -11,9 +11,22 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
+
+/* Cases share one page per group, booted with the 867 world active and reset
+   before each case; each case still starts its own campaign in beforeEach. The
+   reset also removes the test building rows some cases add to the catalogue. */
+const sharedBoot = { boot:async function (page, testInfo) {
+  await openGame(page, testInfo);
+  await activateBookmark(page, '867');
+}, reset:async function (page) {
+  await page.evaluate(function () {
+    ['grant_test', 'grant_ai_test', 'grant_budget_test'].forEach(function (id) { delete FBDATA.buildings[id]; });
+  });
+} };
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () {
     const s = FB.state, p = s.player;
@@ -27,6 +40,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
+describeSharedPage('grant offers, sheets, petitions and rewards', sharedBoot, function () {
 for (const width of [390, 1280]) {
   test('Grant Land offers settlements to a single-county ruler and retains navigation at width ' + width, async function ({ page }) {
     await page.setViewportSize({ width:width, height:844 });
@@ -416,7 +430,9 @@ test('military rewards require their exact available settlement and never fall b
   expect(r.tier).toBe(2); expect(r.firstLife).toBe(true);
   expect(r.effect).toEqual({ custom:'military_settlement_grant' });
 });
+});
 
+describeSharedPage('seasonal delegation, revocation, reviews and large-world caps', sharedBoot, function () {
 test('seasonal delegation protects seats and baron development is affordable, bounded and replay-stable', async function ({ page }) {
   const r = await page.evaluate(function () {
     const original = FB.state, pid = original.player.provinceId;
@@ -774,3 +790,4 @@ for (const width of [390, 1280]) {
     }
   });
 }
+});
