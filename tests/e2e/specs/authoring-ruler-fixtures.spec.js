@@ -3,6 +3,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
+const {describeSharedPage,isSharedPage} = require('../support/shared-page');
 
 test.describe.configure({mode:'parallel'});
 
@@ -51,13 +52,18 @@ const fixtures = [
   {file:'water-operations-river.json',mod:require('../fixtures/authoring/water-operations-river.json')}
 ];
 
+/* Detached validation reads the unmodded catalogue, so its cases share one
+   booted page, reset before each case. The import cases below keep a fresh
+   page because they apply a mod through the Mods screen and reload. */
+describeSharedPage('detached fixture validation',{boot:openGame},function () {
 for (const fixture of fixtures) {
   test(fixture.file + ' passes detached ordinary JSON validation', async function ({page},info) {
-    await openGame(page,info);
+    if (!isSharedPage(page)) await openGame(page,info);
     const faults = await page.evaluate(function (mod) { return FB.mods.validate(mod); },fixture.mod);
     expect(faults,fixture.file).toEqual([]);
   });
 }
+});
 
 const importedRulers = [
   {file:'maritime-work-shore.json',bookmark:'maritime_shore',scenario:'maritime_shore_ruler',sex:'m'},

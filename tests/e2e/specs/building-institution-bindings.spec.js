@@ -6,6 +6,10 @@ const { test, expect } = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const { openGame } = require('../support/game/navigation');
 const { beginBookmarkFromTitle, restoreBookmark } = require('../support/game/bookmark-acceptance');
+const fs = require('fs');
+const { openTitle } = require('../support/game/navigation');
+const { installStoredMod } = require('../support/game/stored-mod');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = {
   see:require('../fixtures/authoring/building-institutions-see.json'),
@@ -22,6 +26,9 @@ dependsOnRuntime(__filename, [
 ]);
 
 async function start(page, info, label, npc, required) {
+  // A shared page booted this unmodified example once (sharedExample below).
+  if (isSharedPage(page) && required) throw new Error('A shared page cannot import a modified example');
+  if (!isSharedPage(page)) {
   await openGame(page, info);
   await page.evaluate(function () { FB.ui.showMods(); });
   if (required) {
@@ -33,6 +40,7 @@ async function start(page, info, label, npc, required) {
     await page.locator('#modfile').setInputFiles({name:'required-foundation.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(source))});
   } else await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/building-institutions-' + label + '.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
+  }
   await prepareGameContent(page);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.binding_work; });
   const world = label === 'see' ? 'inventory_estuary' : 'inventory_uplands';
@@ -55,6 +63,20 @@ async function start(page, info, label, npc, required) {
       if (!q || !q.allowed || !FB.religiousPatronageApply(s, q)) throw new Error('Endowment rejected: ' + (q && q.reason));
     };
   }, !!npc);
+}
+
+/* Cases that restore saves, import a modified example, edit catalogue
+   building definitions or read the unmodded catalogue keep a fresh page with
+   the actual file import. Runs of the others share one page per example,
+   booted once from the exact text that import stores with the example's world
+   active, reset before each case; each case still begins its own start. */
+function sharedExample(label) {
+  const world = label === 'see' ? 'inventory_estuary' : 'inventory_uplands';
+  return { boot:async function (page, info) {
+    await openTitle(page, info);
+    await installStoredMod(page, fs.readFileSync(path.resolve(__dirname, '../fixtures/authoring/building-institutions-' + label + '.json'), 'utf8'));
+    await activateBookmark(page, world);
+  } };
 }
 
 test('an opted-in inherited unbound facility stays dormant through restore until explicit current permission', async function ({ page }, info) {
@@ -86,6 +108,7 @@ test('an unbound required facility exposes the existing phone permission review 
   await button.click();await page.locator('#gm-cancel').click();await expect(button).toBeFocused();
 });
 
+describeSharedPage('see construction, authority and review', sharedExample('see'), function () {
 test('the see import binds the actual office and pays construction and maintenance once', async function ({ page }, info) {
   await start(page, info, 'see');
   const r = await page.evaluate(function () {
@@ -125,23 +148,6 @@ test('a bound foundation also excludes ordinary unbound worship after ruin and l
     return { built:built, blocked:blocked, separate:separate, pure:pure, retained:retained };
   });
   expect(r).toEqual({ built:true, blocked:true, separate:true, pure:true, retained:true });
-});
-
-test('the house import needs a real paid endowment and never spends its restricted property account', async function ({ page }, info) {
-  await start(page, info, 'house');
-  const r = await page.evaluate(function () {
-    const s = FB.state, pid = bindingCounty, before = JSON.stringify(s);
-    const q = FB.buildingInstitutionQuote(s, pid, 0, 'binding_work');
-    const rejected = FB.buildingInstitutionApply(s, q), pure = before === JSON.stringify(s);
-    const gold = s.player.gold; endowBindingHouse(); const endowmentPaid = gold - s.player.gold;
-    const property = JSON.stringify(s.abbeys), price = FB.buildCost(s, pid, 'binding_work'), funds = s.player.gold;
-    const built = FB.buildingInstitutionApply(s, FB.buildingInstitutionQuote(s, pid, 0, 'binding_work'));
-    return { rejected:rejected, pure:pure, reason:q.reason, endowmentPaid:endowmentPaid, built:built,
-      price:price, paid:funds - s.player.gold, propertyUntouched:property === JSON.stringify(s.abbeys),
-      propertyId:s.buildings[pid][0].institutionBinding.propertyId, upkeep:FB.buildingBonusAt(s, pid, 0, 'upkeep') };
-  });
-  expect(r).toMatchObject({ rejected:false, pure:true, endowmentPaid:20, built:true, propertyUntouched:true, propertyId:'binding_property', upkeep:1 });
-  expect(r.reason).toContain('endowed'); expect(r.paid).toBeCloseTo(r.price, 8);
 });
 
 test('one physical foundation excludes alternatives and ruins without excluding unrelated facilities', async function ({ page }, info) {
@@ -196,21 +202,6 @@ test('death and replacement office suspend operation and require a fresh exact r
   expect(r).toEqual({ deathBlocked:true, inactive:true, stillInactive:true, noRepair:true, approved:true, repeat:false, paid:0, upkeep:2 });
 });
 
-test('property transfer suspends the original payer and cannot debit the house or a new patron', async function ({ page }, info) {
-  await start(page, info, 'house');
-  const r = await page.evaluate(function () {
-    const s = FB.state, pid = bindingCounty; endowBindingHouse(); FB.build(s, pid, 0, 'binding_work');
-    const h = s.abbeys.houses.filter(function (v) { return v.id === 'binding_property'; })[0], original = h.patronDyn;
-    const q = FB.buildingInstitutionQuote(s, pid, 0, 'binding_alternative'); h.patronDyn = 'foreign_patron';
-    const before = JSON.stringify(s), reason = FB.buildingInstitutionStatus(s, pid, 0, 'binding_work', undefined, s.buildings[pid][0]).reason;
-    const inactive = FB.buildingBonusAt(s, pid, 0, 'tax') === 0 && FB.buildingBonusAt(s, pid, 0, 'upkeep') === 0;
-    const failed = !FB.buildingInstitutionApply(s, q), untouched = before === JSON.stringify(s);
-    h.patronDyn = original;
-    return { inactive:inactive, failed:failed, untouched:untouched, reason:reason, sameProperty:h.id === 'binding_property' };
-  });
-  expect(r).toMatchObject({ inactive:true, failed:true, untouched:true, sameProperty:true }); expect(r.reason).toContain('patron');
-});
-
 test('spiritual rank and custody cannot bypass physical lordship or the current builder', async function ({ page }, info) {
   await start(page, info, 'see');
   const r = await page.evaluate(function () {
@@ -237,20 +228,6 @@ test('realm AI uses its own treasury, the same authority gate and ordinary const
       correctPayer:payer.kind === 'realm' && payer.id === rid, upkeep:FB.buildingBonusAt(s, pid, 0, 'upkeep') };
   });
   expect(r).toMatchObject({ allowed:true, built:true, repeated:false, sameHousehold:true, correctPayer:true, upkeep:2 }); expect(r.paid).toBeCloseTo(r.cost, 8);
-});
-
-test('annual AI creates an exact binding and leaves a later vacancy unfilled', async function ({ page }, info) {
-  await start(page, info, 'see', true);
-  const r = await page.evaluate(function () {
-    const s = FB.state, pid = bindingCounty, rid = FB.settlementCountyHolder(s, pid);
-    Object.keys(FBDATA.buildings).forEach(function (id) { if (id !== 'binding_work') delete FBDATA.buildings[id].aiBuildOrder; });
-    FB.treasuryCredit(s, rid, 5000); FB.aiBuildingsYear(s);
-    const entry = s.buildings[pid].filter(function (v) { return v.id === 'binding_work'; })[0];
-    const original = s.religiousHeads.binding_bishop; s.chars[original].dead = true;
-    const rows = JSON.stringify(s.buildings[pid]); FB.aiBuildingsYear(s);
-    return { bound:!!entry.institutionBinding, inactive:!FB.buildingInstitutionOperating(s, pid, entry), noReplacement:rows === JSON.stringify(s.buildings[pid]) && s.religiousHeads.binding_bishop === original };
-  });
-  expect(r).toEqual({ bound:true, inactive:true, noReplacement:true });
 });
 
 test('private barons use their real account and a public title supplies no second purse', async function ({ page }, info) {
@@ -281,6 +258,66 @@ test('public construction cannot lower the ordinary reserve through a caller-sup
     return { enoughPrice:q.funds >= q.cost, refused:refused, pure:before === JSON.stringify(s) };
   });
   expect(r).toEqual({ enoughPrice:true, refused:true, pure:true });
+});
+
+test('narrow-screen permission review retains the county, position and keyboard focus', async function ({ page }, info) {
+  await start(page, info, 'see'); await page.setViewportSize({ width:390, height:844 });
+  await page.evaluate(function () { FB.build(FB.state, bindingCounty, 0, 'binding_work'); FB.ui.showBuildings(bindingCounty); });
+  const button = page.locator('[data-institution-building="binding_work"]');
+  await button.click(); await expect(page.locator('#gm-title')).toHaveText('Review permission');
+  await expect(page.locator('#gm-body')).toContainText('Your household account');
+  await page.keyboard.press('Escape'); await expect(button).toBeFocused();
+  await button.click(); await page.locator('#gm-cancel').click(); await expect(button).toBeFocused();
+  expect(await page.locator('#gm-body').evaluate(function (el) { return el.scrollWidth <= el.clientWidth + 1; })).toBe(true);
+});
+});
+
+describeSharedPage('house endowment and property', sharedExample('house'), function () {
+test('the house import needs a real paid endowment and never spends its restricted property account', async function ({ page }, info) {
+  await start(page, info, 'house');
+  const r = await page.evaluate(function () {
+    const s = FB.state, pid = bindingCounty, before = JSON.stringify(s);
+    const q = FB.buildingInstitutionQuote(s, pid, 0, 'binding_work');
+    const rejected = FB.buildingInstitutionApply(s, q), pure = before === JSON.stringify(s);
+    const gold = s.player.gold; endowBindingHouse(); const endowmentPaid = gold - s.player.gold;
+    const property = JSON.stringify(s.abbeys), price = FB.buildCost(s, pid, 'binding_work'), funds = s.player.gold;
+    const built = FB.buildingInstitutionApply(s, FB.buildingInstitutionQuote(s, pid, 0, 'binding_work'));
+    return { rejected:rejected, pure:pure, reason:q.reason, endowmentPaid:endowmentPaid, built:built,
+      price:price, paid:funds - s.player.gold, propertyUntouched:property === JSON.stringify(s.abbeys),
+      propertyId:s.buildings[pid][0].institutionBinding.propertyId, upkeep:FB.buildingBonusAt(s, pid, 0, 'upkeep') };
+  });
+  expect(r).toMatchObject({ rejected:false, pure:true, endowmentPaid:20, built:true, propertyUntouched:true, propertyId:'binding_property', upkeep:1 });
+  expect(r.reason).toContain('endowed'); expect(r.paid).toBeCloseTo(r.price, 8);
+});
+
+test('property transfer suspends the original payer and cannot debit the house or a new patron', async function ({ page }, info) {
+  await start(page, info, 'house');
+  const r = await page.evaluate(function () {
+    const s = FB.state, pid = bindingCounty; endowBindingHouse(); FB.build(s, pid, 0, 'binding_work');
+    const h = s.abbeys.houses.filter(function (v) { return v.id === 'binding_property'; })[0], original = h.patronDyn;
+    const q = FB.buildingInstitutionQuote(s, pid, 0, 'binding_alternative'); h.patronDyn = 'foreign_patron';
+    const before = JSON.stringify(s), reason = FB.buildingInstitutionStatus(s, pid, 0, 'binding_work', undefined, s.buildings[pid][0]).reason;
+    const inactive = FB.buildingBonusAt(s, pid, 0, 'tax') === 0 && FB.buildingBonusAt(s, pid, 0, 'upkeep') === 0;
+    const failed = !FB.buildingInstitutionApply(s, q), untouched = before === JSON.stringify(s);
+    h.patronDyn = original;
+    return { inactive:inactive, failed:failed, untouched:untouched, reason:reason, sameProperty:h.id === 'binding_property' };
+  });
+  expect(r).toMatchObject({ inactive:true, failed:true, untouched:true, sameProperty:true }); expect(r.reason).toContain('patron');
+});
+});
+
+test('annual AI creates an exact binding and leaves a later vacancy unfilled', async function ({ page }, info) {
+  await start(page, info, 'see', true);
+  const r = await page.evaluate(function () {
+    const s = FB.state, pid = bindingCounty, rid = FB.settlementCountyHolder(s, pid);
+    Object.keys(FBDATA.buildings).forEach(function (id) { if (id !== 'binding_work') delete FBDATA.buildings[id].aiBuildOrder; });
+    FB.treasuryCredit(s, rid, 5000); FB.aiBuildingsYear(s);
+    const entry = s.buildings[pid].filter(function (v) { return v.id === 'binding_work'; })[0];
+    const original = s.religiousHeads.binding_bishop; s.chars[original].dead = true;
+    const rows = JSON.stringify(s.buildings[pid]); FB.aiBuildingsYear(s);
+    return { bound:!!entry.institutionBinding, inactive:!FB.buildingInstitutionOperating(s, pid, entry), noReplacement:rows === JSON.stringify(s.buildings[pid]) && s.religiousHeads.binding_bishop === original };
+  });
+  expect(r).toEqual({ bound:true, inactive:true, noReplacement:true });
 });
 
 for (const label of ['see','house']) test(label + ' matching restore preserves exact bindings and never creates property or rewards', async function ({ page }, info) {
@@ -353,15 +390,4 @@ test('unbound legacy buildings keep their effects and are not enrolled by restor
     return { upkeep:upkeep, rejected:!q.allowed, exact:assertRestoreFacts(restoreFacts(FB.state, function (v) { return v.buildings; }), before), bound:!!FB.state.buildings[pid][0].institutionBinding };
   });
   expect(r).toEqual({ upkeep:2, rejected:true, exact:true, bound:false });
-});
-
-test('narrow-screen permission review retains the county, position and keyboard focus', async function ({ page }, info) {
-  await start(page, info, 'see'); await page.setViewportSize({ width:390, height:844 });
-  await page.evaluate(function () { FB.build(FB.state, bindingCounty, 0, 'binding_work'); FB.ui.showBuildings(bindingCounty); });
-  const button = page.locator('[data-institution-building="binding_work"]');
-  await button.click(); await expect(page.locator('#gm-title')).toHaveText('Review permission');
-  await expect(page.locator('#gm-body')).toContainText('Your household account');
-  await page.keyboard.press('Escape'); await expect(button).toBeFocused();
-  await button.click(); await page.locator('#gm-cancel').click(); await expect(button).toBeFocused();
-  expect(await page.locator('#gm-body').evaluate(function (el) { return el.scrollWidth <= el.clientWidth + 1; })).toBe(true);
 });

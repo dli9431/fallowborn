@@ -6,6 +6,10 @@ test.describe.configure({mode:'parallel'});
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {expectModAdmission}=require('../support/game/mod-admission');
+const fs=require('fs');
+const {openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={light:require('../fixtures/authoring/siege-support-light.json'),heavy:require('../fixtures/authoring/siege-support-heavy.json')};
 dependsOnRuntime(__filename,['index.html','data/siege_support.js','data/production.js','data/technology.js','data/technology_civic_military.js',
@@ -15,9 +19,12 @@ dependsOnRuntime(__filename,['index.html','data/siege_support.js','data/producti
   'js/ui_wars.js','js/ui_misc.js','js/ui_modals.js','js/technology.js','js/politics.js']);
 
 async function boot(page,info,kind,npc) {
+  // A shared page booted this example once (sharedSiege below).
+  if(!isSharedPage(page)) {
   await openGame(page,info);await expectModAdmission(page,examples[kind]);await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/siege-support-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  }
   await prepareGameContent(page);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
   const bm='siege_support_'+kind;
@@ -71,7 +78,21 @@ async function stage(page,kind,npc) {
   },{kind:kind,npc:!!npc});
 }
 
+/* Cases that restore saves, apply a changed configuration or size the page
+   before boot keep a fresh page with the admission check and actual file
+   import. Runs of the others share one page per example, booted once from the
+   exact text that import stores with the example's world active, reset before
+   each case; each case still begins its own start. */
+function sharedSiege(kind) {
+  return {boot:async function(page,info){
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/siege-support-'+kind+'.json'),'utf8'));
+    await activateBookmark(page,'siege_support_'+kind);
+  }};
+}
+
 for(const kind of ['light','heavy']) {
+  describeSharedPage(kind+' equipment loading',sharedSiege(kind),function(){
   test(kind+' ordinary JSON import produces finite paid equipment and pure shared quotes',async function({page},info){
     await boot(page,info,kind);const setup=await stage(page,kind);
     const r=await page.evaluate(function(){const s=FB.state,S=FB.siegeSupport,before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -99,16 +120,6 @@ for(const kind of ['light','heavy']) {
         uses:uses,status:s.siegeSupport.records[0].status,gold:s.player.gold===gold,home:home!==a.at};});
     expect(r).toEqual({loaded:true,repeat:false,stock:0,initial:0,after:kind==='light'?2.5:3.5,exhausted:1,uses:2,status:'spent',gold:true,home:true});
   });
-  test(kind+' matching restore retains carried inputs and spent charges without loading or replay',async function({page},info){
-    await boot(page,info,kind);await stage(page,kind);
-    const r=await page.evaluate(function(){const S=FB.siegeSupport,s=FB.state,q=S.quote(s,siegeTest.request);S.commit(s,q);
-      const a=s.armies[0];a.at=siegeTest.target;
-      const w=FB.ordinaryWarById(s,q.request.warId);FB.advanceFortSiegePulse(s,a.at,w.occupations[a.at],{hosts:[a]});
-      const before=JSON.stringify([s.production,s.siegeSupport,s.player.gold,s.armies.map(function(a){return a.id;})]),saved=JSON.parse(FB.save.serialize());
-      FB.save.restore(saved);const t=FB.state;FB.production.validate(t);S.validate(t);
-      return {same:before===JSON.stringify([t.production,t.siegeSupport,t.player.gold,t.armies.map(function(a){return a.id;})]),repeat:S.commit(t,q),uses:t.siegeSupport.records[0].uses.length};});
-    expect(r).toEqual({same:true,repeat:false,uses:1});
-  });
   test(kind+' NPC dispatcher loads through the same quote and consumes the same finite support',async function({page},info){
     await boot(page,info,kind,true);await stage(page,kind,true);
     const r=await page.evaluate(function(){const s=FB.state,S=FB.siegeSupport,q=S.aiQuote(s,siegeTest.request);
@@ -119,8 +130,20 @@ for(const kind of ['light','heavy']) {
       return {allowed:q.allowed,same:same,progress:record.progress,uses:s.siegeSupport.records[0].uses.length};});
     expect(r).toEqual({allowed:true,same:true,progress:kind==='light'?1.25:1.75,uses:1});
   });
+  });
+  test(kind+' matching restore retains carried inputs and spent charges without loading or replay',async function({page},info){
+    await boot(page,info,kind);await stage(page,kind);
+    const r=await page.evaluate(function(){const S=FB.siegeSupport,s=FB.state,q=S.quote(s,siegeTest.request);S.commit(s,q);
+      const a=s.armies[0];a.at=siegeTest.target;
+      const w=FB.ordinaryWarById(s,q.request.warId);FB.advanceFortSiegePulse(s,a.at,w.occupations[a.at],{hosts:[a]});
+      const before=JSON.stringify([s.production,s.siegeSupport,s.player.gold,s.armies.map(function(a){return a.id;})]),saved=JSON.parse(FB.save.serialize());
+      FB.save.restore(saved);const t=FB.state;FB.production.validate(t);S.validate(t);
+      return {same:before===JSON.stringify([t.production,t.siegeSupport,t.player.gold,t.armies.map(function(a){return a.id;})]),repeat:S.commit(t,q),uses:t.siegeSupport.records[0].uses.length};});
+    expect(r).toEqual({same:true,repeat:false,uses:1});
+  });
 }
 
+describeSharedPage('heavy technology, objectives and saved records',sharedSiege('heavy'),function(){
 test('missing exact equipment technology blocks loading while baseline siege and carried commitments remain available',async function({page},info){
   await boot(page,info,'heavy');await stage(page,'heavy');
   const r=await page.evaluate(function(){const s=FB.state,S=FB.siegeSupport,req=siegeTest.request,a=s.armies[0],tech=FB.realmTechRecord(s,a.realm);
@@ -149,18 +172,21 @@ test('ordinary objective resolution uses paid support twice and counts the exist
   expect(r.uses).toBe(2);expect(r.men).toBe(934);
 });
 
-test('equipment configuration content changes reject an earlier matching save before state adoption',async function({page},info){
-  await boot(page,info,'light');await stage(page,'light');
-  const r=await page.evaluate(function(source){const s=FB.state,S=FB.siegeSupport;S.commit(s,S.quote(s,siegeTest.request));
-    const saved=JSON.parse(FB.save.serialize()),sig=FB.mods.sig(),changed=JSON.parse(JSON.stringify(source));
-    changed.siegeSupportProfiles.light_equipment.termDays++;
-    FB.mods.apply(changed);const before=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
-    try{FB.save.restore(saved);}catch(e){rejected=true;}
-    return {changed:sig!==FB.mods.sig(),mismatch:FB.save.otherWorld(saved),rejected:rejected,
-      pure:before===JSON.stringify(FB.state)&&rng===FB.getRngState()&&uid===FB.getUidCounter()};},examples.light);
-  expect(r).toEqual({changed:true,mismatch:true,rejected:true,pure:true});
+test('strict saved equipment rejects forged identities, chronology, stock and duplicate uses before adoption',async function({page},info){
+  await boot(page,info,'heavy');await stage(page,'heavy');
+  const r=await page.evaluate(function(){const s=FB.state,S=FB.siegeSupport;S.commit(s,S.quote(s,siegeTest.request));const base=JSON.stringify(s);
+    const changes=[function(t){t.siegeSupport.version=2;},function(t){t.siegeSupport.definition='wrong';},function(t){t.siegeSupport.records[0].assetId=-1;},
+      function(t){t.siegeSupport.records[0].inputs[0].quantity++;},function(t){t.siegeSupport.records[0].endTurn++;},
+      function(t){t.siegeSupport.records[0].characterId='missing';},function(t){t.siegeSupport.records[0].uses=[{turn:t.turn},{turn:t.turn}];},
+      function(t){delete t.siegeSupport;},function(t){t.production.lots.find(function(l){return l.goodId==='heavy_frame';}).remaining++;}];
+    return changes.map(function(change){const t=JSON.parse(base);change(t);const active=JSON.stringify(FB.state),rng=FB.getRngState();
+      let rejected=false;try{FB.production.validate(t);S.validate(t);}catch(e){rejected=true;}
+      return rejected&&JSON.stringify(FB.state)===active&&rng===FB.getRngState();});});
+  expect(r).toEqual(Array(9).fill(true));
+});
 });
 
+describeSharedPage('light quotes, carriers, compilation and determinism',sharedSiege('light'),function(){
 test('stale quotes, foreign stock, changed command, moving or absent hosts and wrong campaigns do not debit stock',async function({page},info){
   await boot(page,info,'light');await stage(page,'light');
   const r=await page.evaluate(function(){const s=FB.state,S=FB.siegeSupport,base=JSON.stringify(s),q=S.quote(s,siegeTest.request);
@@ -198,19 +224,6 @@ test('expired, reassigned, captured, replaced and destroyed carriers lose unused
   expect(r).toEqual(Array(6).fill(true));
 });
 
-test('strict saved equipment rejects forged identities, chronology, stock and duplicate uses before adoption',async function({page},info){
-  await boot(page,info,'heavy');await stage(page,'heavy');
-  const r=await page.evaluate(function(){const s=FB.state,S=FB.siegeSupport;S.commit(s,S.quote(s,siegeTest.request));const base=JSON.stringify(s);
-    const changes=[function(t){t.siegeSupport.version=2;},function(t){t.siegeSupport.definition='wrong';},function(t){t.siegeSupport.records[0].assetId=-1;},
-      function(t){t.siegeSupport.records[0].inputs[0].quantity++;},function(t){t.siegeSupport.records[0].endTurn++;},
-      function(t){t.siegeSupport.records[0].characterId='missing';},function(t){t.siegeSupport.records[0].uses=[{turn:t.turn},{turn:t.turn}];},
-      function(t){delete t.siegeSupport;},function(t){t.production.lots.find(function(l){return l.goodId==='heavy_frame';}).remaining++;}];
-    return changes.map(function(change){const t=JSON.parse(base);change(t);const active=JSON.stringify(FB.state),rng=FB.getRngState();
-      let rejected=false;try{FB.production.validate(t);S.validate(t);}catch(e){rejected=true;}
-      return rejected&&JSON.stringify(FB.state)===active&&rng===FB.getRngState();});});
-  expect(r).toEqual(Array(9).fill(true));
-});
-
 test('ordinary candidate compilation rejects malformed profiles without campaign, registry, RNG or id mutation',async function({page},info){
   await boot(page,info,'light');
   const r=await page.evaluate(function(mod){const before=JSON.stringify(FBDATA.siegeSupportProfiles),state=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -230,6 +243,19 @@ test('same-seed support commits and siege results agree without consuming RNG or
       FB.advanceFortSiegePulse(s,siegeTest.target,s.wars[siegeTest.request.warId].occupations[siegeTest.target],{hosts:s.armies});});
     return {same:JSON.stringify(a)===JSON.stringify(b),rng:rng===FB.getRngState(),uid:uid===FB.getUidCounter()};});
   expect(r).toEqual({same:true,rng:true,uid:true});
+});
+});
+
+test('equipment configuration content changes reject an earlier matching save before state adoption',async function({page},info){
+  await boot(page,info,'light');await stage(page,'light');
+  const r=await page.evaluate(function(source){const s=FB.state,S=FB.siegeSupport;S.commit(s,S.quote(s,siegeTest.request));
+    const saved=JSON.parse(FB.save.serialize()),sig=FB.mods.sig(),changed=JSON.parse(JSON.stringify(source));
+    changed.siegeSupportProfiles.light_equipment.termDays++;
+    FB.mods.apply(changed);const before=JSON.stringify(FB.state),rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
+    try{FB.save.restore(saved);}catch(e){rejected=true;}
+    return {changed:sig!==FB.mods.sig(),mismatch:FB.save.otherWorld(saved),rejected:rejected,
+      pure:before===JSON.stringify(FB.state)&&rng===FB.getRngState()&&uid===FB.getUidCounter()};},examples.light);
+  expect(r).toEqual({changed:true,mismatch:true,rejected:true,pure:true});
 });
 
 test('phone equipment review preserves list scroll and focus through Back, Escape and a successful load',async function({page},info){

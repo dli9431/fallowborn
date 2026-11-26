@@ -7,6 +7,9 @@ const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-expedition-harbor.json'),
   dune:require('../fixtures/authoring/mobile-expedition-dune.json')};
@@ -25,7 +28,11 @@ dependsOnRuntime(__filename,['index.html','js/bookmark_composition.js','data/mob
 // import and its unmodded admission for both examples.
 async function start(page,info,prefix,input,stored) {
   const fixture=path.resolve(__dirname,'../fixtures/authoring/mobile-expedition-'+prefix+'.json');
-  if (stored) {
+  // A shared page booted this unmodified example once (sharedExample below).
+  if (isSharedPage(page) && (input || stored)) throw new Error('A shared page cannot import another configuration');
+  if (isSharedPage(page)) {
+    await prepareGameContent(page);
+  } else if (stored) {
     await page.addInitScript(function (source) {
       if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
     },fs.readFileSync(fixture,'utf8'));
@@ -44,6 +51,19 @@ async function start(page,info,prefix,input,stored) {
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   await beginBookmarkFromTitle(page,prefix+'_world',prefix+'_household');
   await installRestoreFacts(page);
+}
+
+/* Cases that restore saves, apply or import another configuration, or boot
+   stored text of their own keep a fresh page with the actual file import.
+   Runs of the unmodified dune cases share one page, booted once from the exact
+   text that import stores with the dune world active, reset before each case;
+   each case still begins its own start. */
+function sharedExample(prefix) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/mobile-expedition-'+prefix+'.json'),'utf8'));
+    await activateBookmark(page,prefix+'_world');
+  }};
 }
 
 for (const prefix of ['harbor','dune']) {
@@ -102,9 +122,11 @@ for (const prefix of ['harbor','dune']) {
   });
 }
 
+// Detached validation reads the unmodded catalogue; one boot serves every range.
+describeSharedPage('detached sponsor validation',{boot:openGame},function () {
 for(const range of [[0,5],[5,10],[10,15],[15,19]]){
 test('detached imports reject sponsor ambiguities and malformed external warrants without mutation '+range[0],async function ({page},info) {
-  await openGame(page,info);
+  if (!isSharedPage(page)) await openGame(page,info);
   const result=await page.evaluate(function (input) {
     const source=input.source;
     const changes=[
@@ -129,7 +151,9 @@ test('detached imports reject sponsor ambiguities and malformed external warrant
   expect(result).toEqual(Array(range[1]-range[0]).fill(true));
 });
 }
+});
 
+describeSharedPage('dune independence, commands and reviews',sharedExample('dune'),function () {
 test('independence supplies no access, outside consent, service, land award or free money',async function ({page},info) {
   await start(page,info,'dune');
   const result=await page.evaluate(function () {
@@ -189,6 +213,126 @@ test('independent recruitment uses the same finite people and public funds for p
       privateUnchanged:s.player.gold===privateGold,valid:M.validate(s)};
   });
   expect(result).toEqual({same:true,committed:true,repeat:true,staleAI:true,replay:true,men:10,conserved:true,debit:true,privateUnchanged:true,valid:true});
+});
+
+test('independent access still requires the real holder and one conserved payment',async function ({page},info) {
+  await start(page,info,'dune');
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='dune_coalition',partner='dune_gate',r=M.row(s,rid);
+    const gold=FB.treasuryAvailable(s,rid),outside=FB.treasuryAvailable(s,partner),privateGold=s.player.gold;
+    const offer=M.review(s,{realmId:rid,action:'offer',actor:{kind:'realm',id:rid},terms:{kind:'access',partnerId:partner,
+      countyIds:['dune_pass'],capacity:100,allowRecruit:false,price:7,duration:20}});
+    const offered=M.commit(s,offer),a=r.agreements[0],beforeAcceptance=!M.passage(s,rid,'dune_pass',true);
+    const review=M.review(s,{realmId:rid,action:'accept',terms:{agreementId:a.id},actor:{kind:'realm',id:partner}});
+    const changed=JSON.parse(JSON.stringify(s));changed.holder.dune_pass='dune_oasis';
+    const stale=!M.commit(changed,review),accepted=M.commit(s,review),repeat=!M.commit(s,review);
+    return {offered:offered,beforeAcceptance:beforeAcceptance,stale:stale,accepted:accepted,repeat:repeat,
+      passage:M.passage(s,rid,'dune_pass',true),debit:gold-FB.treasuryAvailable(s,rid),
+      credit:FB.treasuryAvailable(s,partner)-outside,privateUnchanged:privateGold===s.player.gold,
+      stillIndependent:M.migration(s,rid).patronRealmId===null,owner:s.owner.dune_pass,valid:M.validate(s)};
+  });
+  expect(result).toEqual({offered:true,beforeAcceptance:true,stale:true,accepted:true,repeat:true,passage:true,
+    debit:7,credit:7,privateUnchanged:true,stillIndependent:true,owner:'dune_gate',valid:true});
+});
+
+test('neither a commander nor an outside local ruler can impersonate the external issuer',async function ({page},info) {
+  await start(page,info,'dune');
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='dune_coalition',r=M.row(s,rid),before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+    const actors=[{kind:'character',id:r.leaderId},{kind:'realm',id:'dune_gate'},
+      {kind:'external_authority',id:'glassroad_council'}];
+    const refused=actors.every(function (actor) {return ['appoint','recall'].every(function (action) {
+      const request={realmId:rid,commandId:r.command.id,action:action,actor:actor};
+      if(action==='appoint') request.candidateId=r.members[1].principal.id;
+      return !M.reviewCommand(s,request).review.allowed;
+    });});
+    return {refused:refused,pure:before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter()};
+  });
+  expect(result).toEqual({refused:true,pure:true});
+});
+
+test('a committed host interruption preserves the independent camp and authority without grants',async function ({page},info) {
+  await start(page,info,'dune');
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='dune_coalition',r=M.row(s,rid),host=M.host(s,rid),moving=M.migration(s,rid);
+    const gold=FB.treasuryAvailable(s,rid),people=Object.keys(s.chars).length;
+    FB.mobileMigrationInterrupted(s,moving,'host_lost');
+    const once=JSON.stringify([r.accounting,r.members,r.food,moving]);
+    FB.mobileMigrationInterrupted(s,moving,'host_lost');
+    return {once:once===JSON.stringify([r.accounting,r.members,r.food,moving]),independent:moving.sponsorship.kind==='independent',
+      patron:moving.patronRealmId,active:r.status==='active',authority:M.commandValid(s,rid),
+      noGrant:gold===FB.treasuryAvailable(s,rid),noNewPeople:people===Object.keys(s.chars).length};
+  });
+  expect(result).toEqual({once:true,independent:true,patron:null,active:true,authority:true,noGrant:true,noNewPeople:true});
+});
+
+test('saved sponsorship and external issuer variants reject missing, forged and mixed provenance',async function ({page},info) {
+  await start(page,info,'dune');
+  const result=await page.evaluate(function () {
+    const M=FB.mobile,rid='dune_coalition';
+    const changes=[function (r,m) {delete m.sponsorship;},function (r,m) {m.sponsorship.schema=2;},
+      function (r,m) {m.sponsorship.extra=true;},function (r,m) {m.patronRealmId='dune_gate';},
+      function (r,m) {m.choice='service';},function (r,m) {m.choice='force';},function (r,m) {m.origin='dune_flats';},
+      function (r,m) {r.command.issuer.generation++;},
+      function (r,m) {r.command.issuer.externalAuthorityId='missing';},
+      function (r,m) {r.command.issuer.characterId=r.leaderId;},function (r,m) {r.command.issuer=null;}];
+    return changes.map(function (change) {
+      const s=JSON.parse(JSON.stringify(FB.state));change(M.row(s,rid),M.migration(s,rid));
+      const bytes=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
+      try {FB.save.v4.validateAuthority(s.authority,s);M.validate(s);} catch(error) {rejected=true;}
+      return rejected && bytes===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
+    });
+  });
+  expect(result).toEqual(Array(11).fill(true));
+});
+
+test('loss of a former hosting polity does not become a sponsor or interrupt an independent mandate',async function ({page},info) {
+  await start(page,info,'dune');
+  const result=await page.evaluate(function () {
+    const s=FB.state,M=FB.mobile,rid='dune_coalition';
+    // Stage extinction and successor control directly, without a long war simulation.
+    s.realms.dune_oasis.alive=false;
+    Object.keys(s.owner).forEach(function (pid) {if(s.owner[pid]==='dune_oasis') s.owner[pid]='dune_gate';});
+    Object.keys(s.holder).forEach(function (pid) {if(s.holder[pid]==='dune_oasis') s.holder[pid]='dune_gate';});
+    FB.invalidateRealmCache();
+    const bytes=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),m=M.migration(s,rid);
+    const review=M.review(s,{realmId:rid,action:'recruit',terms:{count:10,unitId:'arch'},actor:{kind:'realm',id:rid}});
+    FB.save.v4.validateAuthority(s.authority,s);M.validate(s);
+    return {command:M.commandValid(s,rid),recruit:review.review.allowed,patron:m.patronRealmId,
+      noPassage:!M.passage(s,rid,'dune_pass',true),noRequest:!FB.federateRequest(s,m.id,'land'),
+      noAward:FB.political.federateSettlementQuote(s,m.id)===null,
+      pure:bytes===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter()};
+  });
+  expect(result).toEqual({command:true,recruit:true,patron:null,noPassage:true,noRequest:true,noAward:true,pure:true});
+});
+
+test('sponsorship provenance changes invalidate an already allowed resource review without a debit',async function ({page},info) {
+  await start(page,info,'dune');
+  const result=await page.evaluate(function () {
+    const M=FB.mobile,rid='dune_coalition';
+    return ['removed','schema','patron'].map(function (kind) {
+      const s=JSON.parse(JSON.stringify(FB.state)),m=M.migration(s,rid);
+      const review=M.review(s,{realmId:rid,action:'recruit',terms:{count:10,unitId:'arch'},actor:{kind:'realm',id:rid}});
+      if(kind==='removed') delete m.sponsorship;
+      if(kind==='schema') m.sponsorship.schema=2;
+      if(kind==='patron') m.patronRealmId='dune_oasis';
+      const bytes=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+      return review.review.allowed && !M.commit(s,review) && bytes===JSON.stringify(s) &&
+        rng===FB.getRngState() && uid===FB.getUidCounter();
+    });
+  });
+  expect(result).toEqual([true,true,true]);
+});
+
+test('the shared command sheet discloses independence and the real external term',async function ({page},info) {
+  await start(page,info,'dune');
+  await page.evaluate(function () {FB.ui.showMobileConfederation('dune_coalition');});
+  await expect(page.locator('#gm-body')).toContainText('Independent');
+  await expect(page.locator('#gm-body')).toContainText('Glassroad Council');
+  await expect(page.locator('#gm-body')).toContainText('270 days remaining');
+  await expect(page.locator('#gm-body')).not.toContainText('Recall commander');
+  await expect(page.locator('#gm-body')).not.toContainText('Commission Sela');
+});
 });
 
 test('settlement on actually owned land uses one real seat and conserves the civilian transfer',async function ({page},info) {
@@ -262,26 +406,6 @@ test('settlement on actually owned land uses one real seat and conserves the civ
     conserved:true,noPatron:true,restored:true,constituencyValid:true,valid:true});
 });
 
-test('independent access still requires the real holder and one conserved payment',async function ({page},info) {
-  await start(page,info,'dune');
-  const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='dune_coalition',partner='dune_gate',r=M.row(s,rid);
-    const gold=FB.treasuryAvailable(s,rid),outside=FB.treasuryAvailable(s,partner),privateGold=s.player.gold;
-    const offer=M.review(s,{realmId:rid,action:'offer',actor:{kind:'realm',id:rid},terms:{kind:'access',partnerId:partner,
-      countyIds:['dune_pass'],capacity:100,allowRecruit:false,price:7,duration:20}});
-    const offered=M.commit(s,offer),a=r.agreements[0],beforeAcceptance=!M.passage(s,rid,'dune_pass',true);
-    const review=M.review(s,{realmId:rid,action:'accept',terms:{agreementId:a.id},actor:{kind:'realm',id:partner}});
-    const changed=JSON.parse(JSON.stringify(s));changed.holder.dune_pass='dune_oasis';
-    const stale=!M.commit(changed,review),accepted=M.commit(s,review),repeat=!M.commit(s,review);
-    return {offered:offered,beforeAcceptance:beforeAcceptance,stale:stale,accepted:accepted,repeat:repeat,
-      passage:M.passage(s,rid,'dune_pass',true),debit:gold-FB.treasuryAvailable(s,rid),
-      credit:FB.treasuryAvailable(s,partner)-outside,privateUnchanged:privateGold===s.player.gold,
-      stillIndependent:M.migration(s,rid).patronRealmId===null,owner:s.owner.dune_pass,valid:M.validate(s)};
-  });
-  expect(result).toEqual({offered:true,beforeAcceptance:true,stale:true,accepted:true,repeat:true,passage:true,
-    debit:7,credit:7,privateUnchanged:true,stillIndependent:true,owner:'dune_gate',valid:true});
-});
-
 test('an external warrant expires at its boundary without a successor, replay or supply grant',async function ({page},info) {
   await start(page,info,'dune');
   const result=await page.evaluate(function () {
@@ -302,57 +426,6 @@ test('an external warrant expires at its boundary without a successor, replay or
   });
   expect(result).toEqual({expired:true,stale:true,stopped:true,consumed:true,preserved:true,people:true,
     noElection:true,stillExpired:true,restored:true,valid:true});
-});
-
-test('neither a commander nor an outside local ruler can impersonate the external issuer',async function ({page},info) {
-  await start(page,info,'dune');
-  const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='dune_coalition',r=M.row(s,rid),before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
-    const actors=[{kind:'character',id:r.leaderId},{kind:'realm',id:'dune_gate'},
-      {kind:'external_authority',id:'glassroad_council'}];
-    const refused=actors.every(function (actor) {return ['appoint','recall'].every(function (action) {
-      const request={realmId:rid,commandId:r.command.id,action:action,actor:actor};
-      if(action==='appoint') request.candidateId=r.members[1].principal.id;
-      return !M.reviewCommand(s,request).review.allowed;
-    });});
-    return {refused:refused,pure:before===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter()};
-  });
-  expect(result).toEqual({refused:true,pure:true});
-});
-
-test('a committed host interruption preserves the independent camp and authority without grants',async function ({page},info) {
-  await start(page,info,'dune');
-  const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='dune_coalition',r=M.row(s,rid),host=M.host(s,rid),moving=M.migration(s,rid);
-    const gold=FB.treasuryAvailable(s,rid),people=Object.keys(s.chars).length;
-    FB.mobileMigrationInterrupted(s,moving,'host_lost');
-    const once=JSON.stringify([r.accounting,r.members,r.food,moving]);
-    FB.mobileMigrationInterrupted(s,moving,'host_lost');
-    return {once:once===JSON.stringify([r.accounting,r.members,r.food,moving]),independent:moving.sponsorship.kind==='independent',
-      patron:moving.patronRealmId,active:r.status==='active',authority:M.commandValid(s,rid),
-      noGrant:gold===FB.treasuryAvailable(s,rid),noNewPeople:people===Object.keys(s.chars).length};
-  });
-  expect(result).toEqual({once:true,independent:true,patron:null,active:true,authority:true,noGrant:true,noNewPeople:true});
-});
-
-test('saved sponsorship and external issuer variants reject missing, forged and mixed provenance',async function ({page},info) {
-  await start(page,info,'dune');
-  const result=await page.evaluate(function () {
-    const M=FB.mobile,rid='dune_coalition';
-    const changes=[function (r,m) {delete m.sponsorship;},function (r,m) {m.sponsorship.schema=2;},
-      function (r,m) {m.sponsorship.extra=true;},function (r,m) {m.patronRealmId='dune_gate';},
-      function (r,m) {m.choice='service';},function (r,m) {m.choice='force';},function (r,m) {m.origin='dune_flats';},
-      function (r,m) {r.command.issuer.generation++;},
-      function (r,m) {r.command.issuer.externalAuthorityId='missing';},
-      function (r,m) {r.command.issuer.characterId=r.leaderId;},function (r,m) {r.command.issuer=null;}];
-    return changes.map(function (change) {
-      const s=JSON.parse(JSON.stringify(FB.state));change(M.row(s,rid),M.migration(s,rid));
-      const bytes=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();let rejected=false;
-      try {FB.save.v4.validateAuthority(s.authority,s);M.validate(s);} catch(error) {rejected=true;}
-      return rejected && bytes===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter();
-    });
-  });
-  expect(result).toEqual(Array(11).fill(true));
 });
 
 test('retained sponsored imports still need their actual patron and reject a bare null',async function ({page},info) {
@@ -414,26 +487,6 @@ test('an independent import needs no former patron court and restores without in
     noLand:true,unchanged:true,identity:true,valid:true});
 });
 
-test('loss of a former hosting polity does not become a sponsor or interrupt an independent mandate',async function ({page},info) {
-  await start(page,info,'dune');
-  const result=await page.evaluate(function () {
-    const s=FB.state,M=FB.mobile,rid='dune_coalition';
-    // Stage extinction and successor control directly, without a long war simulation.
-    s.realms.dune_oasis.alive=false;
-    Object.keys(s.owner).forEach(function (pid) {if(s.owner[pid]==='dune_oasis') s.owner[pid]='dune_gate';});
-    Object.keys(s.holder).forEach(function (pid) {if(s.holder[pid]==='dune_oasis') s.holder[pid]='dune_gate';});
-    FB.invalidateRealmCache();
-    const bytes=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),m=M.migration(s,rid);
-    const review=M.review(s,{realmId:rid,action:'recruit',terms:{count:10,unitId:'arch'},actor:{kind:'realm',id:rid}});
-    FB.save.v4.validateAuthority(s.authority,s);M.validate(s);
-    return {command:M.commandValid(s,rid),recruit:review.review.allowed,patron:m.patronRealmId,
-      noPassage:!M.passage(s,rid,'dune_pass',true),noRequest:!FB.federateRequest(s,m.id,'land'),
-      noAward:FB.political.federateSettlementQuote(s,m.id)===null,
-      pure:bytes===JSON.stringify(s) && rng===FB.getRngState() && uid===FB.getUidCounter()};
-  });
-  expect(result).toEqual({command:true,recruit:true,patron:null,noPassage:true,noRequest:true,noAward:true,pure:true});
-});
-
 test('required-patron constructors cannot turn missing or dead patrons into independent expeditions',async function ({page},info) {
   await start(page,info,'dune',sponsored);
   const result=await page.evaluate(function () {
@@ -448,24 +501,6 @@ test('required-patron constructors cannot turn missing or dead patrons into inde
       if(kind==='dead') s.realms[m.patronRealmId].alive=false;
       const bytes=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
       return FB.federateBeginMigration(s,spec)===null && bytes===JSON.stringify(s) &&
-        rng===FB.getRngState() && uid===FB.getUidCounter();
-    });
-  });
-  expect(result).toEqual([true,true,true]);
-});
-
-test('sponsorship provenance changes invalidate an already allowed resource review without a debit',async function ({page},info) {
-  await start(page,info,'dune');
-  const result=await page.evaluate(function () {
-    const M=FB.mobile,rid='dune_coalition';
-    return ['removed','schema','patron'].map(function (kind) {
-      const s=JSON.parse(JSON.stringify(FB.state)),m=M.migration(s,rid);
-      const review=M.review(s,{realmId:rid,action:'recruit',terms:{count:10,unitId:'arch'},actor:{kind:'realm',id:rid}});
-      if(kind==='removed') delete m.sponsorship;
-      if(kind==='schema') m.sponsorship.schema=2;
-      if(kind==='patron') m.patronRealmId='dune_oasis';
-      const bytes=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
-      return review.review.allowed && !M.commit(s,review) && bytes===JSON.stringify(s) &&
         rng===FB.getRngState() && uid===FB.getUidCounter();
     });
   });
@@ -513,14 +548,4 @@ test('changing only the sponsorship policy rejects the prior exact-content save 
     return {mismatch:mismatch,pure:before===JSON.stringify(FB.state) && rng===FB.getRngState() && uid===FB.getUidCounter()};
   },JSON.parse(JSON.stringify(examples.dune)));
   expect(result).toEqual({mismatch:true,pure:true});
-});
-
-test('the shared command sheet discloses independence and the real external term',async function ({page},info) {
-  await start(page,info,'dune');
-  await page.evaluate(function () {FB.ui.showMobileConfederation('dune_coalition');});
-  await expect(page.locator('#gm-body')).toContainText('Independent');
-  await expect(page.locator('#gm-body')).toContainText('Glassroad Council');
-  await expect(page.locator('#gm-body')).toContainText('270 days remaining');
-  await expect(page.locator('#gm-body')).not.toContainText('Recall commander');
-  await expect(page.locator('#gm-body')).not.toContainText('Commission Sela');
 });

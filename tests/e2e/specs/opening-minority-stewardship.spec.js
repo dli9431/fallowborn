@@ -4,6 +4,9 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame,prepareGameContent} = require('../support/game/navigation');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {openTitle} = require('../support/game/navigation');
+const {installStoredMod} = require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const charter = require('../fixtures/opening-minority-stewardship/young-charter.json');
 const river = require('../fixtures/opening-minority-stewardship/river-minority.json');
@@ -41,7 +44,10 @@ async function start(page,info,kind,options) {
   const world=Object.values(mod.bookmarks)[0], realm=world.realms[0], profile=Object.values(mod.aristocraticProfiles)[0];
   if (options.adult) realm.ruler.born=world.date.year-30;
   if (options.omit) delete profile.openingStewardActorId;
-  if (options.stored) await bootStored(page,info,kind);
+  // A shared page booted this unmodified example once (sharedExample below).
+  if (isSharedPage(page) && (options.stored || options.adult || options.omit)) throw new Error('A shared page cannot import another configuration');
+  if (isSharedPage(page)) await prepareGameContent(page);
+  else if (options.stored) await bootStored(page,info,kind);
   else {
     await openGame(page,info);
     expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },mod)).toEqual([]);
@@ -124,6 +130,20 @@ async function start(page,info,kind,options) {
   },{rid:realm.id,player:!!options.player});
 }
 
+/* Cases that restore saves, apply or import a changed configuration, boot
+   stored text of their own or adopt the young ruler keep a fresh page with the
+   actual file import. Adjacent runs of the other cases share one page per
+   example, booted once from the exact text that import stores with the
+   example's world active, reset before each case; each case still begins its
+   own start. */
+function sharedExample(kind) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(fixturePath(kind),'utf8'));
+    await activateBookmark(page,Object.values((kind==='charter' ? charter : river).bookmarks)[0].id);
+  }};
+}
+
 for (const kind of ['charter','river']) {
   test(kind+' fresh minority binds the declared principal once and restores exact public facts',async function ({page},info) {
     await start(page,info,kind);
@@ -154,6 +174,7 @@ for (const kind of ['charter','river']) {
       reads:['stewardship','stewardship','stewardship'],restore:{facts:true,rng:true,uid:true,signature:true,noSeed:true}});
   });
 
+  describeSharedPage(kind+' public seams and replacement',sharedExample(kind),function () {
   test(kind+' every public seam fails closed while independent magnate decisions remain available',async function ({page},info) {
     await start(page,info,kind);
     const result=await page.evaluate(function () {
@@ -236,6 +257,7 @@ for (const kind of ['charter','river']) {
         property:property===JSON.stringify([s.owner,s.holder,s.bookmarkSetup.estates])};
     });
     expect(result).toEqual({pure:true,stale:true,replaced:true,once:true,restored:true,noSovereignPower:true,below:true,adult:true,ended:true,generation:true,identity:true,money:true,property:true});
+  });
   });
 
   test(kind+' player adoption retains the young sovereign and the already bound steward',async function ({page},info) {
