@@ -1,9 +1,12 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/sovereign-preparation-harbor.json'),
   dune:require('../fixtures/authoring/sovereign-preparation-dune.json')};
@@ -14,13 +17,21 @@ dependsOnRuntime(__filename,['js/bookmark_composition.js','js/util.js','index.ht
   'js/population.js','js/logistics.js','js/climate.js','js/technology.js','js/armies.js','js/federates.js',
   'js/justice.js','js/intrigue.js','js/events.js','js/story_expedition_preparation.js','js/save.js','js/save_v4.js']);
 
+/* Cases that restore a save, import a modified copy or validate the unmodded
+   catalogue import through the Mods dialog on a fresh page. The adoption and
+   public grant cases share one page per example that stores the same file text
+   the dialog stores and boots it once with the example world active at its
+   review revision (sharedWorld); each case begins its own start, and the reset
+   removes the adoption probe the setup below installs. */
 async function importWorld(page,info,prefix,modified,revision) {
+  if(!isSharedPage(page)) {
   await openGame(page,info);
   await page.evaluate(function(){FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(modified ? {name:'sovereign.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(modified))} : path.resolve(__dirname,'../fixtures/authoring/sovereign-preparation-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function(prefix){return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   await page.evaluate(function(input){
     if(FBDATA.bookmarks[input.prefix+'_world'].revisions)
@@ -45,6 +56,21 @@ async function importWorld(page,info,prefix,modified,revision) {
       return result;
     };
   },{prefix:prefix,revision:revision});
+}
+function sharedWorld(prefix) {
+  return {boot:async function(page,info){
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/sovereign-preparation-'+prefix+'.json'),'utf8'));
+    const revision=await page.evaluate(function(prefix){
+      const row=FBDATA.bookmarks[prefix+'_world'];
+      if(row.revisions) row.revision='local_policy';
+      window.sovereignBootAdopt=FB.adoptStartingRealm;
+      return row.revisions ? 'local_policy' : null;
+    },prefix);
+    await activateBookmark(page,prefix+'_world',revision);
+  },reset:async function(page){
+    await page.evaluate(function(){FB.adoptStartingRealm=window.sovereignBootAdopt;delete window.sovereignCase;});
+  }};
 }
 async function begin(page,prefix,entry) {
   const sc=examples[prefix].startScenarios[1];
@@ -73,6 +99,7 @@ async function begin(page,prefix,entry) {
 }
 
 for(const prefix of ['harbor','dune']) {
+  describeSharedPage(prefix+' shared adoption',sharedWorld(prefix),function(){
   for(const entry of ['picker','code','direct']) {
     test(prefix+' '+entry+' adoption preserves original sovereign bindings and current pure authority',async function({page},info){
       await importWorld(page,info,prefix);await begin(page,prefix,entry);
@@ -99,6 +126,30 @@ for(const prefix of ['harbor','dune']) {
     });
   }
 
+  test(prefix+' public grant does not authorize or debit the household and stale reviews fail atomically',async function({page},info){
+    await importWorld(page,info,prefix);await begin(page,prefix,'picker');
+    const result=await page.evaluate(function(){
+      const C=sovereignCase,P=FB.expeditionPreparation,s=FB.state,actor=s.player.charId;
+      s.realms.player.treasury.gold=500;
+      const priv=s.player.gold,pub=s.realms.player.treasury.gold,q=P.review(s,C.id,'grant',actor),
+        granted=P.commit(s,q),repeat=P.commit(s,q),separate=C.record(s).authorizedTurn===null && !C.apply(s,'form'),
+        conserved=granted && s.player.gold===priv && Math.abs(pub-s.realms.player.treasury.gold-q.cost)<1e-8 && FB.treasuryAvailable(s,C.rid)===q.cost;
+      C.apply(s,'authorize');
+      const changes=[function(x){x.realms.player.ruler.generation=FB.realmRulerGeneration(x,'player')+1;},function(x){x.chars[actor].dead=true;},
+        function(x){x.holder[C.origin]=C.rid;},function(x){x.owner[C.origin]=C.rid;},
+        function(x){x.market.counties[C.origin][0][x.market.goods.indexOf('provisions')]=0;},
+        function(x){x.turn=C.record(x).endTurn;},function(x){C.record(x).bindings[0].person.actorId='absent';},
+        function(x){x.market.counties[C.origin][1][x.market.goods.indexOf('provisions')]*=1.01;},
+        function(x){x.date.season=(x.date.season+1)%4;}];
+      const stale=changes.map(function(change){const x=JSON.parse(JSON.stringify(s)),f=P.review(x,C.id,'form',actor);change(x);
+        const before=JSON.stringify(x),rng=FB.getRngState(),uid=FB.getUidCounter();
+        return f.allowed && !P.commit(x,f) && before===JSON.stringify(x) && rng===FB.getRngState() && uid===FB.getUidCounter();});
+      return {granted:granted,repeat:repeat,separate:separate,conserved:conserved,stale:stale};
+    });
+    expect(result).toEqual({granted:true,repeat:false,separate:true,conserved:true,stale:Array(9).fill(true)});
+  });
+  });
+
   test(prefix+' paid formation keeps separate voluntary funding consent and finite conservation',async function({page},info){
     await importWorld(page,info,prefix);await begin(page,prefix,'code');
     const result=await page.evaluate(function(){
@@ -123,29 +174,6 @@ for(const prefix of ['harbor','dune']) {
     });
     expect(result).toEqual({gift:true,repeat:false,separate:true,authorized:true,formed:true,again:false,
       money:true,seller:true,food:true,unchanged:true,single:true,valid:true,restored:true});
-  });
-
-  test(prefix+' public grant does not authorize or debit the household and stale reviews fail atomically',async function({page},info){
-    await importWorld(page,info,prefix);await begin(page,prefix,'picker');
-    const result=await page.evaluate(function(){
-      const C=sovereignCase,P=FB.expeditionPreparation,s=FB.state,actor=s.player.charId;
-      s.realms.player.treasury.gold=500;
-      const priv=s.player.gold,pub=s.realms.player.treasury.gold,q=P.review(s,C.id,'grant',actor),
-        granted=P.commit(s,q),repeat=P.commit(s,q),separate=C.record(s).authorizedTurn===null && !C.apply(s,'form'),
-        conserved=granted && s.player.gold===priv && Math.abs(pub-s.realms.player.treasury.gold-q.cost)<1e-8 && FB.treasuryAvailable(s,C.rid)===q.cost;
-      C.apply(s,'authorize');
-      const changes=[function(x){x.realms.player.ruler.generation=FB.realmRulerGeneration(x,'player')+1;},function(x){x.chars[actor].dead=true;},
-        function(x){x.holder[C.origin]=C.rid;},function(x){x.owner[C.origin]=C.rid;},
-        function(x){x.market.counties[C.origin][0][x.market.goods.indexOf('provisions')]=0;},
-        function(x){x.turn=C.record(x).endTurn;},function(x){C.record(x).bindings[0].person.actorId='absent';},
-        function(x){x.market.counties[C.origin][1][x.market.goods.indexOf('provisions')]*=1.01;},
-        function(x){x.date.season=(x.date.season+1)%4;}];
-      const stale=changes.map(function(change){const x=JSON.parse(JSON.stringify(s)),f=P.review(x,C.id,'form',actor);change(x);
-        const before=JSON.stringify(x),rng=FB.getRngState(),uid=FB.getUidCounter();
-        return f.allowed && !P.commit(x,f) && before===JSON.stringify(x) && rng===FB.getRngState() && uid===FB.getUidCounter();});
-      return {granted:granted,repeat:repeat,separate:separate,conserved:conserved,stale:stale};
-    });
-    expect(result).toEqual({granted:true,repeat:false,separate:true,conserved:true,stale:Array(9).fill(true)});
   });
 
   test(prefix+' pending funded consented formed and every closed disposition restore exact original history twice',async function({page},info){

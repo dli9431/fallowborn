@@ -5,6 +5,7 @@ const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const {openGame,prepareGameContent}=require('../support/game/navigation');
 const {restoreBookmark}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={shore:require('../fixtures/authoring/works-production-event-reviews-shore.json'),river:require('../fixtures/authoring/works-production-event-reviews-river.json')};
 dependsOnRuntime(__filename,['data/events_works_technology.js','data/production.js','data/production_fish_drying.js',
@@ -18,11 +19,16 @@ dependsOnRuntime(__filename,['data/events_works_technology.js','data/production.
   'js/politics.js','js/authority.js','js/home_authority.js','js/settlement.js','js/building_institutions.js','js/logistics.js',
   'js/main.js','js/starts.js','js/model.js','js/util.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js','css/style.css']);
 
-// A stored boot uses the exact fixture JSON the Mods dialog stores, so the page
-// prepares only the modded catalogue once. The other cases keep the dialog.
+/* A stored boot uses the exact fixture JSON the Mods dialog stores, so the page
+   prepares only the modded catalogue once. On a shared page the group booted
+   that stored text once (sharedWorks below). The rejected-apply case and the
+   restore, dialog-cancellation and modified public cases keep fresh pages; the
+   restore and dialog cases keep the Mods dialog import. */
 async function boot(page,info,kind,options) {
   const fixture=path.resolve(__dirname,'../fixtures/authoring/works-production-event-reviews-'+kind+'.json');
-  if (options && options.stored) {
+  if (isSharedPage(page)) {
+    expect(await page.evaluate(function () {return FB.mods.count();})).toBe(1);
+  } else if (options && options.stored) {
     await page.addInitScript(function (source) {
       if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
     },fs.readFileSync(fixture,'utf8'));
@@ -99,6 +105,18 @@ async function paidWork(page,siteId,recipeId,finish) {
   },{site:siteId,recipe:recipeId,finish:finish});
 }
 
+// One stored boot per fixture with its world active; each case begins its own start.
+function sharedWorks(kind) {
+  return {boot:async function (page,info) {
+    await page.addInitScript(function (source) {
+      if (localStorage.getItem('fb_mods')===null) localStorage.setItem('fb_mods',JSON.stringify([source]));
+    },fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/works-production-event-reviews-'+kind+'.json'),'utf8'));
+    await openGame(page,info);
+    expect(await page.evaluate(function () {return FB.mods.count();})).toBe(1);
+    await activateBookmark(page,'works_reviews_'+kind);
+  }};
+}
+
 for (const kind of ['shore','river']) {
   test(kind+' ordinary JSON rejects malformed typed reviews atomically and retains native declarations',async function ({page},info) {
     await boot(page,info,kind,{stored:true});
@@ -134,6 +152,67 @@ for (const kind of ['shore','river']) {
     expect(result.rejected).toEqual(Array(16).fill(true));expect(result).toMatchObject({valid:true,existing:true,pure:true});
   });
 
+  test(kind+' completion and cancellation reviews preserve spent resources and exact queued identities through two restores',async function ({page},info) {
+    await boot(page,info,kind);
+    await paidWork(page,'review_plant','review_batch',false);
+    await page.evaluate(function (kind) {
+      worksTest.commit(FB.state,'works_reviews_'+kind+'_finish');
+      worksTest.commit(FB.state,'works_reviews_'+kind+'_water');
+      worksTest.commit(FB.state,'works_reviews_'+kind+'_pasture');
+      worksTest.commit(FB.state,'works_reviews_'+kind+'_buy');
+      worksTest.commit(FB.state,'works_reviews_'+kind+'_build');
+    },kind);
+    await paidWork(page,'boat_plant','prepare_boathouse_work',true);
+    const saved=await page.evaluate(function (kind) {
+      const s=FB.state,T=worksTest;T.commit(s,'works_reviews_'+kind+'_maritime');
+      const ev=FB.eventById('works_boat_release'),ctx=FB.eventContextFor(s,ev,{});
+      if(!FB.queueEvent(s,ev.id,ctx))throw new Error('Exact invoice decision must queue');
+      const live=JSON.stringify(s),storage=JSON.stringify(localStorage),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const corruptions=[function (t) {t.production.economy.receipts[0].paid++;},
+        function (t) {t.siteResources.sources.review_intake.consumed=1000000000;},
+        function (t) {t.buildingOperations.receipts[Object.keys(t.buildingOperations.receipts)[0]].paid++;},
+        function (t) {t.buildingSeasons.terms[0].characterId='missing_original_person';},
+        function (t) {t.production.maritime.invoices[0].credit++;},
+        function (t) {t.buildings.resource_quay.find(function (b) {return b.id==='review_hall';}).buildingProfile.definition='changed';}];
+      corruptions.forEach(function (change) {
+        const t=T.copy(s);change(t);const before=JSON.stringify(t);let rejected=false;
+        try {FB.save.v4.validatePlatform(t);} catch (error) {rejected=true;}
+        if(!rejected || before!==JSON.stringify(t))throw new Error('Malformed account provenance must reject without repair');
+      });
+      const wrongMods=JSON.parse(FB.save.serialize());wrongMods.mods+='changed';let rejected=false;
+      try {FB.save.restore(wrongMods);} catch (error) {rejected=true;}
+      if(!rejected || live!==JSON.stringify(s) || storage!==JSON.stringify(localStorage) || rng!==FB.getRngState() || uid!==FB.getUidCounter())
+        throw new Error('Changed mods must reject before live state or storage changes');
+      window.worksCheckpoint={facts:T.facts(s),queue:JSON.stringify(s.eventQueue),rng:FB.getRngState()>>>0,uid:FB.getUidCounter(),sig:FB.mods.sig()};
+      return FB.save.serialize();
+    },kind);
+    for (let n=0;n<2;n++) {
+      await restoreBookmark(page,n?await page.evaluate(function () {return FB.save.serialize();}):saved);
+      const restored=await page.evaluate(function () {
+        const s=FB.state,c=worksCheckpoint;
+        FB.production.validate(s);FB.siteResources.validate(s);FB.buildingSeasons.validate(s);FB.buildingOperations.validate(s);
+        const entry=s.eventQueue.find(function (q) {return q.id==='works_boat_release';}),ev=FB.eventById(entry.id);
+        const quote=FB.eventReviews.quote(s,ev.options[0],entry.ctx);
+        const current=worksTest.facts(s);let at=0;
+        while(at<c.facts.length&&at<current.length&&c.facts[at]===current[at])at++;
+        return {quote:!!quote&&quote.quote.allowed,facts:c.facts===current,queue:c.queue===JSON.stringify(s.eventQueue),
+          rng:c.rng===(FB.getRngState()>>>0),uid:c.uid===FB.getUidCounter(),sig:c.sig===FB.mods.sig(),
+          difference:c.facts===current ? null : [c.facts.slice(Math.max(0,at-60),at+100),current.slice(Math.max(0,at-60),at+100)]};
+      });
+      expect(restored).toEqual({quote:true,facts:true,queue:true,rng:true,uid:true,sig:true,difference:null});
+    }
+    const cancelled=await page.evaluate(function () {
+      const s=FB.state,T=worksTest,available=FB.production.snapshot(s).find(function (r) {return r.site.id==='boat_plant';}).lots.reduce(function (n,l) {return n+l.available;},0),gold=s.player.gold;
+      const entry=s.eventQueue.find(function (q) {return q.id==='works_boat_release';}),ev=FB.eventById(entry.id);
+      const quote=FB.eventReviews.quote(s,ev.options[0],entry.ctx);
+      if(!quote || !quote.quote.allowed || !FB.resolveEventOption(s,ev,ev.options[0],entry.ctx,{reviewed:quote}))throw new Error('Original restored invoice context must commit without recasting');
+      const invoice=s.production.maritime.invoices[0];
+      return {status:invoice.status,paid:s.player.gold===gold,released:FB.production.snapshot(s).find(function (r) {return r.site.id==='boat_plant';}).lots.reduce(function (n,l) {return n+l.available;},0)>available};
+    });
+    expect(cancelled).toEqual({status:'cancelled',paid:true,released:true});
+  });
+
+  describeSharedPage(kind+' shared works reviews',sharedWorks(kind),function () {
   for (const native of [true,false]) test(kind+' '+(native?'native':'ordinary JSON')+' reviews share canonical commits, pure refusal, stale authority and automation',async function ({page},info) {
     await boot(page,info,kind);
     // A real paid batch supplies the finite sale output and maintained-work credit.
@@ -282,66 +361,6 @@ for (const kind of ['shore','river']) {
     for(const row of result)expect(row,row.id).toMatchObject({pure:true,repeat:true,parity:true});
   });
 
-  test(kind+' completion and cancellation reviews preserve spent resources and exact queued identities through two restores',async function ({page},info) {
-    await boot(page,info,kind);
-    await paidWork(page,'review_plant','review_batch',false);
-    await page.evaluate(function (kind) {
-      worksTest.commit(FB.state,'works_reviews_'+kind+'_finish');
-      worksTest.commit(FB.state,'works_reviews_'+kind+'_water');
-      worksTest.commit(FB.state,'works_reviews_'+kind+'_pasture');
-      worksTest.commit(FB.state,'works_reviews_'+kind+'_buy');
-      worksTest.commit(FB.state,'works_reviews_'+kind+'_build');
-    },kind);
-    await paidWork(page,'boat_plant','prepare_boathouse_work',true);
-    const saved=await page.evaluate(function (kind) {
-      const s=FB.state,T=worksTest;T.commit(s,'works_reviews_'+kind+'_maritime');
-      const ev=FB.eventById('works_boat_release'),ctx=FB.eventContextFor(s,ev,{});
-      if(!FB.queueEvent(s,ev.id,ctx))throw new Error('Exact invoice decision must queue');
-      const live=JSON.stringify(s),storage=JSON.stringify(localStorage),rng=FB.getRngState(),uid=FB.getUidCounter();
-      const corruptions=[function (t) {t.production.economy.receipts[0].paid++;},
-        function (t) {t.siteResources.sources.review_intake.consumed=1000000000;},
-        function (t) {t.buildingOperations.receipts[Object.keys(t.buildingOperations.receipts)[0]].paid++;},
-        function (t) {t.buildingSeasons.terms[0].characterId='missing_original_person';},
-        function (t) {t.production.maritime.invoices[0].credit++;},
-        function (t) {t.buildings.resource_quay.find(function (b) {return b.id==='review_hall';}).buildingProfile.definition='changed';}];
-      corruptions.forEach(function (change) {
-        const t=T.copy(s);change(t);const before=JSON.stringify(t);let rejected=false;
-        try {FB.save.v4.validatePlatform(t);} catch (error) {rejected=true;}
-        if(!rejected || before!==JSON.stringify(t))throw new Error('Malformed account provenance must reject without repair');
-      });
-      const wrongMods=JSON.parse(FB.save.serialize());wrongMods.mods+='changed';let rejected=false;
-      try {FB.save.restore(wrongMods);} catch (error) {rejected=true;}
-      if(!rejected || live!==JSON.stringify(s) || storage!==JSON.stringify(localStorage) || rng!==FB.getRngState() || uid!==FB.getUidCounter())
-        throw new Error('Changed mods must reject before live state or storage changes');
-      window.worksCheckpoint={facts:T.facts(s),queue:JSON.stringify(s.eventQueue),rng:FB.getRngState()>>>0,uid:FB.getUidCounter(),sig:FB.mods.sig()};
-      return FB.save.serialize();
-    },kind);
-    for (let n=0;n<2;n++) {
-      await restoreBookmark(page,n?await page.evaluate(function () {return FB.save.serialize();}):saved);
-      const restored=await page.evaluate(function () {
-        const s=FB.state,c=worksCheckpoint;
-        FB.production.validate(s);FB.siteResources.validate(s);FB.buildingSeasons.validate(s);FB.buildingOperations.validate(s);
-        const entry=s.eventQueue.find(function (q) {return q.id==='works_boat_release';}),ev=FB.eventById(entry.id);
-        const quote=FB.eventReviews.quote(s,ev.options[0],entry.ctx);
-        const current=worksTest.facts(s);let at=0;
-        while(at<c.facts.length&&at<current.length&&c.facts[at]===current[at])at++;
-        return {quote:!!quote&&quote.quote.allowed,facts:c.facts===current,queue:c.queue===JSON.stringify(s.eventQueue),
-          rng:c.rng===(FB.getRngState()>>>0),uid:c.uid===FB.getUidCounter(),sig:c.sig===FB.mods.sig(),
-          difference:c.facts===current ? null : [c.facts.slice(Math.max(0,at-60),at+100),current.slice(Math.max(0,at-60),at+100)]};
-      });
-      expect(restored).toEqual({quote:true,facts:true,queue:true,rng:true,uid:true,sig:true,difference:null});
-    }
-    const cancelled=await page.evaluate(function () {
-      const s=FB.state,T=worksTest,available=FB.production.snapshot(s).find(function (r) {return r.site.id==='boat_plant';}).lots.reduce(function (n,l) {return n+l.available;},0),gold=s.player.gold;
-      const entry=s.eventQueue.find(function (q) {return q.id==='works_boat_release';}),ev=FB.eventById(entry.id);
-      const quote=FB.eventReviews.quote(s,ev.options[0],entry.ctx);
-      if(!quote || !quote.quote.allowed || !FB.resolveEventOption(s,ev,ev.options[0],entry.ctx,{reviewed:quote}))throw new Error('Original restored invoice context must commit without recasting');
-      const invoice=s.production.maritime.invoices[0];
-      return {status:invoice.status,paid:s.player.gold===gold,released:FB.production.snapshot(s).find(function (r) {return r.site.id==='boat_plant';}).lots.reduce(function (n,l) {return n+l.available;},0)>available};
-    });
-    expect(cancelled).toEqual({status:'cancelled',paid:true,released:true});
-  });
-
   test(kind+' native observations follow actual finite account transitions',async function ({page},info) {
     await boot(page,info,kind);
     await page.evaluate(function () {
@@ -460,6 +479,7 @@ for (const kind of ['shore','river']) {
       return {originalAllowed:original.allowed,foreignRefused:refused,personal:rows};
     },kind);
     expect(result).toEqual({originalAllowed:true,foreignRefused:true,personal:[true,true,true,true]});
+  });
   });
 }
 

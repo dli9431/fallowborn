@@ -7,6 +7,7 @@ const {test,expect} = require('../support/fixture');
 const {openGame,openTitle} = require('../support/game/navigation');
 const {installStoredMod} = require('../support/game/stored-mod');
 const {beginBookmarkFromTitle} = require('../support/game/bookmark-acceptance');
+const {describeSharedPage, isSharedPage, activateBookmark} = require('../support/shared-page');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {harbor:require('../fixtures/authoring/mobile-vow-harbor.json'),
   upland:require('../fixtures/authoring/mobile-vow-upland.json')};
@@ -23,10 +24,13 @@ dependsOnRuntime(__filename, ['index.html','data/technology.js','data/mobile_con
 
 /* The first case per example and the camp beginnings are admitted against the
    unmodded catalogue and import through the ordinary Mods file picker. The
-   other cases store the same example file text and boot it once instead. */
+   other cases store the same example file text and boot it once instead; on a
+   shared page the group stored it once (sharedVow below). */
 async function begin(page, info, label, modified, picker) {
   const file = path.resolve(__dirname,'../fixtures/authoring/mobile-vow-'+label+'.json');
-  if (picker || modified) {
+  if (isSharedPage(page)) {
+    expect(await page.evaluate(function () {return FB.mods.count();})).toBe(1);
+  } else if (picker || modified) {
     await openGame(page,info);
     await page.evaluate(function () {FB.ui.showMods();});
     await expectModAdmission(page,modified || examples[label]);
@@ -76,6 +80,17 @@ async function begin(page, info, label, modified, picker) {
       }
     };
   },label);
+}
+
+/* Stored-example cases without a restore share one page per example, booted
+   once with its world active and reset before each case; each begins its own
+   start. Picker, modified, camp and restore cases keep fresh pages. */
+function sharedVow(label) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/mobile-vow-'+label+'.json'),'utf8'));
+    await activateBookmark(page,(label === 'harbor' ? 'harbor' : 'dune')+'_world');
+  }};
 }
 
 async function beginAtCamp(page,info,label) {
@@ -136,6 +151,7 @@ for (const label of ['harbor','upland']) {
   });
 }
 
+describeSharedPage('harbor shared vows',sharedVow('harbor'),function () {
 for (const cause of ['faith','leader_faith','leader_generation','death','custody','office','recall']) {
   test('mobile vow interrupts without replacement or lost obligations after '+cause,async function ({page},info) {
     await begin(page,info,'harbor');
@@ -164,25 +180,6 @@ for (const cause of ['faith','leader_faith','leader_generation','death','custody
   });
 }
 
-test('withdrawal retains field people, casualties and contribution and cannot enroll again',async function ({page},info) {
-  await begin(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const s=FB.state,t=vowTest,M=FB.mobile;t.call(true);t.join();t.launch();
-    const part=t.part(s),host=M.host(s,t.rid);FB.applyHostLosses(host,7,s);
-    FB.addGreatHolyWarContribution(s,t.rid,9);
-    const before=JSON.stringify([host.men,host.mobileRoster,M.row(s,t.rid),s.greatHolyWar.contribution]);
-    const q=FB.mobileGreatHolyWarReview(s,t.rid,M.row(s,t.rid).leaderId,'withdraw');
-    const done=FB.commitMobileGreatHolyWar(s,q);
-    FB.ui.showHolyWarOverview();
-    const displayed=document.querySelector('[data-holy-war-participant="'+t.rid+'"]');
-    return {done:done,again:FB.commitMobileGreatHolyWar(s,q),rejoin:t.join(),status:part.mobileVow.status,
-      outcome:part.vowOutcome,camp:FB.greatHolyWarCamp(s,t.rid),
-      displayed:displayed.dataset.holyWarMen,withdrawn:displayed.textContent.indexOf('Withdrawn')>=0,
-      unchanged:before===JSON.stringify([host.men,host.mobileRoster,M.row(s,t.rid),s.greatHolyWar.contribution])};
-  });
-  expect(result).toEqual({done:true,again:false,rejoin:false,status:'withdrawn',outcome:'broken',camp:null,displayed:'0',withdrawn:true,unchanged:true});
-});
-
 test('defeated field force leaves the camp, vow and prior service without fictitious strength',async function ({page},info) {
   await begin(page,info,'harbor');
   const result=await page.evaluate(function () {
@@ -197,6 +194,59 @@ test('defeated field force leaves the camp, vow and prior service without fictit
   });
   expect(result.delta).toBe(result.men);
   expect(result).toMatchObject({status:'active',camp:true,vow:'active',mustered:true,noHost:true,dead:true});
+});
+
+test('a changed reviewed host or campaign rejects a stale commitment without spending or adding people',async function ({page},info) {
+  await begin(page,info,'harbor');
+  const result=await page.evaluate(function () {
+    const s=FB.state,t=vowTest;t.call(true);
+    const q=FB.mobileGreatHolyWarReview(s,t.rid,FB.mobile.row(s,t.rid).leaderId,'join');
+    FB.mobile.host(s,t.rid).mobileFood+=1;
+    const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+    return !FB.commitMobileGreatHolyWar(s,q)&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+  });
+  expect(result).toBe(true);
+});
+
+test('host, mandate, permission, actor and finite service gates reject without mutation',async function ({page},info) {
+  await begin(page,info,'harbor');
+  const result=await page.evaluate(function () {
+    const base=FB.state,t=vowTest;t.call(true);
+    return [function(s){s.armies=s.armies.filter(function(h){return h.realm!==t.rid;});},
+      function(s){FB.mobile.host(s,t.rid).moveLeft=2;},
+      function(s){FB.mobile.row(s,t.rid).command.status='recalled';},
+      function(s){s.realms.harbor_upland.ruler.generation++;},
+      function(s){s.chars[FB.mobile.row(s,t.rid).leaderId].captive=true;}].map(function(change) {
+        const s=JSON.parse(JSON.stringify(base));change(s);
+        const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+        const q=FB.mobileGreatHolyWarReview(s,t.rid,FB.mobile.row(s,t.rid).leaderId,'join');
+        return !q.allowed&&!FB.commitMobileGreatHolyWar(s,q)&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+      });
+  });
+  expect(result).toEqual(Array(5).fill(true));
+});
+
+test('mobile vow review preserves form state through Escape and confirms only current terms',async function ({page},info) {
+  await begin(page,info,'harbor');
+  await page.evaluate(function () {
+    const s=FB.state,t=vowTest;t.call(true);
+    // Stage control by the already existing landed commander for this UI
+    // boundary. No second person or command is created by the interaction.
+    s.player.charId=FB.mobile.row(s,t.rid).leaderId;
+    FB.ui.showMobileConfederation(t.rid);
+  });
+  await page.locator('#mobile-count').fill('27');
+  await page.locator('#mobile-count').dispatchEvent('change');
+  await page.getByRole('button',{name:/^Pledge the existing host\b/}).click();
+  await expect(page.getByText('This binds the current commander', {exact:false})).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#mobile-count')).toHaveValue('27');
+  await page.getByRole('button',{name:/^Pledge the existing host\b/}).click();
+  await page.locator('#mobile-confirm').click();
+  await page.locator('#mobile-continue').click();
+  await expect(page.locator('#mobile-count')).toHaveValue('27');
+  expect(await page.evaluate(function () {return !!vowTest.part(FB.state).mobileVow;})).toBe(true);
+});
 });
 
 for (const label of ['harbor','upland']) {
@@ -281,36 +331,6 @@ test('ordinary import rejects invalid mandate, role and opening references witho
   expect(result).toEqual([true,true,true]);
 });
 
-test('a changed reviewed host or campaign rejects a stale commitment without spending or adding people',async function ({page},info) {
-  await begin(page,info,'harbor');
-  const result=await page.evaluate(function () {
-    const s=FB.state,t=vowTest;t.call(true);
-    const q=FB.mobileGreatHolyWarReview(s,t.rid,FB.mobile.row(s,t.rid).leaderId,'join');
-    FB.mobile.host(s,t.rid).mobileFood+=1;
-    const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
-    return !FB.commitMobileGreatHolyWar(s,q)&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
-  });
-  expect(result).toBe(true);
-});
-
-test('host, mandate, permission, actor and finite service gates reject without mutation',async function ({page},info) {
-  await begin(page,info,'harbor');
-  const result=await page.evaluate(function () {
-    const base=FB.state,t=vowTest;t.call(true);
-    return [function(s){s.armies=s.armies.filter(function(h){return h.realm!==t.rid;});},
-      function(s){FB.mobile.host(s,t.rid).moveLeft=2;},
-      function(s){FB.mobile.row(s,t.rid).command.status='recalled';},
-      function(s){s.realms.harbor_upland.ruler.generation++;},
-      function(s){s.chars[FB.mobile.row(s,t.rid).leaderId].captive=true;}].map(function(change) {
-        const s=JSON.parse(JSON.stringify(base));change(s);
-        const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
-        const q=FB.mobileGreatHolyWarReview(s,t.rid,FB.mobile.row(s,t.rid).leaderId,'join');
-        return !q.allowed&&!FB.commitMobileGreatHolyWar(s,q)&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
-      });
-  });
-  expect(result).toEqual(Array(5).fill(true));
-});
-
 test('a valid imported command without war permission cannot promise its host',async function ({page},info) {
   const input=JSON.parse(JSON.stringify(examples.harbor));
   const command=input.bookmarks.harbor_world.realms.find(function(r){return r.mobile;}).mobile.command;
@@ -320,16 +340,6 @@ test('a valid imported command without war permission cannot promise its host',a
     const s=FB.state,t=vowTest;t.call(true);
     return !t.join()&&!t.part(s)&&s.player.greatHolyWar===null;
   })).toBe(true);
-});
-
-test('supplied service counters never create a historical mobile muster',async function ({page},info) {
-  await begin(page,info,'upland');
-  const result=await page.evaluate(function () {
-    const s=FB.state,t=vowTest;t.call(true);
-    const joined=FB.joinGreatHolyWar(s,'attackers',t.rid,{seasons:8,served:8,mustered:true,desire:{kind:'honor',id:null}});
-    return {joined:joined,served:t.part(s).served,mustered:t.part(s).mustered,seasons:t.part(s).vowSeasons};
-  });
-  expect(result).toEqual({joined:true,served:0,mustered:false,seasons:8});
 });
 
 test('personal mobile references reject erased or mismatched admission without reenrollment',async function ({page},info) {
@@ -366,6 +376,36 @@ test('same saved opening replays the actual campaign, host and accounting determ
     return first===run();
   });
   expect(result).toBe(true);
+});
+
+describeSharedPage('upland shared vows',sharedVow('upland'),function () {
+test('withdrawal retains field people, casualties and contribution and cannot enroll again',async function ({page},info) {
+  await begin(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const s=FB.state,t=vowTest,M=FB.mobile;t.call(true);t.join();t.launch();
+    const part=t.part(s),host=M.host(s,t.rid);FB.applyHostLosses(host,7,s);
+    FB.addGreatHolyWarContribution(s,t.rid,9);
+    const before=JSON.stringify([host.men,host.mobileRoster,M.row(s,t.rid),s.greatHolyWar.contribution]);
+    const q=FB.mobileGreatHolyWarReview(s,t.rid,M.row(s,t.rid).leaderId,'withdraw');
+    const done=FB.commitMobileGreatHolyWar(s,q);
+    FB.ui.showHolyWarOverview();
+    const displayed=document.querySelector('[data-holy-war-participant="'+t.rid+'"]');
+    return {done:done,again:FB.commitMobileGreatHolyWar(s,q),rejoin:t.join(),status:part.mobileVow.status,
+      outcome:part.vowOutcome,camp:FB.greatHolyWarCamp(s,t.rid),
+      displayed:displayed.dataset.holyWarMen,withdrawn:displayed.textContent.indexOf('Withdrawn')>=0,
+      unchanged:before===JSON.stringify([host.men,host.mobileRoster,M.row(s,t.rid),s.greatHolyWar.contribution])};
+  });
+  expect(result).toEqual({done:true,again:false,rejoin:false,status:'withdrawn',outcome:'broken',camp:null,displayed:'0',withdrawn:true,unchanged:true});
+});
+
+test('supplied service counters never create a historical mobile muster',async function ({page},info) {
+  await begin(page,info,'upland');
+  const result=await page.evaluate(function () {
+    const s=FB.state,t=vowTest;t.call(true);
+    const joined=FB.joinGreatHolyWar(s,'attackers',t.rid,{seasons:8,served:8,mustered:true,desire:{kind:'honor',id:null}});
+    return {joined:joined,served:t.part(s).served,mustered:t.part(s).mustered,seasons:t.part(s).vowSeasons};
+  });
+  expect(result).toEqual({joined:true,served:0,mustered:false,seasons:8});
 });
 
 test('real mobile field losses receive one canonical battle credit and never a copied player credit',async function ({page},info) {
@@ -405,25 +445,4 @@ test('only actual occupied objectives enter the one canonical settlement and its
   expect(result).toMatchObject({noPreview:true,resolved:true,finished:true,repeated:false,once:1,awards:true,changed:true,camp:true,noReplay:true});
   expect(result.captured).toEqual([result.county]);
 });
-
-test('mobile vow review preserves form state through Escape and confirms only current terms',async function ({page},info) {
-  await begin(page,info,'harbor');
-  await page.evaluate(function () {
-    const s=FB.state,t=vowTest;t.call(true);
-    // Stage control by the already existing landed commander for this UI
-    // boundary. No second person or command is created by the interaction.
-    s.player.charId=FB.mobile.row(s,t.rid).leaderId;
-    FB.ui.showMobileConfederation(t.rid);
-  });
-  await page.locator('#mobile-count').fill('27');
-  await page.locator('#mobile-count').dispatchEvent('change');
-  await page.getByRole('button',{name:/^Pledge the existing host\b/}).click();
-  await expect(page.getByText('This binds the current commander', {exact:false})).toBeVisible();
-  await page.keyboard.press('Escape');
-  await expect(page.locator('#mobile-count')).toHaveValue('27');
-  await page.getByRole('button',{name:/^Pledge the existing host\b/}).click();
-  await page.locator('#mobile-confirm').click();
-  await page.locator('#mobile-continue').click();
-  await expect(page.locator('#mobile-count')).toHaveValue('27');
-  expect(await page.evaluate(function () {return !!vowTest.part(FB.state).mobileVow;})).toBe(true);
 });

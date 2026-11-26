@@ -14,9 +14,13 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { describeSharedPage, isSharedPage, activateBookmark } = require('../support/shared-page');
 
+/* Cases that restore or migrate a save, or edit FBDATA.kingdoms, keep a fresh
+   page. The partition, grantor and papal appeal cases share one page booted
+   with the 1204 world active, reset before each case; each begins its own start. */
 async function begin(page, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   await page.evaluate(function () { FB.startProgression.noteTier(3); });
   const fullStart = page.locator('#btn-choose-beginning');
   if (await fullStart.isVisible()) await fullStart.click();
@@ -148,6 +152,10 @@ test('three real conquests allow a conserved named hierarchy, once across restor
   expect(result.excluded).toEqual(['sgouros_1204','crete_1204']);
 });
 
+describeSharedPage('1204 stories without a restore', { boot:async function (page, testInfo) {
+  await openGame(page, testInfo);
+  await activateBookmark(page, '1204');
+} }, function () {
 for (const cause of ['capital','succession','death','third_party','expired']) {
   test('partition can diverge without a promised holding: ' + cause, async function ({ page }, testInfo) {
     await begin(page, testInfo);
@@ -203,6 +211,39 @@ for (const decision of ['accept_grantor','decline_grantor']) {
       expect(result.retained).toBe(decision !== 'accept_grantor');
     });
 }
+
+for (const choice of ['call','decline']) {
+  test('the current player pope can review the dated appeal: ' + choice, async function ({ page }, testInfo) {
+    await begin(page, testInfo);
+    const result = await page.evaluate(function (choice) {
+      const s = FB.state, id = 'fifth_crusade_call_1204';
+      FBTEST1204.date(1213, 0, 1); FB.adjustPapalAuthority(s, null, 100, 'history_test');
+      s.player.charId = FB.romanPope(s, 'catholic').id;
+      FBTEST1204.day(id);
+      const waiting = s.stories[id].phase === 'pending' && !s.greatHolyWar;
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const choices = FB.stories.choices(s, id).map(function (row) { return row.id; });
+      const staleQuote = FB.stories.quote(s, id, 'call');
+      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      FB.adjustPapalAuthority(s, null, -100, 'history_test');
+      const changed = JSON.stringify(s);
+      const stale = FB.stories.apply(s, id, 'call', staleQuote);
+      const unchanged = changed === JSON.stringify(s);
+      FB.adjustPapalAuthority(s, null, 100, 'history_test');
+      const reviewed = FB.stories.quote(s, id, choice);
+      const applied = FB.stories.apply(s, id, choice, reviewed);
+      return { waiting:waiting, choices:choices, pure:pure, stale:stale, unchanged:unchanged,
+        applied:applied, phase:s.stories[id].phase, result:s.stories[id].result,
+        called:!!s.greatHolyWar };
+    }, choice);
+    expect(result.waiting && result.pure && result.unchanged && result.applied).toBe(true);
+    expect(result.choices).toEqual(['call','decline']); expect(result.stale).toBe(false);
+    expect(result.phase).toBe(choice === 'call' ? 'started' : 'resolved');
+    expect(result.result).toBe(choice === 'call' ? null : 'declined');
+    expect(result.called).toBe(choice === 'call');
+  });
+}
+});
 
 for (const cause of ['early','authority','cooldown','vacant','restored_target','expired','eligible']) {
   test('the dated crusade respects current religious eligibility: ' + cause, async function ({ page }, testInfo) {
@@ -266,38 +307,6 @@ test('the dated story records the real religious campaign failure only once', as
   expect(result.row).toHaveLength(1); expect(result.row[0].outcome).toBe('defenders');
   expect(result.ownerUnchanged && result.once).toBe(true);
 });
-
-for (const choice of ['call','decline']) {
-  test('the current player pope can review the dated appeal: ' + choice, async function ({ page }, testInfo) {
-    await begin(page, testInfo);
-    const result = await page.evaluate(function (choice) {
-      const s = FB.state, id = 'fifth_crusade_call_1204';
-      FBTEST1204.date(1213, 0, 1); FB.adjustPapalAuthority(s, null, 100, 'history_test');
-      s.player.charId = FB.romanPope(s, 'catholic').id;
-      FBTEST1204.day(id);
-      const waiting = s.stories[id].phase === 'pending' && !s.greatHolyWar;
-      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
-      const choices = FB.stories.choices(s, id).map(function (row) { return row.id; });
-      const staleQuote = FB.stories.quote(s, id, 'call');
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
-      FB.adjustPapalAuthority(s, null, -100, 'history_test');
-      const changed = JSON.stringify(s);
-      const stale = FB.stories.apply(s, id, 'call', staleQuote);
-      const unchanged = changed === JSON.stringify(s);
-      FB.adjustPapalAuthority(s, null, 100, 'history_test');
-      const reviewed = FB.stories.quote(s, id, choice);
-      const applied = FB.stories.apply(s, id, choice, reviewed);
-      return { waiting:waiting, choices:choices, pure:pure, stale:stale, unchanged:unchanged,
-        applied:applied, phase:s.stories[id].phase, result:s.stories[id].result,
-        called:!!s.greatHolyWar };
-    }, choice);
-    expect(result.waiting && result.pure && result.unchanged && result.applied).toBe(true);
-    expect(result.choices).toEqual(['call','decline']); expect(result.stale).toBe(false);
-    expect(result.phase).toBe(choice === 'call' ? 'started' : 'resolved');
-    expect(result.result).toBe(choice === 'call' ? null : 'declined');
-    expect(result.called).toBe(choice === 'call');
-  });
-}
 
 test('old campaigns receive no new history or people and malformed historical saves are rejected',
   async function ({ page }, testInfo) {

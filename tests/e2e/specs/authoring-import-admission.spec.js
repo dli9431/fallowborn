@@ -3,7 +3,11 @@ const {expectModAdmission}=require('../support/game/mod-admission');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 const {openGame,prepareGameContent}=require('../support/game/navigation');
+const {describeSharedPage,isSharedPage}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
+/* Validation-only admissions and rejections share one prepared unmodded title
+   per group, reset before each case. The file imports keep a fresh page. */
+const titleBoot={boot:openGame};
 
 test.describe.configure({mode:'parallel'});
 dependsOnRuntime(__filename,['index.html','data/eras.js','data/economy.js','data/starts.js','data/units.js',
@@ -44,9 +48,10 @@ const fixtures=[
   {file:'mobile-expedition-dune.json',mod:require('../fixtures/authoring/mobile-expedition-dune.json')}
 ];
 
+describeSharedPage('admissions',titleBoot,function(){
 for(const fixture of fixtures){
   test(fixture.file+' admits its declared starts without changing the catalogue or input',async function({page},info){
-    await openGame(page,info);
+    if(!isSharedPage(page))await openGame(page,info);
     const result=await page.evaluate(function(mod){
       const before=JSON.stringify([FBDATA,FB.state]),input=JSON.stringify(mod),
         rng=FB.getRngState(),uid=FB.getUidCounter(),faults=FB.mods.validate(mod);
@@ -58,10 +63,12 @@ for(const fixture of fixtures){
     expect(result).toMatchObject({inputPure:true,livePure:true,rng:true,uid:true});
   });
 }
+});
 
+describeSharedPage('home ruler rejections',titleBoot,function(){
 for(const prefix of ['harbor','dune']){
   test(prefix+' home ruler rejects missing sex and mismatched rank without changing either input',async function({page},info){
-    await openGame(page,info);
+    if(!isSharedPage(page))await openGame(page,info);
     const fixture=fixtures.find(function(f){return f.file==='local-following-reviews-'+prefix+'.json';});
     const result=await page.evaluate(function(mod){
       const before=JSON.stringify([FBDATA,FB.state]),rng=FB.getRngState(),uid=FB.getUidCounter();
@@ -81,7 +88,10 @@ for(const prefix of ['harbor','dune']){
     },fixture.mod);
     expect(result).toEqual({sex:{rejected:true,inputPure:true},rank:{rejected:true,inputPure:true},pure:true,rng:true,uid:true});
   });
+}
+});
 
+for(const prefix of ['harbor','dune']){
   test(prefix+' file import adopts the same female home ruler and public rank',async function({page},info){
     const fixture=fixtures.find(function(f){return f.file==='local-following-reviews-'+prefix+'.json';}),
       start=fixture.mod.startScenarios.find(function(row){return !!row.rulerRealmId;});
@@ -122,9 +132,10 @@ const invalidControls=[
   {file:'harbor-contracts.json',kind:'story'},
   {file:'local-threat-hill.json',kind:'date'}
 ];
+describeSharedPage('unsupported declarations',titleBoot,function(){
 for(const control of invalidControls){
   test(control.file+' rejects the unsupported '+control.kind+' declaration without mutation',async function({page},info){
-    await openGame(page,info);
+    if(!isSharedPage(page))await openGame(page,info);
     const fixture=fixtures.find(function(f){return f.file===control.file;});
     const result=await page.evaluate(function(input){
       const mod=input.mod,bad=JSON.parse(JSON.stringify(mod));
@@ -150,3 +161,4 @@ for(const control of invalidControls){
     expect(result).toMatchObject({pure:true,rng:true,uid:true});
   });
 }
+});

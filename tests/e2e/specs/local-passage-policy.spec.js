@@ -1,10 +1,13 @@
 'use strict';
 const {prepareGameContent} = require('../support/game/navigation');
+const fs=require('fs');
 const path=require('path');
 const {test,expect}=require('../support/fixture');
 test.describe.configure({mode:'parallel'});
-const {openGame}=require('../support/game/navigation');
+const {openGame,openTitle}=require('../support/game/navigation');
+const {installStoredMod}=require('../support/game/stored-mod');
 const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
+const {describeSharedPage,isSharedPage,activateBookmark}=require('../support/shared-page');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/passage-policy-harbor.json'),
   dune:require('../fixtures/authoring/passage-policy-dune.json')};
@@ -17,8 +20,14 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
   'js/starts.js','js/main.js','js/stories.js','js/armies.js','js/wars.js','js/federates.js','js/population.js',
   'js/market.js','js/treasury.js','js/logistics.js','js/save.js','js/save_v4.js','js/mods.js']);
 
+/* Import, modified, baseline, outside and restore cases validate against the
+   unmodded catalogue and import through the Mods dialog on a fresh page. The
+   other cases share one page per example that stores the same file text the
+   dialog stores and boots it once with the example world active (sharedPolicy);
+   each case begins its own start. */
 async function start(page,info,prefix,options) {
   options=options || {};
+  if (!isSharedPage(page)) {
   await openGame(page,info);
   expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},options.mod || examples[prefix]),
     prefix+' ordinary import validation').toEqual([]);
@@ -27,6 +36,7 @@ async function start(page,info,prefix,options) {
     buffer:Buffer.from(JSON.stringify(options.mod))} : path.resolve(__dirname,'../fixtures/authoring/passage-policy-'+prefix+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await prepareGameContent(page);
+  }
   await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
   if (options.baseline) await page.evaluate(function (prefix) {FBDATA.bookmarks[prefix+'_world'].revision='baseline';},prefix);
   if (options.outside) {
@@ -56,6 +66,13 @@ async function start(page,info,prefix,options) {
         action:'cancel',stepId:null,actor:{kind:'character',id:FB.mobile.row(s,this.rid).leaderId}}));}};
   });
 }
+function sharedPolicy(prefix) {
+  return {boot:async function (page,info) {
+    await openTitle(page,info);
+    await installStoredMod(page,fs.readFileSync(path.resolve(__dirname,'../fixtures/authoring/passage-policy-'+prefix+'.json'),'utf8'));
+    await activateBookmark(page,prefix+'_world');
+  }};
+}
 
 for (const prefix of ['harbor','dune']) {
   test(prefix+' ordinary import validates both revisions and leaves existing government AI and offices intact',async function ({page},info) {
@@ -80,6 +97,7 @@ for (const prefix of ['harbor','dune']) {
       schema:2,marker:true,noAccess:true,tech:'none'});
   });
 
+  describeSharedPage(prefix+' shared negotiation',sharedPolicy(prefix),function () {
   test(prefix+' daily offer and separate response pay exactly once and retain original receipts',async function ({page},info) {
     await start(page,info,prefix);
     const r=await page.evaluate(function () {
@@ -114,6 +132,7 @@ for (const prefix of ['harbor','dune']) {
     },prefix);
     expect(r).toEqual({complete:true,covered:true,bounds:true,
       issued:true,arrived:true,camp:true,valid:true});
+  });
   });
 
   test(prefix+' pending offered accepted in-flight cancelled and ended saves restore without dispatch or replay',async function ({page},info) {
@@ -194,23 +213,6 @@ test('malformed policies reject complete ordinary candidates purely at raw and e
   expect(r).toEqual(Array(10).fill(true));
 });
 
-test('a willing public court still sells only finite stock through the ordinary paid supply review',async function ({page},info) {
-  await start(page,info,'harbor');
-  const r=await page.evaluate(function () {
-    const s=FB.state,C=passageCase,E=FB.expeditionPrograms,M=FB.mobile;C.negotiate(s);
-    const row=M.row(s,C.rid),full=!E.review(s,C.rid,'stock').allowed,route=E.review(s,C.rid,'approach').allowed;
-    row.food=0;
-    const q=E.review(s,C.rid,'stock'),money=FB.treasuryAvailable(s,C.rid),at=M.migration(s,C.rid).at,
-      stock=FB.marketProvisionSnapshot(s,at).stock,quantity=q.operation.request.terms.count,cost=q.operation.review.cost,
-      bought=E.commit(s,q);
-    return {full:full,route:route,bought:bought,finite:quantity>0 && quantity<=stock,
-      paid:Math.abs(money-FB.treasuryAvailable(s,C.rid)-cost)<1e-8,
-      withdrawn:Math.abs(stock-FB.marketProvisionSnapshot(s,at).stock-quantity)<1e-8,
-      food:row.food===quantity,replay:!E.commit(s,q),valid:M.validate(s)};
-  });
-  expect(r).toEqual({full:true,route:true,bought:true,finite:true,paid:true,withdrawn:true,food:true,replay:true,valid:true});
-});
-
 test('an unconfigured form in an opted-in world keeps its default response and exact null policy history',async function ({page},info) {
   const mod=JSON.parse(JSON.stringify(examples.dune));
   delete mod.bookmarks.dune_world.revisions.passage_policy.localPassagePolicies.territorial;
@@ -234,33 +236,6 @@ test('original policy-map key order is immaterial on matching restore',async fun
     return FB.expeditionPrograms.validatePassagePolicies(FB.state);
   });
   expect(r).toBe(true);
-});
-
-test('stale policy form authority occupation capacity money and manual facts reject without payment',async function ({page},info) {
-  await start(page,info,'harbor');
-  const r=await page.evaluate(function () {
-    const C=passageCase,E=FB.expeditionPrograms,M=FB.mobile,base=JSON.parse(JSON.stringify(FB.state));E.day(base);base.turn++;
-    const changes=[function (s,a) {s.authority.governments[a.partnerId].formId='territorial';},
-      function (s,a) {s.holder[a.countyIds[0]]='harbor_commune';},
-      function (s,a) {const next=FB.realmRulerGeneration(s,a.partnerId)+1;
-        s.realms[a.partnerId].ruler.generation=next;s.realms[a.partnerId].succession.rulerGeneration=next;},
-      function (s,a) {s.chars[a.accessOrigin.chain[0].personId].captive=true;},
-      function (s,a) {s.population.counties[a.countyIds[0]].count=1;},
-      function (s) {FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid));},
-      function (s) {M.host(s,C.rid).holdManual=1;},
-      function (s,a) {const w=FB.registerOrdinaryWar(s,'harbor_commune',{
-        enemy:s.owner[a.countyIds[0]],target:a.countyIds[0],legacy:false,occupations:{}});
-        w.occupations[a.countyIds[0]]={occupied:true,progress:100,homeRealm:s.owner[a.countyIds[0]]};}];
-    const rejected=changes.map(function (change) {
-      const s=JSON.parse(JSON.stringify(base)),a=M.row(s,C.rid).agreements[0],q=E.review(s,C.rid,'permission');
-      change(s,a);const before=JSON.stringify(s);
-      return q.allowed && !E.commit(s,q) && !E.review(s,C.rid,'permission').allowed && before===JSON.stringify(s);
-    });
-    const q=E.review(base,C.rid,'permission'),policy=FBDATA.bookmarks.harbor_world.revisions.passage_policy.localPassagePolicies.administrative_monarchy;
-    policy.response='decline';const before=JSON.stringify(base),policyRejected=!E.commit(base,q) && before===JSON.stringify(base);
-    policy.response='accept';return {rejected:rejected,policy:policyRejected};
-  });
-  expect(r).toEqual({rejected:Array(8).fill(true),policy:true});
 });
 
 test('a willing civic policy still requires the actual independent treaty constituency',async function ({page},info) {
@@ -300,6 +275,51 @@ for (const decision of ['accept','decline']) {
       charged:true,permission:decision==='accept',valid:true});
   });
 }
+
+describeSharedPage('harbor shared policies',sharedPolicy('harbor'),function () {
+test('a willing public court still sells only finite stock through the ordinary paid supply review',async function ({page},info) {
+  await start(page,info,'harbor');
+  const r=await page.evaluate(function () {
+    const s=FB.state,C=passageCase,E=FB.expeditionPrograms,M=FB.mobile;C.negotiate(s);
+    const row=M.row(s,C.rid),full=!E.review(s,C.rid,'stock').allowed,route=E.review(s,C.rid,'approach').allowed;
+    row.food=0;
+    const q=E.review(s,C.rid,'stock'),money=FB.treasuryAvailable(s,C.rid),at=M.migration(s,C.rid).at,
+      stock=FB.marketProvisionSnapshot(s,at).stock,quantity=q.operation.request.terms.count,cost=q.operation.review.cost,
+      bought=E.commit(s,q);
+    return {full:full,route:route,bought:bought,finite:quantity>0 && quantity<=stock,
+      paid:Math.abs(money-FB.treasuryAvailable(s,C.rid)-cost)<1e-8,
+      withdrawn:Math.abs(stock-FB.marketProvisionSnapshot(s,at).stock-quantity)<1e-8,
+      food:row.food===quantity,replay:!E.commit(s,q),valid:M.validate(s)};
+  });
+  expect(r).toEqual({full:true,route:true,bought:true,finite:true,paid:true,withdrawn:true,food:true,replay:true,valid:true});
+});
+
+test('stale policy form authority occupation capacity money and manual facts reject without payment',async function ({page},info) {
+  await start(page,info,'harbor');
+  const r=await page.evaluate(function () {
+    const C=passageCase,E=FB.expeditionPrograms,M=FB.mobile,base=JSON.parse(JSON.stringify(FB.state));E.day(base);base.turn++;
+    const changes=[function (s,a) {s.authority.governments[a.partnerId].formId='territorial';},
+      function (s,a) {s.holder[a.countyIds[0]]='harbor_commune';},
+      function (s,a) {const next=FB.realmRulerGeneration(s,a.partnerId)+1;
+        s.realms[a.partnerId].ruler.generation=next;s.realms[a.partnerId].succession.rulerGeneration=next;},
+      function (s,a) {s.chars[a.accessOrigin.chain[0].personId].captive=true;},
+      function (s,a) {s.population.counties[a.countyIds[0]].count=1;},
+      function (s) {FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid));},
+      function (s) {M.host(s,C.rid).holdManual=1;},
+      function (s,a) {const w=FB.registerOrdinaryWar(s,'harbor_commune',{
+        enemy:s.owner[a.countyIds[0]],target:a.countyIds[0],legacy:false,occupations:{}});
+        w.occupations[a.countyIds[0]]={occupied:true,progress:100,homeRealm:s.owner[a.countyIds[0]]};}];
+    const rejected=changes.map(function (change) {
+      const s=JSON.parse(JSON.stringify(base)),a=M.row(s,C.rid).agreements[0],q=E.review(s,C.rid,'permission');
+      change(s,a);const before=JSON.stringify(s);
+      return q.allowed && !E.commit(s,q) && !E.review(s,C.rid,'permission').allowed && before===JSON.stringify(s);
+    });
+    const q=E.review(base,C.rid,'permission'),policy=FBDATA.bookmarks.harbor_world.revisions.passage_policy.localPassagePolicies.administrative_monarchy;
+    policy.response='decline';const before=JSON.stringify(base),policyRejected=!E.commit(base,q) && before===JSON.stringify(base);
+    policy.response='accept';return {rejected:rejected,policy:policyRejected};
+  });
+  expect(r).toEqual({rejected:Array(8).fill(true),policy:true});
+});
 
 test('changed policy or outside form stops only the owned route and never rewrites original history',async function ({page},info) {
   await start(page,info,'harbor');
@@ -343,6 +363,7 @@ test('policy provenance rejects missing forged downgraded and undeclared records
     return {rejected:rejected,undeclared:undeclared};
   });
   expect(r).toEqual({rejected:Array(9).fill(true),undeclared:true});
+});
 });
 
 test('bounded dispatch replay retains deterministic original policies and canonical responses',async function ({page},info) {

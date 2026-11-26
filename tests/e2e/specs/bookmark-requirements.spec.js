@@ -1,6 +1,7 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { describeSharedPage, isSharedPage } = require('../support/shared-page');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 // This is intentionally a catalogue-wide authoring canary.
 dependsOnRuntime(__filename, ['index.html', 'data', 'js']);
@@ -54,9 +55,19 @@ const cases = [
   ['vacancy with an incumbent', 'institution_vacancy', /vacant institution cannot seed/]
 ];
 
+/* Gates that edit only the copied bookmark share one prepared title with the
+   read-only validation cases below, reset before each case. The other gates
+   edit the live catalogue or the story registry, which the reset does not
+   restore, so they keep a fresh page, as do cases that apply mods, activate a
+   world, edit live data or read browser storage. */
+const copyOnly = ['era', 'geography', 'form', 'story', 'start', 'system', 'era_date', 'technology_date', 'date',
+  'tradition', 'culture', 'faith', 'province', 'site', 'title', 'balance', 'institution_seat', 'institution_office',
+  'institution_faith', 'institution_profile', 'institution_vacancy'];
+function declareGates(shared) {
 for (const [label, change, expected] of cases) {
+  if ((copyOnly.indexOf(change) >= 0) !== shared) continue;
   test('requirement gate names ' + label, async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    if (!isSharedPage(page)) await openGame(page, testInfo);
     const errors = await page.evaluate(function (change) {
       const bm = JSON.parse(JSON.stringify(FB.bookmark('493')));
       const realm = bm.realms[0];
@@ -118,9 +129,13 @@ for (const [label, change, expected] of cases) {
     expect(errors.join('\n')).toMatch(expected);
   });
 }
+}
+
+describeSharedPage('copied bookmark validation', { boot:openGame }, function () {
+declareGates(true);
 
 test('headless 711 faiths pass bookmark and mod requirements without mutation', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   const result = await page.evaluate(function () {
     const bm = FB.bookmark('711');
     const before = JSON.stringify(FBDATA), state = FB.state;
@@ -136,7 +151,7 @@ test('headless 711 faiths pass bookmark and mod requirements without mutation', 
 });
 
 test('missing bookmark validation reports a diagnostic without entering opening hooks', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  if (!isSharedPage(page)) await openGame(page, testInfo);
   const result = await page.evaluate(function () {
     const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
     return { faults:[FB.validateBookmark(null), FB.validateBookmark(undefined)],
@@ -144,6 +159,110 @@ test('missing bookmark validation reports a diagnostic without entering opening 
   });
   expect(result).toEqual({ faults:[['Bookmark definition is missing.'], ['Bookmark definition is missing.']], unchanged:true });
 });
+
+test('mod start validation keeps an existing ruler identity distinct from county residents', async function ({ page }, testInfo) {
+  if (!isSharedPage(page)) await openGame(page, testInfo);
+  const result = await page.evaluate(function () {
+    const scenario = FBDATA.startScenarios.filter(function (s) { return s.id === 'syagrius_476'; })[0];
+    const county = FB.bookmark('476').provinces.filter(function (p) { return p.id === scenario.fixedProvinceId; })[0];
+    const resident = FB.provinceCommunities(county).some(function (c) { return c.culture === scenario.startCulture; });
+    return { resident:resident, errors:FB.mods.validate({ startScenarios:[JSON.parse(JSON.stringify(scenario))] }) };
+  });
+  expect(result).toEqual({ resident:false, errors:[] });
+});
+
+test('malformed dates and community lists return diagnostics through the opening validator', async function ({ page }, testInfo) {
+  if (!isSharedPage(page)) await openGame(page, testInfo);
+  const results = await page.evaluate(function () {
+    const malformedDates = [undefined, null, {}, { year:'493', season:0, day:1 },
+      { year:493.5, season:0, day:1 }].map(function (date) {
+      const bm = JSON.parse(JSON.stringify(FB.bookmark('493')));
+      if (date === undefined) delete bm.date;
+      else bm.date = date;
+      return bm;
+    });
+    const invalidCommunities = JSON.parse(JSON.stringify(FB.bookmark('493')));
+    const layout = FBDATA.settlementLayouts[invalidCommunities.settlementLayout];
+    const county = invalidCommunities.provinces.filter(function (p) { return !p.wasteland && layout[p.id]; })[0];
+    const entry = layout[county.id][0];
+    county.communities = {};
+    county.settlements = [Object.assign({}, entry, { communities:[{ culture:county.culture,
+      religion:county.religion, populationShare0:10000 }] })];
+    const malformedScope = JSON.parse(JSON.stringify(FB.bookmark('493')));
+    const institution = Object.values(malformedScope.localInstitutions).find(function (d) { return !!d.profileId; });
+    if (!institution) throw new Error('Expected a profile institution');
+    institution.jurisdictionIds = null;
+    const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const faults = { dates:malformedDates.map(function (bm) { return FB.validateBookmark(bm).join('\n'); }),
+      communities:FB.validateBookmark(invalidCommunities).join('\n'),
+      scope:FB.validateBookmark(malformedScope).join('\n') };
+    if (before !== JSON.stringify(FBDATA) || rng !== FB.getRngState() || uid !== FB.getUidCounter())
+      throw new Error('Malformed definition validation changed the catalogue or identity');
+    return faults;
+  });
+  results.dates.forEach(function (faults) { expect(faults).toContain('invalid start date'); });
+  expect(results.communities).toContain('Invalid settlement community partition');
+  expect(results.scope).toContain('invalid local jurisdiction');
+});
+
+test('dependent partitions may name only the future realm their attached prerequisite declares', async function ({ page }, testInfo) {
+  if (!isSharedPage(page)) await openGame(page, testInfo);
+  const result = await page.evaluate(function () {
+    const bm = JSON.parse(JSON.stringify(FB.bookmark('1204')));
+    const valid = FB.validateBookmark(bm);
+    const child = FB.stories.get('athens_partition_1204').declaration;
+    const original = child.grant.liege;
+    child.grant.liege = 'missing_future_realm';
+    const missing = FB.validateBookmark(bm);
+    child.grant.liege = original;
+    bm.stories = bm.stories.filter(function (id) { return id !== 'thessalonica_partition_1204'; });
+    return { valid:valid, missing:missing, unattached:FB.validateBookmark(bm) };
+  });
+  expect(result.valid).toEqual([]);
+  expect(result.missing.join('\n')).toMatch(/grant.liege references unknown id missing_future_realm/);
+  expect(result.unattached.join('\n')).toContain('requires unattached story thessalonica_partition_1204');
+});
+
+test('a typed birthplaces rule follows each revision and runtime JSON mods validate it', async function ({ page }, testInfo) {
+  if (!isSharedPage(page)) await openGame(page, testInfo);
+  const result = await page.evaluate(function () {
+    const start = function (id) { return FBDATA.startScenarios.find(function (s) { return s.id === id; }); };
+    const fresh = FB.bookmark('476'), before = JSON.stringify([FBDATA.startScenarios, FBDATA.bookmarks['476']]);
+    const allowed = function (id, bm) {
+      return bm.provinces.filter(function (p) { return FB.startProvinceAllowed(start(id), bm, p.id); }).map(function (p) { return p.id; });
+    };
+    // Councils, federate camps and the story county come from the world, not a computed list.
+    const councils = Object.keys(fresh.localInstitutions).map(function (id) { return fresh.localInstitutions[id]; })
+      .filter(function (d) { return d.kind === 'council'; }).map(function (d) { return d.provinceId; });
+    const curialis = allowed('curialis_476', fresh), federate = allowed('federate_476', fresh);
+    const camps = fresh.realms.filter(function (r) { return r.government === 'federate_polity'; }).map(function (r) { return r.capital; });
+    // A mod realm with a federate government becomes a camp with no code change.
+    const added = JSON.parse(JSON.stringify(fresh));
+    const host = added.realms.find(function (r) { return r.government === 'regnum' && added.provinces.some(function (p) { return p.id === r.capital && !p.wasteland; }); });
+    host.government = 'federate_polity';
+    const faults = function (rule) {
+      const scenario = Object.assign(JSON.parse(JSON.stringify(start('farmer_476'))), { id:'e2e_birthplace_rule', birthplaces:rule });
+      return FB.mods.validate({ startScenarios:[scenario] }).join('\n');
+    };
+    return {
+      noLists:fresh.startLocations === undefined,
+      curialis:curialis.length > 0 && curialis.every(function (id) { return councils.indexOf(id) >= 0; }),
+      federate:federate.indexOf('ravenna') >= 0 && federate.every(function (id) { return id === 'ravenna' || camps.indexOf(id) >= 0; }),
+      newCamp:FB.startProvinceAllowed(start('federate_476'), added, host.capital) && !FB.startProvinceAllowed(start('federate_476'), fresh, host.capital),
+      valid:faults({ institutions:['council'] }),
+      empty:/birthplace selector/.test(faults({})),
+      unknownField:/birthplaces/.test(faults({ institution:['council'] })),
+      unknownForm:/unknown government form e2e_missing/.test(faults({ capitalsOf:['e2e_missing'] })),
+      orphanStory:/needs trackLocations/.test(faults({ storyCounties:true })),
+      pure:before === JSON.stringify([FBDATA.startScenarios, FBDATA.bookmarks['476']])
+    };
+  });
+  expect(result).toEqual({ noLists:true, curialis:true, federate:true, newCamp:true, valid:'',
+    empty:true, unknownField:true, unknownForm:true, orphanStory:true, pure:true });
+});
+});
+
+declareGates(false);
 
 test('bookmark validation leaves legacy technology defaults untouched until accepted activation', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -250,17 +369,6 @@ test('bookmark replacements recheck existing ruler and fixed-community starts', 
   });
 });
 
-test('mod start validation keeps an existing ruler identity distinct from county residents', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
-  const result = await page.evaluate(function () {
-    const scenario = FBDATA.startScenarios.filter(function (s) { return s.id === 'syagrius_476'; })[0];
-    const county = FB.bookmark('476').provinces.filter(function (p) { return p.id === scenario.fixedProvinceId; })[0];
-    const resident = FB.provinceCommunities(county).some(function (c) { return c.culture === scenario.startCulture; });
-    return { resident:resident, errors:FB.mods.validate({ startScenarios:[JSON.parse(JSON.stringify(scenario))] }) };
-  });
-  expect(result).toEqual({ resident:false, errors:[] });
-});
-
 test('unused mod faiths cannot introduce an unregistered head system', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   const result = await page.evaluate(function () {
@@ -292,40 +400,6 @@ test('malformed bookmark arrays cannot be silently ignored or overwrite an earli
     expect(result.errors).toMatch(i === 2 ? /must not repeat 867/ : /must be a bookmark id/);
     expect(result.rejected && result.unchanged).toBe(true);
   });
-});
-
-test('malformed dates and community lists return diagnostics through the opening validator', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
-  const results = await page.evaluate(function () {
-    const malformedDates = [undefined, null, {}, { year:'493', season:0, day:1 },
-      { year:493.5, season:0, day:1 }].map(function (date) {
-      const bm = JSON.parse(JSON.stringify(FB.bookmark('493')));
-      if (date === undefined) delete bm.date;
-      else bm.date = date;
-      return bm;
-    });
-    const invalidCommunities = JSON.parse(JSON.stringify(FB.bookmark('493')));
-    const layout = FBDATA.settlementLayouts[invalidCommunities.settlementLayout];
-    const county = invalidCommunities.provinces.filter(function (p) { return !p.wasteland && layout[p.id]; })[0];
-    const entry = layout[county.id][0];
-    county.communities = {};
-    county.settlements = [Object.assign({}, entry, { communities:[{ culture:county.culture,
-      religion:county.religion, populationShare0:10000 }] })];
-    const malformedScope = JSON.parse(JSON.stringify(FB.bookmark('493')));
-    const institution = Object.values(malformedScope.localInstitutions).find(function (d) { return !!d.profileId; });
-    if (!institution) throw new Error('Expected a profile institution');
-    institution.jurisdictionIds = null;
-    const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
-    const faults = { dates:malformedDates.map(function (bm) { return FB.validateBookmark(bm).join('\n'); }),
-      communities:FB.validateBookmark(invalidCommunities).join('\n'),
-      scope:FB.validateBookmark(malformedScope).join('\n') };
-    if (before !== JSON.stringify(FBDATA) || rng !== FB.getRngState() || uid !== FB.getUidCounter())
-      throw new Error('Malformed definition validation changed the catalogue or identity');
-    return faults;
-  });
-  results.dates.forEach(function (faults) { expect(faults).toContain('invalid start date'); });
-  expect(results.communities).toContain('Invalid settlement community partition');
-  expect(results.scope).toContain('invalid local jurisdiction');
 });
 
 test('invalid activation preserves the active world, RNG and state', async function ({ page }, testInfo) {
@@ -422,24 +496,6 @@ test('invalid stored mods are rejected before browser storage changes', async fu
   expect(result).toEqual({ accepted:false, unchanged:true });
 });
 
-test('dependent partitions may name only the future realm their attached prerequisite declares', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
-  const result = await page.evaluate(function () {
-    const bm = JSON.parse(JSON.stringify(FB.bookmark('1204')));
-    const valid = FB.validateBookmark(bm);
-    const child = FB.stories.get('athens_partition_1204').declaration;
-    const original = child.grant.liege;
-    child.grant.liege = 'missing_future_realm';
-    const missing = FB.validateBookmark(bm);
-    child.grant.liege = original;
-    bm.stories = bm.stories.filter(function (id) { return id !== 'thessalonica_partition_1204'; });
-    return { valid:valid, missing:missing, unattached:FB.validateBookmark(bm) };
-  });
-  expect(result.valid).toEqual([]);
-  expect(result.missing.join('\n')).toMatch(/grant.liege references unknown id missing_future_realm/);
-  expect(result.unattached.join('\n')).toContain('requires unattached story thessalonica_partition_1204');
-});
-
 test('an applicability hook failure returns a named diagnostic', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   const errors = await page.evaluate(function () {
@@ -448,42 +504,4 @@ test('an applicability hook failure returns a named diagnostic', async function 
     return FB.validateBookmark(bm);
   });
   expect(errors.join('\n')).toContain('applicability failed: proof hook failed');
-});
-
-test('a typed birthplaces rule follows each revision and runtime JSON mods validate it', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
-  const result = await page.evaluate(function () {
-    const start = function (id) { return FBDATA.startScenarios.find(function (s) { return s.id === id; }); };
-    const fresh = FB.bookmark('476'), before = JSON.stringify([FBDATA.startScenarios, FBDATA.bookmarks['476']]);
-    const allowed = function (id, bm) {
-      return bm.provinces.filter(function (p) { return FB.startProvinceAllowed(start(id), bm, p.id); }).map(function (p) { return p.id; });
-    };
-    // Councils, federate camps and the story county come from the world, not a computed list.
-    const councils = Object.keys(fresh.localInstitutions).map(function (id) { return fresh.localInstitutions[id]; })
-      .filter(function (d) { return d.kind === 'council'; }).map(function (d) { return d.provinceId; });
-    const curialis = allowed('curialis_476', fresh), federate = allowed('federate_476', fresh);
-    const camps = fresh.realms.filter(function (r) { return r.government === 'federate_polity'; }).map(function (r) { return r.capital; });
-    // A mod realm with a federate government becomes a camp with no code change.
-    const added = JSON.parse(JSON.stringify(fresh));
-    const host = added.realms.find(function (r) { return r.government === 'regnum' && added.provinces.some(function (p) { return p.id === r.capital && !p.wasteland; }); });
-    host.government = 'federate_polity';
-    const faults = function (rule) {
-      const scenario = Object.assign(JSON.parse(JSON.stringify(start('farmer_476'))), { id:'e2e_birthplace_rule', birthplaces:rule });
-      return FB.mods.validate({ startScenarios:[scenario] }).join('\n');
-    };
-    return {
-      noLists:fresh.startLocations === undefined,
-      curialis:curialis.length > 0 && curialis.every(function (id) { return councils.indexOf(id) >= 0; }),
-      federate:federate.indexOf('ravenna') >= 0 && federate.every(function (id) { return id === 'ravenna' || camps.indexOf(id) >= 0; }),
-      newCamp:FB.startProvinceAllowed(start('federate_476'), added, host.capital) && !FB.startProvinceAllowed(start('federate_476'), fresh, host.capital),
-      valid:faults({ institutions:['council'] }),
-      empty:/birthplace selector/.test(faults({})),
-      unknownField:/birthplaces/.test(faults({ institution:['council'] })),
-      unknownForm:/unknown government form e2e_missing/.test(faults({ capitalsOf:['e2e_missing'] })),
-      orphanStory:/needs trackLocations/.test(faults({ storyCounties:true })),
-      pure:before === JSON.stringify([FBDATA.startScenarios, FBDATA.bookmarks['476']])
-    };
-  });
-  expect(result).toEqual({ noLists:true, curialis:true, federate:true, newCamp:true, valid:'',
-    empty:true, unknownField:true, unknownForm:true, orphanStory:true, pure:true });
 });
