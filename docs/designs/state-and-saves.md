@@ -1810,6 +1810,13 @@ default history, and coinage history. Every record is plain JSON, so slots, auto
 export/import, and succession preserve exact faces, denominations, deadlines, pledges, and
 already-resolved investment outcomes without a save-version bump. An older save starts at
 price 1 and is first revalued on its next annual tick; no historical inflation is invented.
+
+A new campaign is created with every field these additive repairs supply, so its saved shape
+does not depend on whether a panel or map read has run yet. `FB.game.start` writes the whole
+finance record, including the coinage history counters, and both `FB.game.start` and
+`FB.game.startObserve` write an empty `state.armyCohorts`. `FB.ensureEconomy` and
+`FB.armiesEnsure` therefore leave a fresh campaign unchanged; they still repair older saves.
+When a repair gains a field, add it to campaign creation in the same change.
 Self-founded dispatched ventures reuse `economy.investments` with
 `kind:"trade_venture"` and save their destination, route, strategy, stake, overhead,
 commodity id, origin quote, purchased quantity, exact due turn/date, captured modifiers

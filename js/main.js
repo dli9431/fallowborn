@@ -4097,6 +4097,7 @@ FB.CHANGELOG = [
       realmTech: {}, realmTechMigration: 2, techSeeded:0,
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {}, armyDownSurvival: {}, armyDetachmentDown: {},
+      armyCohorts: {},
       alliances: [], truces: {},
       faiths: {}, faithRelations: {}, faithNextId: 1,
       cultures: {}, cultureNextId: 1,
@@ -4151,7 +4152,8 @@ FB.CHANGELOG = [
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
       economy: {
         price:1, lastRate:0, pressure:0, lastAdjustment:0,
-        shocks:[], loans:[], investments:[], nextId:1, defaults:0
+        shocks:[], loans:[], investments:[], nextId:1, defaults:0,
+        debasements:0, recoinages:0
       },
       seasonMark: { gold: sc.gold, prestige: sc.prestige, piety: sc.piety }, seasonNet: null
     };
@@ -4519,6 +4521,7 @@ FB.CHANGELOG = [
       realmTech: {}, realmTechMigration: 2, techSeeded:0,
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {}, armyDownSurvival: {}, armyDetachmentDown: {},
+      armyCohorts: {},
       alliances: [], truces: {},
       faiths: {}, faithRelations: {}, faithNextId: 1,
       cultures: {}, cultureNextId: 1,
