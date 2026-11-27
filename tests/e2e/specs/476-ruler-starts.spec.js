@@ -95,42 +95,37 @@ const reviewBoot = { boot:async function (page, testInfo) {
   await activateBookmark(page, '476');
 } };
 
-test('unreviewed ruler starts stay out of the picker and reject start codes and direct creation', async function ({ page }, testInfo) {
+test('released ruler starts are offered in the picker and open from start codes', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   expect(await page.evaluate(function () { return FBDATA.reviewOpenStarts; })).toBe(false);
-  const hidden = await page.evaluate(function () {
+  const offered = await page.evaluate(function () {
     return FBDATA.startScenarios.filter(function (sc) {
       return sc.rulerRealmId && sc.bookmarkIds && sc.bookmarkIds.includes('476');
     })
-      .every(function (sc) { return sc.hidden && sc.alwaysUnlocked; });
+      .every(function (sc) { return !sc.hidden && sc.alwaysUnlocked; });
   });
-  expect(hidden).toBe(true);
+  expect(offered).toBe(true);
   await choose476(page);
   const picker = page.locator('#scenariolist');
+  await expect(picker.locator('.scen-group').first()).toHaveText('Historical starts');
   await expect(picker.locator('[data-scenario="farmer_476"]')).toBeVisible();
   for (const def of STARTS) {
-    await expect(picker.locator('[data-scenario="' + def.id + '"]')).toHaveCount(0);
+    const card = picker.locator('[data-scenario="' + def.id + '"]');
+    await expect(card).toBeVisible();
+    await expect(card).not.toHaveAttribute('aria-disabled');
   }
-  await expect(picker.getByRole('button', { name:'Julius Nepos at Salona' })).toHaveCount(0);
-  await expect(picker.getByRole('button', { name:'Odoacer and the federate host' })).toHaveCount(0);
-  await expect(picker.getByRole('button', { name:'Syagrius at Soissons' })).toHaveCount(0);
+  await expect(picker.getByRole('button', { name:'Julius Nepos at Salona' })).toHaveCount(1);
+  await expect(picker.getByRole('button', { name:'Odoacer and the federate host' })).toHaveCount(1);
+  await expect(picker.getByRole('button', { name:'Syagrius at Soissons' })).toHaveCount(1);
 
   await page.locator('#btn-ng-back').click();
   await page.locator('#btn-bm-seed').click();
-  for (const def of STARTS) {
-    await page.locator('#ng-seed').fill(rulerCode(def));
-    await page.locator('#ng-seed').press('Enter');
-    await expect(page.locator('#ng-seed-err')).not.toBeEmpty();
-    await expect(page.locator('#chargen:not(.hidden)')).toHaveCount(0);
-  }
-  await page.locator('#ng-cancel').click();
-  const result = await page.evaluate(function () {
-    FB.activateBookmark('476');
-    FB.game.pending = { scenario:FBDATA.startScenarios.find(function (sc) { return sc.id === 'nepos_476'; }),
-      seed:'RULERS', bookmarkId:'476', provinceId:'split' };
-    return { ready:FB.game.campaignReady('476'), started:FB.game.start(), state:FB.state };
-  });
-  expect(result).toEqual({ ready:true, started:false, state:null });
+  await page.locator('#ng-seed').fill(rulerCode(STARTS[0]));
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await expect(page.locator('#cg-name')).toHaveValue('Julius Nepos');
+  expect(await page.evaluate(function () { return FB.startProgression.snapshot(); }))
+    .toEqual({ v:1, highestAchievedTier:0, highestStartTier:0 });
 });
 
 test('an explicit review session opens the authored rulers in the 476 picker', async function ({ page }, testInfo) {

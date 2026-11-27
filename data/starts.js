@@ -25,8 +25,7 @@ window.FBDATA = window.FBDATA || {};
   'use strict';
 
   FBDATA.startScenarios = [
-    /* Candidates remain hidden until the owner accepts each opening. */
-    { id:'peroz_476', bookmarkIds:['476'], hidden:true, alwaysUnlocked:true,
+    { id:'peroz_476', bookmarkIds:['476'], alwaysUnlocked:true,
       rulerRealmId:'sasanian_476', governmentForm:'aristocratic_monarchy', fixedProvinceId:'baghdad',
       characterName:'Peroz', sex:'m', startCulture:'persian', startReligion:'zoroastrian',
       name:'Peroz and the magnate court', desc:'Govern through royal kin, inherited family interests and appointed provincial officers.',
@@ -34,7 +33,7 @@ window.FBDATA = window.FBDATA || {};
       familyPresets:{ standard:{ name:'Existing royal household', diff:'age 46 · existing court family',
         desc:'Keep the declared royal kin and generated supporting households.' } }, tracks:[], onboarding:'ruler',
       intro:'You are Peroz at Ctesiphon. Public administration in Deeds shows your royal candidates, provincial family rights and appointed officers. Review actual receipts and military burdens with the magnates. Balash has royal ancestry, but recognition decides accession. Your subjects retain their own worship and private estates.' },
-    { id:'nepos_476', bookmarkIds:['476'], hidden:true, alwaysUnlocked:true,
+    { id:'nepos_476', bookmarkIds:['476'], alwaysUnlocked:true,
       rulerRealmId:'croatia', governmentForm:'roman_civic', fixedProvinceId:'split',
       characterName:'Julius Nepos', sex:'m', startCulture:'roman', startReligion:'nicene',
       name:'Julius Nepos at Salona',
@@ -43,7 +42,7 @@ window.FBDATA = window.FBDATA || {};
       familyPresets:{ standard:{ name:'Dalmatian court household', diff:'age 46 · existing court family', desc:'Keep the court’s seeded family. Unattested relatives are generated campaign characters.' } },
       tracks:['nepos_track_476'], onboarding:'ruler',
       intro:'You are Julius Nepos at Salona. Dalmatia is in your hands; Italy is not. Your western imperial claim survives alongside Romulus’s office at Ravenna. Review Offices & Legitimacy and the western claim story in Deeds, then decide whether to pursue recognition, restoration through an ordinary campaign, or Dalmatian rule.' },
-    { id:'odoacer_476', bookmarkIds:['476'], hidden:true, alwaysUnlocked:true,
+    { id:'odoacer_476', bookmarkIds:['476'], alwaysUnlocked:true,
       rulerRealmId:'federates_476', governmentForm:'federate_polity', fixedProvinceId:'pavia',
       characterName:'Odoacer', sex:'m', startCulture:'gothic', startReligion:'homoian',
       name:'Odoacer and the federate host',
@@ -52,7 +51,7 @@ window.FBDATA = window.FBDATA || {};
       familyPresets:{ standard:{ name:'Federate court household', diff:'age 43 · existing court family', desc:'Keep the host court’s seeded family. Unattested relatives are generated campaign characters.' } },
       onboarding:'ruler',
       intro:'You are Odoacer with the federate host near Ticinum. You command its existing soldiers, but hold no county. Open the western court story in Deeds to review paid service or an ordinary campaign for Ravenna. Contracts require both courts’ consent; victory alone supplies neither civic acceptance nor an imperial office. The map’s army controls command your host.' },
-    { id:'syagrius_476', bookmarkIds:['476'], hidden:true, alwaysUnlocked:true,
+    { id:'syagrius_476', bookmarkIds:['476'], alwaysUnlocked:true,
       rulerRealmId:'west_francia', governmentForm:'roman_civic', fixedProvinceId:'laon',
       characterName:'Syagrius', sex:'m', startCulture:'roman', startReligion:'nicene',
       name:'Syagrius at Soissons',

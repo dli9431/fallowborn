@@ -37,7 +37,18 @@ FBDATA.startScenarios_1241 = [
     tier:6, profession:'noble', gold:120, prestige:150, piety:10,
     familyPresets:{ standard:{ name:'The princely family', diff:'about age 50 · existing named family', desc:'Keep one Feodosia, Alexander and Andrei. Alexander’s wife is identified by her attested parentage. Supporting ages and county homes are approximate; no Novgorod office is granted.' } },
     tracks:['yaroslav_agenda_1241','opening_yaroslav_1241'], onboarding:'ruler',
-    intro:'You are Yaroslav Vsevolodovich at Vladimir-on-the-Klyazma, within the broad Suzdal county. Your family retains its own people and homes. Novgorod is a separate court; later recognition and tribute are not opening obligations. Review current resources and choose your priorities through the court agenda in Deeds.' }
+    intro:'You are Yaroslav Vsevolodovich at Vladimir-on-the-Klyazma, within the broad Suzdal county. Your family retains its own people and homes. Novgorod is a separate court; later recognition and tribute are not opening obligations. Review current resources and choose your priorities through the court agenda in Deeds.' },
+  /* The command's bound leader begins a private household; the command keeps
+     its own public account, columns and commission from Ogodei. */
+  { id:'batu_1241', bookmarkIds:['1241'], alwaysUnlocked:true,
+    rulerRealmId:'mongol_western_command_1241', governmentForm:'expedition_command', fixedProvinceId:'volodymyr',
+    characterName:'Batu', sex:'m', startCulture:'mongol_1241', startReligion:'tengri',
+    name:'Batu and the western command',
+    desc:'Lead the existing Mongol western command from Volodymyr. Its columns, stores and commission are already in the field; every conquest still depends on actual campaigns.',
+    tier:1, profession:'soldier', gold:20, prestige:20, piety:0,
+    familyPresets:{ standard:{ name:'The existing commander', diff:'about age 36 · existing commander', desc:'Keep the existing Batu. No unknown spouse, child or companion is added; his birth year is approximate.' } },
+    onboarding:'ruler',
+    intro:'You are Batu, leader of the western command under Ogodei’s commission. Your columns stand at Volodymyr, Krakow, Cluj and Gyula with their own food and fighters, and your private purse stays separate from the command’s account. Open Mobile coalition in Deeds to review the commanders, supplies and the expedition program. The year grants no county; any conquest comes from ordinary campaigns.' }
 ];
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_1241);
 });

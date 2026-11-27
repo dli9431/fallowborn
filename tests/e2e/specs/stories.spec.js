@@ -308,13 +308,15 @@ test('the start picker and family presets follow scenario data',
     if (await page.locator('#pickprov:not(.hidden)').count()) await page.locator('#btn-pick-back').click();
     await page.locator('#btn-ng-back').click();
     await page.locator('#bookmarklist .scencard', { hasText:/\b476:/ }).click();
-    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Story starts', 'Open starts']);
+    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts', 'Story starts', 'Open starts']);
     const cards = page.locator('#scenariolist .scencard');
-    // Fourteen public starts plus Observe, including the new camp and court households.
-    await expect(cards).toHaveCount(15);
+    // Eighteen public starts plus Observe: four courts, the camp and court households and open roles.
+    await expect(cards).toHaveCount(19);
     for (const id of ['nepos_476','odoacer_476','syagrius_476','peroz_sasanian_476']) {
-      await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toHaveCount(0);
+      await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toHaveCount(1);
     }
+    // The fresh world offers its revision-bound Sasanian court, not the retained copy.
+    await expect(page.locator('#scenariolist [data-scenario="peroz_476"]')).toHaveCount(0);
     const federate = cards.filter({ hasText:'Federate Soldier' });
     await expect(federate).toHaveCount(1);
     await expect(federate).not.toHaveClass(/locked/);

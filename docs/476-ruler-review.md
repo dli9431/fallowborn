@@ -8,15 +8,9 @@ odoacer_476: Odoacer with the federate host at Ticinum (pavia), federate governm
 
 syagrius_476: Syagrius at Soissons (laon), northern Gallic Roman domain, Roman civic government and ordinary ruler play.
 
-Reveal one candidate for this page session
+Open a candidate
 
-Open index.html from this worktree, then use the browser console before choosing a beginning:
-
-FBDATA.startScenarios.forEach(function (sc) { if (sc.id === 'nepos_476') sc.hidden = false; });
-
-Substitute odoacer_476 or syagrius_476 to review the others. Reloading the page restores the authored hidden flags. The picker and codes reject a hidden start. A save created during review remains loadable after reloading.
-
-Use Choose your beginning, enter a start code, then continue through the existing character and intro screens:
+The candidates are offered under Historical starts when 476 is chosen. Use Choose your beginning, pick the card or enter a start code, then continue through the existing character and intro screens:
 
 RULERS-476-nepos_476-split-m-Julius_Nepos
 
@@ -38,4 +32,4 @@ Run each opening for ten years, save and reload, and check that neighbors, house
 
 Acceptance
 
-All three definitions stay hidden: true in data/starts.js until individually accepted. For an accepted candidate, change its authored hidden flag to false. Leave any rejected or unreviewed candidate hidden. Feature-branch version, changelog and generated catalog integration remain governed by AGENTS.md.
+The three definitions and Peroz are offered in data/starts.js without a hidden flag. To withdraw a rejected candidate, set its authored hidden flag to true; the picker and codes then reject it. Feature-branch version, changelog and generated catalog integration remain governed by AGENTS.md.

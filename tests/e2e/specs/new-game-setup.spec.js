@@ -96,6 +96,12 @@ test('an unconfigured installation withholds hidden starts from picker, codes an
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     expect(await page.evaluate(function () { return FBDATA.reviewOpenStarts; })).toBe(false);
+    // The shipped courts are offered; mark them as unaccepted candidates.
+    await page.evaluate(function () {
+      FBDATA.startScenarios.forEach(function (sc) {
+        if (sc.rulerRealmId && sc.bookmarkIds && sc.bookmarkIds.indexOf('476') >= 0) sc.hidden = true;
+      });
+    });
     await newGame(page);
     await chooseDate(page, '476');
     await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Story starts', 'Open starts']);
@@ -176,11 +182,9 @@ test('story starts are grouped and say where their story begins', async function
   await openGame(page, testInfo);
   await newGame(page);
   await chooseDate(page, '476');
-  // 476's existing-ruler starts are hidden, so only story and open starts show.
-  await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Story starts', 'Open starts']);
+  await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts', 'Story starts', 'Open starts']);
   const federate = page.locator('#scenariolist [data-scenario="federate_476"]');
-  await expect(federate.locator('.scenario-story'))
-    .toHaveText('Story start: begins in Ravenna. Another birthplace gives an ordinary household.');
+  await expect(federate.locator('.scenario-story')).toHaveText('Story start: begins in Ravenna.');
   await federate.click();
   // The story's county is chosen by default; any other allowed county remains a tap away.
   await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
@@ -310,7 +314,7 @@ test('a preconfigured review session opens hidden and earned beginnings', async 
   expect(await page.evaluate(function () { return FBDATA.reviewOpenStarts; })).toBe(true);
   await newGame(page);
   await chooseDate(page, '476');
-  // The hidden courts are offered under Historical starts and nothing is locked.
+  // The courts are offered under Historical starts and nothing is locked.
   await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts', 'Story starts', 'Open starts']);
   await expect(page.locator('#scenariolist [data-scenario="nepos_476"]')).toHaveCount(1);
   await expect(page.locator('#scenariolist .scencard.locked')).toHaveCount(0);

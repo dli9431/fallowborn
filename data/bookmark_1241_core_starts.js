@@ -22,8 +22,9 @@ FBDATA.bookmarkRevisionContent_core_starts_1241 = {
   layouts.szekesfehervar.splice(1,0,copy(d.layouts.szekesfehervar[0]));
   var layoutId='1241_core_starts_v2',starts=copy(source.starts),locations=copy(source.startLocations);
   FBDATA.settlementLayouts[layoutId]=layouts;
-  starts.push('koten_1241');
+  starts.push('koten_1241','batu_1241');
   locations.koten_1241=['szekesfehervar'];
+  locations.batu_1241=['volodymyr'];
   b.revisions[d.revision]={realms:copy(source.realms),starts:starts,startLocations:locations,
     settlementLayout:layoutId,opening:copy(source.opening),openingRevision:source.openingRevision,
     openingRevisions:copy(source.openingRevisions)};

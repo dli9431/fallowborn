@@ -3525,9 +3525,7 @@ FB.CHANGELOG = [
         '</h3><p>' +
         FB.esc(FB.dataText(null, null, 'scenario', sc.id, sc, 'desc', {})) +
         '</p>' + (places
-          ? '<p class="scenario-story">' + FB.esc(fixedPlaceStart(sc)
-            ? FB.T('Story start: begins in {places}.', { places:places })
-            : FB.T('Story start: begins in {places}. Another birthplace gives an ordinary household.', { places:places })) + '</p>'
+          ? '<p class="scenario-story">' + FB.esc(FB.T('Story start: begins in {places}.', { places:places })) + '</p>'
           : '') + (locked
           ? '<p class="scenario-lock">' + FB.esc(scenarioUnlockText(sc, false)) + '</p>'
           : '');

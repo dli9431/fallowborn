@@ -43,8 +43,8 @@ async function startOdoacer(page, testInfo) {
     const s = FB.state;
     return { bookmark:s.start.id, scenario:s.start.scenarioId, realm:s.start.rulerRealmId,
       nativeActor:s.player.charId === s.stories.western_court_476.odoacerId,
-      hidden:FBDATA.startScenarios.find(function (sc) { return sc.id === 'odoacer_476'; }).hidden };
-  })).toEqual({ bookmark:'476', scenario:'odoacer_476', realm:'federates_476', nativeActor:true, hidden:true });
+      hidden:!!FBDATA.startScenarios.find(function (sc) { return sc.id === 'odoacer_476'; }).hidden };
+  })).toEqual({ bookmark:'476', scenario:'odoacer_476', realm:'federates_476', nativeActor:true, hidden:false });
 }
 
 for (const crazygames of [false]) {

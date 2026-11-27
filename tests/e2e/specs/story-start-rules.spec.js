@@ -229,7 +229,7 @@ for (const role of ['federate_476', 'curialis_476']) {
     await openGame(page, info);
     await chooseDate(page, '476');
     const card = page.locator('#scenariolist [data-scenario="' + role + '"]');
-    await expect(card.locator('.scenario-story')).toHaveText('Story start: begins in Ravenna. Another birthplace gives an ordinary household.');
+    await expect(card.locator('.scenario-story')).toHaveText('Story start: begins in Ravenna.');
     await card.click();
     await expect(page.locator('#pickinfo .pick-location-title')).toHaveText('Ravenna');
     expect(await page.evaluate(function (role) {

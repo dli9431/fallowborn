@@ -54,7 +54,7 @@ test('the fresh world validates every retained revision without changing their o
     return {faults:FB.validateBookmark(fresh),revision:fresh.revision,opening:fresh.openingRevision,
       detached:fresh.openingRevisions!==previous.openingRevisions && fresh.realms!==previous.realms,
       earlierRealms:JSON.stringify(fresh.realms.slice(0,-2))===JSON.stringify(previous.realms),
-      starts:JSON.stringify(fresh.starts.filter(function (id) {return id!=='koten_1241';}))===JSON.stringify(previous.starts),
+      starts:JSON.stringify(fresh.starts.filter(function (id) {return id!=='koten_1241' && id!=='batu_1241';}))===JSON.stringify(previous.starts),
       retained:older,pure:bytes===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter()};
   },retained);
   expect(facts).toMatchObject({faults:[],revision:'core_starts_v2',opening:'operations_v2',

@@ -189,7 +189,7 @@ A player Odoacer decides whether to accept the existing service terms, contest R
 
 Campaign opportunities involving a player-controlled ruler wait for an explicit review. Syagrius retains his actual domain until ordinary territorial settlement changes it; Clovis's succession and a date window do not hand over Soissons. Odoacer can review later campaigns against his actual Ravenna court. The decisions never prevent neighboring rulers from making independent ordinary diplomatic or military choices.
 
-Technology impact: existing_ruler_starts and western_claim_restoration use none. Living support, existing offices and contracts, current territory and ordinary military resources govern these options. All three candidates remain hidden pending owner acceptance.
+Technology impact: existing_ruler_starts and western_claim_restoration use none. Living support, existing offices and contracts, current territory and ordinary military resources govern these options. The three courts and Peroz are offered under Historical starts in the 476 picker.
 
 tests/e2e/specs/476-ruler-starts.spec.js authors separate one-season journeys for all three candidates: an isolated world-ordering slice and ordinary household play retaining events, diplomacy, any death or succession interruptions and campaign choices. The isolated eventsBusy double retains the UI's callable contract. Ordinary journeys complete the opening, check invariants after each 45-day half and restore at the midpoint and final boundary. The 90-day runs do not guarantee natural succession or exercise a decade of annual mortality. Owner execution and content acceptance remain required.
 
