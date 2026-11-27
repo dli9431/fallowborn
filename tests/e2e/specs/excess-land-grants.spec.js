@@ -6,11 +6,11 @@ dependsOnRuntime(__filename, [
   'js/save.js', 'js/technology.js', 'data/technology.js', 'data/map_data.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () {
     const s = FB.state, p = s.player;

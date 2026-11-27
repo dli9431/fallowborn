@@ -14,7 +14,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 /* Legendary and sacred artifacts: each definition's `artifact` gate (faith,
@@ -26,7 +26,7 @@ const { startDeterministicGame } = require('../support/game/start');
 
 test('gates each artifact by faith, culture, and de jure region',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -94,7 +94,7 @@ test('gates each artifact by faith, culture, and de jure region',
 
 test('claims an artifact exactly once and derives its loss forever',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -144,7 +144,7 @@ test('claims an artifact exactly once and derives its loss forever',
 
 test('the trial offering charges exactly the scaled value once',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -178,7 +178,7 @@ test('the trial offering charges exactly the scaled value once',
 
 test('a held artifact can be seized and never returns',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -207,7 +207,7 @@ test('a held artifact can be seized and never returns',
 
 test('selling a sacred artifact of your own faith costs the devout',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -246,7 +246,7 @@ test('selling a sacred artifact of your own faith costs the devout',
 
 test('artifact drawbacks flow through the same bonus channels as boons',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {

@@ -9,7 +9,7 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { mockCrazyGames } = require('../support/crazygames');
 test.beforeEach(async function ({ page }) { await mockCrazyGames(page); });
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
 const { startDeterministicGame } = require('../support/game/start');
 
@@ -23,7 +23,7 @@ for (const distribution of ['standard', 'crazygames']) {
         });
       }
       if (restricted) await openCrazyGame(page, testInfo);
-      else await openGame(page, testInfo);
+      else await openTitle(page, testInfo);
       expect(await page.evaluate(function () {
         return FB.platform.isCrazyGames;
       })).toBe(restricted);
@@ -165,7 +165,7 @@ test('CrazyGames uses English without catalog requests or a language picker', as
 });
 test('unknown distribution flags preserve standard links', async function ({ page }, testInfo) {
   await page.addInitScript(function () { window.FB_DISTRIBUTION = 'unknown'; });
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await page.evaluate(function () { FB.ui.showMenu(); });
   expect(await page.evaluate(function () { return FB.platform.isCrazyGames; })).toBe(false);
   await expect(page.locator('#m-rate'))

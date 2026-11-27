@@ -10,7 +10,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 /* Peddler stock bands: FB.offerItem (the peddler's full table) rolls a rarity
@@ -23,7 +23,7 @@ const { startDeterministicGame } = require('../support/game/start');
 
 test('bands the peddler’s full-table stock by station and purse',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const counts = await page.evaluate(function () {
@@ -73,7 +73,7 @@ test('bands the peddler’s full-table stock by station and purse',
 
 test('keeps famed stock after the unique heirlooms are exhausted',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const counts = await page.evaluate(function () {
@@ -114,7 +114,7 @@ test('keeps famed stock after the unique heirlooms are exhausted',
 
 test('labels the rare aspirational offer and still sells it',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {

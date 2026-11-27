@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, ['index.html', 'css/style.css', 'js/ui_misc.js', 'j
   'js/ui_modals.js', 'js/ui_topbar.js', 'js/actions.js', 'data/actions.js',
   'js/papacy.js', 'data/papacy.js']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 async function inspectFacts(page, selector) {
@@ -31,7 +31,7 @@ async function inspectFacts(page, selector) {
 }
 
 test('Self keeps a long house name beside its edit control', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () {
     FB.state.chars[FB.state.player.charId].dyn = 'House of the long northern valley';
@@ -58,7 +58,7 @@ test('Self keeps a long house name beside its edit control', async function ({ p
 
 for (const width of [390, 1280]) {
   test('panels and information sheets share readable facts at ' + width + 'px', async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     await page.setViewportSize({ width:width, height:850 });
     let count = 0;
@@ -90,7 +90,7 @@ for (const width of [390, 1280]) {
 }
 
 test('Network section toggles match Deeds and expand a shared Land-style body card', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () { FB.ui.showTab('actions'); });
   const skin = function (node) {
@@ -128,7 +128,7 @@ test('Network section toggles match Deeds and expand a shared Land-style body ca
 });
 
 test('Automation explanations work with hover, keyboard focus, and compact disclosures', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   await page.setViewportSize({ width:1280, height:850 });
   await page.evaluate(function () { FB.ui.showAutoResolve(); });

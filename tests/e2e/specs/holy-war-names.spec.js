@@ -3,11 +3,11 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/holywar.js', 'js/model.js', 'js/messages.js',
   'js/i18n.js', 'data/cultures.js', 'data/events_war.js', 'js/ui_modals.js', 'js/ui_panels.js']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('campaign names follow the calling faith in UI, saved messages, and events', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const rows = await page.evaluate(function () {
     const s = FB.state;

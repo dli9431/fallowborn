@@ -23,7 +23,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { START_CODE, startDeterministicGame } = require('../support/game/start');
 const COMPLETE_SAVE_BUDGET = 1.8 * 1024 * 1024;
 
@@ -37,7 +37,7 @@ test.beforeEach(async function ({ page }) {
 
 test('restore repairs an empty technology record for a landed player realm',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -75,7 +75,7 @@ test('served origin provides persistent storage for save slots',
     test.skip(testInfo.project.name !== 'chromium-served',
       'The complete storage contract belongs to the served origin.');
 
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     expect(await page.evaluate(function () {
       localStorage.setItem('fallowborn_contract_probe', 'persistent');
       return {
@@ -132,7 +132,7 @@ test('served origin provides persistent storage for save slots',
 
 test('a restore exception releases the completed world loader with a recoverable message',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const accepted = await page.evaluate(function () {
       const data = JSON.parse(FB.save.serialize());
@@ -167,7 +167,7 @@ test('a restore exception releases the completed world loader with a recoverable
 
 test('an additive repair failure does not reject an otherwise readable save',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const data = JSON.parse(FB.save.serialize());
@@ -202,7 +202,7 @@ test('an additive repair failure does not reject an otherwise readable save',
 
 test('a noncritical post-restore repair failure still opens the game',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const data = JSON.parse(FB.save.serialize());
@@ -237,7 +237,7 @@ test('a noncritical post-restore repair failure still opens the game',
 
 test('continue reconstructs a saved death decision and permits succession',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const prepared = await page.evaluate(function () {
@@ -309,7 +309,7 @@ test('continue reconstructs a saved death decision and permits succession',
 
 test('continue reconstructs the line-ended decision when no successor lives',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const finished = await page.evaluate(function () {
@@ -349,7 +349,7 @@ test('continue reconstructs the line-ended decision when no successor lives',
 
 test('continue repairs malformed enterprise records and reaches the game screen',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const data = JSON.parse(FB.save.serialize());
@@ -402,7 +402,7 @@ test('an eager-court save stays within the storage budget and reloads whole',
     test.skip(testInfo.project.name !== 'chromium-served',
       'The storage budget belongs to the served origin.');
 
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -457,7 +457,7 @@ test('an eager-court save stays within the storage budget and reloads whole',
 
 test('save compaction rehydrates succession, court links, and technology exposure',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
@@ -638,7 +638,7 @@ test('slots store compressed, verify their round trip, and read back the same li
     test.skip(testInfo.project.name !== 'chromium-served',
       'The storage encoding contract belongs to the served origin.');
 
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
@@ -669,7 +669,7 @@ test('slots store compressed, verify their round trip, and read back the same li
 
 test('loading the same schema-1 population twice produces byte-stable schema-2 communities',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -714,7 +714,7 @@ test('legacy plain slots and FBS1 exports still load; fresh exports are FBS2',
     test.skip(testInfo.project.name !== 'chromium-served',
       'The storage encoding contract belongs to the served origin.');
 
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function (startCode) {
@@ -747,7 +747,7 @@ test('save and load dialogs exchange a life through a text file',
     test.skip(testInfo.project.name !== 'chromium-served',
       'The portable file contract belongs to the served origin.');
 
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     await page.evaluate(function () { FB.ui.showExport(); });
@@ -784,7 +784,7 @@ test('save and load dialogs exchange a life through a text file',
 
 test('save-format-4 restore lazily repairs malformed intrigue state and conduct',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -850,7 +850,7 @@ test('save-format-4 restore lazily repairs malformed intrigue state and conduct'
 
 test('a quota-shaped storage failure advises a save-file download, not a generic error',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -888,7 +888,7 @@ test('a manual slot reclaims plain autosave space without replacing its campaign
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
       'The shared storage quota belongs to the served-origin contract.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -956,7 +956,7 @@ test('a manual slot reclaims plain autosave space without replacing its campaign
 
 test('autosave snapshots synchronously, writes on a later task, and flushes safely',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     /* The season-boundary autosave keeps its synchronous snapshot but defers
@@ -1018,7 +1018,7 @@ test('autosave compresses only when a plain write reaches storage quota',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
       'The storage encoding fallback belongs to the served-origin contract.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
@@ -1061,7 +1061,7 @@ test('serf customary tenure round-trips through format-4 serialization and resto
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
       'The storage contract belongs to the served origin.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
@@ -1124,7 +1124,7 @@ test('legacy save without tenure repairs lazily and ignores unknown optional ten
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
       'The storage contract belongs to the served origin.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
@@ -1195,7 +1195,7 @@ test('save slot export and import preserves full customary tenure structure and 
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
       'The storage contract belongs to the served origin.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
@@ -1254,7 +1254,7 @@ test('save slot export and import preserves full customary tenure structure and 
 
 
 test('quota autosaves verify in a worker and supersede an in-flight snapshot safely', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const result = await page.evaluate(async function () {
     FB.game.setPaused(true);
@@ -1299,7 +1299,7 @@ test('quota autosaves verify in a worker and supersede an in-flight snapshot saf
 });
 
 test('a browser blocking workers retains a readable verified quota autosave', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const result = await page.evaluate(async function () {
     FB.game.setPaused(true); FB.save.flushPending();
@@ -1320,7 +1320,7 @@ test('a browser blocking workers retains a readable verified quota autosave', as
 
 
 test('autosave serialization reuses immutable history and preserves replacement rows and live metadata', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const result = await page.evaluate(function () {
     const s = FB.state;
@@ -1369,7 +1369,7 @@ test('autosave serialization reuses immutable history and preserves replacement 
 
 
 test('save technology exposure compaction avoids repeated completed-list scans', async function ({ page }, testInfo) {
-  await openGame(page, testInfo); await startDeterministicGame(page);
+  await openTitle(page, testInfo); await startDeterministicGame(page);
   const result = await page.evaluate(function () {
     const s = FB.state, completed = [];
     for (let i = 0; i < 200; i++) completed.push('snapshot_tech_' + i);

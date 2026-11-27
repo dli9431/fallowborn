@@ -2,12 +2,12 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/ui_panels.js', 'js/ui_misc.js', 'js/model.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 for (const kind of ['descendant', 'collateral', 'adopted']) {
   test('played succession highlights actual lives through ' + kind + ' inheritance', async function ({ page }, testInfo) {
-    await openGame(page, testInfo); await startDeterministicGame(page);
+    await openTitle(page, testInfo); await startDeterministicGame(page);
     const ids = await page.evaluate(function (kind) {
       const s = FB.state, me = s.chars[s.player.charId];
       s.chars = {}; s.chars[me.id] = me;

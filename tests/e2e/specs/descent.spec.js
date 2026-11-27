@@ -18,11 +18,11 @@ dependsOnRuntime(__filename, [
    deterministic context. */
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 async function startGame(page, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   // helpers live in the page: evaluate callbacks cannot close over Node scope
   await page.evaluate(function () {

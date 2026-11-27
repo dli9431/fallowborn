@@ -4,12 +4,12 @@ dependsOnRuntime(__filename, [
   'js/title_ids.js','js/holywar.js', 'data/cultures.js', 'data/map_data.js',
   'js/model.js', 'js/world.js', 'js/armies.js']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('Catholic inaugural eligibility remains Syria until the first launch',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const targets = await page.evaluate(function () {
       const s = FB.state;
@@ -33,7 +33,7 @@ test('Catholic inaugural eligibility remains Syria until the first launch',
 
 test('later AI calls balance sacred importance, coalition strength and decaying failures',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const s = FB.state, saved = {};

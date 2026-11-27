@@ -4,12 +4,12 @@ dependsOnRuntime(__filename, [
   'data/technology.js', 'js/technology.js', 'js/ui_misc.js', 'js/ui_modals.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('reported technology icons use older symbols consistently across catalogue and details',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const ids = [
       'standardized_coinage', 'stone_sawing', 'wheeled_carts', 'mint_assay',

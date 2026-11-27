@@ -6,11 +6,11 @@ dependsOnRuntime(__filename, [
   'js/events.js', 'js/actions.js', 'js/main.js', 'js/save.js', 'js/population.js', 'js/technology.js', 'js/modifiers.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
 });
 
 /* Bookmark selection belongs to this migration scenario, not the universal

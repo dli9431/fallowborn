@@ -13,7 +13,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 /* The market stall shop: town/city settlement visits open a small seasonal
@@ -29,7 +29,7 @@ const { startDeterministicGame } = require('../support/game/start');
 
 test('keeps one seasonal stock per county and kind, then rerolls cleanly',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -80,7 +80,7 @@ test('keeps one seasonal stock per county and kind, then rerolls cleanly',
 
 test('buys an offer into the armory at exactly its quoted price',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -115,7 +115,7 @@ test('buys an offer into the armory at exactly its quoted price',
 
 test('the sell counter skips worn gear and sells at the flat ratio',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -154,7 +154,7 @@ test('the sell counter skips worn gear and sells at the flat ratio',
 
 test('urban_markets widens the stock without gating the baseline shop',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -190,7 +190,7 @@ test('urban_markets widens the stock without gating the baseline shop',
 
 test('the shop modal lists every offer and sells through the UI',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const setup = await page.evaluate(function () {
@@ -222,7 +222,7 @@ test('the shop modal lists every offer and sells through the UI',
 
 test('the shop modal shows buy and sell side by side on wide layouts',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     await page.evaluate(function () {
@@ -249,7 +249,7 @@ test('the shop modal shows buy and sell side by side on wide layouts',
 test('the shop modal toggles buy and sell behind tabs on mobile widths',
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:844 });
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     await page.evaluate(function () {

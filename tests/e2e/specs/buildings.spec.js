@@ -19,11 +19,11 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('ruin repairs reuse the asset, restore effects, and never duplicate construction rewards', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const result = await page.evaluate(function () {
     const s = FB.state, pid = s.player.provinceId, p = s.player;
@@ -70,7 +70,7 @@ test('ruin repairs reuse the asset, restore effects, and never duplicate constru
 });
 
 test('repair review retains settlement position and rechecks money, authority and copy limits', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const result = await page.evaluate(function () {
     const s = FB.state, pid = s.player.provinceId, p = s.player;
@@ -133,7 +133,7 @@ test.use({
 
 test('forming an independent count seeds building technology for empty settlements',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -174,7 +174,7 @@ test('forming an independent count seeds building technology for empty settlemen
 
 test('legacy numeric settlement indices stay visible and canonicalize on write',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -216,7 +216,7 @@ test('legacy numeric settlement indices stay visible and canonicalize on write',
 
 test('raises buildings in two held counties from the narrow county ledger',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const counties = await page.evaluate(function () {
@@ -341,7 +341,7 @@ test('raises buildings in two held counties from the narrow county ledger',
 
 test('deeds building summary includes every held settlement including empty sites',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const names = await page.evaluate(function () {
@@ -470,7 +470,7 @@ test('deeds building summary includes every held settlement including empty site
 
 test('settlement modal keeps fort upgrades visible and siege details behind disclosure',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const setup = await page.evaluate(function () {
@@ -513,7 +513,7 @@ test('settlement modal keeps fort upgrades visible and siege details behind disc
 
 test('raise a building modal shows existing buildings at top and highlighted cost atop each card',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const setup = await page.evaluate(function () {
@@ -569,7 +569,7 @@ test.describe('building ledger keyboard and tooltip access', function () {
 
   test('building cards display side tooltips on desktop without overflowing viewport',
     async function ({ page }, testInfo) {
-      await openGame(page, testInfo);
+      await openTitle(page, testInfo);
       await startDeterministicGame(page);
 
       await page.evaluate(function () {
@@ -618,7 +618,7 @@ test.describe('building ledger keyboard and tooltip access', function () {
 
   test('fort tooltip remains open on hover while upgrade requirements are accessible on the card',
     async function ({ page }, testInfo) {
-      await openGame(page, testInfo);
+      await openTitle(page, testInfo);
       await startDeterministicGame(page);
 
       const setup = await page.evaluate(function () {
@@ -676,7 +676,7 @@ test.describe('building ledger keyboard and tooltip access', function () {
 
   test('tablet-width layouts swap the hover tooltip for the ? disclosure',
     async function ({ page }, testInfo) {
-      await openGame(page, testInfo);
+      await openTitle(page, testInfo);
       await startDeterministicGame(page);
       await page.setViewportSize({ width:1000, height:700 });
 
@@ -712,7 +712,7 @@ test.describe('building ledger keyboard and tooltip access', function () {
 
   test('digit keys raise buildings from the compact ledger',
     async function ({ page }, testInfo) {
-      await openGame(page, testInfo);
+      await openTitle(page, testInfo);
       await startDeterministicGame(page);
 
       await page.evaluate(function () {
@@ -758,7 +758,7 @@ test.describe('building ledger keyboard and tooltip access', function () {
 
 
 test('building ledger shows remaining copies, shared limits and occupied ruins', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const setup = await page.evaluate(function () {
     const s = FB.state, pid = s.player.provinceId;
@@ -795,7 +795,7 @@ test('building ledger shows remaining copies, shared limits and occupied ruins',
 
 
 test('gentry promotion to baron grants no control over home-county buildings', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const result = await page.evaluate(function () {
     const s = FB.state, pid = s.player.provinceId;
@@ -834,7 +834,7 @@ test('gentry promotion to baron grants no control over home-county buildings', a
 });
 
 test('building authority follows the direct holder and rejects stale county context', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const result = await page.evaluate(function () {
     const s = FB.state, pid = s.player.provinceId;

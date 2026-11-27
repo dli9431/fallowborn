@@ -13,12 +13,12 @@ dependsOnRuntime(__filename, [
    NOT run by the authoring agent (owner runs the harness). */
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('real fill appends valid presentations after the curated layouts in both bookmarks',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
 
     const result = await page.evaluate(function () {
       const out = { overCap:[], dupNames:[], missingSites:[], badFill:[],
@@ -72,7 +72,7 @@ test('real fill appends valid presentations after the curated layouts in both bo
 
 test('no settlement name carries a modern numbered administrative label',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
 
     const result = await page.evaluate(function () {
       /* 'Paris 16 Passy'-style GeoNames labels are cleaned to their
@@ -94,7 +94,7 @@ test('no settlement name carries a modern numbered administrative label',
 
 test('fill names use the attested period name, not the modern one',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
 
     const result = await page.evaluate(function () {
       /* The importer substitutes a documented medieval identity when there
@@ -172,7 +172,7 @@ test('fill names use the attested period name, not the modern one',
 test('fill presentations do not force early settlement visibility', async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',
       'The visibility contract runs once against the primary file target.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {

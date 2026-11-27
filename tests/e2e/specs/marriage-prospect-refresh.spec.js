@@ -21,7 +21,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 async function addEligibleDescendant(page) {
@@ -55,7 +55,7 @@ async function addEligibleDescendant(page) {
 }
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
 });
 

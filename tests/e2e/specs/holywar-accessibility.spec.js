@@ -10,7 +10,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
 const { injectHolyWarHarness } = require('../support/game/holywar-harness');
@@ -19,7 +19,7 @@ test('the council is keyboard-operable at desktop and mobile widths',
   async function ({ page }, testInfo) {
     test.skip(!testInfo.project.name.endsWith('-served'),
       'The cross-browser council contract uses the served origin.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     await injectHolyWarHarness(page);
     await page.evaluate(function () {

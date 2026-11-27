@@ -8,13 +8,13 @@ dependsOnRuntime(__filename, [
   'data/map_data.js', 'data/units.js', 'data/ambitions.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { startWarSafety } = require('../support/game/war-safety');
 
 test.describe('character life archives', function () {
   test.beforeEach(async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     await page.evaluate(function () { FB.game.setPaused(true); });
   });
@@ -476,7 +476,7 @@ test('real field combat records pre-casualty forces without changing the simulat
 });
 
 test('life history presents record facts, categorized accomplishments and disclosed actions', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   await page.setViewportSize({ width:390, height:844 });
   await page.evaluate(function () {

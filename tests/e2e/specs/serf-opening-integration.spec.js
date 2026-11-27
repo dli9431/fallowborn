@@ -28,13 +28,13 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
 const SERF_START_CODE = 'ASCENT-867-serf-london-f-Ada';
 
 async function startSerfFixture(page, testInfo, tutorial) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page, { keepTutorial:!!tutorial });
   await page.evaluate(function (keepTutorial) {
     const s = FB.state;
@@ -54,7 +54,7 @@ async function startSerfFixture(page, testInfo, tutorial) {
 
 test('tier 0 onboarding keeps three First steps and links one integrated tenure surface',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.getByRole('button', { name:'New Game', exact:true }).click();
     await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill(SERF_START_CODE);
@@ -125,7 +125,7 @@ test('tier 0 onboarding keeps three First steps and links one integrated tenure 
 
 test('the tenure coach follows First steps, precedes optional deeds, and acknowledges per save',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page, {
       keepFirstTimeTips:true, keepTutorial:true
     });

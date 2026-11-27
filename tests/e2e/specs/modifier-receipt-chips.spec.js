@@ -3,11 +3,11 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/events.js', 'js/ui_misc.js', 'js/ui_panels.js',
   'js/ui_modals.js', 'js/messages.js', 'data/modifiers.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('county modifier receipts use short chips and retain exact effects', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const parts = await page.evaluate(function () {
     FB.game.setPaused(true);

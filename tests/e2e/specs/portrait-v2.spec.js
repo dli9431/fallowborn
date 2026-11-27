@@ -11,12 +11,12 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
 });
 
@@ -781,7 +781,7 @@ test('high-DPI contexts double portrait backing stores and cap at 2x',
       const context = await browser.newContext({ deviceScaleFactor });
       try {
         const hidpi = await context.newPage();
-        await openGame(hidpi, testInfo);
+        await openTitle(hidpi, testInfo);
         return await hidpi.evaluate(function () {
           var host=document.createElement('div');
           host.innerHTML=FB.faceTag({id:'hidpi-probe'},44,50);

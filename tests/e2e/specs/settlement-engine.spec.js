@@ -11,13 +11,13 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
   test.skip(testInfo.project.name !== 'chromium-file',
     'The generic settlement contract runs once against the primary file target.');
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
 });
 

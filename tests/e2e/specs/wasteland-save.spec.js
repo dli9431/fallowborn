@@ -5,11 +5,11 @@ dependsOnRuntime(__filename, ['js/world.js', 'js/save.js', 'js/main.js',
   'js/population.js', 'js/travel.js', 'js/settlement.js', 'data/events_travel.js',
   'data/travel.js', 'data/map_data.js', 'data/counties.js', 'js/market.js', 'js/actions.js']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('wasteland conversion completes its market before any price read', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const result = await page.evaluate(function () {
     const s = FB.state, home = s.player.provinceId;
@@ -35,7 +35,7 @@ test('wasteland conversion completes its market before any price read', async fu
 
 for (const mode of ['noble', 'commoner', 'legacy']) {
   test(mode + ' wasteland settlement survives a fresh page and switching saves', async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const prepared = await page.evaluate(function (mode) {
       const s = FB.state;
@@ -75,7 +75,7 @@ for (const mode of ['noble', 'commoner', 'legacy']) {
     }, mode);
 
     // Navigation discards the mutated bookmark cache, reproducing the reported restart.
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function (saved) {
       return new Promise(function (resolve) { FB.game.loadData(saved, resolve); });
     }, prepared.saved);
@@ -115,7 +115,7 @@ for (const mode of ['noble', 'commoner', 'legacy']) {
 }
 
 test('detached no-policy preflight retains legacy conversion evidence without repair', async function ({page}, testInfo) {
-  await openGame(page,testInfo);
+  await openTitle(page,testInfo);
   await startDeterministicGame(page);
   const result = await page.evaluate(function () {
     const state = JSON.parse(JSON.stringify(FB.state));

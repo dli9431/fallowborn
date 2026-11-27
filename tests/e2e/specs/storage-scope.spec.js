@@ -1,6 +1,6 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
@@ -30,7 +30,7 @@ function storageFacts(page) {
 }
 
 test('unscoped storage keeps every released key and database name', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   expect(await page.evaluate(function () {
     return { scope:FB.storageScope, label:FB.buildLabel,
       keys:['fb_slot1', 'fb_auto', 'fb_progression', 'fb_ui', 'fb_automation', 'fb_lang', 'fb_mods',
@@ -44,7 +44,7 @@ test('unscoped storage keeps every released key and database name', async functi
 
 test('an invalid storage scope is ignored', async function ({ page }, testInfo) {
   await scoped(page, '../Other Branch', 'x');
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   expect(await page.evaluate(function () {
     return [FB.storageScope, FB.storageKey('fb_ui')];
   })).toEqual(['', 'fb_ui']);
@@ -53,7 +53,7 @@ test('an invalid storage scope is ignored', async function ({ page }, testInfo) 
 test('a scoped test build keeps saves, progression and settings apart from the root build',
   async function ({ page }, testInfo) {
     await scoped(page, 'e2e-branch', 'e2e-branch · 0000000');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     await page.evaluate(function () {
       return new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
@@ -66,14 +66,14 @@ test('a scoped test build keeps saves, progression and settings apart from the r
 
     // The root build on the same origin sees none of the branch's storage.
     const root = await page.context().newPage();
-    await openGame(root, testInfo);
+    await openTitle(root, testInfo);
     const unscoped = await storageFacts(root);
     expect(unscoped).toMatchObject({ scope:'', slot:false, any:false });
     expect(unscoped.title).not.toContain('e2e-branch');
     await root.evaluate(function () { FB.startProgression.noteTier(3); });
 
     // And the root's writes never reach the branch.
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     const again = await storageFacts(page);
     expect(again).toMatchObject({ scope:'e2e-branch', slot:true });
     expect(again.title).toContain('e2e-branch · 0000000');

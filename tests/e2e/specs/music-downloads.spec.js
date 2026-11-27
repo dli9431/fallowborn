@@ -13,12 +13,12 @@ dependsOnRuntime(__filename, [
    no bytes travel. NOT run by the authoring agent (owner runs the harness). */
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
 
 async function startGame(page, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
 }
 

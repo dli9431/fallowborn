@@ -12,7 +12,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 
@@ -21,7 +21,7 @@ test('a bounded simulation preserves game-state invariants',
     test.skip(testInfo.project.name !== 'chromium-file',
       'The initial invariant smoke test runs against the primary file target.');
 
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     await injectBrowserHarness(page);
     const result = await page.evaluate(function () {
@@ -53,7 +53,7 @@ test('year-boundary work does not grow with the character record count',
       'The year-boundary cost check runs against the primary file target.');
     test.slow();
 
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     await injectBrowserHarness(page);
 
@@ -121,7 +121,7 @@ test('spring realm AI reuses political status and bounds succession repairs',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',
       'The Spring rollover shape check runs against the primary file target.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -220,7 +220,7 @@ test('spring realm AI reuses political status and bounds succession repairs',
 
 test('AI expansion finishes a partial de jure duchy before opening a weaker frontier',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -320,7 +320,7 @@ test('AI expansion finishes a partial de jure duchy before opening a weaker fron
 
 test('AI expansion steps outward from kingdom to empire before a fresh realm',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -387,7 +387,7 @@ test('annual AI construction snapshots holdings before development invalidation'
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',
       'The AI construction cache-shape check runs against the primary file target.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
@@ -453,7 +453,7 @@ test('succession refresh is linear in accumulated royal history',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',
       'The succession cost-shape check runs against the primary file target.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
@@ -537,7 +537,7 @@ test('stable Spring court rolls ignore accumulated dead generations',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',
       'The court-frontier cost-shape check runs against the primary file target.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
@@ -616,7 +616,7 @@ test('Spring mortality classifies unrelated courtiers only once',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',
       'The annual court handoff check runs against the primary file target.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
@@ -660,7 +660,7 @@ test('annual household checks reuse reverse spouse links',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',
       'The household cost-shape check runs against the primary file target.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
@@ -724,7 +724,7 @@ test('a death-heavy realm rollover reuses one family snapshot',
   async function ({ page }, testInfo) {
     test.skip(['chromium-file', 'chromium-served'].indexOf(testInfo.project.name) < 0,
       'The rollover shape check runs against both Chromium origins.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -816,7 +816,7 @@ test('death-heavy court repairs preserve the live-kin reference state, deaths, R
           await route.fulfill({ response:response, body:source.replace(lookup, 'const familyLinks = null;') });
         });
       } else await page.unroute('**/js/world.js');
-      await openGame(page, testInfo);
+      await openTitle(page, testInfo);
       await startDeterministicGame(page);
       outcomes.push(await page.evaluate(function () {
         const s = FB.state, chance = FB.chance, mortality = FBDATA.balance.mortalityBase;
@@ -853,7 +853,7 @@ test('an interrupted court mortality pass releases its snapshot before ordinary 
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
       'The court mortality exception boundary runs against the served origin.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const s = FB.state, chance = FB.chance, died = FB.courtMemberDied;
@@ -904,7 +904,7 @@ test('home pestilence mortality does not follow extended kin to another county',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',
       'The yearly family-mortality check runs against the primary file target.');
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     expect(await page.evaluate(function () {
