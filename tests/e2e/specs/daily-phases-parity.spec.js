@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 const { test, expect } = require('../support/fixture');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 dependsOnRuntime(__filename, [
@@ -54,7 +54,7 @@ function withSortedKeys(value) {
 ['play', 'observe'].forEach(function (mode) {
   test(mode + ' daily, seasonal and annual passes retain their fixed-seed fingerprints',
     async function ({ page }, testInfo) {
-      await openGame(page, testInfo);
+      await openTitle(page, testInfo);
       await startDeterministicGame(page);
       const captures = await page.evaluate(function (mode) {
         const G = FB.game;

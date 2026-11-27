@@ -13,11 +13,11 @@ dependsOnRuntime(__filename, [
   'data/eras.js', 'js/governments.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 
 // Bookmark selection belongs to this spec; keep the shared start journey stable.
 async function startPoliticalGame(page, testInfo, bookmark) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
   const code = 'POLITICAL-' + bookmark + '-serf-london-f-Ada';
