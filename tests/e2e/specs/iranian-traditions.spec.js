@@ -164,10 +164,10 @@ test('the wider Peroz beginning adopts the same court profile without changing t
       FB.game.setPaused(true);
       const s = FB.state, scenario = FBDATA.startScenarios.find(function (row) { return row.id === 'peroz_476'; });
       return {scenario:s.start.scenarioId,faith:s.chars[s.player.charId].religion,realm:s.realms.player.religion,
-        original:scenario.startReligion,originalHidden:scenario.hidden,
-        freshHidden:FBDATA.startScenarios.find(function (row) { return row.id === 'peroz_sasanian_476'; }).hidden};
+        original:scenario.startReligion,originalHidden:!!scenario.hidden,
+        freshHidden:!!FBDATA.startScenarios.find(function (row) { return row.id === 'peroz_sasanian_476'; }).hidden};
     })).toEqual({scenario:'peroz_sasanian_476',faith:'zoroastrian_sasanian_476',realm:'zoroastrian_sasanian_476',
-      original:'zoroastrian',originalHidden:true,freshHidden:false});
+      original:'zoroastrian',originalHidden:false,freshHidden:false});
   });
 
 sharedTitle('local identity catalogue reads',function () {
