@@ -327,7 +327,7 @@ test('the start picker and family presets follow scenario data',
     for (const code of ['STORIES-476-serf-ravenna-m-Marcus',
       'STORIES-476-federate_476-ravenna-m-Marcus-elder-0-gothic.homoian',
       'STORIES-867-federate_476-ravenna-m-Marcus',
-      'STORIES-476-nepos_476-split-m-Julius_Nepos']) {
+      'STORIES-476-nepos_476-ravenna-m-Julius_Nepos']) {
       await startCode(page, testInfo, code, true);
       await expect(page.locator('#ng-seed-err')).toHaveText(
         'That start code doesn’t parse — check it was copied whole.');

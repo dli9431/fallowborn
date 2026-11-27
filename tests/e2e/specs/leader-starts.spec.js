@@ -103,6 +103,13 @@ test('Batu leads the existing western command without land and keeps it across a
 
 test('only the fresh 1241 world offers Batu, and only at the command origin', async function ({ page }, info) {
   await openDate(page, info, '1241');
+  // Source review accepts the declaration; any fault text is reported here.
+  expect(await page.evaluate(function () {
+    return FB.bookmarkSources.reports().reduce(function (out, row) {
+      return out.concat((row.starts || []).filter(function (unit) { return unit.id === 'batu_1241'; })
+        .map(function (unit) { return { ready:unit.ready, faults:unit.faults }; }));
+    }, []);
+  })).toEqual([{ ready:true, faults:[] }]);
   expect(await page.evaluate(function () {
     const sc = FBDATA.startScenarios.find(function (row) { return row.id === 'batu_1241'; });
     const fresh = FB.bookmark('1241');

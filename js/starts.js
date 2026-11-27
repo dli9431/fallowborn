@@ -561,6 +561,7 @@
   var realmFields = ['realmId','patronRealmId','federateRealmId','institutionId',
     'ownerId','holderId','controllerId','applicantRealmId','targetOwnerId','owner',
     'issuerRealmId','payerRealmId','beneficiaryRealmId','nomineeRealmId','scopeRealmId',
+    'grantorRealmId','lenderRealmId',
     'liege','realm','fromRid','toRid','a','b'];
   function references(value, from, preparation) {
     if (!value || typeof value !== 'object') return;
