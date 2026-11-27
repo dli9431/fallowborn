@@ -44,6 +44,8 @@ const selectedRevisions = {
   '867':'governments_v2_islamic_v1',
   '1066':'governments_v2_islamic_v1_institutions_v1'
 };
+// A later 867 layer gives York its Norse court; new campaigns start there.
+const freshRevisions = Object.assign({},selectedRevisions,{'867':'governments_v2_islamic_v1_norse_york_v1'});
 
 /* Cases that restore saves, install catalogue fixtures or stand alone between
    them keep a fresh page. Runs of the others share one page per group, reset
@@ -238,7 +240,7 @@ test('dated fresh rollout selects only accepted worlds and preserves mixed popul
       const current = dates.map(function (id) { return FB.bookmark(id).revision; });
       const valid = dates.every(function (id) { return !FB.validateBookmark(FB.bookmark(id)).length; });
       const unchanged = Object.keys(selected).every(function (id) {
-        const fresh = FB.bookmark(id), previous = FB.bookmark(id,
+        const fresh = FB.bookmark(id,selected[id]), previous = FB.bookmark(id,
           id === '800' ? 'inhabited_v2_governments_v2' : 'governments_v2');
         const expectedCourts = previous.realms.map(function (r) {
           return assignmentsFor(id,r);
@@ -273,7 +275,7 @@ test('dated fresh rollout selects only accepted worlds and preserves mixed popul
       return {current:current,valid:valid,unchanged:unchanged,noHeldPlacement:noHeldPlacement,early:early,
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     },selectedRevisions)).toEqual({current:['wider_v2','world_v2','terrain_v2_governments_v2',
-      selectedRevisions['800'],selectedRevisions['867'],selectedRevisions['1066'],'inhabited_v2'],
+      freshRevisions['800'],freshRevisions['867'],freshRevisions['1066'],'inhabited_v2'],
       valid:true,unchanged:true,noHeldPlacement:true,early:true,pure:true});
   });
 
@@ -351,7 +353,7 @@ for (const crazygames of [false]) {
               const a = FB.religiousInstitutionSnapshot(s,iid);
               return a && a.available && !Object.keys(a.members).length && a.holderId === null && a.property === null;
             })};
-        },{row:row})).toEqual({revision:selectedRevisions[row.bookmark],
+        },{row:row})).toEqual({revision:freshRevisions[row.bookmark],
           faith:row.faith,ruler:row.faith,resident:true,population:true,head:null,institutions:true});
       });
   }

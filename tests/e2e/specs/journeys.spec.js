@@ -30,7 +30,7 @@ test('a full start code creates the expected deterministic new game',
     expect(snapshot.seed).toBe(START_CODE);
     expect(snapshot.start).toEqual({ id: '867', year: 867, season: 0, day: 1,
       era: 'early_medieval', defaultGovernment: 'territorial', geography: 'europe_regional',
-      revision:'governments_v2_islamic_v1', scenarioId:'farmer',
+      revision:'governments_v2_islamic_v1_norse_york_v1', scenarioId:'farmer',
       storyAttachments:{schema:1,world:[],tracks:[]} });
     expect(snapshot.date).toEqual({ year: 867, season: 0, day: 1 });
     expect(snapshot.turn).toBe(0);

@@ -93,7 +93,7 @@ test('the opt-in world retains complete effective source fields, slots and fresh
       tech:FBDATA.techImpactReviews.features.period_867_north_atlantic_habitation.mode
     };
   },SOURCE);
-  expect(result).toEqual({faults:[],fresh:['governments_v2_islamic_v1','europe_regional',498],
+  expect(result).toEqual({faults:[],fresh:['governments_v2_islamic_v1_norse_york_v1','europe_regional',498],
     laterFresh:['governments_v2_islamic_v1_institutions_v1','europe_regional'],
     geography:'europe_north_atlantic_2',layout:'867_north_atlantic_v1',count:540,unique:true,
     prefix:true,courts:true,unchanged:true,titles:true,slots:true,independent:true,climates:true,
@@ -216,7 +216,7 @@ test('the island world creates ordinary local authority and six water edges',asy
       pure:rng === FB.getRngState() && uid === FB.getUidCounter()};
   },PLACES)).toEqual({stamp:['867',REVISION,'europe_north_atlantic_2'],width:1290,height:1078,home:'faroes',
     courts:true,sites:true,clocks:true,scenic:true,noGateway:true,routes:true,rejectsIceland:true,
-    fresh:'governments_v2_islamic_v1',distribution:false,pure:true});
+    fresh:'governments_v2_islamic_v1_norse_york_v1',distribution:false,pure:true});
 });
 
 test('the retained Ibrim congregation and its actual activity remain usable',async function ({page},info) {

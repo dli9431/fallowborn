@@ -497,6 +497,6 @@ test('Islamic composed revisions keep the activity and patronage offers of their
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     })).toEqual({missing:[],fresh:[
       {revision:'inhabited_v2_governments_v2_islamic_v1_learning_v1',offered:true},
-      {revision:'governments_v2_islamic_v1',offered:true},
+      {revision:'governments_v2_islamic_v1_norse_york_v1',offered:true},
       {revision:'governments_v2_islamic_v1_institutions_v1',offered:true}],pure:true});
   });

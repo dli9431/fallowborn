@@ -61,13 +61,64 @@ test('the starts validate on every offering revision without changing the releas
     return { errors, revisions, ids:starts.map(function (sc) { return sc.id; }),
       tracks:starts.map(function (sc) { return FB.startStoryTracks(sc,sc.fixedProvinceId); }),
       away:FB.startTracks(starts[1],'winchester'), world:FB.bookmark('867','baseline').stories || [],
-      pure:before === JSON.stringify(FBDATA.bookmarks['867']) && rng === FB.getRngState() && uid === FB.getUidCounter(),
-      halfdan:FBDATA.startScenarios.some(function (sc) { return sc.id === 'halfdan_york_867'; }) };
+      pure:before === JSON.stringify(FBDATA.bookmarks['867']) && rng === FB.getRngState() && uid === FB.getUidCounter() };
   });
   expect(result.errors).toEqual([]);
   for (const revision of result.revisions) expect(revision.faults,revision.id).toEqual([]);
-  expect(result).toMatchObject({ ids:['aethelred_wessex_867','york_household_867'],
-    tracks:[[],[ID]], away:[], world:[], pure:true, halfdan:false });
+  expect(result).toMatchObject({ ids:['aethelred_wessex_867','york_household_867','halfdan_york_867'],
+    tracks:[[],[ID],[]], away:[], world:[], pure:true });
+});
+
+test('the fresh world changes only the York court faith and keeps retained worlds', async function ({ page }, info) {
+  await openGame(page, info);
+  expect(await page.evaluate(function () {
+    const fresh = FB.bookmark('867'), previous = FB.bookmark('867','governments_v2_islamic_v1');
+    const changed = fresh.realms.filter(function (r, i) { return JSON.stringify(r) !== JSON.stringify(previous.realms[i]); });
+    const york = fresh.realms.find(function (r) { return r.id === 'york'; });
+    const sc = FBDATA.startScenarios.find(function (row) { return row.id === 'halfdan_york_867'; });
+    const fields = ['provinces','duchies','kingdoms','straits','localInstitutions','settlementLayout','stories','scripted'];
+    return { revision:fresh.revision, changed:changed.map(function (r) { return r.id; }), faith:york.religion,
+      retained:previous.realms.find(function (r) { return r.id === 'york'; }).religion === undefined,
+      sameWorld:fields.every(function (key) { return JSON.stringify(fresh[key]) === JSON.stringify(previous[key]); }),
+      counties:fresh.provinces.find(function (p) { return p.id === 'york'; }).religion,
+      identity:[FB.startIdentity(sc, fresh).startReligion, FB.startIdentity(sc, previous).startReligion],
+      offers:FBDATA.religiousActivities.zoroastrian_household_learning_867.openings.some(function (o) {
+        return o.id === '867' && o.revision === fresh.revision;
+      }), valid:FB.validateBookmark(FBDATA.bookmarks['867']) };
+  })).toEqual({ revision:'governments_v2_islamic_v1_norse_york_v1', changed:['york'], faith:'norse_pagan',
+    retained:true, sameWorld:true, counties:'catholic', identity:['norse_pagan','catholic'], offers:true, valid:[] });
+});
+
+test('Halfdan adopts the Norse court at York through the picker and keeps it across a save', async function ({ page }, info) {
+  await setup(page, info);
+  await page.locator('#bookmarklist [data-bookmark="867"]').click();
+  const court = page.locator('[data-scenario="halfdan_york_867"]');
+  await expect(court.locator('.scenario-story')).toHaveCount(0);
+  await court.click();
+  await expect(page.locator('#cg-name')).toHaveValue('Halfdan Ragnarsson');
+  await expect(page.locator('#cg-name')).toHaveAttribute('readonly','');
+  await finishCreation(page);
+  expect(await evaluateAcrossBookmark(page, function () {
+    const s = FB.state, me = s.chars[s.player.charId];
+    const facts = { name:me.name, age:FB.ageOf(me,s.date.year), culture:me.culture, religion:me.religion,
+      home:s.player.provinceId, tier:s.player.tier, source:s.start.rulerRealmId, revision:s.start.revision,
+      mapped:FB.startRealmId(s,'york'), noDuplicate:!s.realms.york, city:s.owner.york,
+      courtFaith:FB.realmReligionId(s,'player') };
+    function snapshot(state) {
+      const c = state.chars[state.player.charId];
+      return [state.owner,state.holder,state.player.gold,c.id,c.religion,c.spouseId,c.childrenIds,state.realms.player];
+    }
+    const saved = JSON.parse(FB.save.serialize()), before = window.restoreFacts(FB.state,snapshot);
+    window.__startRestoreSave = JSON.stringify(saved);
+    window.__startRestoreSequence = [FB.getRngState() >>> 0, FB.getUidCounter()];
+    FB.activateBookmark('1066');
+    window.__afterStartRestore = function () {
+      facts.retained = before === window.restoreFacts(FB.state,snapshot);
+      return facts;
+    };
+  })).toEqual({ name:'Halfdan Ragnarsson', age:47, culture:'norse', religion:'norse_pagan', home:'york', tier:6,
+    source:'york', revision:'governments_v2_islamic_v1_norse_york_v1', mapped:'player', noDuplicate:true,
+    city:'player', courtFaith:'norse_pagan', retained:true });
 });
 
 test('the picker groups York as Story and Æthelred as Historical and adopts his existing court', async function ({ page }, info) {
@@ -109,6 +160,7 @@ test('the picker groups York as Story and Æthelred as Historical and adopts his
 
 for (const start of [
   { id:'aethelred_wessex_867', wrongPlace:'york', name:'Æthelred_I' },
+  { id:'halfdan_york_867', wrongPlace:'winchester', name:'Halfdan_Ragnarsson' },
   { id:'york_household_867', wrongPlace:'winchester', name:'Review' }
 ]) {
   test(start.id + ' rejects a different birthplace through code and direct creation', async function ({ page }, info) {

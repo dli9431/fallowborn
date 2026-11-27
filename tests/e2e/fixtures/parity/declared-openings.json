@@ -20,6 +20,14 @@
     "bookmark": "800"
   },
   {
+    "scenario": "baldwin_1204",
+    "bookmark": "1204"
+  },
+  {
+    "scenario": "batu_1241",
+    "bookmark": "1241"
+  },
+  {
     "scenario": "bela_1241",
     "bookmark": "1241"
   },
@@ -106,6 +114,10 @@
   {
     "scenario": "guntram_568",
     "bookmark": "568"
+  },
+  {
+    "scenario": "halfdan_york_867",
+    "bookmark": "867"
   },
   {
     "scenario": "harald_1066",
