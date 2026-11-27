@@ -152,9 +152,10 @@ FBDATA.openingProfiles_rulers_1241 = {
   courtHead('szekesfehervar','geo_obuda_3054643');
   courtHead('suzdal','geo_vladimir_473247');
   FBDATA.settlementLayouts['1241_royal_households_v2'] = layout;
-  /* Retained campaigns keep their original people and settlement indexes. */
+  /* Retained campaigns keep their original people and settlement indexes.
+     Koten and Batu need the later operational world and join only its list. */
   var starts = FBDATA.startScenarios.filter(function (sc) {
-    return sc && sc.id !== 'koten_1241' && FB.bookmarkSources.matches(sc,'1241',b.era);
+    return sc && sc.id !== 'koten_1241' && sc.id !== 'batu_1241' && FB.bookmarkSources.matches(sc,'1241',b.era);
   }).map(function (sc) { return sc.id; });
   b.revisions.baseline.starts = starts.filter(function (id) { return id !== 'bela_1241' && id !== 'yaroslav_1241' && id !== 'alexander_1241'; });
   b.revisions.royal_households_v2 = { realms:realms, settlementLayout:'1241_royal_households_v2', starts:starts.filter(function (id) { return id !== 'alexander_1241'; }) };

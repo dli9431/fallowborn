@@ -7,7 +7,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['index.html', 'data/starts.js', 'data/starts_laskaris_1204.js',
   'data/bookmark_1204.js', 'data/bookmark_1204_terrain.js', 'data/bookmark_1204_campaigns.js',
   'data/starts_1241.js', 'data/bookmark_1241.js', 'data/bookmark_1241_operations.js',
-  'data/bookmark_1241_core_starts.js', 'data/mobile_confederations.js', 'data/eras.js',
+  'data/bookmark_1241_core_starts.js', 'data/story_ruler_agendas_1241.js', 'data/mobile_confederations.js', 'data/eras.js',
   'js/starts.js', 'js/main.js', 'js/world.js', 'js/model.js', 'js/station.js', 'js/governments.js',
   'js/bookmark_setup.js', 'js/mobile_confederations.js', 'js/mobile_command.js', 'js/mobile_columns.js',
   'js/treasury.js', 'js/armies.js', 'js/save.js', 'js/save_v4.js', 'js/ui_misc.js', 'js/ui_modals.js']);
