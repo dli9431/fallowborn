@@ -6,12 +6,12 @@ dependsOnRuntime(__filename, [
   'js/main.js', 'js/technology.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
 
 async function startHousehold(page, testInfo, options) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   return page.evaluate(function (opts) {
     var s = FB.state;

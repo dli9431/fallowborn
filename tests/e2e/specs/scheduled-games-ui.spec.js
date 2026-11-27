@@ -5,7 +5,7 @@ dependsOnRuntime(__filename,['index.html','data/actions.js','data/tournaments.js
   'js/util.js','js/crazygames.js','js/main.js','js/world.js','js/lordships.js','js/save.js']);
 const { test, expect } = require('../support/fixture');
 const { startGames, bookGames } = require('../support/game/tournaments');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
 const { mockCrazyGames } = require('../support/crazygames');
 const { startDeterministicGame } = require('../support/game/start');
@@ -135,7 +135,7 @@ for(const distribution of ['standard','crazygames']){
   test('scheduled scripts and English fallback are available in '+distribution,async function({page},info){
     if(distribution==='crazygames')await page.addInitScript(function(){window.FB_DISTRIBUTION='crazygames';window.FB_CRAZYGAMES_STORAGE='localstorage';});
     if(distribution==='crazygames')await openCrazyGame(page,info);
-    else await openGame(page,info);
+    else await openTitle(page,info);
     await startDeterministicGame(page);
     const r=await page.evaluate(function(){
       return {data:!!FBDATA.tournaments,engine:!!FB.tournaments,ui:typeof FB.ui.showGames,

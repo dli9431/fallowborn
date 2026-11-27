@@ -23,11 +23,11 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 async function startPoliticsGame(page, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
 }
 
@@ -1493,7 +1493,7 @@ test('an exported Parliament campaign reloads the same active chamber',
     }, ids);
     expect(saved.exported.startsWith('FBS2.')).toBe(true);
     expect(saved.forecast.blocs.length).toBeGreaterThan(2);
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     const loaded = await page.evaluate(function (text) {
       return new Promise(function (resolve) {
         const data = FB.save.parseExport(text);

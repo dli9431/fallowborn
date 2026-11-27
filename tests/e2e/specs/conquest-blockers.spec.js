@@ -4,11 +4,11 @@ dependsOnRuntime(__filename, ['js/armies.js', 'js/wars.js', 'js/world.js',
   'js/fortifications.js', 'js/logistics.js', 'js/holywar.js', 'js/ui_panels.js',
   'data/map_data.js', 'data/units.js']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 async function arrange(page, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   return page.evaluate(function () {
     const s = FB.state, home = s.player.provinceId;

@@ -12,12 +12,12 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
 
 async function startCampaignGame(page, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   return page.evaluate(function () {
     FB.game.setPaused(true);
@@ -143,7 +143,7 @@ test('Muster Host stays visible through fully fielded and rearming wartime state
 
 test('filtered declarations initialize campaign feedback and preserve the catalogue after withdrawal',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     var setup = await page.evaluate(function () {
       var s = FB.state;

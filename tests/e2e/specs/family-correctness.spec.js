@@ -18,7 +18,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame, unlockStartTier } = require('../support/game/start');
 
 async function startWithCode(page, code, name) {
@@ -42,7 +42,7 @@ async function startWithCode(page, code, name) {
 }
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await unlockStartTier(page, 1);
 });
 

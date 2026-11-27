@@ -6,14 +6,14 @@ dependsOnRuntime(__filename, [
   'js/main.js', 'js/portrait.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 /* Decision reviews share one layout: a fact card of label/value rows, named
    people with portraits, full-width action cards whose cost or first blocker
    stays on the face, and supporting rules behind Details. */
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   await page.setViewportSize({ width:390, height:844 });
   await page.evaluate(function () { FB.game.setPaused(true); });

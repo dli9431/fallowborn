@@ -2,11 +2,11 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/messages.js', 'js/i18n.js', 'js/rebellions.js', 'js/save.js', 'js/ui_modals.js']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('retention removes only old routine world notices independently of visibility', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const result = await page.evaluate(function () {
     const s = FB.state;
@@ -39,7 +39,7 @@ test('retention removes only old routine world notices independently of visibili
 });
 
 test('saved rebellion notices render on a fresh English boot before any rebellion occurs', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const result = await page.evaluate(function () {
     const keys = ['warning', 'ai_settlement', 'muster', 'occupied', 'independence', 'ended'];

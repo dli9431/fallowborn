@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['css/style.css', 'js/ui_misc.js', 'js/ui_modals.js',
   'js/papacy.js', 'data/papacy.js', 'data/actions.js', 'js/actions.js']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 async function expectContainedRows(page, selector) {
@@ -29,7 +29,7 @@ async function expectContainedRows(page, selector) {
 
 for (const width of [320, 593, 1280]) {
   test('Bishopric fields remain readable at ' + width + 'px', async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     await page.setViewportSize({ width:width, height:850 });
     await page.evaluate(function () {
@@ -79,7 +79,7 @@ for (const width of [320, 593, 1280]) {
 }
 
 test('shared rows wrap long fields and preserve compact summary heights', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await page.evaluate(function () {
     const row = '<div class="kv"><span>Current ecclesiastical appointment</span>' +
       '<b><button class="linklike">VeryLongUnbrokenLocalizedNameWithoutSpacesAndWithManyLetters</button></b></div>';
@@ -97,7 +97,7 @@ test('shared rows wrap long fields and preserve compact summary heights', async 
 });
 
 test('summary card labels share typography without restyling nested values', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await page.evaluate(function () {
     const variants = ['papacy-card', 'household-summary', 'governance-domain-summary',
       'aggression-confirm-critical', 'privilege-card-critical', 'privilege-legal-details',

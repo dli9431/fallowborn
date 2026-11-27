@@ -4,11 +4,11 @@ dependsOnRuntime(__filename, [
   'js/ui_misc.js', 'js/ui_modals.js', 'js/main.js', 'js/model.js', 'js/events.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('succession labels name each male and female close relation', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const cases = [
     ['child', 'son', 'daughter'], ['grandchildren', 'grandson', 'granddaughter'],
@@ -33,7 +33,7 @@ test('succession labels name each male and female close relation', async functio
 });
 
 test('player death shows nephew and niece separately in the successor buttons', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const ids = await page.evaluate(function () {
     const s = FB.state, me = s.chars[s.player.charId];

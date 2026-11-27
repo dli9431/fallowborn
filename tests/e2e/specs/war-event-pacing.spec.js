@@ -17,11 +17,11 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
 });
 
@@ -523,14 +523,14 @@ test('automatic event resume defaults off and its Settings toggle persists acros
     expect(await page.evaluate(function () {
       return JSON.parse(localStorage.getItem('fb_ui')).autoResumeAfterEvents;
     })).toBe(true);
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function () { FB.ui.showSettings(); });
     await expect(toggle).toBeChecked();
     await toggle.uncheck();
     expect(await page.evaluate(function () {
       return JSON.parse(localStorage.getItem('fb_ui')).autoResumeAfterEvents;
     })).toBe(false);
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function () { FB.ui.showSettings(); });
     await expect(toggle).not.toBeChecked();
   });
@@ -542,7 +542,7 @@ test('older UI preferences without automatic event resume default to staying pau
       delete prefs.autoResumeAfterEvents;
       localStorage.setItem('fb_ui', JSON.stringify(prefs));
     });
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     expect(await page.evaluate(function () {
       return FB.game.uiPrefs.autoResumeAfterEvents;
     })).toBe(false);

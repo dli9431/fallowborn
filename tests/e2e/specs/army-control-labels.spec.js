@@ -5,7 +5,7 @@ dependsOnRuntime(__filename, [
   'js/ui_modals.js', 'js/ui_misc.js', 'js/main.js', 'js/armies.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 [
@@ -14,7 +14,7 @@ const { startDeterministicGame } = require('../support/game/start');
 ].forEach(function (viewport) {
   test('army control explains each mode on ' + viewport.name, async function ({ page }, testInfo) {
     await page.setViewportSize({ width:viewport.width, height:viewport.height });
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     await page.evaluate(function () {
       FB.game.setPaused(true);

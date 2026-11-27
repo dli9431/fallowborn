@@ -15,14 +15,14 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { injectHolyWarHarness } = require('../support/game/holywar-harness');
 
 test.beforeEach(async function ({ page }, testInfo) {
   test.skip(testInfo.project.name !== 'chromium-file',
     'The holy-war adapter matrix runs once against the primary file target.');
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   await injectHolyWarHarness(page);
 });

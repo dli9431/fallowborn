@@ -1,7 +1,7 @@
 'use strict';
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
@@ -13,7 +13,7 @@ dependsOnRuntime(__filename, [
 test.describe.configure({ mode:'parallel' });
 
 test.beforeEach(async function ({ page }, info) {
-  await openGame(page, info);
+  await openTitle(page, info);
   await startDeterministicGame(page);
   await page.evaluate(function () {
     FB.game.setPaused(true);

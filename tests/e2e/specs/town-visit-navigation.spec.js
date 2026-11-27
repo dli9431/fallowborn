@@ -7,7 +7,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 async function outingState(page) {
@@ -31,7 +31,7 @@ async function outingState(page) {
     async function ({ page }, testInfo) {
       await page.setViewportSize(journey.mobile
         ? { width:390, height:600 } : { width:1100, height:600 });
-      await openGame(page, testInfo);
+      await openTitle(page, testInfo);
       await startDeterministicGame(page, { keepTutorial:true });
       // A long county list makes scroll restoration observable without changing
       // the universal fixture or requiring a particular historical layout.
@@ -100,7 +100,7 @@ async function outingState(page) {
 
 test('choosing an outing activity spends one day and resolves that option once',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page, { keepTutorial:true });
     await page.evaluate(function () {
       FB.state.eventQueue = [];

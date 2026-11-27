@@ -11,14 +11,14 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 for (const height of [480, 800]) {
   test('Self item tooltips stay inside the viewport with a long character name at height ' + height,
     async function ({ page }, testInfo) {
       await page.setViewportSize({ width:1280, height:height });
-      await openGame(page, testInfo);
+      await openTitle(page, testInfo);
       await startDeterministicGame(page);
       const ref = await page.evaluate(function () {
         const s = FB.state;
@@ -79,7 +79,7 @@ for (const height of [480, 800]) {
 
 test('serf work and household items cover the tenure duties with supported icons and art',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -153,7 +153,7 @@ test('serf work and household items cover the tenure duties with supported icons
 
 test('applies Equip Best immediately for one managed character',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const setup = await page.evaluate(function () {
@@ -464,7 +464,7 @@ test('applies Equip Best immediately for one managed character',
 
 test('equipment reservations freeze coupled hands and remain manually removable',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const setup = await page.evaluate(function () {
@@ -545,7 +545,7 @@ test('equipment reservations freeze coupled hands and remain manually removable'
 
 test('barber status prices every tier and applies a persistent, day-free override',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -684,7 +684,7 @@ test('barber status prices every tier and applies a persistent, day-free overrid
 
 test('the protagonist Equipment sheet previews, cancels, and pays for barbering',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const setup = await page.evaluate(function () {
       const s=FB.state,me=s.chars[s.player.charId];
@@ -792,7 +792,7 @@ test('the protagonist Equipment sheet previews, cancels, and pays for barbering'
 test('mobile barber cycles each category while only its options pane scrolls',
   async function ({ page }, testInfo) {
     await page.setViewportSize({width:390,height:520});
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const setup=await page.evaluate(function () {
       const s=FB.state,me=s.chars[s.player.charId];
@@ -872,7 +872,7 @@ test('mobile barber cycles each category while only its options pane scrolls',
 test('female and minor pickers hide facial hair and narrow browser Back returns safely',
   async function ({ page }, testInfo) {
     await page.setViewportSize({width:390,height:740});
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const setup=await page.evaluate(function () {
       const s=FB.state,me=s.chars[s.player.charId];

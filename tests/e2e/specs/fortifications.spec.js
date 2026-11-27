@@ -21,7 +21,7 @@ dependsOnRuntime(__filename, [
    Playwright harness and deliberately do not execute in the authoring flow. */
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test.use({
@@ -30,7 +30,7 @@ test.use({
 });
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
 });
 

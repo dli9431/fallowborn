@@ -14,12 +14,12 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
 
 async function startCapitalRealm(page, testInfo, options) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   return page.evaluate(function (setupOptions) {
     var s = FB.state;
@@ -173,7 +173,7 @@ async function startCapitalRealm(page, testInfo, options) {
 }
 
 async function startGrantedCapitalRealm(page, testInfo, places) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   return page.evaluate(function (pair) {
     var s = FB.state;

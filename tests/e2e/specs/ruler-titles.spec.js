@@ -7,7 +7,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 /* AI realm rulers must be styled with the female rank words from
@@ -17,7 +17,7 @@ test('female AI realm rulers use female rank titles',
     test.skip(testInfo.project.name !== 'chromium-file',
       'The title probe runs against the primary file target.');
 
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const titles = await page.evaluate(function () {
       var s = FB.state;

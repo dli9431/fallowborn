@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/ui_panels.js', 'js/ui_misc.js', 'js/ui_modals.js',
   'js/model.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 for (const scenario of [
@@ -13,7 +13,7 @@ for (const scenario of [
   { name:'unseen child with missing parent records', visible:false, parent:false, ghost:true }
 ]) {
   test('stepfamily tree handles ' + scenario.name, async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page);
     const result = await page.evaluate(function (scenario) {
       const s = FB.state, me = s.chars[s.player.charId];

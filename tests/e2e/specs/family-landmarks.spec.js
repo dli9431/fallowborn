@@ -4,11 +4,11 @@ dependsOnRuntime(__filename, ['js/model.js', 'js/actions.js', 'js/economy.js',
   'js/travel.js', 'js/world.js', 'js/lordships.js', 'js/events.js', 'js/main.js',
   'js/save.js', 'js/save_v4.js', 'js/ui_panels.js', 'js/ui_modals.js']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, info) {
-  await openGame(page, info);
+  await openTitle(page, info);
   await startDeterministicGame(page);
   await page.evaluate(function () { FB.game.setPaused(true); });
 });

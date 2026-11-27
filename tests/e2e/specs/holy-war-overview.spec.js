@@ -3,11 +3,11 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/ui_modals.js', 'js/ui_panels.js', 'js/ui_misc.js',
   'js/holywar.js', 'js/armies.js', 'js/wars.js', 'js/fortifications.js', 'js/mapview.js', 'js/world.js', 'js/model.js', 'js/i18n.js', 'js/messages.js', 'js/util.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('campaign activity shows live battles and sieges and links to their counties', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const fixture = await page.evaluate(function () {
     const s = FB.state;
@@ -52,7 +52,7 @@ test('campaign activity shows live battles and sieges and links to their countie
 });
 
 test('ruler holy-war card summarizes coalitions without the expanded opponent list', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   const fixture = await page.evaluate(function () {
     const s = FB.state;
@@ -111,7 +111,7 @@ test('ruler holy-war card summarizes coalitions without the expanded opponent li
 });
 
 test('holy-war overview lists both full coalitions and sums campaign detachments only', async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await startDeterministicGame(page);
   await page.setViewportSize({ width:1366, height:768 });
   const result = await page.evaluate(function () {

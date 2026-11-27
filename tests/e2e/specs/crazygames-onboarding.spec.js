@@ -16,7 +16,7 @@ dependsOnRuntime(__filename, ['js/bookmark_sources.js',
 const { test, expect } = require('../support/fixture');
 test.describe.configure({mode:'parallel'});
 const { mockCrazyGames } = require('../support/crazygames');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 async function finishOpeningLoop(page, gold) {
@@ -91,7 +91,7 @@ test('standard build with SDK' +
     ' applies its courtship rate and acceptance only after eligibility',
     async function ({ page }, testInfo) {
       await mockCrazyGames(page);
-      await openGame(page, testInfo);
+      await openTitle(page, testInfo);
       await startDeterministicGame(page);
       const initial = await prepareCourtship(page);
       const expectedRate = 0.2;
@@ -155,7 +155,7 @@ test('a standard phone build with an SDK present keeps the town-first and later-
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:844 });
     await mockCrazyGames(page);
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await startDeterministicGame(page, { keepFirstTimeTips:true });
     await page.locator('.coachmark', { hasText:'Low health greatly increases' })
       .getByRole('button', { name:'Got it', exact:true }).click();
