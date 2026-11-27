@@ -1,6 +1,6 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const { useReleasedStartRules } = require('../support/game/released-starts');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 test.describe.configure({ mode:'parallel' });
@@ -16,7 +16,7 @@ const ID = 'baghdad_copyist_track_800';
 
 async function startCopyist(page, info, community) {
   await useReleasedStartRules(page);
-  await openGame(page, info);
+  await openTitle(page, info);
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button', { name:'New Game', exact:true }).click();

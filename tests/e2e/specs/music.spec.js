@@ -14,7 +14,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame, targetUrl } = require('../support/game/navigation');
+const { openTitle, targetUrl } = require('../support/game/navigation');
 const { unlockStartTier } = require('../support/game/start');
 
 const tracks = [
@@ -91,7 +91,7 @@ test('file soundtrack metadata omits unsupported local artwork',
       };
     });
 
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
 
     expect(await page.evaluate(function () {
       const metadata = window.__fileMusicMediaSession.metadata;
@@ -536,7 +536,7 @@ test('campaigns without eligible era banks stop audio and recover when a bank be
       window.Audio = FakeAudio;
     });
     await routeSyntheticSoundtrack(page);
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await expect.poll(function () {
       return page.evaluate(function () {
         return window.__eraMusicAudio.some(function (item) {
@@ -686,7 +686,7 @@ test('context banks, playback controls, and listening history stay consistent',
       window.Audio = FakeAudio;
     });
     await routeSyntheticSoundtrack(page);
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await expect(page.locator('#btn-title-music')).toBeVisible();
     await expect.poll(function () {
       return page.evaluate(function () {
@@ -1219,7 +1219,7 @@ test('local served boot leaves Cache Storage idle',
       };
     });
     await routeSyntheticSoundtrack(page);
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
 
     expect(await page.evaluate(function () {
       return {
@@ -1245,7 +1245,7 @@ test('phone-sized birthplace and character screens yield the corner to Back',
     });
     await routeSyntheticSoundtrack(page);
     await page.setViewportSize({ width:390, height:844 });
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await unlockStartTier(page, 1);
 
     const controls = page.locator('#title-music-controls');

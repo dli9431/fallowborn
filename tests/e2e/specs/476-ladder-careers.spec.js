@@ -17,10 +17,10 @@ dependsOnRuntime(__filename, [
   'js/save.js', 'js/save_v4.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 
 async function start(page, testInfo, scenario) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill(scenario === 'curialis_476'

@@ -18,7 +18,7 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 const {
   START_CODE, startDeterministicGame, unlockStartTier
 } = require('../support/game/start');
@@ -33,7 +33,7 @@ test('telemetry accepts only the exact official play origin and stays silent loc
         }
       };
     });
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
 
     expect(await page.evaluate(function () {
       return {
@@ -77,7 +77,7 @@ test('telemetry accepts only the exact official play origin and stays silent loc
 
 test('New Game telemetry reports each setup screen once per attempt',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function () {
       window.__telemetryEvents = [];
       FB.telemetry = {
@@ -150,7 +150,7 @@ test('New Game telemetry reports each setup screen once per attempt',
 
 test('gameplay telemetry reports descriptive lifecycle and engagement events',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function () {
       window.__telemetryEvents = [];
       FB.telemetry = {
@@ -358,7 +358,7 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
 
 test('campaign telemetry identifies the selected quick start',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function () {
       window.__telemetryEvents = [];
       FB.telemetry = {
@@ -454,7 +454,7 @@ test('campaign telemetry identifies the selected quick start',
 for (const legacyOrigin of ['missing', 'unknown', 'invalid-code']) {
   test('legacy telemetry recovers original setup without inventing activation: ' + legacyOrigin,
     async function ({ page }, testInfo) {
-      await openGame(page, testInfo);
+      await openTitle(page, testInfo);
       await page.evaluate(function () {
         window.__telemetryEvents = [];
         FB.telemetry = {
@@ -524,7 +524,7 @@ for (const legacyOrigin of ['missing', 'unknown', 'invalid-code']) {
 
 test('visibility checkpoints require meaningful new active time',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function () {
       window.__telemetryEvents = [];
       FB.telemetry = {
@@ -585,7 +585,7 @@ test('visibility checkpoints require meaningful new active time',
 
 test('engagement links emit only bounded community and rating click telemetry',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function () {
       window.__telemetryEvents = [];
       FB.telemetry = {
@@ -688,7 +688,7 @@ test('engagement links emit only bounded community and rating click telemetry',
 
 test('first-time hints report shown, interaction, dismissal, and opt-out actions',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function () {
       window.__telemetryEvents = [];
       FB.telemetry = {
@@ -789,7 +789,7 @@ test('first-time hints report shown, interaction, dismissal, and opt-out actions
 
 test('death telemetry distinguishes succession from a completed saga',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function () {
       window.__telemetryEvents = [];
       FB.telemetry = {
@@ -852,7 +852,7 @@ test('death telemetry distinguishes succession from a completed saga',
 
 test('living succession reports a completed retirement explicitly',
   async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     await page.evaluate(function () {
       window.__telemetryEvents = [];
       FB.telemetry = {

@@ -20,12 +20,12 @@ dependsOnRuntime(__filename, [
    owner runs this specification through the approved Playwright harness. */
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openTitle } = require('../support/game/navigation');
 
 test.describe.configure({mode:'parallel'});
 
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo);
+  await openTitle(page, testInfo);
   expect(await page.evaluate(function () {
     return { review:FBDATA.reviewOpenStarts, progression:FB.startProgression.snapshot() };
   })).toEqual({ review:false, progression:{ v:1, highestAchievedTier:0, highestStartTier:0 } });
@@ -127,7 +127,7 @@ test('earning Freeholder unlocks every tier-one beginning across reloads',
     await expect(page.locator('.toast', { hasText:'New beginnings unlocked' }))
       .toContainText('Freeholder');
 
-    await openGame(page, testInfo);
+    await openTitle(page, testInfo);
     expect(await page.evaluate(function () {
       return { review:FBDATA.reviewOpenStarts, progression:FB.startProgression.snapshot(), state:FB.state };
     })).toEqual({ review:false, progression:{ v:1, highestAchievedTier:1, highestStartTier:1 }, state:null });
