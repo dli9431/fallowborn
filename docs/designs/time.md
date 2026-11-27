@@ -272,7 +272,11 @@ one accounting transaction remain together within their phase.
 `daily-phases-parity.spec.js` pins complete-state SHA-256, serialized byte count,
 RNG, UID, date, result, refresh and autosave checkpoints from the former loop for
 fixed-seed play and observe campaigns. Each stages ordinary, seasonal and annual
-dates directly and advances only three days. `daily-phase-registry.spec.js`
+dates directly and advances only three days. The complete-state digest follows
+property order, so creating a state field in a different place changes it without
+changing play; the spec also pins a digest of the same state with sorted keys, and
+when only the first one moves the pinned value is refreshed in the same change.
+`daily-phase-registry.spec.js`
 checks this phase list, registration and dispatch guards, preflight purity,
 deed/travel focus branches, event completion and refresh options, mortality
 exits and reviewed engine-id counts. These bounded checks do not
