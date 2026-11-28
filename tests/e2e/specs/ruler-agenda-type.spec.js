@@ -2,6 +2,7 @@
 const { test, expect } = require('../support/fixture');
 const { openGame, openTitle } = require('../support/game/navigation');
 const { startPreparedParityGame } = require('../support/game/parity');
+const { startHistoricalGame } = require('../support/game/historical-start');
 const { expectModAdmission } = require('../support/game/mod-admission');
 const { installStoredMod } = require('../support/game/stored-mod');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
@@ -13,7 +14,8 @@ dependsOnRuntime(__filename, ['index.html','js/story_ruler_agenda.js','js/story_
   'js/government_support.js','js/government_collective.js','js/government_assembly.js','js/mobile_confederations.js',
   'js/government_selection.js','js/treasury.js','js/world.js','js/mods.js','js/save.js','js/save_v4.js',
   'js/main.js','data/starts.js','data/aristocratic_courts.js','data/bookmark_1204_terrain.js','data/technology.js',
-  'data/story_ruler_agendas.js']);
+  'data/story_ruler_agendas.js','data/story_imperial_service.js','data/starts_imperial_officer.js','data/bookmark_493.js',
+  'data/office_mandates.js','js/office_mandates.js']);
 
 function agendaCandidate(scenario, withoutAgenda) {
   const candidate = JSON.parse(JSON.stringify(proof));
@@ -117,11 +119,41 @@ for (const scenario of ['peroz_476','siwa_delegate_1204']) {
       const stale = FB.stories.apply(s, id, pending.id, pending);
       FB.stories.get(id).day(s, t); const closed = JSON.stringify(t);
       FB.stories.get(id).day(s, t);
-      return { stale:stale, status:t.status, once:closed === JSON.stringify(t), choices:FB.stories.choices(s,id) };
+      const ended = FB.stories.status(s, id), name = FB.realmNameParam(s, FB.startRealmId(s, FB.stories.get(id).declaration.subjectRealmId));
+      const realm = name && name.$realmName ? FB.renderRealmNameSnapshot(name.$realmName) : name;
+      return { stale:stale, status:t.status, once:closed === JSON.stringify(t), choices:FB.stories.choices(s,id),
+        stage:ended.stage === FB.T('Ended: you no longer rule {realm}', { realm:realm }),
+        facts:ended.facts.map(function (f) { return f[0]; }), now:ended.facts[0][1] === FB.T('Ended: you no longer rule {realm}.', { realm:realm }) };
     }, scenario);
-    expect(result).toEqual({ stale:false, status:'agenda_interrupted', once:true, choices:[] });
+    expect(result).toEqual({ stale:false, status:'agenda_interrupted', once:true, choices:[], stage:true, facts:['Now'], now:true });
   });
 }
+
+test('a dormant court program reads Waiting to rule and a service program waits for its appointment', async function ({ page }, info) {
+  await startHistoricalGame(page, info, { bookmark:'493', code:'SERVICE-493-farmer_493-constantinople-m-Officer' });
+  const result = await page.evaluate(function () {
+    const s = FB.state, court = 'imperial_service_emperor_493', service = 'imperial_service_commander_493';
+    function now(id) { return FB.stories.status(s, id).facts.find(function (f) { return f[0] === FB.T('Now'); })[1]; }
+    const name = FB.realmNameParam(s, FB.startRealmId(s, 'east_493'));
+    const realm = name && name.$realmName ? FB.renderRealmNameSnapshot(name.$realmName) : name;
+    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const courtPerson = FB.stories.get(court).people(s, s.stories[court])[0];
+    const servicePerson = FB.stories.get(service).people(s, s.stories[service])[0];
+    const courtNow = now(court), serviceNow = now(service), choices = FB.stories.choices(s, court);
+    const early = FB.stories.quote(s, court, FB.stories.get(court).declaration.stages[0].choices[0].id);
+    return { generation:s.stories[court].generation, appointed:s.stories[service].mandateId,
+      courtLabel:courtPerson.label, courtDetail:courtPerson.detail === FB.T('The program starts once you rule {realm}.', { realm:realm }),
+      courtNow:courtNow === FB.T('Starts when you rule {realm}.', { realm:realm }),
+      serviceLabel:servicePerson.label, serviceDetail:servicePerson.detail === FB.T('The program starts once {realm} appoints you.', { realm:realm }),
+      serviceNow:serviceNow === FB.T('Starts when {realm} appoints you.', { realm:realm }),
+      choices:choices.map(function (c) { return [c.id, c.label, c.detail]; }),
+      early:!early.allowed && FB.stories.get(court).blocker(s, s.stories[court], early.reason) === courtNow,
+      pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter() };
+  });
+  expect(result).toEqual({ generation:0, appointed:null, courtLabel:'Waiting to rule', courtDetail:true, courtNow:true,
+    serviceLabel:'Commander', serviceDetail:true, serviceNow:true,
+    choices:[['agenda_stop_program','Set this program aside','Ends the program.']], early:true, pure:true });
+});
 
 test('bundled source-fact agendas compile at boot and keep their fact key distinct from story references', async function ({ page }, info) {
   await openGame(page, info);

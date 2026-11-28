@@ -216,13 +216,86 @@
       var q = c && source(s, t, c), hasAction = c && ['agenda_priority','agenda_finish'].indexOf(c.operation) < 0;
       var waiting = def.binding && (def.binding.waitForOffice && t.generation === 0 || def.binding.kind === 'mandate_holder' && !t.mandateId) && t.status === 'agenda_open' &&
         t.subjectId === s.player.charId && !s.player.dead && s.chars[t.subjectId] && !s.chars[t.subjectId].dead;
-      return { id:id, allowed:!!(waiting && cancel || current(s, t) && (cancel || ready(s, st) && c && (!hasAction || q && q.allowed))),
+      var allowed = !!(waiting && cancel || current(s, t) && (cancel || ready(s, st) && c && (!hasAction || q && q.allowed)));
+      return { id:id, allowed:allowed,
         reason:c && c.operation === 'agenda_mandate' && q && !q.allowed ? {mandateReason:q.reason} :
           c && c.operation === 'agenda_story_choice' && q && !q.allowed ? { storyId:c.storyId, reason:q.reason } :
           q && q.reviewed && !q.allowed ? {mobileReason:q.reviewed.review.reason,
-            action:q.reviewed.request.action,countyId:q.reviewed.request.terms.countyId || null} : null,
+            action:q.reviewed.request.action,countyId:q.reviewed.request.terms.countyId || null} :
+          allowed ? null : obstacle(s, t, c, q, waiting),
         facts:{ definition:copy(def), record:copy(t), subject:subject(s,t), turn:s.turn, date:copy(s.date), source:q,
           publicFunds:FB.treasuryAvailable(s, realm(s)), privateFunds:s.player.gold } };
+    }
+    /* The first unmet condition of a refused quote that its source does not
+       already explain, as a code the blocker turns into one sentence. */
+    function obstacle(s, t, c, q, waiting) {
+      function out(code) { return { agendaReason:code, choiceId:c ? c.id : null }; }
+      if (!current(s, t)) return out(waiting ? 'waiting' : 'ended');
+      if (!ready(s, stage(t))) return out('opens');
+      if (!c) return null;
+      if (c.operation === 'agenda_story_choice' && !q) return out('not_offered');
+      if (c.operation === 'agenda_public_record' && q && !q.allowed) return out('no_record');
+      if (c.operation === 'agenda_story_fact' && !(q && q.allowed)) return out('not_reached');
+      if (c.operation === 'agenda_mobile_result' && q && !q.allowed) return out('not_done');
+      if ((c.operation === 'agenda_provincial_terms' || c.operation === 'agenda_dues') && q && !q.allowed && q.reason) return out('source');
+      return null;
+    }
+    /* Presentation. Realm names are live display text for the sheet. */
+    function realmText(s, rid) {
+      var name = FB.realmNameParam(s, rid);
+      return name && name.$realmName ? FB.renderRealmNameSnapshot(name.$realmName) : String(name || '');
+    }
+    function waitingOffice(t) { return !!def.binding && !!def.binding.waitForOffice && t.generation === 0; }
+    function waitingAppointment(t) { return !!def.binding && def.binding.kind === 'mandate_holder' && !t.mandateId; }
+    function commander() { return !!def.binding && def.binding.kind === 'mandate_holder'; }
+    function opens(st) { return { season:FB.seasonName(st.season), year:st.year }; }
+    /* The program's present state: a short stage line for the card and one
+       sentence for the Now fact, in the order quote() refuses a choice. */
+    function progress(s, t) {
+      var p = { realm:realmText(s, realm(s)) }, st = stage(t);
+      if (t.status === 'agenda_complete') return { stage:FB.T('Program complete'), now:FB.T('Program complete.') };
+      if (t.status === 'agenda_stopped') return { stage:FB.T('Set aside'), now:FB.T('You set this program aside.') };
+      var open = t.status === 'agenda_open', name = st ? FB.T(st.name) : FB.T(def.title);
+      var line = st && !ready(s, st) ? FB.T('{stage}: opens {season} {year}', Object.assign({ stage:name }, opens(st))) : name;
+      if (open && waitingOffice(t)) return { stage:line, now:FB.T('Starts when you rule {realm}.', p) };
+      if (open && waitingAppointment(t)) return { stage:line, now:FB.T('Starts when {realm} appoints you.', p) };
+      if (!open || !current(s, t)) {
+        if (waitingOffice(t)) return { stage:FB.T('Ended before you came to rule {realm}', p),
+          now:FB.T('Ended before you came to rule {realm}.', p) };
+        if (commander()) return { stage:FB.T('Commission ended'), now:FB.T('Your commission from {realm} has ended.', p) };
+        return { stage:FB.T('Ended: you no longer rule {realm}', p), now:FB.T('Ended: you no longer rule {realm}.', p) };
+      }
+      if (!ready(s, st)) return { stage:line, now:FB.T('Opens in {season} {year}.', opens(st)) };
+      return { stage:line, now:FB.T('Ready.') };
+    }
+    function stopRow() { return { id:'agenda_stop_program', label:FB.T('Set this program aside'), detail:FB.T('Ends the program.') }; }
+    function duesText(code) {
+      if (code === 'withheld') return FB.T('The required represented interests withhold support.');
+      if (code === 'existing_dues') return FB.T('The existing extraordinary dues remain in force.');
+      return null;
+    }
+    function obstacleText(s, t, reason) {
+      var code = reason.agendaReason, c = reason.choiceId && choice(t, reason.choiceId);
+      var story = c && c.storyId && context.get(c.storyId), rec = story && FB.stories.record(s, c.storyId);
+      var title = story ? story.title(s, rec) : '';
+      if (code === 'waiting' || code === 'ended') return progress(s, t).now;
+      if (code === 'opens') return stage(t) ? FB.T('Opens in {season} {year}.', opens(stage(t))) : null;
+      if (code === 'not_offered' && story) return FB.T('{story} does not offer this choice to you now.', { story:title });
+      if (code === 'not_reached' && story) return FB.T('{story} has not reached this point yet.', { story:title });
+      if (code === 'not_done') return FB.T('Complete this step first, then record it.');
+      if (code === 'no_record' && c) {
+        if (c.recordKind === 'agenda_appointments') return FB.T('No new appointment since the program began. Make one in Public administration first.');
+        if (c.recordKind === 'agenda_recognition') return FB.T('No royal candidate has recognition this reign yet.');
+        if (c.recordKind === 'agenda_mobile_agreement') return FB.T('No agreement with {realm} is active yet.',
+          { realm:realmText(s, FB.startRealmId(s, c.otherRealmId)) });
+        if (c.recordKind === 'agenda_collective_decision') return FB.T('The members have not carried out this decision yet.');
+      }
+      if (code === 'source' && c) {
+        var q = source(s, t, c);
+        if (!q || q.allowed || !q.reason) return null;
+        return c.operation === 'agenda_dues' ? duesText(q.reason) : q.reason;
+      }
+      return null;
     }
     function close(s, t, status) { t.status = status; t.outcomeTurn = s.turn; }
     function apply(s, t, id, reviewed) {
@@ -316,85 +389,86 @@
       },
       title:function () { return FB.T(def.title); }, intro:function () { return FB.T(def.intro); },
       people:function (s, t) {
-        var waiting = def.binding && (t.generation === 0 || def.binding.kind === 'mandate_holder' && !t.mandateId);
-        return [{ characterId:t.subjectId, label:waiting ? FB.T('Original person') : FB.T('Original incumbent'),
-          detail:waiting ? FB.T('This program grants no office. It waits for the original person to acquire the declared authority.') :
-            def.binding && def.binding.kind === 'mandate_holder' ? FB.T('This personal program belongs to the original service holder and appointment.') :
-              FB.T('This personal program belongs to this ruler and the original mandate.'), reason:'' }];
+        var p = { realm:realmText(s, realm(s)) };
+        if (waitingOffice(t)) return [{ characterId:t.subjectId, label:FB.T('Waiting to rule'),
+          detail:FB.T('The program starts once you rule {realm}.', p), reason:'' }];
+        if (commander()) return [{ characterId:t.subjectId, label:FB.T('Commander'), detail:waitingAppointment(t) ?
+          FB.T('The program starts once {realm} appoints you.', p) :
+          FB.T('The program ends if you lose your commission from {realm}.', p), reason:'' }];
+        return [{ characterId:t.subjectId, label:FB.T('Ruler'), detail:FB.T('The program ends if you lose {realm}.', p), reason:'' }];
       },
+      /* The shared story status shape (docs/designs/stories.md): name stays the
+         stage name for readers that quote it, stage is the card line, facts
+         are the sheet's labeled list and lines start with the stage text. */
       status:function (s, t) {
-        var st = stage(t), lines = [];
-        if (t.generation === 0) lines.push(FB.T('This program waits until its original protagonist actually holds the declared court. Attachment grants no authority.'));
-        if (def.binding && def.binding.kind === 'mandate_holder' && !t.mandateId) lines.push(FB.T('This program waits for an actual personal service appointment from its declared court.'));
-        if (t.status === 'agenda_interrupted') lines.push(FB.T('This personal program ended when its original incumbent lost the office, mandate or required jurisdiction.'));
-        else if (t.status === 'agenda_stopped') lines.push(FB.T('You set this program aside. Ordinary decisions remain available.'));
-        else if (t.status === 'agenda_complete') lines.push(FB.T('The program is complete. Its decisions create no additional reward.'));
-        else {
+        var st = stage(t), now = progress(s, t), lines = [], facts = [];
+        if (t.status === 'agenda_open') facts.push([FB.T('Step'), FB.T('{n} of {total}', { n:t.step + 1, total:def.stages.length })]);
+        facts.push([FB.T('Now'), now.now]);
+        if (t.status === 'agenda_open') {
           lines.push(FB.T(st.text));
           var rid = realm(s), seen = Object.create(null);
-          lines.push(FB.treasurySeparated(s, rid) ?
+          facts.push([FB.T('Funds'), FB.treasurySeparated(s, rid) ?
             FB.T('Available public funds: {money:funds}. Private purse: {money:privateFunds}.',
               { funds:FB.treasuryAvailable(s, rid), privateFunds:s.player.gold }) :
-            FB.T('Available court funds: {money:funds}.', { funds:FB.treasuryAvailable(s, rid) }));
+            FB.T('Available court funds: {money:funds}.', { funds:FB.treasuryAvailable(s, rid) })]);
           st.choices.forEach(function (c) {
             if (!c.storyId || seen[c.storyId]) return;
             seen[c.storyId] = true;
             var story = context.get(c.storyId), rec = FB.stories.record(s, c.storyId);
             var status = story && rec && story.status && story.status(s, rec);
             if (!status) return;
-            lines.push(FB.T('{story}: {status}.', { story:story.title(s, rec), status:status.name }));
-            lines = lines.concat(status.lines || []);
+            facts.push([FB.T('Linked story'), FB.T('{story}: {stage}', { story:story.title(s, rec), stage:status.stage || status.name })]);
           });
-          if (!ready(s, st)) lines.push(FB.T('The next review opens in year {year}, season {season}.', { year:st.year, season:st.season + 1 }));
         }
-        return { phase:t.status, name:st && t.status === 'agenda_open' ? FB.T(st.name) : FB.T(def.title), lines:lines };
+        return { phase:t.status, name:st && t.status === 'agenda_open' ? FB.T(st.name) : FB.T(def.title),
+          stage:now.stage, facts:facts, lines:lines };
       },
       choices:function (s, t) {
-        if (!current(s, t)) return quote(s,t,'agenda_stop_program').allowed ? [{id:'agenda_stop_program',
-          label:FB.T('Set the program aside'),detail:FB.T('End this personal agenda without a payment, political commitment or restriction on ordinary play.')}] : [];
+        if (!current(s, t)) return quote(s,t,'agenda_stop_program').allowed ? [stopRow()] : [];
         var rows = ready(s, stage(t)) ? stage(t).choices.map(function (c) {
           var story = c.operation === 'agenda_story_choice' && context.get(c.storyId), rec = story && FB.stories.record(s, c.storyId);
           var original = rec && story.choices && story.choices(s, rec).filter(function (row) { return row.id === c.choiceId; })[0];
           return { id:c.id, label:FB.T(c.label), detail:FB.T(c.detail) + (original ? ' ' + original.detail : '') };
         }) : [];
-        rows.push({ id:'agenda_stop_program', label:FB.T('Set the program aside'), detail:FB.T('End this personal agenda without a payment, political commitment or restriction on ordinary play.') });
+        rows.push(stopRow());
         return rows;
       }, quote:quote, apply:apply, day:day, season:day, year:day, observe:day,
       blocker:function (s, t, reason) {
         if (reason && reason.mandateReason) return reason.mandateReason;
         if (reason && reason.action==='settle' && reason.countyId && FB.world.byId[reason.countyId] &&
             FB.mobile.migration(s,realm(s)) && FB.mobile.migration(s,realm(s)).at!==reason.countyId)
-          return FB.T('This settlement choice concerns {province}. The civilian camp must actually arrive there, with lawful land rights and member assent.',{province:FB.world.byId[reason.countyId].name});
-        if (reason && reason.mobileReason==='commitment') return FB.T('A current tribute, protection or service commitment, war or moving host blocks this action. Wait for the finite agreement to end and reunite the halted host with the camp before reviewing again.');
-        if (reason && reason.mobileReason==='withheld') return FB.T('The members have not assented to these exact terms. Propose them here, give only your own assent in Mobile coalition, and let the other members answer before returning.');
-        if (reason && reason.mobileReason==='access') return FB.T('The actual holder must grant current access to the ground and every intervening county. Send the offer after member assent, wait for outside acceptance and review the real route again.');
+          return FB.T('The camp must reach {province} first, with the right to settle there and the members’ assent.',{province:FB.world.byId[reason.countyId].name});
+        if (reason && reason.mobileReason==='commitment') return FB.T('Blocked while a tribute or service agreement, a war or a split host is active. Wait for the agreement to end and bring the host back to the camp.');
+        if (reason && reason.mobileReason==='withheld') return FB.T('The members have not agreed to these terms yet. Add your assent in Mobile coalition and wait for the others.');
+        if (reason && reason.mobileReason==='access') return FB.T('The ruler of the land must let you pass first. Send the offer once the members agree, then wait for an answer.');
         var story = reason && reason.storyId && context.get(reason.storyId);
         if (story && story.blocker) return story.blocker(s, FB.stories.record(s, reason.storyId), reason.reason);
-        return FB.T('The original incumbent, review date and current source decision or recorded public action must still permit this choice. Use its ordinary review or retain the present arrangements.');
+        // Unknown causes fall back to the shared sheet's own sentence.
+        return reason && reason.agendaReason ? obstacleText(s, t, reason) : null;
       },
       review:function (s, t, id, reviewed) {
-        var q = reviewed.facts.source, lines = [FB.T('Recording this agenda adds no reward. Any political effect uses the existing decision and its current consent.')];
+        var q = reviewed.facts.source, lines = [];
         var serviceChoice = choice(t,id);
         if (serviceChoice && serviceChoice.operation === 'agenda_mandate') return FB.officeMandates.storyDetails(s,serviceChoice.service,q);
         var mobile=choice(t,id);
         if (mobile && ['agenda_mobile','agenda_mobile_prepare'].indexOf(mobile.operation)>=0 && q && q.reviewed) {
           var review=q.reviewed.review;
-          lines.push(FB.T('Public cost: {money:cost}. Member assent and outside consent remain independent. Proposals and departures leave the stage pending.',{cost:review.cost || 0}));
+          lines.push(FB.T('Public cost: {money:cost}.',{cost:review.cost || 0}));
           var request=q.reviewed.request,terms=request.action==='propose' ? request.terms.proposal : request.terms;
           if (request.action==='settle' || request.action==='propose' && request.terms.operation==='settle')
             lines.push(FB.T('Settlement: {count} people at {province}. People remaining mobile: {remaining}.',
               {count:terms.count,province:FB.world.byId[terms.countyId].name,remaining:Math.max(0,FB.mobile.total(s,realm(s))-terms.count)}));
-          if (review.round) lines.push(FB.T('Travel food surcharge: {food}. Journey: {days} days. Completion requires the actual camp and host to arrive.',{food:review.round.food,days:review.round.days}));
+          if (review.round) lines.push(FB.T('Travel food surcharge: {food}. Journey: {days} days.',{food:review.round.food,days:review.round.days}));
           if (review.distribution) {
-            lines.push(FB.T('Immediate food consumption: {food}. This divides existing receipts and creates no reward.',{food:review.distribution.food}));
+            lines.push(FB.T('Food eaten now: {food}.',{food:review.distribution.food}));
             review.distribution.rows.forEach(function (part) {lines.push(FB.T('Member share: {money:gold}, {food} food; resulting support {support}.',
               {gold:part.gold,food:part.food,support:part.support}));});
           }
-          if (review.raid) lines.push(FB.T('Raid forecast: {money:gold}, {food} food; {losses} fighter casualties. No land or occupation is granted.',{gold:review.raid.gold,food:review.raid.food,losses:review.raid.casualties}));
+          if (review.raid) lines.push(FB.T('Raid forecast: {money:gold}, {food} food, {losses} fighters lost.',{gold:review.raid.gold,food:review.raid.food,losses:review.raid.casualties}));
           return lines;
         }
         if (q && Number.isFinite(q.cost)) lines.push(FB.T('Public treasury cost: {money:cost}.', { cost:q.cost }));
-        if (q && q.terms && q.terms.amount !== undefined) lines.push(FB.T('Proposed extraordinary dues: {money:amount} for {days} days. Receipts belong to the public institution.', { amount:q.terms.amount, days:q.terms.duration }));
+        if (q && q.terms && q.terms.amount !== undefined) lines.push(FB.T('Dues: {money:amount} for {days} days, paid to the public treasury.', { amount:q.terms.amount, days:q.terms.duration }));
         if (q && q.reviewed) {
           lines.push(q.reviewed.review.payer === realm(s) ? FB.T('Your public treasury pays {money:price} for {days} days.', { price:q.offer.price, days:q.offer.duration }) :
             FB.T('The following pays your public treasury {money:price} for {days} days.', { price:q.offer.price, days:q.offer.duration }));
