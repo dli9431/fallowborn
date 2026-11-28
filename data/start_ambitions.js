@@ -5,8 +5,8 @@ FBDATA.openingProfiles = {
   "opening_peroz_476": {
     "id": "opening_peroz_476",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "Peroz’s first goals",
+    "intro": "Three optional goals for your reign as King of Kings at Ctesiphon.",
     "scenarioIds": [
       "peroz_476",
       "peroz_sasanian_476"
@@ -14,8 +14,8 @@ FBDATA.openingProfiles = {
     "goals": [
       {
         "id": "court_accounts_476",
-        "name": "Settle the court receipts",
-        "text": "Receive a positive ordinary public receipt, assessed under the current provincial limits.",
+        "name": "Collect royal revenue",
+        "text": "Receive income or dues into the royal treasury at a season’s end.",
         "criterion": {
           "kind": "event",
           "eventKind": "profile_receipt",
@@ -25,8 +25,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "court_service_476",
-        "name": "Review provincial burdens",
-        "text": "Complete a funded provincial negotiation through its ordinary consent and treasury checks.",
+        "name": "Bargain with a great house",
+        "text": "Agree a new revenue and troop bargain with a great house through Public administration.",
         "criterion": {
           "kind": "event",
           "eventKind": "profile_provincial_bargain",
@@ -36,8 +36,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "royal_choice_476",
-        "name": "Record a royal recognition decision",
-        "text": "Commit an ordinary recognition decision for an eligible royal candidate. This neither installs a successor nor excludes other candidates.",
+        "name": "Back a royal candidate",
+        "text": "Declare your support for an eligible royal candidate; the succession stays open.",
         "criterion": {
           "kind": "event",
           "eventKind": "profile_royal_choice",
@@ -49,8 +49,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "balash_link",
-        "label": "Royal kin",
-        "text": "This existing royal relative can be consulted through the ordinary kin and court interfaces. No succession pledge is supplied.",
+        "label": "Your brother",
+        "text": "Balash, your brother and a possible successor, lives at your court in Ctesiphon.",
         "linkKind": "kin",
         "required": true,
         "person": {
@@ -65,16 +65,16 @@ FBDATA.openingProfiles = {
   "opening_nepos_476": {
     "id": "opening_nepos_476",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "Julius Nepos’s first goals",
+    "intro": "Three optional goals for your rule over Dalmatia from Salona.",
     "scenarioIds": [
       "nepos_476"
     ],
     "goals": [
       {
         "id": "dalmatian_accounts_476",
-        "name": "Settle Dalmatian receipts",
-        "text": "Receive an ordinary public payment from the domain actually held.",
+        "name": "Collect Dalmatian revenue",
+        "text": "Receive income or dues into your Dalmatian treasury at a season’s end.",
         "criterion": {
           "kind": "event",
           "eventKind": "profile_receipt",
@@ -84,8 +84,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "dalmatian_defence_476",
-        "name": "Meet a host payment",
-        "text": "Fund an actual host expense from an available purse through the ordinary military account.",
+        "name": "Pay your army",
+        "text": "Pay your army’s wages from the treasury in full once.",
         "criterion": {
           "kind": "event",
           "eventKind": "profile_host_payment",
@@ -95,8 +95,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "western_course_476",
-        "name": "Choose a western course",
-        "text": "Commit a recognition, restoration or retained-Dalmatian decision on the personal track. Reviewing it is insufficient.",
+        "name": "Settle your western claim",
+        "text": "Choose to seek recognition, campaign for Ravenna, confirm a restored mandate or keep ruling Dalmatia.",
         "criterion": {
           "kind": "story_choice",
           "storyId": "nepos_track_476",
@@ -113,8 +113,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "zeno_link",
-        "label": "Named eastern claimant",
-        "text": "This is the same displaced claimant through any later restoration. An audience and recognition remain separate.",
+        "label": "Eastern emperor",
+        "text": "Zeno, the eastern emperor who matters to your western claim, is displaced in Isauria as you begin.",
         "linkKind": "target",
         "required": true,
         "person": {
@@ -133,16 +133,16 @@ FBDATA.openingProfiles = {
   "opening_odoacer_476": {
     "id": "opening_odoacer_476",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "Odoacer’s first goals",
+    "intro": "Three optional goals for you and your federate host, camped near Ticinum.",
     "scenarioIds": [
       "odoacer_476"
     ],
     "goals": [
       {
         "id": "host_course_476",
-        "name": "Choose the host?s course",
-        "text": "Commit paid service, independent command or the existing military contest through the western court.",
+        "name": "Choose the host’s course",
+        "text": "Choose to accept paid service, contest Ravenna or keep the host out of the dispute.",
         "criterion": {
           "kind": "story_choice",
           "storyId": "western_court_476",
@@ -156,8 +156,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "host_payroll_476",
-        "name": "Meet a host payment",
-        "text": "Pay an actual host expense with sufficient available funds. This adds no second wage.",
+        "name": "Pay the host’s wages",
+        "text": "Pay the host’s wages from the treasury once.",
         "criterion": {
           "kind": "event",
           "eventKind": "profile_host_payment",
@@ -167,8 +167,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "italian_status_476",
-        "name": "Resolve the civic arrangement",
-        "text": "Commit the existing civic-government offer or retain host government after actual possession permits that choice.",
+        "name": "Settle Ravenna’s government",
+        "text": "Once you possess Ravenna, accept its civic settlement or keep the host’s government.",
         "criterion": {
           "kind": "story_choice",
           "storyId": "western_court_476",
@@ -183,8 +183,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "orestes_link",
-        "label": "Military authority",
-        "text": "This named authority may be adverse. Knowing his identity grants no friendship, audience or command.",
+        "label": "Western commander",
+        "text": "Orestes commands the western army from Ravenna and may oppose you.",
         "linkKind": "target",
         "required": true,
         "person": {
@@ -201,16 +201,16 @@ FBDATA.openingProfiles = {
   "opening_syagrius_476": {
     "id": "opening_syagrius_476",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "Syagrius’s first goals",
+    "intro": "Three optional goals for your rule in northern Gaul from Soissons.",
     "scenarioIds": [
       "syagrius_476"
     ],
     "goals": [
       {
         "id": "gallic_accounts_476",
-        "name": "Settle Gallic receipts",
-        "text": "Receive an ordinary positive public receipt from the surviving domain.",
+        "name": "Collect Gallic revenue",
+        "text": "Receive income or dues into your Gallic treasury at a season’s end.",
         "criterion": {
           "kind": "event",
           "eventKind": "profile_receipt",
@@ -220,8 +220,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "gallic_defence_476",
-        "name": "Meet a host payment",
-        "text": "Fund an actual host expense through the ordinary military account.",
+        "name": "Pay your army",
+        "text": "Pay your army’s wages from the treasury in full once.",
         "criterion": {
           "kind": "event",
           "eventKind": "profile_host_payment",
@@ -231,8 +231,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "northern_course_476",
-        "name": "Resolve a northern approach",
-        "text": "Conclude a new ordinary peace pact with the actual Frankish court, or commit a decision if the existing Frankish challenge opens.",
+        "name": "Make peace with the Franks",
+        "text": "Make a new peace pact with the Frankish court.",
         "criterion": {
           "kind": "any",
           "conditions": [
@@ -256,8 +256,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "childeric_link",
-        "label": "Neighboring ruler",
-        "text": "This personal link stays with the opening ruler. A court-directed peace pact follows the current court independently.",
+        "label": "Frankish king",
+        "text": "Childeric rules the Salian Franks on your northern border.",
         "linkKind": "target",
         "required": true,
         "person": {
@@ -274,16 +274,16 @@ FBDATA.openingProfiles = {
   "opening_federate_476": {
     "id": "opening_federate_476",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "A federate soldier’s first goals",
+    "intro": "Three optional goals for your life as a federate soldier at Ravenna.",
     "scenarioIds": [
       "federate_476"
     ],
     "goals": [
       {
         "id": "earned_service_476",
-        "name": "Receive funded service pay",
-        "text": "Receive an actual due household installment through the personal service contract.",
+        "name": "Draw your service pay",
+        "text": "Receive a seasonal payment to your household under a service contract with the federate host.",
         "criterion": {
           "kind": "service_payment",
           "storyId": "federate_track_476"
@@ -291,8 +291,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "free_reserve_476",
-        "name": "Keep a free household reserve",
-        "text": "Hold 40 private gold while remaining lawfully free.",
+        "name": "Keep {money:40} in reserve",
+        "text": "Hold {money:40} in your household purse while you remain free.",
         "criterion": {
           "kind": "reserve",
           "amount": 40
@@ -300,8 +300,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "service_course_476",
-        "name": "Resolve the service offer",
-        "text": "Commit a personal service decision, including an ordinary refusal or withdrawal.",
+        "name": "Answer the service offer",
+        "text": "Choose to speak for the soldiers, remain in the ranks or stay out of their dispute.",
         "criterion": {
           "kind": "story_choice",
           "storyId": "federate_track_476",
@@ -318,7 +318,7 @@ FBDATA.openingProfiles = {
       {
         "id": "odoacer_link",
         "label": "Host commander",
-        "text": "A named commander, whose actual location and ordinary access still apply. No office or audience is granted.",
+        "text": "Odoacer commands your federate host, which is camped near Ticinum as you begin.",
         "linkKind": "target",
         "required": true,
         "person": {
@@ -337,16 +337,16 @@ FBDATA.openingProfiles = {
   "opening_curialis_476": {
     "id": "opening_curialis_476",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "A curialis’s first goals",
+    "intro": "Three optional goals for your civic household at Ravenna.",
     "scenarioIds": [
       "curialis_476"
     ],
     "goals": [
       {
         "id": "civic_course_476",
-        "name": "Resolve the council offer",
-        "text": "Accept the actual civic mandate or commit the choice to keep the household independent.",
+        "name": "Answer the curia’s offer",
+        "text": "Accept the civic mandate or choose to keep your household outside the dispute.",
         "criterion": {
           "kind": "story_choice",
           "storyId": "curialis_track_476",
@@ -358,8 +358,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "civic_mandate_476",
-        "name": "Obtain a civic mandate",
-        "text": "Complete the lawful consent and appointment route. Refusal leaves this optional aim unfinished.",
+        "name": "Win a civic mandate",
+        "text": "Accept the mandate with the consent it needs and receive Ravenna’s judicial appointment.",
         "criterion": {
           "kind": "civic_mandate",
           "storyId": "curialis_track_476"
@@ -367,8 +367,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "civic_reserve_476",
-        "name": "Keep a private reserve",
-        "text": "Hold 100 private gold. Public receipts do not become household property.",
+        "name": "Keep {money:100} in reserve",
+        "text": "Hold {money:100} in your own household purse.",
         "criterion": {
           "kind": "reserve",
           "amount": 100
@@ -378,8 +378,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "orestes_link",
-        "label": "Named court authority",
-        "text": "The opening military authority is a person to approach through ordinary channels, without a military appointment or friendship.",
+        "label": "Western commander",
+        "text": "Orestes commands the western army and is the military power over your city, Ravenna.",
         "linkKind": "target",
         "required": true,
         "person": {
@@ -398,16 +398,16 @@ FBDATA.openingProfiles = {
   "opening_pontic_476": {
     "id": "opening_pontic_476",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "A Cherson household’s first goals",
+    "intro": "Three optional goals for your farming household at Cherson.",
     "scenarioIds": [
       "mobile_household_476"
     ],
     "goals": [
       {
         "id": "pontic_livelihood_476",
-        "name": "Complete a paid camp service",
-        "text": "Commit an eligible paid work choice at the actual living camp. The canonical treasury and food costs still apply.",
+        "name": "Earn pay at the camp",
+        "text": "Take a day of paid service at the Pontic following’s camp.",
         "criterion": {
           "kind": "story_choice",
           "storyId": "pontic_household_track_476",
@@ -419,8 +419,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "pontic_reserve_476",
-        "name": "Keep a household reserve",
-        "text": "Hold 40 private gold.",
+        "name": "Keep {money:40} in reserve",
+        "text": "Hold {money:40} in your household purse.",
         "criterion": {
           "kind": "reserve",
           "amount": 40
@@ -428,8 +428,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "pontic_home_476",
-        "name": "Conclude the home decision",
-        "text": "Complete the stationary-farm conclusion or actually return home after the personal journey. Camp membership alone is insufficient.",
+        "name": "Decide where home is",
+        "text": "Finish your household story by putting the farm first or by returning home after a journey.",
         "criterion": {
           "kind": "household_phase",
           "storyId": "pontic_household_track_476",
@@ -443,8 +443,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "basiliscus_link",
-        "label": "Imperial authority",
-        "text": "A remote named court authority, separate from the following?s local employer. No local meeting is asserted.",
+        "label": "Eastern emperor",
+        "text": "Basiliscus is the emperor over Cherson as you begin, ruling far away in Constantinople.",
         "linkKind": "target",
         "required": true,
         "person": {
@@ -463,16 +463,16 @@ FBDATA.openingProfiles = {
   "opening_toledo_711": {
     "id": "opening_toledo_711",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "A Toledo household’s first goals",
+    "intro": "Three optional goals for your craft household in Toledo.",
     "scenarioIds": [
       "toledo_household_711"
     ],
     "goals": [
       {
         "id": "toledo_livelihood_711",
-        "name": "Earn an ordinary livelihood",
-        "text": "Receive 15 gold from actual ordinary craft work after the opening. Loans, gifts, opening stock and public money do not count.",
+        "name": "Earn {money:15} at your craft",
+        "text": "Earn {money:15} from your own craft work after the start.",
         "criterion": {
           "kind": "earnings",
           "amount": 15,
@@ -483,8 +483,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "toledo_reserve_711",
-        "name": "Keep a household reserve",
-        "text": "Hold 30 private gold.",
+        "name": "Keep {money:30} in reserve",
+        "text": "Hold {money:30} in your household purse.",
         "criterion": {
           "kind": "reserve",
           "amount": 30
@@ -492,8 +492,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "toledo_home_711",
-        "name": "Complete the household course",
-        "text": "Finish the chosen local-life or actual permanent-settlement conclusion. Changing faith earns no additional recognition.",
+        "name": "Decide your household’s future",
+        "text": "Finish your household story by staying, changing faith or settling elsewhere for good.",
         "criterion": {
           "kind": "household_phase",
           "storyId": "toledo_household_track_711",
@@ -509,8 +509,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "roderic_link",
-        "label": "Named royal authority",
-        "text": "An identified court target. The king?s actual whereabouts, survival and ordinary audience rules remain authoritative.",
+        "label": "Gothic king",
+        "text": "Roderic is the Gothic king whose royal city, Toledo, is your home.",
         "linkKind": "target",
         "required": true,
         "person": {
@@ -529,16 +529,16 @@ FBDATA.openingProfiles = {
   "opening_aachen_800": {
     "id": "opening_aachen_800",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "An Aachen household’s first goals",
+    "intro": "Three optional goals for your farming household at Aachen.",
     "scenarioIds": [
       "aachen_household_800"
     ],
     "goals": [
       {
         "id": "aachen_livelihood_800",
-        "name": "Complete paid work",
-        "text": "Finish the funded palace delivery or receive 20 gold of actual ordinary farm work after the opening.",
+        "name": "Earn from paid work",
+        "text": "Finish the palace delivery or earn {money:20} from work in the fields after the start.",
         "criterion": {
           "kind": "any",
           "conditions": [
@@ -560,8 +560,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "aachen_reserve_800",
-        "name": "Keep a household reserve",
-        "text": "Hold 40 private gold.",
+        "name": "Keep {money:40} in reserve",
+        "text": "Hold {money:40} in your household purse.",
         "criterion": {
           "kind": "reserve",
           "amount": 40
@@ -569,8 +569,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "aachen_petition_800",
-        "name": "Resolve the disputed fee",
-        "text": "Complete the actual local hearing, accept the ordinary settlement or waive the disputed balance. No royal audience is promised.",
+        "name": "Settle the disputed fee",
+        "text": "Take the settlement, seek a local hearing or give up the disputed balance.",
         "criterion": {
           "kind": "story_choice",
           "storyId": "aachen_household_track_800",
@@ -585,8 +585,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "charlemagne_link",
-        "label": "Named royal authority",
-        "text": "Approach the court through ordinary channels. This link asserts no personal meeting at Aachen.",
+        "label": "Your emperor",
+        "text": "Charlemagne, whose palace stands in your town of Aachen, is newly crowned at Rome as you begin.",
         "linkKind": "target",
         "required": true,
         "person": {
@@ -605,16 +605,16 @@ FBDATA.openingProfiles = {
   "opening_constantinople_1204": {
     "id": "opening_constantinople_1204",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "An artisan household’s first goals",
+    "intro": "Three optional goals for your artisan household in Constantinople.",
     "scenarioIds": [
       "constantinople_household_1204"
     ],
     "goals": [
       {
         "id": "city_livelihood_1204",
-        "name": "Earn an ordinary craft livelihood",
-        "text": "Receive 15 gold of actual ordinary craft earnings after the opening. Gifts, loans, booty and opening stock do not count.",
+        "name": "Earn {money:15} at your craft",
+        "text": "Earn {money:15} from your own craft work after the start.",
         "criterion": {
           "kind": "earnings",
           "amount": 15,
@@ -625,8 +625,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "city_reserve_1204",
-        "name": "Keep a household reserve",
-        "text": "Hold 30 private gold.",
+        "name": "Keep {money:30} in reserve",
+        "text": "Hold {money:30} in your household purse.",
         "criterion": {
           "kind": "reserve",
           "amount": 30
@@ -634,8 +634,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "city_home_1204",
-        "name": "Complete the household course",
-        "text": "Finish the stay, actual-work service or ordinary permanent-emigration conclusion. Service does not require conversion.",
+        "name": "Decide your household’s future",
+        "text": "Finish your household story by staying, securing a paid livelihood or settling elsewhere for good.",
         "criterion": {
           "kind": "household_phase",
           "storyId": "constantinople_household_track_1204",
@@ -650,8 +650,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "baldwin_link",
-        "label": "Current opening authority",
-        "text": "A named incumbent to approach through ordinary channels. No loyalty, conversion, property grant or citizenship follows.",
+        "label": "Latin emperor",
+        "text": "Baldwin of Flanders is the Latin emperor who rules your city, Constantinople, as you begin.",
         "linkKind": "target",
         "required": true,
         "person": {
@@ -670,16 +670,16 @@ FBDATA.openingProfiles = {
   "opening_constantinople_merchant_1204": {
     "id": "opening_constantinople_merchant_1204",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "A harbor merchant’s first goals",
+    "intro": "Three optional goals for your trading household by the harbor of Constantinople.",
     "scenarioIds": [
       "constantinople_merchant_household_1204"
     ],
     "goals": [
       {
         "id": "merchant_livelihood_1204",
-        "name": "Earn an ordinary trading livelihood",
-        "text": "Receive {money:15} of actual ordinary market earnings after the opening. Gifts, loans, booty and opening stock do not count.",
+        "name": "Earn {money:15} at market",
+        "text": "Earn {money:15} from your own market trading after the start.",
         "criterion": {
           "kind": "earnings",
           "amount": 15,
@@ -690,8 +690,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "merchant_reserve_1204",
-        "name": "Keep a household reserve",
-        "text": "Hold {money:30} in private funds.",
+        "name": "Keep {money:30} in reserve",
+        "text": "Hold {money:30} in your household purse.",
         "criterion": {
           "kind": "reserve",
           "amount": 30
@@ -699,8 +699,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "merchant_home_1204",
-        "name": "Complete the household course",
-        "text": "Conclude the decision to stay or complete ordinary permanent household resettlement. Deferred plans and temporary personal travel do not complete this goal.",
+        "name": "Decide your household’s future",
+        "text": "Finish your household story by choosing to stay or by moving your household for good.",
         "criterion": {
           "kind": "household_phase",
           "storyId": "constantinople_merchant_track_1204",
@@ -714,8 +714,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "baldwin_link",
-        "label": "Current opening authority",
-        "text": "A named incumbent to approach through ordinary channels. No friendship, privileged access, citizenship or property grant follows.",
+        "label": "Latin emperor",
+        "text": "Baldwin of Flanders is the Latin emperor who rules the harbor city where you trade.",
         "linkKind": "target",
         "required": true,
         "person": {
@@ -734,16 +734,16 @@ FBDATA.openingProfiles = {
   "opening_muhammad_1204": {
     "id": "opening_muhammad_1204",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "Muhammad II’s first goals",
+    "intro": "Three optional goals for your court at Gurganj.",
     "scenarioIds": [
       "muhammad_1204"
     ],
     "goals": [
       {
         "id": "khwarazm_accounts_1204",
-        "name": "Settle ordinary court receipts",
-        "text": "Receive a positive ordinary public receipt in the court actually adopted.",
+        "name": "Collect Khwarazm’s revenue",
+        "text": "Receive income or dues into your Khwarazmian treasury at a season’s end.",
         "criterion": {
           "kind": "event",
           "eventKind": "profile_receipt",
@@ -753,18 +753,18 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "suzerain_course_1204",
-        "name": "Resolve the superior obligation",
-        "text": "An actual tribute installment or concluded renegotiation needs a canonical obligation receipt.",
+        "name": "Settle with the Qara Khitai",
+        "text": "A tribute payment or new terms with your Qara Khitai overlords would complete this goal.",
         "criterion": {
           "kind": "hold",
-          "reason": "No recorded tribute or renegotiation transaction is available for this opening relationship. A policy priority cannot settle it."
+          "reason": "Neither can be recorded yet, so you can only set this goal aside."
         },
         "office": true
       },
       {
         "id": "eastern_diplomacy_1204",
-        "name": "Conclude an ordinary peace approach",
-        "text": "Conclude a new ordinary peace pact with the living Ghurid court. A preview or unrecorded refusal is insufficient.",
+        "name": "Make peace with the Ghurids",
+        "text": "Make a new peace pact with the Ghurid court.",
         "criterion": {
           "kind": "pact",
           "realmId": "ghurid_1204"
@@ -775,8 +775,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "ghurid_link",
-        "label": "Named foreign ruler",
-        "text": "This possibly adverse personal target stays with the opening ruler. Court-directed diplomacy may address an actual successor separately.",
+        "label": "Ghurid sultan",
+        "text": "Muizz al-Din Muhammad rules the Ghurid Sultanate from Ghazni and may be your enemy.",
         "linkKind": "target",
         "required": true,
         "person": {
@@ -790,16 +790,16 @@ FBDATA.openingProfiles = {
   "opening_siwa_1204": {
     "id": "opening_siwa_1204",
     "type": "opening_profile",
-    "title": "Opening goals and people",
-    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "title": "A Siwa delegate’s first goals",
+    "intro": "Three optional goals for your public mandate at Siwa.",
     "scenarioIds": [
       "siwa_delegate_1204"
     ],
     "goals": [
       {
         "id": "oasis_accounts_1204",
-        "name": "Settle a public receipt",
-        "text": "Receive an actual ordinary assessed public receipt within the constituency?s existing limits.",
+        "name": "Collect the oasis dues",
+        "text": "Receive income or dues into the oasis treasury at a season’s end.",
         "criterion": {
           "kind": "event",
           "eventKind": "profile_receipt",
@@ -809,8 +809,8 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "oasis_consent_1204",
-        "name": "Resolve a reserved proposal",
-        "text": "Complete an ordinary constituent-consent decision. A recorded approval or refusal resolves this aim without a second charge.",
+        "name": "Seek the households’ consent",
+        "text": "Put a proposal to the households and record their approval or refusal.",
         "criterion": {
           "kind": "event",
           "eventKind": "profile_consent",
@@ -820,11 +820,11 @@ FBDATA.openingProfiles = {
       },
       {
         "id": "oasis_reserve_1204",
-        "name": "Contribute to the public reserve",
-        "text": "A private contribution must use an existing permitted transfer and preserve the institution?s reserve.",
+        "name": "Add to the oasis reserve",
+        "text": "A gift from your own purse to the oasis reserve would complete this goal.",
         "criterion": {
           "kind": "hold",
-          "reason": "No ordinary private-to-institution reserve contribution is available. Public funds cannot be relabeled as your donation."
+          "reason": "Your own money cannot be given to the oasis reserve yet, so you can only set this goal aside."
         },
         "office": true
       }
@@ -832,8 +832,8 @@ FBDATA.openingProfiles = {
     "contacts": [
       {
         "id": "al_adil_link",
-        "label": "Remote contemporary ruler",
-        "text": "A named court target with ordinary access. This supplies no Siwa overlord, local official, garrison or treaty.",
+        "label": "Ayyubid sultan",
+        "text": "Al-Adil I rules the Ayyubid Sultanate from Fustat, far from Siwa, and is not your overlord.",
         "linkKind": "target",
         "required": true,
         "person": {

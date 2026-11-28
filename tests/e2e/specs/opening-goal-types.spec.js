@@ -220,7 +220,7 @@ test('a held goal keeps its reason in its open row', async function ({ page }, i
       expected:[FB.T(goal.name) + ' (Open)', FB.T(goal.text) + ' ' + FB.T(goal.criterion.reason)] };
   });
   expect(result.row).toEqual(result.expected);
-  expect(result.row[1]).toContain('No ordinary private-to-institution');
+  expect(result.row[1]).toContain('cannot be given to the oasis reserve');
 });
 
 test('a story-person contact keeps its record key distinct from story references and resolves at the opening', async function ({ page }, info) {
